@@ -2,13 +2,24 @@
 
 En fristående, responsiv webbprototyp inspirerad av Tonårskompassen (Base44). Design: **Midnight Haven** med midnattsblå bakgrund, bärnstensfärgade detaljer, mörka kort, seriftypsnitt och en mobilanpassad navigering.
 
+
+## Senaste utveckling: introduktion och familjekoppling
+
+En förstagångsbesökare får nu välja **tonåring** eller **förälder** och skapa en lokal demoprofil. Startsidan har rollanpassad introduktion och länkar till vyn **Hitta varandra**, som visar det planerade flödet för framtida familjekoder och datadelning. Ingen verklig kontoregistrering eller fjärrkoppling sker.
+
+För att kontrollera huvudvyer och onboarding när du arbetar lokalt med repot:
+
+```bash
+node --test tests/smoke.test.cjs
+```
+
 ## Starta webbplatsen
 
-Publicera repositoryts rot från grenen \`main\` via **GitHub → Settings → Pages** (Deploy from a branch → main → /root). Därefter bör standardadressen vara:
+Publicera repositoryts rot från grenen `main` via **GitHub → Settings → Pages** (Deploy from a branch → main → /root). Därefter bör standardadressen vara:
 
 https://erikjarl.github.io/hemmakompassen/
 
-Filerna \`index.html\`, \`styles.css\`, \`app.js\`, \`landscape.svg\` och \`favicon.svg\` körs direkt i webbläsaren och behöver inte byggas.
+Filerna `index.html`, `styles.css`, `app.js`, `landscape.svg` och `favicon.svg` körs direkt i webbläsaren och behöver inte byggas.
 
 ## Vad som fungerar i denna prototyp
 
@@ -26,7 +37,7 @@ Filerna \`index.html\`, \`styles.css\`, \`app.js\`, \`landscape.svg\` och \`favi
 
 **Detta är inte en produktionsklar tjänst.**
 
-All sparad demodata finns endast i webbläsarens \`localStorage\`, kan läsas av andra som använder samma enhet och skickas aldrig till en annan användare. Ingen riktig registrering, identitetskontroll, säker familjekod, meddelandedelning, serverlagring eller AI-anslutning finns. Den som provar sidan ska inte skriva in känsliga personuppgifter.
+All sparad demodata finns endast i webbläsarens `localStorage`, kan läsas av andra som använder samma enhet och skickas aldrig till en annan användare. Ingen riktig registrering, identitetskontroll, säker familjekod, meddelandedelning, serverlagring eller AI-anslutning finns. Den som provar sidan ska inte skriva in känsliga personuppgifter.
 
 Personlighetsövningen är **inte ett validerat Big Five-instrument**. Poängen är inte normerade och ska endast användas som utgångspunkt för samtal.
 
@@ -42,8 +53,8 @@ Källkoden är egen återskapning från användarens funktionsbeskrivning och mo
 
 ## Filer
 
-- \`index.html\`: grundstruktur, ikonbibliotek och navigering.
-- \`styles.css\`: design och responsiv layout.
-- \`app.js\`: lokala demoflöden och frontendlogik.
-- \`landscape.svg\`: illustrerad natthimmel för startsidan.
-- \`favicon.svg\`: ikon.
+- `index.html`: grundstruktur, ikonbibliotek och navigering.
+- `styles.css`: design och responsiv layout.
+- `app.js`: lokala demoflöden och frontendlogik.
+- `landscape.svg`: illustrerad natthimmel för startsidan.
+- `favicon.svg`: ikon.

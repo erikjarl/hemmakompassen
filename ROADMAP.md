@@ -1,5 +1,19 @@
 # Hemmakompassen — utvecklingsplan (2026-10-17)
 
+## Påbörjat 18 oktober 2026 – Fas 1A (utan backend)
+
+- [x] Ny introduktionssida för en besökare utan demoprofil.
+- [x] Två valbara demoperspektiv: förälder och tonåring, med egna välkomsttexter.
+- [x] Visuellt familjekopplingsflöde med tre steg och preliminär information om datadelning.
+- [x] Demonstrationsläge tydligt märkt: inga riktiga konton, familjekoder, fjärrkopplingar eller AI.
+- [x] Enkel automatisk testfil med Node.js inbyggda testverktyg.
+- [ ] Fortsätt dela upp JavaScript i moduler och förbered separerat mock-/backend-lager.
+- [ ] Bygg autentiserings- och familjekopplingsskärmarna med tydliga fel- och väntelägen.
+- [ ] Finputsning av samtliga roller, skärmar och tillgänglighetskontroller.
+
+**Fas 0:** Genomarbetad dataskyddspolicy, validerat testinstrument, användarvillkor och klinisk riskgranskning behövs *före* live-backend med verkliga uppgifter, men blockerar inte frontendutveckling med syntetiska demodata.
+
+
 **Status:** Design- och funktionsprototyp ligger på `main`. Ingen riktig autentisering, datadelning, säker backend eller AI-anslutning finns ännu.
 
 **Mål:** Ett familjepar (förälder + tonåring) ska kunna skapa två separata konton, kopplas med familjekod, använda swajpen och personlighetstestet, dela överenskomna uppgifter, skicka meddelanden och prata var för sig med en privat AI-medlare som kan använda endast tillåtna, gemensamma uppgifter.

@@ -62,9 +62,9 @@
     ["Utforska behovet","Vad var viktigt för dig i situationen?","... eftersom jag behöver ..."],
     ["Be om något konkret","Formulera en möjlig och frivillig önskan.","Skulle vi kunna ...?"]
   ];
-  function newState(){return {version:1,role:"teen",profiles:{teen:{name:"TonårsTest"},parent:{name:""}},swipes:{teen:{},parent:{}},personality:{teen:{},parent:{}},messages:[],rules:[]};}
+  function newState(){return {version:1,onboarded:false,role:"teen",profiles:{teen:{name:""},parent:{name:""}},swipes:{teen:{},parent:{}},personality:{teen:{},parent:{}},messages:[],rules:[]};}
   let S=newState();
-  try{const x=JSON.parse(localStorage.getItem(STORAGE_KEY)||"null");if(x&&x.version===1&&x.profiles&&x.swipes&&x.personality&&Array.isArray(x.messages)&&Array.isArray(x.rules))S=x;}catch(e){}
+  try{const x=JSON.parse(localStorage.getItem(STORAGE_KEY)||"null");if(x&&x.version===1&&x.profiles&&x.swipes&&x.personality&&Array.isArray(x.messages)&&Array.isArray(x.rules)){S=x;if(typeof S.onboarded!=="boolean")S.onboarded=true;}}catch(e){}
   let swipeHistory=[];
   let activeGuide=-1;
   let exerciseOutput="";
@@ -78,7 +78,7 @@
   const swipeCount=r=>Object.keys(S.swipes[r]||{}).length;
   const personalityCount=r=>Object.keys(S.personality[r]||{}).length;
   const isBoth=()=>!!(S.profiles.parent.name&&S.profiles.teen.name);
-  const page=()=>{const hash=decodeURIComponent(location.hash.slice(1));return NAV.some(n=>n[0]===hash)||hash==="installningar"?hash:"hem";};
+  const page=()=>{const hash=decodeURIComponent(location.hash.slice(1));const p=NAV.some(n=>n[0]===hash)||["installningar","kom-igang","familj"].includes(hash)?hash:"hem";return p==="hem"&&!S.onboarded?"kom-igang":p;};
   const persist=()=>{try{localStorage.setItem(STORAGE_KEY,JSON.stringify(S));}catch(e){toast("Webbläsaren kunde inte spara demodata.");}};
   let toastTimer;
   function toast(msg){const t=$("#toast");if(!t)return;t.textContent=msg;t.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove("show"),3400);}
@@ -86,13 +86,53 @@
   function header(title,description,kicker){return '<section class="page-lead"><span class="eyebrow">'+esc(kicker||"ERT GEMENSAMMA RUM")+'</span><h1>'+esc(title)+'</h1><p>'+esc(description||"")+'</p></section>';}
   function sectionTitle(title,route,text){return '<div class="section-title"><h2>'+esc(title)+'</h2>'+(route?'<button class="quiet-link" data-page="'+route+'">'+esc(text||"Visa alla")+' '+ico("arrow")+'</button>':"")+'</div>';}
   function card(route,icon,title,copy,blue){return '<button class="feature-card" data-page="'+route+'"><span class="feature-icon '+(blue?"blue":"")+'">'+ico(icon)+'</span><h3>'+esc(title)+'</h3><p>'+esc(copy)+'</p>'+ico("arrow")+'</button>';}
+
+  function sharingRows(){
+    return '<div class="policy-list">'+[
+      ["Gillaswajpen","Delas mellan paret"],
+      ["Personlighetstest","Delas mellan paret"],
+      ["Schyssta listan","Gemensamt innehåll"],
+      ["Inkorg","Endast avsändare och mottagare"],
+      ["AI-medlarens samtal","Privat för varje konto"]
+    ].map(([name,scope])=>'<div class="policy-row"><span>'+esc(name)+'</span><strong>'+esc(scope)+'</strong></div>').join("")+'</div>';
+  }
+  function renderWelcome(){
+    return '<section class="welcome-intro"><span class="eyebrow">VÄLKOMMEN TILL HEMMAKOMPASSEN</span><h1>Ett rum för <em>större förståelse.</em></h1><p>En gemensam väg mot mer nyfikenhet, öppnare samtal och färre missförstånd. Börja med att välja vilken vy du vill prova.</p><div class="welcome-values"><span>'+ico("heart")+' Lyssna</span><span>'+ico("message")+' Förstå</span><span>'+ico("sparkles")+' Mötas</span></div></section>'+
+      '<div class="welcome-columns"><section class="panel welcome-card"><span class="eyebrow">UTFORSKA APPEN</span><h2>Vem är du?</h2><p>Detta skapar en demoprofil på just den här enheten – inte ett riktigt konto.</p><form id="onboarding-form">'+
+      '<fieldset class="role-chooser"><legend class="field-label">Jag vill prova som</legend>'+
+      '<label><input name="first-role" type="radio" value="teen" checked><span>'+ico("heart")+' Tonåring<small>För dig som vill bli lyssnad på.</small></span></label>'+
+      '<label><input name="first-role" type="radio" value="parent"><span>'+ico("user")+' Förälder<small>För dig som vill förstå bättre.</small></span></label></fieldset>'+
+      '<div class="field"><label for="first-name">Visningsnamn (valfritt)</label><input id="first-name" maxlength="32" autocomplete="off" placeholder="Exempel: Alex"></div>'+
+      '<button class="btn btn-primary btn-block" type="submit">Börja utforska '+ico("arrow")+'</button></form></section>'+
+      '<aside class="panel welcome-aside"><div class="feature-icon">'+ico("shield")+'</div><h2>Här kan du prova i lugn och ro.</h2><ul class="plain-list">'+
+      '<li>'+ico("check")+' Ingen registrering behövs.</li><li>'+ico("check")+' Du kan byta mellan två demoprofiler.</li>'+
+      '<li>'+ico("check")+' Inget skickas till någon annan enhet.</li></ul>'+
+      '<div class="info-card">'+ico("info")+'<p>Ingen säker lagring finns ännu. Använd bara påhittade uppgifter och skriv inte känslig information.</p></div></aside></div>';
+  }
+  function renderFamily(){
+    const steps=[
+      ["01","Skapa varsitt konto","Förälder och tonåring kommer att få säkra och separata konton."],
+      ["02","Använd en familjekod","En inbjudan med begränsad giltighetstid kopplar rätt två personer."],
+      ["03","Bekräfta delningen","Båda får först veta vad som delas och ska sedan godkänna kopplingen."]
+    ];
+    return header("Hitta varandra","Så kommer ni att kunna koppla ihop två separata konton.","FAMILJEKOPPLING")+
+      '<div class="info-card">'+ico("lock")+'<p><strong>Planerad funktion.</strong> Familjekoder fungerar inte ännu. Demonstrationen kan inte koppla ihop två olika telefoner eller riktiga användare.</p></div>'+
+      '<div class="steps-grid">'+steps.map(x=>'<article class="step-card"><span class="step-number">'+x[0]+'</span><h3>'+x[1]+'</h3><p>'+x[2]+'</p></article>').join("")+'</div>'+
+      '<div class="panel"><h2>Testa båda perspektiven</h2><p>Du kan redan nu växla mellan en föräldra- och en tonårsprofil på samma enhet.</p>'+
+      '<div class="demo-status"><div><span class="demo-dot '+(S.profiles.teen.name?"ready":"")+'"></span>Tonåring: '+esc(displayName("teen"))+'</div>'+
+      '<div><span class="demo-dot '+(S.profiles.parent.name?"ready":"")+'"></span>Förälder: '+esc(displayName("parent"))+'</div></div>'+
+      '<button class="btn btn-primary" data-page="installningar">Byt demoprofil '+ico("arrow")+'</button></div>'+
+      '<div class="panel"><h2>Vem kommer att se vad?</h2>'+sharingRows()+
+      '<p class="footer-help">Förslaget behöver godkännas innan riktig backend och datadelning tas i bruk.</p></div>';
+  }
   function renderHome(){
-    const welcome=isBoth()?"ERT RUM ÄR REDO":"VÄNTAR PÅ DIN MOTPART";
-    const intro=isBoth()?"Ni kan prova övningarna med varsin demoprofil på denna enhet.":"Medan du väntar på din motpart kan du redan börja swajpa och göra ditt personlighetstest.";
+    const welcome=isBoth()?"BÅDA DEMOPROFILERNA ÄR REDO":"VÄNTAR PÅ DIN MOTPART · DEMO";
+    const intro=isBoth()?"Ni kan prova övningarna med varsin demoprofil på denna enhet.":S.role==="parent"?"Som förälder kan du utforska nya sätt att lyssna, förstå och mötas. Skapa en andra demoprofil om du vill jämföra svar.":"Här finns plats för dina tankar. Du kan börja swajpa, göra testet och utforska vad som är viktigt för dig.";
     const total=swipeCount(S.role);
     return '<div class="hero"><div class="hero-orbit"></div><div class="hero-content"><span class="status-pill">'+ico("sparkles")+welcome+'</span><h1>Hej '+esc(displayName(S.role))+'.<em>Välkommen till ert rum.</em></h1><p>'+intro+'</p></div></div>'+
+      '<div class="home-connection"><span class="eyebrow">'+(S.role==="parent"?"FÖR DIG SOM FÖRÄLDER":"FÖR DIG SOM TONÅRING")+'</span><button class="quiet-link" data-page="familj">Så ska ni kopplas ihop '+ico("arrow")+'</button></div>'+
       sectionTitle("Nästa steg","medlare","Utforska")+
-      '<button class="next-step" data-page="medlare"><span class="round-icon">'+ico("sparkles")+'</span><span><span class="kicker">NÄSTA STEG</span><strong>Fråga AI-medlaren</strong><p>Börja med guidat reflektionsstöd.</p></span>'+ico("arrow")+'</button>'+
+      '<button class="next-step" data-page="medlare"><span class="round-icon">'+ico("sparkles")+'</span><span><span class="kicker">NÄSTA STEG</span><strong>Utforska samtalsstöd</strong><p>Förskrivna råd – ingen AI ansluten ännu.</p></span>'+ico("arrow")+'</button>'+
       sectionTitle("Utforska tillsammans")+
       '<div class="tile-grid">'+
       card("swipe","heart","Gillaswajpen",total?total+" av "+STATEMENTS.length+" påståenden besvarade.":"Upptäck vad ni tycker lika och olika om.")+
@@ -190,7 +230,7 @@
     $("#desktop-nav").innerHTML=navMarkup(false);
     $("#mobile-nav").innerHTML=navMarkup(true);
     const profile=$("#side-profile");if(profile){profile.querySelector("strong").textContent=displayName(S.role);profile.querySelector(".avatar").textContent=displayName(S.role).slice(0,1).toUpperCase();}
-    const views={hem:renderHome,swipe:renderSwipe,personlighet:renderPersonality,inkorg:renderInbox,kommunikation:renderComm,regler:renderRules,medlare:renderGuide,installningar:renderSettings};
+    const views={hem:renderHome,swipe:renderSwipe,personlighet:renderPersonality,inkorg:renderInbox,kommunikation:renderComm,regler:renderRules,medlare:renderGuide,installningar:renderSettings,"kom-igang":renderWelcome,familj:renderFamily};
     $("#app").innerHTML=views[pg]();
     if(pg==="swipe"){let initialX=null;const card=$("#swipe-card");if(card){card.addEventListener("pointerdown",e=>{initialX=e.clientX;});card.addEventListener("pointerup",e=>{if(initialX===null)return;const d=e.clientX-initialX;initialX=null;if(Math.abs(d)>65)answerSwipe(d>0);});}}
   }
@@ -217,6 +257,7 @@
     const f=e.target;if(!f.id)return;e.preventDefault();
     if(f.id==="message-form"){const el=$("#msg-body");const body=el.value.trim();if(!body)return;if(body.length>800)return;S.messages.push({id:Date.now()+Math.random(),from:S.role,to:other(),body,ts:Date.now(),read:false});persist();render();toast("Meddelandet sparades i denna webbläsare.");}
     if(f.id==="rule-form"){const body=$("#rule-body").value.trim();if(!body)return;S.rules.push({id:Date.now()+Math.random(),text:body.slice(0,300),by:S.role,confirmed:{teen:false,parent:false}});persist();render();toast("Förslaget lades till lokalt.");}
+    if(f.id==="onboarding-form"){const selected=f.querySelector('input[name="first-role"]:checked')?.value;const name=$("#first-name").value.trim();if(selected!=="teen"&&selected!=="parent")return;S.role=selected;S.profiles[selected].name=name.slice(0,32)||roleName(selected);S.onboarded=true;persist();navigate("hem");toast("Demoprofil skapad. Ingen riktig användare registrerades.");}
     if(f.id==="profile-form"){const role=$("#role").value;const name=$("#profile-name").value.trim();if(role!=="teen"&&role!=="parent")return;S.role=role;S.profiles[role].name=name.slice(0,32)||roleName(role);swipeHistory=[];persist();navigate("hem");toast("Demoprofil sparad.");}
     if(f.id==="nvc-form"){const v=["nvc-obs","nvc-feel","nvc-need","nvc-ask"].map(id=>$("#"+id).value.trim());if(v.every(Boolean)){exerciseOutput="När "+v[0]+" kände jag mig "+v[1]+", eftersom jag behöver "+v[2]+". Skulle vi kunna "+v[3]+"?";render();document.querySelector(".exercise-output")?.scrollIntoView({behavior:"smooth",block:"center"});}else toast("Fyll i alla fyra fälten först.");}
   });
