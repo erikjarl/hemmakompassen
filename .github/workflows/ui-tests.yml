@@ -1,0 +1,33 @@
+name: UI browser smoke tests
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  visual:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Playwright
+        run: npm install --no-save playwright@latest
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Existing functional smoke tests
+        run: node --test tests/smoke.test.cjs
+      - name: Browser tests and screenshots
+        run: node tests/visual.mjs
+      - name: Save screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hemmakompassen-ui-screenshots
+          path: artifacts/*.png
+          if-no-files-found: ignore
+          retention-days: 7
