@@ -18,7 +18,7 @@ async function waitForServer(){
   throw new Error("Local HTTP server did not start");
 }
 async function checkOverflow(page,label){
-  const widths=await page.evaluate(()=>({document:document.documentElement.scrollWidth,viewport:window.innerWidth}));
+  const widths=await page.evaluate(()=>({document:document.documentElement.scrollWidth,viewport:document.documentElement.clientWidth,visual:window.visualViewport?.width}));
   assert.ok(widths.document<=widths.viewport+2,label+": horizontal overflow "+JSON.stringify(widths));
 }
 async function capture(page,name){await page.screenshot({path:path.join(output,name),fullPage:true,animations:"disabled"});}
@@ -45,15 +45,17 @@ try{
   await checkOverflow(m.page,"Mobile homepage");
   await capture(m.page,"mobile-home.png");
   await m.page.locator(".home-connection [data-page='familj']").click();
-  assert.match(await m.page.locator("#app").innerText(),/Familjekoder fungerar inte ännu/);
+  await m.page.waitForFunction(()=>document.querySelector("#app")?.textContent?.includes("Familjekoder fungerar inte ännu"));
   await checkOverflow(m.page,"Family page");
   await capture(m.page,"mobile-family.png");
   await m.page.locator(".mobile-nav [data-page='swipe']").click();
+  await m.page.locator(".swipe-choice.like").waitFor();
   await m.page.locator(".swipe-choice.like").click();
-  assert.match(await m.page.locator("#app").innerText(),/1 av 14 påståenden/);
+  await m.page.waitForFunction(()=>document.querySelector("#app")?.textContent?.includes("1 av 14 påståenden"));
   await checkOverflow(m.page,"Swipe page");
   await capture(m.page,"mobile-swipe.png");
   await m.page.locator(".mobile-nav [data-page='personlighet']").click();
+  await m.page.locator(".question-box").first().waitFor();
   assert.equal(await m.page.locator(".question-box").count(),15);
   await checkOverflow(m.page,"Personality page");
   await capture(m.page,"mobile-personality.png");
