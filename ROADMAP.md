@@ -10,6 +10,8 @@
 - [ ] Fortsätt dela upp JavaScript i moduler och förbered separerat mock-/backend-lager.
 - [ ] Bygg autentiserings- och familjekopplingsskärmarna med tydliga fel- och väntelägen.
 - [ ] Finputsning av samtliga roller, skärmar och tillgänglighetskontroller.
+- [x] 2026-10-19: Tillgänglighet: tangentbordslänk till huvudinnehållet, fokus till huvudregionen vid navigering och kompletterande Node-/Playwright-tester.
+- [ ] Återstår: bredare granskning av skärmläsare, formulär och kontraster.
 
 **Fas 0:** Genomarbetad dataskyddspolicy, validerat testinstrument, användarvillkor och klinisk riskgranskning behövs *före* live-backend med verkliga uppgifter, men blockerar inte frontendutveckling med syntetiska demodata.
 

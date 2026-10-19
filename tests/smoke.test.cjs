@@ -17,7 +17,8 @@ function boot(saved, startHash = "#hem") {
     classList: { add() {}, remove() {} },
     querySelector() { return { textContent: "" }; },
     addEventListener() {},
-    scrollIntoView() {}
+    scrollIntoView() {},
+    focus(options) { this.focusCalls = (this.focusCalls || 0) + 1; this.lastFocusOptions = options; }
   });
   for (const sel of ["#app", "#desktop-nav", "#mobile-nav", "#toast", "#side-profile", "#first-name"]) elements[sel] = node();
   const loc = { hash: startHash };
@@ -103,4 +104,19 @@ test("Personality exercise remains explicitly non-validated", () => {
   const page = boot(savedDemo(), "#personlighet");
   assert.equal((page.html.match(/class="question-box"/g) || []).length, 15);
   assert.match(page.html, /inte ett validerat personlighetstest/);
+});
+
+test("Keyboard navigation focuses main on route changes and skip-link activation", () => {
+  const page = boot(savedDemo());
+  page.go("familj");
+  assert.equal(page.elements["#app"].focusCalls, 1);
+  assert.equal(page.elements["#app"].lastFocusOptions.preventScroll, true);
+  let prevented = false;
+  page.handlers.click({
+    target: { closest(selector) { return selector === ".skip-link" ? {} : null; } },
+    preventDefault() { prevented = true; }
+  });
+  assert.equal(prevented, true);
+  assert.equal(page.elements["#app"].focusCalls, 2);
+  assert.equal(page.elements["#app"].lastFocusOptions.preventScroll, false);
 });

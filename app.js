@@ -234,9 +234,11 @@
     $("#app").innerHTML=views[pg]();
     if(pg==="swipe"){let initialX=null;const card=$("#swipe-card");if(card){card.addEventListener("pointerdown",e=>{initialX=e.clientX;});card.addEventListener("pointerup",e=>{if(initialX===null)return;const d=e.clientX-initialX;initialX=null;if(Math.abs(d)>65)answerSwipe(d>0);});}}
   }
-  function navigate(p){if(page()===p){render();window.scrollTo({top:0,behavior:"smooth"});}else location.hash=p;}
+  function focusMain(scrollIntoView=false){const main=$("#app");if(main)main.focus({preventScroll:!scrollIntoView});}
+  function navigate(p){if(page()===p){render();window.scrollTo({top:0,behavior:"smooth"});focusMain();}else location.hash=p;}
   function answerSwipe(value){const idx=STATEMENTS.findIndex((q,i)=>!Object.prototype.hasOwnProperty.call(S.swipes[S.role],i));if(idx<0)return;S.swipes[S.role][idx]=value;swipeHistory.push({role:S.role,index:idx});persist();render();}
   document.addEventListener("click",function(e){
+    if(e.target.closest(".skip-link")){e.preventDefault();focusMain(true);return;}
     const pageButton=e.target.closest("[data-page]");if(pageButton){e.preventDefault();navigate(pageButton.dataset.page);return;}
     const a=e.target.closest("[data-action]");if(!a)return;
     const act=a.dataset.action;
@@ -261,6 +263,6 @@
     if(f.id==="profile-form"){const role=$("#role").value;const name=$("#profile-name").value.trim();if(role!=="teen"&&role!=="parent")return;S.role=role;S.profiles[role].name=name.slice(0,32)||roleName(role);swipeHistory=[];persist();navigate("hem");toast("Demoprofil sparad.");}
     if(f.id==="nvc-form"){const v=["nvc-obs","nvc-feel","nvc-need","nvc-ask"].map(id=>$("#"+id).value.trim());if(v.every(Boolean)){exerciseOutput="När "+v[0]+" kände jag mig "+v[1]+", eftersom jag behöver "+v[2]+". Skulle vi kunna "+v[3]+"?";render();document.querySelector(".exercise-output")?.scrollIntoView({behavior:"smooth",block:"center"});}else toast("Fyll i alla fyra fälten först.");}
   });
-  window.addEventListener("hashchange",()=>{render();window.scrollTo(0,0);});
+  window.addEventListener("hashchange",()=>{render();window.scrollTo(0,0);focusMain();});
   render();
 })();

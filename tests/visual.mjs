@@ -62,10 +62,15 @@ try{
   await m.context.close();
   const d=await freshContext({viewport:{width:1440,height:900},deviceScaleFactor:1});
   assert.equal(await d.page.locator(".welcome-intro").count(),1);
+  await d.page.keyboard.press("Tab");
+  assert.equal(await d.page.evaluate(()=>document.activeElement?.classList.contains("skip-link")),true,"Skip link should be first in tab order");
+  await d.page.keyboard.press("Enter");
+  assert.equal(await d.page.evaluate(()=>document.activeElement?.id),"app","Skip link should focus main");
   await checkOverflow(d.page,"Desktop onboarding");
   await capture(d.page,"desktop-onboarding.png");
   await d.page.locator("#first-name").fill("Provtonåring");
   await d.page.locator("#onboarding-form button[type=submit]").click();
+  await d.page.waitForFunction(()=>document.activeElement?.id==="app");
   assert.equal(await d.page.locator(".desktop-nav .nav-item").count(),7);
   await checkOverflow(d.page,"Desktop homepage");
   await capture(d.page,"desktop-home.png");
