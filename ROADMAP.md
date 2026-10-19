@@ -1,5 +1,13 @@
 # Hemmakompassen — utvecklingsplan (2026-10-17)
 
+## 19 oktober 2026 – Automatisk testning och bildgranskning
+
+- [x] Bekräftat att Github Actions-artifact med sju Playwright-PNG kan laddas ned via ansluten GitHub-tjänst och öppnas som verkliga bilder i arbetsmiljön.
+- [x] Inspekterat mobil och desktop: mörkt responsivt tema fungerar; tidigare skärmbilder visade den fokuserbara "Hoppa till huvudinnehållet"-länken och en tillfällig demoavisering ovanpå innehåll. Det kan vara ett screenshot-tillstånd (fokus/scroll), inte nödvändigtvis ett permanent produktionsfel.
+- [x] Förbättrat Playwright för stabila skärmbilder: återställ scroll, släpp tangentbordsfokus, invänta toast; testa att skip-länken är dold utan fokus. Skapa även visual-audit.json i screenshot-artifact.
+- [ ] Bekräfta ny GitHub Actions-körning för den här förbättringen, granska nya mobil-/datorbilder och åtgärda eventuella fel.
+- [ ] Fortsätt visuell kvalitetsgranskning i de schemalagda utvecklings- och dagsrapportkörningarna. Kontrollera den verkliga bilden, inte bara grön CI-status.
+
 ## Påbörjat 18 oktober 2026 – Fas 1A (utan backend)
 
 - [x] Ny introduktionssida för en besökare utan demoprofil.

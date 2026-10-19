@@ -28,6 +28,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: hemmakompassen-ui-screenshots
-          path: artifacts/*.png
+          path: artifacts/*
           if-no-files-found: ignore
           retention-days: 7

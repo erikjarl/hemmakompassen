@@ -9,6 +9,7 @@ const output=path.resolve("artifacts");
 const server=spawn("python3",["-m","http.server",String(port),"--bind","127.0.0.1"],{stdio:"ignore"});
 let browser;
 const errors=[];
+const captureRecords=[];
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function waitForServer(){
   for(let i=0;i<50;i++){
@@ -21,7 +22,25 @@ async function checkOverflow(page,label){
   const widths=await page.evaluate(()=>({document:document.documentElement.scrollWidth,viewport:document.documentElement.clientWidth,visual:window.visualViewport?.width}));
   assert.ok(widths.document<=widths.viewport+2,label+": horizontal overflow "+JSON.stringify(widths));
 }
-async function capture(page,name){await page.screenshot({path:path.join(output,name),fullPage:true,animations:"disabled"});}
+async function capture(page,name){
+  // Standardize screenshots, and fail if transient UI obscures the layout.
+  await page.evaluate(()=>{
+    if(document.activeElement instanceof HTMLElement)document.activeElement.blur();
+    window.scrollTo({top:0,behavior:"instant"});
+  });
+  await page.waitForFunction(()=>!document.querySelector("#toast")?.classList.contains("show"),null,{timeout:8000});
+  const overlays=await page.evaluate(()=>{
+    const skip=document.querySelector(".skip-link");
+    const toast=document.querySelector("#toast");
+    const box=skip?.getBoundingClientRect();
+    return {skipVisible:!!box&&box.bottom>0,toastVisible:!!toast?.classList.contains("show"),scrollY:window.scrollY};
+  });
+  assert.ok(!overlays.skipVisible,name+": unfocused skip-link appears onscreen");
+  assert.ok(!overlays.toastVisible,name+": transient toast remains visible");
+  assert.ok(overlays.scrollY<=1,name+": screenshot is not at top of page");
+  await page.screenshot({path:path.join(output,name),fullPage:true,animations:"disabled"});
+  captureRecords.push({file:name,viewport:page.viewportSize(),...overlays});
+}
 async function freshContext(options){
   const context=await browser.newContext({...options,locale:"sv-SE",reducedMotion:"reduce"});
   const page=await context.newPage();
@@ -76,6 +95,14 @@ try{
   await capture(d.page,"desktop-home.png");
   await d.context.close();
   assert.deepEqual(errors,[],"Browser errors: "+errors.join("; "));
-  console.log("Browser smoke tests passed. 7 screenshots written to artifacts/.");
+  await fs.writeFile(path.join(output,"visual-audit.json"),JSON.stringify({
+    purpose:"Playwright responsive visual review",
+    commit:process.env.GITHUB_SHA||"local",
+    generatedAt:new Date().toISOString(),
+    screens:captureRecords,
+    browserErrors:errors,
+    note:"Automated checks passed; screenshots still require actual visual review."
+  },null,2)+"\n");
+  console.log("Browser smoke tests passed. "+captureRecords.length+" screenshots and visual-audit.json saved.");
 }catch(error){console.error(error);process.exitCode=1;}
 finally{if(browser)await browser.close();server.kill();}

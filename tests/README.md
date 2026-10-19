@@ -14,3 +14,5 @@ Playwright öppnar en lokal webbserver och testar mobil (390 px) och dator (1440
 Testerna använder endast påhittade testprofiler. Bilderna innehåller inte riktiga användaruppgifter.
 
 Viktigt: automatiska tester verifierar funktion och vissa layoutmått. Bilderna måste också granskas visuellt – skärmbildernas existens garanterar inte god formgivning.
+
+Webbläsartesterna återställer scrollposition, släpper tangentbordsfokus och väntar ut tillfälliga aviseringar innan skärmbilder tas. En ofokuserad tangentbordslänk får inte ligga över innehållet. Artifact innehåller också `visual-audit.json` (commit, bildnamn, viewport och automatiska layoutkontroller). En grön körning innebär inte automatisk visuell AI-granskning; den schemalagda uppgiften ska ladda ned ZIP och verkligen granska PNG-bilderna.
