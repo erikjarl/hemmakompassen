@@ -1,5 +1,15 @@
 # Hemmakompassen — utvecklingsplan (2026-10-17)
 
+## Arbetsrutin: GitHub-commits och publicering (20 oktober 2026)
+
+- Arbeta direkt mot `main` så att projektägaren kan granska resultatet på den ordinarie GitHub Pages-adressen från telefonen. Skapa inte testbrancher som standard.
+- Använd den anslutna GitHub-tjänsten via `functions.exec`. Kontrollera vid varje körning att skrivfunktionerna faktiskt är anropbara, t.ex. `typeof tools.mcp__GitHub__update_file === "function"`; att en funktion finns i verktygslistan räcker inte som verifiering.
+- Om ett anrop ger `TypeError: ... is not a function`, kontrollera tillgängligheten på nytt i en **ny** `functions.exec`-körning och försök igen efter att ha hämtat aktuell fil och blob-SHA. Felet har tidigare varit tillfälligt. Påstå inte att behörigheten saknas utan ett faktiskt GitHub-svar.
+- Före ändring: hämta senaste `main`, relevant fil och dess blob-SHA. Gör en liten, avgränsad ändring. Kör tillgängliga lokala tester och syntax-/strukturkontroller. Redovisa tydligt om fullständiga tester inte kunde köras.
+- För en enda textfil kan `mcp__GitHub__update_file` användas med `branch:"main"` och aktuell blob-SHA. För flera filer: använd GitHub-träd och commit med aktuell parent och uppdatera `main` med `update_ref`, `expected_sha` och utan force-push. Vid konflikt: läs om `main`, granska diff och testa igen; skriv aldrig över andras ändringar.
+- Efter skrivning: verifiera att den nya committen ligger på `main`. Kontrollera GitHub Actions och Pages-publicering; kontrollera Playwright-artifact och öppna de faktiska PNG-bilderna när tillgängliga. En commit är **inte** bevis för att Pages redan är live.
+- Vid kvarstående fel: spara inte påhittad status, skilj verktygsfel från GitHub-behörighetsfel och rapportera exakt vad som fungerade och inte fungerade. Ändra inte säkerhets- eller dataskyddsgränser för att få en push att lyckas.
+
 ## 19 oktober 2026 – Automatisk testning och bildgranskning
 
 - [x] Bekräftat att Github Actions-artifact med sju Playwright-PNG kan laddas ned via ansluten GitHub-tjänst och öppnas som verkliga bilder i arbetsmiljön.
