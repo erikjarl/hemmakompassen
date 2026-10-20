@@ -58,7 +58,7 @@ html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text)
 .feature-card{min-width:0;overflow:hidden}
 .feature-card h3{max-width:100%;overflow-wrap:anywhere;hyphens:auto}
 .mobile-nav .nav-item{min-width:0}
-.mobile-nav .nav-item>span:not(.nav-count){display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mobile-nav .nav-item>span:not(.nav-count){display:block;max-width:100%;overflow-wrap:anywhere;white-space:normal;text-align:center;line-height:1.2}
 body:has(.welcome-intro) .mobile-nav{display:none}
 @media(max-width:580px){.feature-card h3{font-size:19px;line-height:1.25}}
 
