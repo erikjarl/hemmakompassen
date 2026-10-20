@@ -30,6 +30,40 @@
 
 **Arbetssätt:** Följ faserna i ordning. Märkning: **[A] Assistenten** kan göra uppgiften (med GitHubåtkomst och nödvändiga verktyg); **[E] Erik** måste fatta ett beslut, skaffa konto, godkänna något eller ge konfiguration; **[B] Båda**. `BLOCKERAR` markerar ett villkor som måste vara uppfyllt för nästa beroende fas.
 
+
+## Produktvision och prioriterad funktionskö (20 oktober 2026)
+
+**Ansvar:** Assistenten ansvarar för att skapa innehåll, skriva kod, tester, UI-texter och dokumentation och föra uppgifterna framåt. Projektägaren bidrar med idéer, granskar avgörande psykologiska/produktmässiga vägval och gör endast sådant som kräver dennes behörighet eller beslut. Alla nedanstående punkter är planerade, inte redan implementerade. Frontenddemo med syntetiska data kan byggas före säker backend.
+
+### P1 – Gillaswajpen: gemensamma insikter
+- [ ] **[A]** Visa i gemensam resultatvy endast kort där BÅDA har svarat och valt samma alternativ. Visa inte oenighet eller ensidiga svar i den gemensamma sammanfattningen. Definiera tydligt hur avböjda kort hanteras; ett gemensamt nej är inte automatiskt ett gemensamt intresse.
+- [ ] **[A]** Utforma separata, korta och begripliga resultatsammanfattningar för förälder och tonåring: identifiera återkommande teman, möjliga problemområden, styrkor, samt konkreta samtalsöppningar och gemensamma lösningar. Skilj observationer från hypoteser och undvik överdrivna psykologiska slutsatser.
+- [ ] **[A]** Skapa AI-genererad sammanfattning i liveversionen med endast behörig, överenskommen information. Bygg först en tydligt märkt regelbaserad mock-sammanfattning i frontend utan verklig AI eller känsliga data.
+- [ ] **[A]** Utöka och redigera allmänna startkortleken med fokus på relation, svårigheter och möjligheter; dimensionera och användartesta för cirka 10–15 minuters effektiv swajpning för vardera personen. Antal kort bestäms efter provning, inte påhittad tidsuppskattning.
+- [ ] **[A]** Visa tydliga kort som följer fingret och animeras höger/vänster (Tinder-liknande), med likvärdiga synliga knappar, tangentbordsstöd och stöd för reducerad rörelse.
+- [ ] **[A]** Lås upp temakortlekar först när BÅDA avslutat hela första allmänna kortleken. Föreslagna lekar: Samtalsämnen, Aktiviteter tillsammans, Regler till Schyssta listan, Sätt att visa uppskattning, Svåra situationer och återhämtning, Små gemensamma förändringar. Korten ska vara konkreta, respektfulla och relevanta för båda.
+- [ ] **[A]** Spara varje kortleks resultat och rollanpassade sammanfattning för senare återläsning; visa status och möjlighet att återvända.
+- [ ] **[A]** Definiera datamodell och behörighetskontroller så AI-medlaren kan använda enbart tillåtna gemensamma kortresultat/sammanfattningar som bakgrund i varje privat chatt, utan att den andra personens privata AI-konversation exponeras.
+- [ ] **[B]** Granska frågornas psykologiska relevans, trygghet, formuleringar och sammanfattningarnas kvalitet innan verkliga användare.
+
+### P1 – Schyssta listan: förslag och ömsesidighet
+- [ ] **[A]** Från kortleken 'Regler till Schyssta listan': visa automatiskt regler som båda gillat som klickbara FÖRSLAG i Schyssta listan. De ska inte bli bindande överenskommelser förrän båda uttryckligen bekräftat.
+- [ ] **[A]** Stöd egna fritextförslag, motpartens godkännande/avslag och tydliga statusar; inget förslag får presenteras som ömsesidigt antaget utan bådas accept.
+- [ ] **[A]** Innan föräldern skickar regel-/överenskommelseförslag: kort påminnelse om att först prata med tonåringen och gemensamt komma överens om att skapa listan; länk till förälderns MI-information.
+- [ ] **[A]** Bygg och testa detta först med syntetiska demodata, senare med säker parvis synkning och behörigheter.
+
+### P1 – Kommunikationsråd för förälder: motiverande samtal (MI)
+- [ ] **[A]** Skapa en särskild MI-informationssida i föräldervyn (inte tonårsvyn), nåbar från Kommunikationsråd och förälderns regel-förslagsflöde.
+- [ ] **[A]** Skriv kort, källgranskad psykoedukation: öppna frågor, reflektioner/speglingar, bekräftelser, sammanfattningar, autonomistöd, att möta motstånd utan argumentation och att be om lov/bjuda in innan gemensam problemlösning. Beskriv hur föräldern kan adressera problem utan att övergå för snabbt till råd och lösningar.
+- [ ] **[A]** Ge ett konkret exempel på samtalssekvens: lyssna och spegla → utforska perspektiv och behov → fråga om lov att ta upp oro → bjud in till gemensam problemlösning. MI ska inte framställas som manipulation, garanti för förändring eller evidens för appens effekt.
+- [ ] **[B]** Granska psykologisk precision, tillgängligt språk och vetenskapliga källor innan publicering av pedagogiskt innehåll.
+
+### Genomförandeordning och säkerhetsgränser
+1. Först mobilnavigering och befintliga visuella/testrelaterade brister, därefter allmänna swajpkort och resultatlogik.
+2. Därefter temakortlekar, Schyssta listan-integration och MI-innehåll.
+3. Därefter rollanpassad AI-sammanfattning med säker backend, behörighetsgranskning och systematisk kvalitetstestning.
+4. Inga verkliga minderårigdata eller privata samtal i publik demo, CI-artifacts eller externa AI-anrop. Dokumentera produktantaganden och verifiera dem med användartester.
+
 ## FAS 0 — Beslut och integritetskrav (före persondata)
 
 - [ ] **[E]** Fastställ målgrupp (13–19 eller 13–20), hur mycket som ska delas och om båda användarna måste godkänna kopplingen.
