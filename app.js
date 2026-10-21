@@ -46,6 +46,7 @@
     ["Gemenskap","Jag uppskattar små stunder tillsammans även när vi inte pratar om något särskilt."],
     ["Uppskattning","Jag vill att vi oftare berättar vad vi uppskattar hos varandra."]
   ];
+  const THEME_DECKS=[{"id":"samtal","title":"Samtalsämnen","cards":["Vad som varit roligt den senaste veckan","Hur vi har det i skolan eller på jobbet","Vad vi vill göra under nästa ledighet","Hur vi vill prata om sociala medier","Vad vi vill lära oss","Hur vi visar att vi lyssnar","Vad som gör oss stressade","Vad vi drömmer om framöver"]},{"id":"aktiviteter","title":"Aktiviteter tillsammans","cards":["Laga mat tillsammans","Ta en promenad ihop","Se en film tillsammans","Spela ett spel","Prova en ny aktivitet","Göra en utflykt","Visa varandra favoritmusik","Skapa något tillsammans"]},{"id":"regler","title":"Regler för Schyssta listan","cards":["Vi knackar innan vi går in i varandras rum.","Vi lyssnar färdigt innan vi svarar.","Vi får pausa gräl och bestämmer när vi pratar vidare.","Vi frågar innan vi lånar varandras saker.","Vi pratar om hur sysslorna ska fördelas.","Vi berättar när planer som berör andra ändras.","Vi kommer överens om tider för sömn och hemkomst.","Vi kan ompröva regler som inte fungerar.","Vi bestämmer gemensamma mobilfria stunder.","Vi försöker prata utan att höja rösten.","Vi får säga till när något känns orättvist.","Vi försöker reda ut saker efter ett bråk."]},{"id":"uppskattning","title":"Sätt att visa uppskattning","cards":["Säga tack för små saker","Fråga hur den andra mår","Skicka ett vänligt meddelande","Göra något hjälpsamt","Ge en kram när båda vill","Berätta vad man uppskattar","Uppmärksamma den andras ansträngning","Ge varandra odelad uppmärksamhet"]},{"id":"aterhamtning","title":"Svåra situationer och återhämtning","cards":["Ta en paus när vi blir arga","Fråga om den andra vill ha råd","Säga förlåt när vi sårat någon","Prata vidare när vi lugnat oss","Berätta vad vi behöver","Komma överens om en paussignal","Be om hjälp när vi kör fast","Visa att vi vill bli sams"]},{"id":"forandring","title":"Små gemensamma förändringar","cards":["Äta en måltid tillsammans","Avsätta tio minuter för samtal","Fråga innan vi ger råd","Prata om veckans planer","Göra något roligt varje månad","Ha en stund utan mobiler","Utvärdera en regel efter två veckor","Berätta något som fungerat bra"]}];
   const ITEMS=[
     ["E","Jag trivs när jag får träffa nya människor.",false],
     ["E","Jag föredrar nästan alltid att vara för mig själv.",true],
@@ -82,10 +83,11 @@
     ["Utforska behovet","Vad var viktigt för dig i situationen?","... eftersom jag behöver ..."],
     ["Be om något konkret","Formulera en möjlig och frivillig önskan.","Skulle vi kunna ...?"]
   ];
-  function newState(){return {version:1,onboarded:false,role:"teen",profiles:{teen:{name:""},parent:{name:""}},swipes:{teen:{},parent:{}},personality:{teen:{},parent:{}},messages:[],rules:[]};}
+  function newState(){return {version:1,onboarded:false,role:"teen",profiles:{teen:{name:""},parent:{name:""}},swipes:{teen:{},parent:{}},personality:{teen:{},parent:{}},messages:[],rules:[],themeSwipes:{teen:{},parent:{}}};}
   let S=newState();
-  try{const x=JSON.parse(localStorage.getItem(STORAGE_KEY)||"null");if(x&&x.version===1&&x.profiles&&x.swipes&&x.personality&&Array.isArray(x.messages)&&Array.isArray(x.rules)){S=x;if(typeof S.onboarded!=="boolean")S.onboarded=true;}}catch(e){}
+  try{const x=JSON.parse(localStorage.getItem(STORAGE_KEY)||"null");if(x&&x.version===1&&x.profiles&&x.swipes&&x.personality&&Array.isArray(x.messages)&&Array.isArray(x.rules)){S=x;if(typeof S.onboarded!=="boolean")S.onboarded=true;if(!S.themeSwipes)S.themeSwipes={teen:{},parent:{}};for(const r of ["teen","parent"])if(!S.themeSwipes[r])S.themeSwipes[r]={};}}catch(e){}
   let swipeHistory=[];
+  let activeDeck="general";
   let activeGuide=-1;
   let exerciseOutput="";
   const $=sel=>document.querySelector(sel);
@@ -165,18 +167,26 @@
       sectionTitle("Ett steg i taget")+
       '<div class="panel"><span class="eyebrow">SMÅ SAMTAL KAN GÖRA SKILLNAD</span><h3 class="serif" style="font-size:27px;margin:14px 0">Börja med nyfikenhet, inte med att ha rätt.</h3><p>Välj en fråga, låt varandra tala till punkt och jämför vad ni tänkte. Ni behöver inte vara överens för att förstå varandra bättre.</p><button class="btn btn-outline" data-page="swipe">Börja swajpa '+ico("arrow")+'</button></div>';
   }
+  const unlocked=()=>["teen","parent"].every(r=>STATEMENTS.every((q,i)=>Object.hasOwn(S.swipes[r],i)));
+  const deck=id=>THEME_DECKS.find(d=>d.id===id);
+  const cards=id=>id==="general"?STATEMENTS:deck(id).cards.map(t=>["Tema",t]);
+  const answers=(role,id)=>id==="general"?S.swipes[role]:(S.themeSwipes[role][id]||{});
+  const matchedRules=()=>deck("regler").cards.map((text,i)=>({text,i})).filter(q=>answers("teen","regler")[q.i]===true&&answers("parent","regler")[q.i]===true);
   function renderSwipe(){
-    const a=S.swipes[S.role];const idx=STATEMENTS.findIndex((q,i)=>!Object.prototype.hasOwnProperty.call(a,i));const n=swipeCount(S.role);
-    let html=header("Gillaswajpen","Tycker du så här eller inte? Era svar kan bli en början på ett samtal.","LÄR KÄNNA VARANDRA")+
-      '<div class="info-card">'+ico("info")+'<p><strong>Demo:</strong> Svaren lagras bara i denna webbläsare. De skickas inte till någon motpart. Växla demoprofil under Inställningar för att testa jämförelser.</p></div>'+
-      '<div style="margin-top:26px"><div class="progress-top"><span>'+n+' av '+STATEMENTS.length+' påståenden</span><span>'+Math.round(n/STATEMENTS.length*100)+' %</span></div><div class="progress-bar"><span class="progress-fill" style="width:'+(n/STATEMENTS.length*100)+'%"></span></div></div>';
-    if(idx===-1){html+='<div class="panel completion">'+ico("check")+'<h2>Du har svarat på allt!</h2><p>Din del av swajpen är klar. Testa den andra demoprofilen för att se likheter och skillnader.</p><div class="row"><button class="btn btn-primary" data-action="review-swipes">Se svaren</button><button class="btn btn-ghost" data-action="reset-swipes">Börja om</button></div></div>';}
-    else{const s=STATEMENTS[idx];html+='<div class="swipe-card" id="swipe-card" tabindex="0" role="group" aria-label="Swajpkort. Svep höger för stämmer och vänster för stämmer inte, eller använd piltangenterna."><span class="swipe-stamp stamp-no" aria-hidden="true">STÄMMER INTE</span><span class="swipe-stamp stamp-yes" aria-hidden="true">STÄMMER</span><span class="eyebrow">'+esc(s[0])+'</span><blockquote>'+esc(s[1])+'</blockquote><span class="swipe-number">PÅSTÅENDE '+(idx+1)+' / '+STATEMENTS.length+'</span></div>'+
-      '<div class="swipe-actions"><button class="swipe-choice" data-action="swipe-no" aria-label="Stämmer inte">'+ico("x")+'</button><button class="swipe-choice like" data-action="swipe-yes" aria-label="Stämmer">'+ico("heart")+'</button></div><p class="swipe-hint">Vänster = stämmer inte · Höger = stämmer · eller använd knapparna</p>'+(swipeHistory.length?'<div class="row" style="justify-content:center"><button class="quiet-link" data-action="undo-swipe">'+ico("back")+' Ångra senaste</button></div>':"");}
-    html+=sectionTitle("Era svar");
-    const both=Object.keys(S.swipes[other()]).length;
-    if(!n&&!both){html+='<div class="empty">'+ico("heart")+'<h3>Inga svar ännu</h3><p>När ni har svarat visas resultaten här.</p></div>';}
-    else{html+='<div class="swipe-review">'+STATEMENTS.map((s,i)=>{const x=S.swipes[S.role][i],y=S.swipes[other()][i];if(x===undefined&&y===undefined)return "";return '<div class="answer-row"><span>'+esc(s[1])+'</span><div><div class="mini muted">Ditt svar: '+(x===undefined?"—":x?"Ja":"Nej")+'</div><div class="mini muted">Andra demon: '+(y===undefined?"—":y?"Ja":"Nej")+'</div>'+(x!==undefined&&y!==undefined?'<span class="tag '+(x===y?"":"no")+'">'+(x===y?"Lika":"Olika")+'</span>':"")+'</div></div>';}).join("")+'</div>';}
+    if(activeDeck!=="general"&&!unlocked())activeDeck="general";
+    const id=activeDeck,arr=cards(id),a=answers(S.role,id),idx=arr.findIndex((q,i)=>!Object.hasOwn(a,i)),n=Object.keys(a).length;
+    let html=header("Gillaswajpen","Upptäck sådant ni båda vill prata om eller prova.","LÄR KÄNNA VARANDRA")+
+    '<div class="info-card">'+ico("info")+'<p><strong>Demo:</strong> Svar lagras bara i den här webbläsaren. Gemensamma ja är samtalsförslag, inte beslut.</p></div>'+
+    sectionTitle("Välj kortlek")+
+    '<div class="tile-grid"><button class="feature-card" data-action="deck" data-id="general"><h3>Allmänna kortleken</h3><p>'+Object.keys(S.swipes[S.role]).length+' / '+STATEMENTS.length+'</p></button>'+
+    THEME_DECKS.map(d=>'<button class="feature-card" data-action="deck" data-id="'+d.id+'" '+(!unlocked()?'disabled':'')+'><h3>'+esc(d.title)+'</h3><p>'+(unlocked()?Object.keys(answers(S.role,d.id)).length+' / '+d.cards.length+' kort':'Låst tills båda avslutat allmänna kortleken')+'</p></button>').join("")+'</div>'+
+    sectionTitle(id==="general"?"Allmänna kortleken":deck(id).title)+
+    '<div class="progress-top"><span>'+n+' av '+arr.length+' kort</span><span>'+Math.round(n/arr.length*100)+' %</span></div><div class="progress-bar"><span class="progress-fill" style="width:'+(100*n/arr.length)+'%"></span></div>';
+    if(idx<0)html+='<div class="panel completion"><h2>Du är klar!</h2><p>Välj en annan kortlek eller invänta den andra demoprofilens svar.</p><button class="btn btn-ghost" data-action="reset-swipes">Börja om med denna kortlek</button></div>';
+    else html+='<div class="swipe-card" id="swipe-card" tabindex="0" role="group" aria-label="Svep höger för ja eller vänster för nej"><span class="swipe-stamp stamp-no" aria-hidden="true">NEJ</span><span class="swipe-stamp stamp-yes" aria-hidden="true">JA</span><span class="eyebrow">'+esc(arr[idx][0])+'</span><blockquote>'+esc(arr[idx][1])+'</blockquote><span class="swipe-number">KORT '+(idx+1)+' / '+arr.length+'</span></div><div class="swipe-actions"><button class="swipe-choice" data-action="swipe-no" aria-label="Nej">'+ico("x")+'</button><button class="swipe-choice like" data-action="swipe-yes" aria-label="Ja">'+ico("heart")+'</button></div><p class="swipe-hint">Vänster = nej · Höger = ja</p>'+(swipeHistory.some(h=>h.role===S.role&&h.deck===id)?'<button class="quiet-link" data-action="undo-swipe">Ångra senaste</button>':"");
+    const shared=arr.filter((q,i)=>answers("teen",id)[i]===true&&answers("parent",id)[i]===true);
+    html+=sectionTitle("Gemensamma ja")+(shared.length?'<div class="swipe-review">'+shared.map(q=>'<div class="answer-row"><span>'+esc(q[1])+'</span><span class="tag">Båda valde ja</span></div>').join("")+'</div>':'<div class="empty"><p>Här visas endast sådant båda svarat ja på.</p></div>');
+    if(id==="regler")html+='<button class="btn btn-outline" data-page="regler">Till Schyssta listan</button>';
     return html;
   }
   function renderPersonality(){
@@ -222,6 +232,8 @@
   function renderRules(){
     return header("Schyssta listan","Hitta regler och överenskommelser som båda kan vara med och påverka.","VÅRT GEMENSAMMA ANSVAR")+
       '<div class="info-card">'+ico("info")+'<p><strong>Demoläge:</strong> Förslag och godkännanden finns bara på denna enhet. Ett godkännande här är inte en verifierad underskrift från en annan person.</p></div>'+
+      sectionTitle("Regelförslag från Gillaswajpen")+
+      (matchedRules().length?'<div class="rules">'+matchedRules().map(q=>'<div class="rule-row"><strong>'+esc(q.text)+'</strong>'+(S.rules.some(r=>r.sourceDeck==="regler"&&r.sourceIndex===q.i)?'<span class="tag neutral">Redan föreslagen</span>':'<button class="btn btn-small btn-outline" data-action="propose-swipe-rule" data-id="'+q.i+'">Lägg som förslag</button>')+'</div>').join("")+'</div>':'<p>Inga gemensamt gillade regelförslag ännu.</p>')+
       sectionTitle("Föreslå en överenskommelse")+
       '<form id="rule-form" class="panel"><div class="field"><label for="rule-body">Vad vill du att ni ska prova?</label><textarea id="rule-body" required maxlength="300" placeholder="Exempel: Vi lägger undan mobilerna under middagen."></textarea></div><button class="btn btn-primary" type="submit">'+ico("plus")+' Lägg till förslag</button></form>'+
       sectionTitle("Era överenskommelser")+
@@ -294,17 +306,19 @@
   }
   function focusMain(scrollIntoView=false){const main=$("#app");if(main)main.focus({preventScroll:!scrollIntoView});}
   function navigate(p){if(page()===p){render();window.scrollTo({top:0,behavior:"smooth"});focusMain();}else location.hash=p;}
-  function answerSwipe(value){const idx=STATEMENTS.findIndex((q,i)=>!Object.prototype.hasOwnProperty.call(S.swipes[S.role],i));if(idx<0)return;S.swipes[S.role][idx]=value;swipeHistory.push({role:S.role,index:idx});persist();render();}
+  function answerSwipe(value){const id=activeDeck;if(id!=="general"&&!unlocked())return;const idx=cards(id).findIndex((q,i)=>!Object.hasOwn(answers(S.role,id),i));if(idx<0)return;if(id!=="general"&&!S.themeSwipes[S.role][id])S.themeSwipes[S.role][id]={};answers(S.role,id)[idx]=value;swipeHistory.push({role:S.role,deck:id,index:idx});persist();render();}
   document.addEventListener("click",function(e){
     if(e.target.closest(".skip-link")){e.preventDefault();focusMain(true);return;}
     const pageButton=e.target.closest("[data-page]");if(pageButton){e.preventDefault();navigate(pageButton.dataset.page);return;}
     const a=e.target.closest("[data-action]");if(!a)return;
     const act=a.dataset.action;
+    if(act==="deck"){if(a.dataset.id==="general"||(unlocked()&&deck(a.dataset.id))){activeDeck=a.dataset.id;render();}return;}
     if(act==="swipe-yes"||act==="swipe-no")answerSwipe(act==="swipe-yes");
-    else if(act==="undo-swipe"){const last=swipeHistory.pop();if(last&&last.role===S.role){delete S.swipes[S.role][last.index];persist();render();}}
+    else if(act==="undo-swipe"){const i=swipeHistory.findLastIndex(h=>h.role===S.role&&h.deck===activeDeck);if(i>=0){const last=swipeHistory.splice(i,1)[0];delete answers(S.role,last.deck)[last.index];persist();render();}}
     else if(act==="review-swipes"){document.querySelector(".swipe-review")?.scrollIntoView({behavior:"smooth",block:"start"});}
-    else if(act==="reset-swipes"){if(confirm("Vill du ta bort den här demoprofilens swajpsvar?")){S.swipes[S.role]={};swipeHistory=[];persist();render();}}
+    else if(act==="reset-swipes"){if(confirm("Vill du ta bort svaren i denna kortlek?")){if(activeDeck==="general")S.swipes[S.role]={};else S.themeSwipes[S.role][activeDeck]={};swipeHistory=[];persist();render();}}
     else if(act==="reset-personality"){if(confirm("Vill du ta bort den här demoprofilens testsvar?")){S.personality[S.role]={};persist();render();}}
+    else if(act==="propose-swipe-rule"){const i=Number(a.dataset.id),q=matchedRules().find(q=>q.i===i);if(q&&!S.rules.some(r=>r.sourceDeck==="regler"&&r.sourceIndex===i)){S.rules.push({id:Date.now()+Math.random(),text:q.text,by:S.role,sourceDeck:"regler",sourceIndex:i,confirmed:{teen:false,parent:false}});persist();render();}}
     else if(act==="approve-rule"){const rule=S.rules.find(r=>String(r.id)===a.dataset.id);if(rule){rule.confirmed[S.role]=true;persist();render();toast("Bekräftat i den lokala demon.");}}
     else if(act==="guide"){activeGuide=Number(a.dataset.id);render();document.querySelector(".guide-result")?.scrollIntoView({behavior:"smooth",block:"nearest"});}
     else if(act==="clear-demo"){if(confirm("Radera samtliga lokala demodata från denna webbläsare?")){S=newState();swipeHistory=[];activeGuide=-1;exerciseOutput="";persist();navigate("hem");toast("Lokala demodata raderade.");}}
