@@ -64,3 +64,13 @@ body:has(.welcome-intro) .mobile-nav{display:none}
 
 .skip-link{position:fixed;top:12px;left:12px;z-index:1000;transform:translateY(-200%);padding:12px 18px;border-radius:10px;background:var(--accent);color:#111;font-weight:700}
 .skip-link:focus,.skip-link:focus-visible{transform:translateY(0)}
+
+/* Interaktiv kortswajp: pekare, visuell återkoppling och tillgänglig tangentbordsstyrning */
+.swipe-card{user-select:none;cursor:grab;will-change:transform;transition:transform .26s cubic-bezier(.2,.75,.3,1),opacity .26s ease;outline-offset:5px}
+.swipe-card.swipe-dragging{transition:none;cursor:grabbing}
+.swipe-card:focus-visible{outline:3px solid #f5aa29}
+.swipe-stamp{position:absolute;top:20px;padding:7px 12px;border:3px solid currentColor;border-radius:10px;font-weight:800;letter-spacing:.08em;font-size:clamp(12px,2vw,20px);opacity:0;pointer-events:none;transition:opacity .1s ease}
+.stamp-yes{left:20px;color:#87e6a6;transform:rotate(-12deg)}
+.stamp-no{right:20px;color:#ff9b9b;transform:rotate(12deg)}
+.swipe-card.swipe-yes .stamp-yes,.swipe-card.swipe-no .stamp-no{opacity:1}
+@media(prefers-reduced-motion:reduce){.swipe-card,.swipe-stamp{transition:none!important}}

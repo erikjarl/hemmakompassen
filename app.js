@@ -151,7 +151,7 @@
       '<div class="info-card">'+ico("info")+'<p><strong>Demo:</strong> Svaren lagras bara i denna webbläsare. De skickas inte till någon motpart. Växla demoprofil under Inställningar för att testa jämförelser.</p></div>'+
       '<div style="margin-top:26px"><div class="progress-top"><span>'+n+' av '+STATEMENTS.length+' påståenden</span><span>'+Math.round(n/STATEMENTS.length*100)+' %</span></div><div class="progress-bar"><span class="progress-fill" style="width:'+(n/STATEMENTS.length*100)+'%"></span></div></div>';
     if(idx===-1){html+='<div class="panel completion">'+ico("check")+'<h2>Du har svarat på allt!</h2><p>Din del av swajpen är klar. Testa den andra demoprofilen för att se likheter och skillnader.</p><div class="row"><button class="btn btn-primary" data-action="review-swipes">Se svaren</button><button class="btn btn-ghost" data-action="reset-swipes">Börja om</button></div></div>';}
-    else{const s=STATEMENTS[idx];html+='<div class="swipe-card" id="swipe-card"><span class="eyebrow">'+esc(s[0])+'</span><blockquote>'+esc(s[1])+'</blockquote><span class="swipe-number">PÅSTÅENDE '+(idx+1)+' / '+STATEMENTS.length+'</span></div>'+
+    else{const s=STATEMENTS[idx];html+='<div class="swipe-card" id="swipe-card" tabindex="0" role="group" aria-label="Swajpkort. Svep höger för stämmer och vänster för stämmer inte, eller använd piltangenterna."><span class="swipe-stamp stamp-no" aria-hidden="true">STÄMMER INTE</span><span class="swipe-stamp stamp-yes" aria-hidden="true">STÄMMER</span><span class="eyebrow">'+esc(s[0])+'</span><blockquote>'+esc(s[1])+'</blockquote><span class="swipe-number">PÅSTÅENDE '+(idx+1)+' / '+STATEMENTS.length+'</span></div>'+
       '<div class="swipe-actions"><button class="swipe-choice" data-action="swipe-no" aria-label="Stämmer inte">'+ico("x")+'</button><button class="swipe-choice like" data-action="swipe-yes" aria-label="Stämmer">'+ico("heart")+'</button></div><p class="swipe-hint">Vänster = stämmer inte · Höger = stämmer · eller använd knapparna</p>'+(swipeHistory.length?'<div class="row" style="justify-content:center"><button class="quiet-link" data-action="undo-swipe">'+ico("back")+' Ångra senaste</button></div>':"");}
     html+=sectionTitle("Era svar");
     const both=Object.keys(S.swipes[other()]).length;
@@ -232,7 +232,45 @@
     const profile=$("#side-profile");if(profile){profile.querySelector("strong").textContent=displayName(S.role);profile.querySelector(".avatar").textContent=displayName(S.role).slice(0,1).toUpperCase();}
     const views={hem:renderHome,swipe:renderSwipe,personlighet:renderPersonality,inkorg:renderInbox,kommunikation:renderComm,regler:renderRules,medlare:renderGuide,installningar:renderSettings,"kom-igang":renderWelcome,familj:renderFamily};
     $("#app").innerHTML=views[pg]();
-    if(pg==="swipe"){let initialX=null;const card=$("#swipe-card");if(card){card.addEventListener("pointerdown",e=>{initialX=e.clientX;});card.addEventListener("pointerup",e=>{if(initialX===null)return;const d=e.clientX-initialX;initialX=null;if(Math.abs(d)>65)answerSwipe(d>0);});}}
+    if(pg==="swipe")setupSwipeGesture();
+  }
+  function setupSwipeGesture(){
+    const card=$("#swipe-card");if(!card)return;
+    let start=null,locked=false;
+    const reduced=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    function reset(){start=null;card.style.transform="";card.style.opacity="";card.classList.remove("swipe-dragging","swipe-yes","swipe-no");}
+    card.addEventListener("pointerdown",e=>{
+      if(e.button!==0||locked)return;
+      start={id:e.pointerId,x:e.clientX,y:e.clientY,dragging:false};
+    });
+    card.addEventListener("pointermove",e=>{
+      if(!start||start.id!==e.pointerId||locked)return;
+      const dx=e.clientX-start.x,dy=e.clientY-start.y;
+      if(!start.dragging&&Math.abs(dy)>Math.abs(dx)&&Math.abs(dy)>12){start=null;return;}
+      if(Math.abs(dx)>10&&Math.abs(dx)>Math.abs(dy)){start.dragging=true;card.setPointerCapture(e.pointerId);}
+      if(!start.dragging)return;
+      const tilt=Math.max(-13,Math.min(13,dx/18));
+      card.classList.add("swipe-dragging");
+      card.classList.toggle("swipe-yes",dx>35);card.classList.toggle("swipe-no",dx< -35);
+      card.style.transform="translateX("+dx+"px) rotate("+tilt+"deg)";
+    });
+    card.addEventListener("pointerup",e=>{
+      if(!start||start.id!==e.pointerId)return;
+      const dx=e.clientX-start.x,dragged=start.dragging;start=null;
+      if(!dragged||Math.abs(dx)<85){reset();return;}
+      locked=true;
+      card.classList.remove("swipe-dragging");
+      card.classList.toggle("swipe-yes",dx>0);card.classList.toggle("swipe-no",dx<0);
+      if(reduced){answerSwipe(dx>0);return;}
+      card.style.transform="translateX("+(dx>0?"120vw":"-120vw")+") rotate("+(dx>0?18:-18)+"deg)";
+      card.style.opacity="0";
+      window.setTimeout(()=>answerSwipe(dx>0),260);
+    });
+    card.addEventListener("pointercancel",reset);
+    card.addEventListener("lostpointercapture",()=>{if(!locked)reset();});
+    card.addEventListener("keydown",e=>{
+      if(e.key==="ArrowRight"||e.key==="ArrowLeft"){e.preventDefault();if(!locked){locked=true;answerSwipe(e.key==="ArrowRight");}}
+    });
   }
   function focusMain(scrollIntoView=false){const main=$("#app");if(main)main.focus({preventScroll:!scrollIntoView});}
   function navigate(p){if(page()===p){render();window.scrollTo({top:0,behavior:"smooth"});focusMain();}else location.hash=p;}
