@@ -10,6 +10,11 @@
 - Efter skrivning: verifiera att den nya committen ligger på `main`. Kontrollera GitHub Actions och Pages-publicering; kontrollera Playwright-artifact och öppna de faktiska PNG-bilderna när tillgängliga. En commit är **inte** bevis för att Pages redan är live.
 - Vid kvarstående fel: spara inte påhittad status, skilj verktygsfel från GitHub-behörighetsfel och rapportera exakt vad som fungerade och inte fungerade. Ändra inte säkerhets- eller dataskyddsgränser för att få en push att lyckas.
 
+## 21 oktober 2026 – Mobilnavigering, synlig scrollning
+
+- [x] CSS: visa en diskret horisontell scrollindikator i mobilmenyn i stället för att dölja scrollbaren; förbättra scroll-snap och tillåt etiketter på flera rader.
+- [ ] Bekräfta i ny Playwright-körning att mobilmenyn inte kapar etiketter och att scrollindikatorn syns i mobilens verkliga skärmbilder. Justera vid behov efter visuell granskning.
+
 ## 19 oktober 2026 – Automatisk testning och bildgranskning
 
 - [x] Bekräftat att Github Actions-artifact med sju Playwright-PNG kan laddas ned via ansluten GitHub-tjänst och öppnas som verkliga bilder i arbetsmiljön.
