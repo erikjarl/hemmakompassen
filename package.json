@@ -1,0 +1,14 @@
+{
+  "name": "hemmakompassen",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build-static.mjs",
+    "deploy": "npm run build && wrangler deploy",
+    "test:build": "npm run build && node --input-type=module -e \"import {readdir} from 'node:fs/promises'; const files=await readdir('dist'); if(files.some(f=>f.startsWith('.')) || files.includes('ROADMAP.md') || files.includes('tests')) process.exit(1); console.log(files)\""
+  },
+  "devDependencies": {
+    "wrangler": "^4.151.3"
+  }
+}
