@@ -195,3 +195,10 @@
 - Resend: https://resend.com/pricing
 - IMY barns uppgifter: https://www.imy.se/verksamhet/dataskydd/det-har-galler-enligt-gdpr/introduktion-till-gdpr/personuppgifter/personuppgifter-om-barn/
 - GitHub Pages-begränsningar: https://docs.github.com/en/pages/getting-started-with-github-pages/github-pages-limits
+
+
+### Mobilnavigering – separat granskningsbranch (2026-10-21)
+- [x] Förberett större tryckytor, läsbara etiketter, horisontell scroll och fokusmarkering på `ai-dev/mobile-nav-scroll-accessibility-20261021`.
+- [ ] Kör Playwright vid 320/375/390 px och granska mobil startsida, berörd vy och desktop startsida innan merge.
+- [ ] Verifiera att sista navigationsposten kan nås, att aktiv post syns och att innehåll inte döljs bakom navigeringen.
+- [ ] Manuell PR-granskning och uttryckligt godkännande före publicering.

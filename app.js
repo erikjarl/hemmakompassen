@@ -261,6 +261,9 @@
     if(pg==="inkorg"){let changed=false;S.messages.forEach(m=>{if(m.to===S.role&&!m.read){m.read=true;changed=true;}});if(changed)persist();}
     $("#desktop-nav").innerHTML=navMarkup(false);
     $("#mobile-nav").innerHTML=navMarkup(true);
+    const mobileNav=$("#mobile-nav");
+    const activeMobileItem=mobileNav.querySelector('.nav-item.active');
+    if(activeMobileItem)requestAnimationFrame(()=>activeMobileItem.scrollIntoView({block:"nearest",inline:"nearest",behavior:"instant"}));
     const profile=$("#side-profile");if(profile){profile.querySelector("strong").textContent=displayName(S.role);profile.querySelector(".avatar").textContent=displayName(S.role).slice(0,1).toUpperCase();}
     const views={hem:renderHome,swipe:renderSwipe,personlighet:renderPersonality,inkorg:renderInbox,kommunikation:renderComm,regler:renderRules,medlare:renderGuide,installningar:renderSettings,"kom-igang":renderWelcome,familj:renderFamily};
     $("#app").innerHTML=views[pg]();
