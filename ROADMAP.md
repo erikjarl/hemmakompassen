@@ -10,6 +10,13 @@
 - Efter skrivning: verifiera att den nya committen ligger på `main`. Kontrollera GitHub Actions och Pages-publicering; kontrollera Playwright-artifact och öppna de faktiska PNG-bilderna när tillgängliga. En commit är **inte** bevis för att Pages redan är live.
 - Vid kvarstående fel: spara inte påhittad status, skilj verktygsfel från GitHub-behörighetsfel och rapportera exakt vad som fungerade och inte fungerade. Ändra inte säkerhets- eller dataskyddsgränser för att få en push att lyckas.
 
+## 21 oktober 2026 – Utökad allmän kortlek
+
+- [x] Behåll de 14 ursprungliga kortens ordning så att sparade lokala demosvar inte flyttas till fel fråga.
+- [x] Lägg till 20 kort om tillit, självständighet, samtal, konflikter, känslor, vardag, digital vardag, gemenskap och uppskattning (34 kort totalt).
+- [ ] Användartesta begriplighet, upplevd trygghet, ordval och faktisk tidsåtgång med både tonåringar och föräldrar. Målet 10–15 minuter är ännu inte verifierat.
+- [ ] Se över svarsalternativen för påståenden som handlar om önskemål respektive nuläge, och granska resultatlogiken innan liveanvändning.
+
 ## 21 oktober 2026 – Mobilnavigering, synlig scrollning
 
 - [x] CSS: visa en diskret horisontell scrollindikator i mobilmenyn i stället för att dölja scrollbaren; förbättra scroll-snap och tillåt etiketter på flera rader.

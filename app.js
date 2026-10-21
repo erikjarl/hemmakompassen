@@ -24,7 +24,27 @@
     ["Vardag","Jag mår bra av tydliga överenskommelser hemma."],
     ["Samtal","Jag vill kunna be om hjälp utan att bli bedömd."],
     ["Relationer","Vi brukar kunna skratta tillsammans även när vi tycker olika."],
-    ["Känslor","Jag önskar att vi pratade mer om sådant som är svårt."]
+    ["Känslor","Jag önskar att vi pratade mer om sådant som är svårt."],
+    ["Tillit","Jag vill kunna berätta om ett misstag utan att samtalet direkt blir ett gräl."],
+    ["Tillit","Jag tycker det är viktigt att vi håller det vi lovar varandra."],
+    ["Tillit","Jag vill att vi berättar när något har skadat tilliten mellan oss."],
+    ["Självständighet","Jag vill att vi pratar om hur jag kan få mer ansvar och frihet."],
+    ["Självständighet","Det är viktigt för mig att kunna säga nej utan att det blir ett bråk."],
+    ["Självständighet","Jag vill att vi respekterar varandras privatliv."],
+    ["Samtal","Jag vill att vi frågar varandra innan vi ger råd."],
+    ["Samtal","Jag skulle vilja att vi oftare frågade hur den andra har haft det."],
+    ["Samtal","Jag vill att vi försöker förstå varandras skäl även när vi tycker olika."],
+    ["Konflikter","När vi har blivit osams vill jag att vi försöker hitta tillbaka till varandra."],
+    ["Konflikter","Jag tycker det hjälper när någon säger förlåt efter att ha sårat den andra."],
+    ["Konflikter","Jag vill att vi undviker att höja rösten när vi är oense."],
+    ["Känslor","Jag vill kunna säga att jag är ledsen eller orolig utan att behöva förklara allt direkt."],
+    ["Känslor","Jag vill att vi märker när någon behöver stöd och frågar vad som skulle hjälpa."],
+    ["Vardag","Jag vill att vi bestämmer viktiga saker tillsammans när det går."],
+    ["Vardag","Jag tycker det är viktigt att vi kan ändra en regel som inte fungerar."],
+    ["Digital vardag","Jag vill att vi pratar om mobilanvändning utan att någon känner sig anklagad."],
+    ["Gemenskap","Jag skulle vilja att vi gjorde något roligt tillsammans oftare."],
+    ["Gemenskap","Jag uppskattar små stunder tillsammans även när vi inte pratar om något särskilt."],
+    ["Uppskattning","Jag vill att vi oftare berättar vad vi uppskattar hos varandra."]
   ];
   const ITEMS=[
     ["E","Jag trivs när jag får träffa nya människor.",false],
