@@ -197,3 +197,14 @@
 - Resend: https://resend.com/pricing
 - IMY barns uppgifter: https://www.imy.se/verksamhet/dataskydd/det-har-galler-enligt-gdpr/introduktion-till-gdpr/personuppgifter/personuppgifter-om-barn/
 - GitHub Pages-begränsningar: https://docs.github.com/en/pages/getting-started-with-github-pages/github-pages-limits
+
+
+## Testkonton och browsergranskning (22 oktober 2026)
+
+- Inloggningssida: https://erikjarl.github.io/hemmakompassen/konto.html
+- TobbeTonåring: tonåring, `erikbertiljarl@gmail.com`.
+- FannyFörälder: förälder, `aleriserik@gmail.com`.
+- Erik har anvisat dessa konton för webbläsartester av Hemmakompassen. Använd endast fiktivt testinnehåll. Uppgifterna ovan är användarangivna; fungerande inloggning och kontonas roller är ännu inte verifierade i detta dokumentationspass.
+- Läs detta avsnitt vid varje schemalagt utvecklingspass och kvalitetsrapport samt när nya uppgifter för projektet schemaläggs.
+- Lösenord ska tillföras via säker inloggning eller hemlighetshantering, aldrig lagras i Markdown, Git-historik, schemaprompter, loggar eller skärmbilder. Beständig säker åtkomst för schemalagda körningar är ännu inte konfigurerad. Om åtkomst saknas: rapportera hindret och fortsätt med möjliga tester; påstå inte att riktig inloggning har testats.
+- Kontrollera inloggning, rätt profil/roll, navigering och beständig lagring med båda rollerna när säker åtkomst finns. Skilj tester mot publicerad GitHub Pages-version från tester av utvecklingsbranchen. Rapportdelen granskar och rapporterar, utan parallella kodändringar.
