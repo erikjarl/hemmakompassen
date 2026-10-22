@@ -4,7 +4,7 @@ GitHub Actions kör grundläggande funktions- och webbläsartester vid en push t
 
 Kör lokalt:
 
-    node --test tests/smoke.test.cjs tests/password-auth.test.mjs tests/family-rls-migration.test.cjs
+    node --test tests/smoke.test.cjs tests/password-auth.test.mjs tests/family-rls-migration.test.cjs tests/shared-swipe-migration.test.cjs
     npm install --no-save playwright
     npx playwright install chromium
     node tests/visual.mjs
@@ -13,7 +13,7 @@ Playwright öppnar en lokal webbserver och testar mobil (390 px) och dator (1440
 
 Testerna använder endast syntetiska testprofiler. Den inloggade Playwright-vyn använder en mockad Supabase-klient och kontaktar inte den riktiga databasen. Bilderna innehåller inte riktiga användaruppgifter.
 
-`supabase/tests/family_rls_isolation.sql` är ett pgTAP-integrationstest som ska köras först på en disponibel lokal databas eller Supabase-branch efter att migrationerna har applicerats. Det testet får inte köras direkt mot produktionsprojektet.
+`supabase/tests/family_rls_isolation.sql` och `supabase/tests/shared_swipe_matches.sql` är pgTAP-integrationstester som ska köras först på en disponibel lokal databas eller Supabase-branch efter att migrationerna har applicerats. Testerna använder två syntetiska familjer för att kontrollera isolering, oenighet och ensidiga svar. De får inte köras direkt mot produktionsprojektet.
 
 Viktigt: automatiska tester verifierar funktion och vissa layoutmått. Bilderna måste också granskas visuellt – skärmbildernas existens garanterar inte god formgivning.
 
