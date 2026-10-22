@@ -41,8 +41,26 @@ async function capture(page,name){
   await page.screenshot({path:path.join(output,name),fullPage:true,animations:"disabled"});
   captureRecords.push({file:name,viewport:page.viewportSize(),...overlays});
 }
-async function freshContext(options){
+async function freshContext(options,{authenticated=false}={}){
   const context=await browser.newContext({...options,locale:"sv-SE",reducedMotion:"reduce"});
+  await context.addInitScript(value=>{window.__HK_TEST_USER__=value;},authenticated?{id:"10000000-0000-0000-0000-000000000001",email:"synthetic@example.invalid"}:null);
+  await context.route("https://esm.sh/**",route=>route.fulfill({
+    contentType:"application/javascript",
+    body:`
+      export function createClient(){
+        const current=()=>window.__HK_TEST_USER__;
+        return {
+          auth:{
+            async getUser(){return {data:{user:current()},error:current()?null:{name:'AuthSessionMissingError'}}},
+            onAuthStateChange(){return {data:{subscription:{unsubscribe(){}}}}},
+            async signInWithPassword(){return {error:null}}
+          },
+          from(){return {select(){return {eq(){return {async maybeSingle(){return {data:current()?{display_name:'Provförälder'}:null,error:null}}}}}}}},
+          async rpc(){return {data:current()?[{user_id:current().id,role:'parent',display_name:'Provförälder'}]:[],error:null}}
+        };
+      }
+    `
+  }));
   const page=await context.newPage();
   page.on("pageerror",e=>errors.push(e.message));
   // Ignore external font/network warnings; JavaScript exceptions are checked via pageerror.
@@ -53,44 +71,25 @@ try{
   await fs.mkdir(output,{recursive:true});
   await waitForServer();
   browser=await chromium.launch({headless:true});
-  const m=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true});
-  assert.equal(await m.page.locator(".welcome-intro").count(),1,"First visit must show onboarding");
-  await checkOverflow(m.page,"Mobile onboarding");
-  await capture(m.page,"mobile-onboarding.png");
-  await m.page.locator(".role-chooser label").nth(1).click();
-  await m.page.locator("#first-name").fill("Provförälder");
-  await m.page.locator("#onboarding-form button[type=submit]").click();
-  assert.match(await m.page.locator("#app").innerText(),/förälder/i);
+  const login=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true});
+  await login.page.locator("#live-login").waitFor();
+  assert.match(await login.page.locator("#live-app").innerText(),/Logga in/i,"First visit must show real sign-in");
+  await checkOverflow(login.page,"Mobile sign-in");
+  await capture(login.page,"mobile-login.png");
+  await login.context.close();
+  const m=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true});
+  await m.page.getByRole("heading",{name:/Hej, Provförälder/}).waitFor();
+  assert.match(await m.page.locator("#live-app").innerText(),/Din familj/i);
   await checkOverflow(m.page,"Mobile homepage");
   await capture(m.page,"mobile-home.png");
-  await m.page.locator(".home-connection [data-page='familj']").click();
-  await m.page.waitForFunction(()=>document.querySelector("#app")?.textContent?.includes("Familjekoder fungerar inte ännu"));
-  await checkOverflow(m.page,"Family page");
-  await capture(m.page,"mobile-family.png");
-  await m.page.locator(".mobile-nav [data-page='swipe']").click();
-  await m.page.locator(".swipe-choice.like").waitFor();
-  await m.page.locator(".swipe-choice.like").click();
-  await m.page.waitForFunction(()=>document.querySelector("#app")?.textContent?.includes("1 av 14 påståenden"));
-  await checkOverflow(m.page,"Swipe page");
-  await capture(m.page,"mobile-swipe.png");
-  await m.page.locator(".mobile-nav [data-page='personlighet']").click();
-  await m.page.locator(".question-box").first().waitFor();
-  assert.equal(await m.page.locator(".question-box").count(),15);
-  await checkOverflow(m.page,"Personality page");
-  await capture(m.page,"mobile-personality.png");
+  await m.page.locator("#live-mobile-nav a[href='#inkorg']").click();
+  await m.page.getByRole("heading",{name:"Inkorg"}).waitFor();
+  await checkOverflow(m.page,"Mobile authenticated section");
+  await capture(m.page,"mobile-inbox.png");
   await m.context.close();
-  const d=await freshContext({viewport:{width:1440,height:900},deviceScaleFactor:1});
-  assert.equal(await d.page.locator(".welcome-intro").count(),1);
-  await d.page.keyboard.press("Tab");
-  assert.equal(await d.page.evaluate(()=>document.activeElement?.classList.contains("skip-link")),true,"Skip link should be first in tab order");
-  await d.page.keyboard.press("Enter");
-  assert.equal(await d.page.evaluate(()=>document.activeElement?.id),"app","Skip link should focus main");
-  await checkOverflow(d.page,"Desktop onboarding");
-  await capture(d.page,"desktop-onboarding.png");
-  await d.page.locator("#first-name").fill("Provtonåring");
-  await d.page.locator("#onboarding-form button[type=submit]").click();
-  await d.page.waitForFunction(()=>document.activeElement?.id==="app");
-  assert.equal(await d.page.locator(".desktop-nav .nav-item").count(),7);
+  const d=await freshContext({viewport:{width:1440,height:900},deviceScaleFactor:1},{authenticated:true});
+  await d.page.getByRole("heading",{name:/Hej, Provförälder/}).waitFor();
+  assert.equal(await d.page.locator("#live-desktop-nav a").count(),8);
   await checkOverflow(d.page,"Desktop homepage");
   await capture(d.page,"desktop-home.png");
   await d.context.close();

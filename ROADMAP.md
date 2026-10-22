@@ -1,13 +1,13 @@
 # Hemmakompassen — utvecklingsplan (2026-10-17)
 
-## Arbetsrutin: GitHub-commits och publicering (20 oktober 2026)
+## Arbetsrutin: GitHub-commits och publicering (uppdaterad 22 oktober 2026)
 
-- Arbeta direkt mot `main` så att projektägaren kan granska resultatet på den ordinarie GitHub Pages-adressen från telefonen. Skapa inte testbrancher som standard.
+- Ändra aldrig `main` automatiskt. Fortsätt från senaste HEAD på `ai-dev/utveckling`, samla arbetet i samma samlings-PR och invänta uttryckligt godkännande före merge/publicering.
 - Använd den anslutna GitHub-tjänsten via `functions.exec`. Kontrollera vid varje körning att skrivfunktionerna faktiskt är anropbara, t.ex. `typeof tools.mcp__GitHub__update_file === "function"`; att en funktion finns i verktygslistan räcker inte som verifiering.
 - Om ett anrop ger `TypeError: ... is not a function`, kontrollera tillgängligheten på nytt i en **ny** `functions.exec`-körning och försök igen efter att ha hämtat aktuell fil och blob-SHA. Felet har tidigare varit tillfälligt. Påstå inte att behörigheten saknas utan ett faktiskt GitHub-svar.
 - Före ändring: hämta senaste `main`, relevant fil och dess blob-SHA. Gör en liten, avgränsad ändring. Kör tillgängliga lokala tester och syntax-/strukturkontroller. Redovisa tydligt om fullständiga tester inte kunde köras.
-- För en enda textfil kan `mcp__GitHub__update_file` användas med `branch:"main"` och aktuell blob-SHA. För flera filer: använd GitHub-träd och commit med aktuell parent och uppdatera `main` med `update_ref`, `expected_sha` och utan force-push. Vid konflikt: läs om `main`, granska diff och testa igen; skriv aldrig över andras ändringar.
-- Efter skrivning: verifiera att den nya committen ligger på `main`. Kontrollera GitHub Actions och Pages-publicering; kontrollera Playwright-artifact och öppna de faktiska PNG-bilderna när tillgängliga. En commit är **inte** bevis för att Pages redan är live.
+- För en enda textfil kan `mcp__GitHub__update_file` användas med `branch:"ai-dev/utveckling"` och aktuell blob-SHA. För flera filer: använd GitHub-träd och commit med aktuell parent och uppdatera endast utvecklingsbranchen med `update_ref`, `expected_sha` och utan force-push. Vid konflikt: läs om branchen, granska diff och testa igen; skriv aldrig över andras ändringar.
+- Efter skrivning: verifiera committen på `ai-dev/utveckling`, kontrollera samlings-PR, GitHub Actions och Playwright-artifact. Publicering sker först efter separat godkänd merge.
 - Vid kvarstående fel: spara inte påhittad status, skilj verktygsfel från GitHub-behörighetsfel och rapportera exakt vad som fungerade och inte fungerade. Ändra inte säkerhets- eller dataskyddsgränser för att få en push att lyckas.
 
 ## 21 oktober 2026 – Utökad allmän kortlek
@@ -29,6 +29,8 @@
 - [x] Förbättrat Playwright för stabila skärmbilder: återställ scroll, släpp tangentbordsfokus, invänta toast; testa att skip-länken är dold utan fokus. Skapa även visual-audit.json i screenshot-artifact.
 - [ ] Bekräfta ny GitHub Actions-körning för den här förbättringen, granska nya mobil-/datorbilder och åtgärda eventuella fel.
 - [ ] Fortsätt visuell kvalitetsgranskning i de schemalagda utvecklings- och dagsrapportkörningarna. Kontrollera den verkliga bilden, inte bara grön CI-status.
+- [x] 2026-10-22: Uppdaterat det föråldrade Playwright-flödet från borttagen demoonboarding till riktig inloggningsvy och syntetiskt, mockat inloggat läge. Ingen riktig användare eller backenddata används i CI.
+- [ ] Granska nya PNG-bilder och `visual-audit.json` från samlings-PR:ns första CI-körning; lokal Chromium-installation blockerades av en avhuggen nedladdning.
 
 ## Påbörjat 18 oktober 2026 – Fas 1A (utan backend)
 
@@ -46,7 +48,7 @@
 **Fas 0:** Genomarbetad dataskyddspolicy, validerat testinstrument, användarvillkor och klinisk riskgranskning behövs *före* live-backend med verkliga uppgifter, men blockerar inte frontendutveckling med syntetiska demodata.
 
 
-**Status:** Design- och funktionsprototyp ligger på `main`. Ingen riktig autentisering, datadelning, säker backend eller AI-anslutning finns ännu.
+**Status:** E-post/lösenordsautentisering och ett första Supabase-schema finns på `main`. Full datalagring, komplett RLS-verifiering, säker datadelning och AI-anslutning återstår.
 
 **Mål:** Ett familjepar (förälder + tonåring) ska kunna skapa två separata konton, kopplas med familjekod, använda swajpen och personlighetstestet, dela överenskomna uppgifter, skicka meddelanden och prata var för sig med en privat AI-medlare som kan använda endast tillåtna, gemensamma uppgifter.
 
@@ -120,9 +122,9 @@
 
 ## FAS 3 — Autentisering, familjekoppling och databas
 
-- [ ] **[A]** Skapa SQL-migrationer för `profiles`, `families`, `family_members`, `invitations`, `swipe_answers`, `personality_answers`, `messages`, `agreements`, `agreement_approvals` och `private_ai_chats`.
-- [ ] **[A]** Skapa Row Level Security (RLS) och minsta möjliga databastillgång. Två familjer får aldrig se varandras data.
-- [ ] **[A]** Implementera två separata användarkonton, säkra sessioner, invitationskod med livslängd och ömsesidig accept.
+- [x] **[A]** Första Supabase-schemat finns för `profiles`, `families`, `family_members`, `invitations`, `swipe_answers`, `personality_answers`, `messages`, `agreements`, `agreement_approvals` och privata AI-tabeller. Återstår: versionssäkra befintliga produktionsmigrationer i repot och komplettera schemaändringar genom granskade migrationer.
+- [ ] **[A]** Skapa Row Level Security (RLS) och minsta möjliga databastillgång. 2026-10-22: förberedd migration på `ai-dev/utveckling` för de sex familjegemensamma tabeller som saknade policies, inklusive borttagning av `anon`-rättigheter och syntetiska isoleringstester. Återstår: kör SQL-integrationstester på en disponibel Supabase-branch, granska advisors och tillämpa först efter godkännande. Två familjer får aldrig se varandras data.
+- [x] **[A]** Grundflöde implementerat för två separata användarkonton, säkra sessioner och inbjudningskod med 30 minuters livslängd. Återstår: verifiera ömsesidig accept, avvisning/återkallelse och samtidighetsfall med två syntetiska testkonton.
 - [ ] **[A]** Skilj privat AI-chatt från familjegemensamma tabeller. Inga hemliga API-nycklar i webbläsaren.
 - [ ] **[A]** Skriva integrationstester som aktivt försöker läsa/ändra andra familjers data, samt tester för utloggning, avvisad inbjudan, brutet familjepar och radering.
 - [ ] **[E]** Utför Supabase-konfiguration som kräver kontots ägarbehörighet; verifiera med två testkonton.
