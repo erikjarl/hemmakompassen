@@ -86,7 +86,7 @@ try{
   await capture(login.page,"mobile-login.png");
   await login.context.close();
   const m=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true});
-  await m.page.getByRole("heading",{name:/Hej, Provförälder/}).waitFor();
+  await m.page.getByRole("heading",{name:/Hej[ ,]+Provförälder/}).waitFor();
   assert.match(await m.page.locator("#live-app").innerText(),/Din familj/i);
   await checkOverflow(m.page,"Mobile homepage");
   await capture(m.page,"mobile-home.png");
@@ -117,7 +117,7 @@ try{
   await capture(m.page,"mobile-inbox.png");
   await m.context.close();
   const d=await freshContext({viewport:{width:1440,height:900},deviceScaleFactor:1},{authenticated:true});
-  await d.page.getByRole("heading",{name:/Hej, Provförälder/}).waitFor();
+  await d.page.getByRole("heading",{name:/Hej[ ,]+Provförälder/}).waitFor();
   assert.equal(await d.page.locator("#live-desktop-nav a").count(),8);
   await checkOverflow(d.page,"Desktop homepage");
   await capture(d.page,"desktop-home.png");
