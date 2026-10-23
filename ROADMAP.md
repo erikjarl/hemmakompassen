@@ -40,7 +40,7 @@
 - [x] Demonstrationsläge tydligt märkt: inga riktiga konton, familjekoder, fjärrkopplingar eller AI.
 - [x] Enkel automatisk testfil med Node.js inbyggda testverktyg.
 - [ ] Fortsätt dela upp JavaScript i moduler och förbered separerat mock-/backend-lager.
-- [ ] Bygg autentiserings- och familjekopplingsskärmarna med tydliga fel- och väntelägen.
+- [ ] Bygg autentiserings- och familjekopplingsskärmarna med tydliga fel- och väntelägen. 2026-10-23: kontosidan visar nu både inbjudan och kodanslutning för en användare som redan har startat en tom enfamilj; manuell browser- och riktig backendverifiering återstår efter godkänd migration.
 - [ ] Finputsning av samtliga roller, skärmar och tillgänglighetskontroller.
 - [x] 2026-10-19: Tillgänglighet: tangentbordslänk till huvudinnehållet, fokus till huvudregionen vid navigering och kompletterande Node-/Playwright-tester.
 - [ ] Återstår: bredare granskning av skärmläsare, formulär och kontraster.
@@ -124,7 +124,7 @@
 
 - [x] **[A]** Första Supabase-schemat finns för `profiles`, `families`, `family_members`, `invitations`, `swipe_answers`, `personality_answers`, `messages`, `agreements`, `agreement_approvals` och privata AI-tabeller. Återstår: versionssäkra befintliga produktionsmigrationer i repot och komplettera schemaändringar genom granskade migrationer.
 - [ ] **[A]** Skapa Row Level Security (RLS) och minsta möjliga databastillgång. 2026-10-22: förberedd migration på `ai-dev/utveckling` för de sex familjegemensamma tabeller som saknade policies, inklusive borttagning av `anon`-rättigheter och syntetiska isoleringstester. Återstår: kör SQL-integrationstester på en disponibel Supabase-branch, granska advisors och tillämpa först efter godkännande. Två familjer får aldrig se varandras data.
-- [x] **[A]** Grundflöde implementerat för två separata användarkonton, säkra sessioner och inbjudningskod med 30 minuters livslängd. Återstår: verifiera ömsesidig accept, avvisning/återkallelse och samtidighetsfall med två syntetiska testkonton.
+- [x] **[A]** Grundflöde implementerat för två separata användarkonton, säkra sessioner och inbjudningskod med 30 minuters livslängd. 2026-10-23: granskningen visade att tre befintliga konton låg i varsin tom enfamilj och därför inte kunde acceptera kod. En granskningsbar migration låter en användare flytta från en tom enfamilj till en komplementär roll, bevarar profil/privata användardata och stoppar flytten om delad historik finns. Mock-/kontraktstest och disponibelt pgTAP-test tillagda. Återstår: applicera och köra pgTAP i disponibel backend efter godkännande, därefter verifiera med de två anvisade testkontona samt testa återkallelse och samtidighetsfall.
 - [ ] **[A]** Skilj privat AI-chatt från familjegemensamma tabeller. Inga hemliga API-nycklar i webbläsaren.
 - [ ] **[A]** Skriva integrationstester som aktivt försöker läsa/ändra andra familjers data, samt tester för utloggning, avvisad inbjudan, brutet familjepar och radering.
 - [ ] **[E]** Utför Supabase-konfiguration som kräver kontots ägarbehörighet; verifiera med två testkonton.
