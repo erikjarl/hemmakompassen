@@ -1,0 +1,47 @@
+.swipe-playing-card {
+  position: relative;
+}
+
+.swipe-playing-card.swipe-dragging {
+  cursor: grabbing;
+  transition: none;
+}
+
+.swipe-stamp {
+  position: absolute;
+  top: 22px;
+  padding: 5px 11px;
+  border: 3px solid;
+  border-radius: 8px;
+  font: 800 18px/1 "DM Sans", sans-serif;
+  letter-spacing: .08em;
+  opacity: 0;
+  transition: opacity .1s;
+}
+
+.swipe-stamp-no {
+  left: 20px;
+  color: #ffb3ac;
+  transform: rotate(-8deg);
+}
+
+.swipe-stamp-yes {
+  right: 20px;
+  color: #aee9c9;
+  transform: rotate(8deg);
+}
+
+.swipe-preview-no .swipe-stamp-no,
+.swipe-preview-yes .swipe-stamp-yes {
+  opacity: 1;
+}
+
+.swipe-choice:disabled {
+  opacity: .55;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .swipe-stamp {
+    transition: none;
+  }
+}

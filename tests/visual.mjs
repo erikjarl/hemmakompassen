@@ -49,13 +49,21 @@ async function freshContext(options,{authenticated=false}={}){
     body:`
       export function createClient(){
         const current=()=>window.__HK_TEST_USER__;
+        const answers=new Map();
         return {
           auth:{
             async getUser(){return {data:{user:current()},error:current()?null:{name:'AuthSessionMissingError'}}},
             onAuthStateChange(){return {data:{subscription:{unsubscribe(){}}}}},
             async signInWithPassword(){return {error:null}}
           },
-          from(){return {select(){return {eq(){return {async maybeSingle(){return {data:current()?{display_name:'Provförälder'}:null,error:null}}}}}}}},
+          from(table){
+            if(table==='profiles')return {select(){return {eq(){return {async maybeSingle(){return {data:current()?{display_name:'Provförälder'}:null,error:null}}}}}}};
+            if(table==='swipe_answers')return {
+              select(){return {async eq(){return {data:[...answers.values()],error:null}}}},
+              async upsert(row,options){answers.set(row.card_id,row);window.__HK_SAVED_SWIPE__={row,options};return {error:null}}
+            };
+            throw new Error('Unexpected table '+table);
+          },
           async rpc(){return {data:current()?[{user_id:current().id,role:'parent',display_name:'Provförälder'}]:[],error:null}}
         };
       }
@@ -82,6 +90,20 @@ try{
   assert.match(await m.page.locator("#live-app").innerText(),/Din familj/i);
   await checkOverflow(m.page,"Mobile homepage");
   await capture(m.page,"mobile-home.png");
+  await m.page.goto(base+"#swipe",{waitUntil:"load"});
+  await m.page.getByRole("heading",{name:"Gillaswajpen"}).waitFor();
+  assert.match(await m.page.locator("#live-app").innerText(),/sparas privat i ditt konto/i);
+  assert.match(await m.page.locator("#swipe-card").getAttribute("aria-label"),/Kort 1 av 34/);
+  await checkOverflow(m.page,"Mobile swipe");
+  await capture(m.page,"mobile-swipe.png");
+  await m.page.getByRole("button",{name:"Ja"}).click();
+  await m.page.locator("#swipe-card[aria-label^='Kort 2 av 34']").waitFor();
+  const saved=await m.page.evaluate(()=>window.__HK_SAVED_SWIPE__);
+  assert.equal(saved.row.user_id,"10000000-0000-0000-0000-000000000001");
+  assert.equal(saved.row.deck_id,"general");
+  assert.equal(saved.row.card_id,"general-01");
+  assert.equal(saved.row.answer,true);
+  assert.equal(saved.options.onConflict,"user_id,deck_id,card_id");
   await m.page.goto(base+"konto.html",{waitUntil:"load"});
   await m.page.getByRole("heading",{name:"Använd en familjekod"}).waitFor();
   assert.ok(await m.page.locator("#join-family").isVisible(),"A singleton account must be able to enter a family code");

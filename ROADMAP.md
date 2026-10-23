@@ -61,6 +61,7 @@
 
 ### P1 – Gillaswajpen: gemensamma insikter
 - [x] 2026-10-21: Tinder-liknande kortinteraktion i Gillaswajpen: följ fingret/muspekaren, luta kortet, visa svarsstämpel och animera bort kortet; piltangenter, knappar och reducerad rörelse stöds. Återstår verklig mobilgranskning av ny körning.
+- [x] 2026-10-23: Den återställda allmänna kortleken laddar och sparar nu den inloggade användarens egna svar i `swipe_answers`, återupptar vid första obesvarade kortet och rensar klientminnet vid konto-/sessionsbyte. Svaren är fortsatt privata via self-only RLS. Gemensam resultatvy återstår och får bara använda den granskade aggregerande RPC:n efter godkänd migration.
 
 - [ ] **[A]** Visa i gemensam resultatvy endast kort där BÅDA har svarat och valt samma alternativ. 2026-10-22: förberedd autentiserad RPC-migration som returnerar endast samma val från exakt två familjemedlemmar och aldrig användar-id, oenighet, ensidiga svar eller annan familjs träffar. Ett gemensamt nej returneras uttryckligen som `false` och får inte beskrivas som gemensamt intresse. Återstår: kör pgTAP på disponibel backend och anslut resultatvyn.
 - [ ] **[A]** Utforma separata, korta och begripliga resultatsammanfattningar för förälder och tonåring: identifiera återkommande teman, möjliga problemområden, styrkor, samt konkreta samtalsöppningar och gemensamma lösningar. Skilj observationer från hypoteser och undvik överdrivna psykologiska slutsatser.
@@ -133,7 +134,7 @@
 ## FAS 4 — Alla delade funktioner live
 
 - [ ] **[A]** Bygg inkorg med läskvittenser, skyddade meddelanden och möjlighet att radera.
-- [ ] **[A]** Bygg swajpsvar med separat egen historik och jämförelser för paret, inklusive tydliga delningsregler. 2026-10-22: egen historik är fortsatt self-only via RLS och granskningsbar migration för aggregerade gemensamma svar är förberedd; liveklient och disponibel SQL-verifiering återstår.
+- [ ] **[A]** Bygg swajpsvar med separat egen historik och jämförelser för paret, inklusive tydliga delningsregler. 2026-10-23: liveklienten sparar och återläser egen historik med stabila kort-id:n och self-only RLS; mockat webbläsartest verifierar upsert och återupptagning. Återstår: applicera och verifiera den förberedda aggregerande RPC-migrationen på disponibel backend, anslut resultatvyn och testa två verkliga testkonton utan att privata eller avvikande svar exponeras.
 - [ ] **[A]** Implementera valt Big Five-instrument enligt dess dokumenterade skala och poängsättning; jämförelser utan överdrivna slutsatser.
 - [ ] **[A]** Schyssta listan: förslag, redigering, versionshistorik och bekräftelse från båda.
 - [ ] **[A]** Kommunikationsråd, exempel och övningar; spara bara sådant användaren uttryckligen vill spara.

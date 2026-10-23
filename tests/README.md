@@ -4,14 +4,14 @@ GitHub Actions kör grundläggande funktions- och webbläsartester vid en push t
 
 Kör lokalt:
 
-    node --test tests/smoke.test.cjs tests/password-auth.test.mjs tests/family-pairing.test.cjs tests/family-rls-migration.test.cjs tests/shared-swipe-migration.test.cjs
+    node --test tests/smoke.test.cjs tests/password-auth.test.mjs tests/family-pairing.test.cjs tests/family-rls-migration.test.cjs tests/shared-swipe-migration.test.cjs tests/live-swipe-persistence.test.mjs
     npm install --no-save playwright
     npx playwright install chromium
     node tests/visual.mjs
 
 Playwright öppnar en lokal webbserver och testar mobil (390 px) och dator (1440 px). Skärmbilder för båda formaten sparas i artifacts/ och som GitHub Actions-artifact.
 
-Testerna använder endast syntetiska testprofiler. Den inloggade Playwright-vyn använder en mockad Supabase-klient och kontaktar inte den riktiga databasen. Bilderna innehåller inte riktiga användaruppgifter.
+Testerna använder endast syntetiska testprofiler. Den inloggade Playwright-vyn använder en mockad Supabase-klient och kontaktar inte den riktiga databasen. Gillaswajpens webbläsartest kontrollerar dessutom att ett syntetiskt svar skickas som en upsert med stabilt kort-id. Bilderna innehåller inte riktiga användaruppgifter.
 
 `supabase/tests/family_rls_isolation.sql`, `supabase/tests/shared_swipe_matches.sql` och `supabase/tests/merge_empty_singleton_family.sql` är pgTAP-integrationstester som ska köras först på en disponibel lokal databas eller Supabase-branch efter att migrationerna har applicerats. Testerna använder endast syntetiska familjer för att kontrollera isolering, oenighet, ensidiga svar och säker sammanslagning av två tomma enfamiljer. De får inte köras direkt mot produktionsprojektet.
 
