@@ -45,3 +45,31 @@
     transition: none;
   }
 }
+
+
+/* Midnight Haven: subtle forest, compass mark and mobile iconography */
+.live-brand{display:inline-flex;align-items:center;gap:12px}
+.live-brand::before{content:"";width:38px;height:38px;flex:none;border:2px solid #c58a30;border-radius:50%;background:radial-gradient(circle at center,#f5a623 0 4px,transparent 5px);box-shadow:0 0 0 1px #b67d271f,0 0 22px #c58a3010}
+.home-hero{position:relative;isolation:isolate;overflow:hidden;min-height:340px;display:flex;align-items:center;border:1px solid #3e4257;border-radius:28px;margin-bottom:30px;padding:clamp(28px,5vw,54px);background:linear-gradient(90deg,#111522ed 0%,#121827b9 64%,#11152288),url("./landscape.svg") center 62%/cover no-repeat;box-shadow:0 24px 50px #0003}
+.home-hero-inner{position:relative;z-index:2;max-width:740px}
+.home-kicker{display:inline-flex;align-items:center;border:1px solid #92692888;border-radius:99px;padding:7px 15px;background:#342719c9;color:#f2ad45;font-size:11px;font-weight:700;letter-spacing:.13em}
+.home-hero h1{font-size:clamp(34px,5.4vw,64px);line-height:1.16;letter-spacing:-.035em;margin:22px 0}
+.home-hero h1 em{display:block;font-weight:400;color:#f2ad45}
+.home-hero p{max-width:520px;color:#c0c6d4;font-size:clamp(15px,2vw,18px);line-height:1.65}
+.home-hero-link{display:inline-flex;gap:12px;align-items:center;margin-top:12px;color:#f5b657;font-weight:700;font-size:14px}
+.home-hero-link:hover{text-decoration:underline}
+.home-orbit{position:absolute;right:-90px;top:12%;width:300px;height:300px;border:1px solid #d79b3a2e;border-radius:50%;box-shadow:0 0 0 42px #d79b3a0a,0 0 0 86px #d79b3a08;pointer-events:none}
+.home-orbit span{position:absolute;left:50%;top:50%;width:13px;height:13px;background:#f5a623;border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 25px #f5a62355}
+.live-nav a[href="#hem"]::before,.live-nav a[href="#inkorg"]::before,.live-nav a[href="#swipe"]::before,.live-nav a[href="#personlighet"]::before,.live-nav a[href="#kommunikation"]::before,.live-nav a[href="#regler"]::before,.live-nav a[href="#medlare"]::before{display:inline-block;width:23px;margin-right:9px;color:#c8a066;font-size:20px;text-align:center;vertical-align:middle}
+.live-nav a[href="#hem"]::before{content:"⌂"}.live-nav a[href="#inkorg"]::before{content:"▢"}.live-nav a[href="#swipe"]::before{content:"♡"}.live-nav a[href="#personlighet"]::before{content:"✧"}.live-nav a[href="#kommunikation"]::before{content:"☼"}.live-nav a[href="#regler"]::before{content:"☷"}.live-nav a[href="#medlare"]::before{content:"✦"}
+@media(max-width:800px){
+ .home-hero{min-height:340px;padding:30px 23px;background-position:55% center}
+ .home-hero h1{font-size:clamp(34px,8.6vw,50px)}
+ .home-orbit{right:-165px;opacity:.55}
+ .live-mobile a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:85px;max-width:120px;font-size:11px;line-height:1.2;text-align:center;white-space:normal;overflow-wrap:normal;word-break:normal;hyphens:none}
+ .live-mobile a::before{display:block;font-size:25px;line-height:1.1;height:28px;color:#a9afc0}
+ .live-mobile a[aria-current=page]::before{color:#f2a538}
+ .live-mobile a[href="#hem"]::before{content:"⌂"}.live-mobile a[href="#inkorg"]::before{content:"▢"}.live-mobile a[href="#swipe"]::before{content:"♡"}.live-mobile a[href="#personlighet"]::before{content:"✧"}.live-mobile a[href="#kommunikation"]::before{content:"☼"}.live-mobile a[href="#regler"]::before{content:"☷"}.live-mobile a[href="#medlare"]::before{content:"✦"}.live-mobile a[href="#installningar"]::before{content:"⚙"}
+ .live-mobile{scrollbar-width:thin;scrollbar-color:#a97c38 #11141e}
+}
+@media(prefers-reduced-motion:reduce){.home-hero-link{transition:none}}
