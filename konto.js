@@ -14,9 +14,9 @@ async function refresh() {
   $('display-name').value=profile?.display_name||'';
   const {data:members,error:membersError}=await client.rpc('my_family_members');
   if(membersError){status(membersError.message);return;}
-  show('unpaired',!members?.length);show('paired',!!members?.length);
+  const memberCount=members?.length||0;
+  show('unpaired',memberCount===0);show('family',memberCount>0);show('waiting',memberCount===1);show('join-family',memberCount<2);
   $('members').textContent=members?.map(m=>m.role==='teen'?'Tonåring: '+(m.display_name||'Namnlös'):'Förälder: '+(m.display_name||'Namnlös')).join(' · ')||'';
-  show('make-invite',members?.length===1);
 }
 let busy=false;
 async function run(action){if(busy)return;busy=true;const buttons=[...document.querySelectorAll('button')];buttons.forEach(b=>b.disabled=true);try{status('Arbetar…');await action();await refresh();}catch(e){status(e.message||'Ett fel inträffade');}finally{busy=false;buttons.forEach(b=>b.disabled=false);}}
@@ -53,7 +53,7 @@ $('password-form').addEventListener('submit',e=>{e.preventDefault();run(async()=
 $('name-form').addEventListener('submit',e=>{e.preventDefault();run(async()=>{const {data:{user}}=await client.auth.getUser();if(!user)throw Error('Inte inloggad');const {error}=await client.from('profiles').upsert({user_id:user.id,display_name:$('display-name').value.trim()});if(error)throw error;status('Namnet sparat.');});});
 $('create-family').addEventListener('click',()=>run(async()=>{const {error}=await client.rpc('start_family',{p_role:$('role').value});if(error)throw error;status('Familjen skapad. Skapa en kod för att bjuda in den andra personen.');}));
 $('make-invite').addEventListener('click',()=>run(async()=>{const bytes=crypto.getRandomValues(new Uint8Array(18));const code=Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('').toUpperCase();const {data,error}=await client.rpc('create_family_invite',{p_code:code});if(error)throw error;$('new-invite').textContent='Dela koden privat: '+code+' (gäller till '+new Date(data).toLocaleString('sv-SE')+')';status('Ny familjekod skapad.');}));
-$('accept-form').addEventListener('submit',e=>{e.preventDefault();run(async()=>{const {error}=await client.rpc('accept_family_invite',{p_code:$('invite-code').value.trim().toUpperCase()});if(error)throw error;status('Du är nu ansluten till familjen.');});});
+$('accept-form').addEventListener('submit',e=>{e.preventDefault();run(async()=>{const {error}=await client.rpc('accept_family_invite',{p_code:$('invite-code').value.trim().toUpperCase()});if(error)throw error;$('accept-form').reset();status('Du är nu ansluten till familjen. Din profil och privata kontodata är kvar.');});});
 $('logout').addEventListener('click',()=>run(async()=>{const {error}=await client.auth.signOut();if(error)throw error;status('Utloggad.');}));
 client.auth.onAuthStateChange(event=>{setTimeout(async()=>{try{await refresh();if(event==='PASSWORD_RECOVERY'){status('Välj ditt nya lösenord nedan.');$('new-password').focus();}}catch(e){status(e.message);}},0);});
 if(location.hash==='#register')$('register').open=true;

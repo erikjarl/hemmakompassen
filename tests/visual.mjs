@@ -82,6 +82,13 @@ try{
   assert.match(await m.page.locator("#live-app").innerText(),/Din familj/i);
   await checkOverflow(m.page,"Mobile homepage");
   await capture(m.page,"mobile-home.png");
+  await m.page.goto(base+"konto.html",{waitUntil:"load"});
+  await m.page.getByRole("heading",{name:"Använd en familjekod"}).waitFor();
+  assert.ok(await m.page.locator("#join-family").isVisible(),"A singleton account must be able to enter a family code");
+  assert.ok(await m.page.locator("#waiting").isVisible(),"A singleton account must be able to create an invite");
+  await checkOverflow(m.page,"Mobile family pairing");
+  await capture(m.page,"mobile-pairing.png");
+  await m.page.goto(base+"#hem",{waitUntil:"load"});
   await m.page.locator("#live-mobile-nav a[href='#inkorg']").click();
   await m.page.getByRole("heading",{name:"Inkorg"}).waitFor();
   await checkOverflow(m.page,"Mobile authenticated section");
