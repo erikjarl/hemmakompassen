@@ -1,0 +1,58 @@
+name: Shared swipe RPC PostgreSQL tests
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/shared-swipe-db-tests.yml"
+      - "supabase/migrations/20261022132848_shared_swipe_matches.sql"
+      - "supabase/tests/shared_swipe_matches.sql"
+      - "supabase/tests/fixtures/shared_swipe_contract_schema.sql"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  swipe-rpc:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17-trixie
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: synthetic-ci-only
+          POSTGRES_DB: postgres
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pgTAP in disposable PostgreSQL
+        run: |
+          docker exec -u root "${{ job.services.postgres.id }}" bash -lc \
+            'apt-get update -qq && apt-get install -y -qq --no-install-recommends postgresql-17-pgtap'
+      - name: Set up synthetic schema and RLS
+        run: |
+          docker exec -i "${{ job.services.postgres.id }}" \
+            psql -U postgres -d postgres -v ON_ERROR_STOP=1 -X -q \
+            < supabase/tests/fixtures/shared_swipe_contract_schema.sql
+      - name: Apply actual shared swipe migration
+        run: |
+          docker exec -i "${{ job.services.postgres.id }}" \
+            psql -U postgres -d postgres -v ON_ERROR_STOP=1 -X -q \
+            < supabase/migrations/20261022132848_shared_swipe_matches.sql
+      - name: Assert 11 real pgTAP test results
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker exec -i "${{ job.services.postgres.id }}" \
+            psql -U postgres -d postgres -v ON_ERROR_STOP=1 -X -q -A -t \
+            < supabase/tests/shared_swipe_matches.sql | tee /tmp/shared-swipe-test.log
+          grep -qx '1..11' /tmp/shared-swipe-test.log
+          if grep -Eq '^(not ok|# Looks like you failed)' /tmp/shared-swipe-test.log; then
+            exit 1
+          fi
+          test "$(grep -Ec '^ok [0-9]+' /tmp/shared-swipe-test.log)" -eq 11
