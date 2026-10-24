@@ -12,5 +12,16 @@ assert.doesNotMatch(script,/sharedMatches\.filter\(r=>r\.answer===false\)/,'No m
 assert.doesNotMatch(script,/Det ni båda svarat nej till/,'Never renders a shared NO heading');
 assert.match(script,/swipe-match-theme/,'Mutual YES results are grouped by theme');
 assert.match(script,/swipeCardId\(i\)===r\.card_id/,'Only known card IDs are rendered');
+assert.match(script,/function sharedSummary\(groups\)/,'Builds the rule-based summary only from the already filtered mutual-YES groups');
+assert.match(script,/members\.find\(member=>member\.user_id===user\?\.id\)\?\.role/,'Uses the signed-in member role for separate parent and teen wording');
+assert.match(script,/REGELBASERAD · INTE AI/,'Labels the deterministic summary clearly');
+assert.match(script,/Sammanfattningen använder enbart ömsesidiga ja-svar/,'States the summary privacy boundary');
 assert.doesNotMatch(script,/localStorage/,'No shared answers are cached locally');
-console.log('PASS: mutual-YES-only RPC results, theme groups and fail-closed state');
+assert.match(script,/db\.rpc\('shared_general_deck_complete'\)/,'Checks both members completion through authenticated aggregate RPC');
+assert.match(script,/if\(!user\|\|members\.length!==2\)\{themesUnlocked=false/,'Never requests unlock for unpaired accounts');
+assert.match(script,/session!==sharedSession\|\|request!==themesRequest\|\|user\?\.id!==viewer/,'Ignores stale unlock responses after session change');
+assert.match(script,/if\(error\|\|typeof data!=='boolean'\)throw/,'Fail-closed when unlock RPC is missing or malformed');
+assert.match(script,/themesUnlocked=data===true/,'Only an explicit true unlocks theme previews');
+assert.match(script,/const unlocked=members\.length===2&&themesUnlocked&&!themesLoading&&!themesError/,'Never renders theme previews without a valid pair and current RPC');
+assert.match(script,/if\(swipeAnswers\.size===STATEMENTS\.length\)void fetchThemeUnlock\(\)/,'Rechecks completion after finishing the general deck');
+console.log('PASS: mutual-YES-only RPC results, role-specific rule summary, theme groups and fail-closed state');

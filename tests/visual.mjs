@@ -41,9 +41,9 @@ async function capture(page,name){
   await page.screenshot({path:path.join(output,name),fullPage:true,animations:"disabled"});
   captureRecords.push({file:name,viewport:page.viewportSize(),...overlays});
 }
-async function freshContext(options,{authenticated=false,paired=false}={}){
+async function freshContext(options,{authenticated=false,paired=false,role="parent",unlocked=false,unlockUnavailable=false}={}){
   const context=await browser.newContext({...options,locale:"sv-SE",reducedMotion:"reduce"});
-  await context.addInitScript(value=>{window.__HK_TEST_USER__=value.user;window.__HK_TEST_PAIRED__=value.paired;},{user:authenticated?{id:"10000000-0000-0000-0000-000000000001",email:"synthetic@example.invalid"}:null,paired});
+  await context.addInitScript(value=>{window.__HK_TEST_USER__=value.user;window.__HK_TEST_PAIRED__=value.paired;window.__HK_TEST_ROLE__=value.role;window.__HK_TEST_UNLOCKED__=value.unlocked;window.__HK_UNLOCK_RPC_UNAVAILABLE__=value.unlockUnavailable;},{user:authenticated?{id:role==="teen"?"10000000-0000-0000-0000-000000000002":"10000000-0000-0000-0000-000000000001",email:"synthetic@example.invalid"}:null,paired,role,unlocked,unlockUnavailable});
   await context.route("https://esm.sh/**",route=>route.fulfill({
     contentType:"application/javascript",
     body:`
@@ -57,7 +57,7 @@ async function freshContext(options,{authenticated=false,paired=false}={}){
             async signInWithPassword(){return {error:null}}
           },
           from(table){
-            if(table==='profiles')return {select(){return {eq(){return {async maybeSingle(){return {data:current()?{display_name:'Provförälder'}:null,error:null}}}}}}};
+            if(table==='profiles')return {select(){return {eq(){return {async maybeSingle(){return {data:current()?{display_name:window.__HK_TEST_ROLE__==='teen'?'Provtonåring':'Provförälder'}:null,error:null}}}}}}};
             if(table==='swipe_answers')return {
               select(){return {async eq(){return {data:[...answers.values()],error:null}}}},
               async upsert(row,options){answers.set(row.card_id,row);window.__HK_SAVED_SWIPE__={row,options};return {error:null}}
@@ -65,12 +65,17 @@ async function freshContext(options,{authenticated=false,paired=false}={}){
             throw new Error('Unexpected table '+table);
           },
           async rpc(name){
-            if(name==='my_family_members')return {data:current()?[{user_id:current().id,role:'parent',display_name:'Provförälder'},...(window.__HK_TEST_PAIRED__?[{user_id:'10000000-0000-0000-0000-000000000002',role:'teen',display_name:'Provtonåring'}]:[])]:[],error:null};
+            if(name==='my_family_members')return {data:current()?(window.__HK_TEST_PAIRED__?[{user_id:'10000000-0000-0000-0000-000000000001',role:'parent',display_name:'Provförälder'},{user_id:'10000000-0000-0000-0000-000000000002',role:'teen',display_name:'Provtonåring'}]:[{user_id:current().id,role:window.__HK_TEST_ROLE__,display_name:window.__HK_TEST_ROLE__==='teen'?'Provtonåring':'Provförälder'}]):[],error:null};
              if(name==='shared_swipe_matches'){
                window.__HK_MATCH_RPC_CALLS__=(window.__HK_MATCH_RPC_CALLS__||0)+1;
                if(window.__HK_RPC_UNAVAILABLE__)return {data:null,error:{message:'synthetic unavailable'}};
                return {data:window.__HK_TEST_PAIRED__?[{deck_id:'general',card_id:'general-01',answer:true},{deck_id:'general',card_id:'general-02',answer:false},{deck_id:'general',card_id:'general-99',answer:true}]:[],error:null};
              }
+            if(name==='shared_general_deck_complete'){
+              window.__HK_UNLOCK_RPC_CALLS__=(window.__HK_UNLOCK_RPC_CALLS__||0)+1;
+              if(window.__HK_UNLOCK_RPC_UNAVAILABLE__)return {data:null,error:{message:'synthetic unavailable'}};
+              return {data:!!(window.__HK_TEST_PAIRED__&&window.__HK_TEST_UNLOCKED__),error:null};
+            }
             if(name==='create_family_invite')return {data:'2030-01-01T12:00:00.000Z',error:null};
             throw new Error('Unexpected RPC '+name);
           }
@@ -103,6 +108,7 @@ try{
   await m.page.getByRole("heading",{name:"Gillaswajpen"}).waitFor();
   assert.match(await m.page.locator("#live-app").innerText(),/sparas privat i ditt konto/i);
    assert.equal(await m.page.evaluate(()=>window.__HK_MATCH_RPC_CALLS__||0),0,'Unpaired member must not request aggregate matches');
+  assert.equal(await m.page.evaluate(()=>window.__HK_UNLOCK_RPC_CALLS__||0),0,'Unpaired member must not request theme unlock status');
   assert.match(await m.page.locator("#swipe-card").getAttribute("aria-label"),/Kort 1 av 34/);
   await checkOverflow(m.page,"Mobile swipe");
   await capture(m.page,"mobile-swipe.png");
@@ -141,9 +147,14 @@ try{
   assert.equal(await paired.page.locator(".swipe-match-list li").count(),1,"Only the known mutual YES appears; malicious RPC NO and unknown cards are discarded");
   const sharedText=await paired.page.locator(".swipe-results").innerText();
   assert.match(sharedText,/Jag uppskattar när vi gör saker tillsammans utan mobiltelefoner/,"The mutual YES is displayed");
+  assert.match(sharedText,/REGELBASERAD · INTE AI/,"The summary is clearly labelled");
+  assert.match(sharedText,/Kort sammanfattning för förälder/,"The parent sees parent-specific wording");
+  assert.match(sharedText,/Be tonåringen välja vilket gemensamt ja-svar/,"The parent prompt is derived from mutual YES only");
   assert.doesNotMatch(sharedText,/Jag vill helst prata färdigt innan någon kommer med råd/,"The mutual NO is never displayed");
   assert.doesNotMatch(sharedText,/Det ni båda svarat nej till|Två nej/,"No mutual NO headings or counts");
   assert.ok((await paired.page.evaluate(()=>window.__HK_MATCH_RPC_CALLS__))>0,"Paired account requests the aggregate RPC");
+  assert.equal(await paired.page.locator(".swipe-themes details").count(),0,"Incomplete paired family must not see theme cards");
+  assert.match(await paired.page.locator(".swipe-themes").innerText(),/låsta tills ni båda har besvarat alla 34 kort/i);
   await checkOverflow(paired.page,"Mobile matched swipes");
   await capture(paired.page,"mobile-shared-swipes.png");
   await paired.page.evaluate(()=>{window.__HK_RPC_UNAVAILABLE__=true;});
@@ -151,6 +162,27 @@ try{
   await paired.page.locator(".swipe-results [role='alert']").waitFor();
   assert.equal(await paired.page.locator(".swipe-match-list li").count(),0,"RPC failure must clear previous matches");
   await paired.context.close();
+  const pairedTeen=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,paired:true,role:"teen"});
+  await pairedTeen.page.goto(base+"#swipe",{waitUntil:"load"});
+  const teenSummary=await pairedTeen.page.locator(".swipe-rule-summary").innerText();
+  assert.match(teenSummary,/Kort sammanfattning för tonåring/,"The teen sees teen-specific wording");
+  assert.match(teenSummary,/Välj gärna ett gemensamt ja-svar/,"The teen prompt is derived from mutual YES only");
+  assert.doesNotMatch(teenSummary,/Jag vill helst prata färdigt innan någon kommer med råd/,"The teen summary cannot include a mutual NO");
+  await pairedTeen.context.close();
+  const unlocked=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,paired:true,unlocked:true});
+  await unlocked.page.goto(base+"#swipe",{waitUntil:"load"});
+  await unlocked.page.locator(".swipe-themes details").first().waitFor();
+  assert.equal(await unlocked.page.locator(".swipe-themes details").count(),6,"All six theme previews unlock only after backend confirmation");
+  assert.match(await unlocked.page.locator(".swipe-themes").innerText(),/upplåsta för förhandsvisning/i);
+  await checkOverflow(unlocked.page,"Mobile unlocked theme previews");
+  await capture(unlocked.page,"mobile-themes-unlocked.png");
+  await unlocked.context.close();
+  const unavailable=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,paired:true,unlockUnavailable:true});
+  await unavailable.page.goto(base+"#swipe",{waitUntil:"load"});
+  await unavailable.page.locator("#retry-theme-unlock").waitFor();
+  assert.equal(await unavailable.page.locator(".swipe-themes details").count(),0,"RPC errors must keep theme previews locked");
+  assert.match(await unavailable.page.locator(".swipe-themes").innerText(),/inte att kontrollera/i);
+  await unavailable.context.close();
   const d=await freshContext({viewport:{width:1440,height:900},deviceScaleFactor:1},{authenticated:true});
   await d.page.getByRole("heading",{name:/Hej[ ,]+Provförälder/}).waitFor();
   assert.equal(await d.page.locator("#live-desktop-nav a").count(),8);

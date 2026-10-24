@@ -7,6 +7,7 @@ on:
       - "supabase/migrations/20261022132848_shared_swipe_matches.sql"
       - "supabase/migrations/20261024094338_allow_self_only_swipe_upsert_key_columns.sql"
       - "supabase/migrations/20261024130000_shared_swipe_matches_yes_only.sql"
+      - "supabase/migrations/20261024170000_shared_general_deck_complete.sql"
       - "supabase/tests/shared_swipe_matches.sql"
       - "supabase/tests/fixtures/shared_swipe_contract_schema.sql"
   workflow_dispatch:
@@ -56,15 +57,20 @@ jobs:
           docker exec -i "${{ job.services.postgres.id }}" \
             psql -U postgres -d postgres -v ON_ERROR_STOP=1 -X -q \
             < supabase/migrations/20261024130000_shared_swipe_matches_yes_only.sql
-      - name: Assert 14 real pgTAP test results
+      - name: Apply server-side two-member general deck unlock gate
+        run: |
+          docker exec -i "${{ job.services.postgres.id }}" \
+            psql -U postgres -d postgres -v ON_ERROR_STOP=1 -X -q \
+            < supabase/migrations/20261024170000_shared_general_deck_complete.sql
+      - name: Assert 26 real pgTAP test results
         shell: bash
         run: |
           set -euo pipefail
           docker exec -i "${{ job.services.postgres.id }}" \
             psql -U postgres -d postgres -v ON_ERROR_STOP=1 -X -q -A -t \
             < supabase/tests/shared_swipe_matches.sql | tee /tmp/shared-swipe-test.log
-          grep -qx '1..14' /tmp/shared-swipe-test.log
+          grep -qx '1..26' /tmp/shared-swipe-test.log
           if grep -Eq '^(not ok|# Looks like you failed)' /tmp/shared-swipe-test.log; then
             exit 1
           fi
-          test "$(grep -Ec '^ok [0-9]+' /tmp/shared-swipe-test.log)" -eq 14
+          test "$(grep -Ec '^ok [0-9]+' /tmp/shared-swipe-test.log)" -eq 26
