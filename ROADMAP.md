@@ -107,6 +107,13 @@ Listan är en samlad arbetsplan för att slutföra Gillaswajpen. Kryssa av förs
 - [ ] **10. Bygg en säker datamodell för AI-medlarens tillåtna kontext.** Endast gemensamma JA och godkända sammanfattningar får användas; privata AI-samtal och övriga swajpsvar får inte läcka mellan konton.
 - [ ] **11. Bygg AI-genererade sammanfattningar först efter integritetsgranskning.** Säkerställ dataminimering, behörigheter och kvalitetskontroller; förmedla inga NEJ, oenigheter eller ensidiga svar.
 
+**Prioritet 2 – Innehållsutökning i kortlekarna (tillägg 24 oktober 2026)**
+
+- [ ] **15. Fyll på temakortlekarna med psykologiskt genomtänkta, lättillgängliga kort.** Prioritera särskilt **Aktiviteter tillsammans** och **Samtalsämnen**, med ett stort, varierat urval av konkreta alternativ som både tonåring och vuxen kan säga JA till. Utöka även de fyra övriga temakortlekarna i måttlig omfattning. Assistenten ansvarar för förslag, redaktionell granskning, implementation och tester.
+  - **Innehållsprinciper:** Utgå från kunskap om ungdomars autonomi, relationsskapande, ömsesidighet och utvecklingsnivå utan att överdriva evidensen för enskilda kort. Använd vardagligt, icke-terapeutiserande språk som tonåringar förstår; undvik moraliserande, ledande, pinsamma eller alltför privata formuleringar. Erbjud variation i energi, kostnad, tidsåtgång, intressen och social intensitet (inklusive gratis, hemma, ute, digitalt, korta och längre aktiviteter). Samtalsämnen ska rymma både lekfulla, nyfikna och lite djupare frågor med frivillighet och respekt för gränser. JA betyder intresse/förslag, inte löfte eller samtycke till genomförande.
+  - **Tekniska krav:** Bevara befintliga stabila kort-ID:n och lagrade svar, tilldela nya unika ID:n, verifiera att alla kort är spelbara och att bara JA+JA kan förekomma i gemensamma resultat, sammanfattningar, Schyssta listan och AI-kontext. Testa begriplighet och rimlig tidsåtgång med faktiska användare innan påståenden om effekt eller användbarhet.
+  - **Behöver Erik – avvaktar endast inför verklig användargranskning:** Läs och godkänn slutligt korturval/ton och ordna frivillig återkoppling från tonåring och vuxen innan bredare lansering. Innehållsförslag och kod kan tas fram självständigt dessförinnan.
+
 **Prioritet 4 – Kvalitet och användbarhet**
 
 - [ ] **12. Granska och förbättra de 34 allmänna korten.** Pröva psykologisk relevans, trygghet, begriplighet, rollperspektiv, skillnaden mellan önskemål och nuläge samt om JA/NEJ är ett lämpligt svarssätt.
