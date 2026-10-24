@@ -64,7 +64,11 @@ async function freshContext(options,{authenticated=false}={}){
             };
             throw new Error('Unexpected table '+table);
           },
-          async rpc(){return {data:current()?[{user_id:current().id,role:'parent',display_name:'Provförälder'}]:[],error:null}}
+          async rpc(name){
+            if(name==='my_family_members')return {data:current()?[{user_id:current().id,role:'parent',display_name:'Provförälder'}]:[],error:null};
+            if(name==='create_family_invite')return {data:'2030-01-01T12:00:00.000Z',error:null};
+            throw new Error('Unexpected RPC '+name);
+          }
         };
       }
     `
@@ -86,7 +90,7 @@ try{
   await capture(login.page,"mobile-login.png");
   await login.context.close();
   const m=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true});
-  await m.page.getByRole("heading",{name:/Hej, Provförälder/}).waitFor();
+  await m.page.getByRole("heading",{name:/Hej[ ,]+Provförälder/}).waitFor();
   assert.match(await m.page.locator("#live-app").innerText(),/Din familj/i);
   await checkOverflow(m.page,"Mobile homepage");
   await capture(m.page,"mobile-home.png");
@@ -108,6 +112,13 @@ try{
   await m.page.getByRole("heading",{name:"Använd en familjekod"}).waitFor();
   assert.ok(await m.page.locator("#join-family").isVisible(),"A singleton account must be able to enter a family code");
   assert.ok(await m.page.locator("#waiting").isVisible(),"A singleton account must be able to create an invite");
+  await m.page.getByRole("button",{name:"Skapa ny inbjudningskod"}).click();
+  await m.page.locator("#invite-qr:not(.hidden)").waitFor();
+  const qrSource=await m.page.locator("#invite-qr-image").getAttribute("src");
+  const inviteHref=await m.page.locator("#invite-link").getAttribute("href");
+  assert.match(qrSource,/^data:image\/svg\+xml/,'QR code must be generated locally as an SVG data URL');
+  assert.match(inviteHref,/konto\.html#invite=[A-F0-9]{36}$/,'Invitation link must contain the generated code in a URL fragment');
+  assert.equal(new URL(inviteHref).origin,new URL(base).origin,'QR invitation must not use an external service');
   await checkOverflow(m.page,"Mobile family pairing");
   await capture(m.page,"mobile-pairing.png");
   await m.page.goto(base+"#hem",{waitUntil:"load"});
@@ -117,7 +128,7 @@ try{
   await capture(m.page,"mobile-inbox.png");
   await m.context.close();
   const d=await freshContext({viewport:{width:1440,height:900},deviceScaleFactor:1},{authenticated:true});
-  await d.page.getByRole("heading",{name:/Hej, Provförälder/}).waitFor();
+  await d.page.getByRole("heading",{name:/Hej[ ,]+Provförälder/}).waitFor();
   assert.equal(await d.page.locator("#live-desktop-nav a").count(),8);
   await checkOverflow(d.page,"Desktop homepage");
   await capture(d.page,"desktop-home.png");
