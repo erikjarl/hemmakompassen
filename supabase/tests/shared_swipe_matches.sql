@@ -3,7 +3,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
-select plan(10);
+select plan(11);
 
 insert into auth.users (id, email)
 values
@@ -50,6 +50,11 @@ select is(
   has_function_privilege('anon', 'public.shared_swipe_matches(text)', 'execute'),
   false,
   'anonymous users cannot execute the RPC'
+);
+select is(
+  has_column_privilege('authenticated', 'public.swipe_answers', 'updated_at', 'insert'),
+  true,
+  'signed-in users can insert updated_at as required by live swipe upsert'
 );
 select is(
   has_function_privilege('authenticated', 'public.shared_swipe_matches(text)', 'execute'),
