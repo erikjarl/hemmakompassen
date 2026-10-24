@@ -17,4 +17,11 @@ assert.match(script,/members\.find\(member=>member\.user_id===user\?\.id\)\?\.ro
 assert.match(script,/REGELBASERAD · INTE AI/,'Labels the deterministic summary clearly');
 assert.match(script,/Sammanfattningen använder enbart ömsesidiga ja-svar/,'States the summary privacy boundary');
 assert.doesNotMatch(script,/localStorage/,'No shared answers are cached locally');
+assert.match(script,/db\.rpc\('shared_general_deck_complete'\)/,'Checks both members completion through authenticated aggregate RPC');
+assert.match(script,/if\(!user\|\|members\.length!==2\)\{themesUnlocked=false/,'Never requests unlock for unpaired accounts');
+assert.match(script,/session!==sharedSession\|\|request!==themesRequest\|\|user\?\.id!==viewer/,'Ignores stale unlock responses after session change');
+assert.match(script,/if\(error\|\|typeof data!=='boolean'\)throw/,'Fail-closed when unlock RPC is missing or malformed');
+assert.match(script,/themesUnlocked=data===true/,'Only an explicit true unlocks theme previews');
+assert.match(script,/const unlocked=members\.length===2&&themesUnlocked&&!themesLoading&&!themesError/,'Never renders theme previews without a valid pair and current RPC');
+assert.match(script,/if\(swipeAnswers\.size===STATEMENTS\.length\)void fetchThemeUnlock\(\)/,'Rechecks completion after finishing the general deck');
 console.log('PASS: mutual-YES-only RPC results, role-specific rule summary, theme groups and fail-closed state');
