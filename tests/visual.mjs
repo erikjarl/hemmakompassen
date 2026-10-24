@@ -137,9 +137,12 @@ try{
   await paired.page.goto(base+"#swipe",{waitUntil:"load"});
   await paired.page.getByRole("heading",{name:"Era gemensamma svar"}).waitFor();
   await paired.page.getByRole("heading",{name:"Det ni båda svarat ja till"}).waitFor();
-  await paired.page.getByRole("heading",{name:"Det ni båda svarat nej till"}).waitFor();
-  assert.equal(await paired.page.locator(".swipe-match-list li").count(),2,"Only known, mutually matched cards appear");
-  assert.match(await paired.page.locator(".swipe-results").innerText(),/Två nej är en överensstämmelse, inte ett gemensamt intresse/);
+  await paired.page.getByRole("heading",{name:"Relationer"}).waitFor();
+  assert.equal(await paired.page.locator(".swipe-match-list li").count(),1,"Only the known mutual YES appears; malicious RPC NO and unknown cards are discarded");
+  const sharedText=await paired.page.locator(".swipe-results").innerText();
+  assert.match(sharedText,/Jag uppskattar när vi gör saker tillsammans utan mobiltelefoner/,"The mutual YES is displayed");
+  assert.doesNotMatch(sharedText,/Jag vill helst prata färdigt innan någon kommer med råd/,"The mutual NO is never displayed");
+  assert.doesNotMatch(sharedText,/Det ni båda svarat nej till|Två nej/,"No mutual NO headings or counts");
   assert.ok((await paired.page.evaluate(()=>window.__HK_MATCH_RPC_CALLS__))>0,"Paired account requests the aggregate RPC");
   await checkOverflow(paired.page,"Mobile matched swipes");
   await capture(paired.page,"mobile-shared-swipes.png");
