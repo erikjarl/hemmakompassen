@@ -3,7 +3,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
-select plan(11);
+select plan(13);
 
 insert into auth.users (id, email)
 values
@@ -57,6 +57,11 @@ select is(
   'signed-in users can insert updated_at as required by live swipe upsert'
 );
 select is(
+  has_column_privilege('authenticated', 'public.swipe_answers', 'user_id', 'update'),
+  true,
+  'full-row upsert may update conflict columns but RLS enforces self-only ownership'
+);
+select is(
   has_function_privilege('authenticated', 'public.shared_swipe_matches(text)', 'execute'),
   true,
   'signed-in users can execute the reviewed RPC'
@@ -65,6 +70,15 @@ select is(
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"31000000-0000-0000-0000-000000000001","role":"authenticated"}', true);
 
+select lives_ok(
+  $$insert into public.swipe_answers(user_id,deck_id,card_id,answer,updated_at)
+    select user_id,deck_id,card_id,answer,now() from public.swipe_answers
+    where user_id=auth.uid() order by card_id limit 1
+    on conflict(user_id,deck_id,card_id) do update set
+      user_id=excluded.user_id,deck_id=excluded.deck_id,card_id=excluded.card_id,
+      answer=excluded.answer,updated_at=excluded.updated_at$$,
+  'existing own answer writable with full-row upsert; test rolls back'
+);
 select results_eq(
   $$select deck_id, card_id, answer from public.shared_swipe_matches('general')$$,
   $$values ('general'::text, 'same-no'::text, false), ('general'::text, 'same-yes'::text, true)$$,

@@ -5,6 +5,7 @@ on:
     paths:
       - ".github/workflows/shared-swipe-db-tests.yml"
       - "supabase/migrations/20261022132848_shared_swipe_matches.sql"
+      - "supabase/migrations/20261024094338_allow_self_only_swipe_upsert_key_columns.sql"
       - "supabase/tests/shared_swipe_matches.sql"
       - "supabase/tests/fixtures/shared_swipe_contract_schema.sql"
   workflow_dispatch:
@@ -44,15 +45,20 @@ jobs:
           docker exec -i "${{ job.services.postgres.id }}" \
             psql -U postgres -d postgres -v ON_ERROR_STOP=1 -X -q \
             < supabase/migrations/20261022132848_shared_swipe_matches.sql
-      - name: Assert 11 real pgTAP test results
+      - name: Apply PostgREST upsert privilege compatibility
+        run: |
+          docker exec -i "${{ job.services.postgres.id }}" \
+            psql -U postgres -d postgres -v ON_ERROR_STOP=1 -X -q \
+            < supabase/migrations/20261024094338_allow_self_only_swipe_upsert_key_columns.sql
+      - name: Assert 13 real pgTAP test results
         shell: bash
         run: |
           set -euo pipefail
           docker exec -i "${{ job.services.postgres.id }}" \
             psql -U postgres -d postgres -v ON_ERROR_STOP=1 -X -q -A -t \
             < supabase/tests/shared_swipe_matches.sql | tee /tmp/shared-swipe-test.log
-          grep -qx '1..11' /tmp/shared-swipe-test.log
+          grep -qx '1..13' /tmp/shared-swipe-test.log
           if grep -Eq '^(not ok|# Looks like you failed)' /tmp/shared-swipe-test.log; then
             exit 1
           fi
-          test "$(grep -Ec '^ok [0-9]+' /tmp/shared-swipe-test.log)" -eq 11
+          test "$(grep -Ec '^ok [0-9]+' /tmp/shared-swipe-test.log)" -eq 13
