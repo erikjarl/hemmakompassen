@@ -60,10 +60,56 @@
 **Ansvar:** Assistenten ansvarar för att skapa innehåll, skriva kod, tester, UI-texter och dokumentation och föra uppgifterna framåt. Projektägaren bidrar med idéer, granskar avgörande psykologiska/produktmässiga vägval och gör endast sådant som kräver dennes behörighet eller beslut. Alla nedanstående punkter är planerade, inte redan implementerade. Frontenddemo med syntetiska data kan byggas före säker backend.
 
 ### P1 – Gillaswajpen: gemensamma insikter
+
+
+#### Produktbeslut: endast ömsesidiga JA delas (24 oktober 2026)
+
+**Bindande regel för all fortsatt utveckling:** Gillaswajpens gemensamma resultat får **enbart visa kort där exakt två sammankopplade familjemedlemmar båda har svarat JA (`answer = true`) på samma kort**.
+
+- **JA + JA:** visas som ett gemensamt bejakat kort och får användas i behöriga, försiktigt formulerade gemensamma sammanfattningar.
+- **NEJ + NEJ:** **visas inte** (inte heller i en separat kategori, resultatlista, räknare eller sammanfattning).
+- **JA + NEJ, NEJ + JA eller enbart ett svar:** **visas inte**. Inget individuellt svar eller den andras val får avslöjas.
+- Den egna privata svarshistoriken förblir synlig och ändringsbar **endast för den inloggade användaren**. Den är inte en gemensam resultatvy.
+- Kontrollera båda JA **på serversidan via autentiserad RPC**; frontend filtrerar dessutom defensivt till `answer === true`. Visa inget gammalt eller osäkert resultat om RPC-anropet misslyckas eller session/familj byts.
+- Regeln omfattar **allmänna kortleken, samtliga temakortlekar, sparade gemensamma resultat, sammanfattningar, Schyssta listan-förslag och eventuell AI-medlarkontext**. Ett gemensamt JA är fortfarande bara ett förslag/samtalsämne, inte en bindande överenskommelse.
+- **Nuvarande kod behöver ändras:** `live-app.js` visar i dagsläget både gemensamma JA och gemensamma NEJ, och `shared_swipe_matches` returnerar även `false`. Tidigare beslut om att visa två NEJ är **ersatt** av detta beslut. Att äldre historik nedan nämner NEJ är en dokumentation av tidigare implementation, **inte** det nu gällande kravet.
+
+#### Prioriterad att göra-lista (sparad 24 oktober 2026)
+
+Listan är en samlad arbetsplan för att slutföra Gillaswajpen. Kryssa av först efter verifierad funktion. Ordningen nedan ersätter inte integritets- och säkerhetskraven i övriga ROADMAP.
+
+**Prioritet 1 – Färdigställ grundfunktionen**
+
+- [ ] **1. Verifiera resultaten med två riktiga testkonton.** Testa den publicerade webbsidan med föräldern och tonåringen, att endast deras **3 gemensamma JA** visas utifrån dagens testdata och att de 8 gemensamma NEJ, de 23 olika svaren och alla enskilda svar förblir dolda. Testa också ändrat JA/NEJ, inloggning och utloggning.
+- [ ] **2. Gör en begriplig gemensam resultatsida – endast JA + JA.** Ta bort avsnittet för gemensamma NEJ och dess antal; gruppera de tillåtna gemensamma JA-korten tematiskt, hantera tomt läge och återläsning, och presentera dem som samtalsöppningar snarare än överenskommelser.
+- [ ] **3. Skapa korta, separata sammanfattningar för förälder och tonåring.** Bygg på **enbart gemensamma JA**: identifiera teman, möjliga styrkor, försiktiga hypoteser och konkreta samtalsöppningar. Undvik att påstå något om sådant där svaren är olika eller båda svarat NEJ.
+- [ ] **4. Bygg först en tydligt märkt regelbaserad sammanfattning utan AI.** Använd bara ömsesidiga JA och formulera observationer skilt från tolkningar. Inga privata data till en extern modell.
+
+**Prioritet 2 – Temakortlekar**
+
+- [ ] **5. Lås upp temakortlekar först när båda avslutat allmänna kortleken.** Verifiera bådas slutförande säkert via backend utan att exponera deras svar.
+- [ ] **6. Gör alla sex temakortlekar spelbara i liveversionen.** Samtalsämnen, Aktiviteter tillsammans, Regler till Schyssta listan, Sätt att visa uppskattning, Svåra situationer och återhämtning samt Små gemensamma förändringar.
+- [ ] **7. Spara och återuppta varje temakortlek per användare.** Ge möjlighet att fortsätta, ändra egna svar och återvända till tidigare tillåtna resultat.
+- [ ] **8. Visa sparade gemensamma resultat och rollanpassade sammanfattningar per kortlek.** Samma **endast JA + JA**-regel ska användas i varje kortlek och vid senare återläsning.
+
+**Prioritet 3 – Koppling till övriga Hemmakompassen**
+
+- [ ] **9. Skapa klickbara Schyssta listan-förslag från ömsesidiga JA.** Regler blir inte överenskommelser förrän **båda uttryckligen har godkänt** dem.
+- [ ] **10. Bygg en säker datamodell för AI-medlarens tillåtna kontext.** Endast gemensamma JA och godkända sammanfattningar får användas; privata AI-samtal och övriga swajpsvar får inte läcka mellan konton.
+- [ ] **11. Bygg AI-genererade sammanfattningar först efter integritetsgranskning.** Säkerställ dataminimering, behörigheter och kvalitetskontroller; förmedla inga NEJ, oenigheter eller ensidiga svar.
+
+**Prioritet 4 – Kvalitet och användbarhet**
+
+- [ ] **12. Granska och förbättra de 34 allmänna korten.** Pröva psykologisk relevans, trygghet, begriplighet, rollperspektiv, skillnaden mellan önskemål och nuläge samt om JA/NEJ är ett lämpligt svarssätt.
+- [ ] **13. Användartesta tidsåtgång och gränssnitt.** Undersök om 10–15 minuter är realistiskt; testa mobilgester, knappar, tangentbord, reducerad rörelse, tillgänglighet och förståelse av sammanfattningarna.
+- [ ] **14. Testa integritet och felhantering.** Flera familjer, avbruten parning, konto-/sessionsbyte, nätverksfel, och att endast kort med verifierade **JA + JA** någonsin visas som gemensamma resultat.
+
+**Nästa logiska genomförandesteg:** Punkt 1–4, i synnerhet att rätta den nuvarande resultatvyn och RPC-filtreringen så att **alla gemensamma NEJ döljs**. Först därefter temakortlekar.
+
 - [x] 2026-10-21: Tinder-liknande kortinteraktion i Gillaswajpen: följ fingret/muspekaren, luta kortet, visa svarsstämpel och animera bort kortet; piltangenter, knappar och reducerad rörelse stöds. Återstår verklig mobilgranskning av ny körning.
 - [x] 2026-10-23: Den återställda allmänna kortleken laddar och sparar nu den inloggade användarens egna svar i `swipe_answers`, återupptar vid första obesvarade kortet och rensar klientminnet vid konto-/sessionsbyte. Svaren är fortsatt privata via self-only RLS. Gemensam resultatvy återstår och får bara använda den granskade aggregerande RPC:n efter godkänd migration.
 
-- [ ] **[A]** Visa i gemensam resultatvy endast kort där BÅDA har svarat och valt samma alternativ. 2026-10-22: förberedd autentiserad RPC-migration som returnerar endast samma val från exakt två familjemedlemmar och aldrig användar-id, oenighet, ensidiga svar eller annan familjs träffar. Ett gemensamt nej returneras uttryckligen som `false` och får inte beskrivas som gemensamt intresse. 2026-10-24: minimal gemensam resultatvy implementerad på utvecklingsbranchen. Den visar endast RPC-resultat, separerar ja och nej, har tydliga vänt-/felläge och möjlighet att uppdatera. 2026-10-24: fristående pgTAP-test i GitHub Actions för verklig PostgreSQL 17 och syntetiskt schema förberett utan avgiftsbelagd Supabase-branch. Vänta på CI-resultat.
+- [ ] **[A]** Visa i gemensam resultatvy endast kort där BÅDA har svarat **JA**, enligt det nyare bindande produktbeslutet ovan. Gemensamma NEJ får inte visas. 2026-10-22: förberedd autentiserad RPC-migration som returnerar endast samma val från exakt två familjemedlemmar och aldrig användar-id, oenighet, ensidiga svar eller annan familjs träffar. Ett gemensamt nej returneras uttryckligen som `false` och får inte beskrivas som gemensamt intresse. 2026-10-24: minimal gemensam resultatvy implementerad på utvecklingsbranchen. Den visar endast RPC-resultat, separerar ja och nej, har tydliga vänt-/felläge och möjlighet att uppdatera. 2026-10-24: fristående pgTAP-test i GitHub Actions för verklig PostgreSQL 17 och syntetiskt schema förberett utan avgiftsbelagd Supabase-branch. Vänta på CI-resultat.
 - 2026-10-24: Den skyddade matchnings-RPC:n är nu installerad i den befintliga Supabase-databasen. Databaskontroll under autentiserad roll gav 3 gemensamma ja, 8 gemensamma nej och 23 dolda oenigheter för båda testkontona. Totalt 68 sparade svar kvar. Separat migration 20261024094338 återställde PostgREST full-row upsert och ett negativt RLS-test bekräftade att svar inte kan flyttas till annan användare. Browserkontroll mot den publicerade sidan återstår. Återstår: verifiera mot verkligt Supabase-schema, granska och applicera migrationen efter godkännande samt testa med två konton.
 - [ ] **[A]** Utforma separata, korta och begripliga resultatsammanfattningar för förälder och tonåring: identifiera återkommande teman, möjliga problemområden, styrkor, samt konkreta samtalsöppningar och gemensamma lösningar. Skilj observationer från hypoteser och undvik överdrivna psykologiska slutsatser.
 - [ ] **[A]** Skapa AI-genererad sammanfattning i liveversionen med endast behörig, överenskommen information. Bygg först en tydligt märkt regelbaserad mock-sammanfattning i frontend utan verklig AI eller känsliga data.
