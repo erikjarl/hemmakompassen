@@ -61,7 +61,7 @@ function sharedSummary(groups){
       ?'Välj gärna ett gemensamt ja-svar som känns lättast att börja med och berätta vad det betyder för dig. Du behöver inte hålla med om mer än det som faktiskt står här.'
       :'Välj tillsammans ett gemensamt ja-svar och fråga vad det betyder för var och en.';
   return '<aside class="swipe-rule-summary" aria-labelledby="shared-summary-heading"><span class="swipe-summary-label">REGELBASERAD · INTE AI</span><h3 id="shared-summary-heading">Kort sammanfattning för '+esc(roleLabel)+'</h3>'+
-    '<p><strong>Observation:</strong> Ni har '+count+' gemensamma ja-svar inom '+esc(categoryText)+'. Det visar bara vad ni båda har bejakat i Gillaswajpen.</p>'+
+    '<p><strong>Observation:</strong> Ni har '+count+' '+(count===1?'gemensamt ja-svar':'gemensamma ja-svar')+' inom '+esc(categoryText)+'. Det visar bara vad ni båda har bejakat i Gillaswajpen.</p>'+
     '<p><strong>Samtalsöppning:</strong> '+esc(opening)+'</p>'+
     '<p class="live-muted">Sammanfattningen använder enbart ömsesidiga ja-svar. Den använder inte nej-svar, oenighet, ensidiga svar eller AI.</p></aside>';
 }
