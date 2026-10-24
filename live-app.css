@@ -73,3 +73,16 @@
  .live-mobile{scrollbar-width:thin;scrollbar-color:#a97c38 #11141e}
 }
 @media(prefers-reduced-motion:reduce){.home-hero-link{transition:none}}
+
+
+/* Only RPC-confirmed mutual answers */
+.swipe-results{margin:25px 0;padding:clamp(18px,3vw,30px)}
+.swipe-results h2{margin:10px 0 14px;font-size:clamp(23px,3vw,30px)}
+.swipe-results h3{margin:23px 0 12px;color:#f1bf75;font-size:18px}
+.swipe-results p{line-height:1.6}
+.swipe-match-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:12px;padding:0;list-style:none}
+.swipe-match-list li{padding:15px 17px;border:1px solid #494452;background:#23283a;border-radius:13px}
+.swipe-match-list li p{margin:7px 0 0}
+.swipe-match-category{color:#f1bf75;font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700}
+.swipe-refresh{margin-top:20px}
+@media(max-width:600px){.swipe-match-list{grid-template-columns:1fr}}
