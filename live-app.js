@@ -160,11 +160,11 @@ function themeDecksView(){
       ?'Kontrollerar om ni båda har avslutat allmänna kortleken…'
       :themesError||(!unlocked
         ?'Temakortlekarna är låsta tills ni båda har besvarat alla 34 kort i allmänna kortleken.'
-        :'Ni har båda avslutat allmänna kortleken. Du kan nu swajpa temakort privat; gemensamma temaresultat visas inte ännu.');
+        :'Ni har båda avslutat allmänna kortleken. Temakortlekarna är upplåsta för förhandsvisning och privat swajpning; gemensamma temaresultat visas inte ännu.');
   return '<section class="swipe-themes" aria-labelledby="swipe-themes-heading"><h2 id="swipe-themes-heading">Fler kortlekar</h2>'+
     '<p class="live-muted" role="status">'+esc(status)+'</p>'+
     THEME_DECKS.map(deck=>card(unlocked
-      ?'<h3>'+esc(deck.title)+'</h3><p class="live-muted">Din privata status: '+themeAnswers.get(deck.id).size+' / '+deck.cards.length+' kort</p><button type="button" class="live-button" data-theme-open="'+esc(deck.id)+'">'+(themeAnswers.get(deck.id).size===deck.cards.length?'Visa och ändra svar':'Öppna kortleken')+'</button>'
+      ?'<details><summary><strong>'+esc(deck.title)+'</strong> · '+deck.cards.length+' kort</summary><ul>'+deck.cards.map(t=>'<li>'+esc(t)+'</li>').join('')+'</ul></details><p class="live-muted">Din privata status: '+themeAnswers.get(deck.id).size+' / '+deck.cards.length+' kort</p><button type="button" class="live-button" data-theme-open="'+esc(deck.id)+'">'+(themeAnswers.get(deck.id).size===deck.cards.length?'Visa och ändra svar':'Öppna kortleken')+'</button>'
       :'<h3>'+esc(deck.title)+'</h3><p class="live-muted">Låst · öppnas när ni båda är klara.</p>'
     )).join('')+
     (themesError?'<button type="button" class="live-button" id="retry-theme-unlock">Kontrollera igen</button>':'')+
@@ -245,13 +245,11 @@ return '<h1>'+label+'</h1>'+card('<h2>Funktionen är under utveckling</h2><p>Du 
 function render(){if(activeThemeDeck&&!themeAccessAllowed())activeThemeDeck=null;menu();$('live-app').innerHTML=user?(page()==='hem'?home():section(page())):login();setupSwipeGesture();$('sidebar-account').textContent=user?'Inloggad: '+(profile?.display_name||user.email):'Inte inloggad';$('account-link').textContent=user?'Ditt konto →':'Logga in →';}
 async function refresh(){
 const {data:{user:u},error}=await db.auth.getUser();if(error&&error.name!=='AuthSessionMissingError')throw error;user=u;profile=null;members=[];swipeAnswers.clear();for(const answers of themeAnswers.values())answers.clear();activeThemeDeck=null;themeIndex=0;themeReview=false;themeSaveError='';swipeBusy=false;swipeLoadError='';swipeSaveError='';swipeReview=false;swipeIndex=0;sharedMatches=[];sharedError='';sharedLoading=false;sharedSession++;sharedRequest++;themesUnlocked=false;themesLoading=false;themesError='';themesRequest++;
-if(user){const [p,m,s]=await Promise.all([db.from('profiles').select('display_name').eq('user_id',user.id).maybeSingle(),db.rpc('my_family_members'),db.from('swipe_answers').select('deck_id,card_id,answer').eq('user_id',user.id)]);if(p.error)throw p.error;if(m.error)throw m.error;profile=p.data;members=m.data||[];if(s.error)swipeLoadError='Kontrollera anslutningen och försök igen.';else for(const answer of s.data||[]){
+if(user){const [p,m,s]=await Promise.all([db.from('profiles').select('display_name').eq('user_id',user.id).maybeSingle(),db.rpc('my_family_members'),db.from('swipe_answers').select('deck_id,card_id,answer').eq('user_id',user.id)]);if(p.error)throw p.error;if(m.error)throw m.error;profile=p.data;members=m.data||[];if(s.error)swipeLoadError='Kontrollera anslutningen och försök igen.';else for(const answer of s.data||[])if(answer.deck_id==='general'&&typeof answer.answer==='boolean'&&STATEMENTS.some((_,index)=>swipeCardId(index)===answer.card_id))swipeAnswers.set(answer.card_id,answer.answer);
+if(!s.error)for(const answer of s.data||[]){
   if(typeof answer.answer!=='boolean')continue;
-  if(answer.deck_id==='general'&&STATEMENTS.some((_,index)=>swipeCardId(index)===answer.card_id))swipeAnswers.set(answer.card_id,answer.answer);
-  else{
-    const deck=THEME_DECKS.find(d=>d.id===answer.deck_id);
-    if(deck&&deck.cards.some((_,index)=>themeCardId(deck,index)===answer.card_id))themeAnswers.get(deck.id).set(answer.card_id,answer.answer);
-  }
+  const deck=THEME_DECKS.find(d=>d.id===answer.deck_id);
+  if(deck&&deck.cards.some((_,index)=>themeCardId(deck,index)===answer.card_id))themeAnswers.get(deck.id).set(answer.card_id,answer.answer);
 }swipeIndex=nextUnanswered();}
 render();
 if(user&&members.length===2){void fetchSwipeMatches();void fetchThemeUnlock();}
