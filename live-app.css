@@ -93,3 +93,16 @@
 .swipe-summary-label{color:#f1bf75;font-size:11px;letter-spacing:.1em;font-weight:700}
 .swipe-refresh{margin-top:20px}
 @media(max-width:600px){.swipe-match-list{grid-template-columns:1fr}}
+
+
+/* Keep the theme-deck back action separate from its heading on narrow screens. */
+.swipe-theme-play .swipe-theme-back{
+  display:flex;
+  width:max-content;
+  max-width:100%;
+  margin:0 auto 24px;
+}
+.swipe-theme-play .swipe-eyebrow{
+  display:block;
+  margin-bottom:10px;
+}

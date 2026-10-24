@@ -47,6 +47,16 @@ let swipeIndex=0,swipeBusy=false,swipeReview=false,swipeLoadError='',swipeSaveEr
 let sharedMatches=[],sharedError='',sharedLoading=false,sharedSession=0,sharedRequest=0;
 let themesUnlocked=false,themesLoading=false,themesError='',themesRequest=0;
 const swipeAnswers=new Map();
+const themeAnswers=new Map(THEME_DECKS.map(deck=>[deck.id,new Map()]));
+let activeThemeDeck=null,themeIndex=0,themeReview=false,themeSaveError='';
+const themeCardId=(deck,index)=>deck.id+'-'+String(index+1).padStart(2,'0');
+const themeAccessAllowed=()=>!!user&&members.length===2&&themesUnlocked&&!themesLoading&&!themesError;
+function nextThemeUnanswered(deck,start=0){
+  const answers=themeAnswers.get(deck.id);
+  for(let i=start;i<deck.cards.length;i++)if(!answers.has(themeCardId(deck,i)))return i;
+  for(let i=0;i<start;i++)if(!answers.has(themeCardId(deck,i)))return i;
+  return deck.cards.length;
+}
 const swipeCardId=index=>'general-'+String(index+1).padStart(2,'0');
 function nextUnanswered(start=0){for(let i=start;i<STATEMENTS.length;i++)if(!swipeAnswers.has(swipeCardId(i)))return i;for(let i=0;i<start;i++)if(!swipeAnswers.has(swipeCardId(i)))return i;return STATEMENTS.length;}
 
@@ -120,7 +130,7 @@ async function fetchSwipeMatches(){
 }
 
 async function fetchThemeUnlock(){
-  if(!user||members.length!==2){themesUnlocked=false;themesLoading=false;return;}
+  if(!user||members.length!==2){themesUnlocked=false;themesLoading=false;activeThemeDeck=null;return;}
   const viewer=user.id,session=sharedSession,request=++themesRequest;
   themesUnlocked=false;themesLoading=true;themesError='';
   if(page()==='swipe'&&!swipeBusy)render();
@@ -129,9 +139,11 @@ async function fetchThemeUnlock(){
     if(session!==sharedSession||request!==themesRequest||user?.id!==viewer)return;
     if(error||typeof data!=='boolean')throw Error('Unlock RPC unavailable');
     themesUnlocked=data===true;
+    if(!themesUnlocked)activeThemeDeck=null;
   }catch(e){
     if(session!==sharedSession||request!==themesRequest||user?.id!==viewer)return;
     themesUnlocked=false;
+    activeThemeDeck=null;
     themesError='Det går inte att kontrollera om temakortlekarna är upplåsta just nu.';
   }finally{
     if(session===sharedSession&&request===themesRequest&&user?.id===viewer){
@@ -148,20 +160,68 @@ function themeDecksView(){
       ?'Kontrollerar om ni båda har avslutat allmänna kortleken…'
       :themesError||(!unlocked
         ?'Temakortlekarna är låsta tills ni båda har besvarat alla 34 kort i allmänna kortleken.'
-        :'Ni har båda avslutat allmänna kortleken. Temakortlekarna är upplåsta för förhandsvisning; möjlighet att swajpa dem byggs härnäst.');
+        :'Ni har båda avslutat allmänna kortleken. Temakortlekarna är upplåsta för förhandsvisning och privat swajpning; gemensamma temaresultat visas inte ännu.');
   return '<section class="swipe-themes" aria-labelledby="swipe-themes-heading"><h2 id="swipe-themes-heading">Fler kortlekar</h2>'+
     '<p class="live-muted" role="status">'+esc(status)+'</p>'+
     THEME_DECKS.map(deck=>card(unlocked
-      ?'<details><summary><strong>'+esc(deck.title)+'</strong> · '+deck.cards.length+' kort</summary><ul>'+deck.cards.map(t=>'<li>'+esc(t)+'</li>').join('')+'</ul></details>'
-      :'<h3>'+esc(deck.title)+'</h3><p class="live-muted">Låst · förhandsvisning öppnas när ni båda är klara.</p>'
+      ?'<details><summary><strong>'+esc(deck.title)+'</strong> · '+deck.cards.length+' kort</summary><ul>'+deck.cards.map(t=>'<li>'+esc(t)+'</li>').join('')+'</ul></details><p class="live-muted">Din privata status: '+themeAnswers.get(deck.id).size+' / '+deck.cards.length+' kort</p><button type="button" class="live-button" data-theme-open="'+esc(deck.id)+'">'+(themeAnswers.get(deck.id).size===deck.cards.length?'Visa och ändra svar':'Öppna kortleken')+'</button>'
+      :'<h3>'+esc(deck.title)+'</h3><p class="live-muted">Låst · öppnas när ni båda är klara.</p>'
     )).join('')+
     (themesError?'<button type="button" class="live-button" id="retry-theme-unlock">Kontrollera igen</button>':'')+
     '</section>';
 }
 
-function swipeView(){const total=STATEMENTS.length,answered=swipeAnswers.size,item=STATEMENTS[swipeIndex];if(swipeLoadError)return '<div class="swipe-experience"><header class="swipe-heading"><span class="swipe-eyebrow">UPPTÄCK VARANDRA</span><h1>Gillaswajpen</h1></header>'+card('<h2>Kunde inte hämta dina svar</h2><p role="alert">'+esc(swipeLoadError)+'</p><button class="live-button" type="button" id="swipe-reload">Försök igen</button>')+'</div>';return '<div class="swipe-experience"><header class="swipe-heading"><span class="swipe-eyebrow">UPPTÄCK VARANDRA</span><h1>Gillaswajpen</h1><p>Vad är viktigt för dig? Utforska korten i din egen takt.</p></header><div class="swipe-stage"><div class="swipe-stage-top"><span>ALLMÄNNA KORTLEKEN</span><span role="status">'+(item?(swipeIndex+1)+' / '+total:answered+' / '+total+' sparade')+'</span></div><div class="swipe-track"><div class="swipe-track-fill" style="width:'+Math.round(100*(item?(swipeReview?swipeIndex:answered):total)/total)+'%"></div></div>'+(item?'<div id="swipe-card" class="swipe-playing-card" tabindex="0" aria-label="Kort '+(swipeIndex+1)+' av '+total+'. Svep höger för ja eller vänster för nej."><span class="swipe-stamp swipe-stamp-no" aria-hidden="true">NEJ</span><span class="swipe-stamp swipe-stamp-yes" aria-hidden="true">JA</span><span class="swipe-category">'+esc(item[0])+'</span><h2>'+esc(item[1])+'</h2><span class="swipe-card-hint">Dra kortet åt höger eller vänster</span></div><div class="swipe-actions"><button type="button" class="swipe-choice swipe-no" data-swipe="no" aria-label="Nej">✕ <span>Nej</span></button><button type="button" class="swipe-choice swipe-yes" data-swipe="yes" aria-label="Ja">♥ <span>Ja</span></button></div>':'<div class="swipe-finished"><h2>Alla '+total+' svar är sparade</h2><p>Du kan gå igenom korten igen och ändra dina egna svar.</p><button class="live-button" type="button" id="swipe-restart">Gå igenom igen</button></div>')+'<p id="swipe-save-status" class="swipe-disclaimer" role="status">'+(swipeSaveError?esc(swipeSaveError):'Ditt svar sparas privat i ditt konto. Ett kort visas som gemensamt resultat först när båda har svarat ja.')+'</p></div>'+swipeResults()+themeDecksView()+'</div>';}
+
+function themeSwipeView(){
+  const deck=THEME_DECKS.find(d=>d.id===activeThemeDeck);
+  if(!deck||!themeAccessAllowed()){activeThemeDeck=null;return swipeView();}
+  const answers=themeAnswers.get(deck.id),item=deck.cards[themeIndex],answered=answers.size;
+  return '<div class="swipe-experience swipe-theme-play"><header class="swipe-heading">'+
+    '<button type="button" class="live-button swipe-theme-back" id="theme-back">← Alla kortlekar</button>'+
+    '<span class="swipe-eyebrow">TEMAKORTLEK · PRIVATA SVAR</span><h1>'+esc(deck.title)+'</h1>'+
+    '<p>Svara ja på sådant du vill prova eller prata om. Dina svar är privata. Ett ja är inte en bindande överenskommelse.</p></header>'+
+    '<div class="swipe-stage"><div class="swipe-stage-top"><span>'+esc(deck.title)+'</span><span role="status">'+
+    (item?(themeIndex+1)+' / '+deck.cards.length:answered+' / '+deck.cards.length+' sparade')+'</span></div>'+
+    '<div class="swipe-track"><div class="swipe-track-fill" style="width:'+Math.round(100*(item?(themeReview?themeIndex:answered):deck.cards.length)/deck.cards.length)+'%"></div></div>'+
+    (item?'<div id="swipe-card" class="swipe-playing-card" tabindex="0" aria-label="Temakort '+(themeIndex+1)+' av '+deck.cards.length+'. Svep höger för ja eller vänster för nej.">'+
+      '<span class="swipe-stamp swipe-stamp-no" aria-hidden="true">NEJ</span><span class="swipe-stamp swipe-stamp-yes" aria-hidden="true">JA</span>'+
+      '<span class="swipe-category">'+esc(deck.title)+'</span><h2>'+esc(item)+'</h2><span class="swipe-card-hint">Dra kortet åt höger eller vänster</span></div>'+
+      '<div class="swipe-actions"><button type="button" class="swipe-choice swipe-no" data-swipe="no" aria-label="Nej">✕ <span>Nej</span></button>'+
+      '<button type="button" class="swipe-choice swipe-yes" data-swipe="yes" aria-label="Ja">♥ <span>Ja</span></button></div>'
+      :'<div class="swipe-finished"><h2>Alla '+deck.cards.length+' svar är sparade</h2><p>Du kan gå igenom kortleken igen och ändra dina egna svar.</p>'+
+       '<button type="button" class="live-button" id="theme-restart">Gå igenom igen</button></div>')+
+    '<p id="swipe-save-status" class="swipe-disclaimer" role="status">'+
+    esc(themeSaveError||'Ditt svar sparas privat i ditt konto. Gemensamma temaresultat visas ännu inte.')+'</p></div></div>';
+}
+async function saveThemeAnswer(direction,index,deckId,viewer,session){
+  const deck=THEME_DECKS.find(d=>d.id===deckId);
+  if(!deck||!themeAccessAllowed()||user?.id!==viewer||sharedSession!==session||activeThemeDeck!==deckId){swipeBusy=false;return;}
+  const status=$('swipe-save-status');if(status)status.textContent='Sparar ditt svar…';
+  const row={user_id:viewer,deck_id:deckId,card_id:themeCardId(deck,index),answer:direction==='yes',updated_at:new Date().toISOString()};
+  let error;
+  try{({error}=await db.from('swipe_answers').upsert(row,{onConflict:'user_id,deck_id,card_id'}));}
+  catch(e){error=e;}
+  if(user?.id!==viewer||sharedSession!==session||activeThemeDeck!==deckId)return;
+  if(error){themeSaveError='Svaret kunde inte sparas. Försök igen.';swipeBusy=false;render();return;}
+  themeAnswers.get(deckId).set(row.card_id,row.answer);
+  themeSaveError='';
+  themeIndex=themeReview?index+1:nextThemeUnanswered(deck,index+1);
+  swipeBusy=false;render();
+}
+function advanceThemeSwipe(direction){
+  const deck=THEME_DECKS.find(d=>d.id===activeThemeDeck);
+  if(swipeBusy||page()!=='swipe'||!themeAccessAllowed()||!deck||themeIndex>=deck.cards.length)return;
+  const el=$('swipe-card');if(!el)return;
+  const index=themeIndex,deckId=deck.id,viewer=user.id,session=sharedSession;
+  swipeBusy=true;
+  const reduce=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  if(!reduce){el.style.transform='translateX('+(direction==='yes'?'120vw':'-120vw')+') rotate('+(direction==='yes'?18:-18)+'deg)';el.style.opacity='0';}
+  setTimeout(()=>saveThemeAnswer(direction,index,deckId,viewer,session),reduce?0:220);
+}
+
+function swipeView(){if(activeThemeDeck)return themeSwipeView();const total=STATEMENTS.length,answered=swipeAnswers.size,item=STATEMENTS[swipeIndex];if(swipeLoadError)return '<div class="swipe-experience"><header class="swipe-heading"><span class="swipe-eyebrow">UPPTÄCK VARANDRA</span><h1>Gillaswajpen</h1></header>'+card('<h2>Kunde inte hämta dina svar</h2><p role="alert">'+esc(swipeLoadError)+'</p><button class="live-button" type="button" id="swipe-reload">Försök igen</button>')+'</div>';return '<div class="swipe-experience"><header class="swipe-heading"><span class="swipe-eyebrow">UPPTÄCK VARANDRA</span><h1>Gillaswajpen</h1><p>Vad är viktigt för dig? Utforska korten i din egen takt.</p></header><div class="swipe-stage"><div class="swipe-stage-top"><span>ALLMÄNNA KORTLEKEN</span><span role="status">'+(item?(swipeIndex+1)+' / '+total:answered+' / '+total+' sparade')+'</span></div><div class="swipe-track"><div class="swipe-track-fill" style="width:'+Math.round(100*(item?(swipeReview?swipeIndex:answered):total)/total)+'%"></div></div>'+(item?'<div id="swipe-card" class="swipe-playing-card" tabindex="0" aria-label="Kort '+(swipeIndex+1)+' av '+total+'. Svep höger för ja eller vänster för nej."><span class="swipe-stamp swipe-stamp-no" aria-hidden="true">NEJ</span><span class="swipe-stamp swipe-stamp-yes" aria-hidden="true">JA</span><span class="swipe-category">'+esc(item[0])+'</span><h2>'+esc(item[1])+'</h2><span class="swipe-card-hint">Dra kortet åt höger eller vänster</span></div><div class="swipe-actions"><button type="button" class="swipe-choice swipe-no" data-swipe="no" aria-label="Nej">✕ <span>Nej</span></button><button type="button" class="swipe-choice swipe-yes" data-swipe="yes" aria-label="Ja">♥ <span>Ja</span></button></div>':'<div class="swipe-finished"><h2>Alla '+total+' svar är sparade</h2><p>Du kan gå igenom korten igen och ändra dina egna svar.</p><button class="live-button" type="button" id="swipe-restart">Gå igenom igen</button></div>')+'<p id="swipe-save-status" class="swipe-disclaimer" role="status">'+(swipeSaveError?esc(swipeSaveError):'Ditt svar sparas privat i ditt konto. Ett kort visas som gemensamt resultat först när båda har svarat ja.')+'</p></div>'+swipeResults()+themeDecksView()+'</div>';}
 async function saveSwipeAnswer(direction,index){const statusEl=$('swipe-save-status');if(statusEl)statusEl.textContent='Sparar ditt svar…';const row={user_id:user.id,deck_id:'general',card_id:swipeCardId(index),answer:direction==='yes',updated_at:new Date().toISOString()};const {error}=await db.from('swipe_answers').upsert(row,{onConflict:'user_id,deck_id,card_id'});if(error){swipeSaveError='Svaret kunde inte sparas. Kortet ligger kvar så att du kan försöka igen.';swipeBusy=false;render();return;}swipeAnswers.set(row.card_id,row.answer);swipeSaveError='';swipeIndex=swipeReview?index+1:nextUnanswered(index+1);swipeBusy=false;render();if(members.length===2){void fetchSwipeMatches();if(swipeAnswers.size===STATEMENTS.length)void fetchThemeUnlock();}}
-function advanceSwipe(direction){if(swipeBusy||page()!=='swipe'||!user||swipeIndex>=STATEMENTS.length)return;const el=$('swipe-card');if(!el)return;const index=swipeIndex;swipeBusy=true;const reduce=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;if(!reduce){el.style.transform='translateX('+(direction==='yes'?'120vw':'-120vw')+') rotate('+(direction==='yes'?18:-18)+'deg)';el.style.opacity='0';}setTimeout(()=>saveSwipeAnswer(direction,index),reduce?0:220);}
+function advanceSwipe(direction){if(activeThemeDeck){advanceThemeSwipe(direction);return;}if(swipeBusy||page()!=='swipe'||!user||swipeIndex>=STATEMENTS.length)return;const el=$('swipe-card');if(!el)return;const index=swipeIndex;swipeBusy=true;const reduce=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;if(!reduce){el.style.transform='translateX('+(direction==='yes'?'120vw':'-120vw')+') rotate('+(direction==='yes'?18:-18)+'deg)';el.style.opacity='0';}setTimeout(()=>saveSwipeAnswer(direction,index),reduce?0:220);}
 function setupSwipeGesture(){const el=$('swipe-card');if(!el)return;let start=null;const reset=()=>{start=null;el.style.transform='';el.classList.remove('swipe-dragging','swipe-preview-yes','swipe-preview-no');};el.addEventListener('pointerdown',e=>{if(e.button!==undefined&&e.button!==0)return;start={id:e.pointerId,x:e.clientX,y:e.clientY,dragging:false};});el.addEventListener('pointermove',e=>{if(!start||start.id!==e.pointerId||swipeBusy)return;const dx=e.clientX-start.x,dy=e.clientY-start.y;if(!start.dragging&&Math.abs(dy)>Math.abs(dx)&&Math.abs(dy)>12){start=null;return;}if(Math.abs(dx)>10&&Math.abs(dx)>Math.abs(dy)){start.dragging=true;el.setPointerCapture?.(e.pointerId);}if(!start.dragging)return;el.classList.add('swipe-dragging');el.classList.toggle('swipe-preview-yes',dx>35);el.classList.toggle('swipe-preview-no',dx< -35);el.style.transform='translateX('+dx+'px) rotate('+Math.max(-13,Math.min(13,dx/18))+'deg)';});el.addEventListener('pointerup',e=>{if(!start||start.id!==e.pointerId)return;const dx=e.clientX-start.x,dragged=start.dragging;reset();if(dragged&&Math.abs(dx)>=85)advanceSwipe(dx>0?'yes':'no');});el.addEventListener('pointercancel',reset);}
 
 function page(){const h=decodeURIComponent(location.hash.slice(1));return nav.some(n=>n[0]===h)?h:'hem';}
@@ -182,14 +242,27 @@ if(key==='swipe')return swipeView();
 if(key==='kommunikation')return '<h1>Kommunikationsråd</h1><p>Konkreta samtalsöppningar från den tidigare Hemmakompassen.</p>'+COMMUNICATION_GUIDES.map(([title,intro,tips])=>card('<h2>'+esc(title)+'</h2><p>'+esc(intro)+'</p><ul>'+tips.map(t=>'<li>'+esc(t)+'</li>').join('')+'</ul>')).join('');
 return '<h1>'+label+'</h1>'+card('<h2>Funktionen är under utveckling</h2><p>Du är inloggad som '+esc(profile?.display_name||user.email)+'. Vi bygger nu den riktiga kopplingen till Supabase så att dina svar och den andra familjemedlemmens uppgifter hålls åtskilda.</p><p>Här visas inga påhittade demodata och inga svar lagras lokalt som om de vore delade med familjen.</p><a class="live-button" href="#hem">Till startsidan</a>');
 }
-function render(){menu();$('live-app').innerHTML=user?(page()==='hem'?home():section(page())):login();setupSwipeGesture();$('sidebar-account').textContent=user?'Inloggad: '+(profile?.display_name||user.email):'Inte inloggad';$('account-link').textContent=user?'Ditt konto →':'Logga in →';}
+function render(){if(activeThemeDeck&&!themeAccessAllowed())activeThemeDeck=null;menu();$('live-app').innerHTML=user?(page()==='hem'?home():section(page())):login();setupSwipeGesture();$('sidebar-account').textContent=user?'Inloggad: '+(profile?.display_name||user.email):'Inte inloggad';$('account-link').textContent=user?'Ditt konto →':'Logga in →';}
 async function refresh(){
-const {data:{user:u},error}=await db.auth.getUser();if(error&&error.name!=='AuthSessionMissingError')throw error;user=u;profile=null;members=[];swipeAnswers.clear();swipeLoadError='';swipeSaveError='';swipeReview=false;swipeIndex=0;sharedMatches=[];sharedError='';sharedLoading=false;sharedSession++;sharedRequest++;themesUnlocked=false;themesLoading=false;themesError='';themesRequest++;
-if(user){const [p,m,s]=await Promise.all([db.from('profiles').select('display_name').eq('user_id',user.id).maybeSingle(),db.rpc('my_family_members'),db.from('swipe_answers').select('deck_id,card_id,answer').eq('user_id',user.id)]);if(p.error)throw p.error;if(m.error)throw m.error;profile=p.data;members=m.data||[];if(s.error)swipeLoadError='Kontrollera anslutningen och försök igen.';else for(const answer of s.data||[])if(answer.deck_id==='general'&&STATEMENTS.some((_,index)=>swipeCardId(index)===answer.card_id))swipeAnswers.set(answer.card_id,answer.answer);swipeIndex=nextUnanswered();}
+const {data:{user:u},error}=await db.auth.getUser();if(error&&error.name!=='AuthSessionMissingError')throw error;user=u;profile=null;members=[];swipeAnswers.clear();for(const answers of themeAnswers.values())answers.clear();activeThemeDeck=null;themeIndex=0;themeReview=false;themeSaveError='';swipeBusy=false;swipeLoadError='';swipeSaveError='';swipeReview=false;swipeIndex=0;sharedMatches=[];sharedError='';sharedLoading=false;sharedSession++;sharedRequest++;themesUnlocked=false;themesLoading=false;themesError='';themesRequest++;
+if(user){const [p,m,s]=await Promise.all([db.from('profiles').select('display_name').eq('user_id',user.id).maybeSingle(),db.rpc('my_family_members'),db.from('swipe_answers').select('deck_id,card_id,answer').eq('user_id',user.id)]);if(p.error)throw p.error;if(m.error)throw m.error;profile=p.data;members=m.data||[];if(s.error)swipeLoadError='Kontrollera anslutningen och försök igen.';else for(const answer of s.data||[])if(answer.deck_id==='general'&&typeof answer.answer==='boolean'&&STATEMENTS.some((_,index)=>swipeCardId(index)===answer.card_id))swipeAnswers.set(answer.card_id,answer.answer);
+if(!s.error)for(const answer of s.data||[]){
+  if(typeof answer.answer!=='boolean')continue;
+  const deck=THEME_DECKS.find(d=>d.id===answer.deck_id);
+  if(deck&&deck.cards.some((_,index)=>themeCardId(deck,index)===answer.card_id))themeAnswers.get(deck.id).set(answer.card_id,answer.answer);
+}swipeIndex=nextUnanswered();}
 render();
 if(user&&members.length===2){void fetchSwipeMatches();void fetchThemeUnlock();}
 }
-document.addEventListener('click',e=>{const b=e.target.closest('[data-swipe]');if(b)advanceSwipe(b.dataset.swipe);if(e.target.closest('#swipe-restart')){swipeReview=true;swipeIndex=0;render();}if(e.target.closest('#swipe-reload'))refresh().catch(showError);if(e.target.closest('#refresh-matches')&&!sharedLoading)void fetchSwipeMatches();if(e.target.closest('#retry-theme-unlock')&&!themesLoading)void fetchThemeUnlock();});
+document.addEventListener('click',e=>{const b=e.target.closest('[data-swipe]');if(b)advanceSwipe(b.dataset.swipe);if(e.target.closest('#swipe-restart')){swipeReview=true;swipeIndex=0;render();}if(e.target.closest('#swipe-reload'))refresh().catch(showError);if(e.target.closest('#refresh-matches')&&!sharedLoading)void fetchSwipeMatches();if(e.target.closest('#retry-theme-unlock')&&!themesLoading)void fetchThemeUnlock();
+const open=e.target.closest('[data-theme-open]');
+if(open&&themeAccessAllowed()){
+  const deck=THEME_DECKS.find(d=>d.id===open.dataset.themeOpen);
+  if(deck){activeThemeDeck=deck.id;themeIndex=nextThemeUnanswered(deck);themeReview=false;themeSaveError='';render();window.scrollTo(0,0);}
+}
+if(e.target.closest('#theme-back')){activeThemeDeck=null;themeReview=false;render();window.scrollTo(0,0);}
+if(e.target.closest('#theme-restart')&&themeAccessAllowed()){themeReview=true;themeIndex=0;themeSaveError='';render();}
+});
 document.addEventListener('keydown',e=>{if(page()==='swipe'&&user&&!['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName)&&['ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();advanceSwipe(e.key==='ArrowRight'?'yes':'no');}});
 document.addEventListener('submit',async e=>{if(e.target.id!=='live-login')return;e.preventDefault();const b=e.target.querySelector('button');b.disabled=true;const feedback=$('login-feedback');feedback.textContent='Loggar in…';const email=$('live-email').value.trim();try{const {error}=await db.auth.signInWithPassword({email,password:$('live-password').value});if(error)throw error;$('live-password') && ($('live-password').value='');await refresh();}catch(err){feedback.textContent='Kunde inte logga in. Kontrollera e-post och lösenord, eller välj ”Glömt lösenord eller saknar lösenord?”.';}finally{b.disabled=false;}});
 window.addEventListener('hashchange',()=>{render();window.scrollTo(0,0);});
