@@ -49,6 +49,23 @@ const swipeAnswers=new Map();
 const swipeCardId=index=>'general-'+String(index+1).padStart(2,'0');
 function nextUnanswered(start=0){for(let i=start;i<STATEMENTS.length;i++)if(!swipeAnswers.has(swipeCardId(i)))return i;for(let i=0;i<start;i++)if(!swipeAnswers.has(swipeCardId(i)))return i;return STATEMENTS.length;}
 
+function sharedSummary(groups){
+  const count=[...groups.values()].reduce((sum,statements)=>sum+statements.length,0);
+  const categories=[...groups.keys()];
+  const role=members.find(member=>member.user_id===user?.id)?.role;
+  const roleLabel=role==='parent'?'förälder':role==='teen'?'tonåring':'familjemedlem';
+  const categoryText=categories.length===1?categories[0]:categories.slice(0,-1).join(', ')+' och '+categories.at(-1);
+  const opening=role==='parent'
+    ?'Be tonåringen välja vilket gemensamt ja-svar ni ska prata om först. Lyssna färdigt och fråga vad svaret betyder för hen innan du föreslår lösningar.'
+    :role==='teen'
+      ?'Välj gärna ett gemensamt ja-svar som känns lättast att börja med och berätta vad det betyder för dig. Du behöver inte hålla med om mer än det som faktiskt står här.'
+      :'Välj tillsammans ett gemensamt ja-svar och fråga vad det betyder för var och en.';
+  return '<aside class="swipe-rule-summary" aria-labelledby="shared-summary-heading"><span class="swipe-summary-label">REGELBASERAD · INTE AI</span><h3 id="shared-summary-heading">Kort sammanfattning för '+esc(roleLabel)+'</h3>'+
+    '<p><strong>Observation:</strong> Ni har '+count+' gemensamma ja-svar inom '+esc(categoryText)+'. Det visar bara vad ni båda har bejakat i Gillaswajpen.</p>'+
+    '<p><strong>Samtalsöppning:</strong> '+esc(opening)+'</p>'+
+    '<p class="live-muted">Sammanfattningen använder enbart ömsesidiga ja-svar. Den använder inte nej-svar, oenighet, ensidiga svar eller AI.</p></aside>';
+}
+
 function swipeResults(){
   const title='<section class="live-panel swipe-results" aria-labelledby="shared-result-heading"><span class="swipe-eyebrow">BARA SÅDANT NI DELAR</span><h2 id="shared-result-heading">Era gemensamma svar</h2>';
   if(members.length!==2)return title+'<p class="live-muted">Här visas gemensamma resultat när ni är två sammankopplade familjemedlemmar. Dina egna svar är privata.</p></section>';
@@ -71,6 +88,7 @@ function swipeResults(){
   ).join('');
   return title+'<p class="live-muted">Bara kort där ni båda svarat ja visas här. Se dem som möjliga samtalsöppningar, inte som färdiga överenskommelser.</p>'+
     '<div class="swipe-match-group"><h3>Det ni båda svarat ja till</h3>'+themes+'</div>'+
+    sharedSummary(groups)+
     button+'</section>';
 }
 async function fetchSwipeMatches(){

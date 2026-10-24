@@ -12,5 +12,9 @@ assert.doesNotMatch(script,/sharedMatches\.filter\(r=>r\.answer===false\)/,'No m
 assert.doesNotMatch(script,/Det ni båda svarat nej till/,'Never renders a shared NO heading');
 assert.match(script,/swipe-match-theme/,'Mutual YES results are grouped by theme');
 assert.match(script,/swipeCardId\(i\)===r\.card_id/,'Only known card IDs are rendered');
+assert.match(script,/function sharedSummary\(groups\)/,'Builds the rule-based summary only from the already filtered mutual-YES groups');
+assert.match(script,/members\.find\(member=>member\.user_id===user\?\.id\)\?\.role/,'Uses the signed-in member role for separate parent and teen wording');
+assert.match(script,/REGELBASERAD · INTE AI/,'Labels the deterministic summary clearly');
+assert.match(script,/Sammanfattningen använder enbart ömsesidiga ja-svar/,'States the summary privacy boundary');
 assert.doesNotMatch(script,/localStorage/,'No shared answers are cached locally');
-console.log('PASS: mutual-YES-only RPC results, theme groups and fail-closed state');
+console.log('PASS: mutual-YES-only RPC results, role-specific rule summary, theme groups and fail-closed state');

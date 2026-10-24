@@ -41,9 +41,9 @@ async function capture(page,name){
   await page.screenshot({path:path.join(output,name),fullPage:true,animations:"disabled"});
   captureRecords.push({file:name,viewport:page.viewportSize(),...overlays});
 }
-async function freshContext(options,{authenticated=false,paired=false}={}){
+async function freshContext(options,{authenticated=false,paired=false,role="parent"}={}){
   const context=await browser.newContext({...options,locale:"sv-SE",reducedMotion:"reduce"});
-  await context.addInitScript(value=>{window.__HK_TEST_USER__=value.user;window.__HK_TEST_PAIRED__=value.paired;},{user:authenticated?{id:"10000000-0000-0000-0000-000000000001",email:"synthetic@example.invalid"}:null,paired});
+  await context.addInitScript(value=>{window.__HK_TEST_USER__=value.user;window.__HK_TEST_PAIRED__=value.paired;window.__HK_TEST_ROLE__=value.role;},{user:authenticated?{id:role==="teen"?"10000000-0000-0000-0000-000000000002":"10000000-0000-0000-0000-000000000001",email:"synthetic@example.invalid"}:null,paired,role});
   await context.route("https://esm.sh/**",route=>route.fulfill({
     contentType:"application/javascript",
     body:`
@@ -57,7 +57,7 @@ async function freshContext(options,{authenticated=false,paired=false}={}){
             async signInWithPassword(){return {error:null}}
           },
           from(table){
-            if(table==='profiles')return {select(){return {eq(){return {async maybeSingle(){return {data:current()?{display_name:'Provförälder'}:null,error:null}}}}}}};
+            if(table==='profiles')return {select(){return {eq(){return {async maybeSingle(){return {data:current()?{display_name:window.__HK_TEST_ROLE__==='teen'?'Provtonåring':'Provförälder'}:null,error:null}}}}}}};
             if(table==='swipe_answers')return {
               select(){return {async eq(){return {data:[...answers.values()],error:null}}}},
               async upsert(row,options){answers.set(row.card_id,row);window.__HK_SAVED_SWIPE__={row,options};return {error:null}}
@@ -141,6 +141,9 @@ try{
   assert.equal(await paired.page.locator(".swipe-match-list li").count(),1,"Only the known mutual YES appears; malicious RPC NO and unknown cards are discarded");
   const sharedText=await paired.page.locator(".swipe-results").innerText();
   assert.match(sharedText,/Jag uppskattar när vi gör saker tillsammans utan mobiltelefoner/,"The mutual YES is displayed");
+  assert.match(sharedText,/REGELBASERAD · INTE AI/,"The summary is clearly labelled");
+  assert.match(sharedText,/Kort sammanfattning för förälder/,"The parent sees parent-specific wording");
+  assert.match(sharedText,/Be tonåringen välja vilket gemensamt ja-svar/,"The parent prompt is derived from mutual YES only");
   assert.doesNotMatch(sharedText,/Jag vill helst prata färdigt innan någon kommer med råd/,"The mutual NO is never displayed");
   assert.doesNotMatch(sharedText,/Det ni båda svarat nej till|Två nej/,"No mutual NO headings or counts");
   assert.ok((await paired.page.evaluate(()=>window.__HK_MATCH_RPC_CALLS__))>0,"Paired account requests the aggregate RPC");
@@ -151,6 +154,13 @@ try{
   await paired.page.locator(".swipe-results [role='alert']").waitFor();
   assert.equal(await paired.page.locator(".swipe-match-list li").count(),0,"RPC failure must clear previous matches");
   await paired.context.close();
+  const pairedTeen=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,paired:true,role:"teen"});
+  await pairedTeen.page.goto(base+"#swipe",{waitUntil:"load"});
+  const teenSummary=await pairedTeen.page.locator(".swipe-rule-summary").innerText();
+  assert.match(teenSummary,/Kort sammanfattning för tonåring/,"The teen sees teen-specific wording");
+  assert.match(teenSummary,/Välj gärna ett gemensamt ja-svar/,"The teen prompt is derived from mutual YES only");
+  assert.doesNotMatch(teenSummary,/Jag vill helst prata färdigt innan någon kommer med råd/,"The teen summary cannot include a mutual NO");
+  await pairedTeen.context.close();
   const d=await freshContext({viewport:{width:1440,height:900},deviceScaleFactor:1},{authenticated:true});
   await d.page.getByRole("heading",{name:/Hej[ ,]+Provförälder/}).waitFor();
   assert.equal(await d.page.locator("#live-desktop-nav a").count(),8);
