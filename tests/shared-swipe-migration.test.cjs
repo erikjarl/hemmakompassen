@@ -53,3 +53,23 @@ test('follow-up migration enforces mutual YES on the server', () => {
   assert.match(yesOnlyMigration, /grant execute on function public\.shared_swipe_matches\(text\) to authenticated;/i);
   assert.doesNotMatch(yesOnlyMigration, /grant\s+[^;]*\s+to\s+anon/i);
 });
+
+const unlockMigration = readFileSync(
+  join(__dirname, '..', 'supabase', 'migrations', '20261024170000_shared_general_deck_complete.sql'),
+  'utf8'
+);
+
+test('theme unlock is an authenticated, aggregate-only two-person server check', () => {
+  assert.match(unlockMigration, /function public\.shared_general_deck_complete\(\)/i);
+  assert.match(unlockMigration, /returns boolean[\s\S]*security definer[\s\S]*set search_path = ''/i);
+  assert.match(unlockMigration, /caller\.user_id = \(select auth\.uid\(\)\)/i);
+  assert.match(unlockMigration, /count\(\*\)[\s\S]*= 2/i);
+  assert.match(unlockMigration, /generate_series\(1, 34\)/i);
+  assert.match(unlockMigration, /answer\.user_id = member\.user_id/i);
+  assert.match(unlockMigration, /answer\.deck_id = 'general'/i);
+  assert.match(unlockMigration, /answer\.card_id = 'general-'/i);
+  assert.match(unlockMigration, /revoke all on function public\.shared_general_deck_complete\(\) from public, anon;/i);
+  assert.match(unlockMigration, /grant execute on function public\.shared_general_deck_complete\(\) to authenticated;/i);
+  assert.doesNotMatch(unlockMigration, /p_expected|p_card_count|p_user_id|p_family_id/i,
+    'Callers cannot override expected cards or inspect another family');
+});
