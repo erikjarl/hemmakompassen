@@ -72,7 +72,7 @@
 - Den egna privata svarshistoriken förblir synlig och ändringsbar **endast för den inloggade användaren**. Den är inte en gemensam resultatvy.
 - Kontrollera båda JA **på serversidan via autentiserad RPC**; frontend filtrerar dessutom defensivt till `answer === true`. Visa inget gammalt eller osäkert resultat om RPC-anropet misslyckas eller session/familj byts.
 - Regeln omfattar **allmänna kortleken, samtliga temakortlekar, sparade gemensamma resultat, sammanfattningar, Schyssta listan-förslag och eventuell AI-medlarkontext**. Ett gemensamt JA är fortfarande bara ett förslag/samtalsämne, inte en bindande överenskommelse.
-- **Nuvarande kod behöver ändras:** `live-app.js` visar i dagsläget både gemensamma JA och gemensamma NEJ, och `shared_swipe_matches` returnerar även `false`. Tidigare beslut om att visa två NEJ är **ersatt** av detta beslut. Att äldre historik nedan nämner NEJ är en dokumentation av tidigare implementation, **inte** det nu gällande kravet.
+- **Teknisk status 2026-10-24:** Den nya frontendkoden på utvecklingsbranchen filtrerar till JA+JA och den nya, **ännu ej applicerade** SQL-migrationen ändrar RPC-kontraktet till endast JA+JA. Fram till godkänd migration kan den befintliga databasen fortfarande returnera `false`, men den uppdaterade frontendkoden ignorerar det. Tidigare beslut om att visa två NEJ är **ersatt**; historiska omnämnanden längre ned beskriver en äldre implementation.
 
 #### Prioriterad att göra-lista (sparad 24 oktober 2026)
 
@@ -81,7 +81,9 @@ Listan är en samlad arbetsplan för att slutföra Gillaswajpen. Kryssa av förs
 **Prioritet 1 – Färdigställ grundfunktionen**
 
 - [ ] **1. Verifiera resultaten med två riktiga testkonton.** Testa den publicerade webbsidan med föräldern och tonåringen, att endast deras **3 gemensamma JA** visas utifrån dagens testdata och att de 8 gemensamma NEJ, de 23 olika svaren och alla enskilda svar förblir dolda. Testa också ändrat JA/NEJ, inloggning och utloggning.
+  - **Behöver Erik – avvaktar:** Granska och mergea den aktuella samlings-PR:n när CI är godkänd. Ge därefter separat uttryckligt godkännande för att köra den nya SQL-migrationen `20261024130000_shared_swipe_matches_yes_only.sql` i befintligt Supabase-projekt (ingen produktionsmigration utförs automatiskt). Först efter publicering och databasmigration kan de två verkliga testkontona verifieras mot den nya JA+JA-regeln. Om webbläsartest med kontona inte kan genomföras automatiskt behövs din hjälp att öppna publicerade Gillaswajpen med respektive konto och kontrollera resultaten. Ändra inte deras sparade svar bara för test utan separat beslut.
 - [ ] **2. Gör en begriplig gemensam resultatsida – endast JA + JA.** Ta bort avsnittet för gemensamma NEJ och dess antal; gruppera de tillåtna gemensamma JA-korten tematiskt, hantera tomt läge och återläsning, och presentera dem som samtalsöppningar snarare än överenskommelser.
+  - **Kod klar på `ai-dev/utveckling`, verifiering pågår (2026-10-24):** `live-app.js` filtrerar defensivt bort allt utom `answer === true`, grupperar tillåtna JA per tema och har bara JA-texter. Ny separat RPC-migration begränsar resultaten på serversidan; pgTAP- och Playwright-testfall är uppdaterade. Detta är **inte** samma sak som verifierat i produktion; kryssa inte av förrän CI och verklig backend/publicerad sida kontrollerats.
 - [ ] **3. Skapa korta, separata sammanfattningar för förälder och tonåring.** Bygg på **enbart gemensamma JA**: identifiera teman, möjliga styrkor, försiktiga hypoteser och konkreta samtalsöppningar. Undvik att påstå något om sådant där svaren är olika eller båda svarat NEJ.
 - [ ] **4. Bygg först en tydligt märkt regelbaserad sammanfattning utan AI.** Använd bara ömsesidiga JA och formulera observationer skilt från tolkningar. Inga privata data till en extern modell.
 
@@ -104,7 +106,7 @@ Listan är en samlad arbetsplan för att slutföra Gillaswajpen. Kryssa av förs
 - [ ] **13. Användartesta tidsåtgång och gränssnitt.** Undersök om 10–15 minuter är realistiskt; testa mobilgester, knappar, tangentbord, reducerad rörelse, tillgänglighet och förståelse av sammanfattningarna.
 - [ ] **14. Testa integritet och felhantering.** Flera familjer, avbruten parning, konto-/sessionsbyte, nätverksfel, och att endast kort med verifierade **JA + JA** någonsin visas som gemensamma resultat.
 
-**Nästa logiska genomförandesteg:** Punkt 1–4, i synnerhet att rätta den nuvarande resultatvyn och RPC-filtreringen så att **alla gemensamma NEJ döljs**. Först därefter temakortlekar.
+**Nästa logiska genomförandesteg:** Granska CI/Playwright för JA+JA-ändringen, få den granskade migrationen godkänd och verifiera den publicerade resultatvyn med båda testkontona. Fortsätt parallellt med punkt 3–4 (säkra, regelbaserade sammanfattningar) utan att invänta användarens medverkan. Temakortlekarna kommer senare.
 
 - [x] 2026-10-21: Tinder-liknande kortinteraktion i Gillaswajpen: följ fingret/muspekaren, luta kortet, visa svarsstämpel och animera bort kortet; piltangenter, knappar och reducerad rörelse stöds. Återstår verklig mobilgranskning av ny körning.
 - [x] 2026-10-23: Den återställda allmänna kortleken laddar och sparar nu den inloggade användarens egna svar i `swipe_answers`, återupptar vid första obesvarade kortet och rensar klientminnet vid konto-/sessionsbyte. Svaren är fortsatt privata via self-only RLS. Gemensam resultatvy återstår och får bara använda den granskade aggregerande RPC:n efter godkänd migration.
