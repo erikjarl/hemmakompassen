@@ -84,5 +84,8 @@
 .swipe-match-list li{padding:15px 17px;border:1px solid #494452;background:#23283a;border-radius:13px}
 .swipe-match-list li p{margin:7px 0 0}
 .swipe-match-category{color:#f1bf75;font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700}
+.swipe-match-theme{margin-top:17px}
+.swipe-match-theme h4{margin:0 0 9px;color:#f1bf75;font-size:13px;letter-spacing:.03em;font-weight:700}
+.swipe-match-theme .swipe-match-list li p{margin:0}
 .swipe-refresh{margin-top:20px}
 @media(max-width:600px){.swipe-match-list{grid-template-columns:1fr}}
