@@ -71,16 +71,16 @@ set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"31000000-0000-0000-0000-000000000001","role":"authenticated"}', true);
 
 select lives_ok(
-  $insert into public.swipe_answers(user_id,deck_id,card_id,answer,updated_at)
+  $$insert into public.swipe_answers(user_id,deck_id,card_id,answer,updated_at)
     select user_id,deck_id,card_id,answer,now() from public.swipe_answers
     where user_id=auth.uid() order by card_id limit 1
     on conflict(user_id,deck_id,card_id) do update set
       user_id=excluded.user_id,deck_id=excluded.deck_id,card_id=excluded.card_id,
-      answer=excluded.answer,updated_at=excluded.updated_at$,
+      answer=excluded.answer,updated_at=excluded.updated_at$$,
   'existing own answer writable with full-row upsert; test rolls back'
 );
 select results_eq(
-  $select deck_id, card_id, answer from public.shared_swipe_matches('general')$,
+  $$select deck_id, card_id, answer from public.shared_swipe_matches('general')$$,
   $$values ('general'::text, 'same-no'::text, false), ('general'::text, 'same-yes'::text, true)$$,
   'family A sees only its two identical answers'
 );
