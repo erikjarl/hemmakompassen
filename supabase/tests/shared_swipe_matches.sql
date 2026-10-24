@@ -81,11 +81,11 @@ select lives_ok(
 );
 select results_eq(
   $$select deck_id, card_id, answer from public.shared_swipe_matches('general')$$,
-  $values ('general'::text, 'same-yes'::text, true)$,
+  $$values ('general'::text, 'same-yes'::text, true)$$,
   'family A sees only its mutual YES'
 );
 select is_empty(
-  $select * from public.shared_swipe_matches('general') where card_id = 'same-no'$,
+  $$select * from public.shared_swipe_matches('general') where card_id = 'same-no'$$,
   'two NO votes are never returned by the authenticated RPC'
 );
 select is_empty(
