@@ -4,7 +4,8 @@
 
 revoke all privileges on public.swipe_answers from anon, authenticated;
 grant select, delete on public.swipe_answers to authenticated;
-grant insert (user_id, deck_id, card_id, answer) on public.swipe_answers to authenticated;
+-- The live upsert writes updated_at on INSERT as well as on UPDATE.
+grant insert (user_id, deck_id, card_id, answer, updated_at) on public.swipe_answers to authenticated;
 grant update (answer, updated_at) on public.swipe_answers to authenticated;
 
 create or replace function public.shared_swipe_matches(p_deck_id text)

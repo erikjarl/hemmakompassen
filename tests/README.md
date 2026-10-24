@@ -11,7 +11,7 @@ Kör lokalt:
 
 Playwright öppnar en lokal webbserver och testar mobil (390 px) och dator (1440 px). Skärmbilder för båda formaten sparas i artifacts/ och som GitHub Actions-artifact.
 
-Testerna använder endast syntetiska testprofiler. Den inloggade Playwright-vyn använder en mockad Supabase-klient och kontaktar inte den riktiga databasen. Gillaswajpens webbläsartest kontrollerar dessutom att ett syntetiskt svar skickas som en upsert med stabilt kort-id. Bilderna innehåller inte riktiga användaruppgifter.
+Testerna använder endast syntetiska testprofiler. Den inloggade Playwright-vyn använder en mockad Supabase-klient och kontaktar inte den riktiga databasen. Gillaswajpens webbläsartest kontrollerar dessutom att ett syntetiskt svar skickas som en upsert med stabilt kort-id. Ett separat syntetiskt par visar både gemensamma ja och nej, ignorerar okända kort och döljer gamla matchningar vid RPC-fel. Bilderna innehåller inte riktiga användaruppgifter.
 
 `supabase/tests/family_rls_isolation.sql`, `supabase/tests/shared_swipe_matches.sql` och `supabase/tests/merge_empty_singleton_family.sql` är pgTAP-integrationstester som ska köras först på en disponibel lokal databas eller Supabase-branch efter att migrationerna har applicerats. Testerna använder endast syntetiska familjer för att kontrollera isolering, oenighet, ensidiga svar och säker sammanslagning av två tomma enfamiljer. De får inte köras direkt mot produktionsprojektet.
 

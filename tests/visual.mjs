@@ -41,15 +41,15 @@ async function capture(page,name){
   await page.screenshot({path:path.join(output,name),fullPage:true,animations:"disabled"});
   captureRecords.push({file:name,viewport:page.viewportSize(),...overlays});
 }
-async function freshContext(options,{authenticated=false}={}){
+async function freshContext(options,{authenticated=false,paired=false}={}){
   const context=await browser.newContext({...options,locale:"sv-SE",reducedMotion:"reduce"});
-  await context.addInitScript(value=>{window.__HK_TEST_USER__=value;},authenticated?{id:"10000000-0000-0000-0000-000000000001",email:"synthetic@example.invalid"}:null);
+  await context.addInitScript(value=>{window.__HK_TEST_USER__=value.user;window.__HK_TEST_PAIRED__=value.paired;},{user:authenticated?{id:"10000000-0000-0000-0000-000000000001",email:"synthetic@example.invalid"}:null,paired});
   await context.route("https://esm.sh/**",route=>route.fulfill({
     contentType:"application/javascript",
     body:`
       export function createClient(){
         const current=()=>window.__HK_TEST_USER__;
-        const answers=new Map();
+        const answers=new Map(window.__HK_TEST_PAIRED__?[['general-01',{deck_id:'general',card_id:'general-01',answer:true}],['general-02',{deck_id:'general',card_id:'general-02',answer:false}]]:[]);
         return {
           auth:{
             async getUser(){return {data:{user:current()},error:current()?null:{name:'AuthSessionMissingError'}}},
@@ -65,7 +65,12 @@ async function freshContext(options,{authenticated=false}={}){
             throw new Error('Unexpected table '+table);
           },
           async rpc(name){
-            if(name==='my_family_members')return {data:current()?[{user_id:current().id,role:'parent',display_name:'Provförälder'}]:[],error:null};
+            if(name==='my_family_members')return {data:current()?[{user_id:current().id,role:'parent',display_name:'Provförälder'},...(window.__HK_TEST_PAIRED__?[{user_id:'10000000-0000-0000-0000-000000000002',role:'teen',display_name:'Provtonåring'}]:[])]:[],error:null};
+             if(name==='shared_swipe_matches'){
+               window.__HK_MATCH_RPC_CALLS__=(window.__HK_MATCH_RPC_CALLS__||0)+1;
+               if(window.__HK_RPC_UNAVAILABLE__)return {data:null,error:{message:'synthetic unavailable'}};
+               return {data:window.__HK_TEST_PAIRED__?[{deck_id:'general',card_id:'general-01',answer:true},{deck_id:'general',card_id:'general-02',answer:false},{deck_id:'general',card_id:'general-99',answer:true}]:[],error:null};
+             }
             if(name==='create_family_invite')return {data:'2030-01-01T12:00:00.000Z',error:null};
             throw new Error('Unexpected RPC '+name);
           }
@@ -97,6 +102,7 @@ try{
   await m.page.goto(base+"#swipe",{waitUntil:"load"});
   await m.page.getByRole("heading",{name:"Gillaswajpen"}).waitFor();
   assert.match(await m.page.locator("#live-app").innerText(),/sparas privat i ditt konto/i);
+   assert.equal(await m.page.evaluate(()=>window.__HK_MATCH_RPC_CALLS__||0),0,'Unpaired member must not request aggregate matches');
   assert.match(await m.page.locator("#swipe-card").getAttribute("aria-label"),/Kort 1 av 34/);
   await checkOverflow(m.page,"Mobile swipe");
   await capture(m.page,"mobile-swipe.png");
@@ -127,6 +133,21 @@ try{
   await checkOverflow(m.page,"Mobile authenticated section");
   await capture(m.page,"mobile-inbox.png");
   await m.context.close();
+  const paired=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,paired:true});
+  await paired.page.goto(base+"#swipe",{waitUntil:"load"});
+  await paired.page.getByRole("heading",{name:"Era gemensamma svar"}).waitFor();
+  await paired.page.getByRole("heading",{name:"Det ni båda svarat ja till"}).waitFor();
+  await paired.page.getByRole("heading",{name:"Det ni båda svarat nej till"}).waitFor();
+  assert.equal(await paired.page.locator(".swipe-match-list li").count(),2,"Only known, mutually matched cards appear");
+  assert.match(await paired.page.locator(".swipe-results").innerText(),/Två nej är en överensstämmelse, inte ett gemensamt intresse/);
+  assert.ok((await paired.page.evaluate(()=>window.__HK_MATCH_RPC_CALLS__))>0,"Paired account requests the aggregate RPC");
+  await checkOverflow(paired.page,"Mobile matched swipes");
+  await capture(paired.page,"mobile-shared-swipes.png");
+  await paired.page.evaluate(()=>{window.__HK_RPC_UNAVAILABLE__=true;});
+  await paired.page.getByRole("button",{name:"Uppdatera gemensamma svar"}).click();
+  await paired.page.locator(".swipe-results [role='alert']").waitFor();
+  assert.equal(await paired.page.locator(".swipe-match-list li").count(),0,"RPC failure must clear previous matches");
+  await paired.context.close();
   const d=await freshContext({viewport:{width:1440,height:900},deviceScaleFactor:1},{authenticated:true});
   await d.page.getByRole("heading",{name:/Hej[ ,]+Provförälder/}).waitFor();
   assert.equal(await d.page.locator("#live-desktop-nav a").count(),8);

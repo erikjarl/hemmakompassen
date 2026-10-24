@@ -34,7 +34,7 @@ test('shared swipe RPC scopes answers through the caller family', () => {
 
 test('swipe table grants are least privilege and preserve own-answer writes', () => {
   assert.match(migration, /revoke all privileges on public\.swipe_answers from anon, authenticated;/i);
-  assert.match(migration, /grant insert \(user_id, deck_id, card_id, answer\)/i);
+  assert.match(migration, /grant insert \(user_id, deck_id, card_id, answer, updated_at\)/i);
   assert.match(migration, /grant update \(answer, updated_at\)/i);
   assert.doesNotMatch(migration, /grant\s+(all|truncate|trigger|references)/i);
 });
