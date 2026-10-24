@@ -38,3 +38,18 @@ test('swipe table grants are least privilege and preserve own-answer writes', ()
   assert.match(migration, /grant update \(answer, updated_at\)/i);
   assert.doesNotMatch(migration, /grant\s+(all|truncate|trigger|references)/i);
 });
+
+const yesOnlyMigration = readFileSync(
+  join(__dirname, '..', 'supabase', 'migrations', '20261024130000_shared_swipe_matches_yes_only.sql'),
+  'utf8'
+);
+
+test('follow-up migration enforces mutual YES on the server', () => {
+  assert.match(yesOnlyMigration, /create or replace function public\.shared_swipe_matches\(p_deck_id text\)/i);
+  assert.match(yesOnlyMigration, /security definer[\s\S]*set search_path = ''/i);
+  assert.match(yesOnlyMigration, /count\(distinct family_answers\.user_id\) = 2/i);
+  assert.match(yesOnlyMigration, /bool_and\(family_answers\.answer\) is true/i);
+  assert.match(yesOnlyMigration, /revoke all on function public\.shared_swipe_matches\(text\) from public, anon;/i);
+  assert.match(yesOnlyMigration, /grant execute on function public\.shared_swipe_matches\(text\) to authenticated;/i);
+  assert.doesNotMatch(yesOnlyMigration, /grant\s+[^;]*\s+to\s+anon/i);
+});
