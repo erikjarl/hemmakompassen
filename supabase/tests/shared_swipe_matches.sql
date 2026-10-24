@@ -170,7 +170,7 @@ select set_config('request.jwt.claims', '{"sub":"31000000-0000-0000-0000-0000000
 select is(public.shared_general_deck_complete(), true, 'restoring the missing answer unlocks again');
 
 select set_config('request.jwt.claims', '{"role":"authenticated"}', true);
-select throws_ok($select public.shared_general_deck_complete()$, '42501',
+select throws_ok('select public.shared_general_deck_complete()', '42501',
   'authentication required', 'missing auth identity cannot check unlock');
 
 select * from finish();
