@@ -69,7 +69,7 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
              if(name==='shared_swipe_matches'){
                window.__HK_MATCH_RPC_CALLS__=(window.__HK_MATCH_RPC_CALLS__||0)+1;
                if(window.__HK_RPC_UNAVAILABLE__)return {data:null,error:{message:'synthetic unavailable'}};
-               return {data:window.__HK_TEST_PAIRED__?[{deck_id:'general',card_id:'general-01',answer:true},{deck_id:'general',card_id:'general-02',answer:false},{deck_id:'general',card_id:'general-99',answer:true}]:[],error:null};
+               return {data:window.__HK_TEST_PAIRED__?[{deck_id:'general',card_id:'general-01',answer:true},{deck_id:'general',card_id:'general-02',answer:true},{deck_id:'general',card_id:'general-03',answer:false},{deck_id:'general',card_id:'general-99',answer:true}]:[],error:null};
              }
             if(name==='shared_general_deck_complete'){
               window.__HK_UNLOCK_RPC_CALLS__=(window.__HK_UNLOCK_RPC_CALLS__||0)+1;
@@ -109,11 +109,13 @@ try{
   assert.match(await m.page.locator("#live-app").innerText(),/sparas privat i ditt konto/i);
    assert.equal(await m.page.evaluate(()=>window.__HK_MATCH_RPC_CALLS__||0),0,'Unpaired member must not request aggregate matches');
   assert.equal(await m.page.evaluate(()=>window.__HK_UNLOCK_RPC_CALLS__||0),0,'Unpaired member must not request theme unlock status');
-  assert.match(await m.page.locator("#swipe-card").getAttribute("aria-label"),/Kort 1 av 34/);
+  assert.match(await m.page.locator("#swipe-card").getAttribute("aria-label"),/Kort 1 av 21/);
+  assert.equal(await m.page.locator('#swipe-skip').count(),0,'Parent must never see a teen-only skip control');
   await checkOverflow(m.page,"Mobile swipe");
   await capture(m.page,"mobile-swipe.png");
   await m.page.getByRole("button",{name:"Ja"}).click();
-  await m.page.locator("#swipe-card[aria-label^='Kort 2 av 34']").waitFor();
+  await m.page.locator("#swipe-card[aria-label^='Kort 2 av 21']").waitFor();
+  assert.match(await m.page.locator('#swipe-card').innerText(),/Jag tycker det är viktigt att vi har gemensamma aktiviteter/,'Parent skips teen-only understanding cards without corrupting ordinal position');
   const saved=await m.page.evaluate(()=>window.__HK_SAVED_SWIPE__);
   assert.equal(saved.row.user_id,"10000000-0000-0000-0000-000000000001");
   assert.equal(saved.row.deck_id,"general");
@@ -139,6 +141,20 @@ try{
   await checkOverflow(m.page,"Mobile authenticated section");
   await capture(m.page,"mobile-inbox.png");
   await m.context.close();
+  const soloTeen=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,role:'teen'});
+  await soloTeen.page.goto(base+'#swipe',{waitUntil:'load'});
+  await soloTeen.page.locator("#swipe-card[aria-label^='Kort 1 av 34']").waitFor();
+  await soloTeen.page.getByRole('button',{name:'Ja'}).click();
+  await soloTeen.page.locator("#swipe-card[aria-label^='Kort 2 av 34']").waitFor();
+  assert.match(await soloTeen.page.locator('#swipe-card').innerText(),/Jag vill helst prata färdigt/,'Understanding card is visible to teen');
+  assert.match(await soloTeen.page.locator('.swipe-understanding-notice').innerText(),/Delning med förälder är ännu inte aktiverad/,'Teen is not misled about sharing status');
+  const beforeSkip=await soloTeen.page.evaluate(()=>window.__HK_SAVED_SWIPE__.row.card_id);
+  await soloTeen.page.getByRole('button',{name:'Vill inte svara just nu'}).click();
+  await soloTeen.page.locator("#swipe-card[aria-label^='Kort 3 av 34']").waitFor();
+  assert.equal(await soloTeen.page.evaluate(()=>window.__HK_SAVED_SWIPE__.row.card_id),beforeSkip,'Skip must not write a yes/no answer');
+  await checkOverflow(soloTeen.page,'Mobile teen understanding skip');
+  await capture(soloTeen.page,'mobile-teen-understanding.png');
+  await soloTeen.context.close();
   const paired=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,paired:true});
   await paired.page.goto(base+"#swipe",{waitUntil:"load"});
   await paired.page.getByRole("heading",{name:"Era gemensamma svar"}).waitFor();
@@ -154,7 +170,7 @@ try{
   assert.doesNotMatch(sharedText,/Det ni båda svarat nej till|Två nej/,"No mutual NO headings or counts");
   assert.ok((await paired.page.evaluate(()=>window.__HK_MATCH_RPC_CALLS__))>0,"Paired account requests the aggregate RPC");
   assert.equal(await paired.page.locator(".swipe-themes details").count(),0,"Incomplete paired family must not see theme cards");
-  assert.match(await paired.page.locator(".swipe-themes").innerText(),/låsta tills ni båda har besvarat alla 34 kort/i);
+  assert.match(await paired.page.locator(".swipe-themes").innerText(),/låsta tills ni båda har gått igenom den allmänna kortleken/i);
   await checkOverflow(paired.page,"Mobile matched swipes");
   await capture(paired.page,"mobile-shared-swipes.png");
   await paired.page.evaluate(()=>{window.__HK_RPC_UNAVAILABLE__=true;});

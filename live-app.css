@@ -106,3 +106,8 @@
   display:block;
   margin-bottom:10px;
 }
+
+/* Teen understanding cards: a clearly unfilled, optional skip action. */
+.swipe-understanding-notice{max-width:620px;margin:12px auto 18px;padding:12px 16px;border:1px solid #856b48;border-radius:12px;background:#241f22;color:#f2dfc2;line-height:1.5;font-size:14px}
+.swipe-skip{display:block;width:max-content;max-width:100%;margin:16px auto 0;padding:10px 17px;border:1px solid #cba76d;border-radius:99px;background:transparent;color:#f1d5a7;font:inherit;font-size:14px;cursor:pointer}
+.swipe-skip:hover,.swipe-skip:focus-visible{border-color:#f5bb65;color:#fff1d8;outline-offset:3px}
