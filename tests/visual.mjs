@@ -41,15 +41,15 @@ async function capture(page,name){
   await page.screenshot({path:path.join(output,name),fullPage:true,animations:"disabled"});
   captureRecords.push({file:name,viewport:page.viewportSize(),...overlays});
 }
-async function freshContext(options,{authenticated=false,paired=false,role="parent",unlocked=false,unlockUnavailable=false}={}){
+async function freshContext(options,{authenticated=false,paired=false,role="parent",unlocked=false,unlockUnavailable=false,preansweredGeneral=false}={}){
   const context=await browser.newContext({...options,locale:"sv-SE",reducedMotion:"reduce"});
-  await context.addInitScript(value=>{window.__HK_TEST_USER__=value.user;window.__HK_TEST_PAIRED__=value.paired;window.__HK_TEST_ROLE__=value.role;window.__HK_TEST_UNLOCKED__=value.unlocked;window.__HK_UNLOCK_RPC_UNAVAILABLE__=value.unlockUnavailable;},{user:authenticated?{id:role==="teen"?"10000000-0000-0000-0000-000000000002":"10000000-0000-0000-0000-000000000001",email:"synthetic@example.invalid"}:null,paired,role,unlocked,unlockUnavailable});
+  await context.addInitScript(value=>{window.__HK_TEST_USER__=value.user;window.__HK_TEST_PAIRED__=value.paired;window.__HK_TEST_ROLE__=value.role;window.__HK_TEST_UNLOCKED__=value.unlocked;window.__HK_UNLOCK_RPC_UNAVAILABLE__=value.unlockUnavailable;window.__HK_PREANSWERED_GENERAL__=value.preansweredGeneral;},{preansweredGeneral,user:authenticated?{id:role==="teen"?"10000000-0000-0000-0000-000000000002":"10000000-0000-0000-0000-000000000001",email:"synthetic@example.invalid"}:null,paired,role,unlocked,unlockUnavailable});
   await context.route("https://esm.sh/**",route=>route.fulfill({
     contentType:"application/javascript",
     body:`
       export function createClient(){
         const current=()=>window.__HK_TEST_USER__;
-        const answers=new Map(window.__HK_TEST_PAIRED__?[['general-01',{deck_id:'general',card_id:'general-01',answer:true}],['general-02',{deck_id:'general',card_id:'general-02',answer:false}]]:[]);
+        const answers=new Map(window.__HK_PREANSWERED_GENERAL__?Array.from({length:34},(_,i)=>{const id='general-'+String(i+1).padStart(2,'0');return [id,{deck_id:'general',card_id:id,answer:true}]}):window.__HK_TEST_PAIRED__?[['general-01',{deck_id:'general',card_id:'general-01',answer:true}],['general-02',{deck_id:'general',card_id:'general-02',answer:false}]]:[]);
         return {
           auth:{
             async getUser(){return {data:{user:current()},error:current()?null:{name:'AuthSessionMissingError'}}},
@@ -155,6 +155,24 @@ try{
   await checkOverflow(soloTeen.page,'Mobile teen understanding skip');
   await capture(soloTeen.page,'mobile-teen-understanding.png');
   await soloTeen.context.close();
+  // Regression: reviewing a fully answered teen deck must NOT finish after skipping B card #2.
+  // The synthetic backend preloads all 34 answers, including a historical private B answer.
+  const teenReview=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,role:'teen',preansweredGeneral:true});
+  await teenReview.page.goto(base+'#swipe',{waitUntil:'load'});
+  await teenReview.page.locator('#swipe-restart').waitFor();
+  assert.match(await teenReview.page.locator('.swipe-finished').innerText(),/34 svar/,'All answers are loaded before review');
+  await teenReview.page.locator('#swipe-restart').click();
+  await teenReview.page.locator("#swipe-card[aria-label^='Kort 1 av 34']").waitFor();
+  await teenReview.page.getByRole('button',{name:'Ja'}).click();
+  await teenReview.page.locator("#swipe-card[aria-label^='Kort 2 av 34']").waitFor();
+  const savedBeforeReviewSkip=await teenReview.page.evaluate(()=>window.__HK_SAVED_SWIPE__.row.card_id);
+  await teenReview.page.getByRole('button',{name:'Vill inte svara just nu'}).click();
+  await teenReview.page.locator("#swipe-card[aria-label^='Kort 3 av 34']").waitFor();
+  assert.equal(await teenReview.page.locator('.swipe-finished').count(),0,'Skipping during review must not end a previously answered deck');
+  assert.equal(await teenReview.page.evaluate(()=>window.__HK_SAVED_SWIPE__.row.card_id),savedBeforeReviewSkip,'Review skip must not overwrite or delete an existing answer');
+  await checkOverflow(teenReview.page,'Mobile teen review after understanding skip');
+  await capture(teenReview.page,'mobile-teen-review-after-skip.png');
+  await teenReview.context.close();
   const paired=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,paired:true});
   await paired.page.goto(base+"#swipe",{waitUntil:"load"});
   await paired.page.getByRole("heading",{name:"Era gemensamma svar"}).waitFor();
