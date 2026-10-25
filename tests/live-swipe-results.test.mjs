@@ -23,5 +23,5 @@ assert.match(script,/session!==sharedSession\|\|request!==themesRequest\|\|user\
 assert.match(script,/if\(error\|\|typeof data!=='boolean'\)throw/,'Fail-closed when unlock RPC is missing or malformed');
 assert.match(script,/themesUnlocked=data===true/,'Only an explicit true unlocks theme previews');
 assert.match(script,/const unlocked=members\.length===2&&themesUnlocked&&!themesLoading&&!themesError/,'Never renders theme previews without a valid pair and current RPC');
-assert.match(script,/if\(swipeAnswers\.size===STATEMENTS\.length\)void fetchThemeUnlock\(\)/,'Rechecks completion after finishing the general deck');
+assert.match(script,/visibleGeneralIndices\(\)\.every\(i=>swipeAnswers\.has\(swipeCardId\(i\)\)\|\|skippedUnderstanding\.has\(swipeCardId\(i\)\)\)/,'Rechecks completion for role-visible cards and skipped understanding cards');
 console.log('PASS: mutual-YES-only RPC results, role-specific rule summary, theme groups and fail-closed state');
