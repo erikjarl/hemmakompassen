@@ -68,15 +68,15 @@ jobs:
           docker exec -i "${{ job.services.postgres.id }}" \
             psql -U postgres -d postgres -v ON_ERROR_STOP=1 -X -q \
             < supabase/migrations/20261025150000_understanding_card_state.sql
-      - name: Assert 42 real pgTAP test results
+      - name: Assert 43 real pgTAP test results
         shell: bash
         run: |
           set -euo pipefail
           docker exec -i "${{ job.services.postgres.id }}" \
             psql -U postgres -d postgres -v ON_ERROR_STOP=1 -X -q -A -t \
             < supabase/tests/shared_swipe_matches.sql | tee /tmp/shared-swipe-test.log
-          grep -qx '1..42' /tmp/shared-swipe-test.log
+          grep -qx '1..43' /tmp/shared-swipe-test.log
           if grep -Eq '^(not ok|# Looks like you failed)' /tmp/shared-swipe-test.log; then
             exit 1
           fi
-          test "$(grep -Ec '^ok [0-9]+' /tmp/shared-swipe-test.log)" -eq 42
+          test "$(grep -Ec '^ok [0-9]+' /tmp/shared-swipe-test.log)" -eq 43
