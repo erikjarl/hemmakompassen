@@ -3,7 +3,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
-select plan(26);
+select plan(42);
 
 insert into auth.users (id, email)
 values
@@ -128,6 +128,13 @@ select is(has_function_privilege('anon', 'public.shared_general_deck_complete()'
   'anonymous callers cannot check theme unlock');
 select is(has_function_privilege('authenticated', 'public.shared_general_deck_complete()', 'execute'), true,
   'authenticated callers may check theme unlock');
+select has_table('public', 'swipe_skips', 'private understanding-card skip table exists');
+select has_function('public', 'set_understanding_card_state', array['text','boolean','boolean'],
+  'atomic teen understanding-card state RPC exists');
+select is(has_function_privilege('anon', 'public.set_understanding_card_state(text,boolean,boolean)', 'execute'), false,
+  'anonymous callers cannot store understanding-card state');
+select is(has_function_privilege('authenticated', 'public.set_understanding_card_state(text,boolean,boolean)', 'execute'), true,
+  'authenticated callers may store their own understanding-card state');
 
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"31000000-0000-0000-0000-000000000001","role":"authenticated"}', true);
@@ -172,6 +179,72 @@ select is(public.shared_general_deck_complete(), true, 'restoring the missing an
 select set_config('request.jwt.claims', '{"role":"authenticated"}', true);
 select throws_ok('select public.shared_general_deck_complete()', '42501',
   'authentication required', 'missing auth identity cannot check unlock');
+
+-- A/B completion: parents answer only A cards; teens may privately skip B cards.
+reset role;
+delete from public.swipe_answers
+where user_id = '31000000-0000-0000-0000-000000000002'
+  and deck_id = 'general' and card_id = 'general-02';
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"31000000-0000-0000-0000-000000000001","role":"authenticated"}', true);
+select is(public.shared_general_deck_complete(), false,
+  'an unfinished teen B card keeps the pair locked');
+
+select set_config('request.jwt.claims', '{"sub":"31000000-0000-0000-0000-000000000002","role":"authenticated"}', true);
+select lives_ok(
+  $$select public.set_understanding_card_state('general-02', null, true)$$,
+  'teen can privately skip a reviewed B card'
+);
+select is_empty(
+  $$select 1 from public.swipe_answers where card_id = 'general-02'$$,
+  'skipping removes the teen private answer atomically'
+);
+select results_eq(
+  $$select count(*) from public.swipe_skips where card_id = 'general-02'$$,
+  array[1::bigint],
+  'teen can read only the persisted private skip'
+);
+select is(public.shared_general_deck_complete(), true,
+  'a persisted teen B skip counts as reviewed without inventing an answer');
+
+select set_config('request.jwt.claims', '{"sub":"31000000-0000-0000-0000-000000000001","role":"authenticated"}', true);
+select results_eq(
+  $$select count(*) from public.swipe_skips$$,
+  array[0::bigint],
+  'parent cannot read the teen private skip through RLS'
+);
+select throws_ok(
+  $$select public.set_understanding_card_state('general-02', null, true)$$,
+  '42501', 'teen role required',
+  'parent cannot store a teen understanding-card state'
+);
+
+select set_config('request.jwt.claims', '{"sub":"31000000-0000-0000-0000-000000000002","role":"authenticated"}', true);
+select throws_ok(
+  $$select public.set_understanding_card_state('general-01', null, true)$$,
+  '22023', 'unsupported understanding card',
+  'match cards cannot be converted into private skips'
+);
+select throws_ok(
+  $$select public.set_understanding_card_state('general-02', true, true)$$,
+  '22023', 'choose exactly one answer or skip state',
+  'answer and skip cannot be stored simultaneously'
+);
+select lives_ok(
+  $$select public.set_understanding_card_state('general-02', true, false)$$,
+  'teen can replace a skip with a private answer atomically'
+);
+select is_empty(
+  $$select 1 from public.swipe_skips where card_id = 'general-02'$$,
+  'saving an answer removes the stale skip'
+);
+select results_eq(
+  $$select answer from public.swipe_answers where card_id = 'general-02'$$,
+  array[true],
+  'replacement B answer remains private and belongs to the teen'
+);
+select is(public.shared_general_deck_complete(), true,
+  'restoring the B answer keeps the aggregate pair unlock true');
 
 select * from finish();
 rollback;
