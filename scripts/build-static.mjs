@@ -6,7 +6,7 @@ const out = join(root, 'dist');
 await rm(out, { recursive: true, force: true });
 await mkdir(out, { recursive: true });
 await mkdir(join(out, 'vendor'), { recursive: true });
-const assets = ['index.html', 'app.js', 'styles.css', 'live-app.css', 'favicon.svg', 'landscape.svg', 'backend-config.js', 'konto.html', 'konto.js', 'vendor/qrcode.js', 'home.js', 'live-app.js'];
+const assets = ['index.html', 'app.js', 'styles.css', 'live-app.css', 'favicon.svg', 'landscape.svg', 'backend-config.js', 'konto.html', 'konto.js', 'vendor/qrcode.js', 'home.js', 'live-app.js', 'card-catalog.js'];
 for (const file of assets) await copyFile(join(root, file), join(out, file));
 await writeFile(join(out, '_headers'), [
   '/*',

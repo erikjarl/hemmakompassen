@@ -1,47 +1,13 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
+import {GENERAL_CARDS,THEME_DECK_MODELS} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const db=createClient(c.supabaseUrl,c.supabasePublishableKey,{auth:{flowType:'pkce',detectSessionInUrl:true}});
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??'').replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x]));
 const nav=[['hem','Hem'],['inkorg','Inkorg'],['swipe','Gillaswajpen'],['personlighet','Min personlighet'],['kommunikation','Kommunikationsråd'],['regler','Schyssta listan'],['medlare','AI-medlaren'],['installningar','Inställningar']];
 const COMMUNICATION_GUIDES=[["Vi har svårt att lyssna","När båda vill bli förstådda kan samtalet lätt bli en tävling om att få rätt.",["Försök återge vad den andra menade innan du svarar.","Ställ en nyfiken fråga: Vad är det viktigaste för dig här?","Den som lyssnar måste inte hålla med."]],["Vi bråkar om regler","Regelkonflikter handlar ofta både om praktiska behov och om självständighet.",["Beskriv konkret vad som behöver fungera hemma.","Låt båda formulera vad de vill skydda: frihet, trygghet, sömn eller tillit.","Skriv ett tidsbegränsat förslag i Schyssta listan och utvärdera tillsammans."]],["Vi har hamnat i ett gräl","Det kan vara svårt att lösa problem när stressen redan är hög.",["Ta en överenskommen paus och säg när du kommer tillbaka.","Beskriv senare vad som hände utan anklagelser.","Fråga vad var och en skulle behöva nästa gång."]],["Vi pratar nästan aldrig","Kontakt kan ibland börja i små, kravlösa stunder.",["Föreslå tio minuter tillsammans utan mål att lösa något.","Ställ en fråga från Gillaswajpen och var nyfiken på svaret.","Skilj mellan att vara tillsammans och att prestera ett bra samtal."]]];
-const STATEMENTS=[
-  ["Relationer","Jag uppskattar när vi gör saker tillsammans utan mobiltelefoner."],
-  ["Samtal","Jag vill helst prata färdigt innan någon kommer med råd."],
-  ["Vardag","Jag behöver få vara ifred ibland, även när jag är hemma."],
-  ["Känslor","Jag tycker det är lätt att säga hur jag mår."],
-  ["Relationer","Jag känner mig lyssnad på när vi är oense."],
-  ["Vardag","Jag vill vara med och bestämma över regler som gäller mig."],
-  ["Samtal","När vi bråkar behöver jag tid innan jag kan prata igen."],
-  ["Fritid","Jag tycker det är viktigt att vi har gemensamma aktiviteter."],
-  ["Känslor","Jag kan berätta när jag har gjort något som jag ångrar."],
-  ["Relationer","Jag vill att vi visar mer uppskattning i vardagen."],
-  ["Vardag","Jag mår bra av tydliga överenskommelser hemma."],
-  ["Samtal","Jag vill kunna be om hjälp utan att bli bedömd."],
-  ["Relationer","Vi brukar kunna skratta tillsammans även när vi tycker olika."],
-  ["Känslor","Jag önskar att vi pratade mer om sådant som är svårt."],
-  ["Tillit","Jag vill kunna berätta om ett misstag utan att samtalet direkt blir ett gräl."],
-  ["Tillit","Jag tycker det är viktigt att vi håller det vi lovar varandra."],
-  ["Tillit","Jag vill att vi berättar när något har skadat tilliten mellan oss."],
-  ["Självständighet","Jag vill att vi pratar om hur jag kan få mer ansvar och frihet."],
-  ["Självständighet","Det är viktigt för mig att kunna säga nej utan att det blir ett bråk."],
-  ["Självständighet","Jag vill att vi respekterar varandras privatliv."],
-  ["Samtal","Jag vill att vi frågar varandra innan vi ger råd."],
-  ["Samtal","Jag skulle vilja att vi oftare frågade hur den andra har haft det."],
-  ["Samtal","Jag vill att vi försöker förstå varandras skäl även när vi tycker olika."],
-  ["Konflikter","När vi har blivit osams vill jag att vi försöker hitta tillbaka till varandra."],
-  ["Konflikter","Jag tycker det hjälper när någon säger förlåt efter att ha sårat den andra."],
-  ["Konflikter","Jag vill att vi undviker att höja rösten när vi är oense."],
-  ["Känslor","Jag vill kunna säga att jag är ledsen eller orolig utan att behöva förklara allt direkt."],
-  ["Känslor","Jag vill att vi märker när någon behöver stöd och frågar vad som skulle hjälpa."],
-  ["Vardag","Jag vill att vi bestämmer viktiga saker tillsammans när det går."],
-  ["Vardag","Jag tycker det är viktigt att vi kan ändra en regel som inte fungerar."],
-  ["Digital vardag","Jag vill att vi pratar om mobilanvändning utan att någon känner sig anklagad."],
-  ["Gemenskap","Jag skulle vilja att vi gjorde något roligt tillsammans oftare."],
-  ["Gemenskap","Jag uppskattar små stunder tillsammans även när vi inte pratar om något särskilt."],
-  ["Uppskattning","Jag vill att vi oftare berättar vad vi uppskattar hos varandra."]
-];
-const THEME_DECKS=[{"id":"samtal","title":"Samtalsämnen","cards":["Vad som varit roligt den senaste veckan","Hur vi har det i skolan eller på jobbet","Vad vi vill göra under nästa ledighet","Hur vi vill prata om sociala medier","Vad vi vill lära oss","Hur vi visar att vi lyssnar","Vad som gör oss stressade","Vad vi drömmer om framöver"]},{"id":"aktiviteter","title":"Aktiviteter tillsammans","cards":["Laga mat tillsammans","Ta en promenad ihop","Se en film tillsammans","Spela ett spel","Prova en ny aktivitet","Göra en utflykt","Visa varandra favoritmusik","Skapa något tillsammans"]},{"id":"regler","title":"Regler för Schyssta listan","cards":["Vi knackar innan vi går in i varandras rum.","Vi lyssnar färdigt innan vi svarar.","Vi får pausa gräl och bestämmer när vi pratar vidare.","Vi frågar innan vi lånar varandras saker.","Vi pratar om hur sysslorna ska fördelas.","Vi berättar när planer som berör andra ändras.","Vi kommer överens om tider för sömn och hemkomst.","Vi kan ompröva regler som inte fungerar.","Vi bestämmer gemensamma mobilfria stunder.","Vi försöker prata utan att höja rösten.","Vi får säga till när något känns orättvist.","Vi försöker reda ut saker efter ett bråk."]},{"id":"uppskattning","title":"Sätt att visa uppskattning","cards":["Säga tack för små saker","Fråga hur den andra mår","Skicka ett vänligt meddelande","Göra något hjälpsamt","Ge en kram när båda vill","Berätta vad man uppskattar","Uppmärksamma den andras ansträngning","Ge varandra odelad uppmärksamhet"]},{"id":"aterhamtning","title":"Svåra situationer och återhämtning","cards":["Ta en paus när vi blir arga","Fråga om den andra vill ha råd","Säga förlåt när vi sårat någon","Prata vidare när vi lugnat oss","Berätta vad vi behöver","Komma överens om en paussignal","Be om hjälp när vi kör fast","Visa att vi vill bli sams"]},{"id":"forandring","title":"Små gemensamma förändringar","cards":["Äta en måltid tillsammans","Avsätta tio minuter för samtal","Fråga innan vi ger råd","Prata om veckans planer","Göra något roligt varje månad","Ha en stund utan mobiler","Utvärdera en regel efter två veckor","Berätta något som fungerat bra"]}];
+const STATEMENTS=GENERAL_CARDS.map(card=>[card.category,card.teenText]);
+const THEME_DECKS=THEME_DECK_MODELS.map(deck=>({...deck,cards:deck.cards.map(card=>card.teenText),cardIds:deck.cards.map(card=>card.id)}));
 let user=null,profile=null,members=[];
 let swipeIndex=0,swipeBusy=false,swipeReview=false,swipeLoadError='',swipeSaveError='';
 let sharedMatches=[],sharedError='',sharedLoading=false,sharedSession=0,sharedRequest=0;
@@ -49,7 +15,7 @@ let themesUnlocked=false,themesLoading=false,themesError='',themesRequest=0;
 const swipeAnswers=new Map();
 const themeAnswers=new Map(THEME_DECKS.map(deck=>[deck.id,new Map()]));
 let activeThemeDeck=null,themeIndex=0,themeReview=false,themeSaveError='';
-const themeCardId=(deck,index)=>deck.id+'-'+String(index+1).padStart(2,'0');
+const themeCardId=(deck,index)=>deck.cardIds[index];
 const themeAccessAllowed=()=>!!user&&members.length===2&&themesUnlocked&&!themesLoading&&!themesError;
 function nextThemeUnanswered(deck,start=0){
   const answers=themeAnswers.get(deck.id);
@@ -57,7 +23,7 @@ function nextThemeUnanswered(deck,start=0){
   for(let i=0;i<start;i++)if(!answers.has(themeCardId(deck,i)))return i;
   return deck.cards.length;
 }
-const swipeCardId=index=>'general-'+String(index+1).padStart(2,'0');
+const swipeCardId=index=>GENERAL_CARDS[index]?.id;
 function nextUnanswered(start=0){for(let i=start;i<STATEMENTS.length;i++)if(!swipeAnswers.has(swipeCardId(i)))return i;for(let i=0;i<start;i++)if(!swipeAnswers.has(swipeCardId(i)))return i;return STATEMENTS.length;}
 
 function sharedSummary(groups){
