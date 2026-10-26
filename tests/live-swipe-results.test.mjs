@@ -36,7 +36,7 @@ console.log('PASS: mutual-YES-only RPC results, role-specific rule summary, them
 
 
 // Execute the actual shared-view and summary functions with synthetic data.
-const sharedViewFunctions=script.match(/const joinSwedish=[\\s\\S]*?(?=\\nasync function fetchSwipeMatches\\(\\))/);
+const sharedViewFunctions=script.match(/const joinSwedish=[\s\S]*?(?=\nasync function fetchSwipeMatches\(\))/);
 assert.ok(sharedViewFunctions,'Shared result rendering can be tested independently');
 function renderSharedResult(rows,role='parent'){
   const state={
@@ -51,7 +51,7 @@ function renderSharedResult(rows,role='parent'){
     viewerRole:()=>role,
     esc:value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char])),
   };
-  vm.runInNewContext(sharedViewFunctions[0]+'\\nthis.html=swipeResults();',state);
+  vm.runInNewContext(sharedViewFunctions[0]+'\nthis.html=swipeResults();',state);
   return state.html;
 }
 {
