@@ -111,4 +111,50 @@ function harness({upsert=async()=>({error:null}),rpc=async()=>({error:null})}={}
   assert.equal(h.state.swipeAnswers.get('general-02'),false,'A B-card answer is stored after RPC success');
   assert.equal(h.state.skippedUnderstanding.has('general-02'),false,'Answering revokes the private skip locally');
 }
+
+const refreshSource=source.match(/async function refresh\(\)\{[\s\S]*?(?=\ndocument\.addEventListener\('click')/);
+assert.ok(refreshSource,'Account refresh function can be exercised independently');
+const deferred=()=>{let resolve,reject;const promise=new Promise((ok,no)=>{resolve=ok;reject=no;});return {promise,resolve,reject};};
+{
+  const profiles={old:deferred(),new:deferred()};
+  const renders=[];
+  let authCalls=0;
+  const state={
+    refreshGeneration:0,user:null,profile:null,members:[],
+    swipeAnswers:new Map(),skippedUnderstanding:new Set(),themeAnswers:new Map(),
+    activeThemeDeck:null,themeIndex:0,themeReview:false,themeSaveError:'',
+    swipeBusy:false,swipeLoadError:'',swipeSaveError:'',swipeReview:false,swipeIndex:0,
+    sharedMatches:[],sharedError:'',sharedLoading:false,sharedSession:0,sharedRequest:0,
+    themesUnlocked:false,themesLoading:false,themesError:'',themesRequest:0,
+    STATEMENTS:[['Relationer','Testkort']],GENERAL_CARDS:[{id:'general-01',type:'match'}],THEME_DECKS:[],
+    swipeCardId:()=> 'general-01',nextUnanswered:()=>0,
+    render:()=>renders.push(state.profile?.display_name),
+    fetchSwipeMatches:()=>{throw Error('Unexpected shared fetch');},
+    fetchThemeUnlock:()=>{throw Error('Unexpected theme fetch');},
+    db:{
+      auth:{getUser:async()=>({data:{user:{id:authCalls++===0?'old':'new'}},error:null})},
+      rpc:async()=>({data:[],error:null}),
+      from:table=>({select:()=>({eq:(_,id)=>table==='profiles'
+        ?{maybeSingle:()=>profiles[id].promise}
+        :Promise.resolve({data:table==='swipe_answers'?[{deck_id:'general',card_id:'general-01',answer:id==='new'}]:[],error:null})})}),
+    },
+  };
+  vm.runInNewContext(refreshSource[0]+'\nthis.refresh=refresh;',state);
+  const slow=state.refresh();
+  await Promise.resolve();
+  const fast=state.refresh();
+  await Promise.resolve();
+  profiles.new.resolve({data:{display_name:'Nytt konto'},error:null});
+  await fast;
+  assert.equal(state.user.id,'new');
+  assert.equal(state.profile.display_name,'Nytt konto');
+  assert.equal(state.swipeAnswers.get('general-01'),true);
+  profiles.old.resolve({data:{display_name:'Gammalt konto'},error:null});
+  await slow;
+  assert.equal(state.user.id,'new','A delayed old account fetch cannot switch back to old user');
+  assert.equal(state.profile.display_name,'Nytt konto','Old private profile must not overwrite the new account');
+  assert.equal(state.swipeAnswers.get('general-01'),true,'Old private answers must not leak into the new account');
+  assert.equal(JSON.stringify(renders),JSON.stringify(['Nytt konto']),'Stale refresh must not render');
+}
+
 console.log('PASS: session-isolated saves and atomic understanding-card answers/skips');
