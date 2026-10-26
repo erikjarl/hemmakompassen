@@ -35,10 +35,9 @@ function sharedSummary(groups){
   const role=viewerRole();
   const roleLabel=role==='parent'?'förälder':role==='teen'?'tonåring':'familjemedlem';
   const paragraphs=[];
-  for(const [category,statements] of groups){
-    const cardTexts=statements.map(shortCardText);
-    const key=adviceKeyForCard({category});
-    const advice=ADVICE_BY_KEY[key]||'Välj något av det ni båda bejakat och prata om hur ni skulle kunna prova det i vardagen.';
+  for(const [category,items] of groups){
+    const cardTexts=items.map(item=>shortCardText(item.statement));
+    const advice=[...new Set(items.map(item=>ADVICE_BY_KEY[adviceKeyForCard(item.card)]).filter(Boolean))].join(' ')||'Välj något av det ni båda bejakat och prata om hur ni skulle kunna prova det i vardagen.';
     const intro=category==='Fritid'||category==='Gemenskap'
       ?'Ni har båda visat intresse för '
       :'Ni har båda bejakat ';
@@ -67,11 +66,11 @@ function swipeResults(){
     if(!item)continue;
     const [category,statement]=item;
     if(!groups.has(category))groups.set(category,[]);
-    groups.get(category).push(statement);
+    groups.get(category).push({statement,card:GENERAL_CARDS.find(card=>card.id===r.card_id)});
   }
-  const themes=[...groups.entries()].map(([category,statements])=>
+  const themes=[...groups.entries()].map(([category,items])=>
     '<section class="swipe-match-theme"><h4>'+esc(category)+'</h4><ul class="swipe-match-list">'+
-    statements.map(statement=>'<li><p>'+esc(statement)+'</p></li>').join('')+
+    items.map(item=>'<li><p>'+esc(item.statement)+'</p></li>').join('')+
     '</ul></section>'
   ).join('');
   return title+'<p class="live-muted">Bara kort där ni båda svarat ja visas här. Se dem som möjliga samtalsöppningar, inte som färdiga överenskommelser.</p>'+

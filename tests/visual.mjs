@@ -194,6 +194,7 @@ try{
   assert.match(sharedText,/REDAKTIONELLA RÅD · INTE AI/,"The editorial advice is clearly labelled");
   assert.match(sharedText,/Gemensamma möjligheter – förälder/,"The parent sees parent-specific wording");
   assert.match(sharedText,/Fråga gärna tonåringen vad hen vill börja med/,"The parent prompt is derived from mutual YES only");
+  assert.match(sharedText,/Bestäm en kort stund då mobilerna får vila/,"The matched A card renders its own reviewed editorial advice");
   assert.doesNotMatch(sharedText,/Jag vill helst prata färdigt innan någon kommer med råd/,"The mutual NO is never displayed");
   assert.doesNotMatch(sharedText,/Det ni båda svarat nej till|Två nej/,"No mutual NO headings or counts");
   assert.ok((await paired.page.evaluate(()=>window.__HK_MATCH_RPC_CALLS__))>0,"Paired account requests the aggregate RPC");

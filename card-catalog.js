@@ -77,6 +77,27 @@ export const THEME_DECK_MODELS=Object.freeze([
 // Redaktionella råd är metadata, aldrig AI-genererad text. Nytt kort får ett
 // stabilt ID och kan ange adviceKey; nya råd läggs till i ADVICE_BY_KEY.
 export const ADVICE_BY_KEY=Object.freeze({
+  'general-01':'Bestäm en kort stund då mobilerna får vila och välj något enkelt ni båda brukar tycka om.',
+  'general-08':'Skriv varsin idé till en gemensam aktivitet och turas om att välja vad ni provar först.',
+  'general-10':'Börja med att nämna en konkret sak ni uppskattade hos den andra under veckan.',
+  'general-11':'Formulera en överenskommelse så konkret att båda vet vad den innebär och när den ska följas upp.',
+  'general-13':'Ge plats åt humor utan att skämta bort det som känns viktigt för någon av er.',
+  'general-16':'Välj hellre ett litet löfte som går att hålla än ett stort löfte som blir otydligt.',
+  'general-17':'Beskriv vad som hände och vad som skulle kunna återbygga tilliten, utan att kräva en omedelbar lösning.',
+  'general-20':'Prata konkret om vad privatliv betyder för var och en och vilka undantag som behövs för trygghet.',
+  'general-21':'Fråga ”vill du att jag lyssnar eller hjälper dig att tänka?” innan ni går över till råd.',
+  'general-22':'Prova en återkommande, kravlös fråga om dagen och acceptera även ett kort svar.',
+  'general-23':'Återge först den andras skäl med egna ord och kontrollera att du förstått innan du svarar.',
+  'general-24':'Bestäm en enkel väg tillbaka efter bråk, till exempel en paus följd av en bestämd tid för nytt samtal.',
+  'general-25':'En hjälpsam ursäkt nämner vad som blev fel och vad personen vill försöka göra annorlunda nästa gång.',
+  'general-26':'Kom överens om en paussignal och återuppta samtalet när båda kan prata i normal samtalston.',
+  'general-28':'Fråga vilket slags stöd som önskas i stället för att gissa eller lösa problemet direkt.',
+  'general-29':'Avgränsa ett beslut som berör er båda och låt båda föreslå ett genomförbart alternativ.',
+  'general-30':'Bestäm i förväg när en regel ska utvärderas och vad som skulle visa att den behöver ändras.',
+  'general-31':'Välj ett konkret skärmtillfälle och beskriv egna behov utan att räkna upp den andras fel.',
+  'general-32':'Välj något litet och lätt att boka in snart; gemensam tid behöver inte vara avancerad eller dyr.',
+  'general-33':'Skydda en kort stund av kravlös närvaro där ni inte måste prestera ett bra samtal.',
+  'general-34':'Gör uppskattningen konkret genom att säga vad den andra gjorde och varför det betydde något.',
   aktiviteter:'Välj tillsammans en aktivitet och bestäm en dag och plats. Små återkommande stunder kan göra det lättare att hålla kontakten utan krav på stora samtal.',
   samtal:'Välj ett ämne och låt var och en berätta i sin egen takt. Prova att lyssna färdigt och ställa en nyfiken följdfråga innan ni ger råd.',
   regler:'Välj en regel att diskutera. Formulera ett konkret förslag tillsammans och bestäm när ni ska utvärdera det; ett gemensamt intresse är ännu ingen överenskommelse.',
@@ -95,4 +116,4 @@ export const ADVICE_BY_KEY=Object.freeze({
   Gemenskap:'Planera en enkel stund tillsammans som båda får vara med och utforma.',
   Uppskattning:'Berätta något konkret som ni uppskattar hos varandra.',
 });
-export const adviceKeyForCard=(card,deckId='general')=>card.adviceKey|| (deckId==='general'?card.category:deckId);
+export const adviceKeyForCard=(card,deckId='general')=>card.adviceKey|| (deckId==='general'&&ADVICE_BY_KEY[card.id]?card.id:deckId==='general'?card.category:deckId);
