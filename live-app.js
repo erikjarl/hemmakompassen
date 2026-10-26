@@ -1,5 +1,5 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {GENERAL_CARDS,THEME_DECK_MODELS} from './card-catalog.js';
+import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const db=createClient(c.supabaseUrl,c.supabasePublishableKey,{auth:{flowType:'pkce',detectSessionInUrl:true}});
 const $=id=>document.getElementById(id);
@@ -29,21 +29,29 @@ const visibleGeneralIndices=()=>GENERAL_CARDS.flatMap((card,index)=>card.type===
 const skippedUnderstanding=new Set();
 function nextUnanswered(start=0){const visible=visibleGeneralIndices();const pending=i=>!swipeAnswers.has(swipeCardId(i))&&!skippedUnderstanding.has(swipeCardId(i));return visible.find(i=>i>=start&&pending(i))??visible.find(i=>i<start&&pending(i))??STATEMENTS.length;}
 
+const joinSwedish=items=>items.length<2?(items[0]||''):items.slice(0,-1).join(', ')+' och '+items.at(-1);
+const shortCardText=text=>String(text).replace(/[.!?]+$/,'').replace(/^Jag (?:vill|skulle vilja|tycker|uppskattar) (?:att |när )?/i,'').replace(/^Vi /,'att ni ').trim();
 function sharedSummary(groups){
-  const count=[...groups.values()].reduce((sum,statements)=>sum+statements.length,0);
-  const categories=[...groups.keys()];
-  const role=members.find(member=>member.user_id===user?.id)?.role;
+  const role=viewerRole();
   const roleLabel=role==='parent'?'förälder':role==='teen'?'tonåring':'familjemedlem';
-  const categoryText=categories.length===1?categories[0]:categories.slice(0,-1).join(', ')+' och '+categories.at(-1);
+  const paragraphs=[];
+  for(const [category,statements] of groups){
+    const cardTexts=statements.map(shortCardText);
+    const key=adviceKeyForCard({category});
+    const advice=ADVICE_BY_KEY[key]||'Välj något av det ni båda bejakat och prata om hur ni skulle kunna prova det i vardagen.';
+    const intro=category==='Fritid'||category==='Gemenskap'
+      ?'Ni har båda visat intresse för '
+      :'Ni har båda bejakat ';
+    paragraphs.push('<p>'+esc(intro)+'<strong>'+esc(joinSwedish(cardTexts))+'</strong>. '+esc(advice)+'</p>');
+  }
   const opening=role==='parent'
-    ?'Be tonåringen välja vilket gemensamt ja-svar ni ska prata om först. Lyssna färdigt och fråga vad svaret betyder för hen innan du föreslår lösningar.'
+    ?'Fråga gärna tonåringen vad hen vill börja med och lyssna färdigt innan du föreslår något.'
     :role==='teen'
-      ?'Välj gärna ett gemensamt ja-svar som känns lättast att börja med och berätta vad det betyder för dig. Du behöver inte hålla med om mer än det som faktiskt står här.'
-      :'Välj tillsammans ett gemensamt ja-svar och fråga vad det betyder för var och en.';
-  return '<aside class="swipe-rule-summary" aria-labelledby="shared-summary-heading"><span class="swipe-summary-label">REGELBASERAD · INTE AI</span><h3 id="shared-summary-heading">Kort sammanfattning för '+esc(roleLabel)+'</h3>'+
-    '<p><strong>Observation:</strong> Ni har '+count+' '+(count===1?'gemensamt ja-svar':'gemensamma ja-svar')+' inom '+esc(categoryText)+'. Det visar bara vad ni båda har bejakat i Gillaswajpen.</p>'+
-    '<p><strong>Samtalsöppning:</strong> '+esc(opening)+'</p>'+
-    '<p class="live-muted">Sammanfattningen använder enbart ömsesidiga ja-svar. Den använder inte nej-svar, oenighet, ensidiga svar eller AI.</p></aside>';
+      ?'Välj gärna själv vad du vill börja prata om; ett ja betyder inte att du måste göra något direkt.'
+      :'Välj tillsammans något som känns enkelt att börja med.';
+  return '<aside class="swipe-rule-summary" aria-labelledby="shared-summary-heading"><span class="swipe-summary-label">REDAKTIONELLA RÅD · INTE AI</span><h3 id="shared-summary-heading">Gemensamma möjligheter – '+esc(roleLabel)+'</h3>'+
+    paragraphs.join('')+'<p>'+esc(opening)+'</p>'+
+    '<p class="live-muted">Texten bygger enbart på serververifierade ömsesidiga ja-svar. Råden är förskrivna, inte AI-genererade; inget privat svar ingår.</p></aside>';
 }
 
 function swipeResults(){
