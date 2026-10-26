@@ -59,15 +59,18 @@ function swipeResults(){
   const button='<button type="button" class="live-button swipe-refresh" id="refresh-matches" '+(sharedLoading?'disabled':'')+'>Uppdatera gemensamma svar</button>';
   if(sharedLoading)return title+'<p role="status">Hämtar gemensamma svar…</p>'+button+'</section>';
   if(sharedError)return title+'<p role="alert">'+esc(sharedError)+'</p>'+button+'</section>';
-  if(!sharedMatches.length)return title+'<p class="live-muted">Inga gemensamma ja-svar att visa ännu. Här visas bara kort där ni båda har svarat ja.</p>'+button+'</section>';
+  // Defense in depth: a stale or malformed client result must never reach the
+  // shared view or its editorial summary, even if the RPC filter regresses.
   const groups=new Map();
   for(const r of sharedMatches){
-    const item=STATEMENTS[Number(r.card_id.substring(8))-1];
-    if(!item)continue;
-    const [category,statement]=item;
+    if(r?.answer!==true)continue;
+    const matchedCard=GENERAL_CARDS.find(card=>card.id===r.card_id&&card.type==='match');
+    if(!matchedCard)continue;
+    const {category,teenText:statement}=matchedCard;
     if(!groups.has(category))groups.set(category,[]);
-    groups.get(category).push({statement,card:GENERAL_CARDS.find(card=>card.id===r.card_id)});
+    groups.get(category).push({statement,card:matchedCard});
   }
+  if(!groups.size)return title+'<p class="live-muted">Inga gemensamma ja-svar att visa ännu. Här visas bara kort där ni båda har svarat ja.</p>'+button+'</section>';
   const themes=[...groups.entries()].map(([category,items])=>
     '<section class="swipe-match-theme"><h4>'+esc(category)+'</h4><ul class="swipe-match-list">'+
     items.map(item=>'<li><p>'+esc(item.statement)+'</p></li>').join('')+
