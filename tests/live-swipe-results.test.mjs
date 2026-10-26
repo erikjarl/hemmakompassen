@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import vm from 'node:vm';
 import {readFileSync} from 'node:fs';
 const script=readFileSync(new URL('../live-app.js',import.meta.url),'utf8');
 
@@ -32,3 +33,47 @@ assert.match(script,/db\.rpc\('set_understanding_card_state',\{p_card_id:cardId,
 assert.match(script,/swipeAnswers\.delete\(cardId\);\s*skippedUnderstanding\.add\(cardId\)/,'A successful skip revokes the prior answer locally');
 assert.doesNotMatch(script,/#swipe-restart'[\s\S]{0,160}skippedUnderstanding\.clear/,'Review does not erase persistent private skip state');
 console.log('PASS: mutual-YES-only RPC results, role-specific rule summary, theme groups and fail-closed state');
+
+
+// Execute the actual shared-view and summary functions with synthetic data.
+const sharedViewFunctions=script.match(/const joinSwedish=[\s\S]*?(?=\nasync function fetchSwipeMatches\(\))/);
+assert.ok(sharedViewFunctions,'Shared result rendering can be tested independently');
+function renderSharedResult(rows,role='parent'){
+  const state={
+    members:[{role:'parent'},{role:'teen'}],sharedLoading:false,sharedError:'',sharedMatches:rows,
+    GENERAL_CARDS:[
+      {id:'general-01',type:'match',category:'Fritid',teenText:'Spela fotboll'},
+      {id:'general-02',type:'understanding',category:'Känslor',teenText:'HEMLIGT FÖRSTÅELSEKORT'},
+      {id:'general-03',type:'match',category:'Samtal',teenText:'HEMLIGT NEJ-SVAR'},
+    ],
+    ADVICE_BY_KEY:{'general-01':'Välj en gemensam dag.'},
+    adviceKeyForCard:card=>card.id,
+    viewerRole:()=>role,
+    esc:value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char])),
+  };
+  vm.runInNewContext(sharedViewFunctions[0]+'\nthis.html=swipeResults();',state);
+  return state.html;
+}
+{
+  const html=renderSharedResult([
+    {card_id:'general-01',answer:true},
+    {card_id:'general-02',answer:true},
+    {card_id:'general-03',answer:false},
+    {card_id:'unknown',answer:true},
+  ]);
+  assert.match(html,/Spela fotboll/,'A verified A-YES can appear');
+  assert.match(html,/Välj en gemensam dag/,'Only allowed A cards contribute editorial advice');
+  assert.doesNotMatch(html,/HEMLIGT/,'B-YES and A-NO cannot leak into results or summaries');
+  assert.match(html,/Gemensamma möjligheter – förälder/,'Parent gets the parent-facing summary');
+  assert.match(renderSharedResult([{card_id:'general-01',answer:true}],'teen'),/Gemensamma möjligheter – tonåring/,'Teen gets the teen-facing summary');
+}
+{
+  const html=renderSharedResult([
+    {card_id:'general-02',answer:true},
+    {card_id:'general-03',answer:false},
+    {card_id:'unknown',answer:true},
+  ]);
+  assert.match(html,/Inga gemensamma ja-svar/,'Invalid-only results render the safe empty state');
+  assert.doesNotMatch(html,/swipe-rule-summary|HEMLIGT|Välj en gemensam dag/,'Invalid-only results cannot create a shared summary');
+}
+console.log('PASS: shared result renderer and role summaries reject B, NO and unknown cards');
