@@ -26,7 +26,7 @@ assert.match(script,/if\(error\|\|typeof data!=='boolean'\)throw/,'Fail-closed w
 assert.match(script,/themesUnlocked=data===true/,'Only an explicit true unlocks theme previews');
 assert.match(script,/const unlocked=members\.length===2&&themesUnlocked&&!themesLoading&&!themesError/,'Never renders theme previews without a valid pair and current RPC');
 assert.match(script,/visibleGeneralIndices\(\)\.every\(i=>swipeAnswers\.has\(swipeCardId\(i\)\)\|\|skippedUnderstanding\.has\(swipeCardId\(i\)\)\)/,'Rechecks completion for role-visible cards and skipped understanding cards');
-assert.match(script,/db\.from\('swipe_skips'\)\.select\('deck_id,card_id'\)\.eq\('user_id',user\.id\)/,'Reloads only the signed-in user’s private skips');
+assert.match(script,/db\.from\('swipe_skips'\)\.select\('deck_id,card_id'\)\.eq\('user_id',viewer\)/,'Reloads only the signed-in user’s private skips');
 assert.match(script,/db\.rpc\('set_understanding_card_state',\{p_card_id:row\.card_id,p_answer:row\.answer,p_skipped:false\}\)/,'Stores B answers through the role-checked atomic RPC');
 assert.match(script,/db\.rpc\('set_understanding_card_state',\{p_card_id:cardId,p_answer:null,p_skipped:true\}\)/,'Stores B skips through the role-checked atomic RPC');
 assert.match(script,/swipeAnswers\.delete\(cardId\);\s*skippedUnderstanding\.add\(cardId\)/,'A successful skip revokes the prior answer locally');
