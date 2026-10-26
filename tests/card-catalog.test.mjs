@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {GENERAL_CARDS,THEME_DECK_MODELS} from '../card-catalog.js';
+import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard} from '../card-catalog.js';
 
 assert.equal(GENERAL_CARDS.length,34,'Preserves all 34 stable general cards');
 assert.deepEqual(GENERAL_CARDS.map(card=>card.id),Array.from({length:34},(_,index)=>'general-'+String(index+1).padStart(2,'0')),'Preserves general card IDs and ordering');
@@ -17,6 +17,12 @@ for(const card of GENERAL_CARDS){
   assert.ok(card.category&&card.teenText&&card.parentSharedText,card.id+' has complete display metadata');
   if(card.type==='understanding')assert.notEqual(card.teenText,card.parentSharedText,card.id+' has a separate neutral parent rendering');
 }
+for(const card of GENERAL_CARDS.filter(card=>card.type==='match')){
+  const key=adviceKeyForCard(card);
+  assert.equal(key,card.id,card.id+' uses its stable ID as editorial advice key');
+  assert.ok(ADVICE_BY_KEY[key]?.length>=60,card.id+' has a substantive card-specific editorial advice sentence');
+}
+assert.equal(new Set(GENERAL_CARDS.filter(card=>card.type==='match').map(adviceKeyForCard)).size,21,'Every general A card has its own advice key');
 
 assert.equal(THEME_DECK_MODELS.length,6,'Preserves all six theme decks');
 const themeCards=THEME_DECK_MODELS.flatMap(deck=>deck.cards);

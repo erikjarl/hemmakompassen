@@ -13,6 +13,8 @@ assert.doesNotMatch(script,/Det ni båda svarat nej till/,'Never renders a share
 assert.match(script,/swipe-match-theme/,'Mutual YES results are grouped by theme');
 assert.match(script,/swipeCardId\(i\)===r\.card_id/,'Only known card IDs are rendered');
 assert.match(script,/function sharedSummary\(groups\)/,'Builds the rule-based summary only from the already filtered mutual-YES groups');
+assert.match(script,/items\.map\(item=>ADVICE_BY_KEY\[adviceKeyForCard\(item\.card\)\]\)/,'Derives editorial advice from each allowed matched card');
+assert.match(script,/new Set\(/,'Deduplicates repeated advice before rendering grouped prose');
 assert.match(script,/members\.find\(member=>member\.user_id===user\?\.id\)\?\.role/,'Uses the signed-in member role for separate parent and teen wording');
 assert.match(script,/REDAKTIONELLA RÅD · INTE AI/,'Labels the deterministic editorial advice clearly');
 assert.match(script,/Texten bygger enbart på serververifierade ömsesidiga ja-svar/,'States the summary privacy boundary');
