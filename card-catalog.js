@@ -72,3 +72,27 @@ export const THEME_DECK_MODELS=Object.freeze([
   themeDeck('aterhamtning','Svåra situationer och återhämtning',['Ta en paus när vi blir arga','Fråga om den andra vill ha råd','Säga förlåt när vi sårat någon','Prata vidare när vi lugnat oss','Berätta vad vi behöver','Komma överens om en paussignal','Be om hjälp när vi kör fast','Visa att vi vill bli sams']),
   themeDeck('forandring','Små gemensamma förändringar',['Äta en måltid tillsammans','Avsätta tio minuter för samtal','Fråga innan vi ger råd','Prata om veckans planer','Göra något roligt varje månad','Ha en stund utan mobiler','Utvärdera en regel efter två veckor','Berätta något som fungerat bra']),
 ]);
+
+
+// Redaktionella råd är metadata, aldrig AI-genererad text. Nytt kort får ett
+// stabilt ID och kan ange adviceKey; nya råd läggs till i ADVICE_BY_KEY.
+export const ADVICE_BY_KEY=Object.freeze({
+  aktiviteter:'Välj tillsammans en aktivitet och bestäm en dag och plats. Små återkommande stunder kan göra det lättare att hålla kontakten utan krav på stora samtal.',
+  samtal:'Välj ett ämne och låt var och en berätta i sin egen takt. Prova att lyssna färdigt och ställa en nyfiken följdfråga innan ni ger råd.',
+  regler:'Välj en regel att diskutera. Formulera ett konkret förslag tillsammans och bestäm när ni ska utvärdera det; ett gemensamt intresse är ännu ingen överenskommelse.',
+  uppskattning:'Välj ett litet sätt att visa uppskattning redan i veckan. Fråga gärna hur den andra helst vill bli uppmärksammad.',
+  aterhamtning:'Prata om vad som hjälper när det blir svårt. En överenskommen paus och en bestämd tid att återuppta samtalet kan minska pressen.',
+  forandring:'Börja med en liten förändring som känns möjlig för er båda och följ upp efter någon vecka.',
+  Relationer:'Välj en stund då ni kan vara tillsammans utan andra krav och fråga vad ni båda uppskattar med den.',
+  Fritid:'Prova att boka in en gemensam aktivitet och låt båda påverka vad ni gör.',
+  Vardag:'Välj en vardagssituation och fråga vad som skulle göra den enklare för er båda.',
+  Samtal:'Låt var och en beskriva vad som känns viktigt. Lyssna färdigt innan ni försöker hitta en lösning.',
+  Konflikter:'Kom överens om hur ni kan ta paus och hitta tillbaka till samtalet när känslorna lugnat sig.',
+  Tillit:'Börja med ett litet, konkret löfte som ni båda kan hålla och följ upp hur det fungerade.',
+  Självständighet:'Prata om vilka behov av frihet och trygghet som ska få plats och pröva en liten förändring.',
+  Känslor:'Fråga om den andra vill bli lyssnad på eller få hjälp att hitta en lösning.',
+  'Digital vardag':'Välj ett avgränsat tillfälle att prata om skärmar utan anklagelser och var nyfikna på varandras perspektiv.',
+  Gemenskap:'Planera en enkel stund tillsammans som båda får vara med och utforma.',
+  Uppskattning:'Berätta något konkret som ni uppskattar hos varandra.',
+});
+export const adviceKeyForCard=(card,deckId='general')=>card.adviceKey|| (deckId==='general'?card.category:deckId);
