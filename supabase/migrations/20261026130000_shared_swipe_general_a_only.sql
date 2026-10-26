@@ -12,7 +12,7 @@ language plpgsql
 stable
 security definer
 set search_path = ''
-as $
+as $$
 declare
   allowed_general_match_ids constant text[] := array[
     'general-01','general-08','general-10','general-11','general-13',

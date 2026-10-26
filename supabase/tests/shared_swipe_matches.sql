@@ -88,11 +88,11 @@ select results_eq(
   'family A sees only its mutual YES'
 );
 select is_empty(
-  $select * from public.shared_swipe_matches('general') where card_id = 'general-02'$,
+  $$select * from public.shared_swipe_matches('general') where card_id = 'general-02'$$,
   'historical mutual YES on a B understanding card must not be returned'
 );
 select is_empty(
-  $select * from public.shared_swipe_matches('general') where card_id = 'general-10'$,
+  $$select * from public.shared_swipe_matches('general') where card_id = 'general-10'$$,
   'two NO votes are never returned by the authenticated RPC'
 );
 select is_empty(
