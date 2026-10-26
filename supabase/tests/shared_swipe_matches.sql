@@ -3,7 +3,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
-select plan(43);
+select plan(44);
 
 insert into auth.users (id, email)
 values
@@ -29,15 +29,18 @@ values
 
 insert into public.swipe_answers (user_id, deck_id, card_id, answer)
 values
-  ('31000000-0000-0000-0000-000000000001', 'general', 'same-no', false),
-  ('31000000-0000-0000-0000-000000000002', 'general', 'same-no', false),
-  ('31000000-0000-0000-0000-000000000001', 'general', 'same-yes', true),
-  ('31000000-0000-0000-0000-000000000002', 'general', 'same-yes', true),
-  ('31000000-0000-0000-0000-000000000001', 'general', 'disagree', true),
-  ('31000000-0000-0000-0000-000000000002', 'general', 'disagree', false),
-  ('31000000-0000-0000-0000-000000000001', 'general', 'unilateral', true),
-  ('32000000-0000-0000-0000-000000000001', 'general', 'family-b-only', true),
-  ('32000000-0000-0000-0000-000000000002', 'general', 'family-b-only', true),
+  ('31000000-0000-0000-0000-000000000001', 'general', 'general-10', false),
+  ('31000000-0000-0000-0000-000000000002', 'general', 'general-10', false),
+  ('31000000-0000-0000-0000-000000000001', 'general', 'general-01', true),
+  ('31000000-0000-0000-0000-000000000002', 'general', 'general-01', true),
+  -- Historic B answers on both accounts must not be returned by the shared RPC.
+  ('31000000-0000-0000-0000-000000000001', 'general', 'general-02', true),
+  ('31000000-0000-0000-0000-000000000002', 'general', 'general-02', true),
+  ('31000000-0000-0000-0000-000000000001', 'general', 'general-11', true),
+  ('31000000-0000-0000-0000-000000000002', 'general', 'general-11', false),
+  ('31000000-0000-0000-0000-000000000001', 'general', 'general-13', true),
+  ('32000000-0000-0000-0000-000000000001', 'general', 'general-08', true),
+  ('32000000-0000-0000-0000-000000000002', 'general', 'general-08', true),
   ('33000000-0000-0000-0000-000000000001', 'general', 'single-member', true);
 
 select has_function(
@@ -81,28 +84,32 @@ select lives_ok(
 );
 select results_eq(
   $$select deck_id, card_id, answer from public.shared_swipe_matches('general')$$,
-  $$values ('general'::text, 'same-yes'::text, true)$$,
+  $$values ('general'::text, 'general-01'::text, true)$$,
   'family A sees only its mutual YES'
 );
 select is_empty(
-  $$select * from public.shared_swipe_matches('general') where card_id = 'same-no'$$,
+  $select * from public.shared_swipe_matches('general') where card_id = 'general-02'$,
+  'historical mutual YES on a B understanding card must not be returned'
+);
+select is_empty(
+  $select * from public.shared_swipe_matches('general') where card_id = 'general-10'$,
   'two NO votes are never returned by the authenticated RPC'
 );
 select is_empty(
-  $$select * from public.shared_swipe_matches('general') where card_id = 'disagree'$$,
+  $$select * from public.shared_swipe_matches('general') where card_id = 'general-11'$$,
   'a disagreement is never exposed'
 );
 select is_empty(
-  $$select * from public.shared_swipe_matches('general') where card_id = 'unilateral'$$,
+  $$select * from public.shared_swipe_matches('general') where card_id = 'general-13'$$,
   'a unilateral answer is never exposed'
 );
 select is_empty(
-  $$select * from public.shared_swipe_matches('general') where card_id = 'family-b-only'$$,
+  $$select * from public.shared_swipe_matches('general') where card_id = 'general-08'$$,
   'another family match is never exposed'
 );
 select results_eq(
   $$select count(*) from public.swipe_answers$$,
-  array[4::bigint],
+  array[5::bigint],
   'self-only RLS still reveals only the caller answers'
 );
 select throws_ok(
@@ -115,7 +122,7 @@ select throws_ok(
 select set_config('request.jwt.claims', '{"sub":"32000000-0000-0000-0000-000000000001","role":"authenticated"}', true);
 select results_eq(
   $$select deck_id, card_id, answer from public.shared_swipe_matches('general')$$,
-  $$values ('general'::text, 'family-b-only'::text, true)$$,
+  $$values ('general'::text, 'general-08'::text, true)$$,
   'family B sees only its own match'
 );
 

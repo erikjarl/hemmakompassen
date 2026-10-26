@@ -73,3 +73,17 @@ test('theme unlock is an authenticated, aggregate-only two-person server check',
   assert.doesNotMatch(unlockMigration, /p_expected|p_card_count|p_user_id|p_family_id/i,
     'Callers cannot override expected cards or inspect another family');
 });
+
+const aOnlyMigration = readFileSync(join(__dirname,'..','supabase','migrations','20261026130000_shared_swipe_general_a_only.sql'),'utf8');
+test('general shared RPC only exposes reviewed A cards, never legacy B YES', () => {
+  assert.match(aOnlyMigration,/security definer[\s\S]*set search_path = ''/i);
+  assert.match(aOnlyMigration,/p_deck_id <> 'general' or sa\.card_id = any\(allowed_general_match_ids\)/i);
+  assert.match(aOnlyMigration,/count\(distinct roles\.role\)[\s\S]*= 2/i);
+  assert.match(aOnlyMigration,/bool_and\(family_answers\.answer\) is true/i);
+  assert.match(aOnlyMigration,/revoke all on function public\.shared_swipe_matches\(text\) from public, anon;/i);
+  assert.match(aOnlyMigration,/grant execute on function public\.shared_swipe_matches\(text\) to authenticated;/i);
+  const ids=[...aOnlyMigration.matchAll(/'general-(\d{2})'/g)].map(x=>x[1]);
+  assert.equal(ids.length,21);
+  for(const id of ['02','03','04','05','06','07','09','12','14','15','18','19','27'])
+    assert.ok(!ids.includes(id),'B understanding card must not be allowed: '+id);
+});
