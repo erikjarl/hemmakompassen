@@ -50,6 +50,7 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
       export function createClient(){
         const current=()=>window.__HK_TEST_USER__;
         const answers=new Map(window.__HK_PREANSWERED_GENERAL__?Array.from({length:34},(_,i)=>{const id='general-'+String(i+1).padStart(2,'0');return [id,{deck_id:'general',card_id:id,answer:true}]}):window.__HK_TEST_PAIRED__?[['general-01',{deck_id:'general',card_id:'general-01',answer:true}],['general-02',{deck_id:'general',card_id:'general-02',answer:false}]]:[]);
+        const skips=new Map();
         return {
           auth:{
             async getUser(){return {data:{user:current()},error:current()?null:{name:'AuthSessionMissingError'}}},
@@ -62,6 +63,7 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
               select(){return {async eq(){return {data:[...answers.values()],error:null}}}},
               async upsert(row,options){answers.set(row.card_id,row);window.__HK_SAVED_SWIPE__={row,options};return {error:null}}
             };
+            if(table==='swipe_skips')return {select(){return {async eq(){return {data:[...skips.values()],error:null}}}}};
             throw new Error('Unexpected table '+table);
           },
           async rpc(name){
@@ -75,6 +77,12 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
               window.__HK_UNLOCK_RPC_CALLS__=(window.__HK_UNLOCK_RPC_CALLS__||0)+1;
               if(window.__HK_UNLOCK_RPC_UNAVAILABLE__)return {data:null,error:{message:'synthetic unavailable'}};
               return {data:!!(window.__HK_TEST_PAIRED__&&window.__HK_TEST_UNLOCKED__),error:null};
+            }
+            if(name==='set_understanding_card_state'){
+              window.__HK_UNDERSTANDING_STATE__={name,args};
+              if(args.p_skipped){answers.delete(args.p_card_id);skips.set(args.p_card_id,{deck_id:'general',card_id:args.p_card_id});}
+              else {skips.delete(args.p_card_id);answers.set(args.p_card_id,{deck_id:'general',card_id:args.p_card_id,answer:args.p_answer});}
+              return {data:null,error:null};
             }
             if(name==='create_family_invite')return {data:'2030-01-01T12:00:00.000Z',error:null};
             throw new Error('Unexpected RPC '+name);
@@ -152,6 +160,7 @@ try{
   await soloTeen.page.getByRole('button',{name:'Vill inte svara just nu'}).click();
   await soloTeen.page.locator("#swipe-card[aria-label^='Kort 3 av 34']").waitFor();
   assert.equal(await soloTeen.page.evaluate(()=>window.__HK_SAVED_SWIPE__.row.card_id),beforeSkip,'Skip must not write a yes/no answer');
+  assert.deepEqual(await soloTeen.page.evaluate(()=>window.__HK_UNDERSTANDING_STATE__.args),{p_card_id:'general-02',p_answer:null,p_skipped:true},'Skip is persisted through the atomic private-state RPC');
   await checkOverflow(soloTeen.page,'Mobile teen understanding skip');
   await capture(soloTeen.page,'mobile-teen-understanding.png');
   await soloTeen.context.close();
@@ -169,7 +178,8 @@ try{
   await teenReview.page.getByRole('button',{name:'Vill inte svara just nu'}).click();
   await teenReview.page.locator("#swipe-card[aria-label^='Kort 3 av 34']").waitFor();
   assert.equal(await teenReview.page.locator('.swipe-finished').count(),0,'Skipping during review must not end a previously answered deck');
-  assert.equal(await teenReview.page.evaluate(()=>window.__HK_SAVED_SWIPE__.row.card_id),savedBeforeReviewSkip,'Review skip must not overwrite or delete an existing answer');
+  assert.equal(await teenReview.page.evaluate(()=>window.__HK_SAVED_SWIPE__.row.card_id),savedBeforeReviewSkip,'Review skip must not create a replacement yes/no upsert');
+  assert.deepEqual(await teenReview.page.evaluate(()=>window.__HK_UNDERSTANDING_STATE__.args),{p_card_id:'general-02',p_answer:null,p_skipped:true},'Review skip atomically revokes the old B answer');
   await checkOverflow(teenReview.page,'Mobile teen review after understanding skip');
   await capture(teenReview.page,'mobile-teen-review-after-skip.png');
   await teenReview.context.close();
@@ -181,9 +191,9 @@ try{
   assert.equal(await paired.page.locator(".swipe-match-list li").count(),1,"Only the known mutual YES appears; malicious RPC NO and unknown cards are discarded");
   const sharedText=await paired.page.locator(".swipe-results").innerText();
   assert.match(sharedText,/Jag uppskattar när vi gör saker tillsammans utan mobiltelefoner/,"The mutual YES is displayed");
-  assert.match(sharedText,/REGELBASERAD · INTE AI/,"The summary is clearly labelled");
-  assert.match(sharedText,/Kort sammanfattning för förälder/,"The parent sees parent-specific wording");
-  assert.match(sharedText,/Be tonåringen välja vilket gemensamt ja-svar/,"The parent prompt is derived from mutual YES only");
+  assert.match(sharedText,/REDAKTIONELLA RÅD · INTE AI/,"The editorial advice is clearly labelled");
+  assert.match(sharedText,/Gemensamma möjligheter – förälder/,"The parent sees parent-specific wording");
+  assert.match(sharedText,/Fråga gärna tonåringen vad hen vill börja med/,"The parent prompt is derived from mutual YES only");
   assert.doesNotMatch(sharedText,/Jag vill helst prata färdigt innan någon kommer med råd/,"The mutual NO is never displayed");
   assert.doesNotMatch(sharedText,/Det ni båda svarat nej till|Två nej/,"No mutual NO headings or counts");
   assert.ok((await paired.page.evaluate(()=>window.__HK_MATCH_RPC_CALLS__))>0,"Paired account requests the aggregate RPC");
@@ -199,8 +209,8 @@ try{
   const pairedTeen=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,paired:true,role:"teen"});
   await pairedTeen.page.goto(base+"#swipe",{waitUntil:"load"});
   const teenSummary=await pairedTeen.page.locator(".swipe-rule-summary").innerText();
-  assert.match(teenSummary,/Kort sammanfattning för tonåring/,"The teen sees teen-specific wording");
-  assert.match(teenSummary,/Välj gärna ett gemensamt ja-svar/,"The teen prompt is derived from mutual YES only");
+  assert.match(teenSummary,/Gemensamma möjligheter – tonåring/,"The teen sees teen-specific wording");
+  assert.match(teenSummary,/Välj gärna själv vad du vill börja prata om/,"The teen prompt is derived from mutual YES only");
   assert.doesNotMatch(teenSummary,/Jag vill helst prata färdigt innan någon kommer med råd/,"The teen summary cannot include a mutual NO");
   await pairedTeen.context.close();
   const unlocked=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,paired:true,unlocked:true});

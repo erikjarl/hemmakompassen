@@ -204,11 +204,15 @@ async function saveSwipeAnswer(direction,index,viewer,session){
   const statusEl=$('swipe-save-status');if(statusEl)statusEl.textContent='Sparar ditt svar…';
   const row={user_id:viewer,deck_id:'general',card_id:swipeCardId(index),answer:direction==='yes',updated_at:new Date().toISOString()};
   let error;
-  try{({error}=await db.from('swipe_answers').upsert(row,{onConflict:'user_id,deck_id,card_id'}));}
+  try{
+    if(GENERAL_CARDS[index]?.type==='understanding')({error}=await db.rpc('set_understanding_card_state',{p_card_id:row.card_id,p_answer:row.answer,p_skipped:false}));
+    else ({error}=await db.from('swipe_answers').upsert(row,{onConflict:'user_id,deck_id,card_id'}));
+  }
   catch(e){error=e;}
   if(user?.id!==viewer||sharedSession!==session)return;
   if(error){swipeSaveError='Svaret kunde inte sparas. Kortet ligger kvar så att du kan försöka igen.';swipeBusy=false;render();return;}
   swipeAnswers.set(row.card_id,row.answer);
+  skippedUnderstanding.delete(row.card_id);
   swipeSaveError='';
   swipeIndex=swipeReview?nextVisibleAfter(index):nextUnanswered(index+1);
   swipeBusy=false;render();
@@ -217,6 +221,22 @@ async function saveSwipeAnswer(direction,index,viewer,session){
     // A parent sees only 21 match cards; a teen can also skip 13 understanding cards.
     if(visibleGeneralIndices().every(i=>swipeAnswers.has(swipeCardId(i))||skippedUnderstanding.has(swipeCardId(i))))void fetchThemeUnlock();
   }
+}
+async function skipUnderstandingCard(index,viewer,session){
+  const cardId=swipeCardId(index);
+  if(swipeBusy||user?.id!==viewer||sharedSession!==session||viewerRole()!=='teen'||GENERAL_CARDS[index]?.type!=='understanding')return;
+  swipeBusy=true;swipeSaveError='';
+  const statusEl=$('swipe-save-status');if(statusEl)statusEl.textContent='Sparar ditt val…';
+  let error;
+  try{({error}=await db.rpc('set_understanding_card_state',{p_card_id:cardId,p_answer:null,p_skipped:true}));}
+  catch(e){error=e;}
+  if(user?.id!==viewer||sharedSession!==session)return;
+  if(error){swipeSaveError='Överhoppningen kunde inte sparas. Kortet ligger kvar så att du kan försöka igen.';swipeBusy=false;render();return;}
+  swipeAnswers.delete(cardId);
+  skippedUnderstanding.add(cardId);
+  swipeIndex=swipeReview?nextVisibleAfter(index):nextUnanswered(index+1);
+  swipeBusy=false;render();
+  if(members.length===2&&visibleGeneralIndices().every(i=>swipeAnswers.has(swipeCardId(i))||skippedUnderstanding.has(swipeCardId(i))))void fetchThemeUnlock();
 }
 function nextVisibleAfter(index){return visibleGeneralIndices().find(i=>i>index)??STATEMENTS.length;}
 function advanceSwipe(direction){if(activeThemeDeck){advanceThemeSwipe(direction);return;}if(swipeBusy||page()!=='swipe'||!user||swipeIndex>=STATEMENTS.length||!visibleGeneralIndices().includes(swipeIndex))return;const el=$('swipe-card');if(!el)return;const index=swipeIndex,viewer=user.id,session=sharedSession;swipeBusy=true;const reduce=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;if(!reduce){el.style.transform='translateX('+(direction==='yes'?'120vw':'-120vw')+') rotate('+(direction==='yes'?18:-18)+'deg)';el.style.opacity='0';}setTimeout(()=>saveSwipeAnswer(direction,index,viewer,session),reduce?0:220);}
@@ -243,16 +263,16 @@ return '<h1>'+label+'</h1>'+card('<h2>Funktionen är under utveckling</h2><p>Du 
 function render(){if(activeThemeDeck&&!themeAccessAllowed())activeThemeDeck=null;menu();$('live-app').innerHTML=user?(page()==='hem'?home():section(page())):login();setupSwipeGesture();$('sidebar-account').textContent=user?'Inloggad: '+(profile?.display_name||user.email):'Inte inloggad';$('account-link').textContent=user?'Ditt konto →':'Logga in →';}
 async function refresh(){
 const {data:{user:u},error}=await db.auth.getUser();if(error&&error.name!=='AuthSessionMissingError')throw error;user=u;profile=null;members=[];swipeAnswers.clear();skippedUnderstanding.clear();for(const answers of themeAnswers.values())answers.clear();activeThemeDeck=null;themeIndex=0;themeReview=false;themeSaveError='';swipeBusy=false;swipeLoadError='';swipeSaveError='';swipeReview=false;swipeIndex=0;sharedMatches=[];sharedError='';sharedLoading=false;sharedSession++;sharedRequest++;themesUnlocked=false;themesLoading=false;themesError='';themesRequest++;
-if(user){const [p,m,s]=await Promise.all([db.from('profiles').select('display_name').eq('user_id',user.id).maybeSingle(),db.rpc('my_family_members'),db.from('swipe_answers').select('deck_id,card_id,answer').eq('user_id',user.id)]);if(p.error)throw p.error;if(m.error)throw m.error;profile=p.data;members=m.data||[];if(s.error)swipeLoadError='Kontrollera anslutningen och försök igen.';else for(const answer of s.data||[])if(answer.deck_id==='general'&&typeof answer.answer==='boolean'&&STATEMENTS.some((_,index)=>swipeCardId(index)===answer.card_id))swipeAnswers.set(answer.card_id,answer.answer);
+if(user){const [p,m,s,k]=await Promise.all([db.from('profiles').select('display_name').eq('user_id',user.id).maybeSingle(),db.rpc('my_family_members'),db.from('swipe_answers').select('deck_id,card_id,answer').eq('user_id',user.id),db.from('swipe_skips').select('deck_id,card_id').eq('user_id',user.id)]);if(p.error)throw p.error;if(m.error)throw m.error;profile=p.data;members=m.data||[];if(s.error||k.error)swipeLoadError='Kontrollera anslutningen och försök igen.';else for(const answer of s.data||[])if(answer.deck_id==='general'&&typeof answer.answer==='boolean'&&STATEMENTS.some((_,index)=>swipeCardId(index)===answer.card_id))swipeAnswers.set(answer.card_id,answer.answer);
 if(!s.error)for(const answer of s.data||[]){
   if(typeof answer.answer!=='boolean')continue;
   const deck=THEME_DECKS.find(d=>d.id===answer.deck_id);
   if(deck&&deck.cards.some((_,index)=>themeCardId(deck,index)===answer.card_id))themeAnswers.get(deck.id).set(answer.card_id,answer.answer);
-}swipeIndex=nextUnanswered();}
+}if(!k.error)for(const skipped of k.data||[])if(skipped.deck_id==='general'&&GENERAL_CARDS.some(card=>card.id===skipped.card_id&&card.type==='understanding'))skippedUnderstanding.add(skipped.card_id);swipeIndex=nextUnanswered();}
 render();
 if(user&&members.length===2){void fetchSwipeMatches();void fetchThemeUnlock();}
 }
-document.addEventListener('click',e=>{const b=e.target.closest('[data-swipe]');if(b)advanceSwipe(b.dataset.swipe);if(e.target.closest('#swipe-restart')){swipeReview=true;skippedUnderstanding.clear();swipeIndex=visibleGeneralIndices()[0]??STATEMENTS.length;render();}if(e.target.closest('#swipe-skip')&&viewerRole()==='teen'&&GENERAL_CARDS[swipeIndex]?.type==='understanding'&&!swipeBusy){if(!swipeAnswers.has(swipeCardId(swipeIndex)))skippedUnderstanding.add(swipeCardId(swipeIndex));swipeIndex=swipeReview?nextVisibleAfter(swipeIndex):nextUnanswered(swipeIndex+1);render();}if(e.target.closest('#swipe-reload'))refresh().catch(showError);if(e.target.closest('#refresh-matches')&&!sharedLoading)void fetchSwipeMatches();if(e.target.closest('#retry-theme-unlock')&&!themesLoading)void fetchThemeUnlock();
+document.addEventListener('click',e=>{const b=e.target.closest('[data-swipe]');if(b)advanceSwipe(b.dataset.swipe);if(e.target.closest('#swipe-restart')){swipeReview=true;swipeIndex=visibleGeneralIndices()[0]??STATEMENTS.length;render();}if(e.target.closest('#swipe-skip')&&viewerRole()==='teen'&&GENERAL_CARDS[swipeIndex]?.type==='understanding'&&!swipeBusy)void skipUnderstandingCard(swipeIndex,user.id,sharedSession);if(e.target.closest('#swipe-reload'))refresh().catch(showError);if(e.target.closest('#refresh-matches')&&!sharedLoading)void fetchSwipeMatches();if(e.target.closest('#retry-theme-unlock')&&!themesLoading)void fetchThemeUnlock();
 const open=e.target.closest('[data-theme-open]');
 if(open&&themeAccessAllowed()){
   const deck=THEME_DECKS.find(d=>d.id===open.dataset.themeOpen);

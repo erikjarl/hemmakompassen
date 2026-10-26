@@ -14,8 +14,8 @@ assert.match(script,/swipe-match-theme/,'Mutual YES results are grouped by theme
 assert.match(script,/swipeCardId\(i\)===r\.card_id/,'Only known card IDs are rendered');
 assert.match(script,/function sharedSummary\(groups\)/,'Builds the rule-based summary only from the already filtered mutual-YES groups');
 assert.match(script,/members\.find\(member=>member\.user_id===user\?\.id\)\?\.role/,'Uses the signed-in member role for separate parent and teen wording');
-assert.match(script,/REGELBASERAD · INTE AI/,'Labels the deterministic summary clearly');
-assert.match(script,/Sammanfattningen använder enbart ömsesidiga ja-svar/,'States the summary privacy boundary');
+assert.match(script,/REDAKTIONELLA RÅD · INTE AI/,'Labels the deterministic editorial advice clearly');
+assert.match(script,/Texten bygger enbart på serververifierade ömsesidiga ja-svar/,'States the summary privacy boundary');
 assert.doesNotMatch(script,/localStorage/,'No shared answers are cached locally');
 assert.match(script,/db\.rpc\('shared_general_deck_complete'\)/,'Checks both members completion through authenticated aggregate RPC');
 assert.match(script,/if\(!user\|\|members\.length!==2\)\{themesUnlocked=false/,'Never requests unlock for unpaired accounts');
@@ -24,4 +24,9 @@ assert.match(script,/if\(error\|\|typeof data!=='boolean'\)throw/,'Fail-closed w
 assert.match(script,/themesUnlocked=data===true/,'Only an explicit true unlocks theme previews');
 assert.match(script,/const unlocked=members\.length===2&&themesUnlocked&&!themesLoading&&!themesError/,'Never renders theme previews without a valid pair and current RPC');
 assert.match(script,/visibleGeneralIndices\(\)\.every\(i=>swipeAnswers\.has\(swipeCardId\(i\)\)\|\|skippedUnderstanding\.has\(swipeCardId\(i\)\)\)/,'Rechecks completion for role-visible cards and skipped understanding cards');
+assert.match(script,/db\.from\('swipe_skips'\)\.select\('deck_id,card_id'\)\.eq\('user_id',user\.id\)/,'Reloads only the signed-in user’s private skips');
+assert.match(script,/db\.rpc\('set_understanding_card_state',\{p_card_id:row\.card_id,p_answer:row\.answer,p_skipped:false\}\)/,'Stores B answers through the role-checked atomic RPC');
+assert.match(script,/db\.rpc\('set_understanding_card_state',\{p_card_id:cardId,p_answer:null,p_skipped:true\}\)/,'Stores B skips through the role-checked atomic RPC');
+assert.match(script,/swipeAnswers\.delete\(cardId\);\s*skippedUnderstanding\.add\(cardId\)/,'A successful skip revokes the prior answer locally');
+assert.doesNotMatch(script,/#swipe-restart'[\s\S]{0,160}skippedUnderstanding\.clear/,'Review does not erase persistent private skip state');
 console.log('PASS: mutual-YES-only RPC results, role-specific rule summary, theme groups and fail-closed state');
