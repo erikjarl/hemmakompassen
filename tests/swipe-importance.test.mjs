@@ -3,6 +3,7 @@ import {readFileSync} from 'node:fs';
 
 const migration=readFileSync(new URL('../supabase/migrations/20261027140902_private_swipe_importance.sql',import.meta.url),'utf8');
 const app=readFileSync(new URL('../live-app.js',import.meta.url),'utf8');
+const css=readFileSync(new URL('../live-app.css',import.meta.url),'utf8');
 
 assert.match(migration,/create table public\.swipe_importance/i);
 assert.match(migration,/importance smallint not null default 0 check \(importance in \(-1, 0, 1\)\)/i);
@@ -21,4 +22,8 @@ assert.match(app,/e\.target\.closest\?\.\('\[data-importance-control\]'\)/,'Slid
 assert.match(app,/if\(swipeBusy\|\|importanceSaving\.size\|\|page\(\)!=='swipe'/,'A card cannot advance while its importance is unsaved');
 assert.doesNotMatch(app,/localStorage/,'Private importance must never fall back to browser storage');
 
-console.log('PASS: private three-level importance uses self-only storage and accessible UI');
+assert.match(css,/\.swipe-importance\{[\s\S]*?position:relative/,'Importance stays in the normal card layout');
+assert.match(css,/writing-mode:horizontal-tb/,'The rating is horizontal');
+assert.doesNotMatch(css,/writing-mode:vertical-lr|direction:rtl/,'No old vertical orientation can override mobile layout');
+assert.match(app,/swipe-importance-scale/,'Labels must flank the horizontal control');
+console.log('PASS: private three-level importance uses self-only storage and horizontal accessible UI');

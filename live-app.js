@@ -38,8 +38,13 @@ const importanceValueText=value=>value===1?'Mycket viktigt':value===-1?'Mindre v
 function importanceControl(deckId,cardId){
   const value=swipeImportance.get(importanceKey(deckId,cardId))??0;
   const disabled=importanceAvailable?'':' disabled';
-  const status=importanceLoadError?'Viktighet kan inte sparas ännu. '+importanceLoadError:'Viktighet sparas privat och ändrar inte ditt ja eller nej.';
-  return '<aside class="swipe-importance" data-importance-control style="position:relative;inset:auto;top:auto;right:auto;bottom:auto;left:auto;transform:none;width:100%;max-width:100%;display:flex;flex-direction:column;align-items:stretch;gap:0.35rem;margin:1rem 0 0;padding:0.5rem 0.25rem;box-sizing:border-box"><label for="swipe-importance-range" style="display:flex;flex-direction:column;gap:0.35rem;width:100%;align-items:stretch"><span style="display:flex;justify-content:space-between;gap:0.5rem;font-size:0.8rem"><span>Mindre viktigt</span><span>Mycket viktigt</span></span><input id="swipe-importance-range" data-importance data-deck-id="'+esc(deckId)+'" data-card-id="'+esc(cardId)+'" type="range" min="-1" max="1" step="1" value="'+value+'" aria-label="Hur viktigt är det här för dig?" aria-valuetext="'+esc(importanceValueText(value))+'" style="appearance:auto;-webkit-appearance:auto;writing-mode:horizontal-tb;direction:ltr;transform:none;width:100%;height:44px;min-height:44px;max-height:44px;margin:0;touch-action:pan-x;pointer-events:auto;opacity:1"'+disabled+'></label><span class="swipe-importance-status" data-importance-status role="status" style="position:static;width:100%;font-size:0.75rem;line-height:1.3">'+esc(status)+'</span></aside>';
+  const status=importanceLoadError?'Viktighet kan inte sparas ännu. '+importanceLoadError:'Din viktighetsskattning sparas privat och påverkar inte ditt ja eller nej.';
+  return '<div class="swipe-importance" data-importance-control>'+
+    '<label class="swipe-importance-title" for="swipe-importance-range">Hur viktigt är det här för dig?</label>'+
+    '<input id="swipe-importance-range" data-importance data-deck-id="'+esc(deckId)+'" data-card-id="'+esc(cardId)+'" type="range" min="-1" max="1" step="1" value="'+value+'" aria-valuetext="'+esc(importanceValueText(value))+'"'+disabled+'>'+
+    '<div class="swipe-importance-scale" aria-hidden="true"><span>Mindre viktigt</span><span>Mycket viktigt</span></div>'+
+    '<span class="swipe-importance-status" data-importance-status role="status">'+esc(status)+'</span>'+
+    '</div>';
 }
 function validImportanceCard(deckId,cardId){
   if(deckId==='general')return GENERAL_CARDS.some(card=>card.id===cardId&&(card.type==='match'||viewerRole()==='teen'));

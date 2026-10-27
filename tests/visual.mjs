@@ -128,6 +128,13 @@ try{
   assert.match(await m.page.locator("#swipe-card").getAttribute("aria-label"),/Kort 1 av 21/);
   assert.equal(await m.page.locator('#swipe-skip').count(),0,'Parent must never see a teen-only skip control');
   const importance= m.page.locator('[data-importance]');
+  assert.ok(await importance.isEnabled(),'Importance is enabled when the private table is available');
+  const importanceBox=await importance.boundingBox();
+  const cardBox=await m.page.locator('#swipe-card').boundingBox();
+  const headingBox=await m.page.locator('#swipe-card h2').boundingBox();
+  assert.ok(importanceBox.width>importanceBox.height*4,'Importance range must be horizontal on a 390px mobile screen');
+  assert.ok(importanceBox.x>=cardBox.x-2 && importanceBox.x+importanceBox.width<=cardBox.x+cardBox.width+2,'Importance range remains within the card bounds');
+  assert.ok(importanceBox.y>=headingBox.y+headingBox.height,'Importance control must be below the heading');
   assert.equal(await importance.getAttribute('aria-valuetext'),'Neutral, inte prioriterad');
   await importance.focus();
   await importance.press('ArrowDown');
@@ -144,6 +151,14 @@ try{
   assert.equal(savedImportance.row.user_id,'10000000-0000-0000-0000-000000000001');
   assert.equal(savedImportance.options.onConflict,'user_id,deck_id,card_id');
   assert.equal(await importance.getAttribute('aria-valuetext'),'Mycket viktigt');
+  // Simulate a phone tap on both ends. It must change the value, not swipe the card.
+  await importance.scrollIntoViewIfNeeded();
+  const tapBox=await importance.boundingBox();
+  await m.page.touchscreen.tap(tapBox.x+16,tapBox.y+tapBox.height/2);
+  await m.page.waitForFunction(()=>window.__HK_SAVED_IMPORTANCE__?.row.importance===-1);
+  await m.page.touchscreen.tap(tapBox.x+tapBox.width-16,tapBox.y+tapBox.height/2);
+  await m.page.waitForFunction(()=>window.__HK_SAVED_IMPORTANCE__?.row.importance===1);
+  assert.match(await m.page.locator('#swipe-card').getAttribute('aria-label'),/Kort 1 av 21/,'Rating taps must never trigger a swipe');
   await checkOverflow(m.page,"Mobile swipe");
   await capture(m.page,"mobile-swipe-importance.png");
   await m.page.getByRole("button",{name:"Ja"}).click();
