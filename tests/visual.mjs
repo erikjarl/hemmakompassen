@@ -51,6 +51,7 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
         const current=()=>window.__HK_TEST_USER__;
         const answers=new Map(window.__HK_PREANSWERED_GENERAL__?Array.from({length:34},(_,i)=>{const id='general-'+String(i+1).padStart(2,'0');return [id,{deck_id:'general',card_id:id,answer:true}]}):window.__HK_TEST_PAIRED__?[['general-01',{deck_id:'general',card_id:'general-01',answer:true}],['general-02',{deck_id:'general',card_id:'general-02',answer:false}]]:[]);
         const skips=new Map();
+        const importance=new Map();
         return {
           auth:{
             async getUser(){return {data:{user:current()},error:current()?null:{name:'AuthSessionMissingError'}}},
@@ -64,6 +65,10 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
               async upsert(row,options){answers.set(row.card_id,row);window.__HK_SAVED_SWIPE__={row,options};return {error:null}}
             };
             if(table==='swipe_skips')return {select(){return {async eq(){return {data:[...skips.values()],error:null}}}}};
+            if(table==='swipe_importance')return {
+              select(){return {async eq(){return {data:[...importance.values()],error:null}}}},
+              async upsert(row,options){importance.set(row.deck_id+':'+row.card_id,row);window.__HK_SAVED_IMPORTANCE__={row,options};return {error:null}}
+            };
             throw new Error('Unexpected table '+table);
           },
           async rpc(name,args){
@@ -122,8 +127,25 @@ try{
   assert.equal(await m.page.evaluate(()=>window.__HK_UNLOCK_RPC_CALLS__||0),0,'Unpaired member must not request theme unlock status');
   assert.match(await m.page.locator("#swipe-card").getAttribute("aria-label"),/Kort 1 av 21/);
   assert.equal(await m.page.locator('#swipe-skip').count(),0,'Parent must never see a teen-only skip control');
+  const importance= m.page.locator('[data-importance]');
+  assert.equal(await importance.getAttribute('aria-valuetext'),'Neutral, inte prioriterad');
+  await importance.focus();
+  await importance.press('ArrowDown');
+  await m.page.waitForFunction(()=>window.__HK_SAVED_IMPORTANCE__?.row.importance===-1);
+  assert.equal(await importance.getAttribute('aria-valuetext'),'Mindre viktigt');
+  await importance.press('ArrowUp');
+  await m.page.waitForFunction(()=>window.__HK_SAVED_IMPORTANCE__?.row.importance===0);
+  assert.equal(await importance.getAttribute('aria-valuetext'),'Neutral, inte prioriterad');
+  await importance.press('ArrowUp');
+  await m.page.waitForFunction(()=>window.__HK_SAVED_IMPORTANCE__?.row.importance===1);
+  const savedImportance=await m.page.evaluate(()=>window.__HK_SAVED_IMPORTANCE__);
+  assert.equal(savedImportance.row.card_id,'general-01');
+  assert.equal(savedImportance.row.deck_id,'general');
+  assert.equal(savedImportance.row.user_id,'10000000-0000-0000-0000-000000000001');
+  assert.equal(savedImportance.options.onConflict,'user_id,deck_id,card_id');
+  assert.equal(await importance.getAttribute('aria-valuetext'),'Mycket viktigt');
   await checkOverflow(m.page,"Mobile swipe");
-  await capture(m.page,"mobile-swipe.png");
+  await capture(m.page,"mobile-swipe-importance.png");
   await m.page.getByRole("button",{name:"Ja"}).click();
   await m.page.locator("#swipe-card[aria-label^='Kort 2 av 21']").waitFor();
   assert.match(await m.page.locator('#swipe-card').innerText(),/Jag tycker det är viktigt att vi har gemensamma aktiviteter/,'Parent skips teen-only understanding cards without corrupting ordinal position');

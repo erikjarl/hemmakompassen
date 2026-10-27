@@ -121,7 +121,7 @@ const deferred=()=>{let resolve,reject;const promise=new Promise((ok,no)=>{resol
   let authCalls=0;
   const state={
     refreshGeneration:0,user:null,profile:null,members:[],
-    swipeAnswers:new Map(),skippedUnderstanding:new Set(),themeAnswers:new Map(),
+    swipeAnswers:new Map(),swipeImportance:new Map(),importancePending:new Map(),importanceSaving:new Set(),importanceAvailable:false,importanceLoadError:'',skippedUnderstanding:new Set(),themeAnswers:new Map(),
     activeThemeDeck:null,themeIndex:0,themeReview:false,themeSaveError:'',
     swipeBusy:false,swipeLoadError:'',swipeSaveError:'',swipeReview:false,swipeIndex:0,
     sharedMatches:[],sharedError:'',sharedLoading:false,sharedSession:0,sharedRequest:0,
