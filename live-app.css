@@ -124,4 +124,4 @@
 .swipe-importance input[type=range]:focus-visible{outline:3px solid #f5bb65;outline-offset:4px;border-radius:20px}
 .swipe-importance input[type=range]:disabled{cursor:not-allowed;filter:grayscale(1);opacity:.55}
 .swipe-importance-status{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-@media(max-width:440px){.swipe-playing-card{padding-left:16px;padding-right:104px}.swipe-playing-card h2{max-width:100%;overflow-wrap:anywhere}.swipe-importance{right:4px;width:72px}.swipe-importance label{height:195px;font-size:9px}}
+@media(max-width:440px){.swipe-playing-card{padding:22px 18px}.swipe-playing-card h2,.swipe-playing-card .swipe-card-hint{width:calc(100% - 100px);max-width:none;align-self:flex-start}.swipe-playing-card h2{overflow-wrap:anywhere}.swipe-importance{right:4px;width:72px}.swipe-importance label{height:195px;font-size:9px}}
