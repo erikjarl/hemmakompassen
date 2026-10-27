@@ -3,18 +3,18 @@ import vm from 'node:vm';
 import {readFileSync} from 'node:fs';
 const script=readFileSync(new URL('../live-app.js',import.meta.url),'utf8');
 
-assert.match(script,/db\.rpc\('shared_swipe_matches',\{p_deck_id:'general'\}\)/,'Uses only the reviewed aggregate function');
+assert.match(script,/db\.rpc\('shared_swipe_matches',\{p_deck_id:deckId\}\)/,'Uses only the reviewed aggregate function for the selected deck');
+assert.match(script,/r\?\.deck_id!==deckId\|\|r\.answer!==true/,'Rejects rows from another deck and every non-YES answer');
+assert.match(script,/deck\.cards\.find\(card=>card\.id===r\.card_id&&card\.type==='match'\)/,'Allows only catalogued A cards from the selected deck');
 assert.match(script,/if\(!user\|\|members\.length!==2\)return/,'Requires an authenticated paired family');
 assert.match(script,/session!==sharedSession\|\|request!==sharedRequest\|\|user\?\.id!==viewer/,'Rejects stale results after a session switch or refresh');
 assert.match(script,/sharedMatches=\[\];[\s\S]*sharedError='Gemensamma resultat är inte tillgängliga/,'Clears results after RPC errors');
-assert.match(script,/r\?\.deck_id!=='general'\|\|r\.answer!==true/,'Rejects false, missing or unexpected RPC answers');
-assert.match(script,/safe\.set\(r\.card_id,\{card_id:r\.card_id,answer:true\}\)/,'Stores only true answers in shared results');
+assert.match(script,/safe\.set\(r\.card_id,\{deck_id:deckId,card_id:r\.card_id,answer:true\}\)/,'Stores only true answers with their verified deck id');
 assert.doesNotMatch(script,/sharedMatches\.filter\(r=>r\.answer===false\)/,'No mutual NO category is rendered');
 assert.doesNotMatch(script,/Det ni båda svarat nej till/,'Never renders a shared NO heading');
 assert.match(script,/swipe-match-theme/,'Mutual YES results are grouped by theme');
-assert.match(script,/swipeCardId\(i\)===r\.card_id/,'Only known card IDs are rendered');
-assert.match(script,/function sharedSummary\(groups\)/,'Builds the rule-based summary only from the already filtered mutual-YES groups');
-assert.match(script,/items\.map\(item=>ADVICE_BY_KEY\[adviceKeyForCard\(item\.card\)\]\)/,'Derives editorial advice from each allowed matched card');
+assert.match(script,/function sharedSummary\(groups,deckId='general'\)/,'Builds the rule-based summary only from the already filtered mutual-YES groups');
+assert.match(script,/items\.map\(item=>ADVICE_BY_KEY\[adviceKeyForCard\(item\.card,deckId\)\]\)/,'Derives editorial advice from each allowed matched card and deck');
 assert.match(script,/new Set\(/,'Deduplicates repeated advice before rendering grouped prose');
 assert.match(script,/members\.find\(member=>member\.user_id===user\?\.id\)\?\.role/,'Uses the signed-in member role for separate parent and teen wording');
 assert.match(script,/REDAKTIONELLA RÅD · INTE AI/,'Labels the deterministic editorial advice clearly');
@@ -36,17 +36,17 @@ console.log('PASS: mutual-YES-only RPC results, role-specific rule summary, them
 
 
 // Execute the actual shared-view and summary functions with synthetic data.
-const sharedViewFunctions=script.match(/const joinSwedish=[\s\S]*?(?=\nasync function fetchSwipeMatches\(\))/);
+const sharedViewFunctions=script.match(/const joinSwedish=[\s\S]*?(?=\nasync function fetchSwipeMatches\()/);
 assert.ok(sharedViewFunctions,'Shared result rendering can be tested independently');
 function renderSharedResult(rows,role='parent'){
   const state={
-    members:[{role:'parent'},{role:'teen'}],sharedLoading:false,sharedError:'',sharedMatches:rows,
+    members:[{role:'parent'},{role:'teen'}],sharedLoading:false,sharedDeckId:'general',sharedError:'',sharedMatches:rows.map(row=>({deck_id:'general',...row})),
     GENERAL_CARDS:[
       {id:'general-01',type:'match',category:'Fritid',teenText:'Spela fotboll'},
       {id:'general-02',type:'understanding',category:'Känslor',teenText:'HEMLIGT FÖRSTÅELSEKORT'},
       {id:'general-03',type:'match',category:'Samtal',teenText:'HEMLIGT NEJ-SVAR'},
     ],
-    ADVICE_BY_KEY:{'general-01':'Välj en gemensam dag.'},
+    THEME_DECK_MODELS:[],ADVICE_BY_KEY:{'general-01':'Välj en gemensam dag.'},
     adviceKeyForCard:card=>card.id,
     viewerRole:()=>role,
     esc:value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char])),
