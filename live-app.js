@@ -38,8 +38,13 @@ const importanceValueText=value=>value===1?'Mycket viktigt':value===-1?'Mindre v
 function importanceControl(deckId,cardId){
   const value=swipeImportance.get(importanceKey(deckId,cardId))??0;
   const disabled=importanceAvailable?'':' disabled';
-  const status=importanceLoadError?'Viktighet kan inte sparas ännu. '+importanceLoadError:'Viktighet sparas privat och ändrar inte ditt ja eller nej.';
-  return '<aside class="swipe-importance" data-importance-control><label for="swipe-importance-range"><span>Mycket viktigt</span><input id="swipe-importance-range" data-importance data-deck-id="'+esc(deckId)+'" data-card-id="'+esc(cardId)+'" type="range" min="-1" max="1" step="1" value="'+value+'" aria-label="Hur viktigt är det här för dig?" aria-valuetext="'+esc(importanceValueText(value))+'"'+disabled+'><span>Mindre viktigt</span></label><span class="swipe-importance-status" data-importance-status role="status">'+esc(status)+'</span></aside>';
+  const status=importanceLoadError?'Viktighet kan inte sparas ännu. '+importanceLoadError:'Din viktighetsskattning sparas privat och påverkar inte ditt ja eller nej.';
+  return '<div class="swipe-importance" data-importance-control>'+
+    '<label class="swipe-importance-title" for="swipe-importance-range">Hur viktigt är det här för dig?</label>'+
+    '<input id="swipe-importance-range" data-importance data-deck-id="'+esc(deckId)+'" data-card-id="'+esc(cardId)+'" type="range" min="-1" max="1" step="1" value="'+value+'" aria-valuetext="'+esc(importanceValueText(value))+'"'+disabled+'>'+
+    '<div class="swipe-importance-scale" aria-hidden="true"><span>Mindre viktigt</span><span>Mycket viktigt</span></div>'+
+    '<span class="swipe-importance-status" data-importance-status role="status">'+esc(status)+'</span>'+
+    '</div>';
 }
 function validImportanceCard(deckId,cardId){
   if(deckId==='general')return GENERAL_CARDS.some(card=>card.id===cardId&&(card.type==='match'||viewerRole()==='teen'));
