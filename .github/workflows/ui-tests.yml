@@ -20,7 +20,7 @@ jobs:
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
       - name: Functional and backend contract tests
-        run: node --test tests/smoke.test.cjs tests/password-auth.test.mjs tests/family-pairing.test.cjs tests/family-rls-migration.test.cjs tests/shared-swipe-migration.test.cjs tests/live-swipe-persistence.test.mjs tests/live-swipe-results.test.mjs tests/live-swipe-session.test.mjs tests/card-catalog.test.mjs tests/understanding-skip-migration.test.mjs tests/swipe-importance.test.mjs
+        run: node --test tests/smoke.test.cjs tests/password-auth.test.mjs tests/family-pairing.test.cjs tests/family-rls-migration.test.cjs tests/shared-swipe-migration.test.cjs tests/live-swipe-persistence.test.mjs tests/live-swipe-results.test.mjs tests/live-swipe-session.test.mjs tests/card-catalog.test.mjs tests/understanding-skip-migration.test.mjs tests/swipe-importance.test.mjs tests/psychological-card-review.test.mjs
       - name: Browser tests and screenshots
         run: node tests/visual.mjs
       - name: Save screenshots
