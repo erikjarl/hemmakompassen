@@ -10,7 +10,9 @@ on:
       - "supabase/migrations/20261024170000_shared_general_deck_complete.sql"
       - "supabase/migrations/20261025150000_understanding_card_state.sql"
       - "supabase/migrations/20261026130000_shared_swipe_general_a_only.sql"
+      - "supabase/migrations/20261027140902_private_swipe_importance.sql"
       - "supabase/tests/shared_swipe_matches.sql"
+      - "supabase/tests/swipe_importance.sql"
       - "supabase/tests/fixtures/shared_swipe_contract_schema.sql"
   workflow_dispatch:
 
@@ -74,6 +76,11 @@ jobs:
           docker exec -i "${{ job.services.postgres.id }}" \
             psql -U postgres -d postgres -v ON_ERROR_STOP=1 -X -q \
             < supabase/migrations/20261026130000_shared_swipe_general_a_only.sql
+      - name: Apply private swipe importance table
+        run: |
+          docker exec -i "${{ job.services.postgres.id }}" \
+            psql -U postgres -d postgres -v ON_ERROR_STOP=1 -X -q \
+            < supabase/migrations/20261027140902_private_swipe_importance.sql
       - name: Assert 44 real pgTAP test results
         shell: bash
         run: |
@@ -86,3 +93,15 @@ jobs:
             exit 1
           fi
           test "$(grep -Ec '^ok [0-9]+' /tmp/shared-swipe-test.log)" -eq 44
+      - name: Assert 15 private importance pgTAP results
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker exec -i "${{ job.services.postgres.id }}" \
+            psql -U postgres -d postgres -v ON_ERROR_STOP=1 -X -q -A -t \
+            < supabase/tests/swipe_importance.sql | tee /tmp/swipe-importance-test.log
+          grep -qx '1..15' /tmp/swipe-importance-test.log
+          if grep -Eq '^(not ok|# Looks like you failed)' /tmp/swipe-importance-test.log; then
+            exit 1
+          fi
+          test "$(grep -Ec '^ok [0-9]+' /tmp/swipe-importance-test.log)" -eq 15
