@@ -221,7 +221,7 @@ try{
   await unlocked.page.goto(base+"#swipe",{waitUntil:"load"});
   await unlocked.page.locator(".swipe-themes details").first().waitFor();
   assert.equal(await unlocked.page.locator(".swipe-themes details").count(),6,"All six theme previews unlock only after backend confirmation");
-  assert.match(await unlocked.page.locator(".swipe-themes").innerText(),/upplåsta för förhandsvisning/i);
+  assert.match(await unlocked.page.locator(".swipe-themes").innerText(),/upplåsta; gemensamma ja visas inne i respektive kortlek/i);
   await checkOverflow(unlocked.page,"Mobile unlocked theme previews");
   await capture(unlocked.page,"mobile-themes-unlocked.png");
   assert.equal(await unlocked.page.locator('[data-theme-open]').count(),6,"All six decks offer private swipe actions after unlock");
