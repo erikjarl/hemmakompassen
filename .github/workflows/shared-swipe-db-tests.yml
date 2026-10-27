@@ -11,8 +11,10 @@ on:
       - "supabase/migrations/20261025150000_understanding_card_state.sql"
       - "supabase/migrations/20261026130000_shared_swipe_general_a_only.sql"
       - "supabase/migrations/20261027140902_private_swipe_importance.sql"
+      - "supabase/migrations/20261027195833_shared_swipe_priorities.sql"
       - "supabase/tests/shared_swipe_matches.sql"
       - "supabase/tests/swipe_importance.sql"
+      - "supabase/tests/shared_swipe_priorities.sql"
       - "supabase/tests/fixtures/shared_swipe_contract_schema.sql"
   workflow_dispatch:
 
@@ -81,6 +83,11 @@ jobs:
           docker exec -i "${{ job.services.postgres.id }}" \
             psql -U postgres -d postgres -v ON_ERROR_STOP=1 -X -q \
             < supabase/migrations/20261027140902_private_swipe_importance.sql
+      - name: Apply shared teen-first priority RPC
+        run: |
+          docker exec -i "${{ job.services.postgres.id }}" \
+            psql -U postgres -d postgres -v ON_ERROR_STOP=1 -X -q \
+            < supabase/migrations/20261027195833_shared_swipe_priorities.sql
       - name: Assert 44 real pgTAP test results
         shell: bash
         run: |
@@ -105,3 +112,15 @@ jobs:
             exit 1
           fi
           test "$(grep -Ec '^ok [0-9]+' /tmp/swipe-importance-test.log)" -eq 15
+      - name: Assert 18 shared priority pgTAP results
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker exec -i "${{ job.services.postgres.id }}" \
+            psql -U postgres -d postgres -v ON_ERROR_STOP=1 -X -q -A -t \
+            < supabase/tests/shared_swipe_priorities.sql | tee /tmp/shared-priority-test.log
+          grep -qx '1..18' /tmp/shared-priority-test.log
+          if grep -Eq '^(not ok|# Looks like you failed)' /tmp/shared-priority-test.log; then
+            exit 1
+          fi
+          test "$(grep -Ec '^ok [0-9]+' /tmp/shared-priority-test.log)" -eq 18
