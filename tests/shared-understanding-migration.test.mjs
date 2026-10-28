@@ -34,4 +34,8 @@ test('historical private answers require new explicit consent and changes revoke
   assert.match(migration,/revoke_understanding_share_after_answer/i);
   assert.match(migration,/revoke_understanding_share_after_skip/i);
   assert.match(migration,/understanding_shares_self_select/i);
+  assert.match(migration,/revoke_understanding_shares_after_family_change/i);
+  assert.match(migration,/after insert or update or delete on public\.family_members/i);
+  assert.match(migration,/where family_id=old_family or family_id=new_family/i);
+  assert.match(migration,/revoke all on function public\.revoke_understanding_shares_on_family_change\(\) from public,anon,authenticated/i);
 });
