@@ -256,7 +256,7 @@ try{
   await paired.context.close();
   const pairedTeen=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,paired:true,role:"teen"});
   await pairedTeen.page.goto(base+"#swipe",{waitUntil:"load"});
-  const teenSummary=await pairedTeen.page.locator(".swipe-rule-summary").innerText();
+  const teenSummary=await pairedTeen.page.locator(".swipe-results").innerText();
   assert.match(teenSummary,/Gemensamma möjligheter – tonåring/,"The teen sees teen-specific wording");
   assert.match(teenSummary,/Välj gärna själv vad du vill börja prata om/,"The teen prompt is derived from mutual YES only");
   assert.match(teenSummary,/Jag vill att vi visar uppskattning på sätt som känns bra för båda/,"Teen result uses the reviewed teen wording");
