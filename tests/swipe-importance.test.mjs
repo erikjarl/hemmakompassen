@@ -3,6 +3,7 @@ import {readFileSync} from 'node:fs';
 
 const migration=readFileSync(new URL('../supabase/migrations/20261027140902_private_swipe_importance.sql',import.meta.url),'utf8');
 const app=readFileSync(new URL('../live-app.js',import.meta.url),'utf8');
+const backendConfig=readFileSync(new URL('../backend-config.js',import.meta.url),'utf8');
 const css=readFileSync(new URL('../live-app.css',import.meta.url),'utf8');
 
 assert.match(migration,/create table public\.swipe_importance/i);
@@ -26,4 +27,5 @@ assert.match(css,/\.swipe-importance\{[\s\S]*?position:relative/,'Importance sta
 assert.match(css,/writing-mode:horizontal-tb/,'The rating is horizontal');
 assert.doesNotMatch(css,/writing-mode:vertical-lr|direction:rtl/,'No old vertical orientation can override mobile layout');
 assert.match(app,/swipe-importance-scale/,'Labels must flank the horizontal control');
+assert.match(backendConfig,/enableSharedPriorities:\s*false/,'Shared priority UI stays disabled until migrations and real two-account verification are complete');
 console.log('PASS: private three-level importance uses self-only storage and horizontal accessible UI');
