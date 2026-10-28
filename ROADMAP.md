@@ -21,6 +21,7 @@
 
 - [x] CSS: visa en diskret horisontell scrollindikator i mobilmenyn i stället för att dölja scrollbaren; förbättra scroll-snap och tillåt etiketter på flera rader.
 - [ ] Bekräfta i ny Playwright-körning att mobilmenyn inte kapar etiketter och att scrollindikatorn syns i mobilens verkliga skärmbilder. Justera vid behov efter visuell granskning.
+  - **Åtgärdad på utvecklingsbranchen 2026-10-28:** Mobilvyn använder nu två separata layoutrader: ett eget skrollbart innehållsområde och navigationen i en fast, icke-överlappande nederkant. Menylänkar har bestämd innehållsbredd med `border-box`, tillåten radbrytning och horisontell scrollmarginal. Ett Playwright-test mäter att navigationens rektangel inte korsar Gillaswajpens kortyta och att aktiv etikett är helt synlig. Återstår CI och faktisk PNG-granskning innan punkten bockas av.
 
 ## 19 oktober 2026 – Automatisk testning och bildgranskning
 

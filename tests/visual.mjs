@@ -162,6 +162,12 @@ try{
   assert.equal(savedImportance.row.user_id,'10000000-0000-0000-0000-000000000001');
   assert.equal(savedImportance.options.onConflict,'user_id,deck_id,card_id');
   assert.equal(await importance.getAttribute('aria-valuetext'),'Mycket viktigt');
+  const mobileNav=await m.page.locator('#live-mobile-nav').boundingBox();
+  const mobileMain=await m.page.locator('.live-main').boundingBox();
+  assert.ok(mobileNav&&mobileMain,'Mobile navigation and content region must be measurable');
+  assert.ok(mobileMain.y+mobileMain.height<=mobileNav.y+1,'Mobile navigation must occupy its own layout row, never overlay the scrollable content region');
+  const activeNav=await m.page.locator('#live-mobile-nav a[aria-current="page"]').boundingBox();
+  assert.ok(activeNav.x>=mobileNav.x&&activeNav.x+activeNav.width<=mobileNav.x+mobileNav.width,'Active mobile navigation label must be fully visible');
   // Simulate a phone tap on both ends. It must change the value, not swipe the card.
   await importance.scrollIntoViewIfNeeded();
   const tapBox=await importance.boundingBox();
