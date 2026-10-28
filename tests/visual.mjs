@@ -243,7 +243,7 @@ try{
   await paired.page.goto(base+"#swipe",{waitUntil:"load"});
   await paired.page.getByRole("heading",{name:"Era gemensamma svar"}).waitFor();
   await paired.page.getByRole("heading",{name:"Det ni båda svarat ja till"}).waitFor();
-  await paired.page.getByRole("heading",{name:"Relationer"}).waitFor();
+  await paired.page.locator(".swipe-match-group h4").filter({hasText:"Relationer"}).waitFor();
   assert.equal(await paired.page.locator(".swipe-match-list li").count(),2,"Only catalogued mutual YES cards appear; malicious RPC NO, B and unknown cards are discarded");
   const sharedText=await paired.page.locator(".swipe-results").innerText();
   assert.match(sharedText,/Jag uppskattar när vi gör saker tillsammans utan mobiltelefoner/,"The mutual YES is displayed");
