@@ -73,6 +73,59 @@ export const THEME_DECK_MODELS=Object.freeze([
   themeDeck('forandring','Små gemensamma förändringar',['Äta en måltid tillsammans','Avsätta tio minuter för samtal','Fråga innan vi ger råd','Prata om veckans planer','Göra något roligt varje månad','Ha en stund utan mobiler','Utvärdera en regel efter två veckor','Berätta något som fungerat bra']),
 ]);
 
+// Role-specific presentation is editorial metadata, separate from answer IDs,
+// matching rules and program logic. The canonical card text above remains
+// unchanged so existing private answers keep their original meaning. Version 2
+// clarifies each role's responsibility within the same shared A-card goal.
+const roleText=(teen,parent)=>Object.freeze({teen,parent,presentationVersion:2});
+export const ROLE_TEXT_BY_CARD=Object.freeze({
+  'general-10':roleText('Jag vill att vi visar uppskattning på sätt som känns bra för båda.','Jag vill bli bättre på att visa uppskattning och fråga hur den tas emot.'),
+  'general-11':roleText('Tydliga överenskommelser hemma hjälper mig att veta vad som gäller.','Jag vill göra hemmets överenskommelser tydliga och lyssna på tonåringens synpunkter.'),
+  'general-16':roleText('Jag vill kunna lita på de löften vi ger varandra.','Jag vill ge realistiska löften, hålla dem och förklara tidigt om något måste ändras.'),
+  'general-17':roleText('Jag vill kunna berätta när något har påverkat min tillit, i min egen takt.','Jag vill göra det tryggt att berätta och ta ansvar för min del när tilliten skadats.'),
+  'general-20':roleText('Jag vill att mitt privatliv respekteras och att undantag för trygghet förklaras.','Jag vill respektera tonåringens privatliv och vara tydlig med när omsorgsansvar kräver insyn.'),
+  'general-23':roleText('Jag vill att mina skäl blir lyssnade på även när beslutet inte blir som jag önskar.','Jag vill förstå tonåringens skäl och förklara mina beslut utan att kräva medhåll.'),
+  'general-24':roleText('Efter ett bråk vill jag kunna visa när jag är redo att hitta tillbaka.','Efter ett bråk vill jag ta initiativ till trygg återkontakt utan att pressa tonåringen.'),
+  'general-25':roleText('En uppriktig ursäkt hjälper mig när någon har sårat mig.','När jag sårat vill jag ta ansvar, be om ursäkt och ändra mitt beteende.'),
+  'general-26':roleText('Jag vill kunna säga att ett samtal blir för intensivt och ta paus.','Jag vill reglera min röst, avbryta om det blir otryggt och återuppta samtalet lugnt.'),
+  'general-28':roleText('Jag vill kunna visa eller säga när jag behöver stöd och få frågan vad som hjälper.','Jag vill vara uppmärksam på behov av stöd och fråga utan att pressa.'),
+  'general-29':roleText('Jag vill få verkligt inflytande i beslut som berör mig.','Jag vill ge åldersrimligt inflytande och förklara beslut jag måste ta.'),
+  'general-30':roleText('Jag vill kunna föreslå ändringar och bli lyssnad på när en regel inte fungerar.','Jag vill ompröva regler, väga in tonåringens erfarenhet och förklara kvarvarande gränser.'),
+  'general-31':roleText('Jag vill kunna beskriva min mobilanvändning och mina behov utan att bli skammad.','Jag vill prata sakligt om mobilvanor, förklara omsorgsskäl och undvika skam.'),
+  'general-34':roleText('Jag vill kunna ge och få uppskattning på sätt som känns äkta.','Jag vill visa konkret uppskattning utan att kräva ett visst svar tillbaka.'),
+  'samtal-04':roleText('Hur jag vill att vi pratar om sociala medier.','Hur jag kan prata om sociala medier utan skam och samtidigt ta mitt trygghetsansvar.'),
+  'samtal-06':roleText('Vad som hjälper mig att känna mig lyssnad på.','Hur jag kan visa att jag lyssnar och kontrollera att jag förstått.'),
+  'samtal-07':roleText('Vad som stressar mig och vilket stöd jag vill ha.','Hur jag kan lyssna på tonåringens stress utan att lägga min egen reglering på hen.'),
+  'regler-01':roleText('Jag vill att den som kan knackar innan hen går in i mitt rum.','Jag vill respektera tonåringens rum och förklara sällsynta trygghetsundantag.'),
+  'regler-02':roleText('Jag vill få prata färdigt och försöka lyssna när jag kan.','Jag vill lyssna färdigt och hjälpa samtalet att förbli tryggt.'),
+  'regler-03':roleText('Jag får be om paus och påverka när jag är redo igen.','Jag respekterar paus och tar ansvar för ett tryggt förslag om återupptagande.'),
+  'regler-05':roleText('Jag vill kunna påverka vilka rimliga sysslor jag ansvarar för.','Jag vill fördela åldersrimliga sysslor och ta hänsyn till tonåringens belastning.'),
+  'regler-07':roleText('Jag vill få inflytande över tider och förstå skälen för gränser.','Jag vill lyssna, förklara trygghets- och hälsoskäl och sätta åldersrimliga tider.'),
+  'regler-08':roleText('Jag kan föreslå att en regel omprövas och bli lyssnad på.','Jag omprövar regler öppet och förklarar vad som kan eller inte kan ändras.'),
+  'regler-09':roleText('Jag vill kunna påverka när en gemensam mobilfri stund passar.','Jag vill föreslå avgränsade mobilfria stunder och själv föregå med gott exempel.'),
+  'regler-10':roleText('Jag får säga att samtalet blir för intensivt och be om paus.','Jag ansvarar för att reglera min röst och avbryta ett otryggt samtal.'),
+  'regler-11':roleText('Jag får säga att något känns orättvist utan att straffas för att jag säger det.','Jag vill lyssna och förklara mitt beslut utan att bestraffa invändningen.'),
+  'regler-12':roleText('Jag får påverka när och hur jag kan delta i ett samtal efter bråk.','Jag tar initiativ till trygg reparation och ansvar för min del.'),
+  'uppskattning-02':roleText('Jag kan fråga hur föräldern mår utan att behöva lösa det.','Jag vill fråga hur tonåringen mår och bära ansvaret för min egen reglering.'),
+  'uppskattning-04':roleText('Göra en liten, frivillig och åldersrimlig hjälpsam sak.','Erbjuda konkret hjälp utan att kräva återgäldning.'),
+  'uppskattning-08':roleText('Välja en kort stund då jag vill ge och få odelad uppmärksamhet.','Skapa en kravlös stund och respektera om tonåringen inte är redo.'),
+  'aterhamtning-01':roleText('Jag får be om paus när samtalet blir för intensivt.','Jag tar paus innan jag tappar reglering och säkerställer ett tryggt återupptagande.'),
+  'aterhamtning-03':roleText('Jag vill kunna ta ansvar för sådant jag gjort som sårat.','Jag tar ansvar, ber om ursäkt utan förbehåll och försöker ändra beteendet.'),
+  'aterhamtning-04':roleText('Jag får säga när jag är tillräckligt redo att prata vidare.','Jag föreslår en lugn tid och respekterar att tonåringen kan behöva mer tid.'),
+  'aterhamtning-05':roleText('Jag vill kunna uttrycka behov och gränser i min egen takt.','Jag vill fråga om tonåringens behov och uttrycka mina vuxenbehov utan att lägga reglering på hen.'),
+  'aterhamtning-06':roleText('Jag vill kunna använda en paussignal som tas på allvar.','Jag vill respektera paussignalen och ansvara för trygg återkontakt.'),
+  'aterhamtning-07':roleText('Jag vill veta vilka trygga vuxna jag kan be om hjälp.','Jag söker vuxenstöd när situationen kräver det och hjälper tonåringen hitta stöd.'),
+  'aterhamtning-08':roleText('Jag får visa på mitt sätt när jag är öppen för kontakt igen.','Jag visar att relationen är trygg och att jag finns kvar utan att kräva snabb försoning.'),
+  'forandring-06':roleText('Välja en kort mobilfri stund som passar mig.','Föreslå en avgränsad mobilfri stund och själv delta på samma villkor.'),
+  'forandring-07':roleText('Få berätta hur regeln fungerat och föreslå ändring.','Följa upp, lyssna och förklara vad som ändras eller varför gränsen behövs.'),
+});
+
+export const cardTextForRole=(card,role)=>{
+  const adapted=ROLE_TEXT_BY_CARD[card.id];
+  if(adapted&&(role==='teen'||role==='parent'))return adapted[role];
+  return card.teenText;
+};
+
 
 // Redaktionella råd är metadata, aldrig AI-genererad text. Nytt kort får ett
 // stabilt ID och kan ange adviceKey; nya råd läggs till i ADVICE_BY_KEY.

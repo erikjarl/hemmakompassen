@@ -14,6 +14,7 @@ assert.doesNotMatch(script,/sharedMatches\.filter\(r=>r\.answer===false\)/,'No m
 assert.doesNotMatch(script,/Det ni båda svarat nej till/,'Never renders a shared NO heading');
 assert.match(script,/swipe-match-theme/,'Mutual YES results are grouped by theme');
 assert.match(script,/function sharedSummary\(groups,deckId='general'\)/,'Builds the rule-based summary only from the already filtered mutual-YES groups');
+assert.match(script,/const statement=cardTextForRole\(matchedCard,viewerRole\(\)\)/,'Uses reviewed role wording in both the result list and summary');
 assert.match(script,/items\.map\(item=>ADVICE_BY_KEY\[adviceKeyForCard\(item\.card,deckId\)\]\)/,'Derives editorial advice from each allowed matched card and deck');
 assert.match(script,/new Set\(/,'Deduplicates repeated advice before rendering grouped prose');
 assert.match(script,/members\.find\(member=>member\.user_id===user\?\.id\)\?\.role/,'Uses the signed-in member role for separate parent and teen wording');
@@ -42,12 +43,13 @@ function renderSharedResult(rows,role='parent'){
   const state={
     members:[{role:'parent'},{role:'teen'}],sharedLoading:false,sharedDeckId:'general',sharedError:'',sharedMatches:rows.map(row=>({deck_id:'general',...row})),
     GENERAL_CARDS:[
-      {id:'general-01',type:'match',category:'Fritid',teenText:'Spela fotboll'},
+      {id:'general-01',type:'match',category:'Fritid',teenText:'Tonåringens frivilliga aktivitet',parentText:'Förälderns ansvarstagande aktivitet'},
       {id:'general-02',type:'understanding',category:'Känslor',teenText:'HEMLIGT FÖRSTÅELSEKORT'},
       {id:'general-03',type:'match',category:'Samtal',teenText:'HEMLIGT NEJ-SVAR'},
     ],
     THEME_DECK_MODELS:[],ADVICE_BY_KEY:{'general-01':'Välj en gemensam dag.'},
     adviceKeyForCard:card=>card.id,
+    cardTextForRole:(card,viewerRole)=>viewerRole==='parent'?(card.parentText||card.teenText):card.teenText,
     viewerRole:()=>role,
     esc:value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char])),
   };
@@ -61,11 +63,14 @@ function renderSharedResult(rows,role='parent'){
     {card_id:'general-03',answer:false},
     {card_id:'unknown',answer:true},
   ]);
-  assert.match(html,/Spela fotboll/,'A verified A-YES can appear');
+  assert.match(html,/Förälderns ansvarstagande aktivitet/,'Parent sees the reviewed parent wording for a verified A-YES');
   assert.match(html,/Välj en gemensam dag/,'Only allowed A cards contribute editorial advice');
   assert.doesNotMatch(html,/HEMLIGT/,'B-YES and A-NO cannot leak into results or summaries');
   assert.match(html,/Gemensamma möjligheter – förälder/,'Parent gets the parent-facing summary');
-  assert.match(renderSharedResult([{card_id:'general-01',answer:true}],'teen'),/Gemensamma möjligheter – tonåring/,'Teen gets the teen-facing summary');
+  const teenHtml=renderSharedResult([{card_id:'general-01',answer:true}],'teen');
+  assert.match(teenHtml,/Gemensamma möjligheter – tonåring/,'Teen gets the teen-facing summary');
+  assert.match(teenHtml,/Tonåringens frivilliga aktivitet/,'Teen sees the reviewed teen wording');
+  assert.doesNotMatch(teenHtml,/Förälderns ansvarstagande aktivitet/,'Teen does not receive parent wording');
 }
 {
   const html=renderSharedResult([

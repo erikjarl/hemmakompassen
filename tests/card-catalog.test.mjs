@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard} from '../card-catalog.js';
+import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,ROLE_TEXT_BY_CARD,adviceKeyForCard,cardTextForRole} from '../card-catalog.js';
 
 assert.equal(GENERAL_CARDS.length,34,'Preserves all 34 stable general cards');
 assert.deepEqual(GENERAL_CARDS.map(card=>card.id),Array.from({length:34},(_,index)=>'general-'+String(index+1).padStart(2,'0')),'Preserves general card IDs and ordering');
@@ -37,5 +37,20 @@ for(const deck of THEME_DECK_MODELS){
     assert.equal(card.audience,'both','Theme cards target both roles');
   });
 }
+
+const allCards=[...GENERAL_CARDS,...themeCards];
+assert.equal(Object.keys(ROLE_TEXT_BY_CARD).length,39,'Every reviewed role adaptation is declarative and no extra card is silently changed');
+for(const [id,text] of Object.entries(ROLE_TEXT_BY_CARD)){
+  const card=allCards.find(candidate=>candidate.id===id);
+  assert.ok(card,id+' points to an existing stable card');
+  assert.equal(card.type,'match',id+' remains an A match card');
+  assert.equal(text.presentationVersion,2,id+' explicitly versions role-specific presentation');
+  assert.ok(text.teen.length>=35&&text.parent.length>=35,id+' has substantive text for both roles');
+  assert.notEqual(text.teen,text.parent,id+' does not impose symmetric wording on both roles');
+  assert.equal(cardTextForRole(card,'teen'),text.teen,id+' gives the teen the reviewed wording');
+  assert.equal(cardTextForRole(card,'parent'),text.parent,id+' gives the parent the reviewed wording');
+  assert.equal(cardTextForRole(card,'unknown'),card.teenText,id+' safely falls back to canonical text without a known role');
+}
+assert.equal(cardTextForRole(GENERAL_CARDS[0],'parent'),GENERAL_CARDS[0].teenText,'Unchanged cards preserve canonical wording');
 
 console.log('PASS: versioned A/B inventory preserves 34 general and 52 theme card IDs');

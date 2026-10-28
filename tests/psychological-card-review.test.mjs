@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import test from 'node:test';
-import {GENERAL_CARDS,THEME_DECK_MODELS} from '../card-catalog.js';
+import {GENERAL_CARDS,THEME_DECK_MODELS,ROLE_TEXT_BY_CARD} from '../card-catalog.js';
 
 const review=readFileSync(new URL('../docs/psychological-card-review-2026-10-27.md',import.meta.url),'utf8');
 const aCards=[
@@ -30,6 +30,14 @@ test('review labels evidence limits and preserves old answers',()=>{
   assert.match(review,/gamla svar får aldrig flyttas eller delas automatiskt/i);
   assert.match(review,/B-delning.*förblir avstängd/i);
   assert.match(review,/34 kort behålls som A/);
-  assert.match(review,/39 kort behöver rollanpassad A-text/);
+  assert.match(review,/39 kort har fått rollanpassad A-text/);
+});
+
+test('every reviewed role adaptation is implemented without changing stable IDs',()=>{
+  const adapted=[...review.matchAll(/\| `([^`]+)` \|[^\n]+\|[^\n]+\| \*\*Rollanpassa A\.\*\*/g)].map(match=>match[1]).sort();
+  assert.equal(adapted.length,39,'Review contains the expected 39 role adaptations');
+  assert.deepEqual(Object.keys(ROLE_TEXT_BY_CARD).sort(),adapted,'Catalog implementation exactly matches the reviewed adaptation set');
+  const currentIds=aCards.map(card=>card.id);
+  assert.ok(adapted.every(id=>currentIds.includes(id)),'No adaptation invents or replaces a stored answer ID');
 });
 

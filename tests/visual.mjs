@@ -79,7 +79,7 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
                if(window.__HK_RPC_UNAVAILABLE__)return {data:null,error:{message:'synthetic unavailable'}};
                if(!window.__HK_TEST_PAIRED__)return {data:[],error:null};
                if(args.p_deck_id==='samtal')return {data:[{deck_id:'samtal',card_id:'samtal-01',answer:true},{deck_id:'samtal',card_id:'samtal-02',answer:false},{deck_id:'aktiviteter',card_id:'aktiviteter-01',answer:true},{deck_id:'samtal',card_id:'samtal-99',answer:true}],error:null};
-               return {data:[{deck_id:'general',card_id:'general-01',answer:true},{deck_id:'general',card_id:'general-02',answer:true},{deck_id:'general',card_id:'general-03',answer:false},{deck_id:'general',card_id:'general-99',answer:true}],error:null};
+               return {data:[{deck_id:'general',card_id:'general-01',answer:true},{deck_id:'general',card_id:'general-10',answer:true},{deck_id:'general',card_id:'general-02',answer:true},{deck_id:'general',card_id:'general-03',answer:false},{deck_id:'general',card_id:'general-99',answer:true}],error:null};
              }
             if(name==='shared_general_deck_complete'){
               window.__HK_UNLOCK_RPC_CALLS__=(window.__HK_UNLOCK_RPC_CALLS__||0)+1;
@@ -170,6 +170,11 @@ try{
   assert.equal(saved.row.card_id,"general-01");
   assert.equal(saved.row.answer,true);
   assert.equal(saved.options.onConflict,"user_id,deck_id,card_id");
+  await m.page.getByRole("button",{name:"Ja"}).click();
+  await m.page.locator("#swipe-card[aria-label^='Kort 3 av 21']").waitFor();
+  assert.match(await m.page.locator('#swipe-card').innerText(),/Jag vill bli bättre på att visa uppskattning och fråga hur den tas emot/,'Parent card uses reviewed adult-responsibility wording');
+  assert.doesNotMatch(await m.page.locator('#swipe-card').innerText(),/Jag vill att vi visar uppskattning på sätt som känns bra för båda/,'Parent card does not reuse teen wording');
+  await capture(m.page,"mobile-parent-role-card.png");
   await m.page.goto(base+"konto.html",{waitUntil:"load"});
   await m.page.getByRole("heading",{name:"Använd en familjekod"}).waitFor();
   assert.ok(await m.page.locator("#join-family").isVisible(),"A singleton account must be able to enter a family code");
@@ -228,9 +233,11 @@ try{
   await paired.page.getByRole("heading",{name:"Era gemensamma svar"}).waitFor();
   await paired.page.getByRole("heading",{name:"Det ni båda svarat ja till"}).waitFor();
   await paired.page.getByRole("heading",{name:"Relationer"}).waitFor();
-  assert.equal(await paired.page.locator(".swipe-match-list li").count(),1,"Only the known mutual YES appears; malicious RPC NO and unknown cards are discarded");
+  assert.equal(await paired.page.locator(".swipe-match-list li").count(),2,"Only catalogued mutual YES cards appear; malicious RPC NO, B and unknown cards are discarded");
   const sharedText=await paired.page.locator(".swipe-results").innerText();
   assert.match(sharedText,/Jag uppskattar när vi gör saker tillsammans utan mobiltelefoner/,"The mutual YES is displayed");
+  assert.match(sharedText,/Jag vill bli bättre på att visa uppskattning och fråga hur den tas emot/,"Parent result and summary use the reviewed parent wording");
+  assert.doesNotMatch(sharedText,/Jag vill att vi visar uppskattning på sätt som känns bra för båda/,"Parent result does not leak the teen role wording");
   assert.match(sharedText,/REDAKTIONELLA RÅD · INTE AI/,"The editorial advice is clearly labelled");
   assert.match(sharedText,/Gemensamma möjligheter – förälder/,"The parent sees parent-specific wording");
   assert.match(sharedText,/Fråga gärna tonåringen vad hen vill börja med/,"The parent prompt is derived from mutual YES only");
@@ -249,9 +256,11 @@ try{
   await paired.context.close();
   const pairedTeen=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,paired:true,role:"teen"});
   await pairedTeen.page.goto(base+"#swipe",{waitUntil:"load"});
-  const teenSummary=await pairedTeen.page.locator(".swipe-rule-summary").innerText();
+  const teenSummary=await pairedTeen.page.locator(".swipe-results").innerText();
   assert.match(teenSummary,/Gemensamma möjligheter – tonåring/,"The teen sees teen-specific wording");
   assert.match(teenSummary,/Välj gärna själv vad du vill börja prata om/,"The teen prompt is derived from mutual YES only");
+  assert.match(teenSummary,/Jag vill att vi visar uppskattning på sätt som känns bra för båda/,"Teen result uses the reviewed teen wording");
+  assert.doesNotMatch(teenSummary,/Jag vill bli bättre på att visa uppskattning och fråga hur den tas emot/,"Teen result does not receive the parent wording");
   assert.doesNotMatch(teenSummary,/Jag vill helst prata färdigt innan någon kommer med råd/,"The teen summary cannot include a mutual NO");
   await pairedTeen.context.close();
   const unlocked=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,paired:true,unlocked:true});
