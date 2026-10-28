@@ -2,7 +2,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path=public,extensions;
-select plan(20);
+select plan(21);
 select has_function('public','shared_understanding_cards',array[]::text[],'shared B RPC exists');
 select has_function('public','set_understanding_card_share',array['text','boolean'],'explicit consent RPC exists');
 select is(has_function_privilege('anon','public.shared_understanding_cards()','execute'),false,'anon cannot read');
