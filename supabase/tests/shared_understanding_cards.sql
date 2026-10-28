@@ -12,8 +12,28 @@ select is(has_function_privilege('anon','public.shared_understanding_cards()','e
 select is(has_function_privilege('authenticated','public.shared_understanding_cards()','execute'),true,
   'authenticated paired members may request shared B card IDs');
 
+insert into auth.users(id,email) values
+  ('31000000-0000-0000-0000-000000000001','understanding-a-parent@example.invalid'),
+  ('31000000-0000-0000-0000-000000000002','understanding-a-teen@example.invalid'),
+  ('32000000-0000-0000-0000-000000000001','understanding-b-parent@example.invalid'),
+  ('32000000-0000-0000-0000-000000000002','understanding-b-teen@example.invalid'),
+  ('33000000-0000-0000-0000-000000000001','understanding-single@example.invalid');
+
+insert into public.families(id) values
+  ('ca000000-0000-0000-0000-000000000000'),
+  ('cb000000-0000-0000-0000-000000000000'),
+  ('cc000000-0000-0000-0000-000000000000');
+
+insert into public.family_members(family_id,user_id,role) values
+  ('ca000000-0000-0000-0000-000000000000','31000000-0000-0000-0000-000000000001','parent'),
+  ('ca000000-0000-0000-0000-000000000000','31000000-0000-0000-0000-000000000002','teen'),
+  ('cb000000-0000-0000-0000-000000000000','32000000-0000-0000-0000-000000000001','parent'),
+  ('cb000000-0000-0000-0000-000000000000','32000000-0000-0000-0000-000000000002','teen'),
+  ('cc000000-0000-0000-0000-000000000000','33000000-0000-0000-0000-000000000001','parent');
+
 insert into public.swipe_answers(user_id,deck_id,card_id,answer)
 values
+  ('31000000-0000-0000-0000-000000000002','general','general-02',true),
   ('31000000-0000-0000-0000-000000000002','general','general-03',false),
   ('31000000-0000-0000-0000-000000000002','general','general-04',true),
   ('31000000-0000-0000-0000-000000000002','general','general-99',true),
