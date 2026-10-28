@@ -51,6 +51,24 @@ for each row execute function public.revoke_understanding_share_on_private_chang
 create trigger revoke_understanding_share_after_skip after insert or update on public.swipe_skips
 for each row execute function public.revoke_understanding_share_on_private_change();
 
+-- A consent belongs to one exact active pair. Any membership topology change
+-- invalidates it, so delete/re-pair or a temporary third member cannot revive
+-- a consent that was given under an earlier family composition.
+create function public.revoke_understanding_shares_on_family_change()
+returns trigger language plpgsql security definer set search_path='' as $$
+declare old_family uuid;
+declare new_family uuid;
+begin
+  if tg_op <> 'INSERT' then old_family := old.family_id; end if;
+  if tg_op <> 'DELETE' then new_family := new.family_id; end if;
+  delete from public.understanding_card_shares
+  where family_id=old_family or family_id=new_family;
+  return coalesce(new,old);
+end $$;
+create trigger revoke_understanding_shares_after_family_change
+after insert or update or delete on public.family_members
+for each row execute function public.revoke_understanding_shares_on_family_change();
+
 create function public.shared_understanding_cards()
 returns table(deck_id text,card_id text)
 language sql stable security definer set search_path='' as $$
@@ -72,5 +90,6 @@ language sql stable security definer set search_path='' as $$
 $$;
 revoke all on function public.set_understanding_card_share(text,boolean) from public,anon;
 revoke all on function public.shared_understanding_cards() from public,anon;
+revoke all on function public.revoke_understanding_shares_on_family_change() from public,anon,authenticated;
 grant execute on function public.set_understanding_card_share(text,boolean),public.shared_understanding_cards() to authenticated;
 comment on table public.understanding_card_shares is 'Explicit teen sharing consent only; historical private answers are not copied.';
