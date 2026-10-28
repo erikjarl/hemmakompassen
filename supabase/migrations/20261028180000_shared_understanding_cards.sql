@@ -1,6 +1,7 @@
 -- Review-only B sharing boundary. Historical private YES is never consent.
 create table public.understanding_card_shares(
   user_id uuid not null references auth.users(id) on delete cascade,
+  family_id uuid not null references public.families(id) on delete cascade,
   deck_id text not null check(deck_id='general'), card_id text not null,
   shared_at timestamptz not null default now(), primary key(user_id,deck_id,card_id)
 );
@@ -13,6 +14,7 @@ create policy understanding_shares_self_select on public.understanding_card_shar
 create function public.set_understanding_card_share(p_card_id text,p_share boolean)
 returns void language plpgsql security definer set search_path='' as $$
 declare caller_id uuid := (select auth.uid());
+declare active_family uuid;
 begin
   if caller_id is null then raise exception 'authentication required' using errcode='42501'; end if;
   if p_card_id <> all(array['general-02','general-03','general-04','general-05','general-06','general-07','general-09','general-12','general-14','general-15','general-18','general-19','general-27']) then
@@ -32,7 +34,8 @@ begin
   ) or exists(
     select 1 from public.swipe_skips s where s.user_id=caller_id and s.deck_id='general' and s.card_id=p_card_id
   ) then raise exception 'card is not eligible for sharing' using errcode='42501'; end if;
-  insert into public.understanding_card_shares(user_id,deck_id,card_id) values(caller_id,'general',p_card_id)
+  select m.family_id into active_family from public.family_members m where m.user_id=caller_id;
+  insert into public.understanding_card_shares(user_id,family_id,deck_id,card_id) values(caller_id,active_family,'general',p_card_id)
   on conflict(user_id,deck_id,card_id) do update set shared_at=now();
 end $$;
 
@@ -61,9 +64,10 @@ language sql stable security definer set search_path='' as $$
   )
   select share.deck_id,share.card_id from paired_family family
   join public.family_members teen on teen.family_id=family.family_id and teen.role='teen'
-  join public.understanding_card_shares share on share.user_id=teen.user_id
+  join public.understanding_card_shares share on share.user_id=teen.user_id and share.family_id=family.family_id
   join public.swipe_answers answer on answer.user_id=teen.user_id and answer.deck_id=share.deck_id and answer.card_id=share.card_id and answer.answer is true
   where not exists(select 1 from public.swipe_skips skipped where skipped.user_id=teen.user_id and skipped.deck_id=share.deck_id and skipped.card_id=share.card_id)
+    and share.card_id = any(array['general-02','general-03','general-04','general-05','general-06','general-07','general-09','general-12','general-14','general-15','general-18','general-19','general-27'])
   order by share.card_id
 $$;
 revoke all on function public.set_understanding_card_share(text,boolean) from public,anon;
