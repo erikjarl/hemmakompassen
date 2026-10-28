@@ -168,6 +168,11 @@ try{
   assert.ok(mobileMain.y+mobileMain.height<=mobileNav.y+1,'Mobile navigation must occupy its own layout row, never overlay the scrollable content region');
   const activeNav=await m.page.locator('#live-mobile-nav a[aria-current="page"]').boundingBox();
   assert.ok(activeNav.x>=mobileNav.x&&activeNav.x+activeNav.width<=mobileNav.x+mobileNav.width,'Active mobile navigation label must be fully visible');
+  const lastNavLink=m.page.locator('#live-mobile-nav a').last();
+  await lastNavLink.scrollIntoViewIfNeeded();
+  const lastNavBox=await lastNavLink.boundingBox();
+  assert.ok(lastNavBox.x>=mobileNav.x&&lastNavBox.x+lastNavBox.width<=mobileNav.x+mobileNav.width,'The last mobile navigation label must be fully reachable without clipping');
+  await m.page.locator('#live-mobile-nav a[aria-current="page"]').scrollIntoViewIfNeeded();
   // Simulate a phone tap on both ends. It must change the value, not swipe the card.
   await importance.scrollIntoViewIfNeeded();
   const tapBox=await importance.boundingBox();
@@ -269,6 +274,7 @@ try{
   assert.equal(await paired.page.locator(".swipe-themes details").count(),0,"Incomplete paired family must not see theme cards");
   assert.match(await paired.page.locator(".swipe-themes").innerText(),/låsta tills ni båda har gått igenom den allmänna kortleken/i);
   await checkOverflow(paired.page,"Mobile matched swipes");
+  await paired.page.locator('.swipe-results').scrollIntoViewIfNeeded();
   await capture(paired.page,"mobile-shared-swipes.png");
   await paired.page.evaluate(()=>{window.__HK_RPC_UNAVAILABLE__=true;});
   await paired.page.getByRole("button",{name:"Uppdatera gemensamma svar"}).click();
@@ -303,6 +309,7 @@ try{
   assert.doesNotMatch(themeSharedText,/Hur vi har det i skolan eller på jobbet|Laga mat tillsammans/,'Theme NO and rows from another deck remain private');
   assert.deepEqual((await unlocked.page.evaluate(()=>window.__HK_MATCH_RPC_ARGS__)).at(-1),{p_deck_id:'samtal'},'Theme results use the reviewed aggregate RPC with the exact deck id');
   await checkOverflow(unlocked.page,"Mobile active theme deck");
+  await unlocked.page.locator('.swipe-results').scrollIntoViewIfNeeded();
   await capture(unlocked.page,"mobile-theme-swipe.png");
   await unlocked.page.getByRole("button",{name:"Ja"}).click();
   await unlocked.page.locator("#swipe-card[aria-label^='Temakort 2 av 8']").waitFor();
