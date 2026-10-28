@@ -90,6 +90,11 @@
 .swipe-rule-summary{margin-top:24px;padding:18px;border-left:3px solid #c58a30;background:#191e2c;border-radius:0 13px 13px 0}
 .swipe-rule-summary h3{margin:7px 0 12px}
 .swipe-rule-summary p{margin:9px 0}
+.swipe-priority-summary{margin:22px 0;padding:18px;border:1px solid #b97d28;background:linear-gradient(145deg,#25263a,#191e2c);border-radius:14px;box-shadow:0 13px 30px #05070d55}
+.swipe-priority-summary h3{margin:7px 0 12px;color:#ffd18a}
+.swipe-priority-summary p{margin:9px 0}
+.swipe-priority-theme{margin-top:15px;padding-top:12px;border-top:1px solid #4e463b}
+.swipe-priority-theme h4{margin:0 0 7px;color:#f1bf75;font-size:13px;letter-spacing:.03em}
 .swipe-summary-label{color:#f1bf75;font-size:11px;letter-spacing:.1em;font-weight:700}
 .swipe-refresh{margin-top:20px}
 @media(max-width:600px){.swipe-match-list{grid-template-columns:1fr}}

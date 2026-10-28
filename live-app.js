@@ -1,6 +1,7 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
+const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
 const db=createClient(c.supabaseUrl,c.supabasePublishableKey,{auth:{flowType:'pkce',detectSessionInUrl:true}});
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??'').replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x]));
@@ -10,7 +11,7 @@ const STATEMENTS=GENERAL_CARDS.map(card=>[card.category,card.teenText]);
 const THEME_DECKS=THEME_DECK_MODELS.map(deck=>({...deck,cards:deck.cards.map(card=>card.teenText),cardIds:deck.cards.map(card=>card.id)}));
 let user=null,profile=null,members=[],refreshGeneration=0;
 let swipeIndex=0,swipeBusy=false,swipeReview=false,swipeLoadError='',swipeSaveError='';
-let sharedMatches=[],sharedDeckId='general',sharedError='',sharedLoading=false,sharedSession=0,sharedRequest=0;
+let sharedMatches=[],sharedPriorities=[],sharedDeckId='general',sharedError='',sharedLoading=false,sharedSession=0,sharedRequest=0;
 let themesUnlocked=false,themesLoading=false,themesError='',themesRequest=0;
 const swipeAnswers=new Map();
 const themeAnswers=new Map(THEME_DECKS.map(deck=>[deck.id,new Map()]));
@@ -88,13 +89,15 @@ const shortCardText=text=>String(text).replace(/[.!?]+$/,'').replace(/^Jag (?:vi
 const sharedDeck=deckId=>deckId==='general'
   ?{id:'general',title:'Allmänna kortleken',cards:GENERAL_CARDS}
   :THEME_DECK_MODELS.find(deck=>deck.id===deckId);
-function sharedSummary(groups,deckId='general'){
+function sharedSummary(groups,deckId='general',priorityIds=new Set()){
   const role=viewerRole();
   const roleLabel=role==='parent'?'förälder':role==='teen'?'tonåring':'familjemedlem';
   const paragraphs=[];
   for(const [category,items] of groups){
-    const cardTexts=items.map(item=>shortCardText(item.statement));
-    const advice=[...new Set(items.map(item=>ADVICE_BY_KEY[adviceKeyForCard(item.card,deckId)]).filter(Boolean))].join(' ')||'Välj något av det ni båda bejakat och prata om hur ni skulle kunna prova det i vardagen.';
+    const remaining=items.filter(item=>!priorityIds.has(item.card.id));
+    if(!remaining.length)continue;
+    const cardTexts=remaining.map(item=>shortCardText(item.statement));
+    const advice=[...new Set(remaining.map(item=>ADVICE_BY_KEY[adviceKeyForCard(item.card,deckId)]).filter(Boolean))].join(' ')||'Välj något av det ni båda bejakat och prata om hur ni skulle kunna prova det i vardagen.';
     const intro=category==='Fritid'||category==='Gemenskap'
       ?'Ni har båda visat intresse för '
       :'Ni har båda bejakat ';
@@ -105,9 +108,35 @@ function sharedSummary(groups,deckId='general'){
     :role==='teen'
       ?'Välj gärna själv vad du vill börja prata om; ett ja betyder inte att du måste göra något direkt.'
       :'Välj tillsammans något som känns enkelt att börja med.';
+  if(!paragraphs.length)return '';
   return '<aside class="swipe-rule-summary" aria-labelledby="shared-summary-heading"><span class="swipe-summary-label">REDAKTIONELLA RÅD · INTE AI</span><h3 id="shared-summary-heading">Gemensamma möjligheter – '+esc(roleLabel)+'</h3>'+
     paragraphs.join('')+'<p>'+esc(opening)+'</p>'+
     '<p class="live-muted">Texten bygger enbart på serververifierade ömsesidiga ja-svar. Råden är förskrivna, inte AI-genererade; inget privat svar ingår.</p></aside>';
+}
+
+function sharedPrioritySummary(items,deckId='general'){
+  if(!items.length)return '';
+  const role=viewerRole();
+  const groups=new Map();
+  for(const item of items){
+    if(!groups.has(item.card.category))groups.set(item.card.category,[]);
+    groups.get(item.card.category).push(item);
+  }
+  const sections=[...groups.entries()].map(([category,cards])=>{
+    const texts=cards.map(item=>shortCardText(item.statement));
+    const lead=role==='teen'
+      ?'Du har markerat <strong>'+esc(joinSwedish(texts))+'</strong> som särskilt viktigt bland det ni båda sagt ja till.'
+      :'Ni har båda sagt ja till <strong>'+esc(joinSwedish(texts))+'</strong>, och tonåringen har markerat detta som särskilt viktigt.';
+    const advice=[...new Set(cards.map(item=>ADVICE_BY_KEY[adviceKeyForCard(item.card,deckId)]).filter(Boolean))].join(' ');
+    return '<section class="swipe-priority-theme"><h4>'+esc(category)+'</h4><p>'+lead+(advice?' '+esc(advice):'')+'</p></section>';
+  }).join('');
+  const opening=role==='teen'
+    ?'Du bestämmer vad du vill börja prata om. En hög markering betyder inte att något måste lösas direkt.'
+    :'Börja gärna med att fråga vad som skulle kännas hjälpsamt och lyssna färdigt utan att förutsätta att ett problem måste lösas direkt.';
+  return '<aside class="swipe-priority-summary" aria-labelledby="shared-priority-heading"><span class="swipe-summary-label">TONÅRINGENS PRIORITERING · REDAN DELADE A-KORT</span><h3 id="shared-priority-heading">Viktigast att fokusera på</h3>'+
+    '<p>Det här är särskilt viktigt för tonåringen bland sådant som ni redan valt att dela genom att båda svara ja.</p>'+
+    sections+'<p>'+esc(opening)+'</p>'+
+    '<p class="live-muted">Sektionen bygger endast på serververifierat JA+JA och tonåringens höga markering. Låga, neutrala och privata nivåer visas aldrig.</p></aside>';
 }
 
 function swipeResults(deckId='general'){
@@ -141,9 +170,16 @@ function swipeResults(deckId='general'){
     items.map(item=>'<li><p>'+esc(item.statement)+'</p></li>').join('')+
     '</ul></section>'
   ).join('');
+  const matchedById=new Map([...groups.values()].flat().map(item=>[item.card.id,item]));
+  const priorityItems=sharedPriorities
+    .filter(row=>row?.deck_id===deckId&&matchedById.has(row.card_id))
+    .map(row=>matchedById.get(row.card_id))
+    .sort((a,b)=>a.card.id.localeCompare(b.card.id));
+  const priorityIds=new Set(priorityItems.map(item=>item.card.id));
   return title+'<p class="live-muted">Bara kort där ni båda svarat ja visas här. Se dem som möjliga samtalsöppningar, inte som färdiga överenskommelser.</p>'+
+    sharedPrioritySummary(priorityItems,deckId)+
     '<div class="swipe-match-group"><h3>Det ni båda svarat ja till</h3>'+themes+'</div>'+
-    sharedSummary(groups,deckId)+
+    sharedSummary(groups,deckId,priorityIds)+
     button+'</section>';
 }
 async function fetchSwipeMatches(deckId='general'){
@@ -151,11 +187,17 @@ async function fetchSwipeMatches(deckId='general'){
   const deck=sharedDeck(deckId);
   if(!deck)return;
   const viewer=user.id,session=sharedSession,request=++sharedRequest;
-  sharedDeckId=deckId;sharedMatches=[];sharedLoading=true;sharedError='';
+  sharedDeckId=deckId;sharedMatches=[];sharedPriorities=[];sharedLoading=true;sharedError='';
   if(page()==='swipe'&&!swipeBusy)render();
   try{
-    const {data,error}=await db.rpc('shared_swipe_matches',{p_deck_id:deckId});
+    const [matchResult,priorityResult]=await Promise.all([
+      db.rpc('shared_swipe_matches',{p_deck_id:deckId}),
+      sharedPrioritiesEnabled
+        ?db.rpc('shared_swipe_priorities',{p_deck_id:deckId})
+        :Promise.resolve({data:[],error:null})
+    ]);
     if(session!==sharedSession||request!==sharedRequest||user?.id!==viewer||sharedDeckId!==deckId)return;
+    const {data,error}=matchResult;
     if(error||!Array.isArray(data))throw Error('Match RPC unavailable');
     const safe=new Map();
     for(const r of data){
@@ -163,9 +205,18 @@ async function fetchSwipeMatches(deckId='general'){
       safe.set(r.card_id,{deck_id:deckId,card_id:r.card_id,answer:true});
     }
     sharedMatches=[...safe.values()].sort((a,b)=>a.card_id.localeCompare(b.card_id));
+    if(sharedPrioritiesEnabled&&!priorityResult.error&&Array.isArray(priorityResult.data)){
+      const priorities=new Map();
+      for(const row of priorityResult.data){
+        if(row?.deck_id!==deckId||!safe.has(row.card_id))continue;
+        priorities.set(row.card_id,{deck_id:deckId,card_id:row.card_id});
+      }
+      sharedPriorities=[...priorities.values()].sort((a,b)=>a.card_id.localeCompare(b.card_id));
+    }
   }catch(e){
     if(session!==sharedSession||request!==sharedRequest||user?.id!==viewer||sharedDeckId!==deckId)return;
     sharedMatches=[];
+    sharedPriorities=[];
     sharedError='Gemensamma resultat är inte tillgängliga just nu. Försök igen senare.';
   }finally{
     if(session===sharedSession&&request===sharedRequest&&user?.id===viewer&&sharedDeckId===deckId){
@@ -337,7 +388,7 @@ let authResult;
 try{authResult=await db.auth.getUser();}
 catch(e){if(generation!==refreshGeneration)return;throw e;}
 if(generation!==refreshGeneration)return;
-const {data:{user:u},error}=authResult;if(error&&error.name!=='AuthSessionMissingError')throw error;user=u;profile=null;members=[];swipeAnswers.clear();swipeImportance.clear();importancePending.clear();importanceSaving.clear();importanceAvailable=false;importanceLoadError='';skippedUnderstanding.clear();for(const answers of themeAnswers.values())answers.clear();activeThemeDeck=null;themeIndex=0;themeReview=false;themeSaveError='';swipeBusy=false;swipeLoadError='';swipeSaveError='';swipeReview=false;swipeIndex=0;sharedMatches=[];sharedDeckId='general';sharedError='';sharedLoading=false;sharedSession++;sharedRequest++;themesUnlocked=false;themesLoading=false;themesError='';themesRequest++;
+const {data:{user:u},error}=authResult;if(error&&error.name!=='AuthSessionMissingError')throw error;user=u;profile=null;members=[];swipeAnswers.clear();swipeImportance.clear();importancePending.clear();importanceSaving.clear();importanceAvailable=false;importanceLoadError='';skippedUnderstanding.clear();for(const answers of themeAnswers.values())answers.clear();activeThemeDeck=null;themeIndex=0;themeReview=false;themeSaveError='';swipeBusy=false;swipeLoadError='';swipeSaveError='';swipeReview=false;swipeIndex=0;sharedMatches=[];sharedPriorities=[];sharedDeckId='general';sharedError='';sharedLoading=false;sharedSession++;sharedRequest++;themesUnlocked=false;themesLoading=false;themesError='';themesRequest++;
 if(user){const viewer=user.id;
 let loaded;
 try{loaded=await Promise.all([db.from('profiles').select('display_name').eq('user_id',viewer).maybeSingle(),db.rpc('my_family_members'),db.from('swipe_answers').select('deck_id,card_id,answer').eq('user_id',viewer),db.from('swipe_skips').select('deck_id,card_id').eq('user_id',viewer),db.from('swipe_importance').select('deck_id,card_id,importance').eq('user_id',viewer)]);}

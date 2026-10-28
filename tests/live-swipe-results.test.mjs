@@ -4,6 +4,9 @@ import {readFileSync} from 'node:fs';
 const script=readFileSync(new URL('../live-app.js',import.meta.url),'utf8');
 
 assert.match(script,/db\.rpc\('shared_swipe_matches',\{p_deck_id:deckId\}\)/,'Uses only the reviewed aggregate function for the selected deck');
+assert.match(script,/sharedPrioritiesEnabled[\s\S]*?db\.rpc\('shared_swipe_priorities',\{p_deck_id:deckId\}\)/,'Priority IDs come only from the separately gated aggregate RPC');
+assert.match(script,/if\(row\?\.deck_id!==deckId\|\|!safe\.has\(row\.card_id\)\)continue/,'A priority must also exist in the current server-verified mutual-YES set');
+assert.match(script,/enableSharedPriorities===true/,'Shared priorities require an explicit disabled-by-default feature flag');
 assert.match(script,/r\?\.deck_id!==deckId\|\|r\.answer!==true/,'Rejects rows from another deck and every non-YES answer');
 assert.match(script,/deck\.cards\.find\(card=>card\.id===r\.card_id&&card\.type==='match'\)/,'Allows only catalogued A cards from the selected deck');
 assert.match(script,/if\(!user\|\|members\.length!==2\)return/,'Requires an authenticated paired family');
@@ -13,9 +16,11 @@ assert.match(script,/safe\.set\(r\.card_id,\{deck_id:deckId,card_id:r\.card_id,a
 assert.doesNotMatch(script,/sharedMatches\.filter\(r=>r\.answer===false\)/,'No mutual NO category is rendered');
 assert.doesNotMatch(script,/Det ni båda svarat nej till/,'Never renders a shared NO heading');
 assert.match(script,/swipe-match-theme/,'Mutual YES results are grouped by theme');
-assert.match(script,/function sharedSummary\(groups,deckId='general'\)/,'Builds the rule-based summary only from the already filtered mutual-YES groups');
+assert.match(script,/function sharedSummary\(groups,deckId='general',priorityIds=new Set\(\)\)/,'Builds the ordinary summary from mutual YES while excluding already prioritised advice');
+assert.match(script,/function sharedPrioritySummary\(items,deckId='general'\)/,'Builds a separate deterministic priority summary');
+assert.match(script,/Låga, neutrala och privata nivåer visas aldrig/,'Explains the priority privacy boundary without exposing raw levels');
 assert.match(script,/const statement=cardTextForRole\(matchedCard,viewerRole\(\)\)/,'Uses reviewed role wording in both the result list and summary');
-assert.match(script,/items\.map\(item=>ADVICE_BY_KEY\[adviceKeyForCard\(item\.card,deckId\)\]\)/,'Derives editorial advice from each allowed matched card and deck');
+assert.match(script,/remaining\.map\(item=>ADVICE_BY_KEY\[adviceKeyForCard\(item\.card,deckId\)\]\)/,'Derives ordinary editorial advice from each non-prioritised allowed matched card and deck');
 assert.match(script,/new Set\(/,'Deduplicates repeated advice before rendering grouped prose');
 assert.match(script,/members\.find\(member=>member\.user_id===user\?\.id\)\?\.role/,'Uses the signed-in member role for separate parent and teen wording');
 assert.match(script,/REDAKTIONELLA RÅD · INTE AI/,'Labels the deterministic editorial advice clearly');
@@ -39,15 +44,16 @@ console.log('PASS: mutual-YES-only RPC results, role-specific rule summary, them
 // Execute the actual shared-view and summary functions with synthetic data.
 const sharedViewFunctions=script.match(/const joinSwedish=[\s\S]*?(?=\nasync function fetchSwipeMatches\()/);
 assert.ok(sharedViewFunctions,'Shared result rendering can be tested independently');
-function renderSharedResult(rows,role='parent'){
+function renderSharedResult(rows,role='parent',priorityRows=[]){
   const state={
-    members:[{role:'parent'},{role:'teen'}],sharedLoading:false,sharedDeckId:'general',sharedError:'',sharedMatches:rows.map(row=>({deck_id:'general',...row})),
+    members:[{role:'parent'},{role:'teen'}],sharedLoading:false,sharedDeckId:'general',sharedError:'',sharedMatches:rows.map(row=>({deck_id:'general',...row})),sharedPriorities:priorityRows.map(row=>({deck_id:'general',...row})),
     GENERAL_CARDS:[
       {id:'general-01',type:'match',category:'Fritid',teenText:'Tonåringens frivilliga aktivitet',parentText:'Förälderns ansvarstagande aktivitet'},
       {id:'general-02',type:'understanding',category:'Känslor',teenText:'HEMLIGT FÖRSTÅELSEKORT'},
       {id:'general-03',type:'match',category:'Samtal',teenText:'HEMLIGT NEJ-SVAR'},
+      {id:'general-04',type:'match',category:'Samtal',teenText:'Tonåringens andra gemensamma kort',parentText:'Förälderns andra gemensamma kort'},
     ],
-    THEME_DECK_MODELS:[],ADVICE_BY_KEY:{'general-01':'Välj en gemensam dag.'},
+    THEME_DECK_MODELS:[],ADVICE_BY_KEY:{'general-01':'Välj en gemensam dag.','general-04':'Lyssna färdigt och välj ett litet nästa steg.'},
     adviceKeyForCard:card=>card.id,
     cardTextForRole:(card,viewerRole)=>viewerRole==='parent'?(card.parentText||card.teenText):card.teenText,
     viewerRole:()=>role,
@@ -71,6 +77,31 @@ function renderSharedResult(rows,role='parent'){
   assert.match(teenHtml,/Gemensamma möjligheter – tonåring/,'Teen gets the teen-facing summary');
   assert.match(teenHtml,/Tonåringens frivilliga aktivitet/,'Teen sees the reviewed teen wording');
   assert.doesNotMatch(teenHtml,/Förälderns ansvarstagande aktivitet/,'Teen does not receive parent wording');
+}
+{
+  const html=renderSharedResult([
+    {card_id:'general-01',answer:true},
+    {card_id:'general-02',answer:true},
+    {card_id:'general-03',answer:false},
+    {card_id:'general-04',answer:true},
+  ],'parent',[
+    {card_id:'general-01'},
+    {card_id:'general-02'},
+    {card_id:'general-03'},
+    {card_id:'unknown'},
+  ]);
+  assert.match(html,/Viktigast att fokusera på/,'A server-prioritised mutual A-YES gets its own section');
+  assert.match(html,/tonåringen har markerat detta som särskilt viktigt/,'Parent wording preserves teen-first priority');
+  assert.equal((html.match(/Välj en gemensam dag\./g)||[]).length,1,'Prioritised advice is not duplicated in the ordinary summary');
+  assert.match(html,/Förälderns andra gemensamma kort/,'Non-prioritised mutual YES remains in the ordinary shared result');
+  assert.match(html,/Lyssna färdigt och välj ett litet nästa steg/,'Non-prioritised advice remains in the ordinary summary');
+  assert.doesNotMatch(html,/HEMLIGT|unknown/,'B, NO and unknown priority rows cannot leak');
+}
+{
+  const html=renderSharedResult([{card_id:'general-01',answer:true}],'parent',[
+    {card_id:'general-02'},{card_id:'general-03'},{card_id:'unknown'}
+  ]);
+  assert.doesNotMatch(html,/Viktigast att fokusera på/,'Priority rows without the same verified A-YES remain invisible');
 }
 {
   const html=renderSharedResult([
