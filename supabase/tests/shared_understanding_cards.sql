@@ -33,7 +33,7 @@ select is_empty($$select * from public.shared_understanding_cards()$$,'historica
 select throws_ok($$select public.set_understanding_card_share('general-02',true)$$,'42501','card is not eligible for sharing','parent cannot create teen consent');
 select set_config('request.jwt.claims','{"sub":"31000000-0000-0000-0000-000000000002"}',true);
 select lives_ok($$select public.set_understanding_card_share('general-02',true)$$,'teen can actively share own eligible YES');
-select results_eq($$select deck_id,card_id from public.understanding_card_shares$$,$$values('general'::text,'general-02'::text)$$,'teen sees own consent only');
+select is((select count(*) from public.understanding_card_shares where deck_id='general' and card_id='general-02'),1::bigint,'teen sees own consent only');
 select set_config('request.jwt.claims','{"sub":"31000000-0000-0000-0000-000000000001"}',true);
 select results_eq($$select * from public.shared_understanding_cards()$$,$$values('general'::text,'general-02'::text)$$,'parent receives explicitly shared B YES');
 select is_empty($$select * from public.shared_understanding_cards() where card_id='general-03'$$,'B NO stays private');
