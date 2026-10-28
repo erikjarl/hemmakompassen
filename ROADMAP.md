@@ -20,7 +20,8 @@
 ## 21 oktober 2026 – Mobilnavigering, synlig scrollning
 
 - [x] CSS: visa en diskret horisontell scrollindikator i mobilmenyn i stället för att dölja scrollbaren; förbättra scroll-snap och tillåt etiketter på flera rader.
-- [ ] Bekräfta i ny Playwright-körning att mobilmenyn inte kapar etiketter och att scrollindikatorn syns i mobilens verkliga skärmbilder. Justera vid behov efter visuell granskning.
+- [x] Bekräfta i ny Playwright-körning att mobilmenyn inte kapar etiketter och att scrollindikatorn syns i mobilens verkliga skärmbilder. Justera vid behov efter visuell granskning.
+  - **Verifierad 2026-10-28:** Mobilvyn använder nu två separata layoutrader: ett eget skrollbart innehållsområde och navigationen i en fast, icke-överlappande nederkant. Menylänkar har bestämd innehållsbredd med `border-box`, tillåten radbrytning och horisontell scrollmarginal. Playwright mäter att navigationens rektangel inte korsar Gillaswajpens innehåll, att aktiv etikett är helt synlig och att sista menyvalet kan skrollas fram helt utan avklippning. UI Actions #169 är grön med 34/34 Node-tester och utan browserfel i `visual-audit.json`. Faktiska PNG för mobil viktighetsskattning, gemensamma A-resultat, temakortlek och desktop-startsida har öppnats: navigationen ligger inte längre ovanpå kort, reglage, resultat eller knappar; aktiv etikett är läsbar och nästa delvis synliga val fungerar som skrollindikation. Inga nya kontrast- eller desktopregressioner observerades. Testet använder syntetisk backend och ändrar ingen produktionsdata.
 
 ## 19 oktober 2026 – Automatisk testning och bildgranskning
 
