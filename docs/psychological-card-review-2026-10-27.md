@@ -131,11 +131,11 @@ Samtliga åtta kort har låg relationsrisk när aktiviteten är frivillig, säke
 ## Samlad konsekvensbedömning
 
 - **34 kort behålls som A utan textändring.** De handlar främst om frivilliga aktiviteter, neutrala samtalsämnen och avgränsade ömsesidiga handlingar.
-- **39 kort behöver rollanpassad A-text eller rollanpassat redaktionellt råd innan slutligt innehållsgodkännande.** Gemensamt mål kan vara rimligt, men vuxenansvaret måste synas.
+- **39 kort har fått rollanpassad A-text i den deklarativa katalogen.** Gemensamt mål är oförändrat, men vuxenansvaret syns i förälderns presentation och tonåringens autonomi i tonåringens presentation.
 - **0 kort omklassificeras direkt till B och 0 tas bort i denna genomgång.** Flera högriskkort ligger nära gränsen; användartestning kan motivera senare omklassificering.
-- Nuvarande katalog och sparade svar lämnas oförändrade i detta steg. Nästa implementeringssteg ska lägga till rollspecifika, versionssäkra kortdefinitioner. Större betydelseändringar får nya ID:n; gamla svar migreras inte och får inte automatiskt bli delbara.
+- Kortens stabila ID, typ, kanoniska ursprungstext och sparade svar är oförändrade. `ROLE_TEXT_BY_CARD` håller de 39 presentationerna separat från logiken och märker dem med `presentationVersion: 2`. Regressionstester jämför exakt mot granskningsprotokollet. Bedömningen är att dessa formuleringar förtydligar roller inom samma gemensamma mål och därför inte omtolkar svaret; en framtida större betydelseändring måste fortfarande få nytt ID och får inte ärva gamla svar.
 - B-delning och gemensam viktighetsprioritering förblir avstängda tills separata server-/RLS-/tvåkontotester är godkända.
 
-## Behöver Erik – avvaktar innehållsgranskning
+## Redaktionellt mandat och återstående användargranskning
 
-Granska protokollets 39 föreslagna rollanpassningar i samlings-PR:n, särskilt korten om konflikt, tillit, regler, privatliv och förälderns mående. Syftet är produktägarens redaktionella godkännande innan nya versions-ID:n eller ändrade live-texter införs. Under väntan fortsätter utvecklingen med maskinell täckningskontroll, säker versionsmodell och övriga oberoende Gillaswajpen-uppgifter; denna punkt markeras inte som färdig.
+Erik delegerade den 27 oktober 2026 den redaktionella och psykologiska bearbetningen, så separat innehållsgodkännande är inte längre en blockerare. De rollspecifika texterna ska ändå användartestas med frivilliga tonåringar och föräldrar före bred lansering. Det testet får leda till nya redaktionella versioner eller nya kort-ID:n, men befintliga svar får aldrig flyttas eller omtolkas automatiskt.
