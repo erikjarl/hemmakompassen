@@ -118,3 +118,61 @@ function renderSharedResult(rows,role='parent',priorityRows=[],adviceByKey={'gen
   assert.equal(prioritised.split('Välj en gemensam dag.').length-1,1,'A priority tip is not duplicated in the ordinary summary');
 }
 console.log('PASS: shared result renderer and role summaries reject B, NO and unknown cards');
+
+{
+  // Exercise the actual polling functions using a synthetic aggregate RPC.
+  // No private answer table or production Supabase is involved.
+  const source=script.match(/async function fetchSwipeMatches\([\s\S]*?(?=\n\/\/ Theme access)/);
+  assert.ok(source,'The aggregate fetch and polling functions remain independently testable');
+  let rows=[{deck_id:'general',card_id:'general-01',answer:true}],calls=0,renders=0;
+  const state={
+    user:{id:'account-1'},members:[{},{}],sharedSession:1,sharedRequest:0,
+    sharedDeckId:'general',sharedMatches:[],sharedPriorities:[],sharedError:'',
+    sharedLoading:false,sharedPollPending:false,sharedPrioritiesEnabled:false,swipeBusy:false,
+    document:{hidden:false},page:()=> 'swipe',render:()=>{renders++;},
+    sharedDeck:id=>id==='general'?{cards:[
+      {id:'general-01',type:'match'},{id:'general-02',type:'understanding'},
+      {id:'general-03',type:'match'}
+    ]}:null,
+    db:{rpc:async(name,args)=>{
+      assert.equal(name,'shared_swipe_matches','Polling reads only the server-verified aggregate');
+      assert.equal(args.p_deck_id,'general');calls++;return {data:rows,error:null};
+    }},
+  };
+  vm.runInNewContext(source[0]+'\nthis.pollSharedMatches=pollSharedMatches;this.fetchSwipeMatches=fetchSwipeMatches;',state);
+  await state.fetchSwipeMatches('general');
+  assert.equal(state.sharedMatches.length,1,'Initial mutual A-YES is shown');
+  const firstRenders=renders;
+  await state.pollSharedMatches();
+  assert.equal(renders,firstRenders,'Unchanged poll does not flash loading or rerender');
+  rows=[
+    {deck_id:'general',card_id:'general-01',answer:false},
+    {deck_id:'general',card_id:'general-02',answer:true},
+    {deck_id:'general',card_id:'general-03',answer:true},
+    {deck_id:'wrong',card_id:'general-01',answer:true},
+    {deck_id:'general',card_id:'unknown',answer:true},
+  ];
+  await state.pollSharedMatches();
+  assert.equal(state.sharedMatches.length,1,'NO, B, unknown and wrong-deck rows remain hidden');
+  assert.equal(state.sharedMatches[0].card_id,'general-03','New mutual YES replaces revoked match');
+  assert.ok(renders>firstRenders,'Changed result triggers a new rendering');
+  rows=[];
+  await state.pollSharedMatches();
+  assert.equal(state.sharedMatches.length,0,'Revocation removes an old shared result');
+  const beforeHidden=calls;
+  state.document.hidden=true;
+  await state.pollSharedMatches();
+  assert.equal(calls,beforeHidden,'Hidden tab does not poll');
+  state.document.hidden=false;
+  state.db.rpc=async()=>({data:null,error:{message:'synthetic outage'}});
+  await state.pollSharedMatches();
+  assert.equal(state.sharedMatches.length,0,'RPC failure clears stale results');
+  assert.match(state.sharedError,/inte tillgängliga/);
+  state.sharedError='';state.db.rpc=()=>new Promise(resolve=>{state.resolvePending=resolve;});
+  const pending=state.pollSharedMatches();
+  state.user={id:'account-2'};state.sharedSession++;state.sharedMatches=[];state.sharedPriorities=[];
+  state.resolvePending({data:[{deck_id:'general',card_id:'general-01',answer:true}],error:null});
+  await pending;
+  assert.equal(state.sharedMatches.length,0,'Late response cannot restore a prior account’s matches');
+}
+console.log('PASS: automatic aggregate polling, revocation, hidden tabs and session isolation');
