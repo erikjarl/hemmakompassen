@@ -17,6 +17,9 @@ assert.doesNotMatch(script,/sharedMatches\.filter\(r=>r\.answer===false\)/,'No m
 assert.doesNotMatch(script,/Det ni båda svarat nej till/,'Never renders a shared NO heading');
 assert.match(script,/swipe-match-theme/,'Mutual YES results are grouped by theme');
 assert.match(script,/function sharedSummary\(groups,deckId='general',priorityIds=new Set\(\)\)/,'Builds the ordinary summary from mutual YES while excluding already prioritised advice');
+assert.match(script,/const summaryIconFor=\(category,advice=''\)=>/,'Chooses deterministic topic icons from permitted editorial content without using private response data');
+assert.match(script,/aria-hidden="true" focusable="false"/,'Decorative SVG icons stay out of the accessibility tree');
+assert.match(script,/Läs mer om råden och vad de bygger på/,'Keeps the full card-specific basis available in an expandable section');
 assert.match(script,/function sharedPrioritySummary\(items,deckId='general'\)/,'Builds a separate deterministic priority summary');
 assert.match(script,/Låga, neutrala och privata nivåer visas aldrig/,'Explains the priority privacy boundary without exposing raw levels');
 assert.match(script,/const statement=cardTextForRole\(matchedCard,viewerRole\(\)\)/,'Uses reviewed role wording in both the result list and summary');
@@ -70,10 +73,15 @@ function renderSharedResult(rows,role='parent',priorityRows=[],adviceByKey={'gen
   assert.match(html,/Välj en gemensam dag/,'Only allowed A cards contribute editorial advice');
   assert.doesNotMatch(html,/HEMLIGT/,'B-YES and A-NO cannot leak into results or summaries');
   assert.match(html,/Gemensamma möjligheter – förälder/,'Parent gets the parent-facing summary');
+  assert.match(html,/swipe-summary-overview/,'Verified A results produce the compact icon overview');
+  assert.match(html,/Gemensam aktivitet:/,'The icon has a visible-to-assistive-tech topic label');
+  assert.match(html,/<details class="swipe-summary-details">/,'Longer advice is disclosed on demand');
   const teenHtml=renderSharedResult([{card_id:'general-01',answer:true}],'teen');
   assert.match(teenHtml,/Gemensamma möjligheter – tonåring/,'Teen gets the teen-facing summary');
   assert.match(teenHtml,/Tonåringens frivilliga aktivitet/,'Teen sees the reviewed teen wording');
   assert.doesNotMatch(teenHtml,/Förälderns ansvarstagande aktivitet/,'Teen does not receive parent wording');
+  const mobileHtml=renderSharedResult([{card_id:'general-01',answer:true}],'parent',[],{'general-01':'Lägg undan mobiltelefonerna en kort stund.'});
+  assert.match(mobileHtml,/Mobil:/,'The icon follows the actual mobile-related advice subject, not only its broad category');
 }
 {
   const html=renderSharedResult([
@@ -93,6 +101,7 @@ function renderSharedResult(rows,role='parent',priorityRows=[],adviceByKey={'gen
   assert.match(html,/Förälderns andra gemensamma kort/,'Non-prioritised mutual YES remains in the ordinary shared result');
   assert.match(html,/Lyssna färdigt och välj ett litet nästa steg/,'Non-prioritised advice remains in the ordinary summary');
   assert.doesNotMatch(html,/HEMLIGT|unknown/,'B, NO and unknown priority rows cannot leak');
+  assert.doesNotMatch(html,/HEMLIGT|unknown/,'B, NO and unknown rows cannot leak through the icon overview');
 }
 {
   const html=renderSharedResult([{card_id:'general-01',answer:true}],'parent',[
@@ -113,7 +122,7 @@ function renderSharedResult(rows,role='parent',priorityRows=[],adviceByKey={'gen
   const duplicateAdvice={'general-01':'Välj en gemensam dag.','general-04':'Välj en gemensam dag.'};
   const matches=[{card_id:'general-01',answer:true},{card_id:'general-04',answer:true}];
   const ordinary=renderSharedResult(matches,'parent',[],duplicateAdvice);
-  assert.equal(ordinary.split('Välj en gemensam dag.').length-1,1,'One generic tip is not repeated across separate categories');
+  assert.equal(ordinary.split('Välj en gemensam dag.').length-1,2,'One generic tip appears once in the overview and once in expanded detail, never as separate duplicate themes');
   const prioritised=renderSharedResult(matches,'parent',[{card_id:'general-01'}],duplicateAdvice);
   assert.equal(prioritised.split('Välj en gemensam dag.').length-1,1,'A priority tip is not duplicated in the ordinary summary');
 }
