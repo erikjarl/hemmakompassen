@@ -176,3 +176,34 @@ console.log('PASS: shared result renderer and role summaries reject B, NO and un
   assert.equal(state.sharedMatches.length,0,'Late response cannot restore a prior account’s matches');
 }
 console.log('PASS: automatic aggregate polling, revocation, hidden tabs and session isolation');
+
+
+// Cross-deck insights are fail-closed and never derive shared content from local answers.
+assert.match(script,/enableSharedInsights===true/,'All-deck insights require an explicit feature gate');
+assert.match(script,/INSIGHT_DECK_IDS\.map\(deckId=>db\.rpc\('shared_swipe_matches',\{p_deck_id:deckId\}\)\)/,'Each deck is checked by the authenticated aggregate RPC');
+assert.match(script,/request!==insightsRequest\|\|session!==sharedSession\|\|user\?\.id!==viewer/,'Stale multi-deck results are rejected on session changes');
+assert.match(script,/insightsRows=\[\];insightsError='';insightsLoading=false/,'Every insights refresh starts with an empty result');
+assert.match(script,/insightsRows=\[\];\s*insightsError='Gemensamma insikter/,'Partial failures clear all insights');
+assert.doesNotMatch(script,/insightsRows\s*=\s*\[\.\.\.swipeAnswers/,'Private answers cannot seed the insights page');
+const insightSanitizer=script.match(/function safeInsightMatches\(deckId,rows\)\{[\s\S]*?\n\}/);
+assert.ok(insightSanitizer,'The real insights allowlist can be exercised');
+const insightState={
+  sharedDeck:id=>id==='general'?{cards:[
+    {id:'general-01',type:'match'},
+    {id:'general-02',type:'understanding'},
+    {id:'general-03',type:'match'}
+  ]}:id==='samtal'?{cards:[{id:'samtal-01',type:'match'}]}:undefined
+};
+vm.runInNewContext(insightSanitizer[0]+'\nthis.sanitize=safeInsightMatches;',insightState);
+const safeGeneral=insightState.sanitize('general',[
+  {deck_id:'general',card_id:'general-01',answer:true},
+  {deck_id:'general',card_id:'general-02',answer:true}, // historical B YES
+  {deck_id:'general',card_id:'general-03',answer:false}, // mutual NO
+  {deck_id:'general',card_id:'general-04',answer:true}, // unknown
+  {deck_id:'samtal',card_id:'samtal-01',answer:true}, // wrong deck
+  {deck_id:'general',card_id:'general-01',answer:true} // duplicate
+]);
+assert.equal(JSON.stringify(safeGeneral),JSON.stringify([{deck_id:'general',card_id:'general-01',answer:true}]),'Only one known A JA+JA survives malformed RPC rows');
+assert.equal(insightState.sanitize('samtal',[{deck_id:'samtal',card_id:'samtal-01',answer:true}]).length,1,'Valid themed A matches are preserved');
+assert.throws(()=>insightState.sanitize('general',null),/Invalid shared results/,'Malformed server data fails closed');
+console.log('PASS: all-deck insights gate, A-only sanitizer, B/NO isolation, session and error guards');
