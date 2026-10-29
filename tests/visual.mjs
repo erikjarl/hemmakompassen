@@ -319,6 +319,14 @@ try{
   assert.ok((await paired.page.evaluate(()=>window.__HK_MATCH_RPC_CALLS__))>0,"Paired account requests the aggregate RPC");
   assert.equal(await paired.page.locator(".swipe-themes details").count(),6,"A paired family can explore all six theme decks without completing general cards");
   assert.equal(await paired.page.evaluate(()=>window.__HK_UNLOCK_RPC_CALLS__||0),0,"Theme access never requests the obsolete completion RPC");
+  // Partial completion is sufficient: the paired parent has only a few saved
+  // general answers but may already explore a theme and see only mutual YES.
+  await paired.page.locator('[data-theme-open="samtal"]').click();
+  await paired.page.locator("#swipe-card[aria-label^='Temakort 1 av 104']").waitFor();
+  await paired.page.locator(".swipe-match-list li").first().waitFor();
+  assert.equal(await paired.page.locator(".swipe-match-list li").count(),1,"An unfinished theme shows only its verified mutual YES, not NO or other-deck answers");
+  await paired.page.locator("#theme-back").click();
+  await paired.page.locator(".swipe-match-list li").first().waitFor();
   await checkOverflow(paired.page,"Mobile matched swipes");
   await paired.page.locator('.swipe-results').scrollIntoViewIfNeeded();
   await capture(paired.page,"mobile-shared-swipes.png");
