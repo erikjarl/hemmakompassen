@@ -113,8 +113,8 @@ function renderSharedResult(rows,role='parent',priorityRows=[],adviceByKey={'gen
   const duplicateAdvice={'general-01':'Välj en gemensam dag.','general-04':'Välj en gemensam dag.'};
   const matches=[{card_id:'general-01',answer:true},{card_id:'general-04',answer:true}];
   const ordinary=renderSharedResult(matches,'parent',[],duplicateAdvice);
-  assert.equal((ordinary.match(/Välj en gemensam dag\\./g)||[]).length,1,'One generic tip is not repeated across separate categories');
+  assert.equal(ordinary.split('Välj en gemensam dag.').length-1,1,'One generic tip is not repeated across separate categories');
   const prioritised=renderSharedResult(matches,'parent',[{card_id:'general-01'}],duplicateAdvice);
-  assert.equal((prioritised.match(/Välj en gemensam dag\\./g)||[]).length,1,'A priority tip is not duplicated in the ordinary summary');
+  assert.equal(prioritised.split('Välj en gemensam dag.').length-1,1,'A priority tip is not duplicated in the ordinary summary');
 }
 console.log('PASS: shared result renderer and role summaries reject B, NO and unknown cards');
