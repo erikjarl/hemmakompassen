@@ -26,12 +26,9 @@ assert.match(script,/members\.find\(member=>member\.user_id===user\?\.id\)\?\.ro
 assert.match(script,/REDAKTIONELLA RÅD · INTE AI/,'Labels the deterministic editorial advice clearly');
 assert.match(script,/Texten bygger enbart på serververifierade ömsesidiga ja-svar/,'States the summary privacy boundary');
 assert.doesNotMatch(script,/localStorage/,'No shared answers are cached locally');
-assert.match(script,/db\.rpc\('shared_general_deck_complete'\)/,'Checks both members completion through authenticated aggregate RPC');
-assert.match(script,/if\(!user\|\|members\.length!==2\)\{themesUnlocked=false/,'Never requests unlock for unpaired accounts');
-assert.match(script,/session!==sharedSession\|\|request!==themesRequest\|\|user\?\.id!==viewer/,'Ignores stale unlock responses after session change');
-assert.match(script,/if\(error\|\|typeof data!=='boolean'\)throw/,'Fail-closed when unlock RPC is missing or malformed');
-assert.match(script,/themesUnlocked=data===true/,'Only an explicit true unlocks theme previews');
-assert.match(script,/const unlocked=members\.length===2&&themesUnlocked&&!themesLoading&&!themesError/,'Never renders theme previews without a valid pair and current RPC');
+assert.doesNotMatch(script,/shared_general_deck_complete/,'Theme decks no longer depend on finishing the general deck');
+assert.ok(script.includes("themesUnlocked=!!user&&members.length===2&&members.some(member=>member.user_id===user.id)&&members.some(member=>member.role==='parent')&&members.some(member=>member.role==='teen')"),'Private theme access requires the signed-in user in an exact parent-teen pair');
+assert.ok(script.includes("const unlocked=members.length===2&&themesUnlocked&&!themesLoading&&!themesError"),'Unpaired viewers cannot preview theme choices');
 assert.match(script,/visibleGeneralIndices\(\)\.every\(i=>swipeAnswers\.has\(swipeCardId\(i\)\)\|\|skippedUnderstanding\.has\(swipeCardId\(i\)\)\)/,'Rechecks completion for role-visible cards and skipped understanding cards');
 assert.match(script,/db\.from\('swipe_skips'\)\.select\('deck_id,card_id'\)\.eq\('user_id',viewer\)/,'Reloads only the signed-in user’s private skips');
 assert.match(script,/db\.rpc\('set_understanding_card_state',\{p_card_id:row\.card_id,p_answer:row\.answer,p_skipped:false\}\)/,'Stores B answers through the role-checked atomic RPC');
@@ -44,7 +41,7 @@ console.log('PASS: mutual-YES-only RPC results, role-specific rule summary, them
 // Execute the actual shared-view and summary functions with synthetic data.
 const sharedViewFunctions=script.match(/const joinSwedish=[\s\S]*?(?=\nasync function fetchSwipeMatches\()/);
 assert.ok(sharedViewFunctions,'Shared result rendering can be tested independently');
-function renderSharedResult(rows,role='parent',priorityRows=[]){
+function renderSharedResult(rows,role='parent',priorityRows=[],adviceByKey={'general-01':'Välj en gemensam dag.','general-04':'Lyssna färdigt och välj ett litet nästa steg.'}){
   const state={
     members:[{role:'parent'},{role:'teen'}],sharedLoading:false,sharedDeckId:'general',sharedError:'',sharedMatches:rows.map(row=>({deck_id:'general',...row})),sharedPriorities:priorityRows.map(row=>({deck_id:'general',...row})),
     GENERAL_CARDS:[
@@ -53,7 +50,7 @@ function renderSharedResult(rows,role='parent',priorityRows=[]){
       {id:'general-03',type:'match',category:'Samtal',teenText:'HEMLIGT NEJ-SVAR'},
       {id:'general-04',type:'match',category:'Samtal',teenText:'Tonåringens andra gemensamma kort',parentText:'Förälderns andra gemensamma kort'},
     ],
-    THEME_DECK_MODELS:[],ADVICE_BY_KEY:{'general-01':'Välj en gemensam dag.','general-04':'Lyssna färdigt och välj ett litet nästa steg.'},
+    THEME_DECK_MODELS:[],ADVICE_BY_KEY:adviceByKey,
     adviceKeyForCard:card=>card.id,
     cardTextForRole:(card,viewerRole)=>viewerRole==='parent'?(card.parentText||card.teenText):card.teenText,
     viewerRole:()=>role,
@@ -112,4 +109,70 @@ function renderSharedResult(rows,role='parent',priorityRows=[]){
   assert.match(html,/Inga gemensamma ja-svar/,'Invalid-only results render the safe empty state');
   assert.doesNotMatch(html,/swipe-rule-summary|HEMLIGT|Välj en gemensam dag/,'Invalid-only results cannot create a shared summary');
 }
+{
+  const duplicateAdvice={'general-01':'Välj en gemensam dag.','general-04':'Välj en gemensam dag.'};
+  const matches=[{card_id:'general-01',answer:true},{card_id:'general-04',answer:true}];
+  const ordinary=renderSharedResult(matches,'parent',[],duplicateAdvice);
+  assert.equal(ordinary.split('Välj en gemensam dag.').length-1,1,'One generic tip is not repeated across separate categories');
+  const prioritised=renderSharedResult(matches,'parent',[{card_id:'general-01'}],duplicateAdvice);
+  assert.equal(prioritised.split('Välj en gemensam dag.').length-1,1,'A priority tip is not duplicated in the ordinary summary');
+}
 console.log('PASS: shared result renderer and role summaries reject B, NO and unknown cards');
+
+{
+  // Exercise the actual polling functions using a synthetic aggregate RPC.
+  // No private answer table or production Supabase is involved.
+  const source=script.match(/async function fetchSwipeMatches\([\s\S]*?(?=\n\/\/ Theme access)/);
+  assert.ok(source,'The aggregate fetch and polling functions remain independently testable');
+  let rows=[{deck_id:'general',card_id:'general-01',answer:true}],calls=0,renders=0;
+  const state={
+    user:{id:'account-1'},members:[{},{}],sharedSession:1,sharedRequest:0,
+    sharedDeckId:'general',sharedMatches:[],sharedPriorities:[],sharedError:'',
+    sharedLoading:false,sharedPollPending:false,sharedPollingEnabled:true,sharedPrioritiesEnabled:false,swipeBusy:false,activeThemeDeck:null,
+    document:{hidden:false},page:()=> 'swipe',render:()=>{renders++;},
+    sharedDeck:id=>id==='general'?{cards:[
+      {id:'general-01',type:'match'},{id:'general-02',type:'understanding'},
+      {id:'general-03',type:'match'}
+    ]}:null,
+    db:{rpc:async(name,args)=>{
+      assert.equal(name,'shared_swipe_matches','Polling reads only the server-verified aggregate');
+      assert.equal(args.p_deck_id,'general');calls++;return {data:rows,error:null};
+    }},
+  };
+  vm.runInNewContext(source[0]+'\nthis.pollSharedMatches=pollSharedMatches;this.fetchSwipeMatches=fetchSwipeMatches;',state);
+  await state.fetchSwipeMatches('general');
+  assert.equal(state.sharedMatches.length,1,'Initial mutual A-YES is shown');
+  const firstRenders=renders;
+  await state.pollSharedMatches();
+  assert.equal(renders,firstRenders,'Unchanged poll does not flash loading or rerender');
+  rows=[
+    {deck_id:'general',card_id:'general-01',answer:false},
+    {deck_id:'general',card_id:'general-02',answer:true},
+    {deck_id:'general',card_id:'general-03',answer:true},
+    {deck_id:'wrong',card_id:'general-01',answer:true},
+    {deck_id:'general',card_id:'unknown',answer:true},
+  ];
+  await state.pollSharedMatches();
+  assert.equal(state.sharedMatches.length,1,'NO, B, unknown and wrong-deck rows remain hidden');
+  assert.equal(state.sharedMatches[0].card_id,'general-03','New mutual YES replaces revoked match');
+  assert.ok(renders>firstRenders,'Changed result triggers a new rendering');
+  rows=[];
+  await state.pollSharedMatches();
+  assert.equal(state.sharedMatches.length,0,'Revocation removes an old shared result');
+  const beforeHidden=calls;
+  state.document.hidden=true;
+  await state.pollSharedMatches();
+  assert.equal(calls,beforeHidden,'Hidden tab does not poll');
+  state.document.hidden=false;
+  state.db.rpc=async()=>({data:null,error:{message:'synthetic outage'}});
+  await state.pollSharedMatches();
+  assert.equal(state.sharedMatches.length,0,'RPC failure clears stale results');
+  assert.match(state.sharedError,/inte tillgängliga/);
+  state.sharedError='';state.db.rpc=()=>new Promise(resolve=>{state.resolvePending=resolve;});
+  const pending=state.pollSharedMatches();
+  state.user={id:'account-2'};state.sharedSession++;state.sharedMatches=[];state.sharedPriorities=[];
+  state.resolvePending({data:[{deck_id:'general',card_id:'general-01',answer:true}],error:null});
+  await pending;
+  assert.equal(state.sharedMatches.length,0,'Late response cannot restore a prior account’s matches');
+}
+console.log('PASS: automatic aggregate polling, revocation, hidden tabs and session isolation');

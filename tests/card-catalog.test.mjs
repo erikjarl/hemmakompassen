@@ -26,8 +26,18 @@ assert.equal(new Set(GENERAL_CARDS.filter(card=>card.type==='match').map(adviceK
 
 assert.equal(THEME_DECK_MODELS.length,6,'Preserves all six theme decks');
 const themeCards=THEME_DECK_MODELS.flatMap(deck=>deck.cards);
-assert.equal(themeCards.length,52,'Inventories every existing theme card');
-assert.equal(new Set(themeCards.map(card=>card.id)).size,52,'Theme card IDs are unique');
+assert.equal(themeCards.length,244,'Keeps the original 52 cards and appends 192 new cards');
+assert.equal(new Set(themeCards.map(card=>card.id)).size,244,'Theme card IDs are unique');
+for(const id of ['samtal','aktiviteter']){
+  const deck=THEME_DECK_MODELS.find(item=>item.id===id);
+  assert.equal(deck.cards.length,104,id+' has at least 100 options');
+  assert.equal(new Set(deck.cards.map(card=>card.teenText.toLocaleLowerCase('sv'))).size,104,id+' has no repeated choices');
+  assert.equal(deck.cards[8].id,id+'-09','New choices start after the legacy IDs');
+  assert.equal(deck.cards.at(-1).id,id+'-104','New choices use stable append-only IDs');
+  assert.ok(deck.cards.slice(8).every(card=>card.category!==deck.title&&card.category.length>2),'New cards have an explicit discovery category');
+}
+assert.deepEqual(THEME_DECK_MODELS.find(deck=>deck.id==='samtal').cards.slice(0,8).map(card=>card.teenText),['Vad som varit roligt den senaste veckan','Hur vi har det i skolan eller på jobbet','Vad vi vill göra under nästa ledighet','Hur vi vill prata om sociala medier','Vad vi vill lära oss','Hur vi visar att vi lyssnar','Vad som gör oss stressade','Vad vi drömmer om framöver'],'Legacy conversation card texts remain unchanged');
+assert.deepEqual(THEME_DECK_MODELS.find(deck=>deck.id==='aktiviteter').cards.slice(0,8).map(card=>card.teenText),['Laga mat tillsammans','Ta en promenad ihop','Se en film tillsammans','Spela ett spel','Prova en ny aktivitet','Göra en utflykt','Visa varandra favoritmusik','Skapa något tillsammans'],'Legacy activity card texts remain unchanged');
 for(const deck of THEME_DECK_MODELS){
   assert.equal(deck.type,'match',deck.id+' remains a mutual matching deck');
   assert.equal(deck.audience,'both',deck.id+' is available to both roles');
@@ -53,4 +63,4 @@ for(const [id,text] of Object.entries(ROLE_TEXT_BY_CARD)){
 }
 assert.equal(cardTextForRole(GENERAL_CARDS[0],'parent'),GENERAL_CARDS[0].teenText,'Unchanged cards preserve canonical wording');
 
-console.log('PASS: versioned A/B inventory preserves 34 general and 52 theme card IDs');
+console.log('PASS: 34 general and 244 theme cards, with all 52 legacy theme IDs/texts preserved');

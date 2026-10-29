@@ -84,7 +84,7 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
   await context.addInitScript(value=>{window.__HK_TEST_USER__=value.user;window.__HK_TEST_PAIRED__=value.paired;window.__HK_TEST_ROLE__=value.role;window.__HK_TEST_UNLOCKED__=value.unlocked;window.__HK_UNLOCK_RPC_UNAVAILABLE__=value.unlockUnavailable;window.__HK_PRIORITY_RPC_UNAVAILABLE__=value.priorityUnavailable;window.__HK_PREANSWERED_GENERAL__=value.preansweredGeneral;},{preansweredGeneral,user:authenticated?{id:role==="teen"?"10000000-0000-0000-0000-000000000002":"10000000-0000-0000-0000-000000000001",email:"synthetic@example.invalid"}:null,paired,role,unlocked,unlockUnavailable,priorityUnavailable});
   await context.route(base+"backend-config.js",route=>route.fulfill({
     contentType:"application/javascript",
-    body:"window.HEMMAKOMPASSEN_BACKEND=Object.freeze({supabaseUrl:'https://synthetic.invalid',supabasePublishableKey:'synthetic',enableSharedPriorities:true});"
+    body:"window.HEMMAKOMPASSEN_BACKEND=Object.freeze({supabaseUrl:'https://synthetic.invalid',supabasePublishableKey:'synthetic',enableSharedPriorities:true,enableSharedPolling:true});"
   }));
   await context.route("https://esm.sh/**",route=>route.fulfill({
     contentType:"application/javascript",
@@ -120,7 +120,8 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
                window.__HK_MATCH_RPC_ARGS__=[...(window.__HK_MATCH_RPC_ARGS__||[]),args];
                if(window.__HK_RPC_UNAVAILABLE__)return {data:null,error:{message:'synthetic unavailable'}};
                if(!window.__HK_TEST_PAIRED__)return {data:[],error:null};
-               if(args.p_deck_id==='samtal')return {data:[{deck_id:'samtal',card_id:'samtal-01',answer:true},{deck_id:'samtal',card_id:'samtal-02',answer:false},{deck_id:'aktiviteter',card_id:'aktiviteter-01',answer:true},{deck_id:'samtal',card_id:'samtal-99',answer:true}],error:null};
+               if(Array.isArray(window.__HK_TEST_SHARED_MATCHES__))return {data:window.__HK_TEST_SHARED_MATCHES__,error:null};
+               if(args.p_deck_id==='samtal')return {data:[{deck_id:'samtal',card_id:'samtal-01',answer:true},{deck_id:'samtal',card_id:'samtal-02',answer:false},{deck_id:'aktiviteter',card_id:'aktiviteter-01',answer:true},{deck_id:'samtal',card_id:'samtal-999',answer:true}],error:null};
                return {data:[{deck_id:'general',card_id:'general-01',answer:true},{deck_id:'general',card_id:'general-10',answer:true},{deck_id:'general',card_id:'general-02',answer:true},{deck_id:'general',card_id:'general-03',answer:false},{deck_id:'general',card_id:'general-99',answer:true}],error:null};
              }
             if(name==='shared_swipe_priorities'){
@@ -317,8 +318,37 @@ try{
   assert.doesNotMatch(sharedText,/Jag vill helst prata färdigt innan någon kommer med råd/,"The mutual NO is never displayed");
   assert.doesNotMatch(sharedText,/Det ni båda svarat nej till|Två nej/,"No mutual NO headings or counts");
   assert.ok((await paired.page.evaluate(()=>window.__HK_MATCH_RPC_CALLS__))>0,"Paired account requests the aggregate RPC");
-  assert.equal(await paired.page.locator(".swipe-themes details").count(),0,"Incomplete paired family must not see theme cards");
-  assert.match(await paired.page.locator(".swipe-themes").innerText(),/låsta tills ni båda har gått igenom den allmänna kortleken/i);
+  // Simulate a second account changing the server's aggregate result while this
+  // client's tab remains open. The client must refresh without reading private answers.
+  await paired.page.evaluate(()=>{
+    window.__HK_TEST_SHARED_MATCHES__=[
+      {deck_id:'general',card_id:'general-01',answer:true},
+      {deck_id:'general',card_id:'general-02',answer:true},
+      {deck_id:'general',card_id:'general-03',answer:false}
+    ];
+    window.dispatchEvent(new Event('focus'));
+  });
+  await paired.page.waitForFunction(()=>document.querySelectorAll('.swipe-match-list li').length===1);
+  assert.doesNotMatch(await paired.page.locator('.swipe-results').innerText(),/Jag vill helst prata färdigt innan någon kommer med råd/,'Automatic refresh must not expose B or NO');
+  await paired.page.locator('.swipe-results').scrollIntoViewIfNeeded();
+  await capture(paired.page,'mobile-auto-shared-match.png');
+  await paired.page.evaluate(()=>{window.__HK_TEST_SHARED_MATCHES__=[];window.dispatchEvent(new Event('focus'));});
+  await paired.page.waitForFunction(()=>document.querySelector('.swipe-results')?.textContent?.includes('Inga gemensamma ja-svar'));
+  assert.equal(await paired.page.locator('.swipe-match-list li').count(),0,'Automatic refresh must remove a revoked match');
+  await paired.page.locator('.swipe-results').scrollIntoViewIfNeeded();
+  await capture(paired.page,'mobile-auto-revoked-match.png');
+  await paired.page.evaluate(()=>{delete window.__HK_TEST_SHARED_MATCHES__;window.dispatchEvent(new Event('focus'));});
+  await paired.page.waitForFunction(()=>document.querySelectorAll('.swipe-match-list li').length===2);
+  assert.equal(await paired.page.locator(".swipe-themes details").count(),6,"A paired family can explore all six theme decks without completing general cards");
+  assert.equal(await paired.page.evaluate(()=>window.__HK_UNLOCK_RPC_CALLS__||0),0,"Theme access never requests the obsolete completion RPC");
+  // Partial completion is sufficient: the paired parent has only a few saved
+  // general answers but may already explore a theme and see only mutual YES.
+  await paired.page.locator('[data-theme-open="samtal"]').click();
+  await paired.page.locator("#swipe-card[aria-label^='Temakort 1 av 104']").waitFor();
+  await paired.page.locator(".swipe-match-list li").first().waitFor();
+  assert.equal(await paired.page.locator(".swipe-match-list li").count(),1,"An unfinished theme shows only its verified mutual YES, not NO or other-deck answers");
+  await paired.page.locator("#theme-back").click();
+  await paired.page.locator(".swipe-match-list li").first().waitFor();
   await checkOverflow(paired.page,"Mobile matched swipes");
   await paired.page.locator('.swipe-results').scrollIntoViewIfNeeded();
   await capture(paired.page,"mobile-shared-swipes.png");
@@ -340,13 +370,16 @@ try{
   const unlocked=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,paired:true,unlocked:true});
   await unlocked.page.goto(base+"#swipe",{waitUntil:"load"});
   await unlocked.page.locator(".swipe-themes details").first().waitFor();
-  assert.equal(await unlocked.page.locator(".swipe-themes details").count(),6,"All six theme previews unlock only after backend confirmation");
-  assert.match(await unlocked.page.locator(".swipe-themes").innerText(),/upplåsta; gemensamma ja visas inne i respektive kortlek/i);
+  assert.equal(await unlocked.page.locator(".swipe-themes details").count(),6,"All six theme decks are available to the paired family");
+  assert.match(await unlocked.page.locator(".swipe-themes").innerText(),/Gemensamma ja kan visas direkt/i);
   await checkOverflow(unlocked.page,"Mobile unlocked theme previews");
+  await unlocked.page.locator(".swipe-themes").scrollIntoViewIfNeeded();
   await capture(unlocked.page,"mobile-themes-unlocked.png");
   assert.equal(await unlocked.page.locator('[data-theme-open]').count(),6,"All six decks offer private swipe actions after unlock");
   await unlocked.page.locator('[data-theme-open="samtal"]').click();
-  await unlocked.page.locator("#swipe-card[aria-label^='Temakort 1 av 8']").waitFor();
+  await unlocked.page.locator("#swipe-card[aria-label^='Temakort 1 av 104']").waitFor();
+  await unlocked.page.locator("#swipe-card").scrollIntoViewIfNeeded();
+  await capture(unlocked.page,"mobile-theme-card.png");
   assert.match(await unlocked.page.locator("#swipe-card").innerText(),/Vad som varit roligt den senaste veckan/);
   await unlocked.page.getByRole('heading',{name:'Era gemensamma svar · Samtalsämnen'}).waitFor();
   const themeSharedText=await unlocked.page.locator('.swipe-results').innerText();
@@ -358,7 +391,7 @@ try{
   await unlocked.page.locator('.swipe-results').scrollIntoViewIfNeeded();
   await capture(unlocked.page,"mobile-theme-swipe.png");
   await unlocked.page.getByRole("button",{name:"Ja"}).click();
-  await unlocked.page.locator("#swipe-card[aria-label^='Temakort 2 av 8']").waitFor();
+  await unlocked.page.locator("#swipe-card[aria-label^='Temakort 2 av 104']").waitFor();
   const themeSaved=await unlocked.page.evaluate(()=>window.__HK_SAVED_SWIPE__);
   assert.equal(themeSaved.row.deck_id,"samtal","Theme answer must use its own deck id");
   assert.equal(themeSaved.row.card_id,"samtal-01","Theme answer must use a stable card id");
@@ -367,20 +400,20 @@ try{
   assert.equal(themeSaved.options.onConflict,"user_id,deck_id,card_id");
   await unlocked.page.locator("#theme-back").click();
   await unlocked.page.locator('[data-theme-open="samtal"]').click();
-  assert.match(await unlocked.page.locator("#swipe-card").getAttribute("aria-label"),/Temakort 2 av 8/,"Theme resumes at first unanswered card");
+  assert.match(await unlocked.page.locator("#swipe-card").getAttribute("aria-label"),/Temakort 2 av 104/,"Theme resumes at first unanswered card");
   await unlocked.page.getByRole("button",{name:"Nej"}).click();
-  await unlocked.page.locator("#swipe-card[aria-label^='Temakort 3 av 8']").waitFor();
+  await unlocked.page.locator("#swipe-card[aria-label^='Temakort 3 av 104']").waitFor();
   assert.equal((await unlocked.page.evaluate(()=>window.__HK_SAVED_SWIPE__)).row.answer,false,"Private NO is saved but not shared");
   await unlocked.page.locator("#theme-back").click();
   await unlocked.page.locator('[data-theme-open="aktiviteter"]').click();
-  assert.match(await unlocked.page.locator("#swipe-card").getAttribute("aria-label"),/Temakort 1 av 8/,"Another deck starts independently");
+  assert.match(await unlocked.page.locator("#swipe-card").getAttribute("aria-label"),/Temakort 1 av 104/,"Another deck starts independently");
   await unlocked.page.locator("#theme-back").click();
   await unlocked.context.close();
   const unavailable=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,paired:true,unlockUnavailable:true});
   await unavailable.page.goto(base+"#swipe",{waitUntil:"load"});
-  await unavailable.page.locator("#retry-theme-unlock").waitFor();
-  assert.equal(await unavailable.page.locator(".swipe-themes details").count(),0,"RPC errors must keep theme previews locked");
-  assert.match(await unavailable.page.locator(".swipe-themes").innerText(),/inte att kontrollera/i);
+  await unavailable.page.locator(".swipe-themes details").first().waitFor();
+  assert.equal(await unavailable.page.locator(".swipe-themes details").count(),6,"An obsolete completion RPC outage cannot block private theme exploration");
+  assert.equal(await unavailable.page.evaluate(()=>window.__HK_UNLOCK_RPC_CALLS__||0),0,"Completion RPC is not called even when mocked as unavailable");
   await unavailable.context.close();
   const d=await freshContext({viewport:{width:1440,height:900},deviceScaleFactor:1},{authenticated:true});
   await d.page.getByRole("heading",{name:/Hej[ ,]+Provförälder/}).waitFor();

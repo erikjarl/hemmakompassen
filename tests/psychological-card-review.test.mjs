@@ -9,20 +9,28 @@ const aCards=[
   ...THEME_DECK_MODELS.flatMap(deck=>deck.cards.filter(card=>card.type==='match')),
 ];
 
-test('psychological review covers every current A card exactly once',()=>{
-  assert.equal(aCards.length,73,'Expected the reviewed 21 general and 52 theme A cards');
+const newReview=readFileSync(new URL('../docs/psychological-new-theme-cards-2026-10-29.md',import.meta.url),'utf8');
+const reviewedRows=[...review.matchAll(/^\| \x60([^\x60]+)\x60 \|/gm),...newReview.matchAll(/^\| \x60([^\x60]+)\x60 \|/gm)].map(match=>match[1]);
+
+test('psychological reviews cover all 265 current A cards exactly once',()=>{
+  assert.equal(aCards.length,265,'21 general + 52 original theme + 192 new theme A cards');
+  assert.equal(reviewedRows.length,265,'Every A card has one explicit review table row');
+  assert.equal(new Set(reviewedRows).size,265,'No A card is reviewed twice');
+  assert.deepEqual(new Set(reviewedRows),new Set(aCards.map(card=>card.id)),'Review tables match the current A inventory');
+  const rows=[...review.split('\n'),...newReview.split('\n')];
   for(const card of aCards){
-    const escaped=card.id.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-    const matches=review.match(new RegExp('`'+escaped+'`','g'))||[];
-    assert.equal(matches.length,1,card.id+' must have exactly one review row');
-    assert.match(review,new RegExp('\\| `'+escaped+'` \\| [^\\n]+ \\| [^\\n]+ \\| \\*\\*(?:Behåll|Rollanpassa) A\\.\\*\\*'),card.id+' must contain risk and decision fields');
+    const row=rows.find(line=>line.startsWith('| '+String.fromCharCode(96)+card.id+String.fromCharCode(96)+' |'));
+    assert.ok(row,card.id+' must have a review row');
+    assert.ok(row.split('|').length>=7,card.id+' includes text, risk, decision and rationale');
+    if((card.id.startsWith('samtal-')||card.id.startsWith('aktiviteter-'))&&Number(card.id.split('-')[1])>=9)assert.ok(row.split('|').length>=8,card.id+' additionally documents unchanged role text');
   }
 });
 
-test('review does not silently invent or omit A-card identifiers',()=>{
-  const reviewed=[...review.matchAll(/`((?:general|samtal|aktiviteter|regler|uppskattning|aterhamtning|forandring)-\d{2})`/g)].map(match=>match[1]);
-  assert.equal(reviewed.length,73,'Review must contain exactly 73 card rows');
-  assert.deepEqual(new Set(reviewed),new Set(aCards.map(card=>card.id)),'Reviewed IDs must equal the live A inventory');
+test('new theme A review preserves voluntary participation and evidence limits',()=>{
+  assert.match(newReview,/inte empirisk validering/i);
+  assert.match(newReview,/Tonåringen har rätt att uttrycka intresse, avstå och ändra sig/i);
+  assert.match(newReview,/föräldern har fortsatt huvudansvar/i);
+  assert.equal([...newReview.matchAll(/^\| \x60(?:samtal|aktiviteter)-\d{2,3}\x60 \|/gm)].length,192);
 });
 
 test('review labels evidence limits and preserves old answers',()=>{

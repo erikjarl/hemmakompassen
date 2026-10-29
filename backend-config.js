@@ -6,6 +6,9 @@ window.HEMMAKOMPASSEN_BACKEND = Object.freeze({
   // Staged feature: enable only after both priority migrations and real
   // two-account verification have been approved and completed.
   enableSharedPriorities: false,
+  // Enable only after the server's A-only RPC allowlist and authenticated
+  // two-account match/revocation tests pass. Background polling is OFF by default.
+  enableSharedPolling: false,
   // Until auth, family membership and privacy tests pass, the public UI remains a demo.
   liveModeEnabled: false
 });

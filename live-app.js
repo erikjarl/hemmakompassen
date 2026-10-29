@@ -2,6 +2,9 @@ import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
+// Do not activate background polling until the server-side A allowlist and
+// authenticated two-account revocation tests have been approved.
+const sharedPollingEnabled=c.enableSharedPolling===true;
 const db=createClient(c.supabaseUrl,c.supabasePublishableKey,{auth:{flowType:'pkce',detectSessionInUrl:true}});
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??'').replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x]));
@@ -12,6 +15,8 @@ const THEME_DECKS=THEME_DECK_MODELS.map(deck=>({...deck,cards:deck.cards.map(car
 let user=null,profile=null,members=[],refreshGeneration=0;
 let swipeIndex=0,swipeBusy=false,swipeReview=false,swipeLoadError='',swipeSaveError='';
 let sharedMatches=[],sharedPriorities=[],sharedDeckId='general',sharedError='',sharedLoading=false,sharedSession=0,sharedRequest=0;
+let sharedPollPending=false;
+const SHARED_POLL_INTERVAL_MS=15000;
 let themesUnlocked=false,themesLoading=false,themesError='',themesRequest=0;
 const swipeAnswers=new Map();
 const themeAnswers=new Map(THEME_DECKS.map(deck=>[deck.id,new Map()]));
@@ -93,15 +98,18 @@ function sharedSummary(groups,deckId='general',priorityIds=new Set()){
   const role=viewerRole();
   const roleLabel=role==='parent'?'förälder':role==='teen'?'tonåring':'familjemedlem';
   const paragraphs=[];
+  // Never repeat a category-level tip across many matching cards, or repeat
+  // advice already present in the teenager-prioritised section.
+  const usedAdvice=new Set([...groups.values()].flatMap(items=>items.filter(item=>priorityIds.has(item.card.id)).map(item=>ADVICE_BY_KEY[adviceKeyForCard(item.card,deckId)]).filter(Boolean)));
   for(const [category,items] of groups){
     const remaining=items.filter(item=>!priorityIds.has(item.card.id));
     if(!remaining.length)continue;
     const cardTexts=remaining.map(item=>shortCardText(item.statement));
-    const advice=[...new Set(remaining.map(item=>ADVICE_BY_KEY[adviceKeyForCard(item.card,deckId)]).filter(Boolean))].join(' ')||'Välj något av det ni båda bejakat och prata om hur ni skulle kunna prova det i vardagen.';
+    const advice=[...new Set(remaining.map(item=>ADVICE_BY_KEY[adviceKeyForCard(item.card,deckId)]).filter(Boolean))].filter(text=>{if(usedAdvice.has(text))return false;usedAdvice.add(text);return true;}).join(' ');
     const intro=category==='Fritid'||category==='Gemenskap'
       ?'Ni har båda visat intresse för '
       :'Ni har båda bejakat ';
-    paragraphs.push('<p>'+esc(intro)+'<strong>'+esc(joinSwedish(cardTexts))+'</strong>. '+esc(advice)+'</p>');
+    paragraphs.push('<p>'+esc(intro)+'<strong>'+esc(joinSwedish(cardTexts))+'</strong>.'+(advice?' '+esc(advice):'')+'</p>');
   }
   const opening=role==='parent'
     ?'Fråga gärna tonåringen vad hen vill börja med och lyssna färdigt innan du föreslår något.'
@@ -122,12 +130,13 @@ function sharedPrioritySummary(items,deckId='general'){
     if(!groups.has(item.card.category))groups.set(item.card.category,[]);
     groups.get(item.card.category).push(item);
   }
+  const usedAdvice=new Set();
   const sections=[...groups.entries()].map(([category,cards])=>{
     const texts=cards.map(item=>shortCardText(item.statement));
     const lead=role==='teen'
       ?'Du har markerat <strong>'+esc(joinSwedish(texts))+'</strong> som särskilt viktigt bland det ni båda sagt ja till.'
       :'Ni har båda sagt ja till <strong>'+esc(joinSwedish(texts))+'</strong>, och tonåringen har markerat detta som särskilt viktigt.';
-    const advice=[...new Set(cards.map(item=>ADVICE_BY_KEY[adviceKeyForCard(item.card,deckId)]).filter(Boolean))].join(' ');
+    const advice=[...new Set(cards.map(item=>ADVICE_BY_KEY[adviceKeyForCard(item.card,deckId)]).filter(Boolean))].filter(text=>{if(usedAdvice.has(text))return false;usedAdvice.add(text);return true;}).join(' ');
     return '<section class="swipe-priority-theme"><h4>'+esc(category)+'</h4><p>'+lead+(advice?' '+esc(advice):'')+'</p></section>';
   }).join('');
   const opening=role==='teen'
@@ -182,13 +191,16 @@ function swipeResults(deckId='general'){
     sharedSummary(groups,deckId,priorityIds)+
     button+'</section>';
 }
-async function fetchSwipeMatches(deckId='general'){
+async function fetchSwipeMatches(deckId='general',{quiet=false}={}){
   if(!user||members.length!==2)return;
   const deck=sharedDeck(deckId);
   if(!deck)return;
   const viewer=user.id,session=sharedSession,request=++sharedRequest;
-  sharedDeckId=deckId;sharedMatches=[];sharedPriorities=[];sharedLoading=true;sharedError='';
-  if(page()==='swipe'&&!swipeBusy)render();
+  const quietRefresh=quiet&&sharedDeckId===deckId&&!sharedLoading&&!sharedError;
+  const previousResults=quietRefresh?JSON.stringify([sharedMatches,sharedPriorities]):null;
+  sharedDeckId=deckId;
+  if(!quietRefresh){sharedMatches=[];sharedPriorities=[];sharedLoading=true;sharedError='';
+    if(page()==='swipe'&&!swipeBusy)render();}
   try{
     const [matchResult,priorityResult]=await Promise.all([
       db.rpc('shared_swipe_matches',{p_deck_id:deckId}),
@@ -221,48 +233,41 @@ async function fetchSwipeMatches(deckId='general'){
   }finally{
     if(session===sharedSession&&request===sharedRequest&&user?.id===viewer&&sharedDeckId===deckId){
       sharedLoading=false;
-      if(page()==='swipe'&&!swipeBusy)render();
+      if(page()==='swipe'&&!swipeBusy&&(!quietRefresh||sharedError||previousResults!==JSON.stringify([sharedMatches,sharedPriorities])))render();
     }
   }
 }
 
+// Only poll the authenticated, server-verified shared RPC for the currently visible deck.
+// Never subscribe to, query or infer the other family member's private answers.
+// Background tabs are paused, and the existing session/request guards reject stale replies.
+async function pollSharedMatches(){
+  if(!sharedPollingEnabled||sharedPollPending||sharedLoading||!user||members.length!==2||page()!=='swipe'||document.hidden)return;
+  const deckId=activeThemeDeck||'general';
+  if(!sharedDeck(deckId))return;
+  sharedPollPending=true;
+  try{await fetchSwipeMatches(deckId,{quiet:true});}
+  finally{sharedPollPending=false;}
+}
+
+// Theme access no longer depends on completing the general deck. This check
+// grants only private swipe access; all shared A results remain server-gated.
 async function fetchThemeUnlock(){
-  if(!user||members.length!==2){themesUnlocked=false;themesLoading=false;activeThemeDeck=null;return;}
-  const viewer=user.id,session=sharedSession,request=++themesRequest;
-  themesUnlocked=false;themesLoading=true;themesError='';
+  themesUnlocked=!!user&&members.length===2&&members.some(member=>member.user_id===user.id)&&members.some(member=>member.role==='parent')&&members.some(member=>member.role==='teen');
+  themesLoading=false;themesError='';
+  if(!themesUnlocked)activeThemeDeck=null;
   if(page()==='swipe'&&!swipeBusy)render();
-  try{
-    const {data,error}=await db.rpc('shared_general_deck_complete');
-    if(session!==sharedSession||request!==themesRequest||user?.id!==viewer)return;
-    if(error||typeof data!=='boolean')throw Error('Unlock RPC unavailable');
-    themesUnlocked=data===true;
-    if(!themesUnlocked)activeThemeDeck=null;
-  }catch(e){
-    if(session!==sharedSession||request!==themesRequest||user?.id!==viewer)return;
-    themesUnlocked=false;
-    activeThemeDeck=null;
-    themesError='Det går inte att kontrollera om temakortlekarna är upplåsta just nu.';
-  }finally{
-    if(session===sharedSession&&request===themesRequest&&user?.id===viewer){
-      themesLoading=false;
-      if(page()==='swipe'&&!swipeBusy)render();
-    }
-  }
 }
 function themeDecksView(){
   const unlocked=members.length===2&&themesUnlocked&&!themesLoading&&!themesError;
-  const status=members.length!==2
-    ?'Koppla ihop två familjemedlemmar för att kunna låsa upp fler kortlekar.'
-    :themesLoading
-      ?'Kontrollerar om ni båda har avslutat allmänna kortleken…'
-      :themesError||(!unlocked
-        ?'Temakortlekarna är låsta tills ni båda har gått igenom den allmänna kortleken.'
-        :'Ni har båda avslutat allmänna kortleken. Temakortlekarna är upplåsta; gemensamma ja visas inne i respektive kortlek.');
+  const status=unlocked
+    ?'Utforska kortlekarna i egen takt. Gemensamma ja kan visas direkt, även om kortlekarna inte är färdigspelade.'
+    :'Koppla ihop en förälder och en tonåring för att öppna kortlekarna. Dina egna svar förblir privata.';
   return '<section class="swipe-themes" aria-labelledby="swipe-themes-heading"><h2 id="swipe-themes-heading">Fler kortlekar</h2>'+
     '<p class="live-muted" role="status">'+esc(status)+'</p>'+
     THEME_DECKS.map(deck=>card(unlocked
-      ?'<details><summary><strong>'+esc(deck.title)+'</strong> · '+deck.cards.length+' kort</summary><ul>'+deck.cards.map((_,index)=>'<li>'+esc(cardTextForRole(themeCardModel(deck,index),viewerRole()))+'</li>').join('')+'</ul></details><p class="live-muted">Din privata status: '+themeAnswers.get(deck.id).size+' / '+deck.cards.length+' kort</p><button type="button" class="live-button" data-theme-open="'+esc(deck.id)+'">'+(themeAnswers.get(deck.id).size===deck.cards.length?'Visa och ändra svar':'Öppna kortleken')+'</button>'
-      :'<h3>'+esc(deck.title)+'</h3><p class="live-muted">Låst · öppnas när ni båda är klara.</p>'
+      ?'<details><summary><strong>'+esc(deck.title)+'</strong> · '+deck.cards.length+' kort</summary><p class="live-muted">Ämnen: '+esc([...new Set(THEME_DECK_MODELS.find(model=>model.id===deck.id).cards.map(item=>item.category))].join(' · '))+'</p></details><p class="live-muted">Din privata status: '+themeAnswers.get(deck.id).size+' / '+deck.cards.length+' kort</p><button type="button" class="live-button" data-theme-open="'+esc(deck.id)+'">'+(themeAnswers.get(deck.id).size===deck.cards.length?'Visa och ändra svar':'Öppna kortleken')+'</button>'
+      :'<h3>'+esc(deck.title)+'</h3><p class="live-muted">Tillgänglig efter säker familjeparning.</p>'
     )).join('')+
     (themesError?'<button type="button" class="live-button" id="retry-theme-unlock">Kontrollera igen</button>':'')+
     '</section>';
@@ -282,7 +287,7 @@ function themeSwipeView(){
     '<div class="swipe-track"><div class="swipe-track-fill" style="width:'+Math.round(100*(item?(themeReview?themeIndex:answered):deck.cards.length)/deck.cards.length)+'%"></div></div>'+
     (item?'<div id="swipe-card" class="swipe-playing-card" tabindex="0" aria-label="Temakort '+(themeIndex+1)+' av '+deck.cards.length+'. Svep höger för ja eller vänster för nej.">'+
       '<span class="swipe-stamp swipe-stamp-no" aria-hidden="true">NEJ</span><span class="swipe-stamp swipe-stamp-yes" aria-hidden="true">JA</span>'+
-      '<span class="swipe-category">'+esc(deck.title)+'</span><h2>'+esc(itemText)+'</h2><span class="swipe-card-hint">Dra kortet åt höger eller vänster</span>'+importanceControl(deck.id,themeCardId(deck,themeIndex))+'</div>'+
+      '<span class="swipe-category">'+esc(themeCardModel(deck,themeIndex)?.category||deck.title)+'</span><h2>'+esc(itemText)+'</h2><span class="swipe-card-hint">Dra kortet åt höger eller vänster</span>'+importanceControl(deck.id,themeCardId(deck,themeIndex))+'</div>'+
       '<div class="swipe-actions"><button type="button" class="swipe-choice swipe-no" data-swipe="no" aria-label="Nej">✕ <span>Nej</span></button>'+
       '<button type="button" class="swipe-choice swipe-yes" data-swipe="yes" aria-label="Ja">♥ <span>Ja</span></button></div>'
       :'<div class="swipe-finished"><h2>Alla '+deck.cards.length+' svar är sparade</h2><p>Du kan gå igenom kortleken igen och ändra dina egna svar.</p>'+
@@ -419,7 +424,10 @@ document.addEventListener('input',e=>{if(!e.target.matches?.('[data-importance]'
 document.addEventListener('change',e=>{if(!e.target.matches?.('[data-importance]')||!user)return;void saveImportance(e.target.dataset.deckId,e.target.dataset.cardId,Number(e.target.value),user.id,sharedSession);});
 document.addEventListener('keydown',e=>{if(page()==='swipe'&&user&&!['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName)&&['ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();advanceSwipe(e.key==='ArrowRight'?'yes':'no');}});
 document.addEventListener('submit',async e=>{if(e.target.id!=='live-login')return;e.preventDefault();const b=e.target.querySelector('button');b.disabled=true;const feedback=$('login-feedback');feedback.textContent='Loggar in…';const email=$('live-email').value.trim();try{const {error}=await db.auth.signInWithPassword({email,password:$('live-password').value});if(error)throw error;$('live-password') && ($('live-password').value='');await refresh();}catch(err){feedback.textContent='Kunde inte logga in. Kontrollera e-post och lösenord, eller välj ”Glömt lösenord eller saknar lösenord?”.';}finally{b.disabled=false;}});
-window.addEventListener('hashchange',()=>{render();window.scrollTo(0,0);});
+window.addEventListener('hashchange',()=>{render();window.scrollTo(0,0);if(page()==='swipe')void pollSharedMatches();});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)void pollSharedMatches();});
+window.addEventListener('focus',()=>void pollSharedMatches());
+window.setInterval(()=>void pollSharedMatches(),SHARED_POLL_INTERVAL_MS);
 db.auth.onAuthStateChange(()=>setTimeout(()=>refresh().catch(showError),0));
 function showError(e){$('live-app').innerHTML=card('<h2>Kunde inte läsa kontot</h2><p>'+esc(e.message)+'</p><a href="./konto.html">Öppna kontosidan</a>');}
 refresh().catch(showError);
