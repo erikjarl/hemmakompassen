@@ -104,9 +104,9 @@ async function saveImportance(deckId,cardId,value,viewer,session){
 const joinSwedish=items=>items.length<2?(items[0]||''):items.slice(0,-1).join(', ')+' och '+items.at(-1);
 const shortCardText=text=>String(text).replace(/[.!?]+$/,'').replace(/^Jag (?:vill|skulle vilja|tycker|uppskattar) (?:att |när )?/i,'').replace(/^Vi /,'att ni ').trim();
 const firstSentence=text=>String(text||'').match(/^.*?[.!?](?:\s|$)/)?.[0]?.trim()||String(text||'').trim();
-const summaryIconFor=category=>{
-  const value=String(category).toLocaleLowerCase('sv-SE');
-  if(/teknik|digital|medier/.test(value))return {name:'Mobil',path:'M8 2.5h8a2 2 0 0 1 2 2v15a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2v-15a2 2 0 0 1 2-2Zm1 3h6m-4 13h2'};
+const summaryIconFor=(category,advice='')=>{
+  const value=(String(advice)+' '+String(category)).toLocaleLowerCase('sv-SE');
+  if(/mobil|skärm|teknik|digital|medier/.test(value))return {name:'Mobil',path:'M8 2.5h8a2 2 0 0 1 2 2v15a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2v-15a2 2 0 0 1 2-2Zm1 3h6m-4 13h2'};
   if(/samtal|konflikt|känsl|tillit|värdering/.test(value))return {name:'Samtal',path:'M4 5.5h11a3 3 0 0 1 3 3v3a3 3 0 0 1-3 3H9l-4 3v-3H4a3 3 0 0 1-3-3v-3a3 3 0 0 1 3-3Zm5 12h6l4 3v-3h1a3 3 0 0 0 3-3v-3a3 3 0 0 0-2-2.83'};
   if(/relation|uppskatt|gemenskap|vän/.test(value))return {name:'Relation',path:'M12 20.5 3.8 12.7A5.2 5.2 0 0 1 11 5.2l1 1 1-1a5.2 5.2 0 0 1 7.2 7.5Z'};
   if(/vardag|rutin|lugn|återhämt|förändring|hemma|hjälpa/.test(value))return {name:'Tid och vardag',path:'M12 3a9 9 0 1 1-9 9 9 9 0 0 1 9-9Zm0 4v5l3.5 2'};
@@ -133,7 +133,7 @@ function sharedSummary(groups,deckId='general',priorityIds=new Set()){
       ?'Ni har båda visat intresse för '
       :'Ni har båda bejakat ';
     paragraphs.push('<p>'+esc(intro)+'<strong>'+esc(joinSwedish(cardTexts))+'</strong>.'+(advice?' '+esc(advice):'')+'</p>');
-    const icon=summaryIconFor(category);
+    const icon=summaryIconFor(category,advice);
     const concise=firstSentence(advice)||('Utforska '+joinSwedish(cardTexts)+'.');
     overview.push('<li>'+summaryIcon(icon)+'<div><h4>'+esc(category)+'</h4><span class="swipe-summary-icon-label">'+esc(icon.name)+': </span><p>'+esc(concise)+'</p></div></li>');
   }

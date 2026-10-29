@@ -17,7 +17,7 @@ assert.doesNotMatch(script,/sharedMatches\.filter\(r=>r\.answer===false\)/,'No m
 assert.doesNotMatch(script,/Det ni båda svarat nej till/,'Never renders a shared NO heading');
 assert.match(script,/swipe-match-theme/,'Mutual YES results are grouped by theme');
 assert.match(script,/function sharedSummary\(groups,deckId='general',priorityIds=new Set\(\)\)/,'Builds the ordinary summary from mutual YES while excluding already prioritised advice');
-assert.match(script,/const summaryIconFor=category=>/,'Chooses deterministic topic icons without using private response data');
+assert.match(script,/const summaryIconFor=\(category,advice=''\)=>/,'Chooses deterministic topic icons from permitted editorial content without using private response data');
 assert.match(script,/aria-hidden="true" focusable="false"/,'Decorative SVG icons stay out of the accessibility tree');
 assert.match(script,/Läs mer om råden och vad de bygger på/,'Keeps the full card-specific basis available in an expandable section');
 assert.match(script,/function sharedPrioritySummary\(items,deckId='general'\)/,'Builds a separate deterministic priority summary');
@@ -80,6 +80,8 @@ function renderSharedResult(rows,role='parent',priorityRows=[],adviceByKey={'gen
   assert.match(teenHtml,/Gemensamma möjligheter – tonåring/,'Teen gets the teen-facing summary');
   assert.match(teenHtml,/Tonåringens frivilliga aktivitet/,'Teen sees the reviewed teen wording');
   assert.doesNotMatch(teenHtml,/Förälderns ansvarstagande aktivitet/,'Teen does not receive parent wording');
+  const mobileHtml=renderSharedResult([{card_id:'general-01',answer:true}],'parent',[],{'general-01':'Lägg undan mobiltelefonerna en kort stund.'});
+  assert.match(mobileHtml,/Mobil:/,'The icon follows the actual mobile-related advice subject, not only its broad category');
 }
 {
   const html=renderSharedResult([
