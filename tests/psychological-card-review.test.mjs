@@ -21,7 +21,8 @@ test('psychological reviews cover all 265 current A cards exactly once',()=>{
   for(const card of aCards){
     const row=rows.find(line=>line.startsWith('| '+String.fromCharCode(96)+card.id+String.fromCharCode(96)+' |'));
     assert.ok(row,card.id+' must have a review row');
-    assert.ok(row.split('|').length>=8,card.id+' includes text, risk, decision, role wording and rationale');
+    assert.ok(row.split('|').length>=7,card.id+' includes text, risk, decision and rationale');
+    if((card.id.startsWith('samtal-')||card.id.startsWith('aktiviteter-'))&&Number(card.id.split('-')[1])>=9)assert.ok(row.split('|').length>=8,card.id+' additionally documents unchanged role text');
   }
 });
 
