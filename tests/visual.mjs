@@ -454,6 +454,13 @@ try{
   assert.equal(await unavailable.page.locator(".swipe-themes details").count(),6,"An obsolete completion RPC outage cannot block private theme exploration");
   assert.equal(await unavailable.page.evaluate(()=>window.__HK_UNLOCK_RPC_CALLS__||0),0,"Completion RPC is not called even when mocked as unavailable");
   await unavailable.context.close();
+  const desktopInsights=await freshContext({viewport:{width:1440,height:900},deviceScaleFactor:1},{authenticated:true,paired:true});
+  await desktopInsights.page.goto(base+'#insikter',{waitUntil:'load'});
+  await desktopInsights.page.locator('.insights-deck').first().waitFor();
+  assert.equal(await desktopInsights.page.locator('.insights-deck').count(),2,'Desktop insights also show only permitted A decks');
+  await checkOverflow(desktopInsights.page,'Desktop all-deck insights');
+  await capture(desktopInsights.page,'desktop-shared-insights.png');
+  await desktopInsights.context.close();
   const d=await freshContext({viewport:{width:1440,height:900},deviceScaleFactor:1},{authenticated:true});
   await d.page.getByRole("heading",{name:/Hej[ ,]+Provförälder/}).waitFor();
   assert.equal(await d.page.locator("#live-desktop-nav a").count(),8);
