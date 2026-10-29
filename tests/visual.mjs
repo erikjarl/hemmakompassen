@@ -355,6 +355,8 @@ try{
   assert.doesNotMatch(insightText,/Jag känner mig lyssnad på när vi är oense/,'A NO cannot leak');
   await checkOverflow(paired.page,'Mobile all-deck insights');
   await capture(paired.page,'mobile-shared-insights.png');
+  await paired.page.locator('.live-main').evaluate(el=>{el.scrollTop=el.scrollHeight;});
+  await capture(paired.page,'mobile-shared-insights-bottom.png');
   await paired.page.evaluate(()=>{window.__HK_RPC_UNAVAILABLE__=true;});
   await paired.page.locator('#insights-retry').click();
   await paired.page.getByRole('alert').waitFor();
