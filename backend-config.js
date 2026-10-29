@@ -9,6 +9,9 @@ window.HEMMAKOMPASSEN_BACKEND = Object.freeze({
   // Enable only after the server's A-only RPC allowlist and authenticated
   // two-account match/revocation tests pass. Background polling is OFF by default.
   enableSharedPolling: false,
+  // All-deck A insights remain hidden until server A allowlist and authenticated
+  // two-account tests have passed. B sharing is not included in this flag.
+  enableSharedInsights: false,
   // Until auth, family membership and privacy tests pass, the public UI remains a demo.
   liveModeEnabled: false
 });
