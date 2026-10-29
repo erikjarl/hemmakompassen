@@ -378,6 +378,17 @@ try{
   assert.equal(await unlocked.page.locator('[data-theme-open]').count(),6,"All six decks offer private swipe actions after unlock");
   await unlocked.page.locator('[data-theme-open="samtal"]').click();
   await unlocked.page.locator("#swipe-card[aria-label^='Temakort 1 av 104']").waitFor();
+  const categoryFilter=unlocked.page.getByLabel('Välj kategori');
+  assert.equal(await categoryFilter.count(),1,'Large theme decks expose one labelled category filter');
+  assert.ok(await categoryFilter.isEnabled(),'Category filter is keyboard reachable');
+  await categoryFilter.selectOption({label:'Framtid och möjligheter (8)'});
+  await unlocked.page.locator("#swipe-card[aria-label*='i Framtid och möjligheter']").waitFor();
+  assert.match(await unlocked.page.locator('#theme-category-status').innerText(),/^0 av 8 kort sparade i Framtid och möjligheter\.$/,'Filter reports only the signed-in user’s private progress for the selected category');
+  assert.match(await unlocked.page.locator('#swipe-card').innerText(),/Prata om en plats vi vill besöka någon gång/,'Filter starts at the first unanswered card in the selected category');
+  await unlocked.page.locator('.swipe-category-filter').scrollIntoViewIfNeeded();
+  await capture(unlocked.page,'mobile-theme-category-filter.png');
+  await categoryFilter.selectOption('all');
+  await unlocked.page.locator("#swipe-card[aria-label^='Temakort 1 av 104']").waitFor();
   await unlocked.page.locator("#swipe-card").scrollIntoViewIfNeeded();
   await capture(unlocked.page,"mobile-theme-card.png");
   assert.match(await unlocked.page.locator("#swipe-card").innerText(),/Vad som varit roligt den senaste veckan/);

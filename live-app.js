@@ -24,15 +24,23 @@ const swipeImportance=new Map();
 const importancePending=new Map();
 const importanceSaving=new Set();
 let importanceAvailable=false,importanceLoadError='';
-let activeThemeDeck=null,themeIndex=0,themeReview=false,themeSaveError='';
+let activeThemeDeck=null,themeCategory='all',themeIndex=0,themeReview=false,themeSaveError='';
 const themeCardId=(deck,index)=>deck.cardIds[index];
 const themeCardModel=(deck,index)=>THEME_DECK_MODELS.find(model=>model.id===deck.id)?.cards[index];
 const themeAccessAllowed=()=>!!user&&members.length===2&&themesUnlocked&&!themesLoading&&!themesError;
-function nextThemeUnanswered(deck,start=0){
+const themeCategories=deck=>[...new Set(deck.cards.map((_,index)=>themeCardModel(deck,index)?.category||deck.title))];
+function themeVisibleIndices(deck,category=themeCategory){
+  return deck.cards.map((_,index)=>index).filter(index=>category==='all'||themeCardModel(deck,index)?.category===category);
+}
+function nextThemeUnanswered(deck,start=0,category=themeCategory){
   const answers=themeAnswers.get(deck.id);
-  for(let i=start;i<deck.cards.length;i++)if(!answers.has(themeCardId(deck,i)))return i;
-  for(let i=0;i<start;i++)if(!answers.has(themeCardId(deck,i)))return i;
+  const visible=themeVisibleIndices(deck,category);
+  for(const index of visible)if(index>=start&&!answers.has(themeCardId(deck,index)))return index;
+  for(const index of visible)if(index<start&&!answers.has(themeCardId(deck,index)))return index;
   return deck.cards.length;
+}
+function nextThemeVisible(deck,index,category=themeCategory){
+  return themeVisibleIndices(deck,category).find(candidate=>candidate>index)??deck.cards.length;
 }
 const swipeCardId=index=>GENERAL_CARDS[index]?.id;
 const viewerRole=()=>members.find(member=>member.user_id===user?.id)?.role;
@@ -277,20 +285,23 @@ function themeDecksView(){
 function themeSwipeView(){
   const deck=THEME_DECKS.find(d=>d.id===activeThemeDeck);
   if(!deck||!themeAccessAllowed()){activeThemeDeck=null;return swipeView();}
-  const answers=themeAnswers.get(deck.id),item=deck.cards[themeIndex],itemText=item?cardTextForRole(themeCardModel(deck,themeIndex),viewerRole()):'',answered=answers.size;
+  const answers=themeAnswers.get(deck.id),categories=themeCategories(deck),visible=themeVisibleIndices(deck),item=visible.includes(themeIndex)?deck.cards[themeIndex]:undefined;
+  const itemText=item?cardTextForRole(themeCardModel(deck,themeIndex),viewerRole()):'',answered=visible.filter(index=>answers.has(themeCardId(deck,index))).length,ordinal=visible.indexOf(themeIndex)+1;
+  const categoryLabel=themeCategory==='all'?'Alla kategorier':themeCategory;
+  const filter=categories.length>1?'<div class="swipe-category-filter"><label for="theme-category">Välj kategori</label><select id="theme-category" aria-describedby="theme-category-status"><option value="all"'+(themeCategory==='all'?' selected':'')+'>Alla kategorier ('+deck.cards.length+')</option>'+categories.map(category=>'<option value="'+esc(category)+'"'+(themeCategory===category?' selected':'')+'>'+esc(category)+' ('+themeVisibleIndices(deck,category).length+')</option>').join('')+'</select><p id="theme-category-status" class="live-muted" role="status">'+answered+' av '+visible.length+' kort sparade i '+esc(categoryLabel)+'.</p></div>':'';
   return '<div class="swipe-experience swipe-theme-play"><header class="swipe-heading">'+
     '<button type="button" class="live-button swipe-theme-back" id="theme-back">← Alla kortlekar</button>'+
     '<span class="swipe-eyebrow">TEMAKORTLEK · PRIVATA SVAR</span><h1>'+esc(deck.title)+'</h1>'+
-    '<p>Svara ja på sådant du vill prova eller prata om. Dina svar är privata. Ett ja är inte en bindande överenskommelse.</p></header>'+
+    '<p>Svara ja på sådant du vill prova eller prata om. Dina svar är privata. Ett ja är inte en bindande överenskommelse.</p>'+filter+'</header>'+
     '<div class="swipe-stage"><div class="swipe-stage-top"><span>'+esc(deck.title)+'</span><span role="status">'+
-    (item?(themeIndex+1)+' / '+deck.cards.length:answered+' / '+deck.cards.length+' sparade')+'</span></div>'+
-    '<div class="swipe-track"><div class="swipe-track-fill" style="width:'+Math.round(100*(item?(themeReview?themeIndex:answered):deck.cards.length)/deck.cards.length)+'%"></div></div>'+
-    (item?'<div id="swipe-card" class="swipe-playing-card" tabindex="0" aria-label="Temakort '+(themeIndex+1)+' av '+deck.cards.length+'. Svep höger för ja eller vänster för nej.">'+
+    (item?ordinal+' / '+visible.length:answered+' / '+visible.length+' sparade')+'</span></div>'+
+    '<div class="swipe-track"><div class="swipe-track-fill" style="width:'+Math.round(100*(item?(themeReview?ordinal-1:answered):visible.length)/visible.length)+'%"></div></div>'+
+    (item?'<div id="swipe-card" class="swipe-playing-card" tabindex="0" aria-label="Temakort '+ordinal+' av '+visible.length+' i '+esc(categoryLabel)+'. Svep höger för ja eller vänster för nej.">'+
       '<span class="swipe-stamp swipe-stamp-no" aria-hidden="true">NEJ</span><span class="swipe-stamp swipe-stamp-yes" aria-hidden="true">JA</span>'+
       '<span class="swipe-category">'+esc(themeCardModel(deck,themeIndex)?.category||deck.title)+'</span><h2>'+esc(itemText)+'</h2><span class="swipe-card-hint">Dra kortet åt höger eller vänster</span>'+importanceControl(deck.id,themeCardId(deck,themeIndex))+'</div>'+
       '<div class="swipe-actions"><button type="button" class="swipe-choice swipe-no" data-swipe="no" aria-label="Nej">✕ <span>Nej</span></button>'+
       '<button type="button" class="swipe-choice swipe-yes" data-swipe="yes" aria-label="Ja">♥ <span>Ja</span></button></div>'
-      :'<div class="swipe-finished"><h2>Alla '+deck.cards.length+' svar är sparade</h2><p>Du kan gå igenom kortleken igen och ändra dina egna svar.</p>'+
+      :'<div class="swipe-finished"><h2>Alla '+visible.length+' kort i '+esc(categoryLabel)+' är sparade</h2><p>Du kan gå igenom urvalet igen och ändra dina egna svar.</p>'+
        '<button type="button" class="live-button" id="theme-restart">Gå igenom igen</button></div>')+
     '<p id="swipe-save-status" class="swipe-disclaimer" role="status">'+
     esc(themeSaveError||'Ditt svar sparas privat i ditt konto. Gemensamt visas bara kort där ni båda svarat ja.')+'</p></div>'+swipeResults(deck.id)+'</div>';
@@ -307,7 +318,7 @@ async function saveThemeAnswer(direction,index,deckId,viewer,session){
   if(error){themeSaveError='Svaret kunde inte sparas. Försök igen.';swipeBusy=false;render();return;}
   themeAnswers.get(deckId).set(row.card_id,row.answer);
   themeSaveError='';
-  themeIndex=themeReview?index+1:nextThemeUnanswered(deck,index+1);
+  themeIndex=themeReview?nextThemeVisible(deck,index):nextThemeUnanswered(deck,index+1);
   swipeBusy=false;render();
   if(members.length===2)void fetchSwipeMatches(deckId);
 }
@@ -393,7 +404,7 @@ let authResult;
 try{authResult=await db.auth.getUser();}
 catch(e){if(generation!==refreshGeneration)return;throw e;}
 if(generation!==refreshGeneration)return;
-const {data:{user:u},error}=authResult;if(error&&error.name!=='AuthSessionMissingError')throw error;user=u;profile=null;members=[];swipeAnswers.clear();swipeImportance.clear();importancePending.clear();importanceSaving.clear();importanceAvailable=false;importanceLoadError='';skippedUnderstanding.clear();for(const answers of themeAnswers.values())answers.clear();activeThemeDeck=null;themeIndex=0;themeReview=false;themeSaveError='';swipeBusy=false;swipeLoadError='';swipeSaveError='';swipeReview=false;swipeIndex=0;sharedMatches=[];sharedPriorities=[];sharedDeckId='general';sharedError='';sharedLoading=false;sharedSession++;sharedRequest++;themesUnlocked=false;themesLoading=false;themesError='';themesRequest++;
+const {data:{user:u},error}=authResult;if(error&&error.name!=='AuthSessionMissingError')throw error;user=u;profile=null;members=[];swipeAnswers.clear();swipeImportance.clear();importancePending.clear();importanceSaving.clear();importanceAvailable=false;importanceLoadError='';skippedUnderstanding.clear();for(const answers of themeAnswers.values())answers.clear();activeThemeDeck=null;themeCategory='all';themeIndex=0;themeReview=false;themeSaveError='';swipeBusy=false;swipeLoadError='';swipeSaveError='';swipeReview=false;swipeIndex=0;sharedMatches=[];sharedPriorities=[];sharedDeckId='general';sharedError='';sharedLoading=false;sharedSession++;sharedRequest++;themesUnlocked=false;themesLoading=false;themesError='';themesRequest++;
 if(user){const viewer=user.id;
 let loaded;
 try{loaded=await Promise.all([db.from('profiles').select('display_name').eq('user_id',viewer).maybeSingle(),db.rpc('my_family_members'),db.from('swipe_answers').select('deck_id,card_id,answer').eq('user_id',viewer),db.from('swipe_skips').select('deck_id,card_id').eq('user_id',viewer),db.from('swipe_importance').select('deck_id,card_id,importance').eq('user_id',viewer)]);}
@@ -415,13 +426,21 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-swipe]');i
 const open=e.target.closest('[data-theme-open]');
 if(open&&themeAccessAllowed()){
   const deck=THEME_DECKS.find(d=>d.id===open.dataset.themeOpen);
-  if(deck){activeThemeDeck=deck.id;themeIndex=nextThemeUnanswered(deck);themeReview=false;themeSaveError='';void fetchSwipeMatches(deck.id);render();window.scrollTo(0,0);}
+  if(deck){activeThemeDeck=deck.id;themeCategory='all';themeIndex=nextThemeUnanswered(deck);themeReview=false;themeSaveError='';void fetchSwipeMatches(deck.id);render();window.scrollTo(0,0);}
 }
-if(e.target.closest('#theme-back')){activeThemeDeck=null;themeReview=false;void fetchSwipeMatches('general');render();window.scrollTo(0,0);}
-if(e.target.closest('#theme-restart')&&themeAccessAllowed()){themeReview=true;themeIndex=0;themeSaveError='';render();}
+if(e.target.closest('#theme-back')){activeThemeDeck=null;themeCategory='all';themeReview=false;void fetchSwipeMatches('general');render();window.scrollTo(0,0);}
+if(e.target.closest('#theme-restart')&&themeAccessAllowed()){const deck=THEME_DECKS.find(d=>d.id===activeThemeDeck);if(deck){themeReview=true;themeIndex=themeVisibleIndices(deck)[0]??deck.cards.length;themeSaveError='';render();}}
 });
 document.addEventListener('input',e=>{if(!e.target.matches?.('[data-importance]'))return;e.target.setAttribute('aria-valuetext',importanceValueText(Number(e.target.value)));});
-document.addEventListener('change',e=>{if(!e.target.matches?.('[data-importance]')||!user)return;void saveImportance(e.target.dataset.deckId,e.target.dataset.cardId,Number(e.target.value),user.id,sharedSession);});
+document.addEventListener('change',e=>{
+  if(e.target.matches?.('#theme-category')&&activeThemeDeck&&themeAccessAllowed()){
+    const deck=THEME_DECKS.find(d=>d.id===activeThemeDeck),category=e.target.value;
+    if(deck&&(category==='all'||themeCategories(deck).includes(category))){themeCategory=category;themeReview=false;themeIndex=nextThemeUnanswered(deck,0,category);themeSaveError='';render();$('theme-category')?.focus();}
+    return;
+  }
+  if(!e.target.matches?.('[data-importance]')||!user)return;
+  void saveImportance(e.target.dataset.deckId,e.target.dataset.cardId,Number(e.target.value),user.id,sharedSession);
+});
 document.addEventListener('keydown',e=>{if(page()==='swipe'&&user&&!['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName)&&['ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();advanceSwipe(e.key==='ArrowRight'?'yes':'no');}});
 document.addEventListener('submit',async e=>{if(e.target.id!=='live-login')return;e.preventDefault();const b=e.target.querySelector('button');b.disabled=true;const feedback=$('login-feedback');feedback.textContent='Loggar in…';const email=$('live-email').value.trim();try{const {error}=await db.auth.signInWithPassword({email,password:$('live-password').value});if(error)throw error;$('live-password') && ($('live-password').value='');await refresh();}catch(err){feedback.textContent='Kunde inte logga in. Kontrollera e-post och lösenord, eller välj ”Glömt lösenord eller saknar lösenord?”.';}finally{b.disabled=false;}});
 window.addEventListener('hashchange',()=>{render();window.scrollTo(0,0);if(page()==='swipe')void pollSharedMatches();});
