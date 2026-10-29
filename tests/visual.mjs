@@ -344,6 +344,7 @@ try{
   // The mock includes historical B YES, mutual NO, unknown and wrong-deck rows.
   await paired.page.locator('a[href="#insikter"]').click();
   await paired.page.getByRole('heading',{name:'Möjligt att utforska'}).waitFor();
+  assert.ok((await paired.page.locator('.live-main').evaluate(el=>el.scrollTop))<=1,'Insights navigation resets the mobile content scroller to its heading');
   await paired.page.locator('.insights-deck').first().waitFor();
   assert.equal(await paired.page.locator('.insights-deck').count(),2,'Only decks with permitted A JA+JA appear');
   assert.equal(await paired.page.locator('.insights-deck .swipe-match-list li').count(),3,'Two general and one conversation A match, no other rows');
