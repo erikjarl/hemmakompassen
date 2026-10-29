@@ -381,7 +381,7 @@ try{
   const categoryFilter=unlocked.page.getByLabel('Välj kategori');
   assert.equal(await categoryFilter.count(),1,'Large theme decks expose one labelled category filter');
   assert.ok(await categoryFilter.isEnabled(),'Category filter is keyboard reachable');
-  await categoryFilter.selectOption({label:/Framtid och möjligheter/});
+  await categoryFilter.selectOption({label:'Framtid och möjligheter (8)'});
   await unlocked.page.locator("#swipe-card[aria-label*='i Framtid och möjligheter']").waitFor();
   assert.match(await unlocked.page.locator('#theme-category-status').innerText(),/^0 av 8 kort sparade i Framtid och möjligheter\.$/,'Filter reports only the signed-in user’s private progress for the selected category');
   assert.match(await unlocked.page.locator('#swipe-card').innerText(),/Prata om en plats vi vill besöka någon gång/,'Filter starts at the first unanswered card in the selected category');
