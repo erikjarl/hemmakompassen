@@ -382,6 +382,7 @@ try{
   assert.ok((await paired.page.locator('.swipe-summary-overview li').count())>=1,'Authorized A advice renders a compact icon overview');
   assert.equal(await paired.page.locator('.swipe-summary-overview svg[aria-hidden="true"]').count(),await paired.page.locator('.swipe-summary-overview li').count(),'Every overview topic has one decorative SVG and a text heading');
   const summaryDetails=paired.page.locator('.swipe-summary-details');
+  await paired.page.keyboard.press('Tab');
   await summaryDetails.locator('summary').focus();
   assert.ok(await summaryDetails.locator('summary').evaluate(el=>getComputedStyle(el).outlineStyle!=='none'),'The expandable detail control has visible keyboard focus');
   await summaryDetails.locator('summary').press('Enter');
