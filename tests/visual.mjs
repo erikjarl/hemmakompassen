@@ -351,10 +351,13 @@ try{
   assert.equal(await unlocked.page.locator(".swipe-themes details").count(),6,"All six theme decks are available to the paired family");
   assert.match(await unlocked.page.locator(".swipe-themes").innerText(),/Gemensamma ja kan visas direkt/i);
   await checkOverflow(unlocked.page,"Mobile unlocked theme previews");
+  await unlocked.page.locator(".swipe-themes").scrollIntoViewIfNeeded();
   await capture(unlocked.page,"mobile-themes-unlocked.png");
   assert.equal(await unlocked.page.locator('[data-theme-open]').count(),6,"All six decks offer private swipe actions after unlock");
   await unlocked.page.locator('[data-theme-open="samtal"]').click();
   await unlocked.page.locator("#swipe-card[aria-label^='Temakort 1 av 104']").waitFor();
+  await unlocked.page.locator("#swipe-card").scrollIntoViewIfNeeded();
+  await capture(unlocked.page,"mobile-theme-card.png");
   assert.match(await unlocked.page.locator("#swipe-card").innerText(),/Vad som varit roligt den senaste veckan/);
   await unlocked.page.getByRole('heading',{name:'Era gemensamma svar · Samtalsämnen'}).waitFor();
   const themeSharedText=await unlocked.page.locator('.swipe-results').innerText();
