@@ -103,6 +103,16 @@ async function saveImportance(deckId,cardId,value,viewer,session){
 
 const joinSwedish=items=>items.length<2?(items[0]||''):items.slice(0,-1).join(', ')+' och '+items.at(-1);
 const shortCardText=text=>String(text).replace(/[.!?]+$/,'').replace(/^Jag (?:vill|skulle vilja|tycker|uppskattar) (?:att |när )?/i,'').replace(/^Vi /,'att ni ').trim();
+const firstSentence=text=>String(text||'').match(/^.*?[.!?](?:\s|$)/)?.[0]?.trim()||String(text||'').trim();
+const summaryIconFor=category=>{
+  const value=String(category).toLocaleLowerCase('sv-SE');
+  if(/teknik|digital|medier/.test(value))return {name:'Mobil',path:'M8 2.5h8a2 2 0 0 1 2 2v15a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2v-15a2 2 0 0 1 2-2Zm1 3h6m-4 13h2'};
+  if(/samtal|konflikt|känsl|tillit|värdering/.test(value))return {name:'Samtal',path:'M4 5.5h11a3 3 0 0 1 3 3v3a3 3 0 0 1-3 3H9l-4 3v-3H4a3 3 0 0 1-3-3v-3a3 3 0 0 1 3-3Zm5 12h6l4 3v-3h1a3 3 0 0 0 3-3v-3a3 3 0 0 0-2-2.83'};
+  if(/relation|uppskatt|gemenskap|vän/.test(value))return {name:'Relation',path:'M12 20.5 3.8 12.7A5.2 5.2 0 0 1 11 5.2l1 1 1-1a5.2 5.2 0 0 1 7.2 7.5Z'};
+  if(/vardag|rutin|lugn|återhämt|förändring|hemma|hjälpa/.test(value))return {name:'Tid och vardag',path:'M12 3a9 9 0 1 1-9 9 9 9 0 0 1 9-9Zm0 4v5l3.5 2'};
+  return {name:'Gemensam aktivitet',path:'M5 3v3m14-3v3M3 9h18M5 5h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z'};
+};
+const summaryIcon=icon=>'<svg class="swipe-summary-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="'+icon.path+'"/></svg>';
 const sharedDeck=deckId=>deckId==='general'
   ?{id:'general',title:'Allmänna kortleken',cards:GENERAL_CARDS}
   :THEME_DECK_MODELS.find(deck=>deck.id===deckId);
@@ -110,6 +120,7 @@ function sharedSummary(groups,deckId='general',priorityIds=new Set()){
   const role=viewerRole();
   const roleLabel=role==='parent'?'förälder':role==='teen'?'tonåring':'familjemedlem';
   const paragraphs=[];
+  const overview=[];
   // Never repeat a category-level tip across many matching cards, or repeat
   // advice already present in the teenager-prioritised section.
   const usedAdvice=new Set([...groups.values()].flatMap(items=>items.filter(item=>priorityIds.has(item.card.id)).map(item=>ADVICE_BY_KEY[adviceKeyForCard(item.card,deckId)]).filter(Boolean)));
@@ -122,6 +133,9 @@ function sharedSummary(groups,deckId='general',priorityIds=new Set()){
       ?'Ni har båda visat intresse för '
       :'Ni har båda bejakat ';
     paragraphs.push('<p>'+esc(intro)+'<strong>'+esc(joinSwedish(cardTexts))+'</strong>.'+(advice?' '+esc(advice):'')+'</p>');
+    const icon=summaryIconFor(category);
+    const concise=firstSentence(advice)||('Utforska '+joinSwedish(cardTexts)+'.');
+    overview.push('<li>'+summaryIcon(icon)+'<div><h4>'+esc(category)+'</h4><span class="visually-hidden">'+esc(icon.name)+': </span><p>'+esc(concise)+'</p></div></li>');
   }
   const opening=role==='parent'
     ?'Fråga gärna tonåringen vad hen vill börja med och lyssna färdigt innan du föreslår något.'
@@ -130,7 +144,8 @@ function sharedSummary(groups,deckId='general',priorityIds=new Set()){
       :'Välj tillsammans något som känns enkelt att börja med.';
   if(!paragraphs.length)return '';
   return '<aside class="swipe-rule-summary" aria-labelledby="shared-summary-heading"><span class="swipe-summary-label">REDAKTIONELLA RÅD · INTE AI</span><h3 id="shared-summary-heading">Gemensamma möjligheter – '+esc(roleLabel)+'</h3>'+
-    paragraphs.join('')+'<p>'+esc(opening)+'</p>'+
+    '<ul class="swipe-summary-overview">'+overview.join('')+'</ul>'+
+    '<details class="swipe-summary-details"><summary>Läs mer om råden och vad de bygger på</summary><div>'+paragraphs.join('')+'<p>'+esc(opening)+'</p></div></details>'+
     '<p class="live-muted">Texten bygger enbart på serververifierade ömsesidiga ja-svar. Råden är förskrivna, inte AI-genererade; inget privat svar ingår.</p></aside>';
 }
 

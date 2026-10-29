@@ -90,6 +90,15 @@
 .swipe-rule-summary{margin-top:24px;padding:18px;border-left:3px solid #c58a30;background:#191e2c;border-radius:0 13px 13px 0}
 .swipe-rule-summary h3{margin:7px 0 12px}
 .swipe-rule-summary p{margin:9px 0}
+.swipe-summary-overview{display:grid;gap:10px;margin:15px 0 13px;padding:0;list-style:none}
+.swipe-summary-overview li{display:grid;grid-template-columns:36px minmax(0,1fr);gap:11px;align-items:start;padding:12px;border:1px solid #41475b;background:#222839;border-radius:12px}
+.swipe-summary-overview h4{margin:1px 0 4px;color:#ffd18a;font-size:14px}
+.swipe-summary-overview p{margin:0;font-size:14px;line-height:1.48}
+.swipe-summary-icon{width:32px;height:32px;padding:5px;color:#f1bf75;border:1px solid #66553d;border-radius:9px;background:#191e2c;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;fill:none}
+.swipe-summary-details{margin-top:10px;border-top:1px solid #41475b}
+.swipe-summary-details summary{padding:13px 2px 9px;color:#f1bf75;font-weight:700;cursor:pointer}
+.swipe-summary-details summary:focus-visible{outline:3px solid #ffd18a;outline-offset:3px;border-radius:4px}
+.swipe-summary-details>div{padding:0 2px 3px}
 .swipe-priority-summary{margin:22px 0;padding:18px;border:1px solid #b97d28;background:linear-gradient(145deg,#25263a,#191e2c);border-radius:14px;box-shadow:0 13px 30px #05070d55}
 .swipe-priority-summary h3{margin:7px 0 12px;color:#ffd18a}
 .swipe-priority-summary p{margin:9px 0}
@@ -97,7 +106,7 @@
 .swipe-priority-theme h4{margin:0 0 7px;color:#f1bf75;font-size:13px;letter-spacing:.03em}
 .swipe-summary-label{color:#f1bf75;font-size:11px;letter-spacing:.1em;font-weight:700}
 .swipe-refresh{margin-top:20px}
-@media(max-width:600px){.swipe-match-list{grid-template-columns:1fr}}
+@media(max-width:600px){.swipe-match-list{grid-template-columns:1fr}.swipe-summary-overview li{grid-template-columns:32px minmax(0,1fr);padding:10px}.swipe-summary-icon{width:28px;height:28px;padding:4px}}
 
 
 /* Keep the theme-deck back action separate from its heading on narrow screens. */
