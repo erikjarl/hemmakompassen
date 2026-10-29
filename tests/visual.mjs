@@ -330,10 +330,13 @@ try{
   });
   await paired.page.waitForFunction(()=>document.querySelectorAll('.swipe-match-list li').length===1);
   assert.doesNotMatch(await paired.page.locator('.swipe-results').innerText(),/Jag vill helst prata färdigt innan någon kommer med råd/,'Automatic refresh must not expose B or NO');
+  await paired.page.locator('.swipe-results').scrollIntoViewIfNeeded();
   await capture(paired.page,'mobile-auto-shared-match.png');
   await paired.page.evaluate(()=>{window.__HK_TEST_SHARED_MATCHES__=[];window.dispatchEvent(new Event('focus'));});
   await paired.page.waitForFunction(()=>document.querySelector('.swipe-results')?.textContent?.includes('Inga gemensamma ja-svar'));
   assert.equal(await paired.page.locator('.swipe-match-list li').count(),0,'Automatic refresh must remove a revoked match');
+  await paired.page.locator('.swipe-results').scrollIntoViewIfNeeded();
+  await capture(paired.page,'mobile-auto-revoked-match.png');
   await paired.page.evaluate(()=>{delete window.__HK_TEST_SHARED_MATCHES__;window.dispatchEvent(new Event('focus'));});
   await paired.page.waitForFunction(()=>document.querySelectorAll('.swipe-match-list li').length===2);
   assert.equal(await paired.page.locator(".swipe-themes details").count(),6,"A paired family can explore all six theme decks without completing general cards");
