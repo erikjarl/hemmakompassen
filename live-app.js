@@ -93,15 +93,18 @@ function sharedSummary(groups,deckId='general',priorityIds=new Set()){
   const role=viewerRole();
   const roleLabel=role==='parent'?'förälder':role==='teen'?'tonåring':'familjemedlem';
   const paragraphs=[];
+  // Never repeat a category-level tip across many matching cards, or repeat
+  // advice already present in the teenager-prioritised section.
+  const usedAdvice=new Set([...groups.values()].flatMap(items=>items.filter(item=>priorityIds.has(item.card.id)).map(item=>ADVICE_BY_KEY[adviceKeyForCard(item.card,deckId)]).filter(Boolean)));
   for(const [category,items] of groups){
     const remaining=items.filter(item=>!priorityIds.has(item.card.id));
     if(!remaining.length)continue;
     const cardTexts=remaining.map(item=>shortCardText(item.statement));
-    const advice=[...new Set(remaining.map(item=>ADVICE_BY_KEY[adviceKeyForCard(item.card,deckId)]).filter(Boolean))].join(' ')||'Välj något av det ni båda bejakat och prata om hur ni skulle kunna prova det i vardagen.';
+    const advice=[...new Set(remaining.map(item=>ADVICE_BY_KEY[adviceKeyForCard(item.card,deckId)]).filter(Boolean))].filter(text=>{if(usedAdvice.has(text))return false;usedAdvice.add(text);return true;}).join(' ');
     const intro=category==='Fritid'||category==='Gemenskap'
       ?'Ni har båda visat intresse för '
       :'Ni har båda bejakat ';
-    paragraphs.push('<p>'+esc(intro)+'<strong>'+esc(joinSwedish(cardTexts))+'</strong>. '+esc(advice)+'</p>');
+    paragraphs.push('<p>'+esc(intro)+'<strong>'+esc(joinSwedish(cardTexts))+'</strong>.'+(advice?' '+esc(advice):'')+'</p>');
   }
   const opening=role==='parent'
     ?'Fråga gärna tonåringen vad hen vill börja med och lyssna färdigt innan du föreslår något.'
@@ -122,12 +125,13 @@ function sharedPrioritySummary(items,deckId='general'){
     if(!groups.has(item.card.category))groups.set(item.card.category,[]);
     groups.get(item.card.category).push(item);
   }
+  const usedAdvice=new Set();
   const sections=[...groups.entries()].map(([category,cards])=>{
     const texts=cards.map(item=>shortCardText(item.statement));
     const lead=role==='teen'
       ?'Du har markerat <strong>'+esc(joinSwedish(texts))+'</strong> som särskilt viktigt bland det ni båda sagt ja till.'
       :'Ni har båda sagt ja till <strong>'+esc(joinSwedish(texts))+'</strong>, och tonåringen har markerat detta som särskilt viktigt.';
-    const advice=[...new Set(cards.map(item=>ADVICE_BY_KEY[adviceKeyForCard(item.card,deckId)]).filter(Boolean))].join(' ');
+    const advice=[...new Set(cards.map(item=>ADVICE_BY_KEY[adviceKeyForCard(item.card,deckId)]).filter(Boolean))].filter(text=>{if(usedAdvice.has(text))return false;usedAdvice.add(text);return true;}).join(' ');
     return '<section class="swipe-priority-theme"><h4>'+esc(category)+'</h4><p>'+lead+(advice?' '+esc(advice):'')+'</p></section>';
   }).join('');
   const opening=role==='teen'
