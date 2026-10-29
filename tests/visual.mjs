@@ -22,6 +22,44 @@ async function checkOverflow(page,label){
   const widths=await page.evaluate(()=>({document:document.documentElement.scrollWidth,viewport:document.documentElement.clientWidth,visual:window.visualViewport?.width}));
   assert.ok(widths.document<=widths.viewport+2,label+": horizontal overflow "+JSON.stringify(widths));
 }
+async function checkMobileNavigation(page,label){
+  const result=await page.evaluate(async()=>{
+    const nav=document.querySelector('#live-mobile-nav');
+    if(!(nav instanceof HTMLElement))throw new Error('Mobile navigation is missing');
+    const links=[...nav.querySelectorAll('a')];
+    const failures=[];
+    const positions=[];
+    for(const link of links){
+      link.scrollIntoView({block:'nearest',inline:'center'});
+      await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+      const navBox=nav.getBoundingClientRect();
+      const linkBox=link.getBoundingClientRect();
+      const range=document.createRange();
+      range.selectNodeContents(link);
+      const textBox=range.getBoundingClientRect();
+      const style=getComputedStyle(link);
+      const labelText=link.textContent.trim();
+      positions.push({label:labelText,left:linkBox.left,right:linkBox.right,textHeight:textBox.height});
+      if(linkBox.left<navBox.left-1||linkBox.right>navBox.right+1)failures.push(labelText+' is clipped');
+      if(textBox.left<linkBox.left-1||textBox.right>linkBox.right+1)failures.push(labelText+' text exceeds its item');
+      if(textBox.height>Number.parseFloat(style.lineHeight)*2+1)failures.push(labelText+' exceeds two text rows');
+    }
+    links[3]?.focus();
+    await new Promise(resolve=>requestAnimationFrame(resolve));
+    const focusStyle=links[3]?getComputedStyle(links[3]):null;
+    return {
+      count:links.length,
+      scrollable:nav.scrollWidth>nav.clientWidth,
+      focusVisible:!!focusStyle&&focusStyle.outlineStyle!=='none'&&Number.parseFloat(focusStyle.outlineWidth)>=2,
+      failures,
+      positions
+    };
+  });
+  assert.equal(result.count,8,label+': all navigation items render');
+  assert.ok(result.scrollable,label+': navigation remains horizontally scrollable');
+  assert.ok(result.focusVisible,label+': keyboard focus is visible');
+  assert.deepEqual(result.failures,[],label+': '+JSON.stringify(result.positions));
+}
 async function capture(page,name){
   // Standardize screenshots, and fail if transient UI obscures the layout.
   await page.evaluate(()=>{
@@ -131,6 +169,7 @@ try{
   assert.match(await m.page.locator("#live-app").innerText(),/Din familj/i);
   await checkOverflow(m.page,"Mobile homepage");
   await capture(m.page,"mobile-home.png");
+  await checkMobileNavigation(m.page,'390px mobile navigation');
   await m.page.goto(base+"#swipe",{waitUntil:"load"});
   await m.page.getByRole("heading",{name:"Gillaswajpen"}).waitFor();
   assert.match(await m.page.locator("#live-app").innerText(),/sparas privat i ditt konto/i);
@@ -216,6 +255,13 @@ try{
   await checkOverflow(m.page,"Mobile authenticated section");
   await capture(m.page,"mobile-inbox.png");
   await m.context.close();
+  const narrow=await freshContext({viewport:{width:320,height:700},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true});
+  await narrow.page.getByRole("heading",{name:/Hej[ ,]+Provförälder/}).waitFor();
+  await checkMobileNavigation(narrow.page,'320px mobile navigation');
+  await checkOverflow(narrow.page,'320px mobile homepage');
+  await narrow.page.locator('#live-mobile-nav a[href="#kommunikation"]').scrollIntoViewIfNeeded();
+  await capture(narrow.page,'mobile-320-navigation.png');
+  await narrow.context.close();
   const soloTeen=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,role:'teen'});
   await soloTeen.page.goto(base+'#swipe',{waitUntil:'load'});
   await soloTeen.page.locator("#swipe-card[aria-label^='Kort 1 av 34']").waitFor();

@@ -36,4 +36,56 @@ h1,h2,h3,.live-brand{font-family:Georgia,'Playfair Display',serif;letter-spacing
  .live-brand{font-size:21px}
 }
 @media(prefers-reduced-motion:reduce){.live-nav a{transition:none}}
+
+/* Mobile navigation: fixed-size swipe targets, no label collision. */
+@media(max-width:800px){
+  #live-mobile-nav{
+    display:flex;
+    align-items:stretch;
+    gap:8px;
+    overflow-x:auto;
+    overflow-y:hidden;
+    -webkit-overflow-scrolling:touch;
+    scroll-snap-type:x proximity;
+    scroll-padding-inline:14px;
+    padding:9px 14px max(12px,env(safe-area-inset-bottom));
+    scrollbar-width:thin;
+    scrollbar-color:#a97c38 #11141e;
+  }
+  #live-mobile-nav a{
+    box-sizing:border-box;
+    flex:0 0 108px;
+    width:108px;
+    min-width:108px;
+    max-width:108px;
+    min-height:78px;
+    padding:9px 5px;
+    margin:0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:5px;
+    font:500 11px/1.25 "DM Sans",system-ui,sans-serif;
+    text-align:center;
+    white-space:normal;
+    overflow-wrap:normal;
+    word-break:normal;
+    hyphens:none;
+    scroll-snap-align:start;
+  }
+  #live-mobile-nav a::before{
+    display:block;
+    flex:none;
+    width:auto;
+    height:26px;
+    margin:0;
+    font-size:23px;
+    line-height:26px;
+  }
+  #live-mobile-nav a:focus-visible{
+    outline:2px solid #f5b657;
+    outline-offset:-3px;
+  }
+}
 </style></head><body><div class="live-layout"><aside class="live-sidebar"><a class="live-brand" href="#hem">Hemmakompassen</a><p class="live-pill">ERT GEMENSAMMA RUM</p><nav class="live-nav" id="live-desktop-nav" aria-label="Huvudmeny"></nav><div class="live-panel"><p id="sidebar-account">Kontrollerar konto…</p><a href="./konto.html">Kontoinställningar →</a></div></aside><div class="live-main"><header class="live-top"><a class="live-brand" href="#hem">Hemmakompassen</a><a href="./konto.html" id="account-link">Ditt konto →</a></header><main id="live-app" tabindex="-1"><h1>Hemmakompassen</h1><p id="live-status" role="status">Kontrollerar inloggning…</p></main></div><nav class="live-mobile" id="live-mobile-nav" aria-label="Mobilmeny"></nav></div><script src="./backend-config.js"></script><script type="module" src="./live-app.js?v=20261027h3"></script></body></html>
