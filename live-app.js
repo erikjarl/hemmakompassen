@@ -12,6 +12,8 @@ const THEME_DECKS=THEME_DECK_MODELS.map(deck=>({...deck,cards:deck.cards.map(car
 let user=null,profile=null,members=[],refreshGeneration=0;
 let swipeIndex=0,swipeBusy=false,swipeReview=false,swipeLoadError='',swipeSaveError='';
 let sharedMatches=[],sharedPriorities=[],sharedDeckId='general',sharedError='',sharedLoading=false,sharedSession=0,sharedRequest=0;
+let sharedPollPending=false;
+const SHARED_POLL_INTERVAL_MS=15000;
 let themesUnlocked=false,themesLoading=false,themesError='',themesRequest=0;
 const swipeAnswers=new Map();
 const themeAnswers=new Map(THEME_DECKS.map(deck=>[deck.id,new Map()]));
@@ -186,13 +188,16 @@ function swipeResults(deckId='general'){
     sharedSummary(groups,deckId,priorityIds)+
     button+'</section>';
 }
-async function fetchSwipeMatches(deckId='general'){
+async function fetchSwipeMatches(deckId='general',{quiet=false}={}){
   if(!user||members.length!==2)return;
   const deck=sharedDeck(deckId);
   if(!deck)return;
   const viewer=user.id,session=sharedSession,request=++sharedRequest;
-  sharedDeckId=deckId;sharedMatches=[];sharedPriorities=[];sharedLoading=true;sharedError='';
-  if(page()==='swipe'&&!swipeBusy)render();
+  const quietRefresh=quiet&&sharedDeckId===deckId&&!sharedLoading&&!sharedError;
+  const previousResults=quietRefresh?JSON.stringify([sharedMatches,sharedPriorities]):null;
+  sharedDeckId=deckId;
+  if(!quietRefresh){sharedMatches=[];sharedPriorities=[];sharedLoading=true;sharedError='';
+    if(page()==='swipe'&&!swipeBusy)render();}
   try{
     const [matchResult,priorityResult]=await Promise.all([
       db.rpc('shared_swipe_matches',{p_deck_id:deckId}),
@@ -225,9 +230,21 @@ async function fetchSwipeMatches(deckId='general'){
   }finally{
     if(session===sharedSession&&request===sharedRequest&&user?.id===viewer&&sharedDeckId===deckId){
       sharedLoading=false;
-      if(page()==='swipe'&&!swipeBusy)render();
+      if(page()==='swipe'&&!swipeBusy&&(!quietRefresh||sharedError||previousResults!==JSON.stringify([sharedMatches,sharedPriorities])))render();
     }
   }
+}
+
+// Only poll the authenticated, server-verified shared RPC for the currently visible deck.
+// Never subscribe to, query or infer the other family member's private answers.
+// Background tabs are paused, and the existing session/request guards reject stale replies.
+async function pollSharedMatches(){
+  if(sharedPollPending||sharedLoading||!user||members.length!==2||page()!=='swipe'||document.hidden)return;
+  const deckId=activeThemeDeck||'general';
+  if(!sharedDeck(deckId))return;
+  sharedPollPending=true;
+  try{await fetchSwipeMatches(deckId,{quiet:true});}
+  finally{sharedPollPending=false;}
 }
 
 // Theme access no longer depends on completing the general deck. This check
@@ -404,7 +421,10 @@ document.addEventListener('input',e=>{if(!e.target.matches?.('[data-importance]'
 document.addEventListener('change',e=>{if(!e.target.matches?.('[data-importance]')||!user)return;void saveImportance(e.target.dataset.deckId,e.target.dataset.cardId,Number(e.target.value),user.id,sharedSession);});
 document.addEventListener('keydown',e=>{if(page()==='swipe'&&user&&!['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName)&&['ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();advanceSwipe(e.key==='ArrowRight'?'yes':'no');}});
 document.addEventListener('submit',async e=>{if(e.target.id!=='live-login')return;e.preventDefault();const b=e.target.querySelector('button');b.disabled=true;const feedback=$('login-feedback');feedback.textContent='Loggar in…';const email=$('live-email').value.trim();try{const {error}=await db.auth.signInWithPassword({email,password:$('live-password').value});if(error)throw error;$('live-password') && ($('live-password').value='');await refresh();}catch(err){feedback.textContent='Kunde inte logga in. Kontrollera e-post och lösenord, eller välj ”Glömt lösenord eller saknar lösenord?”.';}finally{b.disabled=false;}});
-window.addEventListener('hashchange',()=>{render();window.scrollTo(0,0);});
+window.addEventListener('hashchange',()=>{render();window.scrollTo(0,0);if(page()==='swipe')void pollSharedMatches();});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)void pollSharedMatches();});
+window.addEventListener('focus',()=>void pollSharedMatches());
+window.setInterval(()=>void pollSharedMatches(),SHARED_POLL_INTERVAL_MS);
 db.auth.onAuthStateChange(()=>setTimeout(()=>refresh().catch(showError),0));
 function showError(e){$('live-app').innerHTML=card('<h2>Kunde inte läsa kontot</h2><p>'+esc(e.message)+'</p><a href="./konto.html">Öppna kontosidan</a>');}
 refresh().catch(showError);
