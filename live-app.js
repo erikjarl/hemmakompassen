@@ -226,43 +226,24 @@ async function fetchSwipeMatches(deckId='general'){
   }
 }
 
+// Theme access no longer depends on completing the general deck. This check
+// grants only private swipe access; all shared A results remain server-gated.
 async function fetchThemeUnlock(){
-  if(!user||members.length!==2){themesUnlocked=false;themesLoading=false;activeThemeDeck=null;return;}
-  const viewer=user.id,session=sharedSession,request=++themesRequest;
-  themesUnlocked=false;themesLoading=true;themesError='';
+  themesUnlocked=!!user&&members.length===2&&members.some(member=>member.user_id===user.id)&&members.some(member=>member.role==='parent')&&members.some(member=>member.role==='teen');
+  themesLoading=false;themesError='';
+  if(!themesUnlocked)activeThemeDeck=null;
   if(page()==='swipe'&&!swipeBusy)render();
-  try{
-    const {data,error}=await db.rpc('shared_general_deck_complete');
-    if(session!==sharedSession||request!==themesRequest||user?.id!==viewer)return;
-    if(error||typeof data!=='boolean')throw Error('Unlock RPC unavailable');
-    themesUnlocked=data===true;
-    if(!themesUnlocked)activeThemeDeck=null;
-  }catch(e){
-    if(session!==sharedSession||request!==themesRequest||user?.id!==viewer)return;
-    themesUnlocked=false;
-    activeThemeDeck=null;
-    themesError='Det går inte att kontrollera om temakortlekarna är upplåsta just nu.';
-  }finally{
-    if(session===sharedSession&&request===themesRequest&&user?.id===viewer){
-      themesLoading=false;
-      if(page()==='swipe'&&!swipeBusy)render();
-    }
-  }
 }
 function themeDecksView(){
   const unlocked=members.length===2&&themesUnlocked&&!themesLoading&&!themesError;
-  const status=members.length!==2
-    ?'Koppla ihop två familjemedlemmar för att kunna låsa upp fler kortlekar.'
-    :themesLoading
-      ?'Kontrollerar om ni båda har avslutat allmänna kortleken…'
-      :themesError||(!unlocked
-        ?'Temakortlekarna är låsta tills ni båda har gått igenom den allmänna kortleken.'
-        :'Ni har båda avslutat allmänna kortleken. Temakortlekarna är upplåsta; gemensamma ja visas inne i respektive kortlek.');
+  const status=unlocked
+    ?'Utforska kortlekarna i egen takt. Gemensamma ja kan visas direkt, även om kortlekarna inte är färdigspelade.'
+    :'Koppla ihop en förälder och en tonåring för att öppna kortlekarna. Dina egna svar förblir privata.';
   return '<section class="swipe-themes" aria-labelledby="swipe-themes-heading"><h2 id="swipe-themes-heading">Fler kortlekar</h2>'+
     '<p class="live-muted" role="status">'+esc(status)+'</p>'+
     THEME_DECKS.map(deck=>card(unlocked
-      ?'<details><summary><strong>'+esc(deck.title)+'</strong> · '+deck.cards.length+' kort</summary><ul>'+deck.cards.map((_,index)=>'<li>'+esc(cardTextForRole(themeCardModel(deck,index),viewerRole()))+'</li>').join('')+'</ul></details><p class="live-muted">Din privata status: '+themeAnswers.get(deck.id).size+' / '+deck.cards.length+' kort</p><button type="button" class="live-button" data-theme-open="'+esc(deck.id)+'">'+(themeAnswers.get(deck.id).size===deck.cards.length?'Visa och ändra svar':'Öppna kortleken')+'</button>'
-      :'<h3>'+esc(deck.title)+'</h3><p class="live-muted">Låst · öppnas när ni båda är klara.</p>'
+      ?'<details><summary><strong>'+esc(deck.title)+'</strong> · '+deck.cards.length+' kort</summary><p class="live-muted">Ämnen: '+esc([...new Set(THEME_DECK_MODELS.find(model=>model.id===deck.id).cards.map(item=>item.category))].join(' · '))+'</p></details><p class="live-muted">Din privata status: '+themeAnswers.get(deck.id).size+' / '+deck.cards.length+' kort</p><button type="button" class="live-button" data-theme-open="'+esc(deck.id)+'">'+(themeAnswers.get(deck.id).size===deck.cards.length?'Visa och ändra svar':'Öppna kortleken')+'</button>'
+      :'<h3>'+esc(deck.title)+'</h3><p class="live-muted">Tillgänglig efter säker familjeparning.</p>'
     )).join('')+
     (themesError?'<button type="button" class="live-button" id="retry-theme-unlock">Kontrollera igen</button>':'')+
     '</section>';
@@ -282,7 +263,7 @@ function themeSwipeView(){
     '<div class="swipe-track"><div class="swipe-track-fill" style="width:'+Math.round(100*(item?(themeReview?themeIndex:answered):deck.cards.length)/deck.cards.length)+'%"></div></div>'+
     (item?'<div id="swipe-card" class="swipe-playing-card" tabindex="0" aria-label="Temakort '+(themeIndex+1)+' av '+deck.cards.length+'. Svep höger för ja eller vänster för nej.">'+
       '<span class="swipe-stamp swipe-stamp-no" aria-hidden="true">NEJ</span><span class="swipe-stamp swipe-stamp-yes" aria-hidden="true">JA</span>'+
-      '<span class="swipe-category">'+esc(deck.title)+'</span><h2>'+esc(itemText)+'</h2><span class="swipe-card-hint">Dra kortet åt höger eller vänster</span>'+importanceControl(deck.id,themeCardId(deck,themeIndex))+'</div>'+
+      '<span class="swipe-category">'+esc(themeCardModel(deck,themeIndex)?.category||deck.title)+'</span><h2>'+esc(itemText)+'</h2><span class="swipe-card-hint">Dra kortet åt höger eller vänster</span>'+importanceControl(deck.id,themeCardId(deck,themeIndex))+'</div>'+
       '<div class="swipe-actions"><button type="button" class="swipe-choice swipe-no" data-swipe="no" aria-label="Nej">✕ <span>Nej</span></button>'+
       '<button type="button" class="swipe-choice swipe-yes" data-swipe="yes" aria-label="Ja">♥ <span>Ja</span></button></div>'
       :'<div class="swipe-finished"><h2>Alla '+deck.cards.length+' svar är sparade</h2><p>Du kan gå igenom kortleken igen och ändra dina egna svar.</p>'+
