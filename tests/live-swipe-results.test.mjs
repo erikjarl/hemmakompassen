@@ -128,7 +128,7 @@ console.log('PASS: shared result renderer and role summaries reject B, NO and un
   const state={
     user:{id:'account-1'},members:[{},{}],sharedSession:1,sharedRequest:0,
     sharedDeckId:'general',sharedMatches:[],sharedPriorities:[],sharedError:'',
-    sharedLoading:false,sharedPollPending:false,sharedPrioritiesEnabled:false,swipeBusy:false,
+    sharedLoading:false,sharedPollPending:false,sharedPollingEnabled:true,sharedPrioritiesEnabled:false,swipeBusy:false,
     document:{hidden:false},page:()=> 'swipe',render:()=>{renders++;},
     sharedDeck:id=>id==='general'?{cards:[
       {id:'general-01',type:'match'},{id:'general-02',type:'understanding'},
