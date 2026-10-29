@@ -259,6 +259,7 @@ try{
   await narrow.page.getByRole("heading",{name:/Hej[ ,]+Provförälder/}).waitFor();
   await checkMobileNavigation(narrow.page,'320px mobile navigation');
   await checkOverflow(narrow.page,'320px mobile homepage');
+  await narrow.page.locator('#live-mobile-nav a[href="#kommunikation"]').scrollIntoViewIfNeeded();
   await capture(narrow.page,'mobile-320-navigation.png');
   await narrow.context.close();
   const soloTeen=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,role:'teen'});
