@@ -43,6 +43,20 @@ for(const card of newActivityCards){
   assert.ok(ADVICE_BY_KEY[key]?.length>=80,card.id+' has a substantive card-specific editorial advice sentence');
 }
 assert.equal(new Set(newActivityCards.map(card=>ADVICE_BY_KEY[adviceKeyForCard(card,'aktiviteter')])).size,96,'Every new activity card has a unique editorial advice sentence');
+const newConversationCards=THEME_DECK_MODELS.find(deck=>deck.id==='samtal').cards.slice(8);
+for(const card of newConversationCards){
+  const key=adviceKeyForCard(card,'samtal');
+  assert.equal(key,card.id,card.id+' uses its stable ID as editorial advice key');
+  assert.ok(ADVICE_BY_KEY[key]?.length>=80,card.id+' has a substantive card-specific editorial advice sentence');
+}
+assert.equal(new Set(newConversationCards.map(card=>ADVICE_BY_KEY[adviceKeyForCard(card,'samtal')])).size,96,'Every new conversation card has a unique editorial advice sentence');
+for(const card of themeCards){
+  const deckId=card.id.split('-')[0];
+  const key=adviceKeyForCard(card,deckId);
+  assert.equal(key,card.id,card.id+' uses its stable ID as editorial advice key');
+  assert.ok(ADVICE_BY_KEY[key]?.length>=80,card.id+' has a substantive card-specific editorial advice sentence');
+}
+assert.equal(new Set(themeCards.map(card=>ADVICE_BY_KEY[adviceKeyForCard(card,card.id.split('-')[0])])).size,244,'Every theme A card has its own unique editorial advice sentence');
 assert.deepEqual(THEME_DECK_MODELS.find(deck=>deck.id==='samtal').cards.slice(0,8).map(card=>card.teenText),['Vad som varit roligt den senaste veckan','Hur vi har det i skolan eller på jobbet','Vad vi vill göra under nästa ledighet','Hur vi vill prata om sociala medier','Vad vi vill lära oss','Hur vi visar att vi lyssnar','Vad som gör oss stressade','Vad vi drömmer om framöver'],'Legacy conversation card texts remain unchanged');
 assert.deepEqual(THEME_DECK_MODELS.find(deck=>deck.id==='aktiviteter').cards.slice(0,8).map(card=>card.teenText),['Laga mat tillsammans','Ta en promenad ihop','Se en film tillsammans','Spela ett spel','Prova en ny aktivitet','Göra en utflykt','Visa varandra favoritmusik','Skapa något tillsammans'],'Legacy activity card texts remain unchanged');
 for(const deck of THEME_DECK_MODELS){
