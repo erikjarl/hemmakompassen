@@ -41,7 +41,7 @@ console.log('PASS: mutual-YES-only RPC results, role-specific rule summary, them
 // Execute the actual shared-view and summary functions with synthetic data.
 const sharedViewFunctions=script.match(/const joinSwedish=[\s\S]*?(?=\nasync function fetchSwipeMatches\()/);
 assert.ok(sharedViewFunctions,'Shared result rendering can be tested independently');
-function renderSharedResult(rows,role='parent',priorityRows=[]){
+function renderSharedResult(rows,role='parent',priorityRows=[],adviceByKey={'general-01':'Välj en gemensam dag.','general-04':'Lyssna färdigt och välj ett litet nästa steg.'}){
   const state={
     members:[{role:'parent'},{role:'teen'}],sharedLoading:false,sharedDeckId:'general',sharedError:'',sharedMatches:rows.map(row=>({deck_id:'general',...row})),sharedPriorities:priorityRows.map(row=>({deck_id:'general',...row})),
     GENERAL_CARDS:[
@@ -50,7 +50,7 @@ function renderSharedResult(rows,role='parent',priorityRows=[]){
       {id:'general-03',type:'match',category:'Samtal',teenText:'HEMLIGT NEJ-SVAR'},
       {id:'general-04',type:'match',category:'Samtal',teenText:'Tonåringens andra gemensamma kort',parentText:'Förälderns andra gemensamma kort'},
     ],
-    THEME_DECK_MODELS:[],ADVICE_BY_KEY:{'general-01':'Välj en gemensam dag.','general-04':'Lyssna färdigt och välj ett litet nästa steg.'},
+    THEME_DECK_MODELS:[],ADVICE_BY_KEY:adviceByKey,
     adviceKeyForCard:card=>card.id,
     cardTextForRole:(card,viewerRole)=>viewerRole==='parent'?(card.parentText||card.teenText):card.teenText,
     viewerRole:()=>role,
@@ -108,5 +108,13 @@ function renderSharedResult(rows,role='parent',priorityRows=[]){
   ]);
   assert.match(html,/Inga gemensamma ja-svar/,'Invalid-only results render the safe empty state');
   assert.doesNotMatch(html,/swipe-rule-summary|HEMLIGT|Välj en gemensam dag/,'Invalid-only results cannot create a shared summary');
+}
+{
+  const duplicateAdvice={'general-01':'Välj en gemensam dag.','general-04':'Välj en gemensam dag.'};
+  const matches=[{card_id:'general-01',answer:true},{card_id:'general-04',answer:true}];
+  const ordinary=renderSharedResult(matches,'parent',[],duplicateAdvice);
+  assert.equal((ordinary.match(/Välj en gemensam dag\\./g)||[]).length,1,'One generic tip is not repeated across separate categories');
+  const prioritised=renderSharedResult(matches,'parent',[{card_id:'general-01'}],duplicateAdvice);
+  assert.equal((prioritised.match(/Välj en gemensam dag\\./g)||[]).length,1,'A priority tip is not duplicated in the ordinary summary');
 }
 console.log('PASS: shared result renderer and role summaries reject B, NO and unknown cards');
