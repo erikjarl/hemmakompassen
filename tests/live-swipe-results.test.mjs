@@ -26,9 +26,9 @@ assert.match(script,/members\.find\(member=>member\.user_id===user\?\.id\)\?\.ro
 assert.match(script,/REDAKTIONELLA RÅD · INTE AI/,'Labels the deterministic editorial advice clearly');
 assert.match(script,/Texten bygger enbart på serververifierade ömsesidiga ja-svar/,'States the summary privacy boundary');
 assert.doesNotMatch(script,/localStorage/,'No shared answers are cached locally');
-assert.doesNotMatch(script,/db\\.rpc\\('shared_general_deck_complete'\\)/,'Theme decks no longer depend on finishing the general deck');
-assert.match(script,/themesUnlocked=!!user&&members\\.length===2&&members\\.some\\(member=>member\\.user_id===user\\.id\\)&&members\\.some\\(member=>member\\.role==='parent'\\)&&members\\.some\\(member=>member\\.role==='teen'\\)/,'Private theme access requires the signed-in user in an exact parent-teen pair');
-assert.match(script,/const unlocked=members\\.length===2&&themesUnlocked&&!themesLoading&&!themesError/,'Unpaired viewers cannot preview theme choices');
+assert.doesNotMatch(script,/shared_general_deck_complete/,'Theme decks no longer depend on finishing the general deck');
+assert.ok(script.includes("themesUnlocked=!!user&&members.length===2&&members.some(member=>member.user_id===user.id)&&members.some(member=>member.role==='parent')&&members.some(member=>member.role==='teen')"),'Private theme access requires the signed-in user in an exact parent-teen pair');
+assert.ok(script.includes("const unlocked=members.length===2&&themesUnlocked&&!themesLoading&&!themesError"),'Unpaired viewers cannot preview theme choices');
 assert.match(script,/visibleGeneralIndices\(\)\.every\(i=>swipeAnswers\.has\(swipeCardId\(i\)\)\|\|skippedUnderstanding\.has\(swipeCardId\(i\)\)\)/,'Rechecks completion for role-visible cards and skipped understanding cards');
 assert.match(script,/db\.from\('swipe_skips'\)\.select\('deck_id,card_id'\)\.eq\('user_id',viewer\)/,'Reloads only the signed-in user’s private skips');
 assert.match(script,/db\.rpc\('set_understanding_card_state',\{p_card_id:row\.card_id,p_answer:row\.answer,p_skipped:false\}\)/,'Stores B answers through the role-checked atomic RPC');
