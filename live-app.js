@@ -135,7 +135,7 @@ function sharedSummary(groups,deckId='general',priorityIds=new Set()){
     paragraphs.push('<p>'+esc(intro)+'<strong>'+esc(joinSwedish(cardTexts))+'</strong>.'+(advice?' '+esc(advice):'')+'</p>');
     const icon=summaryIconFor(category);
     const concise=firstSentence(advice)||('Utforska '+joinSwedish(cardTexts)+'.');
-    overview.push('<li>'+summaryIcon(icon)+'<div><h4>'+esc(category)+'</h4><span class="visually-hidden">'+esc(icon.name)+': </span><p>'+esc(concise)+'</p></div></li>');
+    overview.push('<li>'+summaryIcon(icon)+'<div><h4>'+esc(category)+'</h4><span class="swipe-summary-icon-label">'+esc(icon.name)+': </span><p>'+esc(concise)+'</p></div></li>');
   }
   const opening=role==='parent'
     ?'Fråga gärna tonåringen vad hen vill börja med och lyssna färdigt innan du föreslår något.'

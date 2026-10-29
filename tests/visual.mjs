@@ -381,6 +381,8 @@ try{
   await paired.page.locator(".swipe-match-list li").first().waitFor();
   assert.ok((await paired.page.locator('.swipe-summary-overview li').count())>=1,'Authorized A advice renders a compact icon overview');
   assert.equal(await paired.page.locator('.swipe-summary-overview svg[aria-hidden="true"]').count(),await paired.page.locator('.swipe-summary-overview li').count(),'Every overview topic has one decorative SVG and a text heading');
+  const hiddenIconLabel=paired.page.locator('.swipe-summary-icon-label').first();
+  assert.deepEqual(await hiddenIconLabel.evaluate(el=>({width:el.getBoundingClientRect().width,height:el.getBoundingClientRect().height})),{width:1,height:1},'The assistive icon label must not create a visible duplicate text row');
   const summaryDetails=paired.page.locator('.swipe-summary-details');
   await paired.page.keyboard.press('Tab');
   await summaryDetails.locator('summary').focus();

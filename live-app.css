@@ -95,6 +95,7 @@
 .swipe-summary-overview h4{margin:1px 0 4px;color:#ffd18a;font-size:14px}
 .swipe-summary-overview p{margin:0;font-size:14px;line-height:1.48}
 .swipe-summary-icon{width:32px;height:32px;padding:5px;color:#f1bf75;border:1px solid #66553d;border-radius:9px;background:#191e2c;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;fill:none}
+.swipe-summary-icon-label{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 .swipe-summary-details{margin-top:10px;border-top:1px solid #41475b}
 .swipe-summary-details summary{padding:13px 2px 9px;color:#f1bf75;font-weight:700;cursor:pointer}
 .swipe-summary-details summary:focus-visible{outline:3px solid #ffd18a;outline-offset:3px;border-radius:4px}
