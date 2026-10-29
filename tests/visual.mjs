@@ -120,6 +120,7 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
                window.__HK_MATCH_RPC_ARGS__=[...(window.__HK_MATCH_RPC_ARGS__||[]),args];
                if(window.__HK_RPC_UNAVAILABLE__)return {data:null,error:{message:'synthetic unavailable'}};
                if(!window.__HK_TEST_PAIRED__)return {data:[],error:null};
+               if(Array.isArray(window.__HK_TEST_SHARED_MATCHES__))return {data:window.__HK_TEST_SHARED_MATCHES__,error:null};
                if(args.p_deck_id==='samtal')return {data:[{deck_id:'samtal',card_id:'samtal-01',answer:true},{deck_id:'samtal',card_id:'samtal-02',answer:false},{deck_id:'aktiviteter',card_id:'aktiviteter-01',answer:true},{deck_id:'samtal',card_id:'samtal-999',answer:true}],error:null};
                return {data:[{deck_id:'general',card_id:'general-01',answer:true},{deck_id:'general',card_id:'general-10',answer:true},{deck_id:'general',card_id:'general-02',answer:true},{deck_id:'general',card_id:'general-03',answer:false},{deck_id:'general',card_id:'general-99',answer:true}],error:null};
              }
@@ -317,6 +318,24 @@ try{
   assert.doesNotMatch(sharedText,/Jag vill helst prata färdigt innan någon kommer med råd/,"The mutual NO is never displayed");
   assert.doesNotMatch(sharedText,/Det ni båda svarat nej till|Två nej/,"No mutual NO headings or counts");
   assert.ok((await paired.page.evaluate(()=>window.__HK_MATCH_RPC_CALLS__))>0,"Paired account requests the aggregate RPC");
+  // Simulate a second account changing the server's aggregate result while this
+  // client's tab remains open. The client must refresh without reading private answers.
+  await paired.page.evaluate(()=>{
+    window.__HK_TEST_SHARED_MATCHES__=[
+      {deck_id:'general',card_id:'general-01',answer:true},
+      {deck_id:'general',card_id:'general-02',answer:true},
+      {deck_id:'general',card_id:'general-03',answer:false}
+    ];
+    window.dispatchEvent(new Event('focus'));
+  });
+  await paired.page.waitForFunction(()=>document.querySelectorAll('.swipe-match-list li').length===1);
+  assert.doesNotMatch(await paired.page.locator('.swipe-results').innerText(),/Jag vill helst prata färdigt innan någon kommer med råd/,'Automatic refresh must not expose B or NO');
+  await capture(paired.page,'mobile-auto-shared-match.png');
+  await paired.page.evaluate(()=>{window.__HK_TEST_SHARED_MATCHES__=[];window.dispatchEvent(new Event('focus'));});
+  await paired.page.waitForFunction(()=>document.querySelector('.swipe-results')?.textContent?.includes('Inga gemensamma ja-svar'));
+  assert.equal(await paired.page.locator('.swipe-match-list li').count(),0,'Automatic refresh must remove a revoked match');
+  await paired.page.evaluate(()=>{delete window.__HK_TEST_SHARED_MATCHES__;window.dispatchEvent(new Event('focus'));});
+  await paired.page.waitForFunction(()=>document.querySelectorAll('.swipe-match-list li').length===2);
   assert.equal(await paired.page.locator(".swipe-themes details").count(),6,"A paired family can explore all six theme decks without completing general cards");
   assert.equal(await paired.page.evaluate(()=>window.__HK_UNLOCK_RPC_CALLS__||0),0,"Theme access never requests the obsolete completion RPC");
   // Partial completion is sufficient: the paired parent has only a few saved
