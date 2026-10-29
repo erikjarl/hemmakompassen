@@ -84,7 +84,7 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
   await context.addInitScript(value=>{window.__HK_TEST_USER__=value.user;window.__HK_TEST_PAIRED__=value.paired;window.__HK_TEST_ROLE__=value.role;window.__HK_TEST_UNLOCKED__=value.unlocked;window.__HK_UNLOCK_RPC_UNAVAILABLE__=value.unlockUnavailable;window.__HK_PRIORITY_RPC_UNAVAILABLE__=value.priorityUnavailable;window.__HK_PREANSWERED_GENERAL__=value.preansweredGeneral;},{preansweredGeneral,user:authenticated?{id:role==="teen"?"10000000-0000-0000-0000-000000000002":"10000000-0000-0000-0000-000000000001",email:"synthetic@example.invalid"}:null,paired,role,unlocked,unlockUnavailable,priorityUnavailable});
   await context.route(base+"backend-config.js",route=>route.fulfill({
     contentType:"application/javascript",
-    body:"window.HEMMAKOMPASSEN_BACKEND=Object.freeze({supabaseUrl:'https://synthetic.invalid',supabasePublishableKey:'synthetic',enableSharedPriorities:true,enableSharedPolling:true});"
+    body:"window.HEMMAKOMPASSEN_BACKEND=Object.freeze({supabaseUrl:'https://synthetic.invalid',supabasePublishableKey:'synthetic',enableSharedPriorities:true,enableSharedPolling:true,enableSharedInsights:true});"
   }));
   await context.route("https://esm.sh/**",route=>route.fulfill({
     contentType:"application/javascript",
@@ -339,6 +339,33 @@ try{
   await capture(paired.page,'mobile-auto-revoked-match.png');
   await paired.page.evaluate(()=>{delete window.__HK_TEST_SHARED_MATCHES__;window.dispatchEvent(new Event('focus'));});
   await paired.page.waitForFunction(()=>document.querySelectorAll('.swipe-match-list li').length===2);
+
+  // All-deck insights use seven independent, server-verified A-only RPC reads.
+  // The mock includes historical B YES, mutual NO, unknown and wrong-deck rows.
+  await paired.page.locator('a[href="#insikter"]').click();
+  await paired.page.getByRole('heading',{name:'Möjligt att utforska'}).waitFor();
+  await paired.page.locator('.insights-deck').first().waitFor();
+  assert.equal(await paired.page.locator('.insights-deck').count(),2,'Only decks with permitted A JA+JA appear');
+  assert.equal(await paired.page.locator('.insights-deck .swipe-match-list li').count(),3,'Two general and one conversation A match, no other rows');
+  const insightText=await paired.page.locator('.insights-view').innerText();
+  assert.match(insightText,/Så här funkar min tonåring/,'B section is clearly separate');
+  assert.match(insightText,/Förståelsekort visas inte här ännu/,'B content remains disabled');
+  assert.doesNotMatch(insightText,/Jag vill helst prata färdigt innan någon kommer med råd/,'Historical B YES never leaks');
+  assert.doesNotMatch(insightText,/Jag känner mig lyssnad på när vi är oense/,'A NO cannot leak');
+  await checkOverflow(paired.page,'Mobile all-deck insights');
+  await capture(paired.page,'mobile-shared-insights.png');
+  await paired.page.evaluate(()=>{window.__HK_RPC_UNAVAILABLE__=true;});
+  await paired.page.locator('#insights-retry').click();
+  await paired.page.getByRole('alert').waitFor();
+  assert.equal(await paired.page.locator('.insights-deck').count(),0,'One failed deck RPC clears all previous shared insights');
+  await paired.page.evaluate(()=>{window.__HK_RPC_UNAVAILABLE__=false;});
+  await paired.page.locator('#insights-retry').click();
+  await paired.page.locator('.insights-deck').first().waitFor();
+  await paired.page.locator('[data-insight-open="samtal"]').click();
+  await paired.page.locator("#swipe-card[aria-label^='Temakort 1 av 104']").waitFor();
+  await paired.page.locator('#theme-back').click();
+  await paired.page.getByRole('heading',{name:'Era gemensamma svar'}).waitFor();
+
   assert.equal(await paired.page.locator(".swipe-themes details").count(),6,"A paired family can explore all six theme decks without completing general cards");
   assert.equal(await paired.page.evaluate(()=>window.__HK_UNLOCK_RPC_CALLS__||0),0,"Theme access never requests the obsolete completion RPC");
   // Partial completion is sufficient: the paired parent has only a few saved
