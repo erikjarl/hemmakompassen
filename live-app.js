@@ -2,6 +2,9 @@ import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
+// Do not activate background polling until the server-side A allowlist and
+// authenticated two-account revocation tests have been approved.
+const sharedPollingEnabled=c.enableSharedPolling===true;
 const db=createClient(c.supabaseUrl,c.supabasePublishableKey,{auth:{flowType:'pkce',detectSessionInUrl:true}});
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??'').replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x]));
@@ -239,7 +242,7 @@ async function fetchSwipeMatches(deckId='general',{quiet=false}={}){
 // Never subscribe to, query or infer the other family member's private answers.
 // Background tabs are paused, and the existing session/request guards reject stale replies.
 async function pollSharedMatches(){
-  if(sharedPollPending||sharedLoading||!user||members.length!==2||page()!=='swipe'||document.hidden)return;
+  if(!sharedPollingEnabled||sharedPollPending||sharedLoading||!user||members.length!==2||page()!=='swipe'||document.hidden)return;
   const deckId=activeThemeDeck||'general';
   if(!sharedDeck(deckId))return;
   sharedPollPending=true;
