@@ -20,7 +20,7 @@ test('priority RPC exposes only teen-high mutual A cards',()=>{
 test('server catalogue allowlists every current A card and no B card',()=>{
   for(const card of reviewedA)assert.match(migration,new RegExp("\\('(?:[^']+)','"+card.id+"'\\)"),card.id+' is server allowlisted');
   for(const card of GENERAL_CARDS.filter(card=>card.type==='understanding'))assert.doesNotMatch(migration,new RegExp("\\('general','"+card.id+"'\\)"),card.id+' B card must stay excluded');
-  assert.equal(reviewedA.length,73);
+  assert.equal(reviewedA.length,265,'All 21 general and 244 theme A cards are explicitly allowlisted');
 });
 
 test('priority RPC is authenticated and reveals no raw level',()=>{
