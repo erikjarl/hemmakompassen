@@ -122,8 +122,10 @@ console.log('PASS: shared result renderer and role summaries reject B, NO and un
 {
   // Exercise the actual polling functions using a synthetic aggregate RPC.
   // No private answer table or production Supabase is involved.
-  const source=script.match(/async function fetchSwipeMatches\([\s\S]*?(?=\n\/\/ Theme access)/);
+  const source=script.match(/async function fetchSwipeMatches\([\s\S]*?(?=\nconst INSIGHT_DECK_IDS)/);
+   const pollSource=script.match(/async function pollSharedMatches\([\s\S]*?(?=\n\/\/ Theme access)/);
   assert.ok(source,'The aggregate fetch and polling functions remain independently testable');
+   assert.ok(pollSource,'The aggregate polling function remains independently testable');
   let rows=[{deck_id:'general',card_id:'general-01',answer:true}],calls=0,renders=0;
   const state={
     user:{id:'account-1'},members:[{},{}],sharedSession:1,sharedRequest:0,
@@ -139,7 +141,7 @@ console.log('PASS: shared result renderer and role summaries reject B, NO and un
       assert.equal(args.p_deck_id,'general');calls++;return {data:rows,error:null};
     }},
   };
-  vm.runInNewContext(source[0]+'\nthis.pollSharedMatches=pollSharedMatches;this.fetchSwipeMatches=fetchSwipeMatches;',state);
+  vm.runInNewContext(source[0]+'\n'+pollSource[0]+'\nthis.pollSharedMatches=pollSharedMatches;this.fetchSwipeMatches=fetchSwipeMatches;',state);
   await state.fetchSwipeMatches('general');
   assert.equal(state.sharedMatches.length,1,'Initial mutual A-YES is shown');
   const firstRenders=renders;
