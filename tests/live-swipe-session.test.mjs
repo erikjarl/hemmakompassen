@@ -125,6 +125,7 @@ const deferred=()=>{let resolve,reject;const promise=new Promise((ok,no)=>{resol
     activeThemeDeck:null,themeIndex:0,themeReview:false,themeSaveError:'',
     swipeBusy:false,swipeLoadError:'',swipeSaveError:'',swipeReview:false,swipeIndex:0,
     sharedMatches:[],sharedError:'',sharedLoading:false,sharedSession:0,sharedRequest:0,
+     insightsRows:[],insightsLoading:false,insightsError:'',insightsRequest:0,page:()=> 'hem',
     themesUnlocked:false,themesLoading:false,themesError:'',themesRequest:0,
     STATEMENTS:[['Relationer','Testkort']],GENERAL_CARDS:[{id:'general-01',type:'match'}],THEME_DECKS:[],
     swipeCardId:()=> 'general-01',nextUnanswered:()=>0,
