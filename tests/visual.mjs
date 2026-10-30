@@ -84,7 +84,7 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
   await context.addInitScript(value=>{window.__HK_TEST_USER__=value.user;window.__HK_TEST_PAIRED__=value.paired;window.__HK_TEST_ROLE__=value.role;window.__HK_TEST_UNLOCKED__=value.unlocked;window.__HK_UNLOCK_RPC_UNAVAILABLE__=value.unlockUnavailable;window.__HK_PRIORITY_RPC_UNAVAILABLE__=value.priorityUnavailable;window.__HK_PREANSWERED_GENERAL__=value.preansweredGeneral;},{preansweredGeneral,user:authenticated?{id:role==="teen"?"10000000-0000-0000-0000-000000000002":"10000000-0000-0000-0000-000000000001",email:"synthetic@example.invalid"}:null,paired,role,unlocked,unlockUnavailable,priorityUnavailable});
   await context.route(base+"backend-config.js",route=>route.fulfill({
     contentType:"application/javascript",
-    body:"window.HEMMAKOMPASSEN_BACKEND=Object.freeze({supabaseUrl:'https://synthetic.invalid',supabasePublishableKey:'synthetic',enableSharedPriorities:true,enableSharedPolling:true,enableSharedInsights:true,enableSharedUnderstanding:true});"
+    body:"window.HEMMAKOMPASSEN_BACKEND=Object.freeze({supabaseUrl:'https://synthetic.invalid',supabasePublishableKey:'synthetic',enableSharedPriorities:true,enableSharedPolling:true,enableSharedInsights:true,enableSharedUnderstanding:true,enableSchysstaList:true});"
   }));
   await context.route("https://esm.sh/**",route=>route.fulfill({
     contentType:"application/javascript",
@@ -95,6 +95,12 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
         const skips=new Map();
         const importance=new Map();
         const understandingShares=new Set(window.__HK_TEST_PAIRED__?['general-02']:[]);
+        let schysstaSuggestions=[
+          {card_id:'regler-01',body:'Vi knackar innan vi går in i varandras rum.'},
+          {card_id:'regler-02',body:'Falsk text som aldrig får visas.'},
+          {card_id:'regler-99',body:'Okänd privat uppgift'}
+        ];
+        let schysstaRules=[{agreement_id:'20000000-0000-4000-8000-000000000001',source_card_id:'regler-03',body:'Vi får pausa gräl och bestämmer när vi pratar vidare.',status:'proposed',proposed_by_me:false,own_decision:null,parent_decision:null,teen_decision:true,created_at:'2026-10-30T12:00:00Z'}];
         return {
           auth:{
             async getUser(){return {data:{user:current()},error:current()?null:{name:'AuthSessionMissingError'}}},
@@ -148,6 +154,21 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
             if(name==='set_understanding_card_share'){
               window.__HK_UNDERSTANDING_SHARE__={name,args};
               if(args.p_share)understandingShares.add(args.p_card_id);else understandingShares.delete(args.p_card_id);
+              return {data:null,error:null};
+            }
+            if(name==='shared_schyssta_rule_suggestions')return {data:window.__HK_TEST_PAIRED__?schysstaSuggestions:[],error:null};
+            if(name==='my_schyssta_rules')return {data:window.__HK_TEST_PAIRED__?schysstaRules:[],error:null};
+            if(name==='propose_schyssta_rule'){
+              window.__HK_SCHYSSTA_PROPOSE__={name,args};
+              const body={'regler-01':'Vi knackar innan vi går in i varandras rum.'}[args.p_card_id];
+              if(!body)return {data:null,error:{message:'not allowed'}};
+              schysstaSuggestions=schysstaSuggestions.filter(row=>row.card_id!==args.p_card_id);
+              schysstaRules.push({agreement_id:'20000000-0000-4000-8000-000000000002',source_card_id:args.p_card_id,body,status:'proposed',proposed_by_me:true,own_decision:null,parent_decision:null,teen_decision:null,created_at:'2026-10-30T12:01:00Z'});
+              return {data:'20000000-0000-4000-8000-000000000002',error:null};
+            }
+            if(name==='set_schyssta_rule_decision'){
+              window.__HK_SCHYSSTA_DECISION__={name,args};
+              schysstaRules=schysstaRules.map(row=>row.agreement_id===args.p_agreement_id?{...row,own_decision:args.p_approved,parent_decision:args.p_approved,status:args.p_approved&&row.teen_decision===true?'accepted':args.p_approved?'proposed':'rejected'}:row);
               return {data:null,error:null};
             }
             if(name==='create_family_invite')return {data:'2030-01-01T12:00:00.000Z',error:null};
@@ -415,6 +436,25 @@ try{
   await checkOverflow(paired.page,"Mobile matched swipes");
   await paired.page.locator('.swipe-results').scrollIntoViewIfNeeded();
   await capture(paired.page,"mobile-shared-swipes.png");
+  await paired.page.locator('#live-mobile-nav a[href="#regler"]').click();
+  await paired.page.getByRole('heading',{name:'Gemensamma förslag'}).waitFor();
+  const schysstaText=await paired.page.locator('.schyssta-view').innerText();
+  assert.match(schysstaText,/Vi knackar innan vi går in i varandras rum/,'One allowlisted server suggestion is visible');
+  assert.match(schysstaText,/Vi får pausa gräl/,'Existing family proposal is visible');
+  assert.doesNotMatch(schysstaText,/Falsk text|Okänd privat uppgift/,'Malformed and unknown server rows fail closed');
+  assert.match(schysstaText,/Ett förslag är inte ett godkännande/,'Proposal and approval remain visibly separate');
+  await paired.page.getByRole('button',{name:'Föreslå'}).click();
+  await paired.page.waitForFunction(()=>window.__HK_SCHYSSTA_PROPOSE__?.args?.p_card_id==='regler-01');
+  assert.deepEqual(await paired.page.evaluate(()=>window.__HK_SCHYSSTA_PROPOSE__.args),{p_card_id:'regler-01'},'Proposal sends only the allowlisted card id');
+  const newProposal=paired.page.locator('.schyssta-list li').filter({hasText:'Vi knackar innan vi går in i varandras rum'});
+  assert.match(await newProposal.innerText(),/Ditt val: inte lämnat/,'Creating a proposal never records implicit approval');
+  await newProposal.getByRole('button',{name:'Jag godkänner'}).click();
+  await paired.page.waitForFunction(()=>window.__HK_SCHYSSTA_DECISION__?.args?.p_approved===true);
+  assert.deepEqual(await paired.page.evaluate(()=>window.__HK_SCHYSSTA_DECISION__.args),{p_agreement_id:'20000000-0000-4000-8000-000000000002',p_approved:true},'Decision is a separate explicit RPC');
+  await checkOverflow(paired.page,'Mobile Schyssta listan');
+  await capture(paired.page,'mobile-schyssta-list.png');
+  await paired.page.goto(base+'#swipe',{waitUntil:'load'});
+  await paired.page.getByRole('heading',{name:'Era gemensamma svar'}).waitFor();
   await paired.page.evaluate(()=>{window.__HK_RPC_UNAVAILABLE__=true;});
   await paired.page.getByRole("button",{name:"Uppdatera gemensamma svar"}).click();
   await paired.page.locator(".swipe-results [role='alert']").waitFor();
@@ -495,6 +535,10 @@ try{
   assert.equal(await desktopInsights.page.locator('.insights-deck').count(),2,'Desktop insights also show only permitted A decks');
   await checkOverflow(desktopInsights.page,'Desktop all-deck insights');
   await capture(desktopInsights.page,'desktop-shared-insights.png');
+  await desktopInsights.page.goto(base+'#regler',{waitUntil:'load'});
+  await desktopInsights.page.getByRole('heading',{name:'Gemensamma förslag'}).waitFor();
+  await checkOverflow(desktopInsights.page,'Desktop Schyssta listan');
+  await capture(desktopInsights.page,'desktop-schyssta-list.png');
   await desktopInsights.context.close();
   const d=await freshContext({viewport:{width:1440,height:900},deviceScaleFactor:1},{authenticated:true});
   await d.page.getByRole("heading",{name:/Hej[ ,]+Provförälder/}).waitFor();
