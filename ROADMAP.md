@@ -1,5 +1,16 @@
 # Hemmakompassen — utvecklingsplan (2026-10-17)
 
+## Projektstatus – intern utveckling och testning (beslut 2026-10-30)
+
+**Gäller tills Erik uttryckligen ändrar beslutet.** Hemmakompassen är fortfarande helt och hållet ett **internt utvecklings- och testprojekt**, även när webbplatsen ligger publikt på GitHub Pages. Enligt projektägaren finns **inga externa användare**, och tester sker internt med avgränsade testkonton och syntetiskt innehåll. Publicering till Pages är **inte** liktydig med produktionslansering eller extern pilot.
+
+**Arbetskonsekvens:** Prioritera snabbt iterativt arbete och fungerande intern testning. Kräv inte separat manuell förhandsgranskning av varje vanlig UI-, text- eller funktionsändring enbart för att den distribueras till Pages. Bred användbarhetsvalidering, slutlig klinisk/redaktionell godkännandeprocess och lanseringsmaterial kan vänta till inför extern pilot. Håll kvar uttryckliga projektbeslut om branch/PR/merge där de gäller, såvida Erik inte ändrar dem separat.
+
+**Säkerhetsgräns som kvarstår:** En publik URL är tekniskt åtkomlig för andra även om ingen har bjudits in. Behåll därför säker autentisering, self-only RLS, serververifierat A JA+JA, uttryckligt återkalleligt B-samtycke, skydd mot dataläckor, migrationsgranskning och regressionstester. Ändra inte befintliga användarsvar. Intern teststatus är inte tillstånd att aktivera osäker datadelning eller exponera hemligheter.
+
+**Ändring av status:** Endast när Erik uttryckligen meddelar att externa användare/pilot ska börja ändras denna grundförutsättning; genomför då separat lanserings-, integritets- och riskgranskning.
+
+
 ## Arbetsrutin: GitHub-commits och publicering (uppdaterad 22 oktober 2026)
 
 - Ändra aldrig `main` automatiskt. Fortsätt från senaste HEAD på `ai-dev/utveckling`, samla arbetet i samma samlings-PR och invänta uttryckligt godkännande före merge/publicering.
