@@ -84,7 +84,7 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
   await context.addInitScript(value=>{window.__HK_TEST_USER__=value.user;window.__HK_TEST_PAIRED__=value.paired;window.__HK_TEST_ROLE__=value.role;window.__HK_TEST_UNLOCKED__=value.unlocked;window.__HK_UNLOCK_RPC_UNAVAILABLE__=value.unlockUnavailable;window.__HK_PRIORITY_RPC_UNAVAILABLE__=value.priorityUnavailable;window.__HK_PREANSWERED_GENERAL__=value.preansweredGeneral;},{preansweredGeneral,user:authenticated?{id:role==="teen"?"10000000-0000-0000-0000-000000000002":"10000000-0000-0000-0000-000000000001",email:"synthetic@example.invalid"}:null,paired,role,unlocked,unlockUnavailable,priorityUnavailable});
   await context.route(base+"backend-config.js",route=>route.fulfill({
     contentType:"application/javascript",
-    body:"window.HEMMAKOMPASSEN_BACKEND=Object.freeze({supabaseUrl:'https://synthetic.invalid',supabasePublishableKey:'synthetic',enableSharedPriorities:true,enableSharedPolling:true,enableSharedInsights:true});"
+    body:"window.HEMMAKOMPASSEN_BACKEND=Object.freeze({supabaseUrl:'https://synthetic.invalid',supabasePublishableKey:'synthetic',enableSharedPriorities:true,enableSharedPolling:true,enableSharedInsights:true,enableSharedUnderstanding:true});"
   }));
   await context.route("https://esm.sh/**",route=>route.fulfill({
     contentType:"application/javascript",
@@ -94,6 +94,7 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
         const answers=new Map(window.__HK_PREANSWERED_GENERAL__?Array.from({length:34},(_,i)=>{const id='general-'+String(i+1).padStart(2,'0');return [id,{deck_id:'general',card_id:id,answer:true}]}):window.__HK_TEST_PAIRED__?[['general-01',{deck_id:'general',card_id:'general-01',answer:true}],['general-02',{deck_id:'general',card_id:'general-02',answer:false}]]:[]);
         const skips=new Map();
         const importance=new Map();
+        const understandingShares=new Set(window.__HK_TEST_PAIRED__?['general-02']:[]);
         return {
           auth:{
             async getUser(){return {data:{user:current()},error:current()?null:{name:'AuthSessionMissingError'}}},
@@ -111,6 +112,7 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
               select(){return {async eq(){return {data:[...importance.values()],error:null}}}},
               async upsert(row,options){importance.set(row.deck_id+':'+row.card_id,row);window.__HK_SAVED_IMPORTANCE__={row,options};return {error:null}}
             };
+            if(table==='understanding_card_shares')return {select(){return {async eq(){return {data:window.__HK_TEST_ROLE__==='teen'?[...understandingShares].map(card_id=>({deck_id:'general',card_id})):[],error:null}}}}};
             throw new Error('Unexpected table '+table);
           },
           async rpc(name,args){
@@ -140,6 +142,12 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
               window.__HK_UNDERSTANDING_STATE__={name,args};
               if(args.p_skipped){answers.delete(args.p_card_id);skips.set(args.p_card_id,{deck_id:'general',card_id:args.p_card_id});}
               else {skips.delete(args.p_card_id);answers.set(args.p_card_id,{deck_id:'general',card_id:args.p_card_id,answer:args.p_answer});}
+              return {data:null,error:null};
+            }
+            if(name==='shared_understanding_cards')return {data:[...understandingShares].map(card_id=>({deck_id:'general',card_id})),error:null};
+            if(name==='set_understanding_card_share'){
+              window.__HK_UNDERSTANDING_SHARE__={name,args};
+              if(args.p_share)understandingShares.add(args.p_card_id);else understandingShares.delete(args.p_card_id);
               return {data:null,error:null};
             }
             if(name==='create_family_invite')return {data:'2030-01-01T12:00:00.000Z',error:null};
@@ -350,8 +358,8 @@ try{
   assert.equal(await paired.page.locator('.insights-deck .swipe-match-list li').count(),3,'Two general and one conversation A match, no other rows');
   const insightText=await paired.page.locator('.insights-view').innerText();
   assert.match(insightText,/Så här funkar min tonåring/,'B section is clearly separate');
-  assert.match(insightText,/Förståelsekort visas inte här ännu/,'B content remains disabled');
-  assert.doesNotMatch(insightText,/Jag vill helst prata färdigt innan någon kommer med råd/,'Historical B YES never leaks');
+  assert.match(insightText,/Tonåringen vill få prata färdigt innan du kommer med råd/,'Parent sees only the reviewed role-specific text from explicit B consent');
+  assert.doesNotMatch(insightText,/Jag vill helst prata färdigt innan någon kommer med råd/,'Parent never receives the teen-private wording');
   assert.doesNotMatch(insightText,/Jag känner mig lyssnad på när vi är oense/,'A NO cannot leak');
   await checkOverflow(paired.page,'Mobile all-deck insights');
   await capture(paired.page,'mobile-shared-insights.png');
@@ -368,6 +376,20 @@ try{
   await paired.page.locator("#swipe-card[aria-label^='Temakort 1 av 104']").waitFor();
   await paired.page.locator('#theme-back').click();
   await paired.page.getByRole('heading',{name:'Era gemensamma svar'}).waitFor();
+
+  const teenInsights=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,paired:true,role:'teen',unlocked:true,preansweredGeneral:true});
+  await teenInsights.page.evaluate(()=>{location.hash='insikter';});
+  await teenInsights.page.getByRole('heading',{name:'Du bestämmer vad som delas'}).waitFor();
+  const activeShare=teenInsights.page.locator('[data-understanding-share="general-02"]');
+  assert.equal(await activeShare.getAttribute('aria-pressed'),'true','Teen sees their own current explicit consent');
+  assert.match(await activeShare.innerText(),/Återkalla delning/,'Revocation is directly available');
+  await activeShare.click();
+  await teenInsights.page.waitForFunction(()=>window.__HK_UNDERSTANDING_SHARE__?.args?.p_share===false);
+  await teenInsights.page.waitForFunction(()=>document.querySelector('[data-understanding-share="general-02"]')?.getAttribute('aria-pressed')==='false');
+  assert.match(await teenInsights.page.locator('.insights-view').innerText(),/Inga förståelsekort är aktivt delade/,'Revocation immediately removes the shared B message');
+  assert.match(await activeShare.innerText(),/Dela med min förälder/,'Teen can actively consent again after revocation');
+  await checkOverflow(teenInsights.page,'Mobile teen B consent and revocation');
+  await capture(teenInsights.page,'mobile-teen-understanding-consent.png');
 
   assert.equal(await paired.page.locator(".swipe-themes details").count(),6,"A paired family can explore all six theme decks without completing general cards");
   assert.equal(await paired.page.evaluate(()=>window.__HK_UNLOCK_RPC_CALLS__||0),0,"Theme access never requests the obsolete completion RPC");

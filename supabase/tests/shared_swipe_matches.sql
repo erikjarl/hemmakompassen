@@ -3,7 +3,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
-select plan(44);
+select plan(52);
 
 insert into auth.users (id, email)
 values
@@ -124,6 +124,62 @@ select results_eq(
   $$select deck_id, card_id, answer from public.shared_swipe_matches('general')$$,
   $$values ('general'::text, 'general-08'::text, true)$$,
   'family B sees only its own match'
+);
+
+-- Every theme deck is server-allowlisted too. Malformed private rows may exist,
+-- but no caller can turn them into shared output.
+reset role;
+insert into public.swipe_answers (user_id, deck_id, card_id, answer)
+values
+  ('31000000-0000-0000-0000-000000000001','samtal','samtal-104',true),
+  ('31000000-0000-0000-0000-000000000002','samtal','samtal-104',true),
+  ('31000000-0000-0000-0000-000000000001','samtal','samtal-105',true),
+  ('31000000-0000-0000-0000-000000000002','samtal','samtal-105',true),
+  ('31000000-0000-0000-0000-000000000001','aktiviteter','samtal-01',true),
+  ('31000000-0000-0000-0000-000000000002','aktiviteter','samtal-01',true),
+  ('31000000-0000-0000-0000-000000000001','aktiviteter','aktiviteter-01',false),
+  ('31000000-0000-0000-0000-000000000002','aktiviteter','aktiviteter-01',false),
+  ('31000000-0000-0000-0000-000000000001','aktiviteter','aktiviteter-02',true),
+  ('31000000-0000-0000-0000-000000000002','aktiviteter','aktiviteter-02',false),
+  ('31000000-0000-0000-0000-000000000001','aktiviteter','aktiviteter-03',true),
+  ('32000000-0000-0000-0000-000000000001','aktiviteter','aktiviteter-04',true),
+  ('32000000-0000-0000-0000-000000000002','aktiviteter','aktiviteter-04',true);
+
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"31000000-0000-0000-0000-000000000001","role":"authenticated"}', true);
+select results_eq(
+  $$select deck_id,card_id,answer from public.shared_swipe_matches('samtal')$$,
+  $$values ('samtal'::text,'samtal-104'::text,true)$$,
+  'a current catalogued theme A mutual YES is returned'
+);
+select is_empty(
+  $$select * from public.shared_swipe_matches('samtal') where card_id='samtal-105'$$,
+  'an out-of-range theme ID is never returned'
+);
+select is_empty(
+  $$select * from public.shared_swipe_matches('aktiviteter') where card_id='samtal-01'$$,
+  'a valid ID from the wrong deck is never returned'
+);
+select is_empty(
+  $$select * from public.shared_swipe_matches('aktiviteter') where card_id='aktiviteter-01'$$,
+  'mutual theme NO is never returned'
+);
+select is_empty(
+  $$select * from public.shared_swipe_matches('aktiviteter') where card_id='aktiviteter-02'$$,
+  'theme disagreement is never returned'
+);
+select is_empty(
+  $$select * from public.shared_swipe_matches('aktiviteter') where card_id='aktiviteter-03'$$,
+  'a unilateral theme answer is never returned'
+);
+select is_empty(
+  $$select * from public.shared_swipe_matches('aktiviteter') where card_id='aktiviteter-04'$$,
+  'another family theme match is never returned'
+);
+select throws_ok(
+  $$select * from public.shared_swipe_matches('unknown-deck')$$,
+  '22023','unsupported deck id',
+  'unknown decks are rejected before reading answers'
 );
 
 

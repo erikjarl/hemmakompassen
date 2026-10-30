@@ -12,6 +12,9 @@ window.HEMMAKOMPASSEN_BACKEND = Object.freeze({
   // All-deck A insights remain hidden until server A allowlist and authenticated
   // two-account tests have passed. B sharing is not included in this flag.
   enableSharedInsights: false,
+  // Separate explicit-consent B channel. Keep OFF until its migration and
+  // authenticated teen/parent consent and revocation tests are approved.
+  enableSharedUnderstanding: false,
   // Until auth, family membership and privacy tests pass, the public UI remains a demo.
   liveModeEnabled: false
 });

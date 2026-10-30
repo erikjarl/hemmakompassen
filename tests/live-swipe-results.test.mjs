@@ -193,8 +193,8 @@ console.log('PASS: automatic aggregate polling, revocation, hidden tabs and sess
 assert.match(script,/enableSharedInsights===true/,'All-deck insights require an explicit feature gate');
 assert.match(script,/INSIGHT_DECK_IDS\.map\(deckId=>db\.rpc\('shared_swipe_matches',\{p_deck_id:deckId\}\)\)/,'Each deck is checked by the authenticated aggregate RPC');
 assert.match(script,/request!==insightsRequest\|\|session!==sharedSession\|\|user\?\.id!==viewer/,'Stale multi-deck results are rejected on session changes');
-assert.match(script,/insightsRows=\[\];insightsError='';insightsLoading=false/,'Every insights refresh starts with an empty result');
-assert.match(script,/insightsRows=\[\];\s*insightsError='Gemensamma insikter/,'Partial failures clear all insights');
+assert.match(script,/insightsRows=\[\];sharedUnderstandingRows=\[\];insightsError='';insightsLoading=false/,'Every insights refresh starts with empty A and B results');
+assert.match(script,/insightsRows=\[\];\s*sharedUnderstandingRows=\[\];\s*insightsError='Gemensamma insikter/,'Partial failures clear all A and B insights');
 assert.doesNotMatch(script,/insightsRows\s*=\s*\[\.\.\.swipeAnswers/,'Private answers cannot seed the insights page');
 const insightSanitizer=script.match(/function safeInsightMatches\(deckId,rows\)\{[\s\S]*?\n\}/);
 assert.ok(insightSanitizer,'The real insights allowlist can be exercised');
