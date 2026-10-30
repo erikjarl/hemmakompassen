@@ -109,6 +109,18 @@
 .swipe-refresh{margin-top:20px}
 @media(max-width:600px){.swipe-match-list{grid-template-columns:1fr}.swipe-summary-overview li{grid-template-columns:32px minmax(0,1fr);padding:10px}.swipe-summary-icon{width:28px;height:28px;padding:4px}}
 
+/* Schyssta listan: proposals and decisions remain visibly separate. */
+.schyssta-view>p{max-width:760px;line-height:1.65}
+.schyssta-list{display:grid;gap:12px;margin:16px 0 0;padding:0;list-style:none}
+.schyssta-list>li{padding:16px;border:1px solid #494452;border-radius:13px;background:#23283a}
+.schyssta-list>li>p:first-child{margin:0 0 12px;font-size:16px;line-height:1.5}
+.schyssta-status{margin:7px 0 13px;color:#c6ccda;font-size:13px}
+.schyssta-status strong{color:#f1bf75}
+.schyssta-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.schyssta-secondary{min-height:42px;padding:9px 15px;border:1px solid #bda071;border-radius:9px;background:transparent;color:#f3d5a5;font:inherit;cursor:pointer}
+.schyssta-secondary:focus-visible{outline:3px solid #f5bb65;outline-offset:3px}
+.schyssta-actions button:disabled,.schyssta-list button:disabled{opacity:.55;cursor:wait}
+
 
 /* Keep the theme-deck back action separate from its heading on narrow screens. */
 .swipe-theme-play .swipe-theme-back{

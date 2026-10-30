@@ -9,10 +9,25 @@ const sharedPollingEnabled=c.enableSharedPolling===true;
 // authenticated two-account tests are verified. B sharing has a separate gate.
 const sharedInsightsEnabled=c.enableSharedInsights===true;
 const sharedUnderstandingEnabled=c.enableSharedUnderstanding===true;
+const schysstaListEnabled=c.enableSchysstaList===true;
 const db=createClient(c.supabaseUrl,c.supabasePublishableKey,{auth:{flowType:'pkce',detectSessionInUrl:true}});
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??'').replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x]));
 const nav=[['hem','Hem'],['inkorg','Inkorg'],['swipe','Gillaswajpen'],['personlighet','Min personlighet'],['kommunikation','Kommunikationsråd'],['regler','Schyssta listan'],['medlare','AI-medlaren'],['installningar','Inställningar']];
+const SCHYSSTA_RULES=Object.freeze({
+  'regler-01':'Vi knackar innan vi går in i varandras rum.',
+  'regler-02':'Vi lyssnar färdigt innan vi svarar.',
+  'regler-03':'Vi får pausa gräl och bestämmer när vi pratar vidare.',
+  'regler-04':'Vi frågar innan vi lånar varandras saker.',
+  'regler-05':'Vi pratar om hur sysslorna ska fördelas.',
+  'regler-06':'Vi berättar när planer som berör andra ändras.',
+  'regler-07':'Vi kommer överens om tider för sömn och hemkomst.',
+  'regler-08':'Vi kan ompröva regler som inte fungerar.',
+  'regler-09':'Vi bestämmer gemensamma mobilfria stunder.',
+  'regler-10':'Vi försöker prata utan att höja rösten.',
+  'regler-11':'Vi får säga till när något känns orättvist.',
+  'regler-12':'Vi försöker reda ut saker efter ett bråk.'
+});
 const COMMUNICATION_GUIDES=[["Vi har svårt att lyssna","När båda vill bli förstådda kan samtalet lätt bli en tävling om att få rätt.",["Försök återge vad den andra menade innan du svarar.","Ställ en nyfiken fråga: Vad är det viktigaste för dig här?","Den som lyssnar måste inte hålla med."]],["Vi bråkar om regler","Regelkonflikter handlar ofta både om praktiska behov och om självständighet.",["Beskriv konkret vad som behöver fungera hemma.","Låt båda formulera vad de vill skydda: frihet, trygghet, sömn eller tillit.","Skriv ett tidsbegränsat förslag i Schyssta listan och utvärdera tillsammans."]],["Vi har hamnat i ett gräl","Det kan vara svårt att lösa problem när stressen redan är hög.",["Ta en överenskommen paus och säg när du kommer tillbaka.","Beskriv senare vad som hände utan anklagelser.","Fråga vad var och en skulle behöva nästa gång."]],["Vi pratar nästan aldrig","Kontakt kan ibland börja i små, kravlösa stunder.",["Föreslå tio minuter tillsammans utan mål att lösa något.","Ställ en fråga från Gillaswajpen och var nyfiken på svaret.","Skilj mellan att vara tillsammans och att prestera ett bra samtal."]]];
 const STATEMENTS=GENERAL_CARDS.map(card=>[card.category,card.teenText]);
 const THEME_DECKS=THEME_DECK_MODELS.map(deck=>({...deck,cards:deck.cards.map(card=>card.teenText),cardIds:deck.cards.map(card=>card.id)}));
@@ -22,6 +37,8 @@ let sharedMatches=[],sharedPriorities=[],sharedDeckId='general',sharedError='',s
 let sharedPollPending=false;
 let insightsRows=[],insightsLoading=false,insightsError='',insightsRequest=0;
 let sharedUnderstandingRows=[],understandingShareError='';
+let schysstaSuggestions=[],schysstaRules=[],schysstaLoading=false,schysstaError='',schysstaRequest=0;
+const schysstaSaving=new Set();
 const understandingShares=new Set();
 const understandingShareSaving=new Set();
 const SHARED_POLL_INTERVAL_MS=15000;
@@ -550,11 +567,63 @@ const name=profile?.display_name||'du';
 const roster=members.length?members.map(m=>(m.role==='teen'?'Tonåring':'Förälder')+': '+esc(m.display_name||'Namnlös')).join(' · '):'Ingen familj är kopplad ännu.';
 return '<section class="home-hero"><div class="home-hero-inner"><span class="home-kicker">✦ '+(members.length>1?'ERT GEMENSAMMA RUM':'VÄNTAR PÅ DIN MOTPART')+'</span><h1>Hej '+esc(name)+'.<em>Välkommen till ert rum.</em></h1><p>'+(members.length>1?'Ett rum för att förstå varandra bättre, ett steg i taget.':'Medan du väntar kan du utforska Gillaswajpen och börja hitta nya samtalsämnen.')+'</p><a class="home-hero-link" href="#swipe">Utforska Gillaswajpen <span aria-hidden="true">→</span></a></div><div class="home-orbit" aria-hidden="true"><span></span></div></section>'+card('<h2>Din familj</h2><p>'+roster+'</p><p class="live-muted">'+(members.length===1?'Den andra familjemedlemmen har ännu inte anslutit.':'Familjemedlemskap hämtat från Supabase.')+'</p><a class="live-button" href="./konto.html">Hantera familj och inbjudningar</a>')+'<h2>Utforska Hemmakompassen</h2><div class="live-cards">'+nav.slice(1,7).map(([key,label])=>card('<h3>'+label+'</h3><p class="live-muted">Den här funktionen ansluts stegvis till riktiga konton.</p><a href="#'+key+'">Öppna →</a>')).join('')+'</div>';
 }
+const SCHYSSTA_UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+function validSchysstaSuggestion(row){return !!row&&SCHYSSTA_RULES[row.card_id]===row.body&&Object.keys(row).every(key=>key==='card_id'||key==='body');}
+function validSchysstaRule(row){
+  if(!row||!SCHYSSTA_UUID.test(row.agreement_id)||SCHYSSTA_RULES[row.source_card_id]!==row.body||!['proposed','accepted','rejected'].includes(row.status))return false;
+  if(typeof row.proposed_by_me!=='boolean'||![true,false,null].includes(row.own_decision)||![true,false,null].includes(row.parent_decision)||![true,false,null].includes(row.teen_decision))return false;
+  const allowed=['agreement_id','source_card_id','body','status','proposed_by_me','own_decision','parent_decision','teen_decision','created_at'];
+  return Object.keys(row).every(key=>allowed.includes(key))&&(!row.created_at||!Number.isNaN(Date.parse(row.created_at)));
+}
+async function fetchSchysstaList(){
+  const request=++schysstaRequest,viewer=user?.id,session=sharedSession;
+  schysstaSuggestions=[];schysstaRules=[];schysstaError='';
+  if(!schysstaListEnabled||!viewer||members.length!==2){schysstaLoading=false;if(page()==='regler')render();return;}
+  schysstaLoading=true;if(page()==='regler')render();
+  let results;
+  try{results=await Promise.all([db.rpc('shared_schyssta_rule_suggestions'),db.rpc('my_schyssta_rules')]);}
+  catch(e){results=[{error:e},{error:e}];}
+  if(request!==schysstaRequest||user?.id!==viewer||sharedSession!==session)return;
+  schysstaLoading=false;
+  if(results.some(result=>result.error)){schysstaError='Schyssta listan kunde inte hämtas. Inga tidigare förslag visas.';}
+  else{
+    schysstaSuggestions=(results[0].data||[]).filter(validSchysstaSuggestion);
+    schysstaRules=(results[1].data||[]).filter(validSchysstaRule);
+  }
+  if(page()==='regler')render();
+}
+async function proposeSchysstaRule(cardId){
+  if(!schysstaListEnabled||!user||!SCHYSSTA_RULES[cardId]||schysstaSaving.has(cardId))return;
+  const viewer=user.id,session=sharedSession;schysstaSaving.add(cardId);render();
+  let error;try{({error}=await db.rpc('propose_schyssta_rule',{p_card_id:cardId}));}catch(e){error=e;}
+  schysstaSaving.delete(cardId);if(user?.id!==viewer||sharedSession!==session)return;
+  if(error){schysstaError='Förslaget kunde inte sparas. Inget godkännande registrerades.';render();return;}
+  await fetchSchysstaList();
+}
+async function decideSchysstaRule(agreementId,approved){
+  if(!schysstaListEnabled||!user||!SCHYSSTA_UUID.test(agreementId)||schysstaSaving.has(agreementId))return;
+  const viewer=user.id,session=sharedSession;schysstaSaving.add(agreementId);render();
+  let error;try{({error}=await db.rpc('set_schyssta_rule_decision',{p_agreement_id:agreementId,p_approved:approved}));}catch(e){error=e;}
+  schysstaSaving.delete(agreementId);if(user?.id!==viewer||sharedSession!==session)return;
+  if(error){schysstaError='Ditt val kunde inte sparas. Listan har rensats tills den kan hämtas igen.';schysstaSuggestions=[];schysstaRules=[];render();return;}
+  await fetchSchysstaList();
+}
+function schysstaView(){
+  if(!schysstaListEnabled)return '<h1>Schyssta listan</h1>'+card('<h2>Säker anslutning återstår</h2><p>Förslag och överenskommelser visas först när den granskade serverfunktionen och familjeisoleringen är verifierade. Privata swajpsvar visas aldrig här.</p>');
+  if(members.length!==2)return '<h1>Schyssta listan</h1>'+card('<h2>Koppla först en familjemedlem</h2><p>Listan kräver exakt en parad förälder och tonåring.</p><a class="live-button" href="./konto.html">Hantera familj</a>');
+  if(schysstaLoading)return '<h1>Schyssta listan</h1>'+card('<p role="status">Hämtar serververifierade förslag…</p>');
+  if(schysstaError)return '<h1>Schyssta listan</h1>'+card('<h2>Kunde inte visa listan</h2><p role="alert">'+esc(schysstaError)+'</p><button class="live-button" type="button" id="schyssta-retry">Försök igen</button>');
+  const suggestionHtml=schysstaSuggestions.length?'<ul class="schyssta-list">'+schysstaSuggestions.map(item=>'<li><p>'+esc(item.body)+'</p><button class="live-button" type="button" data-schyssta-propose="'+esc(item.card_id)+'"'+(schysstaSaving.has(item.card_id)?' disabled':'')+'>Föreslå</button></li>').join('')+'</ul>':'<p class="live-muted">Inga nya gemensamma ja-förslag finns just nu.</p>';
+  const statusLabel={proposed:'Väntar på två separata beslut',accepted:'Godkänd av båda',rejected:'Inte gemensamt godkänd'};
+  const rulesHtml=schysstaRules.length?'<ul class="schyssta-list">'+schysstaRules.map(item=>'<li><p>'+esc(item.body)+'</p><p class="schyssta-status"><strong>'+statusLabel[item.status]+'</strong> · Ditt val: '+(item.own_decision===true?'ja':item.own_decision===false?'nej':'inte lämnat')+'</p><div class="schyssta-actions"><button class="live-button" type="button" data-schyssta-decision="'+item.agreement_id+'" data-approved="true"'+(schysstaSaving.has(item.agreement_id)?' disabled':'')+'>Jag godkänner</button><button class="schyssta-secondary" type="button" data-schyssta-decision="'+item.agreement_id+'" data-approved="false"'+(schysstaSaving.has(item.agreement_id)?' disabled':'')+'>Jag avstår</button></div></li>').join('')+'</ul>':'<p class="live-muted">Ni har inga regelöverenskommelser ännu.</p>';
+  return '<div class="schyssta-view"><h1>Schyssta listan</h1><p>Prata först om vad regeln ska hjälpa er med. Föräldern ansvarar för att samtalet är tryggt och att tonåringen kan säga nej. <a href="#kommunikation">Öppna samtalsråd</a>.</p>'+card('<h2>Gemensamma förslag</h2><p>Här kan bara regler som servern verifierat som JA+JA visas. Ett förslag är inte ett godkännande.</p>'+suggestionHtml)+card('<h2>Era förslag och överenskommelser</h2><p>Båda behöver lämna ett eget ja innan en regel blir godkänd. Ett ändrat val slår igenom direkt.</p>'+rulesHtml)+'</div>';
+}
 function section(key){
 const label=nav.find(n=>n[0]===key)?.[1]||'Hemmakompassen';
 if(key==='installningar')return '<h1>Inställningar</h1>'+card('<h2>Ditt konto</h2><p>Inloggad som '+esc(user.email)+'</p><p>Visningsnamn: '+esc(profile?.display_name||'Inte angivet')+'</p><a class="live-button" href="./konto.html">Ändra namn, familj eller logga ut</a>');
 if(key==='swipe')return swipeView();
  if(key==='insikter')return insightsView();
+if(key==='regler')return schysstaView();
 if(key==='kommunikation')return '<h1>Kommunikationsråd</h1><p>Konkreta samtalsöppningar från den tidigare Hemmakompassen.</p>'+COMMUNICATION_GUIDES.map(([title,intro,tips])=>card('<h2>'+esc(title)+'</h2><p>'+esc(intro)+'</p><ul>'+tips.map(t=>'<li>'+esc(t)+'</li>').join('')+'</ul>')).join('');
 return '<h1>'+label+'</h1>'+card('<h2>Funktionen är under utveckling</h2><p>Du är inloggad som '+esc(profile?.display_name||user.email)+'. Vi bygger nu den riktiga kopplingen till Supabase så att dina svar och den andra familjemedlemmens uppgifter hålls åtskilda.</p><p>Här visas inga påhittade demodata och inga svar lagras lokalt som om de vore delade med familjen.</p><a class="live-button" href="#hem">Till startsidan</a>');
 }
@@ -566,6 +635,7 @@ try{authResult=await db.auth.getUser();}
 catch(e){if(generation!==refreshGeneration)return;throw e;}
 if(generation!==refreshGeneration)return;
 const {data:{user:u},error}=authResult;if(error&&error.name!=='AuthSessionMissingError')throw error;user=u;profile=null;members=[];swipeAnswers.clear();swipeImportance.clear();importancePending.clear();importanceSaving.clear();importanceAvailable=false;importanceLoadError='';skippedUnderstanding.clear();understandingShares.clear();understandingShareSaving.clear();understandingShareError='';for(const answers of themeAnswers.values())answers.clear();activeThemeDeck=null;themeCategory='all';themeIndex=0;themeReview=false;themeSaveError='';swipeBusy=false;swipeLoadError='';swipeSaveError='';swipeReview=false;swipeIndex=0;sharedMatches=[];sharedPriorities=[];sharedDeckId='general';sharedError='';sharedLoading=false;sharedSession++;sharedRequest++;insightsRows=[];sharedUnderstandingRows=[];insightsLoading=false;insightsError='';insightsRequest++;themesUnlocked=false;themesLoading=false;themesError='';themesRequest++;
+if(typeof schysstaRequest!=='undefined'){schysstaSuggestions=[];schysstaRules=[];schysstaLoading=false;schysstaError='';schysstaRequest++;schysstaSaving.clear();}
 if(user){const viewer=user.id;
 let loaded;
 try{loaded=await Promise.all([db.from('profiles').select('display_name').eq('user_id',viewer).maybeSingle(),db.rpc('my_family_members'),db.from('swipe_answers').select('deck_id,card_id,answer').eq('user_id',viewer),db.from('swipe_skips').select('deck_id,card_id').eq('user_id',viewer),db.from('swipe_importance').select('deck_id,card_id,importance').eq('user_id',viewer),sharedUnderstandingEnabled?db.from('understanding_card_shares').select('deck_id,card_id').eq('user_id',viewer):Promise.resolve({data:[],error:null})]);}
@@ -584,9 +654,13 @@ if(generation!==refreshGeneration)return;
 render();
 if(user&&members.length===2){void fetchSwipeMatches('general');void fetchThemeUnlock();}
 if(page()==='insikter')void fetchInsights();
+if(page()==='regler')void fetchSchysstaList();
 }
 document.addEventListener('click',e=>{const b=e.target.closest('[data-swipe]');if(b)advanceSwipe(b.dataset.swipe);if(e.target.closest('#swipe-restart')){swipeReview=true;swipeIndex=visibleGeneralIndices()[0]??STATEMENTS.length;render();}if(e.target.closest('#swipe-skip')&&viewerRole()==='teen'&&GENERAL_CARDS[swipeIndex]?.type==='understanding'&&!swipeBusy)void skipUnderstandingCard(swipeIndex,user.id,sharedSession);if(e.target.closest('#swipe-reload'))refresh().catch(showError);const refreshMatches=e.target.closest('[data-refresh-matches]');if(refreshMatches&&!sharedLoading)void fetchSwipeMatches(refreshMatches.dataset.refreshMatches);if(e.target.closest('#retry-theme-unlock')&&!themesLoading)void fetchThemeUnlock();
 if(e.target.closest('#insights-retry')&&!insightsLoading)void fetchInsights();
+if(e.target.closest('#schyssta-retry')&&!schysstaLoading)void fetchSchysstaList();
+const schysstaProposal=e.target.closest('[data-schyssta-propose]');if(schysstaProposal)void proposeSchysstaRule(schysstaProposal.dataset.schysstaPropose);
+const schysstaDecision=e.target.closest('[data-schyssta-decision]');if(schysstaDecision)void decideSchysstaRule(schysstaDecision.dataset.schysstaDecision,schysstaDecision.dataset.approved==='true');
 const understandingShare=e.target.closest('[data-understanding-share]');
 if(understandingShare&&user&&viewerRole()==='teen')void setUnderstandingShare(understandingShare.dataset.understandingShare,understandingShare.getAttribute('aria-pressed')!=='true',user.id,sharedSession);
 const insightOpen=e.target.closest('[data-insight-open]');
@@ -617,8 +691,10 @@ document.addEventListener('keydown',e=>{if(page()==='swipe'&&user&&!['INPUT','TE
 document.addEventListener('submit',async e=>{if(e.target.id!=='live-login')return;e.preventDefault();const b=e.target.querySelector('button');b.disabled=true;const feedback=$('login-feedback');feedback.textContent='Loggar in…';const email=$('live-email').value.trim();try{const {error}=await db.auth.signInWithPassword({email,password:$('live-password').value});if(error)throw error;$('live-password') && ($('live-password').value='');await refresh();}catch(err){feedback.textContent='Kunde inte logga in. Kontrollera e-post och lösenord, eller välj ”Glömt lösenord eller saknar lösenord?”.';}finally{b.disabled=false;}});
 window.addEventListener('hashchange',()=>{
   if(page()!=='insikter'){insightsRows=[];sharedUnderstandingRows=[];insightsError='';insightsLoading=false;insightsRequest++;}
+  if(page()!=='regler'){schysstaSuggestions=[];schysstaRules=[];schysstaError='';schysstaLoading=false;schysstaRequest++;}
   render();scrollLiveMainTop();
   if(page()==='insikter')void fetchInsights();
+  if(page()==='regler')void fetchSchysstaList();
   if(page()==='swipe')void pollSharedMatches();
 });
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)void pollSharedMatches();});
