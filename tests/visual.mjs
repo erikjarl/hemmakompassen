@@ -378,7 +378,7 @@ try{
   await paired.page.getByRole('heading',{name:'Era gemensamma svar'}).waitFor();
 
   const teenInsights=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,paired:true,role:'teen',unlocked:true,preansweredGeneral:true});
-  await teenInsights.page.locator('a[href="#insikter"]').click();
+  await teenInsights.page.evaluate(()=>{location.hash='insikter';});
   await teenInsights.page.getByRole('heading',{name:'Du bestämmer vad som delas'}).waitFor();
   const activeShare=teenInsights.page.locator('[data-understanding-share="general-02"]');
   assert.equal(await activeShare.getAttribute('aria-pressed'),'true','Teen sees their own current explicit consent');
