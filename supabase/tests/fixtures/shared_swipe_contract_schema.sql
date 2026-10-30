@@ -42,3 +42,24 @@ create policy swipe_self_delete on public.swipe_answers for delete to authentica
   using (user_id = (select auth.uid()));
 -- Start with broad table grants: tested migration must tighten them.
 grant all privileges on public.swipe_answers to anon, authenticated;
+
+-- Schyssta listan contract tables from the production schema. The reviewed
+-- migration below must remove these broad synthetic grants and expose only its
+-- authenticated RPC surface.
+create table public.agreements (
+  id uuid primary key default gen_random_uuid(),
+  family_id uuid not null references public.families(id) on delete cascade,
+  proposed_by uuid not null references auth.users(id),
+  body text not null check (length(body) between 1 and 2000),
+  status text not null default 'proposed'
+    check (status in ('proposed','accepted','rejected','withdrawn')),
+  created_at timestamptz not null default now()
+);
+create table public.agreement_approvals (
+  agreement_id uuid not null references public.agreements(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  approved boolean not null,
+  decided_at timestamptz not null default now(),
+  primary key (agreement_id,user_id)
+);
+grant all privileges on public.agreements, public.agreement_approvals to anon, authenticated;
