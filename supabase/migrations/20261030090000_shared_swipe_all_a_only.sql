@@ -13,7 +13,11 @@ security definer
 set search_path = ''
 as $$
 begin
-  if p_deck_id is null or not (p_deck_id = any(array[
+  if p_deck_id is null or pg_catalog.char_length(p_deck_id) not between 1 and 80 then
+    raise exception 'deck id must contain 1 to 80 characters' using errcode = '22023';
+  end if;
+
+  if not (p_deck_id = any(array[
     'general','samtal','aktiviteter','regler','uppskattning','aterhamtning','forandring'
   ]::text[])) then
     raise exception 'unsupported deck id' using errcode = '22023';
@@ -33,22 +37,22 @@ begin
       'general-29','general-30','general-31','general-32','general-33','general-34'
     ]::text[]) as id
     union all
-    select 'samtal', 'samtal-' || pg_catalog.lpad(number::text, 2, '0')
+    select 'samtal', 'samtal-' || pg_catalog.to_char(number, 'FM00')
     from pg_catalog.generate_series(1,104) as generated(number)
     union all
-    select 'aktiviteter', 'aktiviteter-' || pg_catalog.lpad(number::text, 2, '0')
+    select 'aktiviteter', 'aktiviteter-' || pg_catalog.to_char(number, 'FM00')
     from pg_catalog.generate_series(1,104) as generated(number)
     union all
-    select 'regler', 'regler-' || pg_catalog.lpad(number::text, 2, '0')
+    select 'regler', 'regler-' || pg_catalog.to_char(number, 'FM00')
     from pg_catalog.generate_series(1,12) as generated(number)
     union all
-    select 'uppskattning', 'uppskattning-' || pg_catalog.lpad(number::text, 2, '0')
+    select 'uppskattning', 'uppskattning-' || pg_catalog.to_char(number, 'FM00')
     from pg_catalog.generate_series(1,8) as generated(number)
     union all
-    select 'aterhamtning', 'aterhamtning-' || pg_catalog.lpad(number::text, 2, '0')
+    select 'aterhamtning', 'aterhamtning-' || pg_catalog.to_char(number, 'FM00')
     from pg_catalog.generate_series(1,8) as generated(number)
     union all
-    select 'forandring', 'forandring-' || pg_catalog.lpad(number::text, 2, '0')
+    select 'forandring', 'forandring-' || pg_catalog.to_char(number, 'FM00')
     from pg_catalog.generate_series(1,8) as generated(number)
   ),
   paired_family as (
