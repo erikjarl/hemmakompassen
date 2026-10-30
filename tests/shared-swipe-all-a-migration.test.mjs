@@ -27,8 +27,9 @@ test('shared match RPC allowlists exactly the current versioned A catalogue',()=
   }
 
   assert.equal(generalA.length+THEME_DECK_MODELS.flatMap(deck=>deck.cards).length,265);
-  assert.match(migration,/to_char\(number, 'FM00'\)/,'Two-digit padding must preserve IDs 100–104 instead of truncating them');
+  assert.match(migration,/case when number < 10 then '0' else '' end \|\| number::text/,'Only one-digit IDs receive padding; IDs 100–104 stay intact');
   assert.doesNotMatch(migration,/lpad\(number::text, 2/i,'lpad width 2 would turn card 104 into card 10');
+  assert.doesNotMatch(migration,/to_char\(number, 'FM00'/i,'A two-position numeric mask cannot represent card IDs 100–104');
 });
 
 test('shared match RPC fails closed around identity, pairing and raw answers',()=>{

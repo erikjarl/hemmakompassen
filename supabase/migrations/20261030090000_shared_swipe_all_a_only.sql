@@ -37,22 +37,22 @@ begin
       'general-29','general-30','general-31','general-32','general-33','general-34'
     ]::text[]) as id
     union all
-    select 'samtal', 'samtal-' || pg_catalog.to_char(number, 'FM00')
+    select 'samtal', 'samtal-' || case when number < 10 then '0' else '' end || number::text
     from pg_catalog.generate_series(1,104) as generated(number)
     union all
-    select 'aktiviteter', 'aktiviteter-' || pg_catalog.to_char(number, 'FM00')
+    select 'aktiviteter', 'aktiviteter-' || case when number < 10 then '0' else '' end || number::text
     from pg_catalog.generate_series(1,104) as generated(number)
     union all
-    select 'regler', 'regler-' || pg_catalog.to_char(number, 'FM00')
+    select 'regler', 'regler-' || case when number < 10 then '0' else '' end || number::text
     from pg_catalog.generate_series(1,12) as generated(number)
     union all
-    select 'uppskattning', 'uppskattning-' || pg_catalog.to_char(number, 'FM00')
+    select 'uppskattning', 'uppskattning-' || case when number < 10 then '0' else '' end || number::text
     from pg_catalog.generate_series(1,8) as generated(number)
     union all
-    select 'aterhamtning', 'aterhamtning-' || pg_catalog.to_char(number, 'FM00')
+    select 'aterhamtning', 'aterhamtning-' || case when number < 10 then '0' else '' end || number::text
     from pg_catalog.generate_series(1,8) as generated(number)
     union all
-    select 'forandring', 'forandring-' || pg_catalog.to_char(number, 'FM00')
+    select 'forandring', 'forandring-' || case when number < 10 then '0' else '' end || number::text
     from pg_catalog.generate_series(1,8) as generated(number)
   ),
   paired_family as (
