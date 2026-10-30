@@ -10,7 +10,7 @@ function harness({upsert=async()=>({error:null}),rpc=async()=>({error:null})}={}
   const calls={writes:0,rpcs:[],renders:0,matches:0,unlocks:0};
   const state={
     user:{id:'parent'},sharedSession:7,swipeBusy:true,swipeReview:false,swipeSaveError:'',swipeIndex:1,
-    swipeAnswers:new Map([['general-01',true]]),skippedUnderstanding:new Set(),members:[{role:'parent'},{role:'teen'}],
+    swipeAnswers:new Map([['general-01',true]]),skippedUnderstanding:new Set(),understandingShares:new Set(),members:[{role:'parent'},{role:'teen'}],
     visibleGeneralIndices:()=>[0,1],swipeCardId:i=>'general-'+String(i+1).padStart(2,'0'),
     GENERAL_CARDS:[{type:'match'},{type:'match'},{type:'match'}],viewerRole:()=>state.user?.id==='teen'?'teen':'parent',
     nextVisibleAfter:i=>i+1,nextUnanswered:i=>i,
@@ -121,11 +121,11 @@ const deferred=()=>{let resolve,reject;const promise=new Promise((ok,no)=>{resol
   let authCalls=0;
   const state={
     refreshGeneration:0,user:null,profile:null,members:[],
-    swipeAnswers:new Map(),swipeImportance:new Map(),importancePending:new Map(),importanceSaving:new Set(),importanceAvailable:false,importanceLoadError:'',skippedUnderstanding:new Set(),themeAnswers:new Map(),
+    swipeAnswers:new Map(),swipeImportance:new Map(),importancePending:new Map(),importanceSaving:new Set(),importanceAvailable:false,importanceLoadError:'',skippedUnderstanding:new Set(),understandingShares:new Set(),understandingShareSaving:new Set(),understandingShareError:'',sharedUnderstandingEnabled:false,themeAnswers:new Map(),
     activeThemeDeck:null,themeIndex:0,themeReview:false,themeSaveError:'',
     swipeBusy:false,swipeLoadError:'',swipeSaveError:'',swipeReview:false,swipeIndex:0,
     sharedMatches:[],sharedError:'',sharedLoading:false,sharedSession:0,sharedRequest:0,
-     insightsRows:[],insightsLoading:false,insightsError:'',insightsRequest:0,page:()=> 'hem',
+     insightsRows:[],sharedUnderstandingRows:[],insightsLoading:false,insightsError:'',insightsRequest:0,page:()=> 'hem',
     themesUnlocked:false,themesLoading:false,themesError:'',themesRequest:0,
     STATEMENTS:[['Relationer','Testkort']],GENERAL_CARDS:[{id:'general-01',type:'match'}],THEME_DECKS:[],
     swipeCardId:()=> 'general-01',nextUnanswered:()=>0,
