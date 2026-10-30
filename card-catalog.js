@@ -373,6 +373,7 @@ export const ROLE_TEXT_BY_CARD=Object.freeze({
 export const cardTextForRole=(card,role)=>{
   const adapted=ROLE_TEXT_BY_CARD[card.id];
   if(adapted&&(role==='teen'||role==='parent'))return adapted[role];
+  if(card.type==='understanding'&&role==='parent')return card.parentSharedText;
   return card.teenText;
 };
 

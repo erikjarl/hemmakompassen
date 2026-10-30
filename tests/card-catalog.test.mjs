@@ -67,6 +67,10 @@ for(const deck of THEME_DECK_MODELS){
     assert.equal(card.type,'match','Theme cards require mutual JA+JA before any future sharing');
     assert.equal(card.audience,'both','Theme cards target both roles');
   });
+
+const reviewedB=GENERAL_CARDS.find(card=>card.id==='general-02');
+assert.equal(cardTextForRole(reviewedB,'teen'),reviewedB.teenText,'Teen retains the private first-person B wording');
+assert.equal(cardTextForRole(reviewedB,'parent'),reviewedB.parentSharedText,'Parent receives only the reviewed shared B wording');
 }
 
 const allCards=[...GENERAL_CARDS,...themeCards];
