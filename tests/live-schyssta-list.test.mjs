@@ -36,7 +36,7 @@ test('Schyssta listan rejects incomplete, duplicate or contradictory RPC snapsho
   const start=app.indexOf('const SCHYSSTA_UUID=');
   const end=app.indexOf('async function fetchSchysstaList()');
   assert.ok(start>=0&&end>start,'Locate the production validators');
-  const catalog=Object.fromEntries([...app.matchAll(/'(regler-\\d{2})':'([^']+)'/g)].map(match=>[match[1],match[2]]));
+  const catalog=Object.fromEntries([...app.matchAll(/'(regler-\d{2})':'([^']+)'/g)].map(match=>[match[1],match[2]]));
   assert.equal(Object.keys(catalog).length,12);
   const validate=runInNewContext(app.slice(start,end)+'\nvalidSchysstaPayload',{SCHYSSTA_RULES:catalog});
   const suggestion={card_id:'regler-01',body:catalog['regler-01']};
