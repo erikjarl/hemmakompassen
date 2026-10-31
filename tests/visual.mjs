@@ -156,7 +156,7 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
               if(args.p_share)understandingShares.add(args.p_card_id);else understandingShares.delete(args.p_card_id);
               return {data:null,error:null};
             }
-            if(name==='shared_schyssta_rule_suggestions')return {data:window.__HK_TEST_PAIRED__?schysstaSuggestions:[],error:null};
+            if(name==='shared_schyssta_rule_suggestions')return {data:window.__HK_TEST_PAIRED__?(window.__HK_SCHYSSTA_CLEAN_RPC__===true?schysstaSuggestions.filter(row=>row.card_id==='regler-01'):schysstaSuggestions):[],error:null};
             if(name==='my_schyssta_rules')return {data:window.__HK_TEST_PAIRED__?schysstaRules:[],error:null};
             if(name==='propose_schyssta_rule'){
               window.__HK_SCHYSSTA_PROPOSE__={name,args};
@@ -437,6 +437,14 @@ try{
   await paired.page.locator('.swipe-results').scrollIntoViewIfNeeded();
   await capture(paired.page,"mobile-shared-swipes.png");
   await paired.page.locator('#live-mobile-nav a[href="#regler"]').click();
+  // The initial synthetic server response deliberately includes a known card
+  // with forged text and a completely unknown card. Never display even its
+  // valid rows as a partial result; recover only after a clean RPC retry.
+  await paired.page.getByRole('heading',{name:'Kunde inte visa listan'}).waitFor();
+  assert.equal(await paired.page.locator('.schyssta-list li').count(),0,'A malformed RPC snapshot cannot display a partial list');
+  assert.doesNotMatch(await paired.page.locator('.live-main').innerText(),/Falsk text|Okänd privat uppgift/,'Unexpected server rows are never rendered');
+  await paired.page.evaluate(()=>{window.__HK_SCHYSSTA_CLEAN_RPC__=true;});
+  await paired.page.locator('#schyssta-retry').click();
   await paired.page.getByRole('heading',{name:'Gemensamma förslag'}).waitFor();
   const schysstaText=await paired.page.locator('.schyssta-view').innerText();
   assert.match(schysstaText,/Vi knackar innan vi går in i varandras rum/,'One allowlisted server suggestion is visible');
