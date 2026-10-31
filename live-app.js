@@ -575,6 +575,16 @@ function validSchysstaRule(row){
   const allowed=['agreement_id','source_card_id','body','status','proposed_by_me','own_decision','parent_decision','teen_decision','created_at'];
   return Object.keys(row).every(key=>allowed.includes(key))&&(!row.created_at||!Number.isNaN(Date.parse(row.created_at)));
 }
+function validSchysstaPayload(suggestions,rules){
+  // An unexpected response must not be mistaken for a complete, trustworthy list.
+  // Reject the whole snapshot, including duplicates or cards already proposed.
+  if(!Array.isArray(suggestions)||!Array.isArray(rules))return false;
+  if(!suggestions.every(validSchysstaSuggestion)||!rules.every(validSchysstaRule))return false;
+  const proposedCardIds=new Set(rules.map(row=>row.source_card_id));
+  return new Set(suggestions.map(row=>row.card_id)).size===suggestions.length
+    &&new Set(rules.map(row=>row.agreement_id)).size===rules.length
+    &&!suggestions.some(row=>proposedCardIds.has(row.card_id));
+}
 async function fetchSchysstaList(){
   const request=++schysstaRequest,viewer=user?.id,session=sharedSession;
   schysstaSuggestions=[];schysstaRules=[];schysstaError='';
@@ -586,9 +596,11 @@ async function fetchSchysstaList(){
   if(request!==schysstaRequest||user?.id!==viewer||sharedSession!==session)return;
   schysstaLoading=false;
   if(results.some(result=>result.error)){schysstaError='Schyssta listan kunde inte hämtas. Inga tidigare förslag visas.';}
-  else{
-    schysstaSuggestions=(results[0].data||[]).filter(validSchysstaSuggestion);
-    schysstaRules=(results[1].data||[]).filter(validSchysstaRule);
+  else if(!validSchysstaPayload(results[0].data,results[1].data)){
+    schysstaError='Schyssta listan skickade ett oväntat svar. Inga förslag eller överenskommelser visas.';
+  }else{
+    schysstaSuggestions=results[0].data;
+    schysstaRules=results[1].data;
   }
   if(page()==='regler')render();
 }
