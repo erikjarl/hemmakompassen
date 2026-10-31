@@ -49,6 +49,10 @@ test('Schyssta listan rejects incomplete, duplicate or contradictory RPC snapsho
   assert.equal(validate([suggestion,suggestion],[rule]),false,'Reject duplicate suggested cards');
   assert.equal(validate([suggestion],[rule,rule]),false,'Reject duplicate agreements');
   assert.equal(validate([suggestion],[{...rule,source_card_id:'regler-01',body:catalog['regler-01']}]),false,'A proposed rule cannot simultaneously be available as a suggestion');
+  assert.equal(validate([{}],[]),false,'Missing both card ID and body must not validate as undefined equals undefined');
+  assert.equal(validate([7],[]),false,'Primitive suggestion rows are invalid');
+  assert.equal(validate([], [{...rule,source_card_id:undefined,body:undefined}]),false,'Missing rule source ID and body is invalid');
+  assert.equal(validate([], [{...rule,source_card_id:42}]),false,'Non-text source ID is invalid');
   assert.equal(validate(null,[rule]),false,'Null RPC payload is not a legitimate empty array');
   assert.equal(validate([suggestion],null),false,'Missing agreements cannot imply an empty list');
   assert.equal(validate([suggestion],[{...rule,parent_decision:'yes'}]),false,'Reject invalid decision types');
