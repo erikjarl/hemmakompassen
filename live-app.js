@@ -568,9 +568,15 @@ const roster=members.length?members.map(m=>(m.role==='teen'?'Tonåring':'Föräl
 return '<section class="home-hero"><div class="home-hero-inner"><span class="home-kicker">✦ '+(members.length>1?'ERT GEMENSAMMA RUM':'VÄNTAR PÅ DIN MOTPART')+'</span><h1>Hej '+esc(name)+'.<em>Välkommen till ert rum.</em></h1><p>'+(members.length>1?'Ett rum för att förstå varandra bättre, ett steg i taget.':'Medan du väntar kan du utforska Gillaswajpen och börja hitta nya samtalsämnen.')+'</p><a class="home-hero-link" href="#swipe">Utforska Gillaswajpen <span aria-hidden="true">→</span></a></div><div class="home-orbit" aria-hidden="true"><span></span></div></section>'+card('<h2>Din familj</h2><p>'+roster+'</p><p class="live-muted">'+(members.length===1?'Den andra familjemedlemmen har ännu inte anslutit.':'Familjemedlemskap hämtat från Supabase.')+'</p><a class="live-button" href="./konto.html">Hantera familj och inbjudningar</a>')+'<h2>Utforska Hemmakompassen</h2><div class="live-cards">'+nav.slice(1,7).map(([key,label])=>card('<h3>'+label+'</h3><p class="live-muted">Den här funktionen ansluts stegvis till riktiga konton.</p><a href="#'+key+'">Öppna →</a>')).join('')+'</div>';
 }
 const SCHYSSTA_UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-function validSchysstaSuggestion(row){return !!row&&SCHYSSTA_RULES[row.card_id]===row.body&&Object.keys(row).every(key=>key==='card_id'||key==='body');}
+function validSchysstaSuggestion(row){
+  if(!row||typeof row!=='object'||Array.isArray(row)||typeof row.card_id!=='string'||typeof row.body!=='string')return false;
+  return Object.hasOwn(SCHYSSTA_RULES,row.card_id)&&SCHYSSTA_RULES[row.card_id]===row.body
+    &&Object.keys(row).length===2&&Object.keys(row).every(key=>key==='card_id'||key==='body');
+}
 function validSchysstaRule(row){
-  if(!row||!SCHYSSTA_UUID.test(row.agreement_id)||SCHYSSTA_RULES[row.source_card_id]!==row.body||!['proposed','accepted','rejected'].includes(row.status))return false;
+  if(!row||typeof row!=='object'||Array.isArray(row)||typeof row.source_card_id!=='string'||typeof row.body!=='string'
+    ||!Object.hasOwn(SCHYSSTA_RULES,row.source_card_id)
+    ||!SCHYSSTA_UUID.test(row.agreement_id)||SCHYSSTA_RULES[row.source_card_id]!==row.body||!['proposed','accepted','rejected'].includes(row.status))return false;
   if(typeof row.proposed_by_me!=='boolean'||![true,false,null].includes(row.own_decision)||![true,false,null].includes(row.parent_decision)||![true,false,null].includes(row.teen_decision))return false;
   const allowed=['agreement_id','source_card_id','body','status','proposed_by_me','own_decision','parent_decision','teen_decision','created_at'];
   return Object.keys(row).every(key=>allowed.includes(key))&&(!row.created_at||!Number.isNaN(Date.parse(row.created_at)));
