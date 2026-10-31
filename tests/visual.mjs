@@ -544,6 +544,10 @@ try{
   await checkOverflow(desktopInsights.page,'Desktop all-deck insights');
   await capture(desktopInsights.page,'desktop-shared-insights.png');
   await desktopInsights.page.goto(base+'#regler',{waitUntil:'load'});
+  await desktopInsights.page.getByRole('heading',{name:'Kunde inte visa listan'}).waitFor();
+  assert.equal(await desktopInsights.page.locator('.schyssta-list li').count(),0,'Desktop also rejects the entire malformed Schyssta payload');
+  await desktopInsights.page.evaluate(()=>{window.__HK_SCHYSSTA_CLEAN_RPC__=true;});
+  await desktopInsights.page.locator('#schyssta-retry').click();
   await desktopInsights.page.getByRole('heading',{name:'Gemensamma förslag'}).waitFor();
   await checkOverflow(desktopInsights.page,'Desktop Schyssta listan');
   await capture(desktopInsights.page,'desktop-schyssta-list.png');
