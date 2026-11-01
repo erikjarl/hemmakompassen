@@ -469,7 +469,7 @@ try{
   await teenReflection.page.getByRole('button',{name:'Jag vill dela mina fem skalpoäng'}).click();
   await teenReflection.page.locator('.pf-family-reflections').waitFor();
   assert.match(await teenReflection.page.locator('.pf-family-reflections').innerText(),/För dig som tonåring/);
-  assert.match(await teenReflection.page.locator('.pf-family-reflections').innerText(),/Om du gärna vill veta vad som ska hända men din förälder tar dagen som den kommer/);
+  assert.match(await teenReflection.page.locator('.pf-family-reflections').innerText(),/Det kan vara skönt när ni ungefär känner igen varandras sätt att vara med människor/);
   await checkOverflow(teenReflection.page,'Teen-specific reflections 390px');
   await teenReflection.page.locator('.pf-family-reflections h3').scrollIntoViewIfNeeded();
   await teenReflection.page.screenshot({path:path.join(output,'mobile-personality-teen-reflections.png'),animations:'disabled'});
