@@ -139,3 +139,12 @@ test('Schyssta first-time guidance, live rule preview and menus use safe local d
   assert.match(app,/new Intl\.DateTimeFormat\('sv-SE'/);
   assert.doesNotMatch(app,/schysstaDraft[^\n]{0,100}\.innerHTML=/);
 });
+
+test('Schyssta fetch failure clears old data and bounds a stalled network request',()=>{
+  assert.match(app,/results=await Promise\.race\(\[pending,new Promise/);
+  assert.match(app,/setTimeout\(\(\)=>reject\(new Error\('Schyssta fetch timeout'\)\),15000\)/);
+  assert.match(app,/finally\{clearTimeout\(timeoutHandle\);\}/);
+  assert.match(app,/schysstaSuggestions=\[\];schysstaRules=\[\];schysstaManualRules=\[\];schysstaNotifications=\[\]/);
+  assert.match(app,/window\.addEventListener\('online'/);
+  assert.match(app,/schysstaError&&\['hem','inkorg','regler'\]\.includes\(page\(\)\)/);
+});
