@@ -21,6 +21,10 @@ window.HEMMAKOMPASSEN_BACKEND = Object.freeze({
   // IPIP-50: all individual item answers stay self-only. Shared FIVE scores
   // require exact current pair + both opt-ins in verified server-side RPCs.
   enablePersonalitySharing: true,
+  // First internal-only AI chat: ephemeral one-turn Worker, no shared family context.
+  // This is a test-only UI on the development branch, not clinical service.
+  enableAiMediator: true,
+  aiMediatorUrl: 'https://hemmakompassen-ai-medlare.erikbertiljarl.workers.dev/api/ai/mediate',
   // Until auth, family membership and privacy tests pass, the public UI remains a demo.
   liveModeEnabled: false
 });
