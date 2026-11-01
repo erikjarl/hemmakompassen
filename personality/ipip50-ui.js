@@ -98,7 +98,7 @@ function percentileChart(self,other=null){
   return '<div class="pf-percentile-chart">'+
     '<div class="pf-legend" style="--pf-own:#55d6d2;--pf-other:#f8b55b"><span class="pf-legend-own">Din profil</span>'+
     (other?'<span class="pf-legend-other">Den andras profil</span>':'')+'</div>'+
-    '<p class="pf-chart-description">Varje stapel går från 0 till 100 i <strong>uppskattad percentil</strong>. 50 ligger exakt i mitten och 75 vid tre fjärdedelar. Färgfälten följer gränserna −2, −1, +1 och +2 standardavvikelser i en antagen normalfördelning.</p>'+
+    '<p class="pf-chart-description"><strong>Uppskattad percentil:</strong> 50 ligger exakt i mitten och 75 vid tre fjärdedelar. Färgzonerna motsvarar standardavvikelser.</p>'+
     bandKey+rows+
     '<details class="pf-chart-help"><summary>Hur ska jag tolka percentilerna?</summary>'+
     '<p>P≈75 betyder att ditt resultat uppskattas ligga högre än cirka 75 % i en hypotetisk normalfördelning med det amerikanska vuxenurvalets medelvärde och standardavvikelse. Det är <strong>inte</strong> en uppmätt percentil i urvalet eller en svensk norm.</p>'+
@@ -259,13 +259,13 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false}
         '<h3>Frågor att utforska tillsammans</h3><ul>'+
         distant.map(r=>'<li>'+esc(topics[r.factorId])+'</li>').join('')+
         '</ul><p class="live-muted">Samtalsfrågorna är redaktionella förslag, inte individuella psykologiska råd.</p></section>';
-      comparison='<section class="live-panel pf-comparison"><h2>Våra profiler</h2><p>Två självskattningar jämförda med samma amerikanska vuxenreferens. Percentilerna är normalmodellerade uppskattningar, inte svenska normer eller mått på hur bra någon är.</p>'+
+      comparison='<section class="live-panel pf-comparison"><h2>Våra profiler</h2><p>Två självskattningar jämförda med samma amerikanska vuxenreferens. Placeringarna är uppskattningar, inte svenska normer.</p>'+
         
         percentileChart(own,other)+table(own,other)+referenceFeedback(other,'Den andras')+referenceCaveat()+
         '<p class="live-muted">Markörerna visar uppskattad percentil jämfört med samma vuxenreferens. Tabellen visar råpoäng, medelvärde och SD. Skillnader är inte bevis för att ni fungerar olika.</p>'+
         reflections+'</section>';
     }
-    return heading+'<section class="live-panel pf-results"><h2>Din profil</h2><p>De fem skalorna sammanfattar dina svar. Staplarna visar ungefärliga percentiler utifrån en amerikansk vuxenreferens och en antagen normalfördelning, inte svenska normer.</p>'+
+    return heading+'<section class="live-panel pf-results"><h2>Din profil</h2><p>Dina fem skalor visar uppskattad placering jämfört med en amerikansk vuxenreferens, inte svenska normer.</p>'+
       percentileChart(own)+table(own)+referenceFeedback(own)+referenceCaveat()+
       '<p class="live-muted">Skalorna bygger på dina svar (10–50). Högt eller lågt är inte i sig bättre eller sämre. Den svenska översättningen behöver prövas vetenskapligt.</p>'+
       '<button type="button" data-pf-action="review">Granska eller ändra mina svar</button></section>'+sharing+comparison;
