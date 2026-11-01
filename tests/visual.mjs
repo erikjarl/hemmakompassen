@@ -549,7 +549,7 @@ try{
   assert.doesNotMatch(exported,/Vi får pausa gräl|Vi pratar om hur vi delar på sysslorna/,'Copy excludes proposals without two approvals');
   assert.equal(await paired.page.getByRole('button',{name:'Uppdatera listan'}).count(),1,
     'A paired test user can explicitly reload the list');
-  assert.equal(await paired.page.locator('#live-mobile-nav a[href="#inkorg"] .live-nav-count').innerText(),'1','Inbox has unobtrusive unread count');
+  assert.equal(await paired.page.locator('#live-mobile-nav a[href="#inkorg"] .live-nav-count').innerText(),'2','Inbox counts both one private chat message and one rule event');
   assert.equal(await paired.page.locator('#live-mobile-nav a[href="#regler"] .live-nav-count').innerText(),'2','Rule tab shows only requests awaiting the current viewer');
   assert.match(await paired.page.locator('#live-mobile-nav a[href="#regler"]').getAttribute('aria-label'),/2 obesvarade regelförslag/,'Navigation text announces the meaning of the count');
   // Search and status filters never hide incoming requests requiring the user's answer.
