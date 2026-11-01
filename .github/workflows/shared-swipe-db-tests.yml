@@ -17,6 +17,7 @@ on:
       - "supabase/migrations/20261030180000_schyssta_list_server_contract.sql"
       - "supabase/migrations/20261101110000_schyssta_manual_proposals.sql"
       - "supabase/migrations/20261101121500_schyssta_notifications.sql"
+      - "supabase/migrations/20261101130000_schyssta_replacements.sql"
       - "supabase/tests/shared_swipe_matches.sql"
       - "supabase/tests/swipe_importance.sql"
       - "supabase/tests/shared_swipe_priorities.sql"
@@ -24,6 +25,7 @@ on:
       - "supabase/tests/schyssta_list_server_contract.sql"
       - "supabase/tests/schyssta_manual_proposals.sql"
       - "supabase/tests/schyssta_notifications.sql"
+      - "supabase/tests/schyssta_replacements.sql"
       - "supabase/tests/fixtures/shared_swipe_contract_schema.sql"
   workflow_dispatch:
 
@@ -122,6 +124,11 @@ jobs:
           docker exec -i "${{ job.services.postgres.id }}" \
             psql -U postgres -d postgres -v ON_ERROR_STOP=1 -X -q \
             < supabase/migrations/20261101121500_schyssta_notifications.sql
+      - name: Apply agreed rule replacements
+        run: |
+          docker exec -i "${{ job.services.postgres.id }}" \
+            psql -U postgres -d postgres -v ON_ERROR_STOP=1 -X -q \
+            < supabase/migrations/20261101130000_schyssta_replacements.sql
       - name: Assert 52 real pgTAP test results
         shell: bash
         run: |
@@ -208,3 +215,16 @@ jobs:
             exit 1
           fi
           test "$(grep -Ec '^ok [0-9]+' /tmp/schyssta-inbox-test.log)" -eq 17
+
+      - name: Assert 18 rule replacement pgTAP results
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker exec -i "${{ job.services.postgres.id }}" \
+            psql -U postgres -d postgres -v ON_ERROR_STOP=1 -X -q -A -t \
+            < supabase/tests/schyssta_replacements.sql | tee /tmp/schyssta-replacements-test.log
+          grep -qx '1..18' /tmp/schyssta-replacements-test.log
+          if grep -Eq '^(not ok|# Looks like you failed)' /tmp/schyssta-replacements-test.log; then
+            exit 1
+          fi
+          test "$(grep -Ec '^ok [0-9]+' /tmp/schyssta-replacements-test.log)" -eq 18
