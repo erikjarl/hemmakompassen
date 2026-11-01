@@ -7,8 +7,8 @@ const app=await readFile(new URL('../live-app.js',import.meta.url),'utf8');
 const config=await readFile(new URL('../backend-config.js',import.meta.url),'utf8');
 const migration=await readFile(new URL('../supabase/migrations/20261030180000_schyssta_list_server_contract.sql',import.meta.url),'utf8');
 
-test('Schyssta listan is fail-closed outside reviewed environments',()=>{
-  assert.match(config,/enableSchysstaList:\s*false/);
+test('Schyssta listan is enabled for the online test site, with authenticated RPCs',()=>{
+  assert.match(config,/enableSchysstaList:\s*true/);
   assert.match(app,/const schysstaListEnabled=c\.enableSchysstaList===true/);
   assert.match(app,/if\(!schysstaListEnabled\)return/);
 });
