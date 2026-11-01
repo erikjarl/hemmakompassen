@@ -69,6 +69,7 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
   }
   async function createChat() {
     if (!historyEnabled || !userId) return false;
+    listRequest++; // Invalidate any stale list response before creating a new chat.
     const account=userId, myEpoch=epoch;
     try {
       const data=await callApi('/chats','POST',account);
@@ -100,6 +101,7 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
   }
   async function deleteChat() {
     if (!historyEnabled || !activeChatId || !userId || sending) return false;
+    listRequest++; // A pending list fetch may not restore a just-deleted chat.
     const account=userId,myEpoch=epoch,id=activeChatId;
     try {
       await callApi('/chats/'+encodeURIComponent(id),'DELETE',account);
