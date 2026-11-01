@@ -122,6 +122,8 @@ const deferred=()=>{let resolve,reject;const promise=new Promise((ok,no)=>{resol
   const state={
     refreshGeneration:0,user:null,profile:null,members:[],
     personalityExperience:{reset(){},load:async()=>{}},
+    // The refresh function now also resets the private AI-chat lifecycle.
+    mediatorExperience:{reset(){},loadList:async()=>{}},
     swipeAnswers:new Map(),swipeImportance:new Map(),importancePending:new Map(),importanceSaving:new Set(),importanceAvailable:false,importanceLoadError:'',skippedUnderstanding:new Set(),understandingShares:new Set(),understandingShareSaving:new Set(),understandingShareError:'',sharedUnderstandingEnabled:false,themeAnswers:new Map(),
     activeThemeDeck:null,themeIndex:0,themeReview:false,themeSaveError:'',
     swipeBusy:false,swipeLoadError:'',swipeSaveError:'',swipeReview:false,swipeIndex:0,
