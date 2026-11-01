@@ -819,7 +819,8 @@ function schysstaView(){
     +'<details class="schyssta-tips"><summary>Tips för en tydlig och rättvis överenskommelse</summary>'
     +'<p>Beskriv helst vad ni vill göra, snarare än vad den andra ska sluta med.</p>'
     +'<ul><li>När ska regeln gälla?</li><li>Vad betyder den i praktiken för var och en?</li><li>När vill ni prata om hur den fungerar?</li></ul>'
-    +'<p>Ni får båda föreslå ändringar. Vuxnas ansvar för trygghet och omsorg ska inte läggas på tonåringen.</p></details>'
+    +'<p>Ni får båda föreslå ändringar. Vuxnas ansvar för trygghet och omsorg ska inte läggas på tonåringen.</p>'
+    +(viewerRole()==='parent'?'<p>Som förälder: prova att prata om förslaget och lyssna på tonåringens perspektiv innan du skickar. <a href="#kommunikation">Öppna kommunikationsråden</a>.</p>':'')+'</details>'
     +'<button class="live-button" type="submit"'+(schysstaSubmitting?' disabled':'')+'>'+(schysstaSubmitting?'Skickar…':schysstaEditTarget?'Skicka ändringsförslag':'Skicka regelförslag')+'</button>'
     +'<button class="schyssta-secondary" type="button" id="schyssta-compose">Stäng formuläret</button></form>'
     :'<button class="live-button" type="button" id="schyssta-compose">+ Föreslå en regel</button>';
