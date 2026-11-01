@@ -140,3 +140,11 @@ test('safety detection is narrow and does not intercept an ordinary disagreement
   assert.equal(safetyResponse('Vi bråkar om läxor och tvätt.'),null);
   assert.equal(safetyResponse('Jag vill leva ett självständigare liv.'),null);
 });
+
+test('passiv beskrivning av våld fångas utan AI-anrop',async()=>{
+ const x=harness();
+ const response=await x.handler(request({body:{message:'Jag blir slagen hemma.'}}),x.env);
+ assert.equal(response.status,200);
+ assert.equal((await response.json()).safetyNotice,true);
+ assert.equal(x.seen.model.length,0);
+});
