@@ -635,7 +635,7 @@ try{
   const inboxText=await paired.page.locator('#live-app').innerText();
   assert.match(inboxText,/Vi pratar om hur vi delar på sysslorna/,'Inbox shows other member pending manual request');
   assert.doesNotMatch(inboxText,/Vi planerar veckans sysslor på söndag/,'Inbox does not present sender own proposal as incoming');
-  assert.match(inboxText,/Meddelanden · 1 olästa/,'Server inbox shows persisted unread count');
+  assert.match(inboxText,/Händelser från Schyssta listan · 1 olästa/,'Server inbox shows persisted unread count');
   assert.equal(await paired.page.locator('.schyssta-unread time[datetime]').count(),1,'Notifications display a timestamp from the server');
   assert.match(await paired.page.locator('.schyssta-unread').innerText(),/Från: Provtonåring/,'Inbox identifies only the authorized counterpart');
   // The home screen surfaces the latest personal inbox alert ahead of general family information.
