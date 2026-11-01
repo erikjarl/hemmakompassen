@@ -100,6 +100,7 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
           {card_id:'regler-02',body:'Falsk text som aldrig får visas.'},
           {card_id:'regler-99',body:'Okänd privat uppgift'}
         ];
+        let schysstaNotifications=[{notification_id:'40000000-0000-4000-8000-000000000001',agreement_id:'30000000-0000-4000-8000-000000000001',kind:'rule_proposed',body:'Vi pratar om hur vi delar på sysslorna.',read_at:null,created_at:'2026-10-30T12:00:01Z'}];
         let schysstaManualRules=[{agreement_id:'30000000-0000-4000-8000-000000000001',body:'Vi pratar om hur vi delar på sysslorna.',status:'proposed',agreement_version:1,proposed_by_me:false,own_decision:null,parent_decision:null,teen_decision:null,created_at:'2026-10-30T12:00:00Z'}];
         let schysstaRules=[{agreement_id:'20000000-0000-4000-8000-000000000001',source_card_id:'regler-03',body:'Vi får pausa gräl och bestämmer när vi pratar vidare.',status:'proposed',proposed_by_me:false,own_decision:null,parent_decision:null,teen_decision:true,created_at:'2026-10-30T12:00:00Z'}];
         return {
@@ -159,6 +160,12 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
             }
             if(name==='shared_schyssta_rule_suggestions')return {data:window.__HK_TEST_PAIRED__?(window.__HK_SCHYSSTA_CLEAN_RPC__===true?schysstaSuggestions.filter(row=>row.card_id==='regler-01'):schysstaSuggestions):[],error:null};
             if(name==='my_schyssta_rules')return {data:window.__HK_TEST_PAIRED__?schysstaRules:[],error:null};
+            if(name==='my_schyssta_notifications')return {data:window.__HK_TEST_PAIRED__?schysstaNotifications:[],error:null};
+            if(name==='mark_schyssta_notification_read'){
+              window.__HK_READ_NOTICE__={name,args};
+              schysstaNotifications=schysstaNotifications.map(n=>n.notification_id===args.p_notification_id?{...n,read_at:'2026-11-01T10:00:00Z'}:n);
+              return {data:null,error:null};
+            }
             if(name==='my_manual_schyssta_rules')return {data:window.__HK_TEST_PAIRED__?schysstaManualRules.map(({request_key,...row})=>row):[],error:null};
             if(name==='propose_manual_schyssta_rule'){
               window.__HK_MANUAL_PROPOSE__={name,args};
@@ -488,6 +495,12 @@ try{
   const inboxText=await paired.page.locator('#live-app').innerText();
   assert.match(inboxText,/Vi pratar om hur vi delar på sysslorna/,'Inbox shows other member pending manual request');
   assert.doesNotMatch(inboxText,/Vi planerar veckans sysslor på söndag/,'Inbox does not present sender own proposal as incoming');
+  assert.match(inboxText,/Meddelanden · 1 olästa/,'Server inbox shows persisted unread count');
+  await paired.page.getByRole('button',{name:'Markera som läst'}).click();
+  await paired.page.waitForFunction(()=>window.__HK_READ_NOTICE__?.args?.p_notification_id==='40000000-0000-4000-8000-000000000001');
+  await paired.page.waitForFunction(()=>document.querySelector('#live-app')?.textContent?.includes('Meddelanden'));
+  assert.equal(await paired.page.getByRole('button',{name:'Markera som läst'}).count(),0,'Read receipt removes unread action without approving the rule');
+
   await paired.page.getByRole('button',{name:'Se och svara i Schyssta listan'}).first().click();
   await paired.page.getByRole('heading',{name:'Schyssta listan'}).waitFor();
   await paired.page.locator('#schyssta-rule-30000000-0000-4000-8000-000000000001').waitFor();
