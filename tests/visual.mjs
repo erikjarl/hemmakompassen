@@ -427,11 +427,15 @@ try{
   await consentPair.page.getByRole('heading',{name:'Våra profiler'}).waitFor();
   assert.equal(await consentPair.page.locator('.pf-comparison .pf-table tbody tr').count(),5);
   assert.equal(await consentPair.page.locator('.pf-family-reflections').count(),1);
-  assert.match(await consentPair.page.locator('.pf-family-reflections').innerText(),/Vad era profiler kan säga om samspelet/);
-  assert.match(await consentPair.page.locator('.pf-family-reflections').innerText(),/Likheter att bygga vidare på/);
-  assert.match(await consentPair.page.locator('.pf-family-reflections').innerText(),/Skillnader att utforska/);
-  assert.match(await consentPair.page.locator('.pf-family-reflections').innerText(),/Tonåringen beskriver större benägenhet till ordning och planering/);
+  assert.match(await consentPair.page.locator('.pf-family-reflections').innerText(),/Att förstå era likheter och olikheter/);
+  assert.match(await consentPair.page.locator('.pf-family-reflections').innerText(),/Likheter som kan hjälpa er/);
+  assert.match(await consentPair.page.locator('.pf-family-reflections').innerText(),/Skillnader som kan vara värda att prata om/);
+  assert.match(await consentPair.page.locator('.pf-family-reflections').innerText(),/Tonåringen kanske uppskattar tydliga planer mer än du själv gör/);
   assert.match(await consentPair.page.locator('.pf-family-reflections').innerText(),/Extraversion/);
+  assert.match(await consentPair.page.locator('.pf-family-reflections').innerText(),/För dig som förälder/);
+  assert.equal(await consentPair.page.locator('.pf-insight-resource a[href="#regler"]').count(),1);
+  assert.ok(await consentPair.page.locator('.pf-insight-resource a[href="#swipe"]').count()>=1);
+  assert.equal(await consentPair.page.locator('.pf-family-reflections .pf-insight-card').count(),5);
   assert.equal(await consentPair.page.locator('.pf-comparison .pf-scale-track').count(),5);
   const pctGeometry=await consentPair.page.locator('.pf-comparison .pf-scale-row').first().evaluate(row=>{
     const bar=row.querySelector('.pf-scale-track').getBoundingClientRect();
@@ -459,6 +463,17 @@ try{
   assert.equal(await consentPair.page.locator('.pf-family-reflections').count(),0,'Withdrawal hides the entire narrative');
   assert.equal(await consentPair.page.evaluate(()=>window.__HK_PERSONALITY_SHARE__),false);
   await consentPair.context.close();
+  const teenReflection=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},
+    {authenticated:true,paired:true,role:'teen',personalityComplete:true,personalitySharing:true,personalityPartnerShared:true});
+  await teenReflection.page.goto(base+'#personlighet',{waitUntil:'load'});
+  await teenReflection.page.getByRole('button',{name:'Jag vill dela mina fem skalpoäng'}).click();
+  await teenReflection.page.locator('.pf-family-reflections').waitFor();
+  assert.match(await teenReflection.page.locator('.pf-family-reflections').innerText(),/För dig som tonåring/);
+  assert.match(await teenReflection.page.locator('.pf-family-reflections').innerText(),/Om du gärna vill veta vad som ska hända men din förälder tar dagen som den kommer/);
+  await checkOverflow(teenReflection.page,'Teen-specific reflections 390px');
+  await teenReflection.page.locator('.pf-family-reflections h3').scrollIntoViewIfNeeded();
+  await teenReflection.page.screenshot({path:path.join(output,'mobile-personality-teen-reflections.png'),animations:'disabled'});
+  await teenReflection.context.close();
   const narrow=await freshContext({viewport:{width:320,height:700},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true});
   await narrow.page.getByRole("heading",{name:/Hej[ ,]+Provförälder/}).waitFor();
   await checkMobileNavigation(narrow.page,'320px mobile navigation');
