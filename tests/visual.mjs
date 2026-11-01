@@ -542,6 +542,15 @@ try{
   assert.equal(await paired.page.locator('[data-schyssta-filter-group="approved"]').isVisible(),true,'Status filter retains agreed rules');
   await paired.page.locator('#schyssta-status-filter').selectOption('all');
   assert.equal(await paired.page.locator('[data-schyssta-filter-group="ongoing"]').isVisible(),true,'All-status restores the ongoing section');
+  // "Inte nu" is a session-only postponement, not a saved rejection.
+  await paired.page.locator('[data-schyssta-pause="30000000-0000-4000-8000-000000000001"]').click();
+  assert.equal(await paired.page.locator('#schyssta-rule-30000000-0000-4000-8000-000000000001').isVisible(),true,
+    'Paused request remains accessible under ongoing proposals');
+  assert.equal(await paired.page.locator('#live-mobile-nav a[href="#regler"] .live-nav-count').innerText(),'1',
+    'Pausing a request decreases only the local pending-action count');
+  assert.equal(await paired.page.evaluate(()=>window.__HK_SCHYSSTA_DECISION__?.args?.p_agreement_id==='30000000-0000-4000-8000-000000000001'),false,
+    'Pausing does not send any approval or rejection decision');
+  assert.match(await paired.page.locator('.schyssta-view').innerText(),/Inget beslut har sparats/);
   await paired.page.getByRole('button',{name:'+ Föreslå en regel'}).click();
   const prompts=paired.page.locator('.schyssta-tips');
   assert.equal(await prompts.count(),1,'Composing a rule offers optional, collapsed conversation prompts');
