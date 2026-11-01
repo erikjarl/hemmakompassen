@@ -524,6 +524,36 @@ try{
   assert.equal(await paired.page.locator('#live-mobile-nav a[href="#inkorg"] .live-nav-count').innerText(),'1','Inbox has unobtrusive unread count');
   assert.equal(await paired.page.locator('#live-mobile-nav a[href="#regler"] .live-nav-count').innerText(),'2','Rule tab shows only requests awaiting the current viewer');
   assert.match(await paired.page.locator('#live-mobile-nav a[href="#regler"]').getAttribute('aria-label'),/2 obesvarade regelförslag/,'Navigation text announces the meaning of the count');
+  // Search and status filters never hide incoming requests requiring the user's answer.
+  const search=paired.page.locator('#schyssta-search');
+  await search.fill('LÅNAR');
+  assert.equal(await paired.page.locator('[data-schyssta-filter-group="approved"] .schyssta-list>li:visible').count(),1,
+    'Accent/case-aware local search includes the accepted rule');
+  assert.equal(await paired.page.locator('[data-schyssta-filter-group="ongoing"] .schyssta-list>li:visible').count(),0,
+    'Search hides unrelated ongoing proposals without altering server results');
+  assert.equal(await paired.page.locator('#schyssta-rule-30000000-0000-4000-8000-000000000001').isVisible(),true,
+    'Incoming action cards stay visible while the rules are filtered');
+  assert.match(await paired.page.locator('#schyssta-filter-summary').innerText(),/Visar 1 av/,'Search announces visible result count');
+  await search.fill('ord-som-inte-finns');
+  assert.equal(await paired.page.locator('.schyssta-no-results:visible').count(),2,'No-match feedback is visible without fabricated rows');
+  await search.fill('');
+  await paired.page.locator('#schyssta-status-filter').selectOption('approved');
+  assert.equal(await paired.page.locator('[data-schyssta-filter-group="ongoing"]').isVisible(),false,'Status filter hides ongoing proposals');
+  assert.equal(await paired.page.locator('[data-schyssta-filter-group="approved"]').isVisible(),true,'Status filter retains agreed rules');
+  await paired.page.locator('#schyssta-status-filter').selectOption('all');
+  assert.equal(await paired.page.locator('[data-schyssta-filter-group="ongoing"]').isVisible(),true,'All-status restores the ongoing section');
+  // "Inte nu" is a session-only postponement, not a saved rejection.
+  await paired.page.locator('[data-schyssta-pause="30000000-0000-4000-8000-000000000001"]').click();
+  assert.equal(await paired.page.locator('#schyssta-rule-30000000-0000-4000-8000-000000000001').isVisible(),true,
+    'Paused request remains accessible under ongoing proposals');
+  assert.equal(await paired.page.locator('#live-mobile-nav a[href="#regler"] .live-nav-count').innerText(),'1',
+    'Pausing a request decreases only the local pending-action count');
+  assert.equal(await paired.page.evaluate(()=>window.__HK_SCHYSSTA_DECISION__?.args?.p_agreement_id==='30000000-0000-4000-8000-000000000001'),false,
+    'Pausing does not send any approval or rejection decision');
+  assert.match(await paired.page.locator('.schyssta-view').innerText(),/Inget beslut har sparats/);
+  await paired.page.locator('[data-schyssta-resume="30000000-0000-4000-8000-000000000001"]').click();
+  assert.equal(await paired.page.locator('#live-mobile-nav a[href="#regler"] .live-nav-count').innerText(),'2',
+    'A deferred proposal can be returned to the actionable list without any backend change');
   await paired.page.getByRole('button',{name:'+ Föreslå en regel'}).click();
   const prompts=paired.page.locator('.schyssta-tips');
   assert.equal(await prompts.count(),1,'Composing a rule offers optional, collapsed conversation prompts');
