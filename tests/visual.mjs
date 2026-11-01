@@ -398,17 +398,24 @@ try{
   const completedPersonality=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,personalityComplete:true,role:'teen'});
   await completedPersonality.page.goto(base+'#personlighet',{waitUntil:'load'});
   await completedPersonality.page.getByRole('heading',{name:'Din profil'}).waitFor();
-  assert.equal(await completedPersonality.page.locator('.pf-radar').count(),1);
+  assert.equal(await completedPersonality.page.locator('.pf-scale-track').count(),5);
+  assert.equal(await completedPersonality.page.locator('.pf-band').count(),25);
   assert.equal(await completedPersonality.page.locator('.pf-table tbody tr').count(),5);
-  assert.equal(await completedPersonality.page.locator('.pf-reference-legend').count(),1);
+  assert.equal(await completedPersonality.page.locator('.pf-band-key').count(),1);
   assert.match(await completedPersonality.page.locator('.pf-table').innerText(),/Vuxna M/);
   assert.match(await completedPersonality.page.locator('.pf-table').innerText(),/Vuxna SD/);
-  assert.match(await completedPersonality.page.locator('.pf-reference-feedback').innerText(),/amerikanska vuxenreferensen/);
+  assert.match(await completedPersonality.page.locator('.pf-reference-feedback').innerText(),/amerikanska vuxenurvalets/);
   assert.match(await completedPersonality.page.locator('.pf-reference-caveat').innerText(),/svenska översättning/);
   assert.equal(await completedPersonality.page.getByText('Våra profiler').count(),0,'No fabricated second profile');
   await checkOverflow(completedPersonality.page,'Private personality profile 390px');
   await capture(completedPersonality.page,'mobile-personality-profile.png');
   await completedPersonality.context.close();
+  const narrowPersonality=await freshContext({viewport:{width:320,height:700},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,personalityComplete:true});
+  await narrowPersonality.page.goto(base+'#personlighet',{waitUntil:'load'});
+  await narrowPersonality.page.locator('.pf-scale-row').first().waitFor();
+  await checkOverflow(narrowPersonality.page,'Private personality profile 320px');
+  await capture(narrowPersonality.page,'mobile-320-personality-percentiles.png');
+  await narrowPersonality.context.close();
   const consentPair=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,paired:true,personalityComplete:true,personalitySharing:true,personalityPartnerShared:true});
   await consentPair.page.goto(base+'#personlighet',{waitUntil:'load'});
   await consentPair.page.getByRole('button',{name:'Jag vill dela mina fem skalpoäng'}).waitFor();
@@ -416,6 +423,21 @@ try{
   await consentPair.page.getByRole('button',{name:'Jag vill dela mina fem skalpoäng'}).click();
   await consentPair.page.getByRole('heading',{name:'Våra profiler'}).waitFor();
   assert.equal(await consentPair.page.locator('.pf-comparison .pf-table tbody tr').count(),5);
+  assert.equal(await consentPair.page.locator('.pf-comparison .pf-scale-track').count(),5);
+  const pctGeometry=await consentPair.page.locator('.pf-comparison .pf-scale-row').first().evaluate(row=>{
+    const bar=row.querySelector('.pf-scale-track').getBoundingClientRect();
+    const axis=row.querySelector('.pf-pct-axis');
+    const center=axis.children[2].getBoundingClientRect();
+    const threeQuarters=axis.children[3].getBoundingClientRect();
+    const own=row.querySelector('.pf-score-own').getBoundingClientRect();
+    const partner=row.querySelector('.pf-score-other').getBoundingClientRect();
+    return {meanError:Math.abs(center.left+center.width/2-(bar.left+.5*bar.width)),
+      p75Error:Math.abs(threeQuarters.left+threeQuarters.width/2-(bar.left+.75*bar.width)),
+      partnerDx:Math.abs((own.left+own.width/2)-(partner.left+partner.width/2)),
+      partnerDy:Math.abs((own.top+own.height/2)-(partner.top+partner.height/2))};
+  });
+  assert.ok(pctGeometry.meanError<1&&pctGeometry.p75Error<1,'P50 and P75 ticks align mathematically with the bar');
+  assert.ok(pctGeometry.partnerDx<1&&pctGeometry.partnerDy>4,'Same-percentile profile dots have same x but remain distinguishable');
   await checkOverflow(consentPair.page,'Two consenting personality profiles 390px');
   await capture(consentPair.page,'mobile-personality-two-consents.png');
   await consentPair.page.getByRole('button',{name:'Sluta dela min profil'}).click();
