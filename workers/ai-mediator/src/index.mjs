@@ -163,7 +163,7 @@ export function createHandler({ fetchAuth = fetch, now = () => new Date() } = {}
     if (!message || message.length > MAX_MESSAGE_CHARS) {
       return answer(400, { error: 'Skriv ett meddelande på högst 2 000 tecken.' }, origin);
     }
-    if (chatId !== null && !CHAT_ID_RE.test(chatId)) return answer(400, {error:'Ogiltigt samtals-ID.'}, origin);
+    if (chatId !== null && (typeof chatId !== 'string' || !CHAT_ID_RE.test(chatId))) return answer(400, {error:'Ogiltigt samtals-ID.'}, origin);
     let previous = [];
     if (chatId) {
       try {
