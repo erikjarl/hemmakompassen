@@ -585,3 +585,12 @@ Listan är en samlad arbetsplan för att slutföra Gillaswajpen. Kryssa av förs
 - [ ] **Behöver Erik – status avvaktar autentiserat sluttest:** Godkännande för granskade framtida liknande migrationer och testkontotester gäller till och med 2027-12-31, men inga befintliga användarsvar får ändras. Testa med två riktiga inloggade testkonton, inklusive JA+JA, NEJ+NEJ, ensidigt svar, B-samtycke/återkallelse, omparning och familjeisolering. Testa utan att ändra redan lagrade svar; använd endast nya syntetiska testposter efter separat säker avgränsning. Aktivera inte B-, prioriterings-, insikts- eller Schyssta-listan-flaggor förrän de relevanta autentiserade testen är godkända.
 - [ ] **Schyssta listan:** migrationens exakta sökväg och säkerhetsberoenden behöver granskas separat före installation. Ingen Schyssta-listan-migration installerades i detta pass.
 - **Begränsning:** SQL-metadata och migrationshistorik har verifierats mot verklig Supabase. Ingen riktig browserinloggning eller tvåkontoverifiering genomfördes i detta pass. Inga ändringar på `main`, ingen merge och ingen publik flaggaktivering.
+
+
+## UI-uppdatering Big Five: percentilstaplar (1 november 2026)
+- [x] Ersätt den synliga radargrafen med fem mobilanpassade liggande jämförelsestaplar, med fast skala 0–100 och separata markörer för egen och delad profil. Genomförd på utvecklingsbranchen `ai-dev/utveckling`, ännu inte publicerad förrän PR godkänns/mergas.
+- [x] Skala x-positionerna med `100 × Φ(z)`: 50 placeras exakt i mitten, 75 exakt tre fjärdedelar. Färgzoner: 0–2,275, 2,275–15,866, 15,866–84,134, 84,134–97,725 och 97,725–100 i den antagna normalfördelningen; mellersta fältet störst.
+- [x] Använd termerna mycket under / under / runt / över / mycket över genomsnittet och skriv `P≈`, då percentilerna är **normalmodellerade uppskattningar**, inte observerade eller validerade svenska/amerikanska percentilnormer.
+- [x] Behåll tillhörande poängtabell, vuxenreferens M/SD, metodförbehåll, privat svarshistorik och separat dubbelsamtycke. Lägg till mobilstilar, förklaringsfält och automatiska kontrollfall.
+- [ ] Kontrollera GitHub Actions och visuella Playwright-bilder för både en profil och två profiler på liten mobil samt desktop efter PR-körning. Verifiera att färgzoner, markörer och texter inte överlappar.
+- [ ] Publicera på Pages först efter uttryckligen godkänd merge enligt arbetsrutinen ovan.
