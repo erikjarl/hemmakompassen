@@ -66,6 +66,18 @@ webbplatsen eller två riktiga webbläsarsessioner. CI-status för GitHub Action
 - [ ] AI-genererade frivilliga sammanfattningar i Gillaswajpen och
   personlighetstestet byggs efter att AI-01 är behörighetstestat.
 
+## Fiktiv kvalitetsgranskning och skydd för tydliga riskfraser
+
+Fyra frivilliga och fiktiva svenska förälder–tonåring-scenarier prövades direkt mot Llama 3.1 8B: mobilkonflikt, vuxen som höjer rösten, hot om våld från förälder och tonåring med självmordstankar. Modellen gav rimliga små samtalsförslag för vardagsexemplen men **olämpliga eller otillräckliga svar i risksituationerna**: bland annat föreslog den direkt samtal med den hotande föräldern. Suicidexemplet gav ett generellt svar och klipptes mitt i texten.
+
+**Riskbegränsning införd:** `safetyResponse(message)` på Workersidan känner igen vissa tydliga svenska fraser om suicid/självskada och våld/hot. Då skickas meddelandet **inte** till AI-modellen. I stället returneras särskilt förskriven text om mänsklig hjälp och säkerhet. UI markerar detta **Säkerhetsinformation**, inte AI-svar. Hänvisningar: 112 vid akut fara, 1177 för vårdvägledning, och Bris 116 111/bris.se dygnet runt för personer under 18 år. Dessa uppgifter kontrollerades mot Bris och 1177 2026-11-01.
+
+**Begränsning:** Enkel regelmatchning kan missa farliga situationer, tolka ett citat fel eller ge generiska hänvisningar. Det är inte en tillförlitlig suicid-/våldsbedömning och ersätter inte kliniska rutiner. **Fortsatt förbättring och granskning före verklig användning är obligatorisk.** Ej underlag för att aktivera AI-stöd till externa ungdomar.
+
+Källor:
+- https://www.bris.se/om-bris/press-och-opinion/hanvisa-till-bris/hanvisa-till-bris/
+- https://www.1177.se/sjukdomar--besvar/psykiska-sjukdomar-och-besvar/sjalvmordstankar/till-dig-som-har-sjalvmordstankar/
+
 ## Säkerhetskontrakt
 
 Denna testversion tar **ett** frivilligt meddelande åt gången och
