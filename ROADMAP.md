@@ -515,6 +515,8 @@ Listan är en samlad arbetsplan för att slutföra Gillaswajpen. Kryssa av förs
 - [ ] **Kvar innan release på `main`:** riktig autentiserad end-to-end-testning i två separata sessioner, Node/Actions-kontroller, mobiltest/Playwright och särskild granskning/merge av den renodlade AI-pull-requesten.
 - [ ] **AI-01D/AI-02/AI-03:** samtyckesstyrd serverkontext och frivilliga, rollanpassade AI-reflektioner för Gillaswajpen respektive Big Five först efter säkerhets- och behörighetstest.
 
+**Senaste tillägg:** Servern hämtar nu endast den verifierade användarens `parent`/`teen`-roll via befintlig Supabase-RPC med användarens Auth-token. Instruktionerna för AI-medlaren anpassas därefter till förälder respektive tonåring och faller tillbaka till neutralt läge om rollinformation inte kan verifieras. Rolluppgiften går att testa; fiktiva svenska modellprov visar ännu inte robust, tydlig kvalitetsskillnad mellan roller. Godkända GitHub Actions omfattar nu AI-Node-tester och den ordinarie UI/browser-testkedjan; faktisk autentiserad tvåkontotestning återstår.
+
 ### AI-01 — Grundläggande AI-medlare (byggs först)
 
 **AI-01A. Teknik, kostnad och säker anslutning**
