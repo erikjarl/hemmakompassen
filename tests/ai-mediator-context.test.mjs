@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import { loadAuthorizedContext, normalizeSharedIPIP, CONTEXT_LIMIT_CHARS } from '../workers/ai-mediator/src/context.mjs';
+import { IPIP50_V1 } from '../workers/ai-mediator/src/catalog.mjs';
 const ENV={SUPABASE_URL:'https://test.supabase.co',SUPABASE_PUBLISHABLE_KEY:'sb_publishable_test'};
 const UID='11111111-1111-4111-8111-111111111111';
 const FACTOR={extraversion:30,agreeableness:30,conscientiousness:30,emotional_stability:30,intellect_imagination:30};
@@ -90,4 +91,17 @@ test('catalog snapshot is byte-for-byte sourced from canonical public metadata',
  const instrument=readFileSync(new URL('../personality/ipip50-v1.js',import.meta.url),'utf8');
  assert.ok(snapshot.includes(cards));
  assert.ok(snapshot.includes(instrument));
+});
+
+test('own complete 50-item IPIP produces only five scored factor sums, never raw item answers',async()=>{
+ const factory=fixture(), original=factory.fetchAuth;
+ const rows=IPIP50_V1.items.map(item=>({question_id:item.id,answer:{value:3}}));
+ const ctx=await loadAuthorizedContext(ENV,'signed-in-test-token',UID,'teen',async(url,opts)=>{
+   if(url.includes('/personality_answers'))return Response.json(rows);
+   return original(url,opts);
+ });
+ assert.ok(ctx.sections.includes('Personlighetstest – egen profil'));
+ assert.ok(ctx.text.includes('Extraversion: 30/50'));
+ assert.ok(ctx.text.includes('Emotionell stabilitet: 30/50'));
+ assert.ok(!ctx.text.includes('ipip50-001'));
 });
