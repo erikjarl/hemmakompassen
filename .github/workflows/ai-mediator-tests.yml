@@ -7,6 +7,8 @@ on:
     paths:
       - 'workers/ai-mediator/**'
       - 'tests/ai-mediator-worker.test.mjs'
+      - 'tests/ai-mediator-ui.test.mjs'
+      - 'ai-mediator-ui.js'
       - '.github/workflows/ai-mediator-tests.yml'
   pull_request:
     paths:
@@ -27,4 +29,11 @@ jobs:
         with:
           node-version: '22'
       - name: Run offline security tests
-        run: node --test tests/ai-mediator-worker.test.mjs
+        run: node --test tests/ai-mediator-worker.test.mjs tests/ai-mediator-ui.test.mjs
+      - name: JavaScript syntax checks
+        run: |
+          node --check ai-mediator-ui.js
+          node --check live-app.js
+          node --check workers/ai-mediator/src/index.mjs
+      - name: Static site build
+        run: npm run build
