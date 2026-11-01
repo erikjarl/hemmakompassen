@@ -65,21 +65,25 @@ test('answers resume at the first unanswered item after session reset',async()=>
   assert.match(ui.render(),/Fråga 3 av 50/);
 });
 
-test('50 answers show individual radar and accessible table, no partner or consent',async()=>{
+test('50 answers show individual normal-model percentile bars and accessible table, no partner or consent',async()=>{
   const mock=fakeClient(new Map(itemIds.map(id=>[id,3])));
   const ui=createPersonalityExperience({db:mock.db,onRender:()=>{}});
   ui.reset('teen-id');await ui.load('teen-id');
   const html=ui.render({viewerRole:'teen'});
   assert.match(html,/Din profil/);
-  assert.match(html,/class="pf-radar"/);
+  assert.match(html,/class="pf-percentile-chart"/);
+  assert.doesNotMatch(html,/class="pf-radar"/);
   assert.match(html,/<table/);
   assert.match(html,/Samvetsgrannhet/);
   assert.match(html,/Vuxna M/);
   assert.match(html,/Vuxna SD/);
-  assert.match(html,/pf-reference-legend/);
+  assert.match(html,/class="pf-band-key"/);
+  assert.match(html,/style="left:50%"/);
+  assert.match(html,/style="left:75%"/);
+  assert.match(html,/klassad som|P≈/);
   assert.match(html,/pf-reference-caveat/);
-  assert.match(html,/±1 SD/);
-  assert.match(html,/Ovanligt lågt.*amerikanska vuxenreferensen/);
+  assert.match(html,/−1 till \+1 SD/);
+  assert.match(html,/Mycket under genomsnittet.*amerikanska vuxenurvalets/);
   assert.doesNotMatch(html,/Våra profiler/);
   assert.doesNotMatch(html,/Den andras profil/);
   assert.doesNotMatch(html,/data-pf-action="share"/);
@@ -98,9 +102,10 @@ test('two consents allow summary comparison and consent withdrawal hides it',asy
   let html=ui.render({isPaired:true,viewerRole:'teen'});
   assert.match(html,/Våra profiler/);
   assert.match(html,/Den andras profil/);
-  assert.match(html,/stroke-dasharray/);
+  assert.match(html,/class="pf-score-dot pf-score-other"/);
+  assert.match(html,/beräknade under antagande om normalfördelning/);
   assert.match(html,/Den andras resultat jämfört med vuxenreferensen/);
-  assert.match(html,/Amerikanska vuxna|amerikanska vuxenreferensen/);
+  assert.match(html,/amerikanska vuxenurvalets|amerikanska vuxnas/);
   assert.doesNotMatch(html,/Am the life of the party/);
   await ui.handleClick(btn('withdraw'),{isPaired:true});
   html=ui.render({isPaired:true,viewerRole:'teen'});
@@ -116,4 +121,22 @@ test('malformed RPC payload is always rejected',async()=>{
   ui.reset('teen-id');await ui.load('teen-id');
   await ui.handleClick(btn('share'),{isPaired:true});
   assert.doesNotMatch(ui.render({isPaired:true}),/Våra profiler/);
+});
+
+test('two-person markers preserve independent x percentages when raw scores match',async()=>{
+  const mock=fakeClient(new Map(itemIds.map(id=>[id,3])));
+  const sums=Object.fromEntries(IPIP50_V1.factors.map(f=>[f.id,30]));
+  mock.setPartner({instrument_id:IPIP50_V1.id,viewer_role:'teen',profiles:[
+    {role:'parent',scores:sums},{role:'teen',scores:sums}
+  ]});
+  const ui=createPersonalityExperience({db:mock.db,onRender:()=>{},isSharingEnabled:true});
+  ui.reset('teen-id');await ui.load('teen-id');
+  await ui.handleClick(btn('share'),{isPaired:true});
+  const html=ui.render({isPaired:true});
+  const segments=(html.match(/class="pf-scale-track"/g)||[]).length;
+  assert.equal(segments,10,'Both own and comparison have five scale bars');
+  assert.match(html,/pf-score-own/);
+  assert.match(html,/pf-score-other/);
+  assert.match(html,/Normalmodell|normalmodell|normalfördelning/);
+  assert.match(html,/50 ligger exakt i mitten och 75 vid tre fjärdedelar/);
 });

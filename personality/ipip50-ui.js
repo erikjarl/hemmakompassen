@@ -1,6 +1,6 @@
 import {IPIP50_V1} from './ipip50-v1.js';
 import {scoreIPIP50,compareIPIP50Profiles} from './ipip50-scoring.js';
-import {IPIP50_REFERENCE,referenceLimits,describeReferenceProfile,formatSv} from './ipip50-reference.js';
+import {IPIP50_REFERENCE,IPIP50_PERCENTILE_BANDS,approximateReferencePercentile,referenceLimits,describeReferenceProfile,formatSv} from './ipip50-reference.js';
 import {loadMyIPIP50Answers,saveMyIPIP50Answer} from './ipip50-storage.js';
 
 const esc=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -70,6 +70,41 @@ function radarSvg(self,other=null,role='parent'){
       'Din profil, amerikanskt vuxenmedelvärde samt plus och minus en och två standardavvikelser. Exakta värden finns i tabellen.')+
     '" xmlns="http://www.w3.org/2000/svg">'+rings+spokes+band+tails+referenceMean+own+second+labels+'</svg>';
 }
+
+function percentileChart(self,other=null){
+  const bandKey='<div class="pf-band-key" aria-label="Fem jämförelsezoner utifrån standardavvikelser">'+
+    IPIP50_PERCENTILE_BANDS.map(b=>'<span class="pf-band-key-item"><i class="pf-band-swatch pf-band-'+esc(b.id)+'" aria-hidden="true"></i>'+
+      esc(b.label)+'</span>').join('')+'</div>';
+  const rows=FACTORS.map(f=>{
+    const own=approximateReferencePercentile(f.id,self.byFactor[f.id].sum);
+    const partner=other?approximateReferencePercentile(f.id,other.byFactor[f.id].sum):null;
+    const title= f.id==='emotional_stability'?'Emotionell balans':f.labelSv;
+    const ownPct=own.percentile.toFixed(6);
+    const otherPct=partner?.percentile.toFixed(6);
+    const ownText='Du: '+own.category+' (P≈'+Math.round(own.percentile)+')';
+    const partnerText=partner?'Den andra: '+partner.category+' (P≈'+Math.round(partner.percentile)+')':'';
+    const aria=title+'. '+ownText+(partner?'. '+partnerText:'')+
+      '. Placeringar är normalmodellerade uppskattningar, inte observerade percentiler.';
+    return '<section class="pf-scale-row"><h3>'+esc(title)+'</h3>'+
+      '<div class="pf-scale-track" role="img" aria-label="'+esc(aria)+'">'+
+      '<div class="pf-scale-bands" aria-hidden="true">'+
+      IPIP50_PERCENTILE_BANDS.map(b=>'<span class="pf-band pf-band-'+esc(b.id)+'" style="left:'+b.start.toFixed(6)+'%;width:'+(b.end-b.start).toFixed(6)+'%"></span>').join('')+
+      '</div><div class="pf-scale-grid" aria-hidden="true"><i style="left:25%"></i><i class="pf-median" style="left:50%"></i><i style="left:75%"></i></div>'+
+      '<span class="pf-score-dot pf-score-own" style="left:'+ownPct+'%" aria-hidden="true" title="'+esc(ownText)+'"></span>'+
+      (partner?'<span class="pf-score-dot pf-score-other" style="left:'+otherPct+'%" aria-hidden="true" title="'+esc(partnerText)+'"></span>':'')+
+      '</div><div class="pf-pct-axis" aria-hidden="true"><span>0</span><span>25</span><span>50</span><span>75</span><span>100</span></div>'+
+      '<p class="pf-scale-summary">'+esc(ownText)+(partner?'<span> · '+esc(partnerText)+'</span>':'')+'</p></section>';
+  }).join('');
+  return '<div class="pf-percentile-chart">'+
+    '<div class="pf-legend" style="--pf-own:#55d6d2;--pf-other:#f8b55b"><span class="pf-legend-own">Din profil</span>'+
+    (other?'<span class="pf-legend-other">Den andras profil</span>':'')+'</div>'+
+    '<p class="pf-chart-description"><strong>Uppskattad percentil:</strong> 50 ligger exakt i mitten och 75 vid tre fjärdedelar. Färgzonerna motsvarar standardavvikelser.</p>'+
+    bandKey+rows+
+    '<details class="pf-chart-help"><summary>Hur ska jag tolka percentilerna?</summary>'+
+    '<p>P≈75 betyder att ditt resultat uppskattas ligga högre än cirka 75 % i en hypotetisk normalfördelning med det amerikanska vuxenurvalets medelvärde och standardavvikelse. Det är <strong>inte</strong> en uppmätt percentil i urvalet eller en svensk norm.</p>'+
+    '<p>Den gröna mittzonen motsvarar −1 till +1 SD (cirka percentil 16–84), zonerna utanför motsvarar 1–2 SD och de smala ändarna resultat bortom 2 SD. Poängen är diskreta och den svenska översättningen är inte validerad.</p></details></div>';
+}
+
 function referenceLegend(){
   return '<div class="pf-reference-legend" aria-label="Förklaring av referenslinjer">'+
     '<span class="pf-reference-mean">Vuxna: medelvärde</span>'+
@@ -89,7 +124,7 @@ function referenceFeedback(profile,roleLabel='Dina'){
 }
 function referenceCaveat(){
   return '<p class="pf-reference-caveat">'+esc(IPIP50_REFERENCE.disclaimer)+
-    ' ”Ovanligt” betyder här minst två SD från ett jämförelsemedelvärde, inte en beräknad percentil eller en diagnos. '+
+    ' ”Mycket över/under genomsnittet” motsvarar mer än två SD i modellen. P≈-värden är beräknade under antagande om normalfördelning, inte direkt observerade percentiler eller diagnoser. '+
     'Under 18 år beskriver jämförelsen fortfarande en <strong>vuxen</strong> referens, inte en tonårsnorm. '+
     '<a href="'+esc(IPIP50_REFERENCE.studyUrl)+'" target="_blank" rel="noopener noreferrer">Referensstudie och urval</a>.</p>';
 }
@@ -224,14 +259,14 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false}
         '<h3>Frågor att utforska tillsammans</h3><ul>'+
         distant.map(r=>'<li>'+esc(topics[r.factorId])+'</li>').join('')+
         '</ul><p class="live-muted">Samtalsfrågorna är redaktionella förslag, inte individuella psykologiska råd.</p></section>';
-      comparison='<section class="live-panel pf-comparison"><h2>Våra profiler</h2><p>Två självskattningar på samma svarsskala, inte ett mått på hur bra någon är som person.</p>'+
-        '<div class="pf-legend" style="--pf-own:'+(role==='teen'?'#f8b55b':'#55d6d2')+';--pf-other:'+(role==='teen'?'#55d6d2':'#f8b55b')+'"><span class="pf-legend-own">Din profil</span><span class="pf-legend-other">Den andras profil</span></div>'+
-        radarSvg(own,other,role)+referenceLegend()+table(own,other)+referenceFeedback(other,'Den andras')+referenceCaveat()+
-        '<p class="live-muted">Skillnaderna mellan er visas som råpoäng, medan vuxenreferensen visas som M och SD. Det är inte bevis för att ni fungerar olika.</p>'+
+      comparison='<section class="live-panel pf-comparison"><h2>Våra profiler</h2><p>Två självskattningar jämförda med samma amerikanska vuxenreferens. Placeringarna är uppskattningar, inte svenska normer.</p>'+
+        
+        percentileChart(own,other)+table(own,other)+referenceFeedback(other,'Den andras')+referenceCaveat()+
+        '<p class="live-muted">Markörerna visar uppskattad percentil jämfört med samma vuxenreferens. Tabellen visar råpoäng, medelvärde och SD. Skillnader är inte bevis för att ni fungerar olika.</p>'+
         reflections+'</section>';
     }
-    return heading+'<section class="live-panel pf-results"><h2>Din profil</h2><p>De fem skalorna sammanfattar dina svar. De är inte percentiler och inte jämförda med någon svensk normgrupp.</p>'+
-      '<div class="pf-legend" style="--pf-own:'+(role==='teen'?'#f8b55b':'#55d6d2')+'"><span class="pf-legend-own">Du</span></div>'+radarSvg(own,null,role)+referenceLegend()+table(own)+referenceFeedback(own)+referenceCaveat()+
+    return heading+'<section class="live-panel pf-results"><h2>Din profil</h2><p>Dina fem skalor visar uppskattad placering jämfört med en amerikansk vuxenreferens, inte svenska normer.</p>'+
+      percentileChart(own)+table(own)+referenceFeedback(own)+referenceCaveat()+
       '<p class="live-muted">Skalorna bygger på dina svar (10–50). Högt eller lågt är inte i sig bättre eller sämre. Den svenska översättningen behöver prövas vetenskapligt.</p>'+
       '<button type="button" data-pf-action="review">Granska eller ändra mina svar</button></section>'+sharing+comparison;
   }

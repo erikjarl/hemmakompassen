@@ -19,13 +19,10 @@ export function referencePosition(factorId,score){
   if(!norm||!Number.isInteger(score)||score<10||score>50)throw new RangeError('Okänd skala eller ogiltig råpoäng');
   const z=(score-norm.mean)/norm.sd;
   const size=Math.abs(z);
-  const side=z<0?'lägre':'högre';
   const classification=size>=IPIP50_Z_LIMIT?'unusual':size>=1?'aboveOneSd':'nearAverage';
-  const description=classification==='unusual'
-    ?'Ovanligt '+(z<0?'lågt':'högt')+' i förhållande till den amerikanska vuxenreferensen (minst två standardavvikelser från dess medelvärde).'
-    :classification==='aboveOneSd'
-      ?'Mer än en standardavvikelse '+side+' än medelvärdet i den amerikanska vuxenreferensen.'
-      :'Inom en standardavvikelse från medelvärdet i den amerikanska vuxenreferensen.';
+  const label=z< -2?'Mycket under genomsnittet':z< -1?'Under genomsnittet':
+    z<=1?'Runt genomsnittet':z<=2?'Över genomsnittet':'Mycket över genomsnittet';
+  const description=label+' i jämförelsen med det amerikanska vuxenurvalets medelvärde och SD. Detta är ingen svensk norm.';
   return {factorId,score,mean:norm.mean,sd:norm.sd,z,classification,description};
 }
 
@@ -39,4 +36,36 @@ export function referenceLimits(factorId){
 export function describeReferenceProfile(profile){
   if(!profile?.complete||profile.instrumentId!==IPIP50_V1.id||profile.version!==IPIP50_V1.version)throw new Error('En fullständig och versionsriktig profil krävs');
   return IPIP50_V1.factors.map(f=>referencePosition(f.id,profile.byFactor[f.id]?.sum));
+}
+
+
+// The position is a NORMAL-MODEL APPROXIMATION from a reference M and SD.
+// It is NOT an empirical percentile from the sample or a validated Swedish norm.
+// This distinction must stay visible in the user interface.
+export function normalPercentileFromZ(z){
+  if(!Number.isFinite(z))throw new RangeError('Ogiltigt z-värde');
+  if(z===0)return 50;
+  // Abramowitz & Stegun 7.1.26: max erf absolute error ~1.5e-7.
+  const x=Math.abs(z)/Math.SQRT2;
+  const t=1/(1+0.3275911*x);
+  const erf=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x);
+  const cdf=z<0?(1-erf)/2:(1+erf)/2;
+  return Math.max(0,Math.min(100,cdf*100));
+}
+export const IPIP50_PERCENTILE_BANDS=Object.freeze([
+  {id:'very-low', label:'Mycket under genomsnittet',start:0,end:normalPercentileFromZ(-2)},
+  {id:'low', label:'Under genomsnittet',start:normalPercentileFromZ(-2),end:normalPercentileFromZ(-1)},
+  {id:'average',label:'Runt genomsnittet',start:normalPercentileFromZ(-1),end:normalPercentileFromZ(1)},
+  {id:'high',label:'Över genomsnittet',start:normalPercentileFromZ(1),end:normalPercentileFromZ(2)},
+  {id:'very-high',label:'Mycket över genomsnittet',start:normalPercentileFromZ(2),end:100}
+]);
+export function approximateReferencePercentile(factorId,score){
+  const r=referencePosition(factorId,score);
+  const percentile=normalPercentileFromZ(r.z);
+  const category=r.z< -2?'mycket under genomsnittet'
+    :r.z< -1?'under genomsnittet'
+    :r.z<=1?'runt genomsnittet'
+    :r.z<=2?'över genomsnittet'
+    :'mycket över genomsnittet';
+  return {...r,percentile,category};
 }
