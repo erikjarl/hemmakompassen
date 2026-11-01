@@ -447,7 +447,10 @@ try{
   await checkOverflow(consentPair.page,'Two consenting personality profiles 390px');
   await capture(consentPair.page,'mobile-personality-two-consents.png');
   await consentPair.page.locator('.pf-comparison .pf-percentile-chart').screenshot({path:path.join(output,'mobile-personality-bars-comparison.png'),animations:'disabled'});
-  await consentPair.page.locator('.pf-family-reflections').screenshot({path:path.join(output,'mobile-personality-family-reflections.png'),animations:'disabled'});
+  await consentPair.page.locator('.pf-family-reflections h3').scrollIntoViewIfNeeded();
+  await consentPair.page.screenshot({path:path.join(output,'mobile-personality-family-reflections-viewport.png'),animations:'disabled'});
+  await consentPair.page.locator('.pf-insight-group').last().scrollIntoViewIfNeeded();
+  await consentPair.page.screenshot({path:path.join(output,'mobile-personality-family-similarities-viewport.png'),animations:'disabled'});
   await consentPair.page.getByRole('button',{name:'Sluta dela min profil'}).click();
   await consentPair.page.getByRole('heading',{name:'Våra profiler'}).waitFor({state:'detached'});
   assert.equal(await consentPair.page.locator('.pf-family-reflections').count(),0,'Withdrawal hides the entire narrative');
