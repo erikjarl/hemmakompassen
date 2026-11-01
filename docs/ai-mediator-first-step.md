@@ -1,5 +1,12 @@
 # AI-01A: första säkra tekniska grunden (1 november 2026)
 
+## Uppföljning efter bekräftad Workers Free-plan
+- [x] Erik visade i Cloudflare-dashboard att Workers Free ($0/mån) är aktiv plan.
+- [x] Cloudflares officiella modellkatalog anger att `@cf/zai-org/glm-4.7-flash` fortfarande finns på Workers Free. Fiktiva API-testanrop lyckades, men med 90 respektive 400 genererade tokens upptog resonemanget hela svarslängden; därför blev själva svarstexten tom. Den modellen väljs inte till första enkla chatten.
+- [x] Fiktivt svenskt API-test mot `@cf/meta/llama-3.1-8b-instruct-fp8-fast` returnerade en faktisk svensk samtalsöppning på Workers Free. Worker-koden har uppdaterats till denna modell och dess dokumenterade parameter `max_tokens` (i stället för `max_completion_tokens`). Detta är ett tekniskt smoke-test, **inte** klinisk kvalitetsvalidering.
+- [x] Riktig Cloudflare D1-fråga med identisk atomisk UPSERT kördes 12 gånger mot en tillfällig testpost. Första 10 accepterades; anrop 11–12 gav ingen rad och stoppas enligt kontraktet. Testposten raderades direkt efteråt. Denna kontroll körde **inga** AI-anrop.
+- [ ] CI-resultat för sparad Worker- och testkod, autentiserad tvåkontotestning och faktisk fristående Worker-driftsättning återstår. Webbplatsen har fortfarande ingen inkopplad AI-chatt.
+
 ## Verifierad molnstatus 2026-11-01
 - [x] Cloudflare-kontot har en D1-databas `hemmakompassen-ai-limits` med EU-jurisdiktion, skapad via Cloudflare API.
 - [x] `ai_daily_user_usage` har skapats i D1 och tabellens existens verifierats med SELECT från `sqlite_master`.
