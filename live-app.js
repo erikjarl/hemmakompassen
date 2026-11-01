@@ -614,7 +614,7 @@ function validManualSchysstaPayload(rows,matchedRules){
     &&!rows.some(row=>matchedRules.some(other=>other.agreement_id===row.agreement_id));
 }
 const schysstaAllRules=()=>[...schysstaManualRules,...schysstaRules];
-const schysstaNeedsAnswer=()=>schysstaAllRules().filter(row=>row.status==='proposed'&&!row.proposed_by_me&&row.own_decision===null);
+const schysstaNeedsAnswer=()=>schysstaAllRules().filter(row=>row.status==='proposed'&&!row.proposed_by_me&&row.own_decision===null).sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at));
 function validSchysstaNotifications(rows){
   const kinds=['rule_proposed','rule_accepted','rule_declined','rule_withdrawn'];
   return Array.isArray(rows)&&rows.every(row=>row&&typeof row==='object'&&!Array.isArray(row)
@@ -777,6 +777,10 @@ function schysstaView(){
     +'<label for="schyssta-body">Vad vill du att ni båda ska kunna komma överens om?</label>'
     +'<textarea id="schyssta-body" name="rule" rows="3" minlength="5" maxlength="500" required placeholder="Vi knackar innan vi går in i varandras rum…">'+esc(schysstaDraft)+'</textarea>'
     +'<p class="live-muted">Skriv ett konkret förslag. Det skickas till den andra personen, men blir en överenskommelse först när ni båda sagt ja.</p>'
+    +'<details class="schyssta-tips"><summary>Tips för en tydlig och rättvis överenskommelse</summary>'
+    +'<p>Beskriv helst vad ni vill göra, snarare än vad den andra ska sluta med.</p>'
+    +'<ul><li>När ska regeln gälla?</li><li>Vad betyder den i praktiken för var och en?</li><li>När vill ni prata om hur den fungerar?</li></ul>'
+    +'<p>Ni får båda föreslå ändringar. Vuxnas ansvar för trygghet och omsorg ska inte läggas på tonåringen.</p></details>'
     +'<button class="live-button" type="submit"'+(schysstaSubmitting?' disabled':'')+'>'+(schysstaSubmitting?'Skickar…':schysstaEditTarget?'Skicka ändringsförslag':'Skicka regelförslag')+'</button>'
     +'<button class="schyssta-secondary" type="button" id="schyssta-compose">Stäng formuläret</button></form>'
     :'<button class="live-button" type="button" id="schyssta-compose">+ Föreslå en regel</button>';
@@ -889,7 +893,13 @@ window.addEventListener('hashchange',()=>{
   if(['regler','inkorg','hem'].includes(page()))void fetchSchysstaList();
   if(page()==='swipe')void pollSharedMatches();
 });
-document.addEventListener('visibilitychange',()=>{if(!document.hidden)void pollSharedMatches();});
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden)return;
+  void pollSharedMatches();
+  // Refresh the family's inbox after returning to the tab, without overwriting a draft.
+  if(schysstaListEnabled&&user&&members.length===2&&!schysstaLoading&&!schysstaDraftOpen
+    &&['hem','inkorg','regler'].includes(page()))void fetchSchysstaList();
+});
 window.addEventListener('focus',()=>void pollSharedMatches());
 window.setInterval(()=>void pollSharedMatches(),SHARED_POLL_INTERVAL_MS);
 db.auth.onAuthStateChange(()=>setTimeout(()=>refresh().catch(showError),0));
