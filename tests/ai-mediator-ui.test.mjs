@@ -124,3 +124,11 @@ test('invalid Worker URL disables AI even if flag is true',async()=>{
  assert.equal(await ui.submit(),false);
  assert.match(ui.render(),/inte aktiverad/);
 });
+
+test('deterministisk säkerhetsinformation märks inte som genererad AI',async()=>{
+ const x=fixture({fetchImpl:async()=>Response.json({reply:'Ring 112 vid akut fara.',remainingToday:null,ephemeral:true,safetyNotice:true})});
+ x.ui.input('Fiktiv risksituation');
+ assert.equal(await x.ui.submit(),true);
+ assert.match(x.ui.render(),/Säkerhetsinformation/);
+ assert.equal(x.ui.getState().turns[1].role,'safety');
+});
