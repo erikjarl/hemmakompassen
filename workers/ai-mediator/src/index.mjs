@@ -27,7 +27,7 @@ export function safetyResponse(message) {
   if (suicide) {
     return 'Jag tar det du skriver på allvar. Det är viktigt att du får stöd av en människa, inte bara en AI. Berätta så snart du kan för en trygg vuxen eller en person du litar på. Om du riskerar att skada dig själv, har planer att ta ditt liv eller situationen känns akut: ring 112 eller sök psykiatrisk akutmottagning. Ring 1177 för hjälp att hitta vård. Om du är under 18 kan du också kontakta Bris på 116 111 eller bris.se, dygnet runt. Du behöver inte lösa detta ensam.';
   }
-  const violence = /(?:hotar|hotade|hotat).{0,50}(?:slå|skada|döda)|(?:slår|slog|slagen|misshandlar|misshandlad|våldtar|våldtagen)\s+(?:mig|mej)|våld\s+hemma|utsatt\s+för\s+våld|övergrepp\s+(?:hemma|mot\s+mig)/i.test(value);
+  const violence = /(?:hotar|hotade|hotat).{0,50}(?:slå|skada|döda)|(?:slår|slog|slagen|misshandlar|misshandlad|våldtar|våldtagen)\s+(?:mig|mej)|(?:jag\s+)?blir\s+(?:slagen|misshandlad)|våld\s+hemma|utsatt\s+för\s+våld|övergrepp\s+(?:hemma|mot\s+mig)/i.test(value);
   if (violence) {
     return 'Det du beskriver kan handla om hot eller våld. Din trygghet är viktigare än att försöka medla med den person som hotar eller skadar dig. Försök komma till en trygg plats om du kan och kontakta en annan vuxen du litar på, till exempel skolkurator, lärare eller socialtjänst. Vid omedelbar fara, ring 112. Du kan ringa 1177 för att få vägledning. Om du är under 18 kan du också kontakta Bris på 116 111 eller bris.se, dygnet runt.';
   }
