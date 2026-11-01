@@ -537,7 +537,7 @@ try{
   await paired.page.locator('.schyssta-history summary').click();
   assert.match(await paired.page.locator('.schyssta-history').innerText(),/Vi frågar innan vi lånar saker/,'Withdrawn rule remains in accessible history');
   await paired.page.goto(base+'#inkorg',{waitUntil:'load'});
-  await paired.page.getByRole('heading',{name:'Inkorg'}).waitFor();
+  await paired.page.getByRole('heading',{name:'Inkorg',exact:true}).waitFor();
   const inboxText=await paired.page.locator('#live-app').innerText();
   assert.match(inboxText,/Vi pratar om hur vi delar på sysslorna/,'Inbox shows other member pending manual request');
   assert.doesNotMatch(inboxText,/Vi planerar veckans sysslor på söndag/,'Inbox does not present sender own proposal as incoming');
@@ -549,7 +549,7 @@ try{
   assert.ok(homeSections.findIndex(t=>t.startsWith('Inkorgen'))<homeSections.indexOf('Din familj'),
     'Personal inbox alerts are placed above the family overview');
   await paired.page.getByRole('link',{name:'Visa inkorgen'}).click();
-  await paired.page.getByRole('heading',{name:'Inkorg'}).waitFor();
+  await paired.page.getByRole('heading',{name:'Inkorg',exact:true}).waitFor();
   await paired.page.getByRole('button',{name:'Markera som läst'}).click();
   await paired.page.waitForFunction(()=>window.__HK_READ_NOTICE__?.args?.p_notification_id==='40000000-0000-4000-8000-000000000001');
   await paired.page.waitForFunction(()=>document.querySelector('#live-app')?.textContent?.includes('Meddelanden'));
