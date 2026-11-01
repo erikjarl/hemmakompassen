@@ -1,60 +1,39 @@
 # Hemmakompassen
 
-En fristående, responsiv webbprototyp inspirerad av Tonårskompassen (Base44). Design: **Midnight Haven** med midnattsblå bakgrund, bärnstensfärgade detaljer, mörka kort, seriftypsnitt och en mobilanpassad navigering.
+**Aktuell status: intern testversion, 1 november 2026.** Hemmakompassen är en responsiv webbapp för förälder och tonåring med fokus på dialog, ömsesidig förståelse och gemensamma överenskommelser. GitHub Pages är tillgänglig på internet, men projektet är ännu inte granskat eller lanserat för externa verkliga familjer.
 
+- **Vad som gjordes under helgen / återstående arbete:** [Aktuell utvecklingskö](docs/CURRENT_TASKS.md).
+- **Hela produktvisionen och historiken:** [ROADMAP.md](ROADMAP.md).
+- **Metod för IPIP-50 och dess begränsningar:** [docs/ipip50-sv-method.md](docs/ipip50-sv-method.md).
 
-## Senaste utveckling: introduktion och familjekoppling
+## Öppna webbappen
 
-En förstagångsbesökare får nu välja **tonåring** eller **förälder** och skapa en lokal demoprofil. Startsidan har rollanpassad introduktion och länkar till vyn **Hitta varandra**, som visar det planerade flödet för framtida familjekoder och datadelning. Ingen verklig kontoregistrering eller fjärrkoppling sker.
+**Intern online-testmiljö:** https://erikjarl.github.io/hemmakompassen/
 
-För att kontrollera huvudvyer och onboarding när du arbetar lokalt med repot:
+Inloggning sker i `konto.html` och vidare i `index.html`/`live-app.js`, med Supabase-autentisering och familjekoppling. Två separata konton med rollerna förälder/tonåring kan bilda ett familjepar. Delade data får inte hämtas direkt från den andras privata svar.
 
-```bash
-node --test tests/smoke.test.cjs
-```
+Det finns även äldre lokala demofiler `app.js`/`styles.css`, men de är **inte** det aktuella inloggade familjeflödet. Tolka inte deras påhittade exempel som produktionsdata eller samma funktioner som liveappen.
 
-## Starta webbplatsen
+## Implementerat i den interna testversionen
 
-Publicera repositoryts rot från grenen `main` via **GitHub → Settings → Pages** (Deploy from a branch → main → /root). Därefter bör standardadressen vara:
+- **Gillaswajpen:** 34 allmänna A/B-kort, sex temakortlekar, stora kataloger (104 aktiviteter och 104 samtalsämnen), privata svar, återupptagning och serverbaserad grund för A-matchningar. **Inte alla gemensamma funktioner är aktiverade** (se nedan).
+- **Inkorg:** privata familjemeddelanden i båda riktningar, historik, meddelandestatus och olästa regelaviseringar. Backend har familje- och parningskontroller. Verkligt heltäckande tvåkontotest är kvarstående.
+- **Schyssta listan:** familjeavgränsade förslag från regelkort och fritext, separata godkännanden, förfrågningsstatus, ändringar, omprövning/återkallelse, arkiv, sök- och filterfunktion samt inkorgskoppling. `enableSchysstaList=true` i intern testversion.
+- **Min personlighet:** versionssatt svenskspråkigt IPIP-50 (50 frågor) med privata svar, fem summaskalor, frivillig delning av endast fem sammanfattande poäng efter bådas aktiva samtycke, fem horisontella jämförelsestaplar och förskrivna rollanpassade reflektionsråd. Beräknade `P≈` utgår från en normalmodell och en icke-representativ amerikansk vuxenreferens, **inte** svenska normpercentiler.
+- **Kommunikationsråd:** befintliga allmänna råd; särskild MI-sida för förälder kvarstår.
 
-https://erikjarl.github.io/hemmakompassen/
+## Kvarvarande begränsningar – läs innan extern testning
 
-Filerna `index.html`, `styles.css`, `app.js`, `landscape.svg` och `favicon.svg` körs direkt i webbläsaren och behöver inte byggas.
+- Konfigurationen i `backend-config.js` håller `enableSharedPriorities`, `enableSharedPolling`, `enableSharedInsights` och `enableSharedUnderstanding` **avstängda**. Att migrationsfiler eller frontendkod finns betyder inte att dessa funktioner är aktiva.
+- **AI-medlaren är inte färdig:** den är fortfarande en utvecklingsvy, inte en fungerande privat AI-medlingschatt.
+- IPIP-50-översättningens psykometriska egenskaper och jämförbarhet mellan svenska ungdomar och vuxna är inte fastställda; tolkningsråd och godtyckliga råpoängströsklar är redaktionella samtalshjälpmedel, inte kliniska gränser.
+- Simulerade Node-/PostgreSQL-/Playwright-tester bevisar **inte** att hela flödet fungerar med två verkligt autentiserade konton, särskilt vid omparning, fel och samtyckesåterkallelse. Följ testkön i [CURRENT_TASKS.md](docs/CURRENT_TASKS.md).
+- Krav på dataportabilitet/radering, informationsflöden för minderåriga, juridisk bedömning, säkerhets- och användbarhetsgranskning återstår inför en extern pilot.
 
-## Vad som fungerar i denna prototyp
+## Testning och publicering
 
-- Anpassat utseende för telefon, surfplatta och dator.
-- Startskärm och navigation.
-- Två växlingsbara **demoprofiler** (tonåring och förälder) på samma enhet.
-- Gillaswajpen: påståenden, knappar eller svepgester, sammanställning och likheter/skillnader.
-- Big Five-inspirerad **reflektionsövning med 15 egenskapssvar** och illustrativa jämförelsestaplar.
-- Lokal demoinkorg med meddelanden och läsmarkering.
-- Schyssta listan med förslag och lokala bekräftelser.
-- Kommunikationsråd med fyra steg och en tillfällig NVC-formuleringshjälp.
-- Förskrivna reflektionsråd på sidan "AI-medlaren".
+UI-test och grundläggande kontraktstest körs i `.github/workflows/ui-tests.yml`, även med mobil- och desktop-skärmbilder. PostgreSQL/pgTAP för bland annat Gillaswajpen, Schyssta listan och privata familjemeddelanden körs i `.github/workflows/shared-swipe-db-tests.yml`.
 
-## Viktiga begränsningar
+Kör den samlade Node-/webbläsarkontrollen enligt [tests/README.md](tests/README.md). En statisk tillgångsbuild kan köras med `npm run build`; `scripts/build-static.mjs` kopierar uttryckligen tillåtna tillgångar till `dist/` och ska **inte** publicera databasmigrationer, hemligheter eller interna dokument.
 
-**Detta är inte en produktionsklar tjänst.**
-
-All sparad demodata finns endast i webbläsarens `localStorage`, kan läsas av andra som använder samma enhet och skickas aldrig till en annan användare. Ingen riktig registrering, identitetskontroll, säker familjekod, meddelandedelning, serverlagring eller AI-anslutning finns. Den som provar sidan ska inte skriva in känsliga personuppgifter.
-
-Personlighetsövningen är **inte ett validerat Big Five-instrument**. Poängen är inte normerade och ska endast användas som utgångspunkt för samtal.
-
-## Inför en riktig lansering
-
-1. Välj en säker backend (exempelvis Supabase med serverhanterad autentisering) och implementera användarprofiler, familjekoppling och radnivåbehörigheter (RLS) så att olika familjepar är isolerade.
-2. Begränsa insamling av känsliga uppgifter och definiera gallring och samtyckes-/informationsflöden för minderåriga.
-3. Implementera verklig synkning för meddelanden, swajpsvar, resultat och regler.
-4. Om AI används: anropa modellen **endast via backend**, skydda API-nycklar, separera samtal mellan användare, och informera tydligt om vilken profilinformation AI får använda.
-5. Säkerhetsgranska, testa med riktiga testkonton och utför en integritets- och rättslig genomgång innan användning med riktiga familjer.
-
-Källkoden är egen återskapning från användarens funktionsbeskrivning och mobilskärmbilder; den är **inte** exporterad från Base44.
-
-## Filer
-
-- `index.html`: grundstruktur, ikonbibliotek och navigering.
-- `styles.css`: design och responsiv layout.
-- `app.js`: lokala demoflöden och frontendlogik.
-- `landscape.svg`: illustrerad natthimmel för startsidan.
-- `favicon.svg`: ikon.
+**Koppla inte in verkliga externa familjer förrän återstående säkerhets-, datalivscykel- och innehållsgranskning är slutförd.** Bevara alla redan sparade testkontosvar vid utveckling och utför migrationer först efter avgränsad granskning.
