@@ -478,6 +478,17 @@ Listan är en samlad arbetsplan för att slutföra Gillaswajpen. Kryssa av förs
 
 ### AI-01 — Grundläggande AI-medlare (byggs först)
 
+
+**Första kodleverans 2026-11-01 (endast utvecklingsbranch, EJ publicerad, EJ färdig AI-chatt):**
+- [x] Read-only-inspektion av de tre installerade AI-tabellerna och deras RLS-policyer. Bekräftat att klienten inte får INSERT med rollen assistant. Inga befintliga användarsvar eller chattar ändrade.
+- [x] Första Cloudflare Worker-kod för autentiserad enmeddelande-proxy finns i workers/ai-mediator/src/index.mjs. Verifierar Supabase-access-token på serversidan och skickar bara den aktiva användarens aktuella text, inte familje-, swajp- eller personlighetssvar.
+- [x] D1-migration, separat Wrangler-konfiguration och serverkvot (10 anrop/användare/UTC-dag, max 2 000 tecken/meddelande och högst 320 genererade tokens). Utan korrekt D1-binding vägrar proxyn skicka till modellen.
+- [x] Offline-testfall har lagts till i tests/ai-mediator-worker.test.mjs och egen GitHub Actions-workflow i .github/workflows/ai-mediator-tests.yml. Åtta lokala kontroller på motsvarande serverlogik passerade; **CI mot exakt GitHub-commit och autentiserat tvåkontotest är ännu inte dokumenterade som godkända**.
+- [ ] Skapa/verifiera gratis D1-databas och Cloudflare-konto, ersätt konfigurationens tillfälliga database_id, konfigurera publika Supabase-projektvärden och kör migrationen. Driftsätt först efter säkerhetstest; inga betalda resurser får aktiveras.
+- [ ] Implementera AI-01B:s verkliga egna chattsessioner, serverstyrd och RLS-granskad lagring av assistant-svar, återläsning/radering och rollanpassning. Därefter AI-01D:s kontrollerade delningsintegrationer samt AI-02/03:s frivilliga sammanfattningar.
+- **Designval:** Första proxyn är medvetet stateless och använder endast ett meddelande; ingen påstådd konversationsförmåga, personlig AI-validering eller fungerande webbfunktion innan den faktiskt är integrerad och testad. Se docs/ai-mediator-first-step.md.
+
+
 **AI-01A. Teknik, kostnad och säker anslutning**
 - [ ] **[A]** Granska frontendens nuvarande medlarvy, befintliga SQL/RLS-policyer och vilka autentiserade RPC:er som faktiskt finns. Återanvänd befintligt schema där det är säkert; gör bara versionssatta, granskade migrationer om något saknas och ändra inte befintliga testsvar.
 - [ ] **[B]** Välj och jämför minst två *för närvarande gratisplanskompatibla* Workers AI-modeller med fiktiva svenska dialoger: sammanhang, nyanser, råd, empati, tonåringsspråk, svarslängd, latens och förbrukning. Dokumentera begränsningar; AI-kvalitet ska inte antas utifrån allmänna modellbenchmarks.
