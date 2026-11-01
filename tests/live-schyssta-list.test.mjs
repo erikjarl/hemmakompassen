@@ -56,7 +56,7 @@ test('Schyssta listan rejects incomplete, duplicate or contradictory RPC snapsho
   assert.equal(validate(null,[rule]),false,'Null RPC payload is not a legitimate empty array');
   assert.equal(validate([suggestion],null),false,'Missing agreements cannot imply an empty list');
   assert.equal(validate([suggestion],[{...rule,parent_decision:'yes'}]),false,'Reject invalid decision types');
-  assert.ok(app.includes("else if(!validSchysstaPayload(results[0].data,results[1].data)||!validManualSchysstaPayload(results[2].data,results[1].data)||!validSchysstaNotifications(results[3].data))"),'All three sources fail closed together');
+  assert.ok(app.includes("else if(!validSchysstaPayload(results[0].data,results[1].data)||!validManualSchysstaPayload(results[2].data,results[1].data)||!validSchysstaNotifications(results[3].data)||!validSchysstaReplacementLinks(results[4].data,results[2].data))"),'Rule, manual, notification and replacement sources fail closed together');
   assert.match(app,/Inga förslag eller överenskommelser visas/);
 });
 
@@ -68,4 +68,12 @@ test('manual Schyssta proposals and inbox are backed by the installed authentica
   assert.match(app,/schysstaNeedsAnswer/);
   assert.match(app,/Ni behöver båda godkänna det innan det blir en överenskommelse/);
   assert.match(app,/Ditt val: /);
+});
+
+test('Schyssta rule changes are proposed as new manual rules without implicit approval',()=>{
+  assert.match(app,/db\.rpc\('propose_schyssta_change'/);
+  assert.match(app,/db\.rpc\('my_schyssta_replacement_links'/);
+  assert.match(app,/data-schyssta-edit/);
+  assert.match(app,/Föreslå ändring/);
+  assert.match(app,/Den tidigare överenskommelsen gäller tills ni båda/);
 });
