@@ -501,6 +501,13 @@ try{
   await paired.page.waitForFunction(()=>window.__HK_SCHYSSTA_DECISION__?.args?.p_approved===true);
   assert.deepEqual(await paired.page.evaluate(()=>window.__HK_SCHYSSTA_DECISION__.args),{p_agreement_id:'20000000-0000-4000-8000-000000000002',p_approved:true},'Decision is a separate explicit RPC');
   // A test parent can compose and submit a manual rule without auto-approval.
+  const schysstaSections=await paired.page.locator('.schyssta-view h2').allTextContents();
+  assert.ok(schysstaSections.findIndex(t=>t.startsWith('Behöver ditt svar'))<
+    schysstaSections.findIndex(t=>t==='Skriv ett eget förslag'),'Incoming requests are above compose');
+  assert.equal(await paired.page.locator('#schyssta-rule-30000000-0000-4000-8000-000000000003 [data-schyssta-decision]').count(),0,
+    'An accepted rule does not offer misleading approval or rejection buttons');
+  assert.equal(await paired.page.getByRole('button',{name:'Uppdatera listan'}).count(),1,
+    'A paired test user can explicitly reload the list');
   await paired.page.getByRole('button',{name:'+ Föreslå en regel'}).click();
   await paired.page.locator('#schyssta-body').fill('Vi planerar veckans sysslor på söndag.');
   await paired.page.getByRole('button',{name:'Skicka regelförslag'}).click();
