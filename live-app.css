@@ -304,3 +304,19 @@
 .schyssta-review p,.schyssta-review li{line-height:1.6;font-size:13px}
 .schyssta-review ul{padding-left:22px;margin:8px 0}
 .schyssta-review+button{margin-top:12px}
+
+/* Local-only, accessible filters for the family's authorized rule snapshot. */
+.schyssta-filter-toolbar{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:8px 15px;align-items:end;padding:15px;border:1px solid #6a6275;border-radius:14px;margin:16px 0;background:#222638}
+.schyssta-filter-toolbar label{display:block;color:#f1dcba;font-weight:650;font-size:13px}
+.schyssta-filter-toolbar label[for="schyssta-search"]{grid-column:1}
+.schyssta-filter-toolbar input,.schyssta-filter-toolbar select{box-sizing:border-box;min-width:0;width:100%;height:44px;padding:10px 12px;border-radius:9px;border:1px solid #9f91a8;background:#151d2b;color:#fff5eb;font:inherit}
+.schyssta-filter-toolbar input:focus-visible,.schyssta-filter-toolbar select:focus-visible{outline:3px solid #f5c16e;outline-offset:2px}
+.schyssta-filter-toolbar>.live-muted,.schyssta-filter-toolbar>[role="status"]{grid-column:1/-1;margin:3px 0;line-height:1.5;font-size:13px}
+.schyssta-filter-group{min-width:0}
+.schyssta-filter-group[hidden],.schyssta-filter-group li[hidden],.schyssta-no-results[hidden]{display:none!important}
+.schyssta-no-results{margin:9px 16px 18px}
+.schyssta-status-mark{display:inline-block;vertical-align:middle;margin:0 6px 0 0;width:9px;height:9px;border-radius:50%;background:#c5b99c}
+.schyssta-status-accepted{background:#75b9a0}
+.schyssta-status-rejected{background:#c6a786}
+.schyssta-status-proposed{background:#d8bc7f}
+@media(max-width:490px){.schyssta-filter-toolbar{grid-template-columns:1fr}.schyssta-filter-toolbar>*{grid-column:1/-1}}
