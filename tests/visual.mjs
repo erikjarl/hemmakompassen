@@ -102,6 +102,8 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
         ];
         let schysstaReplacementLinks=[];
         let schysstaHistory=[];
+        let chatMessages=window.__HK_TEST_PAIRED__?[{message_id:'71000000-0000-4000-8000-000000000001',body:'Hej, ska vi prata senare?',sent_by_me:false,created_at:'2026-11-01T10:00:00Z',read_at:null}]:[];
+        const chatTokens=new Map();
         let schysstaNotifications=[{notification_id:'40000000-0000-4000-8000-000000000001',agreement_id:'30000000-0000-4000-8000-000000000001',kind:'rule_proposed',body:'Vi pratar om hur vi delar på sysslorna.',read_at:null,created_at:'2026-10-30T12:00:01Z'}];
         let schysstaManualRules=[{agreement_id:'30000000-0000-4000-8000-000000000001',body:'Vi pratar om hur vi delar på sysslorna.',status:'proposed',agreement_version:1,proposed_by_me:false,own_decision:null,parent_decision:null,teen_decision:null,created_at:'2026-10-30T12:00:00Z'}];
         schysstaManualRules.push({agreement_id:'30000000-0000-4000-8000-000000000003',body:'Vi frågar innan vi lånar saker.',status:'accepted',agreement_version:1,proposed_by_me:false,own_decision:true,parent_decision:true,teen_decision:true,created_at:'2026-10-30T12:00:00Z'});
@@ -180,6 +182,32 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
               const id='30000000-0000-4000-8000-000000000004';
               schysstaManualRules.push({agreement_id:id,body:args.p_body,status:'proposed',agreement_version:1,proposed_by_me:true,own_decision:null,parent_decision:null,teen_decision:null,created_at:'2026-11-01T10:12:00Z'});
               schysstaReplacementLinks.push({agreement_id:id,replaces_agreement_id:args.p_agreement_id});
+              return {data:id,error:null};
+            }
+            if(name==='my_family_messages'){
+              if(!window.__HK_TEST_PAIRED__)return {data:[],error:null};
+              let rows=chatMessages.slice().sort((a,b)=>b.created_at.localeCompare(a.created_at)||b.message_id.localeCompare(a.message_id));
+              if(args?.p_before_created_at&&args?.p_before_id)rows=rows.filter(row=>
+                row.created_at<args.p_before_created_at||(row.created_at===args.p_before_created_at&&row.message_id<args.p_before_id));
+              if(window.__HK_BAD_CHAT_RESPONSE__)return {data:[{message_id:'wrong',body:'untrusted',sent_by_me:false,created_at:'?',read_at:null}],error:null};
+              return {data:rows.slice(0,50),error:null};
+            }
+            if(name==='my_family_unread_message_count')
+              return {data:window.__HK_TEST_PAIRED__?chatMessages.filter(row=>!row.sent_by_me&&row.read_at===null).length:0,error:null};
+            if(name==='mark_family_messages_read'){
+              window.__HK_MARK_CHAT_READ__=(window.__HK_MARK_CHAT_READ__||0)+1;
+              const unread=chatMessages.filter(row=>!row.sent_by_me&&row.read_at===null).length;
+              chatMessages=chatMessages.map(row=>row.sent_by_me?row:{...row,read_at:row.read_at||'2026-11-01T11:00:00Z'});
+              return {data:unread,error:null};
+            }
+            if(name==='send_family_message'){
+              window.__HK_CHAT_SEND__={name,args};
+              if(!window.__HK_TEST_PAIRED__||!args.p_body?.trim()||!args.p_request_key)return {data:null,error:{message:'invalid message'}};
+              const existing=chatTokens.get(args.p_request_key);
+              if(existing)return {data:existing.message_id,error:existing.body===args.p_body?null:{message:'request key mismatch'}};
+              const id='71000000-0000-4000-8000-'+String(chatTokens.size+2).padStart(12,'0');
+              const row={message_id:id,body:args.p_body,sent_by_me:true,created_at:'2026-11-01T12:00:00Z',read_at:null};
+              chatTokens.set(args.p_request_key,row);chatMessages.push(row);
               return {data:id,error:null};
             }
             if(name==='my_schyssta_notifications')return {data:window.__HK_TEST_PAIRED__?schysstaNotifications:[],error:null};
@@ -589,6 +617,21 @@ try{
   assert.match(await paired.page.locator('.schyssta-history').innerText(),/Vi frågar innan vi lånar saker/,'Withdrawn rule remains in accessible history');
   await paired.page.goto(base+'#inkorg',{waitUntil:'load'});
   await paired.page.getByRole('heading',{name:'Inkorg',exact:true}).waitFor();
+  await paired.page.getByRole('heading',{name:'Privata meddelanden med Provtonåring'}).waitFor();
+  await paired.page.locator('.family-chat-bubble').filter({hasText:'Hej, ska vi prata senare?'}).waitFor();
+  assert.equal(await paired.page.locator('.family-chat-bubble.family-chat-theirs').count(),1,
+    'Received chat message is rendered as coming from counterpart');
+  await paired.page.waitForFunction(()=>window.__HK_MARK_CHAT_READ__>0);
+  await paired.page.locator('#family-chat-body').fill('Hej tillbaka! Vi kan prata efter maten.');
+  await paired.page.getByRole('button',{name:'Skicka meddelande'}).click();
+  await paired.page.waitForFunction(()=>window.__HK_CHAT_SEND__?.args?.p_body==='Hej tillbaka! Vi kan prata efter maten.');
+  assert.match(await paired.page.locator('.family-chat-mine').innerText(),/Hej tillbaka/,'Sent message appears in conversation');
+  assert.match(await paired.page.locator('.family-chat-mine .family-chat-receipt').innerText(),/Skickat/,'Read receipt distinguishes sent from read');
+  assert.equal(await paired.page.locator('#family-chat-body').inputValue(),'','Successful send clears composer');
+  await paired.page.locator('#family-chat-body').fill('<img src=x onerror=alert(1)>');
+  await paired.page.getByRole('button',{name:'Skicka meddelande'}).click();
+  await paired.page.locator('.family-chat-mine').filter({hasText:'<img src=x onerror=alert(1)>'}).waitFor();
+  assert.equal(await paired.page.locator('.family-chat-text img').count(),0,'Message content never runs HTML');
   const inboxText=await paired.page.locator('#live-app').innerText();
   assert.match(inboxText,/Vi pratar om hur vi delar på sysslorna/,'Inbox shows other member pending manual request');
   assert.doesNotMatch(inboxText,/Vi planerar veckans sysslor på söndag/,'Inbox does not present sender own proposal as incoming');
