@@ -257,8 +257,11 @@ export function createHandler({ fetchAuth = fetch, now = () => new Date() } = {}
       const result = await env.AI.run(MODEL, {
         messages: [
           { role: 'system', content: SYSTEM_PROMPT + ' ' + roleGuidance + '\n\n' + authorized.text },
-          ...previous.filter(row => row.role === 'user' || row.role === 'assistant')
-            .map(row => ({role:row.role, content:String(row.body).slice(0,1200)})),
+          // Never resend previous AI answers: they may reference partner details
+          // for which consent has since been revoked. Use only previous user words
+          // and a freshly authorised context snapshot on every call.
+          ...previous.filter(row => row.role === 'user')
+            .slice(-6).map(row => ({role:'user', content:'Tidigare eget meddelande: '+String(row.body).slice(0,900)})),
           { role: 'user', content: message }
         ],
         max_tokens: MAX_COMPLETION_TOKENS,
