@@ -24,6 +24,8 @@ window.HEMMAKOMPASSEN_BACKEND = Object.freeze({
   // First internal-only AI chat: ephemeral one-turn Worker, no shared family context.
   // This is a test-only UI on the development branch, not clinical service.
   enableAiMediator: true,
+  // Internal-only private saved conversations in EU-jurisdiction D1.
+  enableAiHistory: true,
   aiMediatorUrl: 'https://hemmakompassen-ai-medlare.erikbertiljarl.workers.dev/api/ai/mediate',
   // Until auth, family membership and privacy tests pass, the public UI remains a demo.
   liveModeEnabled: false
