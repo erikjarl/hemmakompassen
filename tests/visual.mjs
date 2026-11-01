@@ -79,9 +79,9 @@ async function capture(page,name){
   await page.screenshot({path:path.join(output,name),fullPage:true,animations:"disabled"});
   captureRecords.push({file:name,viewport:page.viewportSize(),...overlays});
 }
-async function freshContext(options,{authenticated=false,paired=false,role="parent",unlocked=false,unlockUnavailable=false,priorityUnavailable=false,preansweredGeneral=false}={}){
+async function freshContext(options,{authenticated=false,paired=false,role="parent",unlocked=false,unlockUnavailable=false,priorityUnavailable=false,preansweredGeneral=false,emptySchyssta=false}={}){
   const context=await browser.newContext({...options,locale:"sv-SE",reducedMotion:"reduce"});
-  await context.addInitScript(value=>{window.__HK_TEST_USER__=value.user;window.__HK_TEST_PAIRED__=value.paired;window.__HK_TEST_ROLE__=value.role;window.__HK_TEST_UNLOCKED__=value.unlocked;window.__HK_UNLOCK_RPC_UNAVAILABLE__=value.unlockUnavailable;window.__HK_PRIORITY_RPC_UNAVAILABLE__=value.priorityUnavailable;window.__HK_PREANSWERED_GENERAL__=value.preansweredGeneral;},{preansweredGeneral,user:authenticated?{id:role==="teen"?"10000000-0000-0000-0000-000000000002":"10000000-0000-0000-0000-000000000001",email:"synthetic@example.invalid"}:null,paired,role,unlocked,unlockUnavailable,priorityUnavailable});
+  await context.addInitScript(value=>{window.__HK_TEST_USER__=value.user;window.__HK_TEST_PAIRED__=value.paired;window.__HK_TEST_ROLE__=value.role;window.__HK_TEST_UNLOCKED__=value.unlocked;window.__HK_UNLOCK_RPC_UNAVAILABLE__=value.unlockUnavailable;window.__HK_PRIORITY_RPC_UNAVAILABLE__=value.priorityUnavailable;window.__HK_PREANSWERED_GENERAL__=value.preansweredGeneral;window.__HK_SCHYSSTA_EMPTY__=value.emptySchyssta;},{emptySchyssta,preansweredGeneral,user:authenticated?{id:role==="teen"?"10000000-0000-0000-0000-000000000002":"10000000-0000-0000-0000-000000000001",email:"synthetic@example.invalid"}:null,paired,role,unlocked,unlockUnavailable,priorityUnavailable});
   await context.route(base+"backend-config.js",route=>route.fulfill({
     contentType:"application/javascript",
     body:"window.HEMMAKOMPASSEN_BACKEND=Object.freeze({supabaseUrl:'https://synthetic.invalid',supabasePublishableKey:'synthetic',enableSharedPriorities:true,enableSharedPolling:true,enableSharedInsights:true,enableSharedUnderstanding:true,enableSchysstaList:true});"
@@ -127,6 +127,7 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
             throw new Error('Unexpected table '+table);
           },
           async rpc(name,args){
+            if(window.__HK_SCHYSSTA_EMPTY__===true&&['shared_schyssta_rule_suggestions','my_schyssta_rules','my_manual_schyssta_rules','my_schyssta_notifications','my_schyssta_replacement_links','my_schyssta_rule_history'].includes(name))return {data:[],error:null};
             if(name==='my_family_members')return {data:current()?(window.__HK_TEST_PAIRED__?[{user_id:'10000000-0000-0000-0000-000000000001',role:'parent',display_name:'Provförälder'},{user_id:'10000000-0000-0000-0000-000000000002',role:'teen',display_name:'Provtonåring'}]:[{user_id:current().id,role:window.__HK_TEST_ROLE__,display_name:window.__HK_TEST_ROLE__==='teen'?'Provtonåring':'Provförälder'}]):[],error:null};
              if(name==='shared_swipe_matches'){
                window.__HK_MATCH_RPC_CALLS__=(window.__HK_MATCH_RPC_CALLS__||0)+1;
@@ -506,15 +507,35 @@ try{
     schysstaSections.findIndex(t=>t==='Skriv ett eget förslag'),'Incoming requests are above compose');
   assert.equal(await paired.page.locator('#schyssta-rule-30000000-0000-4000-8000-000000000003 [data-schyssta-decision]').count(),0,
     'An accepted rule does not offer misleading approval or rejection buttons');
+  const review=paired.page.locator('#schyssta-rule-30000000-0000-4000-8000-000000000003 .schyssta-review');
+  assert.equal(await review.count(),1,'Agreed rules have an optional discussion guide');
+  await review.locator('summary').click();
+  assert.match(await review.innerText(),/Vad har fungerat bra för oss/,'Guide uses open questions, not compliance points');
+  await paired.page.evaluate(()=>Object.defineProperty(navigator,'clipboard',{configurable:true,value:{
+    writeText:async text=>{window.__HK_COPIED_RULES__=text;}
+  }}));
+  await paired.page.getByRole('button',{name:'Kopiera aktuella regler'}).click();
+  await paired.page.waitForFunction(()=>typeof window.__HK_COPIED_RULES__==='string');
+  const exported=await paired.page.evaluate(()=>window.__HK_COPIED_RULES__);
+  assert.match(exported,/Vi frågar innan vi lånar saker/,'Copy includes accepted rules');
+  assert.doesNotMatch(exported,/Vi får pausa gräl|Vi pratar om hur vi delar på sysslorna/,'Copy excludes proposals without two approvals');
   assert.equal(await paired.page.getByRole('button',{name:'Uppdatera listan'}).count(),1,
     'A paired test user can explicitly reload the list');
+  assert.equal(await paired.page.locator('#live-mobile-nav a[href="#inkorg"] .live-nav-count').innerText(),'1','Inbox has unobtrusive unread count');
+  assert.equal(await paired.page.locator('#live-mobile-nav a[href="#regler"] .live-nav-count').innerText(),'2','Rule tab shows only requests awaiting the current viewer');
+  assert.match(await paired.page.locator('#live-mobile-nav a[href="#regler"]').getAttribute('aria-label'),/2 obesvarade regelförslag/,'Navigation text announces the meaning of the count');
   await paired.page.getByRole('button',{name:'+ Föreslå en regel'}).click();
   const prompts=paired.page.locator('.schyssta-tips');
   assert.equal(await prompts.count(),1,'Composing a rule offers optional, collapsed conversation prompts');
   assert.equal(await prompts.locator('summary').innerText(),'Tips för en tydlig och rättvis överenskommelse');
   await prompts.locator('summary').click();
   assert.match(await prompts.innerText(),/Vuxnas ansvar för trygghet och omsorg/, 'Prompts retain parent responsibility');
+  assert.equal(await prompts.getByRole('link',{name:'Öppna kommunikationsråden'}).count(),1,
+    'Parent can open conversation support without requiring teen compliance');
   await paired.page.locator('#schyssta-body').fill('Vi planerar veckans sysslor på söndag.');
+  assert.equal(await paired.page.locator('#schyssta-preview-text').innerText(),'Vi planerar veckans sysslor på söndag.','Live preview uses the typed text');
+  assert.match(await paired.page.locator('.schyssta-preview').innerText(),/Från: Provförälder/,'Preview identifies the current author');
+  assert.match(await paired.page.locator('#schyssta-length').innerText(),/ av 500 tecken/,'Visible length counter updates');
   await paired.page.getByRole('button',{name:'Skicka regelförslag'}).click();
   await paired.page.waitForFunction(()=>window.__HK_MANUAL_PROPOSE__?.args?.p_body==='Vi planerar veckans sysslor på söndag.');
   const manualRequest=await paired.page.evaluate(()=>window.__HK_MANUAL_PROPOSE__.args);
@@ -542,6 +563,8 @@ try{
   assert.match(inboxText,/Vi pratar om hur vi delar på sysslorna/,'Inbox shows other member pending manual request');
   assert.doesNotMatch(inboxText,/Vi planerar veckans sysslor på söndag/,'Inbox does not present sender own proposal as incoming');
   assert.match(inboxText,/Meddelanden · 1 olästa/,'Server inbox shows persisted unread count');
+  assert.equal(await paired.page.locator('.schyssta-unread time[datetime]').count(),1,'Notifications display a timestamp from the server');
+  assert.match(await paired.page.locator('.schyssta-unread').innerText(),/Från: Provtonåring/,'Inbox identifies only the authorized counterpart');
   // The home screen surfaces the latest personal inbox alert ahead of general family information.
   await paired.page.goto(base+'#hem',{waitUntil:'load'});
   await paired.page.getByRole('heading',{name:'Inkorgen · 1 olästa'}).waitFor();
@@ -567,6 +590,18 @@ try{
   await paired.page.locator(".swipe-results [role='alert']").waitFor();
   assert.equal(await paired.page.locator(".swipe-match-list li").count(),0,"RPC failure must clear previous matches");
   await paired.context.close();
+  const freshRules=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,paired:true,emptySchyssta:true});
+  await freshRules.page.goto(base+'#regler',{waitUntil:'load'});
+  await freshRules.page.getByRole('heading',{name:'Kom igång tillsammans'}).waitFor();
+  assert.match(await freshRules.page.locator('.schyssta-view').innerText(),/Ni har inte gjort någon gemensam överenskommelse än/,'Empty paired family has useful onboarding rather than sample data');
+  assert.equal(await freshRules.page.locator('.schyssta-view .schyssta-list li').count(),0,'Empty family does not show invented rules');
+  await freshRules.page.locator('[data-schyssta-start]').click();
+  await freshRules.page.locator('#schyssta-body').waitFor();
+  assert.ok(await freshRules.page.locator('#schyssta-body').evaluate(el=>document.activeElement===el),'Start action moves focus into the editor');
+  await freshRules.page.locator('#schyssta-body').fill('<img src=x onerror=alert(1)>');
+  assert.equal(await freshRules.page.locator('#schyssta-preview-text').innerText(),'<img src=x onerror=alert(1)>','Preview renders user input as literal text');
+  assert.equal(await freshRules.page.locator('#schyssta-preview-text img').count(),0,'Manual proposal preview never interprets HTML');
+  await freshRules.context.close();
   const pairedTeen=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,paired:true,role:"teen"});
   await pairedTeen.page.goto(base+"#swipe",{waitUntil:"load"});
   const teenSummary=await pairedTeen.page.locator(".swipe-results").innerText();

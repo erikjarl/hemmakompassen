@@ -102,3 +102,28 @@ test('Schyssta rule changes are proposed as new manual rules without implicit ap
   assert.match(app,/Föreslå ändring/);
   assert.match(app,/Den tidigare överenskommelsen gäller tills ni båda/);
 });
+
+test('Rule review never scores a family and copy exports only approved text on click',()=>{
+  assert.match(app,/function copySchysstaAgreements\(\)/);
+  assert.match(app,/const approved=schysstaAllRules\(\)\.filter\(item=>item\.status==='accepted'\)/);
+  assert.match(app,/navigator\.clipboard\.writeText\(payload\)/);
+  assert.match(app,/data-schyssta-copy/);
+  assert.match(app,/Hur fungerar den här regeln för oss/);
+  assert.match(app,/Vad har fungerat bra för oss/);
+  assert.doesNotMatch(app,/schysstaCopyMessage.*user_id/);
+});
+
+test('Schyssta first-time guidance, live rule preview and menus use safe local display data',()=>{
+  assert.match(app,/function menu\(\)/);
+  assert.match(app,/schysstaNeedsAnswer\(\)\.length/);
+  assert.match(app,/schysstaUnreadCount\(\)/);
+  assert.match(app,/class="live-nav-count" aria-hidden="true"/);
+  assert.match(app,/aria-describedby="schyssta-length schyssta-description"/);
+  assert.match(app,/id="schyssta-preview-text"/);
+  assert.match(app,/preview\.textContent=schysstaDraft\.trim\(\)/);
+  assert.match(app,/data-schyssta-start/);
+  assert.match(app,/Ni har inte gjort någon gemensam överenskommelse än/);
+  assert.match(app,/Hitta idéer i Gillaswajpen/);
+  assert.match(app,/new Intl\.DateTimeFormat\('sv-SE'/);
+  assert.doesNotMatch(app,/schysstaDraft[^\n]{0,100}\.innerHTML=/);
+});
