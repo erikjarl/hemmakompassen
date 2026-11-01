@@ -261,7 +261,7 @@ export function createHandler({ fetchAuth = fetch, now = () => new Date() } = {}
           // for which consent has since been revoked. Use only previous user words
           // and a freshly authorised context snapshot on every call.
           ...previous.filter(row => row.role === 'user')
-            .slice(-6).map(row => ({role:'user', content:'Tidigare eget meddelande: '+String(row.body).slice(0,900)})),
+            .slice(-6).map(row => ({role:'user', content:String(row.body).slice(0,900)})),
           { role: 'user', content: message }
         ],
         max_tokens: MAX_COMPLETION_TOKENS,
