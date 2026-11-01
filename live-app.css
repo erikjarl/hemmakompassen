@@ -296,3 +296,11 @@
 .schyssta-actions a.schyssta-secondary{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;box-sizing:border-box}
 .schyssta-actions a.schyssta-secondary:focus-visible{outline:3px solid #f5bb65;outline-offset:3px}
 @media(max-width:440px){.schyssta-actions a.schyssta-secondary{width:100%;text-align:center}}
+
+/* Voluntary reflection: does not collect ratings or assess obedience. */
+.schyssta-review{margin-top:13px;padding:11px 14px;border:1px solid #5e6172;border-radius:12px;background:#1c2231}
+.schyssta-review summary{cursor:pointer;color:#f2d4aa;font-weight:600;line-height:1.5}
+.schyssta-review summary:focus-visible{outline:3px solid #f2bf6c;outline-offset:3px}
+.schyssta-review p,.schyssta-review li{line-height:1.6;font-size:13px}
+.schyssta-review ul{padding-left:22px;margin:8px 0}
+.schyssta-review+button{margin-top:12px}
