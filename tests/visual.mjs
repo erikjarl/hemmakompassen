@@ -472,6 +472,25 @@ try{
   await newProposal.getByRole('button',{name:'Jag godkänner'}).click();
   await paired.page.waitForFunction(()=>window.__HK_SCHYSSTA_DECISION__?.args?.p_approved===true);
   assert.deepEqual(await paired.page.evaluate(()=>window.__HK_SCHYSSTA_DECISION__.args),{p_agreement_id:'20000000-0000-4000-8000-000000000002',p_approved:true},'Decision is a separate explicit RPC');
+  // A test parent can compose and submit a manual rule without auto-approval.
+  await paired.page.getByRole('button',{name:'+ Föreslå en regel'}).click();
+  await paired.page.locator('#schyssta-body').fill('Vi planerar veckans sysslor på söndag.');
+  await paired.page.getByRole('button',{name:'Skicka regelförslag'}).click();
+  await paired.page.waitForFunction(()=>window.__HK_MANUAL_PROPOSE__?.args?.p_body==='Vi planerar veckans sysslor på söndag.');
+  const manualRequest=await paired.page.evaluate(()=>window.__HK_MANUAL_PROPOSE__.args);
+  assert.match(manualRequest.p_request_key,/^[0-9a-f-]{36}$/i,'Manual proposals send an idempotency token');
+  const manualRule=paired.page.locator('.schyssta-list li').filter({hasText:'Vi planerar veckans sysslor på söndag.'});
+  await manualRule.waitFor();
+  assert.match(await manualRule.innerText(),/Väntar på bådas beslut/,'Manual proposal remains pending');
+  assert.match(await manualRule.innerText(),/Ditt val: inte lämnat/,'Submitting never approves own manual proposal');
+  await paired.page.goto(base+'#inkorg',{waitUntil:'load'});
+  await paired.page.getByRole('heading',{name:'Inkorg'}).waitFor();
+  const inboxText=await paired.page.locator('#live-app').innerText();
+  assert.match(inboxText,/Vi pratar om hur vi delar på sysslorna/,'Inbox shows other member pending manual request');
+  assert.doesNotMatch(inboxText,/Vi planerar veckans sysslor på söndag/,'Inbox does not present sender own proposal as incoming');
+  await paired.page.getByRole('button',{name:'Se och svara i Schyssta listan'}).first().click();
+  await paired.page.getByRole('heading',{name:'Schyssta listan'}).waitFor();
+  await paired.page.locator('#schyssta-rule-30000000-0000-4000-8000-000000000001').waitFor();
   await checkOverflow(paired.page,'Mobile Schyssta listan');
   await capture(paired.page,'mobile-schyssta-list.png');
   await paired.page.goto(base+'#swipe',{waitUntil:'load'});
