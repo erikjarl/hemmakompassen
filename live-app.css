@@ -363,8 +363,8 @@
 .pf-legend{display:flex;gap:24px;flex-wrap:wrap;font-size:14px;font-weight:600;color:#e2e8f0}
 .pf-legend>span{display:inline-flex;align-items:center;gap:9px}
 .pf-legend>span:before{content:"";display:inline-block;width:22px;border-top:3px solid #55d6d2}
-.pf-legend-own:before{border-color:#f8b55b!important}
-.pf-legend-other:before{border-color:#55d6d2!important;border-top-style:dashed!important}
+.pf-legend-own:before{border-color:var(--pf-own,#f8b55b)!important}
+.pf-legend-other:before{border-color:var(--pf-other,#55d6d2)!important;border-top-style:dashed!important}
 .pf-table-wrap{max-width:100%;overflow-x:auto}
 .pf-table{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums;line-height:1.5}
 .pf-table caption{text-align:left;color:#bdc2cf;margin:5px 0 12px}
