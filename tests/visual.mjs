@@ -409,12 +409,14 @@ try{
   assert.equal(await completedPersonality.page.getByText('Våra profiler').count(),0,'No fabricated second profile');
   await checkOverflow(completedPersonality.page,'Private personality profile 390px');
   await capture(completedPersonality.page,'mobile-personality-profile.png');
+  await completedPersonality.page.locator('.pf-percentile-chart').screenshot({path:path.join(output,'mobile-personality-bars.png'),animations:'disabled'});
   await completedPersonality.context.close();
   const narrowPersonality=await freshContext({viewport:{width:320,height:700},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,personalityComplete:true});
   await narrowPersonality.page.goto(base+'#personlighet',{waitUntil:'load'});
   await narrowPersonality.page.locator('.pf-scale-row').first().waitFor();
   await checkOverflow(narrowPersonality.page,'Private personality profile 320px');
   await capture(narrowPersonality.page,'mobile-320-personality-percentiles.png');
+  await narrowPersonality.page.locator('.pf-percentile-chart').screenshot({path:path.join(output,'mobile-320-personality-bars.png'),animations:'disabled'});
   await narrowPersonality.context.close();
   const consentPair=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,paired:true,personalityComplete:true,personalitySharing:true,personalityPartnerShared:true});
   await consentPair.page.goto(base+'#personlighet',{waitUntil:'load'});
@@ -440,6 +442,7 @@ try{
   assert.ok(pctGeometry.partnerDx<1&&pctGeometry.partnerDy>4,'Same-percentile profile dots have same x but remain distinguishable');
   await checkOverflow(consentPair.page,'Two consenting personality profiles 390px');
   await capture(consentPair.page,'mobile-personality-two-consents.png');
+  await consentPair.page.locator('.pf-comparison .pf-percentile-chart').screenshot({path:path.join(output,'mobile-personality-bars-comparison.png'),animations:'disabled'});
   await consentPair.page.getByRole('button',{name:'Sluta dela min profil'}).click();
   await consentPair.page.getByRole('heading',{name:'Våra profiler'}).waitFor({state:'detached'});
   assert.equal(await consentPair.page.evaluate(()=>window.__HK_PERSONALITY_SHARE__),false);
