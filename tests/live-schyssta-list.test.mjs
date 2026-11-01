@@ -70,6 +70,16 @@ test('manual Schyssta proposals and inbox are backed by the installed authentica
   assert.match(app,/Ditt val: /);
 });
 
+test('Schyssta accepted rules have only management actions and requests come first',()=>{
+  assert.match(app,/const decisionActions=item\.status==='accepted'/);
+  assert.match(app,/const manageActions=item\.status==='accepted'/);
+  assert.match(app,/Ta tillbaka mitt ja/);
+  assert.match(app,/Ändra till ja/);
+  assert.match(app,/data-schyssta-refresh/);
+  assert.match(app,/id="schyssta-history"/);
+  assert.match(app,/el\?\.closest\('details'\)/);
+});
+
 test('Schyssta history is private and withdrawal needs explicit confirmation',()=>{
   assert.match(app,/db\.rpc\('my_schyssta_rule_history'\)/);
   assert.match(app,/db\.rpc\('withdraw_schyssta_rule'/);
