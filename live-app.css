@@ -477,3 +477,7 @@
 .mediator-error{color:#ffb3ac}
 #mediator-status{min-height:1.4em;margin:0}
 @media(max-width:600px){.mediator-actions{flex-direction:column;align-items:stretch}.mediator-actions .live-button,.mediator-clear{width:100%}}
+
+/* A deterministic safety referral, not an AI-generated answer. */
+.mediator-message-safety{border-color:#b88c47;background:#342c2a}
+.mediator-message-safety strong{color:#ffe0a1}
