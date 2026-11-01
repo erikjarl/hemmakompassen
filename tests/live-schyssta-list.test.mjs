@@ -70,6 +70,14 @@ test('manual Schyssta proposals and inbox are backed by the installed authentica
   assert.match(app,/Ditt val: /);
 });
 
+test('Schyssta inbox ranks actionable requests newest first and reloads after foregrounding',()=>{
+  assert.match(app,/schysstaNeedsAnswer=.*\.sort\(\(a,b\)=>Date\.parse\(b\.created_at\)-Date\.parse\(a\.created_at\)\)/);
+  assert.match(app,/data-schyssta-refresh/);
+  assert.match(app,/document\.addEventListener\('visibilitychange'/);
+  assert.match(app,/!schysstaDraftOpen/);
+  assert.match(app,/Tips för en tydlig och rättvis överenskommelse/);
+});
+
 test('Schyssta accepted rules have only management actions and requests come first',()=>{
   assert.match(app,/const decisionActions=item\.status==='accepted'/);
   assert.match(app,/const manageActions=item\.status==='accepted'/);
