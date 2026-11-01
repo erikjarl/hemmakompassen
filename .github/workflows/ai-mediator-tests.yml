@@ -1,0 +1,30 @@
+name: AI-mediator backend safety tests
+
+on:
+  push:
+    branches:
+      - ai-dev/utveckling
+    paths:
+      - 'workers/ai-mediator/**'
+      - 'tests/ai-mediator-worker.test.mjs'
+      - '.github/workflows/ai-mediator-tests.yml'
+  pull_request:
+    paths:
+      - 'workers/ai-mediator/**'
+      - 'tests/ai-mediator-worker.test.mjs'
+      - '.github/workflows/ai-mediator-tests.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  mediator-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run offline security tests
+        run: node --test tests/ai-mediator-worker.test.mjs
