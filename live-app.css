@@ -481,3 +481,13 @@
 /* A deterministic safety referral, not an AI-generated answer. */
 .mediator-message-safety{border-color:#b88c47;background:#342c2a}
 .mediator-message-safety strong{color:#ffe0a1}
+
+/* Private history is visible only to the signed-in account. */
+.mediator-history{background:#1e2235;border:1px solid #33394d;border-radius:18px;padding:18px;margin:20px 0}
+.mediator-history-heading{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.mediator-history-heading h2{margin:0;font-size:1.25rem}
+.mediator-thread-list{display:flex;gap:9px;overflow-x:auto;padding:16px 0 4px;scrollbar-width:thin}
+.mediator-thread-list button{flex:0 0 180px;max-width:220px;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:12px 14px;border:1px solid #565d73;border-radius:12px;background:#20283b;color:#e2e8f0;font:inherit;cursor:pointer}
+.mediator-thread-list button[aria-current="true"]{border-color:#f59e0b;background:#302b2b;color:#f8c66b}
+.mediator-thread-list button:focus-visible{outline:3px solid #f59e0b;outline-offset:3px}
+@media(max-width:600px){.mediator-thread-list button{flex-basis:155px}.mediator-history-heading .mediator-clear{width:auto}}
