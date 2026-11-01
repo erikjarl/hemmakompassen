@@ -686,7 +686,7 @@ function inboxView(){
   const needs=schysstaNeedsAnswer();
   const kinds={rule_proposed:'Nytt regelförslag',rule_accepted:'En regel har godkänts',rule_declined:'Ett regelförslag har avböjts',rule_withdrawn:'En överenskommelse har avslutats'};
   const notificationHtml=schysstaNotifications.length?'<ul class="schyssta-list">'+schysstaNotifications.map(n=>'<li class="'+(n.read_at===null?'schyssta-unread':'')+'"><p><strong>'+kinds[n.kind]+'</strong>'+(n.read_at===null?' · Oläst':'')+'</p><p>'+esc(n.body)+'</p><div class="schyssta-actions"><button type="button" class="live-button" data-schyssta-open="'+n.agreement_id+'">Visa regeln</button>'+(n.read_at===null?'<button type="button" class="schyssta-secondary" data-schyssta-read="'+n.notification_id+'"'+(schysstaSaving.has(n.notification_id)?' disabled':'')+'>Markera som läst</button>':'')+'</div></li>').join('')+'</ul>':'<p class="live-muted">Inga meddelanden ännu.</p>';
-  return '<h1>Inkorg</h1><p>Förfrågningar som väntar på ditt svar.</p>'+card(
+  return '<h1>Inkorg</h1><p>Förfrågningar som väntar på ditt svar.</p><button class="schyssta-secondary" type="button" data-schyssta-refresh>Uppdatera inkorgen</button>'+card(
     '<h2>Behöver ditt svar'+(needs.length?' ('+needs.length+')':'')+'</h2>'
     +(needs.length?'<ul class="schyssta-list">'+needs.map(row=>'<li><p>'+esc(row.body)+'</p><p class="live-muted">'+(row.source_card_id?'Från Gillaswajpen':'Manuellt regelförslag')+' · En förfrågan är inte ett godkännande.</p><button class="live-button" type="button" data-schyssta-open="'+row.agreement_id+'">Se och svara i Schyssta listan</button></li>').join('')+'</ul>':'<p class="live-muted">Du har inga regelförslag som väntar på svar just nu.</p>'))
     +card('<h2>Meddelanden'+(schysstaUnreadCount()?' · '+schysstaUnreadCount()+' olästa':'')+'</h2>'+notificationHtml+(schysstaMessage?'<p role="status">'+esc(schysstaMessage)+'</p>':''))+'<p><a href="#regler">Öppna Schyssta listan</a></p>';
@@ -715,7 +715,11 @@ async function fetchSchysstaList(){
   if(['regler','inkorg','hem'].includes(page()))render();
   if(page()==='regler'&&schysstaFocusId){
     const id=schysstaFocusId;schysstaFocusId='';
-    requestAnimationFrame(()=>document.getElementById('schyssta-rule-'+id)?.scrollIntoView({block:'center'}));
+    requestAnimationFrame(()=>{
+      const el=document.getElementById('schyssta-rule-'+id);
+      if(el?.closest('details')&&!el.closest('details').open)el.closest('details').open=true;
+      el?.scrollIntoView({block:'center'});
+    });
   }
 }
 async function proposeSchysstaRule(cardId){
@@ -743,12 +747,26 @@ function schysstaView(){
   const itemHtml=item=>{
     const source=schysstaReplacementLinks.some(link=>link.agreement_id===item.agreement_id)?'Ändringsförslag':item.source_card_id?'Från Gillaswajpen':'Eget regelförslag';
     const action=schysstaSaving.has(item.agreement_id);
+    const submitButton=(approved,label,style='live-button')=>'<button class="'+style+'" type="button" data-schyssta-decision="'+item.agreement_id+'" data-approved="'+approved+'"'+(action?' disabled':'')+'>'+label+'</button>';
+    const decisionActions=item.status==='accepted'
+      ?'<p class="live-muted">Ni har båda godkänt denna överenskommelse.</p>'
+      :item.own_decision===true
+      ?'<p class="live-muted">Du har sagt ja. Den andra personen behöver också säga ja till samma text.</p>'+submitButton(false,'Ta tillbaka mitt ja','schyssta-secondary')
+      :item.own_decision===false
+      ?'<p class="live-muted">Du har avböjt detta förslag. Du kan ändra ditt svar.</p>'+submitButton(true,'Ändra till ja')
+      :submitButton(true,'Jag godkänner')+submitButton(false,'Avböj förslaget','schyssta-secondary')
+        +'<button class="schyssta-secondary" type="button" data-schyssta-pause="'+item.agreement_id+'">Inte nu</button>';
+    const manageActions=item.status==='accepted'
+      ?'<button class="schyssta-secondary" type="button" data-schyssta-edit="'+item.agreement_id+'">Föreslå ändring</button>'
+        +'<button class="schyssta-secondary" type="button" data-schyssta-end="'+item.agreement_id+'">Avsluta överenskommelsen</button>'
+      :'';
     return '<li id="schyssta-rule-'+item.agreement_id+'"><p>'+esc(item.body)+'</p>'
       +'<p class="schyssta-status"><span>'+source+'</span> · <strong>'+statusLabel[item.status]+'</strong> · Ditt val: '
       +(item.own_decision===true?'ja':item.own_decision===false?'nej':'inte lämnat')+'</p>'
       +(source==='Ändringsförslag'&&item.status==='proposed'?'<p class="live-muted">Den tidigare överenskommelsen gäller tills ni båda har godkänt den nya formuleringen.</p>':'')
-      +'<div class="schyssta-actions"><button class="live-button" type="button" data-schyssta-decision="'+item.agreement_id+'" data-approved="true"'+(action?' disabled':'')+'>Jag godkänner</button>'
-      +'<button class="schyssta-secondary" type="button" data-schyssta-decision="'+item.agreement_id+'" data-approved="false"'+(action?' disabled':'')+'>Avböj förslaget</button><button class="schyssta-secondary" type="button" data-schyssta-pause="'+item.agreement_id+'">Inte nu</button>'+(item.status==='accepted'?'<button class="schyssta-secondary" type="button" data-schyssta-edit="'+item.agreement_id+'">Föreslå ändring</button><button class="schyssta-secondary" type="button" data-schyssta-end="'+item.agreement_id+'">Avsluta överenskommelsen</button>':'')+'</div>'+(schysstaEndTarget===item.agreement_id?'<div class="schyssta-confirm" role="group" aria-label="Bekräfta avslut"><p>Om du avslutar gäller regeln inte längre som gemensam överenskommelse. Den finns kvar i historiken.</p><button class="live-button" type="button" data-schyssta-end-confirm="'+item.agreement_id+'">Ja, avsluta</button><button class="schyssta-secondary" type="button" id="schyssta-end-cancel">Avbryt</button></div>':'')+'</li>';
+      +'<div class="schyssta-actions">'+decisionActions+manageActions+'</div>'
+      +(schysstaEndTarget===item.agreement_id?'<div class="schyssta-confirm" role="group" aria-label="Bekräfta avslut"><p>Om du avslutar gäller regeln inte längre som gemensam överenskommelse. Den finns kvar i historiken.</p><button class="live-button" type="button" data-schyssta-end-confirm="'+item.agreement_id+'">Ja, avsluta</button><button class="schyssta-secondary" type="button" id="schyssta-end-cancel">Avbryt</button></div>':'')
+      +'</li>';
   };
   const list=(rows,empty)=>rows.length?'<ul class="schyssta-list">'+rows.map(itemHtml).join('')+'</ul>':'<p class="live-muted">'+empty+'</p>';
   const rules=schysstaAllRules(), needs=schysstaNeedsAnswer();
@@ -762,13 +780,13 @@ function schysstaView(){
     +'<button class="live-button" type="submit"'+(schysstaSubmitting?' disabled':'')+'>'+(schysstaSubmitting?'Skickar…':schysstaEditTarget?'Skicka ändringsförslag':'Skicka regelförslag')+'</button>'
     +'<button class="schyssta-secondary" type="button" id="schyssta-compose">Stäng formuläret</button></form>'
     :'<button class="live-button" type="button" id="schyssta-compose">+ Föreslå en regel</button>';
-  return '<div class="schyssta-view"><h1>Schyssta listan</h1><p>Här samlar ni sådant ni båda har sagt ja till. Regler kan komma från Gillaswajpen eller skrivas av någon av er.</p>'
-    +card('<h2>'+(schysstaEditTarget?'Föreslå ändring av regel':'Skriv ett eget förslag')+'</h2>'+formHtml+(schysstaMessage?'<p role="status" class="schyssta-feedback">'+esc(schysstaMessage)+'</p>':''))
+  return '<div class="schyssta-view"><h1>Schyssta listan</h1><p>Här samlar ni sådant ni båda har sagt ja till. Regler kan komma från Gillaswajpen eller skrivas av någon av er.</p><button class="schyssta-secondary" type="button" data-schyssta-refresh>Uppdatera listan</button>'
     +card('<h2>Behöver ditt svar'+(needs.length?' ('+needs.length+')':'')+'</h2><p>Förslag från den andra personen visas här först.</p>'+list(needs,'Inga nya förslag väntar på ditt svar.'))
+    +card('<h2>'+(schysstaEditTarget?'Föreslå ändring av regel':'Skriv ett eget förslag')+'</h2>'+formHtml+(schysstaMessage?'<p role="status" class="schyssta-feedback">'+esc(schysstaMessage)+'</p>':''))
     +card('<h2>Våra överenskommelser</h2>'+list(approved,'Ni har ännu inga regler som båda godkänt.'))
     +card('<h2>Förslag på gång</h2><p>Era förslag och överenskommelser som ännu inte fått två ja. Ett eget skickat förslag kräver också ditt separata godkännande.</p>'+list(ongoing,'Inga andra pågående förslag.'))
     +card('<h2>Gemensamma förslag</h2><p>Här kan bara regler som servern verifierat som JA+JA visas. Ett förslag är inte ett godkännande.</p>'+suggestionHtml)
-    +(schysstaHistory.length?'<details class="schyssta-history"><summary>Tidigare överenskommelser ('+schysstaHistory.length+')</summary><ul class="schyssta-list">'+schysstaHistory.map(item=>'<li><p>'+esc(item.body)+'</p><p class="live-muted">Avslutad överenskommelse</p></li>').join('')+'</ul></details>':'')
+    +(schysstaHistory.length?'<details class="schyssta-history" id="schyssta-history"><summary>Tidigare överenskommelser ('+schysstaHistory.length+')</summary><ul class="schyssta-list">'+schysstaHistory.map(item=>'<li id="schyssta-rule-'+item.agreement_id+'"><p>'+esc(item.body)+'</p><p class="live-muted">Avslutad överenskommelse</p></li>').join('')+'</ul></details>':'')
     +'</div>';
 }
 function section(key){
@@ -813,6 +831,7 @@ if(typeof fetchSchysstaList==='function'&&schysstaListEnabled&&['regler','inkorg
 document.addEventListener('click',e=>{const b=e.target.closest('[data-swipe]');if(b)advanceSwipe(b.dataset.swipe);if(e.target.closest('#swipe-restart')){swipeReview=true;swipeIndex=visibleGeneralIndices()[0]??STATEMENTS.length;render();}if(e.target.closest('#swipe-skip')&&viewerRole()==='teen'&&GENERAL_CARDS[swipeIndex]?.type==='understanding'&&!swipeBusy)void skipUnderstandingCard(swipeIndex,user.id,sharedSession);if(e.target.closest('#swipe-reload'))refresh().catch(showError);const refreshMatches=e.target.closest('[data-refresh-matches]');if(refreshMatches&&!sharedLoading)void fetchSwipeMatches(refreshMatches.dataset.refreshMatches);if(e.target.closest('#retry-theme-unlock')&&!themesLoading)void fetchThemeUnlock();
 if(e.target.closest('#insights-retry')&&!insightsLoading)void fetchInsights();
 if(e.target.closest('#schyssta-retry')&&!schysstaLoading)void fetchSchysstaList();
+if(e.target.closest('[data-schyssta-refresh]')&&!schysstaLoading)void fetchSchysstaList();
 if(e.target.closest('#schyssta-compose')){schysstaDraftOpen=!schysstaDraftOpen;if(!schysstaDraftOpen){schysstaEditTarget=null;schysstaDraftKey=null;schysstaDraft='';}schysstaMessage='';render();}
 const openRule=e.target.closest('[data-schyssta-open]');
 if(openRule&&SCHYSSTA_UUID.test(openRule.dataset.schysstaOpen)){
