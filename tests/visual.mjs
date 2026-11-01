@@ -464,7 +464,7 @@ try{
   assert.match(schysstaText,/Vi får pausa gräl/,'Existing family proposal is visible');
   assert.doesNotMatch(schysstaText,/Falsk text|Okänd privat uppgift/,'Malformed and unknown server rows fail closed');
   assert.match(schysstaText,/Ett förslag är inte ett godkännande/,'Proposal and approval remain visibly separate');
-  await paired.page.getByRole('button',{name:'Föreslå'}).click();
+  await paired.page.getByRole('button',{name:'Föreslå',exact:true}).click();
   await paired.page.waitForFunction(()=>window.__HK_SCHYSSTA_PROPOSE__?.args?.p_card_id==='regler-01');
   assert.deepEqual(await paired.page.evaluate(()=>window.__HK_SCHYSSTA_PROPOSE__.args),{p_card_id:'regler-01'},'Proposal sends only the allowlisted card id');
   const newProposal=paired.page.locator('.schyssta-list li').filter({hasText:'Vi knackar innan vi går in i varandras rum'});
