@@ -339,3 +339,38 @@
 .family-chat-compose-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .family-chat-form .live-muted{font-size:12px;margin:0}
 @media(max-width:480px){.family-chat-history{max-height:450px;padding:8px}.family-chat-bubble{max-width:95%;padding:10px 11px}.family-chat-compose-actions>button{width:100%}}
+
+
+/* Personlighetstest IPIP-50 v1: mobile-first and keyboard-accessible */
+.pf-intro{max-width:760px;margin:0 auto 14px;text-align:center}
+.pf-intro h1{margin:8px 0 10px}.pf-intro p{color:#bdc2cf;line-height:1.6}
+.pf-overview,.pf-survey,.pf-results,.pf-sharing,.pf-comparison{max-width:800px;margin:18px auto}
+.pf-progress{width:100%;height:8px;overflow:hidden;background:#34394b;border-radius:99px;margin:14px 0 26px}
+.pf-progress>span{height:100%;display:block;background:#f59e0b;border-radius:99px;transition:width .2s ease}
+.pf-counter{display:flex;justify-content:space-between;gap:12px;font-weight:600;font-size:13px;color:#f8c66b}
+.pf-question{border:0;padding:0;margin:20px 0;min-width:0}
+.pf-question legend{font:600 clamp(21px,4vw,29px)/1.35 Georgia,serif;color:#e2e8f0;padding:0;margin-bottom:14px}
+.pf-option{display:flex;align-items:center;gap:12px;min-height:52px;cursor:pointer;background:#262c40;border:1px solid #495168;border-radius:12px;padding:12px 14px;margin:8px 0;color:#e2e8f0}
+.pf-option:has(input:checked){background:#43372c;border-color:#f8b55b}
+.pf-option:focus-within{outline:3px solid #f59e0b;outline-offset:2px}
+.pf-option input{width:20px;height:20px;flex:none;accent-color:#f59e0b}
+.pf-option span{line-height:1.35}
+.pf-controls{display:flex;gap:10px;flex-wrap:wrap;margin:24px 0 10px}
+.pf-controls button,.pf-results button,.pf-sharing button:not(.live-button){background:#30394a;color:#e2e8f0;border:1px solid #647087;border-radius:10px;padding:11px 14px;font-weight:600;cursor:pointer}
+.pf-controls button:disabled,.pf-option:has(input:disabled){opacity:.55;cursor:default}
+.pf-status{color:#bdc2cf;font-size:14px;line-height:1.5}
+.pf-radar{display:block;margin:15px auto;width:min(100%,480px);height:auto;overflow:visible}
+.pf-legend{display:flex;gap:24px;flex-wrap:wrap;font-size:14px;font-weight:600;color:#e2e8f0}
+.pf-legend>span{display:inline-flex;align-items:center;gap:9px}
+.pf-legend>span:before{content:"";display:inline-block;width:22px;border-top:3px solid #55d6d2}
+.pf-legend-own:before{border-color:var(--pf-own,#f8b55b)!important}
+.pf-legend-other:before{border-color:var(--pf-other,#55d6d2)!important;border-top-style:dashed!important}
+.pf-table-wrap{max-width:100%;overflow-x:auto}
+.pf-table{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums;line-height:1.5}
+.pf-table caption{text-align:left;color:#bdc2cf;margin:5px 0 12px}
+.pf-table th,.pf-table td{text-align:left;padding:10px 7px;border-bottom:1px solid #495168}
+.pf-table th:first-child{width:55%}.pf-table td{white-space:nowrap}
+.pf-differences{padding-left:20px;color:#bdc2cf}
+.pf-sharing button{margin:5px 10px 5px 0}
+@media(max-width:420px){.pf-option{padding:10px}.pf-radar{width:100%}.pf-controls button{flex:1 1 45%}}
+@media(prefers-reduced-motion:reduce){.pf-progress>span{transition:none}}

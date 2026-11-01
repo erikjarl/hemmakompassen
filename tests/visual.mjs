@@ -79,9 +79,9 @@ async function capture(page,name){
   await page.screenshot({path:path.join(output,name),fullPage:true,animations:"disabled"});
   captureRecords.push({file:name,viewport:page.viewportSize(),...overlays});
 }
-async function freshContext(options,{authenticated=false,paired=false,role="parent",unlocked=false,unlockUnavailable=false,priorityUnavailable=false,preansweredGeneral=false,emptySchyssta=false}={}){
+async function freshContext(options,{authenticated=false,paired=false,role="parent",unlocked=false,unlockUnavailable=false,priorityUnavailable=false,preansweredGeneral=false,emptySchyssta=false,personalityComplete=false}={}){
   const context=await browser.newContext({...options,locale:"sv-SE",reducedMotion:"reduce"});
-  await context.addInitScript(value=>{window.__HK_TEST_USER__=value.user;window.__HK_TEST_PAIRED__=value.paired;window.__HK_TEST_ROLE__=value.role;window.__HK_TEST_UNLOCKED__=value.unlocked;window.__HK_UNLOCK_RPC_UNAVAILABLE__=value.unlockUnavailable;window.__HK_PRIORITY_RPC_UNAVAILABLE__=value.priorityUnavailable;window.__HK_PREANSWERED_GENERAL__=value.preansweredGeneral;window.__HK_SCHYSSTA_EMPTY__=value.emptySchyssta;},{emptySchyssta,preansweredGeneral,user:authenticated?{id:role==="teen"?"10000000-0000-0000-0000-000000000002":"10000000-0000-0000-0000-000000000001",email:"synthetic@example.invalid"}:null,paired,role,unlocked,unlockUnavailable,priorityUnavailable});
+  await context.addInitScript(value=>{window.__HK_TEST_USER__=value.user;window.__HK_TEST_PAIRED__=value.paired;window.__HK_TEST_ROLE__=value.role;window.__HK_TEST_UNLOCKED__=value.unlocked;window.__HK_UNLOCK_RPC_UNAVAILABLE__=value.unlockUnavailable;window.__HK_PRIORITY_RPC_UNAVAILABLE__=value.priorityUnavailable;window.__HK_PREANSWERED_GENERAL__=value.preansweredGeneral;window.__HK_SCHYSSTA_EMPTY__=value.emptySchyssta;window.__HK_TEST_PERSONALITY_DONE__=value.personalityComplete;},{personalityComplete,emptySchyssta,preansweredGeneral,user:authenticated?{id:role==="teen"?"10000000-0000-0000-0000-000000000002":"10000000-0000-0000-0000-000000000001",email:"synthetic@example.invalid"}:null,paired,role,unlocked,unlockUnavailable,priorityUnavailable});
   await context.route(base+"backend-config.js",route=>route.fulfill({
     contentType:"application/javascript",
     body:"window.HEMMAKOMPASSEN_BACKEND=Object.freeze({supabaseUrl:'https://synthetic.invalid',supabasePublishableKey:'synthetic',enableSharedPriorities:true,enableSharedPolling:true,enableSharedInsights:true,enableSharedUnderstanding:true,enableSchysstaList:true});"
@@ -92,6 +92,7 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
       export function createClient(){
         const current=()=>window.__HK_TEST_USER__;
         const answers=new Map(window.__HK_PREANSWERED_GENERAL__?Array.from({length:34},(_,i)=>{const id='general-'+String(i+1).padStart(2,'0');return [id,{deck_id:'general',card_id:id,answer:true}]}):window.__HK_TEST_PAIRED__?[['general-01',{deck_id:'general',card_id:'general-01',answer:true}],['general-02',{deck_id:'general',card_id:'general-02',answer:false}]]:[]);
+        const personalityAnswers=new Map(window.__HK_TEST_PERSONALITY_DONE__?Array.from({length:50},(_,i)=>['ipip50-'+String(i+1).padStart(3,'0'),3]):[]);
         const skips=new Map();
         const importance=new Map();
         const understandingShares=new Set(window.__HK_TEST_PAIRED__?['general-02']:[]);
@@ -115,6 +116,10 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
             async signInWithPassword(){return {error:null}}
           },
           from(table){
+            if(table==='personality_answers')return {
+              select(){return {eq(){return {async eq(){return {data:[...personalityAnswers].map(([id,value])=>({question_id:id,answer:{value}})),error:null};}}}};},
+              async upsert(row,options){personalityAnswers.set(row.question_id,row.answer.value);window.__HK_PERSONALITY_SAVE__={row,options};return {error:null};}
+            };
             if(table==='profiles')return {select(){return {eq(){return {async maybeSingle(){return {data:current()?{display_name:window.__HK_TEST_ROLE__==='teen'?'Provtonåring':'Provförälder'}:null,error:null}}}}}}};
             if(table==='swipe_answers')return {
               select(){return {async eq(){return {data:[...answers.values()],error:null}}}},
@@ -269,6 +274,23 @@ try{
   assert.match(await m.page.locator("#live-app").innerText(),/Din familj/i);
   await checkOverflow(m.page,"Mobile homepage");
   await capture(m.page,"mobile-home.png");
+  await m.page.goto(base+"#personlighet",{waitUntil:"load"});
+  await m.page.getByRole('button',{name:'Börja testet'}).waitFor();
+  await m.page.getByRole('button',{name:'Börja testet'}).click();
+  assert.match(await m.page.locator('.pf-question').innerText(),/Jag brukar vara den som får igång stämningen/);
+  await m.page.locator('input[data-pf-answer="ipip50-001"][value="4"]').check();
+  await m.page.getByText('Fråga 2 av 50').waitFor();
+  const pfSaved=await m.page.evaluate(()=>window.__HK_PERSONALITY_SAVE__);
+  assert.equal(pfSaved.row.instrument_id,'ipip50-sv-v1');
+  assert.equal(pfSaved.row.question_id,'ipip50-001');
+  assert.deepEqual(pfSaved.row.answer,{value:4});
+  await checkOverflow(m.page,'Personality questionnaire 390px');
+  await capture(m.page,'mobile-personality-question.png');
+  await m.page.getByRole('button',{name:'Spara och avsluta för nu'}).click();
+  await m.page.getByRole('button',{name:'Fortsätt testet'}).waitFor();
+  await m.page.getByRole('button',{name:'Fortsätt testet'}).click();
+  await m.page.getByText('Fråga 2 av 50').waitFor();
+  await m.page.goto(base+"#hem",{waitUntil:"load"});
   await checkMobileNavigation(m.page,'390px mobile navigation');
   await m.page.goto(base+"#swipe",{waitUntil:"load"});
   await m.page.getByRole("heading",{name:"Gillaswajpen"}).waitFor();
@@ -355,6 +377,15 @@ try{
   await checkOverflow(m.page,"Mobile authenticated section");
   await capture(m.page,"mobile-inbox.png");
   await m.context.close();
+  const completedPersonality=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,personalityComplete:true,role:'teen'});
+  await completedPersonality.page.goto(base+'#personlighet',{waitUntil:'load'});
+  await completedPersonality.page.getByRole('heading',{name:'Din profil'}).waitFor();
+  assert.equal(await completedPersonality.page.locator('.pf-radar').count(),1);
+  assert.equal(await completedPersonality.page.locator('.pf-table tbody tr').count(),5);
+  assert.equal(await completedPersonality.page.getByText('Våra profiler').count(),0,'No fabricated second profile');
+  await checkOverflow(completedPersonality.page,'Private personality profile 390px');
+  await capture(completedPersonality.page,'mobile-personality-profile.png');
+  await completedPersonality.context.close();
   const narrow=await freshContext({viewport:{width:320,height:700},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true});
   await narrow.page.getByRole("heading",{name:/Hej[ ,]+Provförälder/}).waitFor();
   await checkMobileNavigation(narrow.page,'320px mobile navigation');
