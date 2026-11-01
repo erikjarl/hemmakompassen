@@ -47,7 +47,7 @@ async function identity(env, jwt, fetchAuth) {
       Authorization: 'Bearer ' + jwt,
       apikey: env.SUPABASE_PUBLISHABLE_KEY
     },
-    redirect: 'error'
+    redirect: 'manual' // A redirect is rejected below; never follow Auth redirects.
   });
   if (response.status === 401 || response.status === 403) return null;
   if (!response.ok) throw new Error('Auth service unavailable');
