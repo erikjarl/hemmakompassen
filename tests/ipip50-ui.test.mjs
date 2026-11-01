@@ -105,7 +105,7 @@ test('two consents allow summary comparison and consent withdrawal hides it',asy
   assert.match(html,/class="pf-score-dot pf-score-other"/);
   assert.match(html,/beräknade under antagande om normalfördelning/);
   assert.match(html,/Den andras resultat jämfört med vuxenreferensen/);
-  assert.match(html,/Amerikanska vuxna|amerikanska vuxenreferensen/);
+  assert.match(html,/amerikanska vuxenurvalets|amerikanska vuxnas/);
   assert.doesNotMatch(html,/Am the life of the party/);
   await ui.handleClick(btn('withdraw'),{isPaired:true});
   html=ui.render({isPaired:true,viewerRole:'teen'});
