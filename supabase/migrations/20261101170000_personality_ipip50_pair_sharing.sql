@@ -9,7 +9,7 @@ begin
   if new.question_id !~ '^ipip50-(00[1-9]|0[1-4][0-9]|050)$'
      or pg_catalog.jsonb_typeof(new.answer->'value') is distinct from 'number'
      or (new.answer->>'value') !~ '^[1-5]$'
-     or pg_catalog.jsonb_object_length(new.answer) <> 1 then
+     or new.answer <> pg_catalog.jsonb_build_object('value',new.answer->'value') then
     raise exception 'invalid IPIP50 item or response' using errcode='22023';
   end if;
   return new;
