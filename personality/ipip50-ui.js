@@ -167,7 +167,7 @@ function familyReflectionPanel(parentProfile,teenProfile,viewerRole){
   const story=(item,index)=>{
     const detail=richFamilyReflection(item,viewerRole);
     const type=item.status==='similarity'?'Likhet att bygga vidare på':item.status==='notable'?'Skillnad att utforska':'Ytterligare en nyans';
-    const opening=item.status==='similarity'?'<p class="pf-reflection-context">'+esc(item.observation)+'</p>':'';
+    const opening=''; // Role-specific prose already expresses similarity without unvalidated raw-score labels.
     return '<article class="pf-insight-card pf-insight-'+esc(item.status)+'">'+
       '<div class="pf-insight-header"><span class="pf-insight-type">'+esc(type)+'</span><h5>'+esc(item.label)+'</h5></div>'+
       opening+'<p class="pf-insight-narrative">'+esc(detail.paragraph)+'</p>'+
