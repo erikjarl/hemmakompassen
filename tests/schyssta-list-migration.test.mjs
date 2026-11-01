@@ -39,3 +39,17 @@ test('RPCs use fixed empty search paths and return no user identifiers',()=>{
   const listSignature=migration.match(/create or replace function public\.my_schyssta_rules\(\)[\s\S]*?\)\s*language sql/i)?.[0]||'';
   assert.doesNotMatch(listSignature,/user_id|parent_id|teen_id/i);
 });
+
+test('rule proposals belong to the current pairing epoch, never an earlier one',()=>{
+  for(const column of ['paired_parent_id','paired_teen_id','paired_parent_joined_at','paired_teen_joined_at']){
+    assert.match(migration,new RegExp('add column if not exists '+column));
+    assert.match(migration,new RegExp('agreement\\.'+column+' = '));
+  }
+  assert.match(migration,/existing\.paired_parent_joined_at = pair\.parent_joined_at/);
+  assert.match(migration,/existing\.paired_teen_joined_at = pair\.teen_joined_at/);
+  assert.match(migration,/agreement\.paired_parent_joined_at = current_parent\.joined_at/);
+  assert.match(migration,/agreement\.paired_teen_joined_at = current_teen\.joined_at/);
+  assert.match(migration,/join public\.family_members as current_member/);
+  assert.match(migration,/when parent_vote\.approved is false or teen_vote\.approved is false then 'rejected'/);
+  assert.match(migration,/when parent_vote\.approved is true and teen_vote\.approved is true then 'accepted'/);
+});
