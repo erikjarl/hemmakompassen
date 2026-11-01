@@ -109,6 +109,9 @@
 .swipe-refresh{margin-top:20px}
 @media(max-width:600px){.swipe-match-list{grid-template-columns:1fr}.swipe-summary-overview li{grid-template-columns:32px minmax(0,1fr);padding:10px}.swipe-summary-icon{width:28px;height:28px;padding:4px}}
 
+.schyssta-unread{border-color:#b99b66!important;box-shadow:inset 3px 0 0 #e4b968}
+.schyssta-unread strong{color:#f6cf92}
+.schyssta-list li{overflow-wrap:anywhere}
 /* Schyssta listan's online-test compose and response workflow. */
 .schyssta-compose{display:flex;flex-direction:column;align-items:flex-start;gap:12px}
 .schyssta-compose label{color:#f7d3a1;font-weight:650;line-height:1.5}
