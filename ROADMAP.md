@@ -502,6 +502,9 @@ Listan är en samlad arbetsplan för att slutföra Gillaswajpen. Kryssa av förs
 
 ## FAS 5 — AI-medlaren: privat samtal och senare AI-stödda sammanfattningar (uppdaterad 1 november 2026)
 
+**Senaste status efter merge:** Ren AI-PR #81 är mergad till `main` (commit `6fe4538`) med sparad, privat testchatt, serverkontrollerad Supabase-inloggning och rollstyrt AI-svar, samt allowlist för Fannyförälder/Tobbetonåring. GitHub Actions för AI-backend och webbplatsens UI/browser-testkedja har passerat. `index.html` har uppdaterade versionsparametrar för JS, CSS och konfiguration (commit `49a64d4`). **Publiceringens faktiska innehåll via GitHub Pages och riktig autentiserad tvåkontofunktion är inte oberoende bekräftade. Verkligt känsliga samtal får ännu inte användas.** Äldre statusrader om att koden enbart ligger på en branch är historiska.
+
+
 **Produktbeslut 2026-11-01:** Prioritera en användbar, *privat* AI-medlare med målet **0 kr/månad under intern testning**, via befintliga GitHub Pages + Supabase och i första hand Cloudflare Workers/Workers AI på gratisnivå. Ingen betald plan eller automatisk överskridningsdebitering får aktiveras utan nytt beslut. **Efter att AI-medlaren kopplats in, fungerar och är behörighetstestad** ska samma säkra AI-infrastruktur även kunna skapa **frivilliga, rollanpassade och mer reflekterande sammanfattningar/råd i Gillaswajpen och Big Five/personlighetstestet**. Detta tillägg preciserar och uppdaterar beslutet 2026-10-26 om att Gillaswajpens ordinarie sammanfattning ska vara helt förskriven: den förskrivna, deterministiska sammanfattningen ska **finnas kvar som primär säker fallback** och får inte ersättas eller försämras. AI-lagret är en separat, opt-in-funktion.
 
 ### Aktuell genomförandestatus 2026-11-01 — ersätter tidigare statusanteckningar
