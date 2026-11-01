@@ -151,7 +151,7 @@ function familyReflectionPanel(parentProfile,teenProfile){
   const summary=buildIPIP50FamilyInsights({parent,teen});
   const diffs=summary.featuredDifferences;
   const similarities=summary.featuredSimilarities;
-  const labels=items=>items.map(i=>i.label.toLowerCase()).join(', ').replace(/, ([^,]+)$/,' och $1');
+  const labels=items=>items.map(i=>'”'+i.label.toLowerCase()+'”').join(', ').replace(/, ([^,]+)$/,' och $1');
   const lead=diffs.length
     ?'I era svar framträder särskilt skillnader kring '+esc(labels(diffs))+'. Det kan vara bra ämnen att förstå varandras perspektiv på.'
     :'Ingen av de fem skalorna visar en tydlig skillnad enligt våra samtalsgränser.';
