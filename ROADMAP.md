@@ -478,6 +478,9 @@ Listan är en samlad arbetsplan för att slutföra Gillaswajpen. Kryssa av förs
 
 ### AI-01 — Grundläggande AI-medlare (byggs först)
 
+**Molnförberedelse verifierad 2026-11-01:** Cloudflare D1 `hemmakompassen-ai-limits` skapades med EU-jurisdiktion, SQL-tabellen `ai_daily_user_usage` applicerades och verifierades via databaskatalogfråga, och `workers/ai-mediator/wrangler.jsonc` fick dess riktiga ID. **Workers AI har inte driftsatts eller körts.** Kontots faktureringsplan kunde inte läsas: API-behörigheten saknar Billing Read (HTTP 403). Verifiera Free i Cloudflare-dashboard före eventuell driftsättning. Ingen betald plan aktiverad av detta steg.
+
+
 
 **Första kodleverans 2026-11-01 (endast utvecklingsbranch, EJ publicerad, EJ färdig AI-chatt):**
 - [x] Read-only-inspektion av de tre installerade AI-tabellerna och deras RLS-policyer. Bekräftat att klienten inte får INSERT med rollen assistant. Inga befintliga användarsvar eller chattar ändrade.
