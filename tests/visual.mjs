@@ -510,7 +510,7 @@ try{
   assert.equal(await paired.page.getByRole('button',{name:'Uppdatera listan'}).count(),1,
     'A paired test user can explicitly reload the list');
   assert.equal(await paired.page.locator('#live-mobile-nav a[href="#inkorg"] .live-nav-count').innerText(),'1','Inbox has unobtrusive unread count');
-  assert.equal(await paired.page.locator('#live-mobile-nav a[href="#regler"] .live-nav-count').innerText(),'2','Rule tab shows only two requests requiring this parent's answer');
+  assert.equal(await paired.page.locator('#live-mobile-nav a[href="#regler"] .live-nav-count').innerText(),'2','Rule tab shows only requests awaiting the current viewer');
   assert.match(await paired.page.locator('#live-mobile-nav a[href="#regler"]').getAttribute('aria-label'),/2 obesvarade regelförslag/,'Navigation text announces the meaning of the count');
   await paired.page.getByRole('button',{name:'+ Föreslå en regel'}).click();
   const prompts=paired.page.locator('.schyssta-tips');
