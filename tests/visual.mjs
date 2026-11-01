@@ -507,6 +507,18 @@ try{
     schysstaSections.findIndex(t=>t==='Skriv ett eget förslag'),'Incoming requests are above compose');
   assert.equal(await paired.page.locator('#schyssta-rule-30000000-0000-4000-8000-000000000003 [data-schyssta-decision]').count(),0,
     'An accepted rule does not offer misleading approval or rejection buttons');
+  const review=paired.page.locator('#schyssta-rule-30000000-0000-4000-8000-000000000003 .schyssta-review');
+  assert.equal(await review.count(),1,'Agreed rules have an optional discussion guide');
+  await review.locator('summary').click();
+  assert.match(await review.innerText(),/Vad har fungerat bra för oss/,'Guide uses open questions, not compliance points');
+  await paired.page.evaluate(()=>Object.defineProperty(navigator,'clipboard',{configurable:true,value:{
+    writeText:async text=>{window.__HK_COPIED_RULES__=text;}
+  }}));
+  await paired.page.getByRole('button',{name:'Kopiera aktuella regler'}).click();
+  await paired.page.waitForFunction(()=>typeof window.__HK_COPIED_RULES__==='string');
+  const exported=await paired.page.evaluate(()=>window.__HK_COPIED_RULES__);
+  assert.match(exported,/Vi frågar innan vi lånar saker/,'Copy includes accepted rules');
+  assert.doesNotMatch(exported,/Vi får pausa gräl|Vi pratar om hur vi delar på sysslorna/,'Copy excludes proposals without two approvals');
   assert.equal(await paired.page.getByRole('button',{name:'Uppdatera listan'}).count(),1,
     'A paired test user can explicitly reload the list');
   assert.equal(await paired.page.locator('#live-mobile-nav a[href="#inkorg"] .live-nav-count').innerText(),'1','Inbox has unobtrusive unread count');
