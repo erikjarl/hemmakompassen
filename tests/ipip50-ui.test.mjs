@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
 import {IPIP50_V1} from '../personality/ipip50-v1.js';
 import {createPersonalityExperience} from '../personality/ipip50-ui.js';
 
@@ -139,4 +140,21 @@ test('two-person markers preserve independent x percentages when raw scores matc
   assert.match(html,/pf-score-other/);
   assert.match(html,/Normalmodell|normalmodell|normalfördelning/);
   assert.match(html,/50 ligger exakt i mitten och 75 vid tre fjärdedelar/);
+});
+
+test('public entry and nested personality modules share a cache-busting release version',async()=>{
+  const read=filename=>readFile(new URL('../'+filename,import.meta.url),'utf8');
+  const [html,app,personality]=await Promise.all([
+    read('index.html'),read('live-app.js'),read('personality/ipip50-ui.js')
+  ]);
+  const tag=html.match(/<meta name="hk-ui-version" content="([^"]+)">/);
+  assert.ok(tag,'Expected explicit app version metadata for cache troubleshooting');
+  const version=tag[1];
+  assert.match(version,/^[0-9]{8}-percentile-cachefix[0-9]+$/);
+  assert.ok(html.includes('./live-app.css?v='+version));
+  assert.ok(html.includes('./live-app.js?v='+version));
+  assert.ok(app.includes("./personality/ipip50-ui.js?v="+version));
+  assert.ok(personality.includes("./ipip50-reference.js?v="+version));
+  assert.ok(personality.includes('percentileChart(own,other)'));
+  assert.ok(personality.includes('percentileChart(own)'));
 });
