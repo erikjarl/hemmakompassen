@@ -40,6 +40,99 @@ let sharedUnderstandingRows=[],understandingShareError='';
 let schysstaSuggestions=[],schysstaRules=[],schysstaManualRules=[],schysstaNotifications=[],schysstaReplacementLinks=[],schysstaHistory=[],schysstaEndTarget=null,schysstaLoading=false,schysstaError='',schysstaRequest=0;
 let schysstaDraft='',schysstaDraftOpen=false,schysstaDraftKey=null,schysstaEditTarget=null,schysstaSubmitting=false,schysstaMessage='',schysstaCopyMessage='',schysstaFocusId='',schysstaSearch='',schysstaFilterStatus='all';
 const schysstaSaving=new Set();
+// Independent of agreement notifications: a current family's private 1:1 conversation.
+let familyChatMessages=[],familyChatUnread=0,familyChatLoading=false,familyChatLoadingOlder=false,
+  familyChatHasMore=false,familyChatError='',familyChatStatus='',familyChatDraft='',
+  familyChatRequestKey=null,familyChatSending=false,familyChatRequest=0,familyChatCountRequest=0;
+const familyChatTimestamp=timestamp=>new Intl.DateTimeFormat('sv-SE',{dateStyle:'medium',timeStyle:'short'}).format(new Date(timestamp));
+function validFamilyChatRows(rows){
+  return Array.isArray(rows)&&rows.length<=50
+    &&rows.every(m=>m&&typeof m==='object'&&!Array.isArray(m)
+      &&Object.keys(m).length===5
+      &&Object.keys(m).every(k=>['message_id','body','sent_by_me','created_at','read_at'].includes(k))
+      &&SCHYSSTA_UUID.test(m.message_id)&&typeof m.body==='string'&&m.body.length>=1&&m.body.length<=1500
+      &&typeof m.sent_by_me==='boolean'
+      &&typeof m.created_at==='string'&&!Number.isNaN(Date.parse(m.created_at))
+      &&(m.read_at===null||(typeof m.read_at==='string'&&!Number.isNaN(Date.parse(m.read_at)))))
+    &&new Set(rows.map(m=>m.message_id)).size===rows.length;
+}
+function clearFamilyChat(){
+  familyChatRequest++;familyChatCountRequest++;
+  familyChatMessages=[];familyChatUnread=0;familyChatLoading=false;familyChatLoadingOlder=false;
+  familyChatHasMore=false;familyChatError='';familyChatStatus='';familyChatDraft='';
+  familyChatRequestKey=null;familyChatSending=false;
+}
+async function fetchFamilyChatUnread(){
+  if(!user||members.length!==2){familyChatUnread=0;return;}
+  const request=++familyChatCountRequest,viewer=user.id,session=sharedSession;
+  let result;
+  try{result=await db.rpc('my_family_unread_message_count');}catch(e){result={error:e};}
+  if(request!==familyChatCountRequest||user?.id!==viewer||sharedSession!==session)return;
+  if(result?.error||!Number.isInteger(result?.data)||result.data<0){
+    familyChatUnread=0;
+  }else familyChatUnread=result.data;
+  if(['hem','regler'].includes(page()))render();
+  else menu();
+}
+async function fetchFamilyChat(older=false){
+  if(!user||members.length!==2)return;
+  if(older?(!familyChatHasMore||familyChatLoadingOlder||familyChatLoading):familyChatLoading)return;
+  const viewer=user.id,session=sharedSession,request=++familyChatRequest;
+  const oldest=older?familyChatMessages[familyChatMessages.length-1]:null;
+  familyChatError='';familyChatStatus='';
+  if(older)familyChatLoadingOlder=true;else familyChatLoading=true;
+  if(page()==='inkorg'&&!familyChatDraft.trim())render();
+  let result,timer;
+  try{
+    result=await Promise.race([
+      db.rpc('my_family_messages',{
+        p_before_created_at:oldest?.created_at||null,p_before_id:oldest?.message_id||null
+      }),
+      new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('Message request timed out')),15000);})
+    ]);
+  }catch(e){result={error:e};}
+  finally{clearTimeout(timer);}
+  if(request!==familyChatRequest||viewer!==user?.id||session!==sharedSession)return;
+  if(older)familyChatLoadingOlder=false;else familyChatLoading=false;
+  if(result?.error||!validFamilyChatRows(result.data)){
+    familyChatError='Kunde inte hämta meddelandena. Kontrollera anslutningen och försök igen.';
+    if(!older){familyChatMessages=[];familyChatHasMore=false;familyChatUnread=0;}
+  }else{
+    familyChatMessages=older?[...familyChatMessages,...result.data]:result.data;
+    familyChatHasMore=result.data.length===50;
+    if(!older&&page()==='inkorg'){
+      // Reading the conversation is not an approval of any proposal.
+      let marked;
+      try{marked=await db.rpc('mark_family_messages_read');}catch(e){marked={error:e};}
+      if(request!==familyChatRequest||viewer!==user?.id||session!==sharedSession)return;
+      if(!marked?.error&&Number.isInteger(marked?.data)&&marked.data>=0){
+        familyChatUnread=0;
+        // Refresh sender-side delivery/read ticks with later fetches, never forge remote approval.
+        familyChatMessages=familyChatMessages.map(m=>m.sent_by_me?m:{...m,read_at:m.read_at||new Date().toISOString()});
+      }else familyChatStatus='Meddelandena visas, men kunde inte markeras som lästa.';
+    }
+  }
+  if(page()==='inkorg'&&!familyChatDraft.trim())render();
+  else menu();
+}
+async function sendFamilyChatMessage(){
+  if(!user||members.length!==2||familyChatSending)return;
+  const body=familyChatDraft.trim();
+  if(!body||body.length>1500){familyChatStatus='Skriv ett meddelande med högst 1 500 tecken.';render();return;}
+  if(!familyChatRequestKey)familyChatRequestKey=crypto.randomUUID();
+  const viewer=user.id,session=sharedSession,token=familyChatRequestKey;
+  familyChatSending=true;familyChatStatus='Skickar meddelandet…';render();
+  let result;
+  try{result=await db.rpc('send_family_message',{p_body:body,p_request_key:token});}catch(e){result={error:e};}
+  if(viewer!==user?.id||session!==sharedSession)return;
+  familyChatSending=false;
+  if(result?.error||!SCHYSSTA_UUID.test(result?.data)){
+    familyChatStatus='Meddelandet kunde inte skickas. Försök igen – inget nytt meddelande skapas vid ett identiskt återförsök.';
+    render();return;
+  }
+  familyChatDraft='';familyChatRequestKey=null;familyChatStatus='Meddelandet har skickats.';
+  await fetchFamilyChat();
+}
 // A local, session-only pause never records a NO vote or changes shared data.
 const schysstaPausedIds=new Set();
 const understandingShares=new Set();
@@ -739,19 +832,51 @@ async function submitManualSchysstaRule(){
   await fetchSchysstaList();
 }
 function inboxView(){
-  if(!schysstaListEnabled)return '<h1>Inkorg</h1>'+card('<p>Inkorgen ansluts till era gemensamma förslag.</p>');
-  if(members.length!==2)return '<h1>Inkorg</h1>'+card('<p>Para ihop en förälder och en tonåring för att se gemensamma förfrågningar.</p>');
-  if(schysstaLoading)return '<h1>Inkorg</h1>'+card('<p role="status">Hämtar dina förfrågningar…</p>');
-  if(schysstaError)return '<h1>Inkorg</h1>'+card('<p role="alert">'+esc(schysstaError)+'</p><button class="live-button" id="schyssta-retry" type="button">Försök igen</button>');
-  const needs=schysstaNeedsAnswer();
-  const kinds={rule_proposed:'Nytt regelförslag',rule_accepted:'En regel har godkänts',rule_declined:'Ett regelförslag har avböjts',rule_withdrawn:'En överenskommelse har avslutats'};
-  const otherMember=members.find(member=>member.user_id!==user?.id);
-  const senderName=esc(otherMember?.display_name||(otherMember?.role==='parent'?'Din förälder':otherMember?.role==='teen'?'Din tonåring':'Den andra familjemedlemmen'));
-  const notificationHtml=schysstaNotifications.length?'<ul class="schyssta-list">'+schysstaNotifications.map(n=>'<li class="'+(n.read_at===null?'schyssta-unread':'')+'"><p><strong>'+kinds[n.kind]+'</strong>'+(n.read_at===null?' · Oläst':'')+'</p><p>'+esc(n.body)+'</p><p class="live-muted">Från: '+senderName+' · <time datetime="'+esc(n.created_at)+'">'+esc(new Intl.DateTimeFormat('sv-SE',{dateStyle:'medium',timeStyle:'short'}).format(new Date(n.created_at)))+'</time></p><div class="schyssta-actions"><button type="button" class="live-button" data-schyssta-open="'+n.agreement_id+'">Visa regeln</button>'+(n.read_at===null?'<button type="button" class="schyssta-secondary" data-schyssta-read="'+n.notification_id+'"'+(schysstaSaving.has(n.notification_id)?' disabled':'')+'>Markera som läst</button>':'')+'</div></li>').join('')+'</ul>':'<p class="live-muted">Inga meddelanden ännu.</p>';
-  return '<h1>Inkorg</h1><p>Förfrågningar som väntar på ditt svar.</p><button class="schyssta-secondary" type="button" data-schyssta-refresh>Uppdatera inkorgen</button>'+card(
-    '<h2>Behöver ditt svar'+(needs.length?' ('+needs.length+')':'')+'</h2>'
-    +(needs.length?'<ul class="schyssta-list">'+needs.map(row=>'<li><p>'+esc(row.body)+'</p><p class="live-muted">'+(row.source_card_id?'Från Gillaswajpen':'Manuellt regelförslag')+' · En förfrågan är inte ett godkännande.</p><button class="live-button" type="button" data-schyssta-open="'+row.agreement_id+'">Se och svara i Schyssta listan</button></li>').join('')+'</ul>':'<p class="live-muted">Du har inga regelförslag som väntar på svar just nu.</p>'))
-    +card('<h2>Meddelanden'+(schysstaUnreadCount()?' · '+schysstaUnreadCount()+' olästa':'')+'</h2>'+notificationHtml+(schysstaMessage?'<p role="status">'+esc(schysstaMessage)+'</p>':''))+'<p><a href="#regler">Öppna Schyssta listan</a></p>';
+  if(!user)return '<h1>Inkorg</h1>'+card('<p>Logga in för att läsa dina meddelanden.</p>');
+  if(members.length!==2)return '<h1>Inkorg</h1>'+card('<h2>Para ihop era konton</h2><p>Ni behöver vara en förälder och en tonåring i samma familj för att kunna skicka privata meddelanden.</p><a class="live-button" href="./konto.html">Hantera parning</a>');
+  const counterpart=members.find(m=>m.user_id!==user.id);
+  const otherName=esc(counterpart?.display_name||(counterpart?.role==='parent'?'Din förälder':'Din tonåring'));
+  const messages=familyChatMessages.slice().reverse();
+  const messageList=messages.length?'<ol class="family-chat-messages" aria-label="Er privata konversation">'
+    +messages.map(m=>'<li class="family-chat-bubble '+(m.sent_by_me?'family-chat-mine':'family-chat-theirs')+'">'
+      +'<p class="family-chat-author">'+(m.sent_by_me?'Du':otherName)+' · <time datetime="'+esc(m.created_at)+'">'+esc(familyChatTimestamp(m.created_at))+'</time></p>'
+      +'<p class="family-chat-text">'+esc(m.body)+'</p>'
+      +(m.sent_by_me?'<p class="family-chat-receipt">'+(m.read_at?'Läst':'Skickat')+'</p>':'')+'</li>').join('')+'</ol>'
+    :'<p class="live-muted">Inga meddelanden ännu. Skriv det första nedan.</p>';
+  const chat=card('<div class="family-chat"><h2>Privata meddelanden med '+otherName+'</h2>'
+    +'<p class="live-muted">Bara ni två i den aktuella familjeparningen kan läsa konversationen. Tidigare parningars meddelanden visas inte.</p>'
+    +(familyChatError?'<p role="alert">'+esc(familyChatError)+'</p>':'')
+    +(familyChatLoading?'<p role="status">Hämtar meddelanden…</p>':
+      '<div class="family-chat-history">'
+      +(familyChatHasMore?'<button type="button" class="schyssta-secondary" data-family-chat-more'+(familyChatLoadingOlder?' disabled':'')+'>Visa äldre meddelanden</button>':'')
+      +messageList+'</div>')
+    +'<form id="family-chat-form" class="family-chat-form">'
+    +'<label for="family-chat-body">Skriv till '+otherName+'</label>'
+    +'<textarea id="family-chat-body" rows="3" maxlength="1500" required placeholder="Skriv ett meddelande…" aria-describedby="family-chat-help">'+esc(familyChatDraft)+'</textarea>'
+    +'<p id="family-chat-help" class="live-muted">Skickas bara när du väljer Skicka. Ctrl/⌘ + Enter fungerar också.</p>'
+    +'<div class="family-chat-compose-actions"><button type="submit" class="live-button"'+(familyChatSending?' disabled':'')+'>'+(familyChatSending?'Skickar…':'Skicka meddelande')+'</button>'
+    +'<button type="button" class="schyssta-secondary" data-family-chat-refresh>Uppdatera konversationen</button></div></form>'
+    +(familyChatStatus?'<p role="status" class="schyssta-feedback">'+esc(familyChatStatus)+'</p>':'')
+    +'</div>');
+  const needs=(!schysstaLoading&&!schysstaError&&schysstaListEnabled)?schysstaNeedsAnswer():[];
+  const kinds={rule_proposed:'Nytt regelförslag',rule_accepted:'En regel har godkänts',
+    rule_declined:'Ett regelförslag har avböjts',rule_withdrawn:'En överenskommelse har avslutats'};
+  const noticeHtml=schysstaNotifications.length?'<ul class="schyssta-list">'
+    +schysstaNotifications.map(n=>'<li class="'+(n.read_at===null?'schyssta-unread':'')+'"><p><strong>'+kinds[n.kind]+'</strong>'+(n.read_at===null?' · Oläst':'')+'</p>'
+      +'<p>'+esc(n.body)+'</p><p class="live-muted"><time datetime="'+esc(n.created_at)+'">'+esc(familyChatTimestamp(n.created_at))+'</time></p>'
+      +'<div class="schyssta-actions"><button type="button" class="live-button" data-schyssta-open="'+n.agreement_id+'">Visa regeln</button>'
+      +(n.read_at===null?'<button type="button" class="schyssta-secondary" data-schyssta-read="'+n.notification_id+'">Markera som läst</button>':'')+'</div></li>').join('')+'</ul>'
+    :'<p class="live-muted">Inga regelhändelser ännu.</p>';
+  const rules=!schysstaListEnabled?''
+    :schysstaLoading?card('<p role="status">Hämtar regelförfrågningar…</p>')
+    :schysstaError?card('<p role="alert">'+esc(schysstaError)+'</p><button type="button" class="schyssta-secondary" id="schyssta-retry">Försök igen</button>')
+    :card('<h2>Regelförfrågningar'+(needs.length?' ('+needs.length+')':'')+'</h2>'
+      +(needs.length?'<ul class="schyssta-list">'+needs.map(row=>'<li><p>'+esc(row.body)+'</p><button type="button" class="live-button" data-schyssta-open="'+row.agreement_id+'">Se och svara i Schyssta listan</button></li>').join('')+'</ul>'
+        :'<p class="live-muted">Inga regelförslag väntar på ditt svar.</p>')
+      +'<h3>Händelser från Schyssta listan'+(schysstaUnreadCount()?' · '+schysstaUnreadCount()+' olästa':'')+'</h3>'
+      +noticeHtml+'<p><a href="#regler">Öppna Schyssta listan</a></p>');
+  return '<h1>Inkorg</h1><p>Här kan ni skriva privata meddelanden till varandra och hantera gemensamma regelförfrågningar.</p>'
+    +chat+rules;
 }
 async function fetchSchysstaList(){
   const request=++schysstaRequest,viewer=user?.id,session=sharedSession;
