@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createHandler, DAILY_LIMIT, MODEL } from '../workers/ai-mediator/src/index.mjs';
+import { createHandler, DAILY_LIMIT, MODEL, safetyResponse } from '../workers/ai-mediator/src/index.mjs';
 
 const ORIGIN = 'https://erikjarl.github.io';
 const USER_A = '11111111-1111-4111-8111-111111111111';
@@ -114,4 +114,29 @@ test('GET är inte en genväg till AI',async()=>{
   const x=harness();
   assert.equal((await x.handler(req({method:'GET'}),x.env)).status,405);
   assert.equal(x.seen.model.length,0);
+});
+
+test('explicit suicide risk is never forwarded to the language model',async()=>{
+  const x=harness();
+  const response=await x.handler(request({body:{message:'Jag är 15 år och vill inte leva längre.'}}),x.env);
+  assert.equal(response.status,200);
+  const data=await response.json();
+  assert.equal(data.safetyNotice,true);
+  assert.match(data.reply,/112/);
+  assert.match(data.reply,/116 111/);
+  assert.equal(x.seen.model.length,0);
+});
+test('explicit threat from a parent never triggers an unsafe mediation prompt',async()=>{
+  const x=harness();
+  const response=await x.handler(request({body:{message:'Min pappa hotar att slå mig.'}}),x.env);
+  assert.equal(response.status,200);
+  const data=await response.json();
+  assert.equal(data.safetyNotice,true);
+  assert.match(data.reply,/trygghet/);
+  assert.match(data.reply,/112/);
+  assert.equal(x.seen.model.length,0);
+});
+test('safety detection is narrow and does not intercept an ordinary disagreement',()=>{
+  assert.equal(safetyResponse('Vi bråkar om läxor och tvätt.'),null);
+  assert.equal(safetyResponse('Jag vill leva ett självständigare liv.'),null);
 });
