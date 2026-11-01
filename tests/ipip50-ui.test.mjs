@@ -196,9 +196,9 @@ test('parent/teen-specific narratives are generated only from authorized sums an
 test('parent sees a distinct narrative for the same shared scores',async()=>{
   const mock=fakeClient(new Map(itemIds.map(id=>[id,3])));
   const parent=Object.fromEntries(IPIP50_V1.factors.map(f=>[f.id,30]));
-  parent.conscientiousness=47;
+  const teen={...parent,conscientiousness:47};
   mock.setPartner({instrument_id:IPIP50_V1.id,viewer_role:'parent',profiles:[
-    {role:'parent',scores:parent},{role:'teen',scores:Object.fromEntries(IPIP50_V1.factors.map(f=>[f.id,30]))}
+    {role:'parent',scores:parent},{role:'teen',scores:teen}
   ]});
   const ui=createPersonalityExperience({db:mock.db,onRender:()=>{},isSharingEnabled:true});
   ui.reset('teen-id');await ui.load('teen-id');
