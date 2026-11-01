@@ -32,7 +32,8 @@ function harness(){
       assert.ok(messages.has(chatId),'must send selected server-side chat id');
       const reply='Svar på: '+message;
       messages.get(chatId).push({role:'user',body:message},{role:'assistant',body:reply});
-      chats.find(x=>x.id===chatId).title=message.slice(0,70);
+      const entry=chats.find(x=>x.id===chatId);
+      if(entry.title==='Nytt samtal')entry.title=message.slice(0,70);
       return response({reply,chatId,ephemeral:false,remainingToday:9});
     }
     throw new Error('Unexpected API call '+opts.method+' '+url);
