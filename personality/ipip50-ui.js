@@ -1,6 +1,7 @@
 import {IPIP50_V1} from './ipip50-v1.js';
 import {scoreIPIP50} from './ipip50-scoring.js';
 import {buildIPIP50FamilyInsights} from './ipip50-family-insights.js?v=20261101-family-insights1';
+import {richFamilyReflection} from './ipip50-family-copy.js?v=20261101-family-reflections2';
 import {IPIP50_REFERENCE,IPIP50_PERCENTILE_BANDS,approximateReferencePercentile,referenceLimits,describeReferenceProfile,formatSv} from './ipip50-reference.js?v=20261101-family-insights1';
 import {loadMyIPIP50Answers,saveMyIPIP50Answer} from './ipip50-storage.js';
 
@@ -145,39 +146,51 @@ function table(self,other=null){
     }).join('')+'</tbody></table></div>';
 }
 
-function familyReflectionPanel(parentProfile,teenProfile){
+function familyReflectionPanel(parentProfile,teenProfile,viewerRole){
   const parent=Object.fromEntries(FACTORS.map(f=>[f.id,parentProfile.byFactor[f.id].sum]));
   const teen=Object.fromEntries(FACTORS.map(f=>[f.id,teenProfile.byFactor[f.id].sum]));
   const summary=buildIPIP50FamilyInsights({parent,teen});
-  const diffs=summary.featuredDifferences;
-  const similarities=summary.featuredSimilarities;
-  const labels=items=>items.map(i=>'”'+i.label.toLowerCase()+'”').join(', ').replace(/, ([^,]+)$/,' och $1');
-  const lead=diffs.length
-    ?'I era svar framträder särskilt skillnader kring '+esc(labels(diffs))+'. Det kan vara bra ämnen att förstå varandras perspektiv på.'
-    :'Ingen av de fem skalorna visar en tydlig skillnad enligt våra samtalsgränser.';
-  const similarityLead=similarities.length
-    ?'Ni beskriver er samtidigt ganska lika inom '+esc(labels(similarities))+'. Det kan vara utgångspunkter för gemensam förståelse.'
-    :'Det finns ingen skala där era resultat ligger särskilt nära enligt våra samtalsgränser. Ni kan ändå dela mycket i vardagen.';
-  const paragraph=(item)=>'<article class="pf-insight-card pf-insight-'+esc(item.status)+'">'+
-    '<h5>'+esc(item.label)+'</h5>'+
-    '<p>'+esc(item.observation)+' '+esc(item.suggestion)+'</p>'+
-    '<p class="pf-insight-question"><strong>Att prata om:</strong> '+esc(item.question)+'</p></article>';
-  const extra=[...summary.notable.slice(diffs.length),...summary.similar.slice(similarities.length),...summary.moderate]
-    .sort((a,b)=>b.absoluteDifference-a.absoluteDifference||a.order-b.order);
-  return '<section class="pf-family-reflections" aria-label="Anpassade reflektioner om era två profiler">'+
-    '<h3>Vad era profiler kan säga om samspelet</h3>'+
-    '<p class="pf-insight-intro">'+lead+' '+similarityLead+'</p>'+
-    '<div class="pf-insight-group"><h4>Skillnader att utforska</h4>'+
-    (diffs.length?diffs.map(paragraph).join(''):
-      '<p>Ni har inga större skillnader i självskattningarna enligt våra gränser. Det betyder inte att ni alltid fungerar på samma sätt.</p>')+'</div>'+
-    '<div class="pf-insight-group"><h4>Likheter att bygga vidare på</h4>'+
-    (similarities.length?similarities.map(paragraph).join(''):
-      '<p>Inga skalor är så lika att vi lyfter dem särskilt. Prata gärna om situationer där ni ändå känner igen er i varandra.</p>')+'</div>'+
-    (extra.length?'<details class="pf-insight-more"><summary>Fler nyanser från de fem skalorna ('+extra.length+')</summary>'+
-      '<div>'+extra.map(paragraph).join('')+'</div></details>':'')+
-    '<details class="pf-insight-method"><summary>Hur väljs likheter och skillnader ut?</summary>'+
-    '<p>Varje skala består av tio påståenden (10–50 poäng). Vi räknar 0–3 råpoängs skillnad som liknande svar, 4–8 som viss skillnad och 9 eller fler som tydlig skillnad. Skillnader från 15 poäng prioriteras högre. De viktigaste exemplen visas först, upp till tre i varje grupp.</p>'+
-    '<p>Gränserna är <strong>redaktionella tumregler</strong> för samtal, inte vetenskapligt validerade gränser eller statistiska signifikanstester. Vi jämför två personers egna svar, inte deras percentiler. Ålder, situation och hur man tolkar påståendena kan påverka svaren. Den svenska versionen är inte validerad för ungdomar. Föräldern har ett större ansvar för relationen och för sin egen känsloreglering.</p>'+
+  const parentView=viewerRole==='parent';
+  const roleHeading=parentView?'För dig som förälder':'För dig som tonåring';
+  const roleIntro=parentView
+    ?'Skillnader kan skapa missförstånd även när båda vill väl. Som vuxen har du ett särskilt ansvar att lyssna, erbjuda stöd och anpassa dina förväntningar. Använd texterna som förslag att pröva, inte som sanningar om er.'
+    :'Det kan vara svårt när du och din förälder tänker, reagerar eller planerar olika. Dina behov får också ta plats, och du ska inte ensam behöva lösa konflikter. Texterna ger idéer att prova, inte facit på hur ni är.';
+  const formatTitle=items=>items.map(i=>'”'+i.label.toLowerCase()+'”').join(', ').replace(/, ([^,]+)$/,' och $1');
+  const big=summary.notable; // All qualifying differences, largest first.
+  const close=summary.similar; // All qualifying similarities, closest first.
+  const lead=big.length
+    ?'Störst skillnader i era svar syns inom '+esc(formatTitle(big))+'. Skillnaderna kan vara värda att utforska, men behöver inte innebära något problem.'
+    :'Era fem självskattningar visar ingen tydlig skillnad enligt våra preliminära gränser.';
+  const similarities=close.length
+    ?'Ni beskriver er samtidigt ganska lika inom '+esc(formatTitle(close))+'. Det kan ge en gemensam utgångspunkt.'
+    :'Ingen skala ligger inom vår gräns för särskilt liknande svar. Ni kan ändå känna igen er i varandra på många sätt.';
+  const story=(item,index)=>{
+    const detail=richFamilyReflection(item,viewerRole);
+    const type=item.status==='similarity'?'Likhet att bygga vidare på':item.status==='notable'?'Skillnad att utforska':'Ytterligare en nyans';
+    const opening=item.status==='similarity'?'<p class="pf-reflection-context">'+esc(item.observation)+'</p>':'';
+    return '<article class="pf-insight-card pf-insight-'+esc(item.status)+'">'+
+      '<div class="pf-insight-header"><span class="pf-insight-type">'+esc(type)+'</span><h5>'+esc(item.label)+'</h5></div>'+
+      opening+'<p class="pf-insight-narrative">'+esc(detail.paragraph)+'</p>'+
+      '<p class="pf-insight-question"><strong>En fråga att ta med er:</strong> '+esc(item.question)+'</p>'+
+      '<div class="pf-insight-resource"><a href="'+esc(detail.resource.href)+'">Utforska i '+esc(detail.resource.title)+'</a>'+
+      '<p>'+esc(detail.resource.instruction)+'</p></div></article>';
+  };
+  const moderate=summary.moderate; // No arbitrary promotion to "large difference".
+  return '<section class="pf-family-reflections" aria-label="Personlig återkoppling om era profiler">'+
+    '<h3>Att förstå era likheter och olikheter</h3>'+
+    '<p class="pf-insight-audience">'+esc(roleHeading)+'</p>'+
+    '<p class="pf-insight-intro">'+esc(roleIntro)+'</p>'+
+    '<p class="pf-insight-overview">'+lead+' '+similarities+'</p>'+
+    '<div class="pf-insight-group"><h4>Skillnader som kan vara värda att prata om</h4>'+
+    (big.length?big.map(story).join(''):'<p class="pf-insight-empty">Här finns inga stora skillnader att lyfta fram. I vardagen kan ni ändå ha olika önskemål, även om ni svarat liknande.</p>')+
+    '</div><div class="pf-insight-group"><h4>Likheter som kan hjälpa er</h4>'+
+    (close.length?close.map(story).join(''):'<p class="pf-insight-empty">Ingen skala ligger särskilt nära enligt vår gräns. Det säger inte att ni saknar gemensamma intressen eller värderingar.</p>')+
+    '</div>'+
+    (moderate.length?'<details class="pf-insight-more"><summary>Även andra skillnader kan vara intressanta ('+moderate.length+')</summary>'+
+      moderate.map(story).join('')+'</details>':'')+
+    '<details class="pf-insight-method"><summary>Vad bygger tolkningen på?</summary>'+
+    '<p>Skalorna jämför bara era summerade självskattningar: 0–3 råpoängs skillnad lyfts som likhet, 4–8 som viss skillnad och minst 9 som tydlig skillnad; från 15 poäng får skillnaden högre prioritet. Det är redaktionella sorteringsgränser, <strong>inte</strong> validerade kliniska eller statistiska gränsvärden. Den svenska testversionen är inte validerad för tonåringar.</p>'+
+    '<p>Råden är möjliga vardagsscenarier och samtalsförslag, inte bedömningar av er relation. Vissa funktioner och kortlekar kan kräva en parad familj och att de är upplåsta. AI-medlaren är ännu under utveckling och används därför inte som färdigt verktyg här.</p>'+
     '</details></section>';
 }
 
@@ -277,7 +290,7 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false}
       // Compare five authorized sums; raw questionnaire answers remain private.
       const parentProfile=role==='parent'?own:other;
       const teenProfile=role==='teen'?own:other;
-      const reflections=familyReflectionPanel(parentProfile,teenProfile);
+      const reflections=familyReflectionPanel(parentProfile,teenProfile,role);
       comparison='<section class="live-panel pf-comparison"><h2>Våra profiler</h2><p>Två självskattningar jämförda med samma amerikanska vuxenreferens. Placeringarna är uppskattningar, inte svenska normer.</p>'+
         
         percentileChart(own,other)+reflections+table(own,other)+referenceFeedback(other,'Den andras')+referenceCaveat()+
