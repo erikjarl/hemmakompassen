@@ -1,20 +1,36 @@
-# Automatiserade visuella tester
+# Hemmakompassen – automatiska tester (status 1 november 2026)
 
-GitHub Actions kör grundläggande funktions- och webbläsartester vid en push till main eller en pull request.
+Detta är **testmiljön för kod och UI**, inte bevis för att verkliga familjeflöden fungerar. Se [aktuell utvecklingskö](../docs/CURRENT_TASKS.md) och [ROADMAP](../ROADMAP.md).
 
-Kör lokalt:
+## GitHub Actions
 
-    node --test tests/smoke.test.cjs tests/password-auth.test.mjs tests/family-pairing.test.cjs tests/family-rls-migration.test.cjs tests/shared-swipe-migration.test.cjs tests/live-swipe-persistence.test.mjs
-    npm install --no-save playwright
-    npx playwright install chromium
-    node tests/visual.mjs
+- `../.github/workflows/ui-tests.yml` kör Node-/kontraktstester, statisk build, Playwright och mobil-/desktopskärmbilder vid PR och push till `main`.
+- `../.github/workflows/shared-swipe-db-tests.yml` kör PostgreSQL 17 + pgTAP med **syntetiska familjer och ett disponibelt schema** för Gillaswajpens serverkontrakt och flera migrationskedjor: prioritet, B-delning, Schyssta listan inklusive notiser/versioner/arkiv samt privata familjemeddelanden.
 
-Playwright öppnar en lokal webbserver och testar mobil (390 px) och dator (1440 px). Skärmbilder för båda formaten sparas i artifacts/ och som GitHub Actions-artifact.
+Kör lokalt från projektroten:
 
-Testerna använder endast syntetiska testprofiler. Den inloggade Playwright-vyn använder en mockad Supabase-klient och kontaktar inte den riktiga databasen. Gillaswajpens webbläsartest kontrollerar dessutom att ett syntetiskt svar skickas som en upsert med stabilt kort-id. Ett separat syntetiskt par verifierar att **endast gemensamma ja** visas, även om ett felaktigt RPC-svar innehåller gemensamma nej; okända kort ignoreras och gamla matchningar döljs vid RPC-fel. Bilderna innehåller inte riktiga användaruppgifter.
+```bash
+node --test tests/*.test.mjs
+npm run build
+npm install --no-save playwright
+npx playwright install chromium
+node tests/visual.mjs
+```
 
-`supabase/tests/shared_swipe_matches.sql` körs automatiskt som 52 pgTAP-assertioner i en tillfällig PostgreSQL 17-miljö via `.github/workflows/shared-swipe-db-tests.yml` utan Supabase-kostnad. Migrationskedjan slutar med `20261030090000_shared_swipe_all_a_only.sql`, som kräver JA+JA från ett exakt förälder–tonåringspar och servervitlistar dagens 265 A-kort i alla sju kortlekar; B, NEJ, oenighet, ensidiga svar, okända/felplacerade kort och andra familjer ska aldrig returneras. Migrationen är inte automatiskt applicerad på produktion. Migration `20261024094338_allow_self_only_swipe_upsert_key_columns.sql` reparerar full-row upsert utan att ändra self-only RLS; en kontroll uppdaterar en syntetisk rad inom en transaktion som rullas tillbaka. Den syntetiska fixturefilen `supabase/tests/fixtures/shared_swipe_contract_schema.sql` efterliknar bara tabeller och auth som denna RPC behöver; den är inte en fullständig Supabase-miljö eller en verifiering av produktionsschemat. Övriga pgTAP-tester (`family_rls_isolation.sql` och `merge_empty_singleton_family.sql`) måste fortfarande köras i en komplett testmiljö. Kör aldrig testfixture mot produktionsprojektet. Testerna använder endast syntetiska familjer för att kontrollera isolering, oenighet, ensidiga svar och säker sammanslagning av två tomma enfamiljer. De får inte köras direkt mot produktionsprojektet.
+**Observera:** vissa andra automatiska tester använder `.cjs` och ingår i GitHub-arbetsflödets explicita testkommando; den lokala genvägen ovan täcker inte nödvändigtvis varje test. Följ arbetsflödets kommandorad för exakt full svit.
 
-Viktigt: automatiska tester verifierar funktion och vissa layoutmått. Bilderna måste också granskas visuellt – skärmbildernas existens garanterar inte god formgivning.
+## Vad testerna täcker
 
-Webbläsartesterna återställer scrollposition, släpper tangentbordsfokus och väntar ut tillfälliga aviseringar innan skärmbilder tas. En ofokuserad tangentbordslänk får inte ligga över innehållet. Artifact innehåller också `visual-audit.json` (commit, bildnamn, viewport och automatiska layoutkontroller). En grön körning innebär inte automatisk visuell AI-granskning; den schemalagda uppgiften ska ladda ned ZIP och verkligen granska PNG-bilderna.
+- Gillaswajpen: enskilda svar och status, tillåtna A JA+JA, skydd mot otillåtna/okända svar, familjeisolering och överhoppning.
+- Schyssta listan: föreslagna/antagna/avslutade regler, dubbelgodkännande, ändringar, omparning och behöriga regelnotiser.
+- Inkorg: syntetiska privata meddelanden i båda riktningar, read/unread, läskvittenser, sessionsbyte och avvisning av felaktig data.
+- IPIP-50: 50 frågor, poängberäkning, referensbeskrivning, positionsgeometri för P50/P75, privat sparning, samtyckesstyrd tvåprofilvisning, rollanpassade reflektioner och giltiga hänvisningar till befintliga kortlekar.
+- Playwright: mobil 320/390 px samt desktop i Chromium med mockad Supabase-klient; exempel på vyer och bilder för personlighet med en eller två profiler.
+
+Testerna ska **aldrig** skriva i produktionsdatabasen eller ändra verkliga användares svar. Syntetiska fixtures är **inte** en fullständig Supabase-installation. En migrationsfil som ligger i repo eller klarar pgTAP är inte per automatik installerad i den riktiga databasen. Nuvarande installationsuppgifter finns i dokumenterade databasgenomgångar i ROADMAP, men slutlig autentiserad verifiering av två riktiga testkonton återstår för flera delsystem.
+
+## Granskning och bevis
+
+Playwright lägger skärmbilder och `visual-audit.json` i `artifacts/` och laddar upp dem som GitHub Actions-artifact. **Grön CI betyder inte automatiskt godkänd visuell design eller säker extern lansering.** Kontrollera det faktiska utfallet och bilderna, notera exakt commit, testmiljö och vad som inte har kontrollerats.
+
+Den tidigare noteringen om att sista matchningsmigrationen ”inte är installerad” var en äldre status före den dokumenterade 30 oktober-installationen. Utgå från nya, explicit verifierade statusuppgifter i ROADMAP och [CURRENT_TASKS.md](../docs/CURRENT_TASKS.md), och kontrollera riktiga databasen innan nya påståenden om livefunktioner.
