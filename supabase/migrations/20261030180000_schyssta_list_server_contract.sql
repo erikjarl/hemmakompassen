@@ -1,6 +1,7 @@
 -- Schyssta listan: secure, family-isolated server contract for suggestions
 -- derived from mutual A matches and separate explicit decisions by both users.
--- Review-only migration: do not apply to production automatically.
+-- Install only after reviewing the active schema and family isolation.
+-- Existing agreements and swipe answers are not rewritten.
 
 create schema if not exists private;
 revoke all on schema private from public;
@@ -54,7 +55,11 @@ revoke all on function private.current_exact_pair_family_id() from public, anon,
 
 alter table public.agreements
   add column if not exists source_deck_id text,
-  add column if not exists source_card_id text;
+  add column if not exists source_card_id text,
+  add column if not exists paired_parent_id uuid,
+  add column if not exists paired_teen_id uuid,
+  add column if not exists paired_parent_joined_at timestamptz,
+  add column if not exists paired_teen_joined_at timestamptz;
 
 do $$
 begin
@@ -73,8 +78,10 @@ end
 $$;
 
 create unique index if not exists agreements_family_source_unique
-  on public.agreements (family_id,source_deck_id,source_card_id)
-  where source_deck_id is not null and source_card_id is not null;
+  on public.agreements (
+    family_id,source_deck_id,source_card_id,
+    paired_parent_id,paired_teen_id,paired_parent_joined_at,paired_teen_joined_at
+  ) where source_deck_id is not null and source_card_id is not null;
 
 alter table public.agreements enable row level security;
 alter table public.agreement_approvals enable row level security;
@@ -92,7 +99,9 @@ as $$
     select
       family_id,
       (array_agg(user_id) filter (where role = 'parent'))[1] as parent_id,
-      (array_agg(user_id) filter (where role = 'teen'))[1] as teen_id
+      (array_agg(user_id) filter (where role = 'teen'))[1] as teen_id,
+      (array_agg(joined_at) filter (where role = 'parent'))[1] as parent_joined_at,
+      (array_agg(joined_at) filter (where role = 'teen'))[1] as teen_joined_at
     from public.family_members
     where family_id = private.current_exact_pair_family_id()
     group by family_id
@@ -116,6 +125,10 @@ as $$
       where existing.family_id = pair.family_id
         and existing.source_deck_id = 'regler'
         and existing.source_card_id = catalog.card_id
+        and existing.paired_parent_id = pair.parent_id
+        and existing.paired_teen_id = pair.teen_id
+        and existing.paired_parent_joined_at = pair.parent_joined_at
+        and existing.paired_teen_joined_at = pair.teen_joined_at
     )
   order by catalog.card_id
 $$;
@@ -133,6 +146,8 @@ declare
   v_body text;
   v_parent_id uuid;
   v_teen_id uuid;
+  v_parent_joined_at timestamptz;
+  v_teen_joined_at timestamptz;
   v_agreement_id uuid;
 begin
   if v_user_id is null then
@@ -153,8 +168,10 @@ begin
 
   select
     (array_agg(member.user_id) filter (where member.role = 'parent'))[1],
-    (array_agg(member.user_id) filter (where member.role = 'teen'))[1]
-  into v_parent_id, v_teen_id
+    (array_agg(member.user_id) filter (where member.role = 'teen'))[1],
+    (array_agg(member.joined_at) filter (where member.role = 'parent'))[1],
+    (array_agg(member.joined_at) filter (where member.role = 'teen'))[1]
+  into v_parent_id, v_teen_id, v_parent_joined_at, v_teen_joined_at
   from public.family_members as member
   where member.family_id = v_family_id;
 
@@ -175,9 +192,11 @@ begin
   end if;
 
   insert into public.agreements (
-    family_id, proposed_by, body, status, source_deck_id, source_card_id
+    family_id, proposed_by, body, status, source_deck_id, source_card_id,
+    paired_parent_id,paired_teen_id,paired_parent_joined_at,paired_teen_joined_at
   ) values (
-    v_family_id, v_user_id, v_body, 'proposed', 'regler', p_card_id
+    v_family_id, v_user_id, v_body, 'proposed', 'regler', p_card_id,
+    v_parent_id,v_teen_id,v_parent_joined_at,v_teen_joined_at
   )
   returning id into v_agreement_id;
 
@@ -209,7 +228,11 @@ as $$
     agreement.id,
     agreement.source_card_id,
     agreement.body,
-    agreement.status,
+    case
+      when parent_vote.approved is false or teen_vote.approved is false then 'rejected'
+      when parent_vote.approved is true and teen_vote.approved is true then 'accepted'
+      else 'proposed'
+    end as status,
     agreement.proposed_by = (select auth.uid()),
     own_vote.approved,
     parent_vote.approved,
@@ -231,6 +254,11 @@ as $$
     and agreement.family_id = private.current_exact_pair_family_id()
     and agreement.source_deck_id = 'regler'
     and agreement.source_card_id is not null
+    and agreement.status <> 'withdrawn'
+    and agreement.paired_parent_id = parent_member.user_id
+    and agreement.paired_teen_id = teen_member.user_id
+    and agreement.paired_parent_joined_at = parent_member.joined_at
+    and agreement.paired_teen_joined_at = teen_member.joined_at
   order by agreement.created_at, agreement.id
 $$;
 
@@ -255,9 +283,18 @@ begin
   v_family_id := private.current_exact_pair_family_id();
   if v_family_id is null or not exists (
     select 1 from public.agreements as agreement
+    join public.family_members as current_parent
+      on current_parent.family_id = agreement.family_id and current_parent.role = 'parent'
+    join public.family_members as current_teen
+      on current_teen.family_id = agreement.family_id and current_teen.role = 'teen'
     where agreement.id = p_agreement_id
       and agreement.family_id = v_family_id
       and agreement.source_deck_id = 'regler'
+      and agreement.status <> 'withdrawn'
+      and agreement.paired_parent_id = current_parent.user_id
+      and agreement.paired_teen_id = current_teen.user_id
+      and agreement.paired_parent_joined_at = current_parent.joined_at
+      and agreement.paired_teen_joined_at = current_teen.joined_at
   ) then
     raise exception 'agreement is not available to this family pair' using errcode = '42501';
   end if;
@@ -271,6 +308,8 @@ begin
   set status = case
     when exists (
       select 1 from public.agreement_approvals as vote
+      join public.family_members as current_member
+        on current_member.user_id = vote.user_id and current_member.family_id = v_family_id
       where vote.agreement_id = p_agreement_id and vote.approved is false
     ) then 'rejected'
     when (
@@ -302,4 +341,4 @@ comment on function public.propose_schyssta_rule(text) is
 comment on function public.my_schyssta_rules() is
   'Returns only the caller pair shared rule proposals and role decisions without user identifiers.';
 comment on function public.set_schyssta_rule_decision(uuid,boolean) is
-  'Stores only the caller own explicit decision; accepted requires two current family-member approvals.';
+  'Stores only the caller own explicit decision; accepted requires two current family-member approvals bound to their current pairing.';

@@ -156,15 +156,15 @@ jobs:
             exit 1
           fi
           test "$(grep -Ec '^ok [0-9]+' /tmp/shared-understanding-test.log)" -eq 28
-      - name: Assert 22 Schyssta listan pgTAP results
+      - name: Assert 25 Schyssta listan pgTAP results
         shell: bash
         run: |
           set -euo pipefail
           docker exec -i "${{ job.services.postgres.id }}" \
             psql -U postgres -d postgres -v ON_ERROR_STOP=1 -X -q -A -t \
             < supabase/tests/schyssta_list_server_contract.sql | tee /tmp/schyssta-list-test.log
-          grep -qx '1..22' /tmp/schyssta-list-test.log
+          grep -qx '1..25' /tmp/schyssta-list-test.log
           if grep -Eq '^(not ok|# Looks like you failed)' /tmp/schyssta-list-test.log; then
             exit 1
           fi
-          test "$(grep -Ec '^ok [0-9]+' /tmp/schyssta-list-test.log)" -eq 22
+          test "$(grep -Ec '^ok [0-9]+' /tmp/schyssta-list-test.log)" -eq 25

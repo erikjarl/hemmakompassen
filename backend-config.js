@@ -15,8 +15,8 @@ window.HEMMAKOMPASSEN_BACKEND = Object.freeze({
   // Separate explicit-consent B channel. Keep OFF until its migration and
   // authenticated teen/parent consent and revocation tests are approved.
   enableSharedUnderstanding: false,
-  // Schyssta listan uses four narrow authenticated RPCs. Keep OFF until the
-  // review-only migration and a real two-account isolation test are approved.
+  // Schyssta listan's four authenticated RPCs were installed on 2026-11-01.
+  // Keep OFF until real two-account isolation and revocation tests pass.
   enableSchysstaList: false,
   // Until auth, family membership and privacy tests pass, the public UI remains a demo.
   liveModeEnabled: false
