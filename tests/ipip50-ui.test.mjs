@@ -150,7 +150,7 @@ test('public entry and nested personality modules share a cache-busting release 
   const tag=html.match(/<meta name="hk-ui-version" content="([^"]+)">/);
   assert.ok(tag,'Expected explicit app version metadata for cache troubleshooting');
   const version=tag[1];
-  assert.match(version,/^\\d{8}-percentile-cachefix\\d+$/);
+  assert.match(version,/^[0-9]{8}-percentile-cachefix[0-9]+$/);
   assert.ok(html.includes('./live-app.css?v='+version));
   assert.ok(html.includes('./live-app.js?v='+version));
   assert.ok(app.includes("./personality/ipip50-ui.js?v="+version));
