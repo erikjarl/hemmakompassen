@@ -100,8 +100,10 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
           {card_id:'regler-02',body:'Falsk text som aldrig får visas.'},
           {card_id:'regler-99',body:'Okänd privat uppgift'}
         ];
+        let schysstaReplacementLinks=[];
         let schysstaNotifications=[{notification_id:'40000000-0000-4000-8000-000000000001',agreement_id:'30000000-0000-4000-8000-000000000001',kind:'rule_proposed',body:'Vi pratar om hur vi delar på sysslorna.',read_at:null,created_at:'2026-10-30T12:00:01Z'}];
         let schysstaManualRules=[{agreement_id:'30000000-0000-4000-8000-000000000001',body:'Vi pratar om hur vi delar på sysslorna.',status:'proposed',agreement_version:1,proposed_by_me:false,own_decision:null,parent_decision:null,teen_decision:null,created_at:'2026-10-30T12:00:00Z'}];
+        schysstaManualRules.push({agreement_id:'30000000-0000-4000-8000-000000000003',body:'Vi frågar innan vi lånar saker.',status:'accepted',agreement_version:1,proposed_by_me:false,own_decision:true,parent_decision:true,teen_decision:true,created_at:'2026-10-30T12:00:00Z'});
         let schysstaRules=[{agreement_id:'20000000-0000-4000-8000-000000000001',source_card_id:'regler-03',body:'Vi får pausa gräl och bestämmer när vi pratar vidare.',status:'proposed',proposed_by_me:false,own_decision:null,parent_decision:null,teen_decision:true,created_at:'2026-10-30T12:00:00Z'}];
         return {
           auth:{
@@ -160,6 +162,15 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
             }
             if(name==='shared_schyssta_rule_suggestions')return {data:window.__HK_TEST_PAIRED__?(window.__HK_SCHYSSTA_CLEAN_RPC__===true?schysstaSuggestions.filter(row=>row.card_id==='regler-01'):schysstaSuggestions):[],error:null};
             if(name==='my_schyssta_rules')return {data:window.__HK_TEST_PAIRED__?schysstaRules:[],error:null};
+            if(name==='my_schyssta_replacement_links')return {data:window.__HK_TEST_PAIRED__?schysstaReplacementLinks:[],error:null};
+            if(name==='propose_schyssta_change'){
+              window.__HK_CHANGE_PROPOSE__={name,args};
+              if(!window.__HK_TEST_PAIRED__||!schysstaManualRules.some(row=>row.agreement_id===args.p_agreement_id&&row.status==='accepted'))return {data:null,error:{message:'not accepted'}};
+              const id='30000000-0000-4000-8000-000000000004';
+              schysstaManualRules.push({agreement_id:id,body:args.p_body,status:'proposed',agreement_version:1,proposed_by_me:true,own_decision:null,parent_decision:null,teen_decision:null,created_at:'2026-11-01T10:12:00Z'});
+              schysstaReplacementLinks.push({agreement_id:id,replaces_agreement_id:args.p_agreement_id});
+              return {data:id,error:null};
+            }
             if(name==='my_schyssta_notifications')return {data:window.__HK_TEST_PAIRED__?schysstaNotifications:[],error:null};
             if(name==='mark_schyssta_notification_read'){
               window.__HK_READ_NOTICE__={name,args};
@@ -490,6 +501,13 @@ try{
   await manualRule.waitFor();
   assert.match(await manualRule.innerText(),/Väntar på bådas beslut/,'Manual proposal remains pending');
   assert.match(await manualRule.innerText(),/Ditt val: inte lämnat/,'Submitting never approves own manual proposal');
+  await paired.page.getByRole('button',{name:'Föreslå ändring'}).first().click();
+  assert.equal(await paired.page.locator('#schyssta-body').inputValue(),'Vi frågar innan vi lånar saker.','Approved text is copied to change editor');
+  await paired.page.locator('#schyssta-body').fill('Vi frågar varandra innan vi lånar något.');
+  await paired.page.getByRole('button',{name:'Skicka ändringsförslag'}).click();
+  await paired.page.waitForFunction(()=>window.__HK_CHANGE_PROPOSE__?.args?.p_body==='Vi frågar varandra innan vi lånar något.');
+  assert.deepEqual(await paired.page.evaluate(()=>Object.keys(window.__HK_CHANGE_PROPOSE__.args).sort()),['p_agreement_id','p_body','p_request_key'],'Only approved source and changed text sent');
+  assert.match(await paired.page.locator('.schyssta-view').innerText(),/Den tidigare överenskommelsen gäller tills ni båda har godkänt/,'Previous rule stays current until new agreement');
   await paired.page.goto(base+'#inkorg',{waitUntil:'load'});
   await paired.page.getByRole('heading',{name:'Inkorg'}).waitFor();
   const inboxText=await paired.page.locator('#live-app').innerText();
