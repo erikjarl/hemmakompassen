@@ -63,6 +63,8 @@ select throws_ok(
  '23505','a replacement is already pending','duplicate simultaneous replacement blocked');
 
 set local role postgres;
+select set_config('test.original_id',
+  (select id::text from public.agreements where request_key='57000000-0000-0000-0000-000000000011'),true);
 select set_config('test.replacement_id',
   (select id::text from public.agreements where request_key='57000000-0000-0000-0000-000000000012'),true);
 set local role authenticated;
@@ -71,7 +73,7 @@ select is_empty($$select * from public.my_schyssta_replacement_links()$$,
  'other family cannot see replacement link');
 select throws_ok(
  $$select public.propose_schyssta_change(
-  (select id from public.agreements where request_key='57000000-0000-0000-0000-000000000012'),
+  current_setting('test.original_id')::uuid,
   'En otillåten ändring från en annan familj',
   '58000000-0000-0000-0000-000000000011')$$,
  '42501','original accepted rule unavailable','other family cannot propose changes');
