@@ -278,7 +278,7 @@ try{
   await m.page.getByRole('button',{name:'Börja testet'}).waitFor();
   await m.page.getByRole('button',{name:'Börja testet'}).click();
   assert.match(await m.page.locator('.pf-question').innerText(),/Jag brukar vara den som får igång stämningen/);
-  await m.page.locator('input[data-pf-answer="ipip50-001"][value="4"]').check();
+  await m.page.locator('label.pf-option').nth(3).click();
   await m.page.getByText('Fråga 2 av 50').waitFor();
   const pfSaved=await m.page.evaluate(()=>window.__HK_PERSONALITY_SAVE__);
   assert.equal(pfSaved.row.instrument_id,'ipip50-sv-v1');
