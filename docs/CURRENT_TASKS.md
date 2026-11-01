@@ -61,7 +61,7 @@
 
 ### P1 – AI-medlaren i intern testutveckling (2026-11-01)
 - [x] **AI-01A: Driftsatt separat Worker, Workers Free, autentisering, verklig D1-kvot och svensk fiktiv modellprovsvar.** Ingen publik webbplatsmerge.
-- [x] **AI-01B: Privat D1-chatt med skapande, lista, historik, radering, serverstyrd ägarisolering och rollstyrt stöd (parent/teen via verifierad RPC).** En ren AI-featurebranch från senaste `main` innehåller också chattgränssnittet.
+- [x] **AI-01B: Privat D1-chatt med skapande, lista, historik, radering, serverstyrd ägarisolering och rollstyrt stöd (parent/teen via verifierad RPC).** En ren AI-featurebranch mergades via PR #81 till `main` och chattgränssnittet ingår i webbplatsens källkod; live-test på Pages återstår.
 - [x] **AI-01C: Fiktiva databas- och V8-kodkontroller.** 28 automatiserade testfall från GitHub-koden passerade i simulerad körning; verklig D1 bekräftar ägarfilter, kaskadradering och stabil meddelandeordning. CI är ännu inte verifierad.
 - [ ] **AI-01D: Verifiera två verkligt autentiserade testkonton, webbläsare/mobil och reella Worker-anrop** innan aktivering på GitHub Pages. Kontrollera även att säkerhetsmeddelanden och konto-/sessionsbyte fungerar som avsett.
 - [ ] **AI-01E: Granska barn-/ungdomsskydd, kliniska risker, säkerhet och dataskydd.** Endast fiktiva samtal hittills; enkel riskfrasmatchning är INTE en klinisk säkerhetslösning.
