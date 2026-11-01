@@ -5,6 +5,7 @@
 ## Arkitektur
 - GitHub Pages statisk frontend → separat Cloudflare Worker → verifierar Supabase Auth-token via `/auth/v1/user`.
 - Cloudflare Worker har AI-binding för `@cf/meta/llama-3.1-8b-instruct-fp8-fast` (fiktiva svenska API-testanrop har givit läsbara svar).
+- Workern läser enbart **den inloggades roll** (`parent` eller `teen`) genom befintliga Supabase-RPC:n `my_family_members`; övriga familjemedlemmars namn eller roller skickas inte till modellen. När anropet misslyckas används en neutral instruktion.
 - Samma Worker använder EU-jurisdiktionens Cloudflare D1 med migrationsfiler 0001/0002/0003.
 - **D1 håller privata chattsessioner och meddelanden, inte delad familjekontext.** Varje SQL-fråga begränsas till det verifierade Supabase-användar-ID:t, inklusive skapande, lista, läsning, meddelandesparning och radering.
 - Ingen Supabase service_role-nyckel används. Inga chattar eller IPIP/Gillaswajp-resultat läses från Supabase. Befintliga `private_ai_*`-tabeller i Supabase ändras inte och används ännu inte av AI-medlaren.
@@ -38,7 +39,8 @@ Klienten begär autentisering vid varje anrop; Workern verifierar token **på se
 - [x] Riktig D1 SQL-test för kontoisolering, kaskadradering, lagring och stabil följd; syntetiska testposter raderade.
 - [x] Samtliga 28 tester från GitHub-kodfiler genomkörda i V8 med simulerade Request/Response, Supabase Auth, D1 och AI och **alla passerade**.
 - [x] Separata modellförfrågningar med påhittade svenska frågor har givit svar på gratisplanen.
-- [ ] Node/GitHub Actions-resultat, Playwright, verkliga autentiserade tvåkontotester och browser→Worker→Auth→AI-end-to-end-test **inte verifierade**. Direkta egna workers.dev-anrop blockerades tidigare av Cloudflare-verktygets egress; detta bevisar inte tjänstens svarskod.
+- [x] GitHub Actions **AI-mediator backend safety tests** har klarat Node-tester, syntaxkontroller och statiskt bygge på den renodlade PR-branchen. Den ordinarie webbplatsens UI-browser-workflow har också passerat efter att testharnessen uppdaterades för medlarens reset.
+- [ ] Verkliga autentiserade tvåkontotester och browser→Worker→Auth→AI-end-to-end-test **inte verifierade**. Direkta egna workers.dev-anrop blockerades tidigare av Cloudflare-verktygets egress; detta bevisar inte tjänstens svarskod.
 - [ ] Featurebranchen måste granskas och mergas före den vanliga GitHub Pages-sidan visar chatten. Inga förändringar är ännu mergade till `main`.
 
 ## Länkar
