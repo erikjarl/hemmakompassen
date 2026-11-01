@@ -11,6 +11,7 @@ function harness({ noQuota = false, modelFails = false, authFails = false } = {}
   const usage = new Map();
   const env = {
     APP_ORIGIN: ORIGIN,
+    AI_TEST_USERS: USER_A+','+USER_B,
     SUPABASE_URL: 'https://example.supabase.co',
     SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_test',
     AI: { async run(model, args) {
