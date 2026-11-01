@@ -1,69 +1,90 @@
-# AI-01A: första säkra tekniska grunden (1 november 2026)
+# AI-01A/B — säker testproxy och första privata chattvy (1 november 2026)
 
-## Uppföljning efter bekräftad Workers Free-plan
-- [x] Erik visade i Cloudflare-dashboard att Workers Free ($0/mån) är aktiv plan.
-- [x] Cloudflares officiella modellkatalog anger att `@cf/zai-org/glm-4.7-flash` fortfarande finns på Workers Free. Fiktiva API-testanrop lyckades, men med 90 respektive 400 genererade tokens upptog resonemanget hela svarslängden; därför blev själva svarstexten tom. Den modellen väljs inte till första enkla chatten.
-- [x] Fiktivt svenskt API-test mot `@cf/meta/llama-3.1-8b-instruct-fp8-fast` returnerade en faktisk svensk samtalsöppning på Workers Free. Worker-koden har uppdaterats till denna modell och dess dokumenterade parameter `max_tokens` (i stället för `max_completion_tokens`). Detta är ett tekniskt smoke-test, **inte** klinisk kvalitetsvalidering.
-- [x] Riktig Cloudflare D1-fråga med identisk atomisk UPSERT kördes 12 gånger mot en tillfällig testpost. Första 10 accepterades; anrop 11–12 gav ingen rad och stoppas enligt kontraktet. Testposten raderades direkt efteråt. Denna kontroll körde **inga** AI-anrop.
-- [ ] CI-resultat för sparad Worker- och testkod, autentiserad tvåkontotestning och faktisk fristående Worker-driftsättning återstår. Webbplatsen har fortfarande ingen inkopplad AI-chatt.
+## Verifierat nuläge
 
-## Verifierad molnstatus 2026-11-01
-- [x] Cloudflare-kontot har en D1-databas `hemmakompassen-ai-limits` med EU-jurisdiktion, skapad via Cloudflare API.
-- [x] `ai_daily_user_usage` har skapats i D1 och tabellens existens verifierats med SELECT från `sqlite_master`.
-- [x] Utvecklingsbranchens `workers/ai-mediator/wrangler.jsonc` har nu det faktiska D1-ID:t och saknar fortfarande aktiva AI-anrop från webbplatsen.
-- [ ] Faktisk Cloudflare-faktureringsplan kunde inte verifieras via anslutningen: API-anropet för abonnemang ger 403, saknar Billing Read. Ingen Worker har publicerats, och inga AI-inferenser har körts.
-- [ ] GitHub Actions-resultat för Worker-testfilen återstår att verifiera. Åtta lokala tester av motsvarande serverlogik passerade.
-- [ ] Serverns `SUPABASE_URL` och `SUPABASE_PUBLISHABLE_KEY` behöver konfigureras för den separata Workern inför testdriftsättning.
+**Cloudflare-servern är uppladdad och dess workers.dev-subdomän är aktiverad.**
+Hemmakompassens ordinarie GitHub Pages (`main`) är **inte uppdaterad**.
+Det första chattgränssnittet och dess påslag finns bara på utvecklingsbranchen
+`ai-dev/utveckling` och i [utkast-PR #80](https://github.com/erikjarl/hemmakompassen/pull/80).
+Det har ännu inte gjorts ett autentiserat end-to-end-test från den publicerade
+webbplatsen eller två riktiga webbläsarsessioner. CI-status för GitHub Actions
+är ännu inte verifierad.
 
+### Genomfört
+- [x] Användaren har verifierat Cloudflare **Workers Free $0/månad** i dashboard.
+- [x] En separat Worker `hemmakompassen-ai-medlare` med Workers AI och
+  autentiserad Supabase Auth-token-kontroll har driftsatts med Cloudflare API.
+- [x] Worker-bindningarna **AI**, **LIMITS** (D1), **APP_ORIGIN**,
+  **SUPABASE_URL** och **SUPABASE_PUBLISHABLE_KEY** finns verifierat
+  registrerade på Cloudflare. Inga service_role-nycklar i frontend eller GitHub.
+- [x] Den separata D1-databasen `hemmakompassen-ai-limits` skapades
+  med EU-jurisdiktion. SQL-tabellen installerades och verifierades.
+- [x] En verklig D1-kvottest med 12 försök gav 10 lyckade och 2 blockerade
+  enligt den atomiska kvotregeln. Testposten raderades.
+- [x] AI-modeller testades med fiktiv svensk text. GLM-4.7-Flash
+  gav resonemang men ingen visbar svarstext inom kort genereringsgräns.
+  Llama 3.1 8B (`@cf/meta/llama-3.1-8b-instruct-fp8-fast`)
+  gav en visbar svensk samtalsöppning på gratisplanen.
+- [x] Workern använder nu Llama-modellen, parametern `max_tokens`, strikt
+  CORS, verifierad användartoken via Supabase Auth och `no-store` för svar.
+  Den accepterar endast det aktuella användarmeddelandet.
+- [x] Hämtad, exakt GitHub-källkod för Worker testades i en isolerad V8-miljö
+  med simulerade Fetch/Request/Response/D1/AI-komponenter. Kontrollerna
+  omfattade fel ursprung (403), fel token (401), ogiltigt/tomt/långt
+  meddelande (400), godkänt svar (200), falsk roll och historik från
+  klienten som ignoreras, samt kvotstopp (429) efter 10.
+- [x] Separat `ai-mediator-ui.js` finns på utvecklingsbranchen:
+  användaren kan skriva, skicka, se och rensa en **ephemeral** testchatt.
+  Kontobyte/radering aborterar gamla anrop och rensar minnet; inga
+  meddelanden sparas i LocalStorage/Supabase. Modulen är kopplad till
+  `live-app.js` och ingår i den statiska byggfilens asset-lista.
+- [x] Hämtad exakt UI-modulkod testades i isolerad V8-miljö mot
+  simulerade Supabase-sessioner och AI-svar: felaktig användare avvisas,
+  endast användartext skickas, HTML-escape görs, kontobyte ignorerar
+  väntande svar, rensning fungerar, okänd Worker-URL stängs av.
+- [x] Node-testfiler samt en separat GitHub Actions-workflow har lagts till.
+  **Det är inte samma sak som ett godkänt GitHub Actions-resultat.**
 
-**Status: endast på utvecklingsbranch, inte driftsatt eller inkopplad på webbplatsen.**
+### Återstår inför ett färdigt första användartest
+- [ ] Kontrollera GitHub Actions/Node/bygget och verklig CORS+Auth från
+  separat testklient. Cloudflare-anslutningens fetch-egress blockerade
+  direktanrop till den egna workers.dev-domänen; dessa 403-respons var
+  från verktygets nätverksbegränsning och bevisar **inte** Workers
+  autentiseringsskydd.
+- [ ] Testa med båda befintliga autentiserade testkontona mot faktisk
+  Worker, inklusive kvot, utloggning, kontobyte, återkoppling och mobilvy.
+- [ ] Implementera riktiga privata chattsessioner och serverstyrd
+  persistens av AI-svar. Nuvarande chatt är avsiktligt **stateless**;
+  modellen ser inte tidigare meddelanden i samma session.
+- [ ] Låt AI-medlaren få serververifierad, samtyckesstyrd delad
+  Gillaswajp-/Big Five-/Schyssta-listan-kontext, först efter
+  behörighetsgranskning och fungerande återkallelse.
+- [ ] Testa kvalitet och riskhantering med större uppsättning fiktiva
+  svenska fall innan användning med verkligt känsligt material.
+- [ ] Synkronisera utvecklingsbranchen med nyare `main`-commits
+  och få uttryckligt godkännande innan merge/publicering.
+- [ ] AI-genererade frivilliga sammanfattningar i Gillaswajpen och
+  personlighetstestet byggs efter att AI-01 är behörighetstestat.
 
-## Detta är implementerat i koden
-- Fristående Cloudflare Worker med en enda tillfällig chattförfrågan.
-- Kräver Supabase-access-token och verifierar token via Supabase Auth vid varje anrop.
-- Tar bara emot ett enskilt meddelande. Andra medlemmars chattar, swajpsvar,
-  personlighetssvar och klientens egna påstådda roller skickas inte till modellen.
-- Separat modellinstruktion på svenska och skydd mot falsk säkerhet.
-- Serverbaserad D1-kvot: högst 10 AI-anrop per konto och UTC-dygn,
-  högst 2 000 tecken in och högst 320 genererade tokens. Kvoten kontrolleras
-  atomiskt och blockeras när lagringen saknas.
-- CORS endast från Hemmakompassens Pages-origin; inga hemliga nycklar i frontend.
-- Svar markeras som tillfälliga: chatt/minne sparas INTE i denna version.
-- Node-baserade offline-tester finns i tests/ai-mediator-worker.test.mjs.
+## Säkerhetskontrakt
 
-## Verifierings- och driftsättningssteg (återstår)
-1. Kör offline-tester: node --test tests/ai-mediator-worker.test.mjs.
-2. Kontrollera att Cloudflare-kontot använder Workers Free och att vald modell
-   fortfarande omfattas av gratisnivån. Aktivera ingen betalplan.
-3. Skapa separat gratis D1-databas med namnet hemmakompassen-ai-limits.
-   Byt ut noll-UUID i workers/ai-mediator/wrangler.jsonc mot det faktiska ID:t.
-4. Konfigurera miljövariabler SUPABASE_URL och SUPABASE_PUBLISHABLE_KEY för
-   denna Worker i Cloudflare. Detta är publika Supabase-värden, men inga
-   hemligheter eller service_role-nycklar får läggas i GitHub.
-5. Kör SQL-migrationen från workers/ai-mediator/migrations/0001_daily_quota.sql.
-6. Först efter granskning: driftsätt denna separata Worker och testa med
-   enbart fiktiv svensk text och testkonton.
-7. Nästa AI-01B: UI, privat historik, serverstyrd infogning av AI-svar med
-   riktig ägarverifiering, avparning/radering och rollanpassat språk.
-8. Därefter serververifierad, uttryckligen delad kontext. AI-genererade
-   sammanfattningar i Gillaswajpen och Big Five först efter detta.
+Denna testversion tar **ett** frivilligt meddelande åt gången och
+sparar inga chattar. Den är inte terapi eller krishjälp. Endast
+kontots aktuella Supabase-token och meddelandet skickas; ingen familjeflagga,
+rollen som klienten uppger, privat chatt, inkorgshistorik, enskilda IPIP-svar
+eller Gillaswajp-NEJ skickas till modellen.
 
-## Viktig säkerhetsgräns
-Befintliga Supabase-tabeller private_ai_chats, private_ai_messages och
-private_ai_memories har RLS. Användare får inte skriva meddelanden som
-utger sig för att vara AI. Denna första Worker öppnar inte den behörigheten,
-och lagrar ännu inga meddelanden. Senare lagring måste byggas säkert
-på serversidan. Origin-kontroll ersätter INTE tokenverifieringen.
+Kostnadsgräns: max **10 förfrågningar per användare och UTC-dag**, med D1
+som atomisk spärr, max **2 000 tecken** i frågan och max **320 output-tokens**.
+Utan fungerande D1/AI/korrekt autentisering stoppas inferensen. Ovanför
+Cloudflares gratisgräns skall ingen betalplan aktiveras automatiskt.
 
-## Anrop efter framtida driftsättning
-POST /api/ai/mediate med Origin https://erikjarl.github.io, giltig
-Supabase Bearer-token och JSON med fältet message.
-Svar innehåller reply, remainingToday och ephemeral:true.
-Observera att detta ännu inte är en publikt fungerande tjänst.
+**Server-endpoint (API, inte en sida att besöka):**
+`https://hemmakompassen-ai-medlare.erikbertiljarl.workers.dev/api/ai/mediate`
 
 ## Källor
-- https://developers.cloudflare.com/workers-ai/models/glm-4.7-flash/
 - https://developers.cloudflare.com/workers-ai/platform/pricing/
+- https://developers.cloudflare.com/workers-ai/models/llama-3.1-8b-instruct-fp8-fast/
 - https://developers.cloudflare.com/d1/platform/pricing/
 - https://supabase.com/docs/guides/auth/users
 - https://supabase.com/docs/guides/database/postgres/row-level-security
