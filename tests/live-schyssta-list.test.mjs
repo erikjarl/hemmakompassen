@@ -113,6 +113,18 @@ test('Rule review never scores a family and copy exports only approved text on c
   assert.doesNotMatch(app,/schysstaCopyMessage.*user_id/);
 });
 
+test('Schyssta search only filters an authorized, already validated snapshot',()=>{
+  assert.match(app,/function applySchysstaFilters\(\)/);
+  assert.match(app,/item\.querySelector\('p'\)\?\.textContent/);
+  assert.match(app,/data-schyssta-filter-group="approved"/);
+  assert.match(app,/data-schyssta-filter-group="ongoing"/);
+  assert.match(app,/function render\(\).*applySchysstaFilters\(\)/);
+  assert.match(app,/schysstaFilterStatus=\['all','approved','ongoing'\]/);
+  assert.match(app,/schysstaSearch='';schysstaFilterStatus='all'/);
+  assert.match(app,/item\.status==='rejected'/);
+  assert.doesNotMatch(app,/db\.rpc\('search_schyssta/);
+});
+
 test('Schyssta first-time guidance, live rule preview and menus use safe local display data',()=>{
   assert.match(app,/function menu\(\)/);
   assert.match(app,/schysstaNeedsAnswer\(\)\.length/);
