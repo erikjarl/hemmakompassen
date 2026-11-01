@@ -478,6 +478,8 @@ Listan är en samlad arbetsplan för att slutföra Gillaswajpen. Kryssa av förs
 
 ### AI-01 — Grundläggande AI-medlare (byggs först)
 
+**Gratisplan och AI-rökprov verifierat med Cloudflare 2026-11-01:** Användaren har visat Workers Free som aktiv plan ($0/månad). Cloudflares modellkatalog och fiktiva API-testanrop bekräftade att GLM-4.7-Flash fungerar men använde hela korta svarskvoten till resonemang, utan visbar svarstext. Ett fiktivt svenskt test med `@cf/meta/llama-3.1-8b-instruct-fp8-fast` gav visbar svarstext; Worker-koden är därför uppdaterad till den modellen och `max_tokens`. Atomisk D1-kvot verifierades i verklig EU-D1 med 12 tillfälliga testanrop: 10 accepterades, 2 stoppades; testposten raderades. **AI-medlaren är fortfarande inte driftsatt eller inkopplad på Pages**; säkerhetstest av hela vägen, CI-verifiering och svensk psykologisk kvalitetsgranskning återstår. Ändringarna ligger bara på utvecklingsbranch.
+
 **Molnförberedelse verifierad 2026-11-01:** Cloudflare D1 `hemmakompassen-ai-limits` skapades med EU-jurisdiktion, SQL-tabellen `ai_daily_user_usage` applicerades och verifierades via databaskatalogfråga, och `workers/ai-mediator/wrangler.jsonc` fick dess riktiga ID. **Workers AI har inte driftsatts eller körts.** Kontots faktureringsplan kunde inte läsas: API-behörigheten saknar Billing Read (HTTP 403). Verifiera Free i Cloudflare-dashboard före eventuell driftsättning. Ingen betald plan aktiverad av detta steg.
 
 
