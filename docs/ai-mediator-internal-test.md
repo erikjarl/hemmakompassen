@@ -5,6 +5,7 @@
 ## Arkitektur
 - GitHub Pages statisk frontend → separat Cloudflare Worker → verifierar Supabase Auth-token via `/auth/v1/user`.
 - Cloudflare Worker har AI-binding för `@cf/meta/llama-3.1-8b-instruct-fp8-fast` (fiktiva svenska API-testanrop har givit läsbara svar).
+- **Endast två interna testkonton** (Fannyförälder och Tobbetonåring) är tillåtna i Cloudflare-serverns separata `AI_TEST_USERS`-bindning. Kontonas UUID:n är inte inlagda i GitHub. Utan bindningen nekas alla AI-anrop (fail closed). Övriga inloggade konton får HTTP 403. Detta är en extra begränsning vid sidan av den obligatoriska verifieringen av varje Supabase Auth-token.
 - Workern läser enbart **den inloggades roll** (`parent` eller `teen`) genom befintliga Supabase-RPC:n `my_family_members`; övriga familjemedlemmars namn eller roller skickas inte till modellen. När anropet misslyckas används en neutral instruktion.
 - Samma Worker använder EU-jurisdiktionens Cloudflare D1 med migrationsfiler 0001/0002/0003.
 - **D1 håller privata chattsessioner och meddelanden, inte delad familjekontext.** Varje SQL-fråga begränsas till det verifierade Supabase-användar-ID:t, inklusive skapande, lista, läsning, meddelandesparning och radering.
