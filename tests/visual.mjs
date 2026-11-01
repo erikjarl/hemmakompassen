@@ -522,7 +522,8 @@ try{
   assert.match(await paired.page.locator('.schyssta-confirm').innerText(),/Om du avslutar gäller regeln inte längre/,'Ending is a two-step action');
   await paired.page.getByRole('button',{name:'Ja, avsluta'}).click();
   await paired.page.waitForFunction(()=>window.__HK_WITHDRAW_RULE__?.args?.p_agreement_id==='30000000-0000-4000-8000-000000000003');
-  assert.match(await paired.page.locator('.schyssta-history').innerText(),/Vi frågar innan vi lånar saker/,'Withdrawn rule remains in history');
+  await paired.page.locator('.schyssta-history summary').click();
+  assert.match(await paired.page.locator('.schyssta-history').innerText(),/Vi frågar innan vi lånar saker/,'Withdrawn rule remains in accessible history');
   await paired.page.goto(base+'#inkorg',{waitUntil:'load'});
   await paired.page.getByRole('heading',{name:'Inkorg'}).waitFor();
   const inboxText=await paired.page.locator('#live-app').innerText();
