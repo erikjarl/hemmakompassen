@@ -648,7 +648,7 @@ try{
   await paired.page.getByRole('heading',{name:'Inkorg',exact:true}).waitFor();
   await paired.page.getByRole('button',{name:'Markera som läst'}).click();
   await paired.page.waitForFunction(()=>window.__HK_READ_NOTICE__?.args?.p_notification_id==='40000000-0000-4000-8000-000000000001');
-  await paired.page.waitForFunction(()=>document.querySelector('#live-app')?.textContent?.includes('Meddelanden'));
+  await paired.page.waitForFunction(()=>document.querySelector('#live-app')?.textContent?.includes('Händelser från Schyssta listan'));
   assert.equal(await paired.page.getByRole('button',{name:'Markera som läst'}).count(),0,'Read receipt removes unread action without approving the rule');
 
   await paired.page.getByRole('button',{name:'Se och svara i Schyssta listan'}).first().click();
