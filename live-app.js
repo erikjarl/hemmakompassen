@@ -830,7 +830,9 @@ function schysstaView(){
       :item.own_decision===false
       ?'<p class="live-muted">Du har avböjt detta förslag. Du kan ändra ditt svar.</p>'+submitButton(true,'Ändra till ja')
       :submitButton(true,'Jag godkänner')+submitButton(false,'Avböj förslaget','schyssta-secondary')
-        +'<button class="schyssta-secondary" type="button" data-schyssta-pause="'+item.agreement_id+'">Inte nu</button>';
+        +(schysstaPausedIds.has(item.agreement_id)
+          ?'<button class="schyssta-secondary" type="button" data-schyssta-resume="'+item.agreement_id+'">Visa bland förslag som behöver mitt svar</button>'
+          :'<button class="schyssta-secondary" type="button" data-schyssta-pause="'+item.agreement_id+'">Inte nu</button>');
     const manageActions=item.status==='accepted'
       ?'<button class="schyssta-secondary" type="button" data-schyssta-edit="'+item.agreement_id+'">Föreslå ändring</button>'
         +'<button class="schyssta-secondary" type="button" data-schyssta-end="'+item.agreement_id+'">Avsluta överenskommelsen</button>'
@@ -958,6 +960,12 @@ if(startEdit&&SCHYSSTA_UUID.test(startEdit.dataset.schysstaEdit)){
     render();document.getElementById('schyssta-body')?.focus();}
 }
 const schysstaProposal=e.target.closest('[data-schyssta-propose]');if(schysstaProposal)void proposeSchysstaRule(schysstaProposal.dataset.schysstaPropose);
+const resume=e.target.closest('[data-schyssta-resume]');
+if(resume&&SCHYSSTA_UUID.test(resume.dataset.schysstaResume)){
+  schysstaPausedIds.delete(resume.dataset.schysstaResume);
+  schysstaMessage='Förslaget visas återigen bland de förslag som behöver ditt svar.';
+  render();
+}
 const pause=e.target.closest('[data-schyssta-pause]');
 if(pause&&SCHYSSTA_UUID.test(pause.dataset.schysstaPause)){
   const row=schysstaAllRules().find(item=>item.agreement_id===pause.dataset.schysstaPause);
