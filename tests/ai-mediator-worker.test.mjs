@@ -179,3 +179,18 @@ test('role lookup falls back neutrally when RLS/RPC is unavailable',async()=>{
   const role=await loadViewerRole(env,'valid-jwt',USER_A,async()=>new Response('',{status:403}));
   assert.equal(role,null);
 });
+
+test('authenticated users outside the internal pilot allowlist are denied',async()=>{
+  const x=harness();
+  x.env.AI_TEST_USERS=USER_B;
+  const response=await x.handler(req({token:'valid-a'}),x.env);
+  assert.equal(response.status,403);
+  assert.equal(x.seen.model.length,0);
+});
+test('missing internal allowlist fails closed before any model call',async()=>{
+  const x=harness();
+  delete x.env.AI_TEST_USERS;
+  const response=await x.handler(req({token:'valid-a'}),x.env);
+  assert.equal(response.status,403);
+  assert.equal(x.seen.model.length,0);
+});
