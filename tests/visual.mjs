@@ -425,6 +425,10 @@ try{
   await consentPair.page.getByRole('button',{name:'Jag vill dela mina fem skalpoäng'}).click();
   await consentPair.page.getByRole('heading',{name:'Våra profiler'}).waitFor();
   assert.equal(await consentPair.page.locator('.pf-comparison .pf-table tbody tr').count(),5);
+  assert.equal(await consentPair.page.locator('.pf-family-reflections').count(),1);
+  assert.match(await consentPair.page.locator('.pf-family-reflections').innerText(),/Vad era profiler kan säga om samspelet/);
+  assert.match(await consentPair.page.locator('.pf-family-reflections').innerText(),/Likheter att bygga vidare på/);
+  assert.match(await consentPair.page.locator('.pf-family-reflections').innerText(),/Skillnader att utforska/);
   assert.equal(await consentPair.page.locator('.pf-comparison .pf-scale-track').count(),5);
   const pctGeometry=await consentPair.page.locator('.pf-comparison .pf-scale-row').first().evaluate(row=>{
     const bar=row.querySelector('.pf-scale-track').getBoundingClientRect();
@@ -443,8 +447,10 @@ try{
   await checkOverflow(consentPair.page,'Two consenting personality profiles 390px');
   await capture(consentPair.page,'mobile-personality-two-consents.png');
   await consentPair.page.locator('.pf-comparison .pf-percentile-chart').screenshot({path:path.join(output,'mobile-personality-bars-comparison.png'),animations:'disabled'});
+  await consentPair.page.locator('.pf-family-reflections').screenshot({path:path.join(output,'mobile-personality-family-reflections.png'),animations:'disabled'});
   await consentPair.page.getByRole('button',{name:'Sluta dela min profil'}).click();
   await consentPair.page.getByRole('heading',{name:'Våra profiler'}).waitFor({state:'detached'});
+  assert.equal(await consentPair.page.locator('.pf-family-reflections').count(),0,'Withdrawal hides the entire narrative');
   assert.equal(await consentPair.page.evaluate(()=>window.__HK_PERSONALITY_SHARE__),false);
   await consentPair.context.close();
   const narrow=await freshContext({viewport:{width:320,height:700},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true});
