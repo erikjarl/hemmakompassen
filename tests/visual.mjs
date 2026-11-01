@@ -283,6 +283,7 @@ try{
   assert.match(await m.page.locator("#live-app").innerText(),/Din familj/i);
   await checkOverflow(m.page,"Mobile homepage");
   await capture(m.page,"mobile-home.png");
+  await checkMobileNavigation(m.page,'390px mobile navigation');
   await m.page.goto(base+"#personlighet",{waitUntil:"load"});
   await m.page.getByRole('button',{name:'Börja testet'}).waitFor();
   await m.page.getByRole('button',{name:'Börja testet'}).click();
@@ -300,7 +301,6 @@ try{
   await m.page.getByRole('button',{name:'Fortsätt testet'}).click();
   await m.page.getByText('Fråga 2 av 50').waitFor();
   await m.page.goto(base+"#hem",{waitUntil:"load"});
-  await checkMobileNavigation(m.page,'390px mobile navigation');
   await m.page.goto(base+"#swipe",{waitUntil:"load"});
   await m.page.getByRole("heading",{name:"Gillaswajpen"}).waitFor();
   assert.match(await m.page.locator("#live-app").innerText(),/sparas privat i ditt konto/i);
