@@ -37,7 +37,8 @@ let sharedMatches=[],sharedPriorities=[],sharedDeckId='general',sharedError='',s
 let sharedPollPending=false;
 let insightsRows=[],insightsLoading=false,insightsError='',insightsRequest=0;
 let sharedUnderstandingRows=[],understandingShareError='';
-let schysstaSuggestions=[],schysstaRules=[],schysstaLoading=false,schysstaError='',schysstaRequest=0;
+let schysstaSuggestions=[],schysstaRules=[],schysstaManualRules=[],schysstaLoading=false,schysstaError='',schysstaRequest=0;
+let schysstaDraft='',schysstaDraftOpen=false,schysstaDraftKey=null,schysstaSubmitting=false,schysstaMessage='',schysstaFocusId='';
 const schysstaSaving=new Set();
 const understandingShares=new Set();
 const understandingShareSaving=new Set();
@@ -591,24 +592,77 @@ function validSchysstaPayload(suggestions,rules){
     &&new Set(rules.map(row=>row.agreement_id)).size===rules.length
     &&!suggestions.some(row=>proposedCardIds.has(row.card_id));
 }
+function validManualSchysstaRule(row){
+  if(!row||typeof row!=='object'||Array.isArray(row)||!SCHYSSTA_UUID.test(row.agreement_id)
+    ||typeof row.body!=='string'||row.body.length<5||row.body.length>500
+    ||!['proposed','accepted','rejected'].includes(row.status)
+    ||!Number.isInteger(row.agreement_version)||row.agreement_version<1
+    ||typeof row.proposed_by_me!=='boolean'
+    ||![true,false,null].includes(row.own_decision)
+    ||![true,false,null].includes(row.parent_decision)
+    ||![true,false,null].includes(row.teen_decision)
+    ||typeof row.created_at!=='string'||Number.isNaN(Date.parse(row.created_at)))return false;
+  const keys=['agreement_id','body','status','agreement_version','proposed_by_me',
+    'own_decision','parent_decision','teen_decision','created_at'];
+  return Object.keys(row).length===keys.length&&Object.keys(row).every(key=>keys.includes(key));
+}
+function validManualSchysstaPayload(rows,matchedRules){
+  return Array.isArray(rows)&&rows.every(validManualSchysstaRule)
+    &&new Set(rows.map(row=>row.agreement_id)).size===rows.length
+    &&!rows.some(row=>matchedRules.some(other=>other.agreement_id===row.agreement_id));
+}
+const schysstaAllRules=()=>[...schysstaManualRules,...schysstaRules];
+const schysstaNeedsAnswer=()=>schysstaAllRules().filter(row=>row.status==='proposed'&&!row.proposed_by_me&&row.own_decision===null);
+async function submitManualSchysstaRule(){
+  if(!schysstaListEnabled||!user||members.length!==2||schysstaSubmitting||schysstaLoading||schysstaError)return;
+  const body=schysstaDraft.trim().replace(/\s+/g,' ');
+  if(body.length<5||body.length>500){schysstaMessage='Skriv mellan 5 och 500 tecken.';render();return;}
+  if(!schysstaDraftKey)schysstaDraftKey=crypto.randomUUID();
+  const requestKey=schysstaDraftKey,viewer=user.id,session=sharedSession;
+  schysstaSubmitting=true;schysstaMessage='Skickar förslaget…';render();
+  let error;try{({error}=await db.rpc('propose_manual_schyssta_rule',{p_body:body,p_request_key:requestKey}));}
+  catch(e){error=e;}
+  schysstaSubmitting=false;
+  if(user?.id!==viewer||sharedSession!==session)return;
+  if(error){schysstaMessage='Kunde inte skicka förslaget. Kontrollera anslutningen och försök igen.';render();return;}
+  schysstaDraft='';schysstaDraftKey=null;schysstaDraftOpen=false;
+  schysstaMessage='Förslaget är skickat. Ni behöver båda godkänna det innan det blir en överenskommelse.';
+  await fetchSchysstaList();
+}
+function inboxView(){
+  if(!schysstaListEnabled)return '<h1>Inkorg</h1>'+card('<p>Inkorgen ansluts till era gemensamma förslag.</p>');
+  if(members.length!==2)return '<h1>Inkorg</h1>'+card('<p>Para ihop en förälder och en tonåring för att se gemensamma förfrågningar.</p>');
+  if(schysstaLoading)return '<h1>Inkorg</h1>'+card('<p role="status">Hämtar dina förfrågningar…</p>');
+  if(schysstaError)return '<h1>Inkorg</h1>'+card('<p role="alert">'+esc(schysstaError)+'</p><button class="live-button" id="schyssta-retry" type="button">Försök igen</button>');
+  const needs=schysstaNeedsAnswer();
+  return '<h1>Inkorg</h1><p>Förfrågningar som väntar på ditt svar.</p>'+card(
+    '<h2>Behöver ditt svar'+(needs.length?' ('+needs.length+')':'')+'</h2>'
+    +(needs.length?'<ul class="schyssta-list">'+needs.map(row=>'<li><p>'+esc(row.body)+'</p><p class="live-muted">'+(row.source_card_id?'Från Gillaswajpen':'Manuellt regelförslag')+' · En förfrågan är inte ett godkännande.</p><button class="live-button" type="button" data-schyssta-open="'+row.agreement_id+'">Se och svara i Schyssta listan</button></li>').join('')+'</ul>':'<p class="live-muted">Du har inga regelförslag som väntar på svar just nu.</p>'))
+    +'<p><a href="#regler">Öppna Schyssta listan</a></p>';
+}
 async function fetchSchysstaList(){
   const request=++schysstaRequest,viewer=user?.id,session=sharedSession;
-  schysstaSuggestions=[];schysstaRules=[];schysstaError='';
-  if(!schysstaListEnabled||!viewer||members.length!==2){schysstaLoading=false;if(page()==='regler')render();return;}
-  schysstaLoading=true;if(page()==='regler')render();
+  schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];schysstaError='';
+  if(!schysstaListEnabled||!viewer||members.length!==2){schysstaLoading=false;if(page()==='regler'||page()==='inkorg')render();return;}
+  schysstaLoading=true;if(page()==='regler'||page()==='inkorg')render();
   let results;
-  try{results=await Promise.all([db.rpc('shared_schyssta_rule_suggestions'),db.rpc('my_schyssta_rules')]);}
-  catch(e){results=[{error:e},{error:e}];}
+  try{results=await Promise.all([db.rpc('shared_schyssta_rule_suggestions'),db.rpc('my_schyssta_rules'),db.rpc('my_manual_schyssta_rules')]);}
+  catch(e){results=[{error:e},{error:e},{error:e}];}
   if(request!==schysstaRequest||user?.id!==viewer||sharedSession!==session)return;
   schysstaLoading=false;
   if(results.some(result=>result.error)){schysstaError='Schyssta listan kunde inte hämtas. Inga tidigare förslag visas.';}
-  else if(!validSchysstaPayload(results[0].data,results[1].data)){
+  else if(!validSchysstaPayload(results[0].data,results[1].data)||!validManualSchysstaPayload(results[2].data,results[1].data)){
     schysstaError='Schyssta listan skickade ett oväntat svar. Inga förslag eller överenskommelser visas.';
   }else{
     schysstaSuggestions=results[0].data;
     schysstaRules=results[1].data;
+    schysstaManualRules=results[2].data;
   }
-  if(page()==='regler')render();
+  if(page()==='regler'||page()==='inkorg')render();
+  if(page()==='regler'&&schysstaFocusId){
+    const id=schysstaFocusId;schysstaFocusId='';
+    requestAnimationFrame(()=>document.getElementById('schyssta-rule-'+id)?.scrollIntoView({block:'center'}));
+  }
 }
 async function proposeSchysstaRule(cardId){
   if(!schysstaListEnabled||!user||!SCHYSSTA_RULES[cardId]||schysstaSaving.has(cardId))return;
@@ -623,7 +677,7 @@ async function decideSchysstaRule(agreementId,approved){
   const viewer=user.id,session=sharedSession;schysstaSaving.add(agreementId);render();
   let error;try{({error}=await db.rpc('set_schyssta_rule_decision',{p_agreement_id:agreementId,p_approved:approved}));}catch(e){error=e;}
   schysstaSaving.delete(agreementId);if(user?.id!==viewer||sharedSession!==session)return;
-  if(error){schysstaError='Ditt val kunde inte sparas. Listan har rensats tills den kan hämtas igen.';schysstaSuggestions=[];schysstaRules=[];render();return;}
+  if(error){schysstaError='Ditt val kunde inte sparas. Listan har rensats tills den kan hämtas igen.';schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];render();return;}
   await fetchSchysstaList();
 }
 function schysstaView(){
@@ -642,6 +696,7 @@ if(key==='installningar')return '<h1>Inställningar</h1>'+card('<h2>Ditt konto</
 if(key==='swipe')return swipeView();
  if(key==='insikter')return insightsView();
 if(key==='regler')return schysstaView();
+if(key==='inkorg')return inboxView();
 if(key==='kommunikation')return '<h1>Kommunikationsråd</h1><p>Konkreta samtalsöppningar från den tidigare Hemmakompassen.</p>'+COMMUNICATION_GUIDES.map(([title,intro,tips])=>card('<h2>'+esc(title)+'</h2><p>'+esc(intro)+'</p><ul>'+tips.map(t=>'<li>'+esc(t)+'</li>').join('')+'</ul>')).join('');
 return '<h1>'+label+'</h1>'+card('<h2>Funktionen är under utveckling</h2><p>Du är inloggad som '+esc(profile?.display_name||user.email)+'. Vi bygger nu den riktiga kopplingen till Supabase så att dina svar och den andra familjemedlemmens uppgifter hålls åtskilda.</p><p>Här visas inga påhittade demodata och inga svar lagras lokalt som om de vore delade med familjen.</p><a class="live-button" href="#hem">Till startsidan</a>');
 }
@@ -653,7 +708,7 @@ try{authResult=await db.auth.getUser();}
 catch(e){if(generation!==refreshGeneration)return;throw e;}
 if(generation!==refreshGeneration)return;
 const {data:{user:u},error}=authResult;if(error&&error.name!=='AuthSessionMissingError')throw error;user=u;profile=null;members=[];swipeAnswers.clear();swipeImportance.clear();importancePending.clear();importanceSaving.clear();importanceAvailable=false;importanceLoadError='';skippedUnderstanding.clear();understandingShares.clear();understandingShareSaving.clear();understandingShareError='';for(const answers of themeAnswers.values())answers.clear();activeThemeDeck=null;themeCategory='all';themeIndex=0;themeReview=false;themeSaveError='';swipeBusy=false;swipeLoadError='';swipeSaveError='';swipeReview=false;swipeIndex=0;sharedMatches=[];sharedPriorities=[];sharedDeckId='general';sharedError='';sharedLoading=false;sharedSession++;sharedRequest++;insightsRows=[];sharedUnderstandingRows=[];insightsLoading=false;insightsError='';insightsRequest++;themesUnlocked=false;themesLoading=false;themesError='';themesRequest++;
-if(typeof schysstaRequest!=='undefined'){schysstaSuggestions=[];schysstaRules=[];schysstaLoading=false;schysstaError='';schysstaRequest++;schysstaSaving.clear();}
+if(typeof schysstaRequest!=='undefined'){schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];schysstaLoading=false;schysstaError='';schysstaRequest++;schysstaSaving.clear();schysstaDraft='';schysstaDraftOpen=false;schysstaDraftKey=null;schysstaSubmitting=false;schysstaMessage='';schysstaFocusId='';}
 if(user){const viewer=user.id;
 let loaded;
 try{loaded=await Promise.all([db.from('profiles').select('display_name').eq('user_id',viewer).maybeSingle(),db.rpc('my_family_members'),db.from('swipe_answers').select('deck_id,card_id,answer').eq('user_id',viewer),db.from('swipe_skips').select('deck_id,card_id').eq('user_id',viewer),db.from('swipe_importance').select('deck_id,card_id,importance').eq('user_id',viewer),sharedUnderstandingEnabled?db.from('understanding_card_shares').select('deck_id,card_id').eq('user_id',viewer):Promise.resolve({data:[],error:null})]);}
@@ -672,11 +727,18 @@ if(generation!==refreshGeneration)return;
 render();
 if(user&&members.length===2){void fetchSwipeMatches('general');void fetchThemeUnlock();}
 if(page()==='insikter')void fetchInsights();
-if(page()==='regler')void fetchSchysstaList();
+if(page()==='regler'||page()==='inkorg')void fetchSchysstaList();
 }
 document.addEventListener('click',e=>{const b=e.target.closest('[data-swipe]');if(b)advanceSwipe(b.dataset.swipe);if(e.target.closest('#swipe-restart')){swipeReview=true;swipeIndex=visibleGeneralIndices()[0]??STATEMENTS.length;render();}if(e.target.closest('#swipe-skip')&&viewerRole()==='teen'&&GENERAL_CARDS[swipeIndex]?.type==='understanding'&&!swipeBusy)void skipUnderstandingCard(swipeIndex,user.id,sharedSession);if(e.target.closest('#swipe-reload'))refresh().catch(showError);const refreshMatches=e.target.closest('[data-refresh-matches]');if(refreshMatches&&!sharedLoading)void fetchSwipeMatches(refreshMatches.dataset.refreshMatches);if(e.target.closest('#retry-theme-unlock')&&!themesLoading)void fetchThemeUnlock();
 if(e.target.closest('#insights-retry')&&!insightsLoading)void fetchInsights();
 if(e.target.closest('#schyssta-retry')&&!schysstaLoading)void fetchSchysstaList();
+if(e.target.closest('#schyssta-compose')){schysstaDraftOpen=!schysstaDraftOpen;schysstaMessage='';render();}
+const openRule=e.target.closest('[data-schyssta-open]');
+if(openRule&&SCHYSSTA_UUID.test(openRule.dataset.schysstaOpen)){
+  schysstaFocusId=openRule.dataset.schysstaOpen;
+  location.hash='regler';
+  if(page()==='regler')void fetchSchysstaList();
+}
 const schysstaProposal=e.target.closest('[data-schyssta-propose]');if(schysstaProposal)void proposeSchysstaRule(schysstaProposal.dataset.schysstaPropose);
 const schysstaDecision=e.target.closest('[data-schyssta-decision]');if(schysstaDecision)void decideSchysstaRule(schysstaDecision.dataset.schysstaDecision,schysstaDecision.dataset.approved==='true');
 const understandingShare=e.target.closest('[data-understanding-share]');
@@ -695,7 +757,7 @@ if(open&&themeAccessAllowed()){
 if(e.target.closest('#theme-back')){activeThemeDeck=null;themeCategory='all';themeReview=false;void fetchSwipeMatches('general');render();scrollLiveMainTop();}
 if(e.target.closest('#theme-restart')&&themeAccessAllowed()){const deck=THEME_DECKS.find(d=>d.id===activeThemeDeck);if(deck){themeReview=true;themeIndex=themeVisibleIndices(deck)[0]??deck.cards.length;themeSaveError='';render();}}
 });
-document.addEventListener('input',e=>{if(!e.target.matches?.('[data-importance]'))return;e.target.setAttribute('aria-valuetext',importanceValueText(Number(e.target.value)));});
+document.addEventListener('input',e=>{if(e.target.matches?.('#schyssta-body')){schysstaDraft=e.target.value;schysstaDraftKey=null;schysstaMessage='';return;}if(!e.target.matches?.('[data-importance]'))return;e.target.setAttribute('aria-valuetext',importanceValueText(Number(e.target.value)));});
 document.addEventListener('change',e=>{
   if(e.target.matches?.('#theme-category')&&activeThemeDeck&&themeAccessAllowed()){
     const deck=THEME_DECKS.find(d=>d.id===activeThemeDeck),category=e.target.value;
@@ -706,13 +768,13 @@ document.addEventListener('change',e=>{
   void saveImportance(e.target.dataset.deckId,e.target.dataset.cardId,Number(e.target.value),user.id,sharedSession);
 });
 document.addEventListener('keydown',e=>{if(page()==='swipe'&&user&&!['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName)&&['ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();advanceSwipe(e.key==='ArrowRight'?'yes':'no');}});
-document.addEventListener('submit',async e=>{if(e.target.id!=='live-login')return;e.preventDefault();const b=e.target.querySelector('button');b.disabled=true;const feedback=$('login-feedback');feedback.textContent='Loggar in…';const email=$('live-email').value.trim();try{const {error}=await db.auth.signInWithPassword({email,password:$('live-password').value});if(error)throw error;$('live-password') && ($('live-password').value='');await refresh();}catch(err){feedback.textContent='Kunde inte logga in. Kontrollera e-post och lösenord, eller välj ”Glömt lösenord eller saknar lösenord?”.';}finally{b.disabled=false;}});
+document.addEventListener('submit',async e=>{if(e.target.id==='schyssta-manual-form'){e.preventDefault();await submitManualSchysstaRule();return;}if(e.target.id!=='live-login')return;e.preventDefault();const b=e.target.querySelector('button');b.disabled=true;const feedback=$('login-feedback');feedback.textContent='Loggar in…';const email=$('live-email').value.trim();try{const {error}=await db.auth.signInWithPassword({email,password:$('live-password').value});if(error)throw error;$('live-password') && ($('live-password').value='');await refresh();}catch(err){feedback.textContent='Kunde inte logga in. Kontrollera e-post och lösenord, eller välj ”Glömt lösenord eller saknar lösenord?”.';}finally{b.disabled=false;}});
 window.addEventListener('hashchange',()=>{
   if(page()!=='insikter'){insightsRows=[];sharedUnderstandingRows=[];insightsError='';insightsLoading=false;insightsRequest++;}
-  if(page()!=='regler'){schysstaSuggestions=[];schysstaRules=[];schysstaError='';schysstaLoading=false;schysstaRequest++;}
+  if(page()!=='regler'&&page()!=='inkorg'){schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];schysstaError='';schysstaLoading=false;schysstaRequest++;}
   render();scrollLiveMainTop();
   if(page()==='insikter')void fetchInsights();
-  if(page()==='regler')void fetchSchysstaList();
+  if(page()==='regler'||page()==='inkorg')void fetchSchysstaList();
   if(page()==='swipe')void pollSharedMatches();
 });
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)void pollSharedMatches();});
