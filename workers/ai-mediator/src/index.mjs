@@ -35,6 +35,35 @@ export function safetyResponse(message) {
   return null;
 }
 
+// Only the signed-in person's role may influence the tone. Never send the RPC's
+// family names or other members' roles to Workers AI. Fail to a neutral prompt.
+export async function loadViewerRole(env, jwt, userId, fetchAuth) {
+  try {
+    const url = new URL('/rest/v1/rpc/my_family_members', env.SUPABASE_URL);
+    const res = await fetchAuth(url.toString(), {
+      method: 'POST',
+      headers: {
+        Authorization: 'Bearer ' + jwt,
+        apikey: env.SUPABASE_PUBLISHABLE_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: '{}',
+      redirect: 'manual'
+    });
+    if (!res.ok) return null;
+    const rows = await res.json();
+    if (!Array.isArray(rows) || rows.length > 4) return null;
+    const self = rows.find(row => row?.user_id === userId);
+    return self?.role === 'parent' || self?.role === 'teen' ? self.role : null;
+  } catch {
+    return null;
+  }
+}
+const ROLE_INSTRUCTIONS = Object.freeze({
+  parent: 'Du talar med en förälder. Hjälp den vuxne att ta sitt ansvar för relationen, reparation efter bråk och respekt för tonåringens integritet. Undvik att lägga konfliktlösningsansvaret på barnet.',
+  teen: 'Du talar med en tonåring. Visa respekt för självständighet och känslor. Hjälp tonåringen hitta en trygg samtalsöppning, men gör inte ungdomen ansvarig för förälderns beteenden eller för att medla vid hot och övergrepp.'
+});
+
 function answer(status, data, origin) {
   const headers = {
     'Content-Type': 'application/json; charset=utf-8',
@@ -196,9 +225,11 @@ export function createHandler({ fetchAuth = fetch, now = () => new Date() } = {}
     }
     if (!quota) return answer(429, { error: 'Dagens testkvot är slut. Försök nästa dag.' }, origin);
     try {
+      const viewerRole = await loadViewerRole(env, jwt, userId, fetchAuth);
+      const roleGuidance = viewerRole ? ROLE_INSTRUCTIONS[viewerRole] : 'Ge neutralt, respektfullt stöd utan att gissa om personen är förälder eller tonåring.';
       const result = await env.AI.run(MODEL, {
         messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'system', content: SYSTEM_PROMPT + ' ' + roleGuidance },
           ...previous.filter(row => row.role === 'user' || row.role === 'assistant')
             .map(row => ({role:row.role, content:String(row.body).slice(0,2400)})),
           { role: 'user', content: message }
