@@ -205,7 +205,7 @@ test('parent sees a distinct narrative for the same shared scores',async()=>{
   await ui.handleClick(btn('share'),{isPaired:true});
   const html=ui.render({isPaired:true,viewerRole:'parent'});
   assert.match(html,/För dig som förälder/);
-  assert.match(html,/När du vill planera i god tid och tonåringen tar saker mer som de kommer/);
+  assert.match(html,/Tonåringen kanske uppskattar tydliga planer mer än du själv gör/);
   assert.doesNotMatch(html,/Om din förälder vill ha ordning och framförhållning/);
   assert.match(html,/href="#regler"/);
 });
