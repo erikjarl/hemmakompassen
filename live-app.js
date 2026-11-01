@@ -756,9 +756,16 @@ async function fetchSchysstaList(){
   schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];schysstaNotifications=[];schysstaReplacementLinks=[];schysstaHistory=[];schysstaError='';
   if(!schysstaListEnabled||!viewer||members.length!==2){schysstaLoading=false;if(['regler','inkorg','hem'].includes(page()))render();return;}
   schysstaLoading=true;if(['regler','inkorg','hem'].includes(page()))render();
-  let results;
-  try{results=await Promise.all([db.rpc('shared_schyssta_rule_suggestions'),db.rpc('my_schyssta_rules'),db.rpc('my_manual_schyssta_rules'),db.rpc('my_schyssta_notifications'),db.rpc('my_schyssta_replacement_links'),db.rpc('my_schyssta_rule_history')]);}
-  catch(e){results=[{error:e},{error:e},{error:e},{error:e},{error:e},{error:e}];}
+  let results,timeoutHandle;
+  try{
+    const pending=Promise.all([db.rpc('shared_schyssta_rule_suggestions'),db.rpc('my_schyssta_rules'),db.rpc('my_manual_schyssta_rules'),db.rpc('my_schyssta_notifications'),db.rpc('my_schyssta_replacement_links'),db.rpc('my_schyssta_rule_history')]);
+    // Fail closed if Supabase stays unreachable; no stale snapshot shown.
+    results=await Promise.race([pending,new Promise((_,reject)=>{
+      timeoutHandle=setTimeout(()=>reject(new Error('Schyssta fetch timeout')),15000);
+    })]);
+  }catch(e){
+    results=[{error:e},{error:e},{error:e},{error:e},{error:e},{error:e}];
+  }finally{clearTimeout(timeoutHandle);}
   if(request!==schysstaRequest||user?.id!==viewer||sharedSession!==session)return;
   schysstaLoading=false;
   if(results.some(result=>result.error)){schysstaError='Schyssta listan kunde inte hämtas. Inga tidigare förslag visas.';}
@@ -992,6 +999,10 @@ document.addEventListener('visibilitychange',()=>{
   // Refresh the family's inbox after returning to the tab, without overwriting a draft.
   if(schysstaListEnabled&&user&&members.length===2&&!schysstaLoading&&!schysstaDraftOpen
     &&['hem','inkorg','regler'].includes(page()))void fetchSchysstaList();
+});
+window.addEventListener('online',()=>{
+  if(schysstaListEnabled&&user&&members.length===2&&!schysstaDraftOpen&&!schysstaLoading
+     &&schysstaError&&['hem','inkorg','regler'].includes(page()))void fetchSchysstaList();
 });
 window.addEventListener('focus',()=>void pollSharedMatches());
 window.setInterval(()=>void pollSharedMatches(),SHARED_POLL_INTERVAL_MS);
