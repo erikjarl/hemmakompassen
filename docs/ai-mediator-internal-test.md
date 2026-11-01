@@ -1,6 +1,6 @@
 # AI-medlaren – intern testversion med privata sparade samtal
 
-**Status 2026-11-01:** Cloudflare Worker är driftsatt på Workers Free; användargränssnittet finns på `feature/ai-medlare-privat-test-20261101`, **inte** på `main` eller på den ordinarie publicerade GitHub Pages-sidan. Det är fortfarande en utvecklingsversion; använd enbart fiktiva testsamtal.
+**Status 2026-11-01:** AI-medlarens frontend och serverkod har mergats till `main` via PR #81 (commit `6fe4538`) och webbplatsens cacheversion har uppdaterats (commit `49a64d4`). Den separata Cloudflare Workern kör på Workers Free och godkänner bara de två interna testkontona. **Den faktiska GitHub Pages-distributionen och verklig tvåkontoinloggning har inte kunnat verifieras här.** Det är en intern testversion, enbart för fiktiva samtal.
 
 ## Arkitektur
 - GitHub Pages statisk frontend → separat Cloudflare Worker → verifierar Supabase Auth-token via `/auth/v1/user`.
@@ -42,7 +42,8 @@ Klienten begär autentisering vid varje anrop; Workern verifierar token **på se
 - [x] Separata modellförfrågningar med påhittade svenska frågor har givit svar på gratisplanen.
 - [x] GitHub Actions **AI-mediator backend safety tests** har klarat Node-tester, syntaxkontroller och statiskt bygge på den renodlade PR-branchen. Den ordinarie webbplatsens UI-browser-workflow har också passerat efter att testharnessen uppdaterades för medlarens reset.
 - [ ] Verkliga autentiserade tvåkontotester och browser→Worker→Auth→AI-end-to-end-test **inte verifierade**. Direkta egna workers.dev-anrop blockerades tidigare av Cloudflare-verktygets egress; detta bevisar inte tjänstens svarskod.
-- [ ] Featurebranchen måste granskas och mergas före den vanliga GitHub Pages-sidan visar chatten. Inga förändringar är ännu mergade till `main`.
+- [x] AI-branchen har granskats, haft gröna AI- och UI-GitHub Actions och mergats till `main` via PR #81. Cacheversionen för webbsidans JS, CSS och konfiguration har ändrats.
+- [ ] Verifiera att GitHub Pages faktiskt serverar den nya versionen och testa hela kedjan med Fannyförälder/Tobbetonåring i två riktiga sessioner.
 
 ## Länkar
 - [Cloudflare Workers AI-priser](https://developers.cloudflare.com/workers-ai/platform/pricing/)
