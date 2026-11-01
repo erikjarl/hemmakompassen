@@ -478,3 +478,27 @@
  .pf-insight-card{padding:13px 0}
  .pf-insight-card p{font-size:.9rem}
 }
+
+/* Rich family reflections: readable narrative text and real next-step links. */
+.pf-family-reflections{background:#22283a}
+.pf-insight-audience{color:#f3c785;font-weight:700;letter-spacing:.025em;margin:0 0 10px;font-size:.91rem}
+.pf-insight-intro{font-size:.96rem;line-height:1.75;margin:0 0 16px;color:#e1e7f0}
+.pf-insight-overview{font-size:.9rem;line-height:1.7;color:#b9c9d7;border-left:3px solid #7b8fa4;padding:2px 0 2px 13px;margin:0 0 26px}
+.pf-insight-header{margin-bottom:10px}
+.pf-insight-type{display:block;color:#f1bc70;font-size:.77rem;letter-spacing:.025em;font-weight:650;margin:0 0 5px}
+.pf-insight-similarity .pf-insight-type{color:#90d4c6}
+.pf-insight-header h5{font:600 1.15rem/1.3 Georgia,serif;color:#f1f5fb;margin:0}
+.pf-insight-card{padding:17px 0 22px}
+.pf-insight-card .pf-insight-context,.pf-insight-card .pf-reflection-context{font-size:.89rem;color:#bfc9d7;line-height:1.65;margin-bottom:10px}
+.pf-insight-card .pf-insight-narrative{font-size:.96rem;line-height:1.8;color:#f0f2f6;margin:0 0 14px}
+.pf-insight-card .pf-insight-question{font-size:.9rem!important;line-height:1.65;color:#d9f3ec!important;margin:0 0 15px}
+.pf-insight-resource{padding:13px 14px;background:#2d3447;border:1px solid #56677c;border-radius:12px}
+.pf-insight-resource a{color:#facb82;font-weight:700;font-size:.9rem;text-decoration:underline;text-underline-offset:3px}
+.pf-insight-resource a:focus-visible{outline:3px solid #e5b863;outline-offset:3px}
+.pf-insight-resource p{color:#c9d2df;font-size:.84rem;line-height:1.55;margin:7px 0 0}
+.pf-insight-empty{color:#ccd5e3;font-size:.94rem;line-height:1.7}
+@media(max-width:420px){
+ .pf-family-reflections{padding:17px 16px}
+ .pf-insight-card .pf-insight-narrative{font-size:.94rem}
+ .pf-insight-resource{padding:12px}
+}
