@@ -20,11 +20,12 @@ function harness() {
     if(q.startsWith('SELECT id, title, created_at, updated_at FROM ai_private_chat_threads WHERE id'))return threads.get(a[0])?.user_id===a[1]?threads.get(a[0]):null;
     if(q.startsWith('SELECT id FROM ai_private_chat_threads'))return threads.get(a[0])?.user_id===a[1]?{id:a[0]}:null;
     if(q.startsWith('SELECT COUNT(*) AS n FROM ai_private_chat_messages'))return {n:messages.filter(x=>x.chat_id===a[0]&&x.user_id===a[1]).length};
-    if(q.startsWith('SELECT id, role, body, created_at FROM ai_private_chat_messages'))return messages.filter(x=>x.chat_id===a[0]&&x.user_id===a[1]).sort((x,y)=>y.created_at.localeCompare(x.created_at)).slice(0,a[2]);
-    if(q.startsWith('SELECT role, body FROM ai_private_chat_messages'))return messages.filter(x=>x.chat_id===a[0]&&x.user_id===a[1]).sort((x,y)=>y.created_at.localeCompare(x.created_at)).slice(0,a[2]);
+    if(q.startsWith('SELECT id, role, body, created_at FROM ai_private_chat_messages'))return messages.filter(x=>x.chat_id===a[0]&&x.user_id===a[1]).sort((x,y)=>y.sort_order-x.sort_order).slice(0,a[2]);
+    if(q.startsWith('SELECT role, body FROM ai_private_chat_messages'))return messages.filter(x=>x.chat_id===a[0]&&x.user_id===a[1]).sort((x,y)=>y.sort_order-x.sort_order).slice(0,a[2]);
     if(q.startsWith('INSERT INTO ai_private_chat_messages')){
       const m=q.includes("'user'")?{id:a[0],role:'user',body:a[1],created_at:a[2],chat_id:a[3],user_id:a[4]}:{id:a[0],role:a[1],body:a[2],created_at:a[3],chat_id:a[4],user_id:a[5]};
       if(threads.get(m.chat_id)?.user_id!==m.user_id)return 0;
+      m.sort_order=1+Math.max(0,...messages.filter(x=>x.chat_id===m.chat_id&&x.user_id===m.user_id).map(x=>x.sort_order||0));
       messages.push(m);return 1;
     }
     if(q.startsWith('UPDATE ai_private_chat_threads')){
