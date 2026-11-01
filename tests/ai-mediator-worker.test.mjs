@@ -118,7 +118,7 @@ test('GET är inte en genväg till AI',async()=>{
 
 test('explicit suicide risk is never forwarded to the language model',async()=>{
   const x=harness();
-  const response=await x.handler(request({body:{message:'Jag är 15 år och vill inte leva längre.'}}),x.env);
+  const response=await x.handler(req({body:{message:'Jag är 15 år och vill inte leva längre.'}}),x.env);
   assert.equal(response.status,200);
   const data=await response.json();
   assert.equal(data.safetyNotice,true);
@@ -128,7 +128,7 @@ test('explicit suicide risk is never forwarded to the language model',async()=>{
 });
 test('explicit threat from a parent never triggers an unsafe mediation prompt',async()=>{
   const x=harness();
-  const response=await x.handler(request({body:{message:'Min pappa hotar att slå mig.'}}),x.env);
+  const response=await x.handler(req({body:{message:'Min pappa hotar att slå mig.'}}),x.env);
   assert.equal(response.status,200);
   const data=await response.json();
   assert.equal(data.safetyNotice,true);
@@ -143,7 +143,7 @@ test('safety detection is narrow and does not intercept an ordinary disagreement
 
 test('passiv beskrivning av våld fångas utan AI-anrop',async()=>{
  const x=harness();
- const response=await x.handler(request({body:{message:'Jag blir slagen hemma.'}}),x.env);
+ const response=await x.handler(req({body:{message:'Jag blir slagen hemma.'}}),x.env);
  assert.equal(response.status,200);
  assert.equal((await response.json()).safetyNotice,true);
  assert.equal(x.seen.model.length,0);
