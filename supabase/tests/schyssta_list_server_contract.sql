@@ -2,7 +2,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
-select plan(22);
+select plan(25);
 
 insert into auth.users (id,email) values
   ('41000000-0000-0000-0000-000000000001','rule-a-parent@example.invalid'),
@@ -106,6 +106,28 @@ select results_eq(
   $$values ('regler-05'::text)$$,
   'other family sees only its own mutual match'
 );
-select is_empty($$select * from public.my_schyssta_rules()$$,'other family cannot read family A proposal');
+select is_empty($select * from public.my_schyssta_rules()$,'other family cannot read family A proposal');
+
+-- A re-pair (or rejoin) must not inherit an earlier proposal or approval.
+set local role postgres;
+update public.family_members
+set joined_at = joined_at + interval '1 second'
+where family_id = 'da000000-0000-0000-0000-000000000000'
+  and role = 'teen';
+set local role authenticated;
+select set_config('request.jwt.claims','{"sub":"41000000-0000-0000-0000-000000000001","role":"authenticated"}',true);
+select is_empty(
+  $select * from public.my_schyssta_rules()$,
+  'older pairing rule is invisible after a membership epoch change'
+);
+select results_eq(
+  $select card_id from public.shared_schyssta_rule_suggestions()$,
+  $values ('regler-01'::text)$,
+  'current mutual match may be proposed again in a new pairing epoch'
+);
+select lives_ok(
+  $select public.propose_schyssta_rule('regler-01')$,
+  'new pairing can create its own proposal without inheriting old votes'
+);
 
 rollback;
