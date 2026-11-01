@@ -19,6 +19,7 @@ on:
       - "supabase/migrations/20261101121500_schyssta_notifications.sql"
       - "supabase/migrations/20261101130000_schyssta_replacements.sql"
       - "supabase/migrations/20261101133000_schyssta_rule_archive.sql"
+      - "supabase/migrations/20261101150000_family_direct_messages.sql"
       - "supabase/tests/shared_swipe_matches.sql"
       - "supabase/tests/swipe_importance.sql"
       - "supabase/tests/shared_swipe_priorities.sql"
@@ -28,6 +29,7 @@ on:
       - "supabase/tests/schyssta_notifications.sql"
       - "supabase/tests/schyssta_replacements.sql"
       - "supabase/tests/schyssta_archive.sql"
+      - "supabase/tests/family_direct_messages.sql"
       - "supabase/tests/fixtures/shared_swipe_contract_schema.sql"
   workflow_dispatch:
 
@@ -136,6 +138,11 @@ jobs:
           docker exec -i "${{ job.services.postgres.id }}" \
             psql -U postgres -d postgres -v ON_ERROR_STOP=1 -X -q \
             < supabase/migrations/20261101133000_schyssta_rule_archive.sql
+      - name: Apply private two-way family messages
+        run: |
+          docker exec -i "${{ job.services.postgres.id }}" \
+            psql -U postgres -d postgres -v ON_ERROR_STOP=1 -X -q \
+            < supabase/migrations/20261101150000_family_direct_messages.sql
       - name: Assert 52 real pgTAP test results
         shell: bash
         run: |
@@ -248,3 +255,16 @@ jobs:
             exit 1
           fi
           test "$(grep -Ec '^ok [0-9]+' /tmp/schyssta-archive-test.log)" -eq 14
+
+      - name: Assert 24 private family message pgTAP results
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker exec -i "${{ job.services.postgres.id }}" \
+            psql -U postgres -d postgres -v ON_ERROR_STOP=1 -X -q -A -t \
+            < supabase/tests/family_direct_messages.sql | tee /tmp/family-direct-messages.log
+          grep -qx '1..24' /tmp/family-direct-messages.log
+          if grep -Eq '^(not ok|# Looks like you failed)' /tmp/family-direct-messages.log; then
+            exit 1
+          fi
+          test "$(grep -Ec '^ok [0-9]+' /tmp/family-direct-messages.log)" -eq 24
