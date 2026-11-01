@@ -538,3 +538,8 @@
 .mediator-thread-list button[aria-current="true"]{border-color:#f59e0b;background:#302b2b;color:#f8c66b}
 .mediator-thread-list button:focus-visible{outline:3px solid #f59e0b;outline-offset:3px}
 @media(max-width:600px){.mediator-thread-list button{flex-basis:155px}.mediator-history-heading .mediator-clear{width:auto}}
+
+/* Private AI context-source preview; content stays server-side. */
+.mediator-context{margin:18px 0;padding:16px 19px;border:1px solid #59687a;border-radius:17px;background:#202a35}
+.mediator-context h2{font-size:1.12rem;margin:0 0 8px}
+.mediator-context p{line-height:1.6;margin:8px 0 14px;color:#cbd5e1}
