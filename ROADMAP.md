@@ -502,6 +502,16 @@ Listan är en samlad arbetsplan för att slutföra Gillaswajpen. Kryssa av förs
 
 ## FAS 5 — AI-medlaren: privat samtal och senare AI-stödda sammanfattningar (uppdaterad 1 november 2026)
 
+**AI-01F – behörighetsstyrd kontext från hela Hemmakompassen (pågående 2026-11-01):**
+- [x] Worker-kod för att läsa underlag med den verifierade användarens JWT vid varje AI-svar – aldrig med service_role eller klientinskickade familjeuppgifter.
+- [x] Egna Gillaswajpen-JA/NEJ och privat viktighet (urval), endast godkända gemensamma JA+JA från server-RPC, egna fem IPIP-faktorer och tvåsidigt samtyckt delade faktorpoäng (inte råa enskilda frågesvar).
+- [x] Aktiva godkända och separat märkta föreslagna Schyssta-regler, begränsat utdrag ur den av användaren åtkomliga familjeinkorgen samt möjlighet att hänvisa till appens övriga funktioner.
+- [x] Uppdaterade rollanpassade AI-instruktioner, dataminimering till max 9 300 tecken, separation av egna och gemensamma svar samt en källa-översikt vid chatstart.
+- [x] Gamla AI-svar skickas inte tillbaka som modellkontext – de kan innehålla information vars delningssamtycke därefter har dragits tillbaka. Användarens egna tidigare meddelanden och en nyskapad auktoriserad kontext används.
+- [ ] Verifiera GitHub CI, distribuera alla Worker-moduler till Cloudflare och testa verkliga anrop med båda interna testkontona.
+- [ ] Granska integritet, särskilt att korta inkorgsutdrag och samtyckta partnerpoäng inte används utöver användarens behörighet; ingen klinisk säkerhet är validerad.
+- [ ] Senare: separata frivilliga, rollanpassade AI-sammanfattningar på Gillaswajpen-/Big Five-resultatsidorna.
+
 **Senaste status efter merge:** Ren AI-PR #81 är mergad till `main` (commit `6fe4538`) med sparad, privat testchatt, serverkontrollerad Supabase-inloggning och rollstyrt AI-svar, samt allowlist för Fannyförälder/Tobbetonåring. GitHub Actions för AI-backend och webbplatsens UI/browser-testkedja har passerat. `index.html` har uppdaterade versionsparametrar för JS, CSS och konfiguration (commit `49a64d4`). **Publiceringens faktiska innehåll via GitHub Pages och riktig autentiserad tvåkontofunktion är inte oberoende bekräftade. Verkligt känsliga samtal får ännu inte användas.** Äldre statusrader om att koden enbart ligger på en branch är historiska.
 
 
