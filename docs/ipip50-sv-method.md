@@ -99,3 +99,19 @@ Nästa backendsteg enligt ROADMAP PF-18–25: skapa versionssatta testomgångar 
 
 **Säkerhetsgräns:** Direkt klientläsning av den andra användarens `personality_answers` får aldrig införas. Om samma instrument översätts om, skapa ett NYTT `instrument_id`; byt inte tyst ut frågor under v1.
 
+
+## Komplettering 2026-11-01 – amerikanskt vuxenmedelvärde och standardavvikelse i spindeldiagrammet
+
+**Produktbeslut:** användaren vill att M och SD ska synas direkt i den befintliga radargrafen med tillhörande textåterkoppling, inte i en separat illustrativ stapel. Därför gäller följande för version `ipip50-sv-v1`:
+
+- `personality/ipip50-reference.js` tillför en **deskriptiv** vuxenjämförelse baserad på befintliga fem M/SD från Skidmores ESCS-analys (N=570, engelskspråkig testversion). Ingen databas- eller samtyckesmigration behövdes.
+- Radarn har råpoängsskalan 10–50. En ljus, streckad referenskontur visar **medelvärdet per dimension**. Ett grått fält ligger mellan M−1 SD och M+1 SD. Prickade konturer visar M±2 SD. Eftersom skalan är begränsad 10–50 klipps fältkonturerna där. Samma M/SD gäller för föräldern och tonåringen – **inte** separata åldersnormer.
+- Tabellen under grafen visar de fem dimensionernas egna (och vid ömsesidigt godkänd delning den andras) råsummor, amerikanskt vuxenmedelvärde (M), amerikansk standardavvikelse (SD) samt avståndet för egen poäng i antal SD, dvs. `z=(poäng−M)/SD`.
+- För textåterkopplingen gäller en **deklarerad redaktionell konvention**, inte en empiriskt verifierad populationsandel: `|z| >= 2` innebär ”ovanligt högt/lågt i förhållande till den amerikanska vuxenreferensen”; `1 <= |z| < 2` innebär mer än en SD över/under; `|z| < 1` innebär inom en SD. Gränsen har inte prövats mot den svenska översättningen; vi rapporterar därför ingen percentil eller statistisk signifikans och ingen klinisk gräns.
+- Det måste tydligt stå i vyn att **amerikanska engelskspråkiga vuxenresultat inte är svenska normer och inte tonårsnormer**. Den fritt formulerade svenska översättningen behöver kontrolleras med kognitiva intervjuer och psykometrisk prövning, och det är extra viktigt när användaren är under 18. IPIP:s egen varning om allmänna normgrupper står kvar: https://ipip.ori.org/newNorms.htm.
+- Primärkälla till originaldata: Goldberg (2018), ESCS, Harvard Dataverse https://doi.org/10.7910/DVN/UF52WY (CC0 1.0). Den exakta uppställningen av M och SD som används i appen: https://darrenskidmore.com/projects/ipip-workbench/report/unified_report.html, **Big Five: Sample and Descriptive Statistics**. Skala IV har i referensrapporten riktningen Neuroticism, därför är den här omräknad till Emotionell stabilitet: `M_stabilitet=60−M_neuroticism=35,01`; SD är oförändrad (7,56).
+- Ingen individinformation överförs till normkällan: alla jämförelser är lokala beräkningar av redan inlästa tillåtna råpoäng. Andra familjemedlemmens individuella svar förblir privata.
+
+**UI-bugg och åtgärd:** svarsalternativ fick tidigare nästan ingen synlig bekräftelse på tryck, eftersom skärmen omedelbart ritades om till nästa fråga. Nu hålls det markerade alternativet kvar med kontrastfärg, kant och bock under sparning, i minst 650 millisekunder, innan frågeflödet går vidare. Om sparningen misslyckas går frågan inte vidare och ett felmeddelande visas. De val som redan finns sparade blir markerade vid återgång och granskning. Enhetstester och mobilwebbläsartest kontrollerar detta.
+
+**Status:** Teknisk referensvisning är implementerad, men motsvarar INTE att ett validerat svenskt test med svenska normer har skapats. Fortsatt översättningsgranskning och referensgruppsval finns i ROADMAP PF-29.
