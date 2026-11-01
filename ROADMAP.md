@@ -602,3 +602,11 @@ Listan är en samlad arbetsplan för att slutföra Gillaswajpen. Kryssa av förs
 - [x] Behåll serverkontrollerat dubbelsamtycke och fem summerade skalpoäng som enda gemensamma underlag. Återkallelse tar bort tolkningstexterna tillsammans med jämförelsediagrammet.
 - [x] Automatisk testning av riktningar, gränsvärden, lika profiler, ogiltiga resultat, mobilvyer och visning efter samtycke.
 - [ ] Användartesta texter och gränser med föräldrar/tonåringar samt genomför klinisk kvalitetsgranskning före extern pilot; gränserna är för närvarande redaktionella, inte vetenskapligt validerade.
+
+## Big Five – reflekterande och rollanpassad textåterkoppling (1 november 2026)
+- [x] Varje tydlig skillnad (≥9 råpoäng) och varje tydlig likhet (≤3 råpoäng) får en egen kort, vardagsnära, hypotetisk reflektion, inte bara listor med poäng och frågor. Största skillnaderna och närmaste likheterna prioriteras.
+- [x] Texterna skrivna separat för förälder och tonåring, med skillnadens riktning och familjerelationens ansvarsfördelning beaktad; ingen diagnostik och inget antagande att olikheter automatiskt är problem.
+- [x] Konkret nästa steg och fördjupande samtalsfråga per dimension, länkat enbart till aktiva avsnitt (Gillaswajpen: Aktiviteter tillsammans, Sätt att visa uppskattning, Samtalsämnen; Kommunikationsråd; Schyssta listan).
+- [x] AI-medlaren är fortfarande en utvecklingsvy och rekommenderas därför inte som ett färdigt verktyg.
+- [x] Kontroll att de relevanta Gillaswajpen-kortlekarna existerar, skilda föräldra/tonåringstexter, tvåsamtyckesgrind och borttagning vid återkallelse; mobiltest för båda rollerna.
+- [ ] Klinisk och användarnära granskning av språkets hjälpsamhet och lämplighet före extern pilot. Gränserna är fortfarande redaktionella.
