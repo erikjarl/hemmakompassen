@@ -509,6 +509,11 @@ try{
   assert.equal(await paired.page.getByRole('button',{name:'Uppdatera listan'}).count(),1,
     'A paired test user can explicitly reload the list');
   await paired.page.getByRole('button',{name:'+ Föreslå en regel'}).click();
+  const prompts=paired.page.locator('.schyssta-tips');
+  assert.equal(await prompts.count(),1,'Composing a rule offers optional, collapsed conversation prompts');
+  assert.equal(await prompts.locator('summary').innerText(),'Tips för en tydlig och rättvis överenskommelse');
+  await prompts.locator('summary').click();
+  assert.match(await prompts.innerText(),/Vuxnas ansvar för trygghet och omsorg/, 'Prompts retain parent responsibility');
   await paired.page.locator('#schyssta-body').fill('Vi planerar veckans sysslor på söndag.');
   await paired.page.getByRole('button',{name:'Skicka regelförslag'}).click();
   await paired.page.waitForFunction(()=>window.__HK_MANUAL_PROPOSE__?.args?.p_body==='Vi planerar veckans sysslor på söndag.');
