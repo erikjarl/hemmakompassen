@@ -100,6 +100,7 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
           {card_id:'regler-02',body:'Falsk text som aldrig får visas.'},
           {card_id:'regler-99',body:'Okänd privat uppgift'}
         ];
+        let schysstaManualRules=[{agreement_id:'30000000-0000-4000-8000-000000000001',body:'Vi pratar om hur vi delar på sysslorna.',status:'proposed',agreement_version:1,proposed_by_me:false,own_decision:null,parent_decision:null,teen_decision:null,created_at:'2026-10-30T12:00:00Z'}];
         let schysstaRules=[{agreement_id:'20000000-0000-4000-8000-000000000001',source_card_id:'regler-03',body:'Vi får pausa gräl och bestämmer när vi pratar vidare.',status:'proposed',proposed_by_me:false,own_decision:null,parent_decision:null,teen_decision:true,created_at:'2026-10-30T12:00:00Z'}];
         return {
           auth:{
@@ -158,6 +159,18 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
             }
             if(name==='shared_schyssta_rule_suggestions')return {data:window.__HK_TEST_PAIRED__?(window.__HK_SCHYSSTA_CLEAN_RPC__===true?schysstaSuggestions.filter(row=>row.card_id==='regler-01'):schysstaSuggestions):[],error:null};
             if(name==='my_schyssta_rules')return {data:window.__HK_TEST_PAIRED__?schysstaRules:[],error:null};
+            if(name==='my_manual_schyssta_rules')return {data:window.__HK_TEST_PAIRED__?schysstaManualRules.map(({request_key,...row})=>row):[],error:null};
+            if(name==='propose_manual_schyssta_rule'){
+              window.__HK_MANUAL_PROPOSE__={name,args};
+              if(!window.__HK_TEST_PAIRED__||!args.p_body||!args.p_request_key)return {data:null,error:{message:'invalid manual rule'}};
+              const existing=schysstaManualRules.find(row=>row.request_key===args.p_request_key);
+              if(existing)return {data:existing.agreement_id,error:null};
+              const row={agreement_id:'30000000-0000-4000-8000-000000000002',
+                body:args.p_body,status:'proposed',agreement_version:1,proposed_by_me:true,
+                own_decision:null,parent_decision:null,teen_decision:null,created_at:'2026-10-30T12:02:00Z'};
+              schysstaManualRules.push({...row,request_key:args.p_request_key});
+              return {data:row.agreement_id,error:null};
+            }
             if(name==='propose_schyssta_rule'){
               window.__HK_SCHYSSTA_PROPOSE__={name,args};
               const body={'regler-01':'Vi knackar innan vi går in i varandras rum.'}[args.p_card_id];
@@ -451,7 +464,7 @@ try{
   assert.match(schysstaText,/Vi får pausa gräl/,'Existing family proposal is visible');
   assert.doesNotMatch(schysstaText,/Falsk text|Okänd privat uppgift/,'Malformed and unknown server rows fail closed');
   assert.match(schysstaText,/Ett förslag är inte ett godkännande/,'Proposal and approval remain visibly separate');
-  await paired.page.getByRole('button',{name:'Föreslå'}).click();
+  await paired.page.getByRole('button',{name:'Föreslå',exact:true}).click();
   await paired.page.waitForFunction(()=>window.__HK_SCHYSSTA_PROPOSE__?.args?.p_card_id==='regler-01');
   assert.deepEqual(await paired.page.evaluate(()=>window.__HK_SCHYSSTA_PROPOSE__.args),{p_card_id:'regler-01'},'Proposal sends only the allowlisted card id');
   const newProposal=paired.page.locator('.schyssta-list li').filter({hasText:'Vi knackar innan vi går in i varandras rum'});
@@ -459,6 +472,25 @@ try{
   await newProposal.getByRole('button',{name:'Jag godkänner'}).click();
   await paired.page.waitForFunction(()=>window.__HK_SCHYSSTA_DECISION__?.args?.p_approved===true);
   assert.deepEqual(await paired.page.evaluate(()=>window.__HK_SCHYSSTA_DECISION__.args),{p_agreement_id:'20000000-0000-4000-8000-000000000002',p_approved:true},'Decision is a separate explicit RPC');
+  // A test parent can compose and submit a manual rule without auto-approval.
+  await paired.page.getByRole('button',{name:'+ Föreslå en regel'}).click();
+  await paired.page.locator('#schyssta-body').fill('Vi planerar veckans sysslor på söndag.');
+  await paired.page.getByRole('button',{name:'Skicka regelförslag'}).click();
+  await paired.page.waitForFunction(()=>window.__HK_MANUAL_PROPOSE__?.args?.p_body==='Vi planerar veckans sysslor på söndag.');
+  const manualRequest=await paired.page.evaluate(()=>window.__HK_MANUAL_PROPOSE__.args);
+  assert.match(manualRequest.p_request_key,/^[0-9a-f-]{36}$/i,'Manual proposals send an idempotency token');
+  const manualRule=paired.page.locator('.schyssta-list li').filter({hasText:'Vi planerar veckans sysslor på söndag.'});
+  await manualRule.waitFor();
+  assert.match(await manualRule.innerText(),/Väntar på bådas beslut/,'Manual proposal remains pending');
+  assert.match(await manualRule.innerText(),/Ditt val: inte lämnat/,'Submitting never approves own manual proposal');
+  await paired.page.goto(base+'#inkorg',{waitUntil:'load'});
+  await paired.page.getByRole('heading',{name:'Inkorg'}).waitFor();
+  const inboxText=await paired.page.locator('#live-app').innerText();
+  assert.match(inboxText,/Vi pratar om hur vi delar på sysslorna/,'Inbox shows other member pending manual request');
+  assert.doesNotMatch(inboxText,/Vi planerar veckans sysslor på söndag/,'Inbox does not present sender own proposal as incoming');
+  await paired.page.getByRole('button',{name:'Se och svara i Schyssta listan'}).first().click();
+  await paired.page.getByRole('heading',{name:'Schyssta listan'}).waitFor();
+  await paired.page.locator('#schyssta-rule-30000000-0000-4000-8000-000000000001').waitFor();
   await checkOverflow(paired.page,'Mobile Schyssta listan');
   await capture(paired.page,'mobile-schyssta-list.png');
   await paired.page.goto(base+'#swipe',{waitUntil:'load'});

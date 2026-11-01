@@ -7,8 +7,8 @@ const app=await readFile(new URL('../live-app.js',import.meta.url),'utf8');
 const config=await readFile(new URL('../backend-config.js',import.meta.url),'utf8');
 const migration=await readFile(new URL('../supabase/migrations/20261030180000_schyssta_list_server_contract.sql',import.meta.url),'utf8');
 
-test('Schyssta listan is fail-closed outside reviewed environments',()=>{
-  assert.match(config,/enableSchysstaList:\s*false/);
+test('Schyssta listan is enabled for the online test site, with authenticated RPCs',()=>{
+  assert.match(config,/enableSchysstaList:\s*true/);
   assert.match(app,/const schysstaListEnabled=c\.enableSchysstaList===true/);
   assert.match(app,/if\(!schysstaListEnabled\)return/);
 });
@@ -56,6 +56,16 @@ test('Schyssta listan rejects incomplete, duplicate or contradictory RPC snapsho
   assert.equal(validate(null,[rule]),false,'Null RPC payload is not a legitimate empty array');
   assert.equal(validate([suggestion],null),false,'Missing agreements cannot imply an empty list');
   assert.equal(validate([suggestion],[{...rule,parent_decision:'yes'}]),false,'Reject invalid decision types');
-  assert.match(app,/else if\(!validSchysstaPayload\(results\[0\]\.data,results\[1\]\.data\)\)/);
+  assert.ok(app.includes("else if(!validSchysstaPayload(results[0].data,results[1].data)||!validManualSchysstaPayload(results[2].data,results[1].data))"),'Both sources fail closed together');
   assert.match(app,/Inga förslag eller överenskommelser visas/);
+});
+
+test('manual Schyssta proposals and inbox are backed by the installed authenticated RPCs',()=>{
+  assert.match(app,/db\.rpc\('my_manual_schyssta_rules'\)/);
+  assert.match(app,/db\.rpc\('propose_manual_schyssta_rule'/);
+  assert.match(app,/data-schyssta-open/);
+  assert.match(app,/function inboxView\(\)/);
+  assert.match(app,/schysstaNeedsAnswer/);
+  assert.match(app,/Ni behöver båda godkänna det innan det blir en överenskommelse/);
+  assert.match(app,/Ditt val: /);
 });

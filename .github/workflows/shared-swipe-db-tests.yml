@@ -15,11 +15,13 @@ on:
       - "supabase/migrations/20261028180000_shared_understanding_cards.sql"
       - "supabase/migrations/20261030090000_shared_swipe_all_a_only.sql"
       - "supabase/migrations/20261030180000_schyssta_list_server_contract.sql"
+      - "supabase/migrations/20261101110000_schyssta_manual_proposals.sql"
       - "supabase/tests/shared_swipe_matches.sql"
       - "supabase/tests/swipe_importance.sql"
       - "supabase/tests/shared_swipe_priorities.sql"
       - "supabase/tests/shared_understanding_cards.sql"
       - "supabase/tests/schyssta_list_server_contract.sql"
+      - "supabase/tests/schyssta_manual_proposals.sql"
       - "supabase/tests/fixtures/shared_swipe_contract_schema.sql"
   workflow_dispatch:
 
@@ -108,6 +110,11 @@ jobs:
           docker exec -i "${{ job.services.postgres.id }}" \
             psql -U postgres -d postgres -v ON_ERROR_STOP=1 -X -q \
             < supabase/migrations/20261030180000_schyssta_list_server_contract.sql
+      - name: Apply versioned manual Schyssta proposals
+        run: |
+          docker exec -i "${{ job.services.postgres.id }}" \
+            psql -U postgres -d postgres -v ON_ERROR_STOP=1 -X -q \
+            < supabase/migrations/20261101110000_schyssta_manual_proposals.sql
       - name: Assert 52 real pgTAP test results
         shell: bash
         run: |
@@ -168,3 +175,16 @@ jobs:
             exit 1
           fi
           test "$(grep -Ec '^ok [0-9]+' /tmp/schyssta-list-test.log)" -eq 25
+
+      - name: Assert 21 manual Schyssta proposal pgTAP results
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker exec -i "${{ job.services.postgres.id }}" \
+            psql -U postgres -d postgres -v ON_ERROR_STOP=1 -X -q -A -t \
+            < supabase/tests/schyssta_manual_proposals.sql | tee /tmp/schyssta-manual-test.log
+          grep -qx '1..21' /tmp/schyssta-manual-test.log
+          if grep -Eq '^(not ok|# Looks like you failed)' /tmp/schyssta-manual-test.log; then
+            exit 1
+          fi
+          test "$(grep -Ec '^ok [0-9]+' /tmp/schyssta-manual-test.log)" -eq 21

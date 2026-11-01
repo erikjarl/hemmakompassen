@@ -109,6 +109,18 @@
 .swipe-refresh{margin-top:20px}
 @media(max-width:600px){.swipe-match-list{grid-template-columns:1fr}.swipe-summary-overview li{grid-template-columns:32px minmax(0,1fr);padding:10px}.swipe-summary-icon{width:28px;height:28px;padding:4px}}
 
+/* Schyssta listan's online-test compose and response workflow. */
+.schyssta-compose{display:flex;flex-direction:column;align-items:flex-start;gap:12px}
+.schyssta-compose label{color:#f7d3a1;font-weight:650;line-height:1.5}
+.schyssta-compose textarea{box-sizing:border-box;width:100%;min-height:114px;resize:vertical;border:1px solid #837c8b;border-radius:12px;padding:14px 15px;font:inherit;line-height:1.55;background:#161c2b;color:#f9f3e8}
+.schyssta-compose textarea:focus-visible{outline:3px solid #f1b86e;outline-offset:2px}
+.schyssta-compose .live-muted{margin:0}
+.schyssta-compose button{max-width:100%}
+.schyssta-feedback{padding:12px 14px;margin-top:14px;border-radius:10px;background:#242d38;color:#f7e6c9;line-height:1.5}
+.schyssta-view .live-panel h2{margin-top:0}
+.schyssta-view .schyssta-list>li{scroll-margin-top:110px}
+@media(max-width:430px){.schyssta-compose button{width:100%}.schyssta-view .live-panel{padding:16px}}
+
 /* Schyssta listan: proposals and decisions remain visibly separate. */
 .schyssta-view>p{max-width:760px;line-height:1.65}
 .schyssta-list{display:grid;gap:12px;margin:16px 0 0;padding:0;list-style:none}
