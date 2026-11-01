@@ -29,7 +29,7 @@ export async function getPrivateChat(db, userId, chatId) {
   if (!chat) return null;
   const r = await db.prepare(
     'SELECT id, role, body, created_at FROM ai_private_chat_messages ' +
-    'WHERE chat_id = ? AND user_id = ? ORDER BY created_at DESC, id DESC LIMIT ?'
+    'WHERE chat_id = ? AND user_id = ? ORDER BY sort_order DESC, id DESC LIMIT ?'
   ).bind(chatId, userId, HISTORY_LIMIT).all();
   return {chat, messages: (r.results || []).reverse()};
 }
@@ -51,7 +51,7 @@ export async function contextForChat(db, userId, chatId) {
   if (Number(count?.n || 0) >= HISTORY_LIMIT) return {full: true};
   const r = await db.prepare(
     'SELECT role, body FROM ai_private_chat_messages WHERE chat_id = ? AND user_id = ? ' +
-    'ORDER BY created_at DESC, id DESC LIMIT ?'
+    'ORDER BY sort_order DESC, id DESC LIMIT ?'
   ).bind(chatId, userId, CONTEXT_LIMIT).all();
   return {rows: (r.results || []).reverse()};
 }
@@ -63,13 +63,18 @@ export async function saveExchange(db, userId, chatId, userText, replyText, repl
   const title = userText.slice(0, 70);
   const x = await db.batch([
     db.prepare(
-      'INSERT INTO ai_private_chat_messages (id, chat_id, user_id, role, body, created_at) ' +
-      "SELECT ?, id, user_id, 'user', ?, ? FROM ai_private_chat_threads " +
-      'WHERE id = ? AND user_id = ?'
+      'INSERT INTO ai_private_chat_messages (id, chat_id, user_id, role, body, created_at, sort_order) ' +
+      "SELECT ?, c.id, c.user_id, 'user', ?, ?, " +
+      '(SELECT COALESCE(MAX(m.sort_order),0)+1 FROM ai_private_chat_messages m ' +
+      'WHERE m.chat_id = c.id AND m.user_id = c.user_id) ' +
+      'FROM ai_private_chat_threads c WHERE c.id = ? AND c.user_id = ?'
     ).bind(ids[0], userText, first, chatId, userId),
     db.prepare(
-      'INSERT INTO ai_private_chat_messages (id, chat_id, user_id, role, body, created_at) ' +
-      'SELECT ?, id, user_id, ?, ?, ? FROM ai_private_chat_threads WHERE id = ? AND user_id = ?'
+      'INSERT INTO ai_private_chat_messages (id, chat_id, user_id, role, body, created_at, sort_order) ' +
+      'SELECT ?, c.id, c.user_id, ?, ?, ?, ' +
+      '(SELECT COALESCE(MAX(m.sort_order),0)+1 FROM ai_private_chat_messages m ' +
+      'WHERE m.chat_id = c.id AND m.user_id = c.user_id) ' +
+      'FROM ai_private_chat_threads c WHERE c.id = ? AND c.user_id = ?'
     ).bind(ids[1], replyRole, replyText, second, chatId, userId),
     db.prepare(
       "UPDATE ai_private_chat_threads SET updated_at = ?, title = CASE WHEN title = 'Nytt samtal' THEN ? ELSE title END " +
