@@ -1067,6 +1067,7 @@ swipeIndex=nextUnanswered();}
 if(generation!==refreshGeneration)return;
 render();
 if(user)void personalityExperience.load(user.id);
+if(user&&page()==='medlare')void mediatorExperience.loadList();
 if(user&&members.length===2){void fetchSwipeMatches('general');void fetchThemeUnlock();}
 if(page()==='insikter')void fetchInsights();
 if(typeof fetchSchysstaList==='function'&&schysstaListEnabled&&['regler','inkorg','hem'].includes(page()))void fetchSchysstaList();
@@ -1075,7 +1076,7 @@ if(user&&members.length===2){
   else void fetchFamilyChatUnread();
 }
 }
-document.addEventListener('click',e=>{if(e.target.closest('#mediator-clear')){mediatorExperience.clear();return;}if(e.target.closest('[data-pf-action]')){void personalityExperience.handleClick(e.target,{isPaired:members.length===2&&members.some(m=>m.role==='parent')&&members.some(m=>m.role==='teen')});return;}const b=e.target.closest('[data-swipe]');if(b)advanceSwipe(b.dataset.swipe);if(e.target.closest('#swipe-restart')){swipeReview=true;swipeIndex=visibleGeneralIndices()[0]??STATEMENTS.length;render();}if(e.target.closest('#swipe-skip')&&viewerRole()==='teen'&&GENERAL_CARDS[swipeIndex]?.type==='understanding'&&!swipeBusy)void skipUnderstandingCard(swipeIndex,user.id,sharedSession);if(e.target.closest('#swipe-reload'))refresh().catch(showError);const refreshMatches=e.target.closest('[data-refresh-matches]');if(refreshMatches&&!sharedLoading)void fetchSwipeMatches(refreshMatches.dataset.refreshMatches);if(e.target.closest('#retry-theme-unlock')&&!themesLoading)void fetchThemeUnlock();
+document.addEventListener('click',e=>{if(e.target.closest('#mediator-clear')){mediatorExperience.clear();return;}if(e.target.closest('#mediator-new')){void mediatorExperience.createChat();return;}if(e.target.closest('#mediator-delete')){if(window.confirm('Vill du radera hela detta privata samtal permanent?'))void mediatorExperience.deleteChat();return;}const mediatorOpen=e.target.closest('[data-mediator-open]');if(mediatorOpen){void mediatorExperience.openChat(mediatorOpen.dataset.mediatorOpen);return;}if(e.target.closest('[data-pf-action]')){void personalityExperience.handleClick(e.target,{isPaired:members.length===2&&members.some(m=>m.role==='parent')&&members.some(m=>m.role==='teen')});return;}const b=e.target.closest('[data-swipe]');if(b)advanceSwipe(b.dataset.swipe);if(e.target.closest('#swipe-restart')){swipeReview=true;swipeIndex=visibleGeneralIndices()[0]??STATEMENTS.length;render();}if(e.target.closest('#swipe-skip')&&viewerRole()==='teen'&&GENERAL_CARDS[swipeIndex]?.type==='understanding'&&!swipeBusy)void skipUnderstandingCard(swipeIndex,user.id,sharedSession);if(e.target.closest('#swipe-reload'))refresh().catch(showError);const refreshMatches=e.target.closest('[data-refresh-matches]');if(refreshMatches&&!sharedLoading)void fetchSwipeMatches(refreshMatches.dataset.refreshMatches);if(e.target.closest('#retry-theme-unlock')&&!themesLoading)void fetchThemeUnlock();
 if(e.target.closest('#insights-retry')&&!insightsLoading)void fetchInsights();
 if(e.target.closest('[data-family-chat-refresh]'))void fetchFamilyChat();
 if(e.target.closest('[data-family-chat-more]'))void fetchFamilyChat(true);
@@ -1158,6 +1159,7 @@ window.addEventListener('hashchange',()=>{
   render();scrollLiveMainTop();
   if(page()==='insikter')void fetchInsights();
   if(page()==='personlighet')void personalityExperience.refreshShared();
+  if(page()==='medlare')void mediatorExperience.loadList();
   if(['regler','inkorg','hem'].includes(page()))void fetchSchysstaList();
   if(page()==='inkorg')void fetchFamilyChat();
   else if(page()==='hem')void fetchFamilyChatUnread();
