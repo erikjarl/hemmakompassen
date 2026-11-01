@@ -59,8 +59,16 @@
 - [ ] **UX-02: Fullfölj ikonbaserad och kortfattad Gillaswajpen-sammanfattning**, inklusive strukturerade råd, prioriterade kort och tillgängliga alternativa texter.
 - [ ] **NOT-01: Samla behöriga aviseringar på startsidan** från kortaktiviteter, inkorg, regler och nya resultat utan att avslöja privata svar eller skapa störande påminnelser.
 
+### P1 – AI-medlaren i intern testutveckling (2026-11-01)
+- [x] **AI-01A: Driftsatt separat Worker, Workers Free, autentisering, verklig D1-kvot och svensk fiktiv modellprovsvar.** Ingen publik webbplatsmerge.
+- [x] **AI-01B: Privat D1-chatt med skapande, lista, historik, radering, serverstyrd ägarisolering och rollstyrt stöd (parent/teen via verifierad RPC).** En ren AI-featurebranch från senaste `main` innehåller också chattgränssnittet.
+- [x] **AI-01C: Fiktiva databas- och V8-kodkontroller.** 28 automatiserade testfall från GitHub-koden passerade i simulerad körning; verklig D1 bekräftar ägarfilter, kaskadradering och stabil meddelandeordning. CI är ännu inte verifierad.
+- [ ] **AI-01D: Verifiera två verkligt autentiserade testkonton, webbläsare/mobil och reella Worker-anrop** innan aktivering på GitHub Pages. Kontrollera även att säkerhetsmeddelanden och konto-/sessionsbyte fungerar som avsett.
+- [ ] **AI-01E: Granska barn-/ungdomsskydd, kliniska risker, säkerhet och dataskydd.** Endast fiktiva samtal hittills; enkel riskfrasmatchning är INTE en klinisk säkerhetslösning.
+- [ ] **AI-02/03: AI-genererade frivilliga och rollanpassade Gillaswajp-/personlighetssammanfattningar** efter att AI-01 och serververifierat delningssamtycke fungerar.
+
 ### P2 – framtida tjänstekvalitet
-- [ ] **AI-01: AI-medlaren** är i dag endast en utvecklingsvy, inte en fungerande privat AI-tjänst. Planera backend-proxy, autentisering, separat chatt, kvotgränser, integritet, riskhantering och kvalitetstester innan navigeringen föreslår den som ett färdigt hjälpmedel.
+- [ ] **AI-01: Produktionsklar AI-medlare** återstår trots driftsatt intern testserver och kod för privat chatthistorik. Följ AI-01D/E samt ROADMAP FAS 5; markera inte som färdig före verklig tvåkontotestning och skyddsgranskning.
 - [ ] **DATA-01: Datahantering och juridik för pilot.** Radering/export/retention, rättslig grund, information till ungdomar, incidenthantering och eventuell DPIA. Genomför innan externa verkliga användare.
 - [ ] **PILOT-01: Genomför verklig användbarhets- och etisk granskning** med föräldrar/ungdomar innan offentlig lansering. Mät förståelse och upplevd press; inga påståenden om behandlingseffekt utan evidens.
 

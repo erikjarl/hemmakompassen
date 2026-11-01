@@ -1,0 +1,46 @@
+name: AI-mediator backend safety tests
+
+on:
+  push:
+    branches:
+      - ai-dev/utveckling
+      - feature/ai-medlare-privat-test-20261101
+    paths:
+      - 'workers/ai-mediator/**'
+      - 'tests/ai-mediator-worker.test.mjs'
+      - 'tests/ai-mediator-ui.test.mjs'
+      - 'tests/ai-mediator-private-history.test.mjs'
+      - 'tests/ai-mediator-saved-ui.test.mjs'
+      - 'ai-mediator-ui.js'
+      - '.github/workflows/ai-mediator-tests.yml'
+  pull_request:
+    paths:
+      - 'workers/ai-mediator/**'
+      - 'tests/ai-mediator-worker.test.mjs'
+      - 'tests/ai-mediator-ui.test.mjs'
+      - 'tests/ai-mediator-private-history.test.mjs'
+      - 'tests/ai-mediator-saved-ui.test.mjs'
+      - 'ai-mediator-ui.js'
+      - '.github/workflows/ai-mediator-tests.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  mediator-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run offline security tests
+        run: node --test tests/ai-mediator-worker.test.mjs tests/ai-mediator-ui.test.mjs tests/ai-mediator-private-history.test.mjs tests/ai-mediator-saved-ui.test.mjs
+      - name: JavaScript syntax checks
+        run: |
+          node --check ai-mediator-ui.js
+          node --check live-app.js
+          node --check workers/ai-mediator/src/index.mjs
+      - name: Static site build
+        run: npm run build

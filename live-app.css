@@ -502,3 +502,39 @@
  .pf-insight-card .pf-insight-narrative{font-size:.94rem}
  .pf-insight-resource{padding:12px}
 }
+
+/* Private AI test chat: independent of the family inbox and Gillaswajpen. */
+.mediator-view{max-width:780px;margin:0 auto;padding-bottom:28px}
+.mediator-notice{border-color:#866332;background:#242230}
+.mediator-notice p{font-size:14px;color:var(--soft)}
+.mediator-chat{display:grid;gap:20px}
+.mediator-messages{margin:0;padding:0;list-style:none;display:grid;gap:14px;max-height:420px;overflow-y:auto;overscroll-behavior:contain}
+.mediator-message{border-radius:18px;padding:15px 19px;background:#262d41;border:1px solid #48516a;overflow-wrap:anywhere}
+.mediator-message strong{color:#e9edf4;font-size:14px}
+.mediator-message p{white-space:pre-wrap;margin:8px 0 0;line-height:1.55}
+.mediator-message-user{margin-left:clamp(12px,5vw,55px);border-color:#906a38;background:#342b2a}
+.mediator-message-assistant{margin-right:clamp(12px,5vw,55px)}
+.mediator-empty{color:var(--muted)}
+#mediator-form{display:grid;gap:12px}
+#mediator-input{width:100%;min-height:110px;box-sizing:border-box;resize:vertical;border:1px solid #65677a;border-radius:14px;padding:14px 16px;background:#171c2b;color:var(--text);font:inherit;line-height:1.5}
+#mediator-input:focus-visible,.mediator-clear:focus-visible{outline:3px solid #f59e0b;outline-offset:2px}
+.mediator-actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.mediator-actions .live-button:disabled,.mediator-clear:disabled{opacity:.48;cursor:not-allowed}
+.mediator-clear{border:1px solid #65677a;border-radius:12px;padding:12px 18px;background:transparent;color:var(--soft);font:inherit;cursor:pointer}
+.mediator-error{color:#ffb3ac}
+#mediator-status{min-height:1.4em;margin:0}
+@media(max-width:600px){.mediator-actions{flex-direction:column;align-items:stretch}.mediator-actions .live-button,.mediator-clear{width:100%}}
+
+/* A deterministic safety referral, not an AI-generated answer. */
+.mediator-message-safety{border-color:#b88c47;background:#342c2a}
+.mediator-message-safety strong{color:#ffe0a1}
+
+/* Private history is visible only to the signed-in account. */
+.mediator-history{background:#1e2235;border:1px solid #33394d;border-radius:18px;padding:18px;margin:20px 0}
+.mediator-history-heading{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.mediator-history-heading h2{margin:0;font-size:1.25rem}
+.mediator-thread-list{display:flex;gap:9px;overflow-x:auto;padding:16px 0 4px;scrollbar-width:thin}
+.mediator-thread-list button{flex:0 0 180px;max-width:220px;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:12px 14px;border:1px solid #565d73;border-radius:12px;background:#20283b;color:#e2e8f0;font:inherit;cursor:pointer}
+.mediator-thread-list button[aria-current="true"]{border-color:#f59e0b;background:#302b2b;color:#f8c66b}
+.mediator-thread-list button:focus-visible{outline:3px solid #f59e0b;outline-offset:3px}
+@media(max-width:600px){.mediator-thread-list button{flex-basis:155px}.mediator-history-heading .mediator-clear{width:auto}}

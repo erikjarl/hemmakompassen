@@ -1,0 +1,25 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "hemmakompassen-ai-medlare",
+  "main": "./src/index.mjs",
+  "compatibility_date": "2026-11-01",
+  "workers_dev": true,
+  "observability": {
+    "enabled": false
+  },
+  "vars": {
+    "APP_ORIGIN": "https://erikjarl.github.io",
+    "AI_TEST_USERS": ""
+  },
+  "ai": {
+    "binding": "AI"
+  },
+  "d1_databases": [
+    {
+      "binding": "LIMITS",
+      "database_name": "hemmakompassen-ai-limits",
+      "database_id": "d1f88a44-40be-49b6-b79b-7eb3b4df565b",
+      "migrations_dir": "./migrations"
+    }
+  ]
+}
