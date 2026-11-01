@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createHandler, DAILY_LIMIT, MODEL, safetyResponse } from '../workers/ai-mediator/src/index.mjs';
+import { createHandler, DAILY_LIMIT, MODEL, safetyResponse, loadViewerRole } from '../workers/ai-mediator/src/index.mjs';
 
 const ORIGIN = 'https://erikjarl.github.io';
 const USER_A = '11111111-1111-4111-8111-111111111111';
@@ -147,4 +147,34 @@ test('passiv beskrivning av våld fångas utan AI-anrop',async()=>{
  assert.equal(response.status,200);
  assert.equal((await response.json()).safetyNotice,true);
  assert.equal(x.seen.model.length,0);
+});
+
+test('role advice uses only the verified viewer row, not the partner role/name',async()=>{
+  const peer='PRIVATE_PARTNER_NAME_SHOULD_NOT_BE_SENT';
+  const env={SUPABASE_URL:'https://example.supabase.co',SUPABASE_PUBLISHABLE_KEY:'publishable'};
+  const calls=[];
+  const role=await loadViewerRole(env,'valid-jwt',USER_A,async(url,options)=>{
+    calls.push({url,options});
+    return Response.json([
+      {user_id:USER_B,role:'parent',display_name:peer},
+      {user_id:USER_A,role:'teen',display_name:'Self'}
+    ]);
+  });
+  assert.equal(role,'teen');
+  assert.equal(calls.length,1);
+  assert.match(calls[0].url,/\/rest\/v1\/rpc\/my_family_members$/);
+  assert.equal(calls[0].options.method,'POST');
+  assert.equal(calls[0].options.headers.Authorization,'Bearer valid-jwt');
+});
+test('role lookup never guesses the partner role if the viewer row is missing',async()=>{
+  const env={SUPABASE_URL:'https://example.supabase.co',SUPABASE_PUBLISHABLE_KEY:'publishable'};
+  const role=await loadViewerRole(env,'valid-jwt',USER_A,async()=>Response.json([
+    {user_id:USER_B,role:'parent',display_name:'private'}
+  ]));
+  assert.equal(role,null);
+});
+test('role lookup falls back neutrally when RLS/RPC is unavailable',async()=>{
+  const env={SUPABASE_URL:'https://example.supabase.co',SUPABASE_PUBLISHABLE_KEY:'publishable'};
+  const role=await loadViewerRole(env,'valid-jwt',USER_A,async()=>new Response('',{status:403}));
+  assert.equal(role,null);
 });
