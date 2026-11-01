@@ -866,7 +866,7 @@ function inboxView(){
     rule_declined:'Ett regelförslag har avböjts',rule_withdrawn:'En överenskommelse har avslutats'};
   const noticeHtml=schysstaNotifications.length?'<ul class="schyssta-list">'
     +schysstaNotifications.map(n=>'<li class="'+(n.read_at===null?'schyssta-unread':'')+'"><p><strong>'+kinds[n.kind]+'</strong>'+(n.read_at===null?' · Oläst':'')+'</p>'
-      +'<p>'+esc(n.body)+'</p><p class="live-muted"><time datetime="'+esc(n.created_at)+'">'+esc(familyChatTimestamp(n.created_at))+'</time></p>'
+      +'<p>'+esc(n.body)+'</p><p class="live-muted">Från: '+otherName+' · <time datetime="'+esc(n.created_at)+'">'+esc(familyChatTimestamp(n.created_at))+'</time></p>'
       +'<div class="schyssta-actions"><button type="button" class="live-button" data-schyssta-open="'+n.agreement_id+'">Visa regeln</button>'
       +(n.read_at===null?'<button type="button" class="schyssta-secondary" data-schyssta-read="'+n.notification_id+'">Markera som läst</button>':'')+'</div></li>').join('')+'</ul>'
     :'<p class="live-muted">Inga regelhändelser ännu.</p>';

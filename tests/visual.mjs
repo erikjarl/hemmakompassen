@@ -549,7 +549,7 @@ try{
   assert.doesNotMatch(exported,/Vi får pausa gräl|Vi pratar om hur vi delar på sysslorna/,'Copy excludes proposals without two approvals');
   assert.equal(await paired.page.getByRole('button',{name:'Uppdatera listan'}).count(),1,
     'A paired test user can explicitly reload the list');
-  assert.equal(await paired.page.locator('#live-mobile-nav a[href="#inkorg"] .live-nav-count').innerText(),'1','Inbox has unobtrusive unread count');
+  assert.equal(await paired.page.locator('#live-mobile-nav a[href="#inkorg"] .live-nav-count').innerText(),'2','Inbox counts both one private chat message and one rule event');
   assert.equal(await paired.page.locator('#live-mobile-nav a[href="#regler"] .live-nav-count').innerText(),'2','Rule tab shows only requests awaiting the current viewer');
   assert.match(await paired.page.locator('#live-mobile-nav a[href="#regler"]').getAttribute('aria-label'),/2 obesvarade regelförslag/,'Navigation text announces the meaning of the count');
   // Search and status filters never hide incoming requests requiring the user's answer.
@@ -648,7 +648,7 @@ try{
   await paired.page.getByRole('heading',{name:'Inkorg',exact:true}).waitFor();
   await paired.page.getByRole('button',{name:'Markera som läst'}).click();
   await paired.page.waitForFunction(()=>window.__HK_READ_NOTICE__?.args?.p_notification_id==='40000000-0000-4000-8000-000000000001');
-  await paired.page.waitForFunction(()=>document.querySelector('#live-app')?.textContent?.includes('Meddelanden'));
+  await paired.page.waitForFunction(()=>document.querySelector('#live-app')?.textContent?.includes('Händelser från Schyssta listan'));
   assert.equal(await paired.page.getByRole('button',{name:'Markera som läst'}).count(),0,'Read receipt removes unread action without approving the rule');
 
   await paired.page.getByRole('button',{name:'Se och svara i Schyssta listan'}).first().click();
@@ -675,6 +675,20 @@ try{
   assert.equal(await freshRules.page.locator('#schyssta-preview-text').innerText(),'<img src=x onerror=alert(1)>','Preview renders user input as literal text');
   assert.equal(await freshRules.page.locator('#schyssta-preview-text img').count(),0,'Manual proposal preview never interprets HTML');
   await freshRules.context.close();
+  const teenInbox=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,paired:true,role:'teen'});
+  await teenInbox.page.goto(base+'#inkorg',{waitUntil:'load'});
+  await teenInbox.page.getByRole('heading',{name:'Privata meddelanden med Provförälder'}).waitFor();
+  await teenInbox.page.locator('#family-chat-body').fill('Hej från tonåringen');
+  await teenInbox.page.locator('#family-chat-form').evaluate(form=>form.requestSubmit());
+  await teenInbox.page.waitForFunction(()=>window.__HK_CHAT_SEND__?.args?.p_body==='Hej från tonåringen');
+  assert.match(await teenInbox.page.locator('.family-chat-mine').innerText(),/Hej från tonåringen/,'Teen can send from their own paired account');
+  await checkOverflow(teenInbox.page,'Private message inbox on teen mobile view');
+  await teenInbox.context.close();
+  const unpairedInbox=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,paired:false});
+  await unpairedInbox.page.goto(base+'#inkorg',{waitUntil:'load'});
+  await unpairedInbox.page.getByRole('heading',{name:'Para ihop era konton'}).waitFor();
+  assert.equal(await unpairedInbox.page.locator('#family-chat-body').count(),0,'Unpaired users cannot compose messages');
+  await unpairedInbox.context.close();
   const pairedTeen=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,paired:true,role:"teen"});
   await pairedTeen.page.goto(base+"#swipe",{waitUntil:"load"});
   const teenSummary=await pairedTeen.page.locator(".swipe-results").innerText();
