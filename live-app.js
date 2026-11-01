@@ -1154,6 +1154,7 @@ window.addEventListener('hashchange',()=>{
   if(page()!=='regler'&&page()!=='inkorg'){schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];schysstaNotifications=[];schysstaReplacementLinks=[];schysstaHistory=[];schysstaError='';schysstaLoading=false;schysstaRequest++;}
   render();scrollLiveMainTop();
   if(page()==='insikter')void fetchInsights();
+  if(page()==='personlighet')void personalityExperience.refreshShared();
   if(['regler','inkorg','hem'].includes(page()))void fetchSchysstaList();
   if(page()==='inkorg')void fetchFamilyChat();
   else if(page()==='hem')void fetchFamilyChatUnread();
@@ -1162,6 +1163,7 @@ window.addEventListener('hashchange',()=>{
 document.addEventListener('visibilitychange',()=>{
   if(document.hidden)return;
   void pollSharedMatches();
+  if(page()==='personlighet')void personalityExperience.refreshShared();
   // Refresh the family's inbox after returning to the tab, without overwriting a draft.
   if(schysstaListEnabled&&user&&members.length===2&&!schysstaLoading&&!schysstaDraftOpen
     &&['hem','inkorg','regler'].includes(page()))void fetchSchysstaList();
@@ -1179,6 +1181,8 @@ window.setInterval(()=>{
 },15000);
 window.addEventListener('focus',()=>void pollSharedMatches());
 window.setInterval(()=>void pollSharedMatches(),SHARED_POLL_INTERVAL_MS);
+// If the other family member withdraws consent, remove their profile on the next check.
+window.setInterval(()=>{if(!document.hidden&&page()==='personlighet'&&user)void personalityExperience.refreshShared();},15000);
 db.auth.onAuthStateChange(()=>setTimeout(()=>refresh().catch(showError),0));
 function showError(e){$('live-app').innerHTML=card('<h2>Kunde inte läsa kontot</h2><p>'+esc(e.message)+'</p><a href="./konto.html">Öppna kontosidan</a>');}
 refresh().catch(showError);
