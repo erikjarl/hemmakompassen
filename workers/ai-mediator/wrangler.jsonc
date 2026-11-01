@@ -8,7 +8,8 @@
     "enabled": false
   },
   "vars": {
-    "APP_ORIGIN": "https://erikjarl.github.io"
+    "APP_ORIGIN": "https://erikjarl.github.io",
+    "AI_TEST_USERS": ""
   },
   "ai": {
     "binding": "AI"
