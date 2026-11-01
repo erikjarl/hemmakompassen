@@ -77,12 +77,13 @@ function referenceLegend(){
     '<span class="pf-reference-two">Vuxna: ±2 SD (prickade gränser)</span></div>';
 }
 function referenceFeedback(profile,roleLabel='Dina'){
+  const selfLabel=roleLabel==='Dina'?'ditt värde':'den andras värde';
   const positions=describeReferenceProfile(profile);
   return '<div class="pf-reference-feedback"><h3>'+esc(roleLabel)+' resultat jämfört med vuxenreferensen</h3>'+
     '<ul>'+positions.map(p=>{
       const factor=FACTORS.find(f=>f.id===p.factorId);
       return '<li><strong>'+esc(factor.labelSv)+'</strong>: '+esc(p.description)+
-        ' (M '+formatSv(p.mean,2)+', SD '+formatSv(p.sd,2)+', ditt värde '+p.score+
+        ' (M '+formatSv(p.mean,2)+', SD '+formatSv(p.sd,2)+', '+esc(selfLabel)+' '+p.score+
         '; '+formatSv(p.z)+' SD från medelvärdet.)</li>';
     }).join('')+'</ul></div>';
 }
@@ -225,7 +226,7 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false}
         '</ul><p class="live-muted">Samtalsfrågorna är redaktionella förslag, inte individuella psykologiska råd.</p></section>';
       comparison='<section class="live-panel pf-comparison"><h2>Våra profiler</h2><p>Två självskattningar på samma svarsskala, inte ett mått på hur bra någon är som person.</p>'+
         '<div class="pf-legend" style="--pf-own:'+(role==='teen'?'#f8b55b':'#55d6d2')+';--pf-other:'+(role==='teen'?'#55d6d2':'#f8b55b')+'"><span class="pf-legend-own">Din profil</span><span class="pf-legend-other">Den andras profil</span></div>'+
-        radarSvg(own,other,role)+referenceLegend()+table(own,other)+
+        radarSvg(own,other,role)+referenceLegend()+table(own,other)+referenceFeedback(other,'Den andras')+referenceCaveat()+
         '<p class="live-muted">Skillnaderna mellan er visas som råpoäng, medan vuxenreferensen visas som M och SD. Det är inte bevis för att ni fungerar olika.</p>'+
         reflections+'</section>';
     }
