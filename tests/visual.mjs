@@ -79,12 +79,12 @@ async function capture(page,name){
   await page.screenshot({path:path.join(output,name),fullPage:true,animations:"disabled"});
   captureRecords.push({file:name,viewport:page.viewportSize(),...overlays});
 }
-async function freshContext(options,{authenticated=false,paired=false,role="parent",unlocked=false,unlockUnavailable=false,priorityUnavailable=false,preansweredGeneral=false,emptySchyssta=false,personalityComplete=false}={}){
+async function freshContext(options,{authenticated=false,paired=false,role="parent",unlocked=false,unlockUnavailable=false,priorityUnavailable=false,preansweredGeneral=false,emptySchyssta=false,personalityComplete=false,personalitySharing=false,personalityPartnerShared=false}={}){
   const context=await browser.newContext({...options,locale:"sv-SE",reducedMotion:"reduce"});
-  await context.addInitScript(value=>{window.__HK_TEST_USER__=value.user;window.__HK_TEST_PAIRED__=value.paired;window.__HK_TEST_ROLE__=value.role;window.__HK_TEST_UNLOCKED__=value.unlocked;window.__HK_UNLOCK_RPC_UNAVAILABLE__=value.unlockUnavailable;window.__HK_PRIORITY_RPC_UNAVAILABLE__=value.priorityUnavailable;window.__HK_PREANSWERED_GENERAL__=value.preansweredGeneral;window.__HK_SCHYSSTA_EMPTY__=value.emptySchyssta;window.__HK_TEST_PERSONALITY_DONE__=value.personalityComplete;},{personalityComplete,emptySchyssta,preansweredGeneral,user:authenticated?{id:role==="teen"?"10000000-0000-0000-0000-000000000002":"10000000-0000-0000-0000-000000000001",email:"synthetic@example.invalid"}:null,paired,role,unlocked,unlockUnavailable,priorityUnavailable});
+  await context.addInitScript(value=>{window.__HK_TEST_USER__=value.user;window.__HK_TEST_PAIRED__=value.paired;window.__HK_TEST_ROLE__=value.role;window.__HK_TEST_UNLOCKED__=value.unlocked;window.__HK_UNLOCK_RPC_UNAVAILABLE__=value.unlockUnavailable;window.__HK_PRIORITY_RPC_UNAVAILABLE__=value.priorityUnavailable;window.__HK_PREANSWERED_GENERAL__=value.preansweredGeneral;window.__HK_SCHYSSTA_EMPTY__=value.emptySchyssta;window.__HK_TEST_PERSONALITY_DONE__=value.personalityComplete;window.__HK_TEST_PERSONALITY_PARTNER_SHARED__=value.personalityPartnerShared;},{personalityPartnerShared,personalityComplete,emptySchyssta,preansweredGeneral,user:authenticated?{id:role==="teen"?"10000000-0000-0000-0000-000000000002":"10000000-0000-0000-0000-000000000001",email:"synthetic@example.invalid"}:null,paired,role,unlocked,unlockUnavailable,priorityUnavailable});
   await context.route(base+"backend-config.js",route=>route.fulfill({
     contentType:"application/javascript",
-    body:"window.HEMMAKOMPASSEN_BACKEND=Object.freeze({supabaseUrl:'https://synthetic.invalid',supabasePublishableKey:'synthetic',enableSharedPriorities:true,enableSharedPolling:true,enableSharedInsights:true,enableSharedUnderstanding:true,enableSchysstaList:true});"
+    body:"window.HEMMAKOMPASSEN_BACKEND=Object.freeze({supabaseUrl:'https://synthetic.invalid',supabasePublishableKey:'synthetic',enableSharedPriorities:true,enableSharedPolling:true,enableSharedInsights:true,enableSharedUnderstanding:true,enableSchysstaList:true,enablePersonalitySharing:"+String(personalitySharing)+"});"
   }));
   await context.route("https://esm.sh/**",route=>route.fulfill({
     contentType:"application/javascript",
@@ -93,6 +93,7 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
         const current=()=>window.__HK_TEST_USER__;
         const answers=new Map(window.__HK_PREANSWERED_GENERAL__?Array.from({length:34},(_,i)=>{const id='general-'+String(i+1).padStart(2,'0');return [id,{deck_id:'general',card_id:id,answer:true}]}):window.__HK_TEST_PAIRED__?[['general-01',{deck_id:'general',card_id:'general-01',answer:true}],['general-02',{deck_id:'general',card_id:'general-02',answer:false}]]:[]);
         const personalityAnswers=new Map(window.__HK_TEST_PERSONALITY_DONE__?Array.from({length:50},(_,i)=>['ipip50-'+String(i+1).padStart(3,'0'),3]):[]);
+        let personalityConsent=false;
         const skips=new Map();
         const importance=new Map();
         const understandingShares=new Set(window.__HK_TEST_PAIRED__?['general-02']:[]);
@@ -116,6 +117,9 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
             async signInWithPassword(){return {error:null}}
           },
           from(table){
+            if(table==='personality_share_preferences')return {
+              select(){return {eq(){return {eq(){return {async maybeSingle(){return {data:personalityConsent?{share_enabled:true}:null,error:null};}}}}}};}
+            };
             if(table==='personality_answers')return {
               select(){return {eq(){return {async eq(){return {data:[...personalityAnswers].map(([id,value])=>({question_id:id,answer:{value}})),error:null};}}}};},
               async upsert(row,options){personalityAnswers.set(row.question_id,row.answer.value);window.__HK_PERSONALITY_SAVE__={row,options};return {error:null};}
@@ -134,6 +138,11 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
             throw new Error('Unexpected table '+table);
           },
           async rpc(name,args){
+            if(name==='set_my_ipip50_share'){personalityConsent=args.p_share===true;window.__HK_PERSONALITY_SHARE__=personalityConsent;return {data:personalityConsent,error:null};}
+            if(name==='my_ipip50_shared_profiles'){
+              const scores={extraversion:30,agreeableness:30,conscientiousness:30,emotional_stability:30,intellect_imagination:30};
+              return {data:personalityConsent&&window.__HK_TEST_PERSONALITY_PARTNER_SHARED__?{instrument_id:'ipip50-sv-v1',viewer_role:window.__HK_TEST_ROLE__,profiles:[{role:'parent',scores},{role:'teen',scores}]}:null,error:null};
+            }
             if(window.__HK_SCHYSSTA_EMPTY__===true&&['shared_schyssta_rule_suggestions','my_schyssta_rules','my_manual_schyssta_rules','my_schyssta_notifications','my_schyssta_replacement_links','my_schyssta_rule_history'].includes(name))return {data:[],error:null};
             if(name==='my_family_members')return {data:current()?(window.__HK_TEST_PAIRED__?[{user_id:'10000000-0000-0000-0000-000000000001',role:'parent',display_name:'Provförälder'},{user_id:'10000000-0000-0000-0000-000000000002',role:'teen',display_name:'Provtonåring'}]:[{user_id:current().id,role:window.__HK_TEST_ROLE__,display_name:window.__HK_TEST_ROLE__==='teen'?'Provtonåring':'Provförälder'}]):[],error:null};
              if(name==='shared_swipe_matches'){
@@ -386,6 +395,19 @@ try{
   await checkOverflow(completedPersonality.page,'Private personality profile 390px');
   await capture(completedPersonality.page,'mobile-personality-profile.png');
   await completedPersonality.context.close();
+  const consentPair=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,paired:true,personalityComplete:true,personalitySharing:true,personalityPartnerShared:true});
+  await consentPair.page.goto(base+'#personlighet',{waitUntil:'load'});
+  await consentPair.page.getByRole('button',{name:'Jag vill dela mina fem skalpoäng'}).waitFor();
+  assert.equal(await consentPair.page.getByRole('heading',{name:'Våra profiler'}).count(),0,'No comparison before own consent');
+  await consentPair.page.getByRole('button',{name:'Jag vill dela mina fem skalpoäng'}).click();
+  await consentPair.page.getByRole('heading',{name:'Våra profiler'}).waitFor();
+  assert.equal(await consentPair.page.locator('.pf-comparison .pf-table tbody tr').count(),5);
+  await checkOverflow(consentPair.page,'Two consenting personality profiles 390px');
+  await capture(consentPair.page,'mobile-personality-two-consents.png');
+  await consentPair.page.getByRole('button',{name:'Sluta dela min profil'}).click();
+  await consentPair.page.getByRole('heading',{name:'Våra profiler'}).waitFor({state:'detached'});
+  assert.equal(await consentPair.page.evaluate(()=>window.__HK_PERSONALITY_SHARE__),false);
+  await consentPair.context.close();
   const narrow=await freshContext({viewport:{width:320,height:700},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true});
   await narrow.page.getByRole("heading",{name:/Hej[ ,]+Provförälder/}).waitFor();
   await checkMobileNavigation(narrow.page,'320px mobile navigation');
