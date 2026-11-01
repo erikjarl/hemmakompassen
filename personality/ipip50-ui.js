@@ -280,9 +280,9 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false}
       const reflections=familyReflectionPanel(parentProfile,teenProfile);
       comparison='<section class="live-panel pf-comparison"><h2>Våra profiler</h2><p>Två självskattningar jämförda med samma amerikanska vuxenreferens. Placeringarna är uppskattningar, inte svenska normer.</p>'+
         
-        percentileChart(own,other)+table(own,other)+referenceFeedback(other,'Den andras')+referenceCaveat()+
+        percentileChart(own,other)+reflections+table(own,other)+referenceFeedback(other,'Den andras')+referenceCaveat()+
         '<p class="live-muted">Markörerna visar uppskattad percentil jämfört med samma vuxenreferens. Tabellen visar råpoäng, medelvärde och SD. Skillnader är inte bevis för att ni fungerar olika.</p>'+
-        reflections+'</section>';
+        '</section>';
     }
     return heading+'<section class="live-panel pf-results"><h2>Din profil</h2><p>Dina fem skalor visar uppskattad placering jämfört med en amerikansk vuxenreferens, inte svenska normer.</p>'+
       percentileChart(own)+table(own)+referenceFeedback(own)+referenceCaveat()+
