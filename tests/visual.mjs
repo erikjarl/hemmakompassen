@@ -532,6 +532,7 @@ try{
   assert.match(await prompts.innerText(),/Vuxnas ansvar för trygghet och omsorg/, 'Prompts retain parent responsibility');
   await paired.page.locator('#schyssta-body').fill('Vi planerar veckans sysslor på söndag.');
   assert.equal(await paired.page.locator('#schyssta-preview-text').innerText(),'Vi planerar veckans sysslor på söndag.','Live preview uses the typed text');
+  assert.match(await paired.page.locator('.schyssta-preview').innerText(),/Från: Provförälder/,'Preview identifies the current author');
   assert.match(await paired.page.locator('#schyssta-length').innerText(),/ av 500 tecken/,'Visible length counter updates');
   await paired.page.getByRole('button',{name:'Skicka regelförslag'}).click();
   await paired.page.waitForFunction(()=>window.__HK_MANUAL_PROPOSE__?.args?.p_body==='Vi planerar veckans sysslor på söndag.');
@@ -561,6 +562,7 @@ try{
   assert.doesNotMatch(inboxText,/Vi planerar veckans sysslor på söndag/,'Inbox does not present sender own proposal as incoming');
   assert.match(inboxText,/Meddelanden · 1 olästa/,'Server inbox shows persisted unread count');
   assert.equal(await paired.page.locator('.schyssta-unread time[datetime]').count(),1,'Notifications display a timestamp from the server');
+  assert.match(await paired.page.locator('.schyssta-unread').innerText(),/Från: Provtonåring/,'Inbox identifies only the authorized counterpart');
   // The home screen surfaces the latest personal inbox alert ahead of general family information.
   await paired.page.goto(base+'#hem',{waitUntil:'load'});
   await paired.page.getByRole('heading',{name:'Inkorgen · 1 olästa'}).waitFor();
