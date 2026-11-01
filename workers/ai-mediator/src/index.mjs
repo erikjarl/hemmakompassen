@@ -1,5 +1,6 @@
 // AI-01A: staged private one-turn AI proxy. NOT deployed. No chat persistence.
-export const MODEL = '@cf/zai-org/glm-4.7-flash';
+// Tested on Workers Free: non-reasoning Llama replies within a short output limit.
+export const MODEL = '@cf/meta/llama-3.1-8b-instruct-fp8-fast';
 export const DAILY_LIMIT = 10;
 export const MAX_MESSAGE_CHARS = 2000;
 export const MAX_COMPLETION_TOKENS = 320;
@@ -126,7 +127,7 @@ export function createHandler({ fetchAuth = fetch, now = () => new Date() } = {}
           { role: 'system', content: SYSTEM_PROMPT },
           { role: 'user', content: message }
         ],
-        max_completion_tokens: MAX_COMPLETION_TOKENS,
+        max_tokens: MAX_COMPLETION_TOKENS,
         temperature: 0.4,
         stream: false
       });
