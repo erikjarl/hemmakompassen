@@ -284,3 +284,15 @@
 .schyssta-tips summary:focus-visible{outline:3px solid #f5bb65;outline-offset:3px}
 .schyssta-tips p,.schyssta-tips li{font-size:13px;line-height:1.6}
 .schyssta-tips ul{padding-left:24px;margin:8px 0 12px}
+
+/* Small, accessible counters for only the current signed-in family member. */
+.live-nav a,.live-mobile a{position:relative}
+.live-nav-count{position:absolute;top:4px;right:4px;display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 4px;box-sizing:border-box;border-radius:999px;background:#7a654e;border:1px solid #d6bc96;color:#fff5e8;font:700 11px/1 "DM Sans",system-ui,sans-serif;pointer-events:none}
+.live-mobile .live-nav-count{top:3px;right:5px;min-width:21px;height:21px}
+.schyssta-preview{box-sizing:border-box;width:100%;max-width:680px;padding:14px 16px;border:1px dashed #9b835e;border-radius:12px;background:#232537}
+.schyssta-preview>strong{display:block;margin-bottom:7px;color:#f4d7a9;font-size:13px}
+.schyssta-preview>p{margin:4px 0 0;line-height:1.55;overflow-wrap:anywhere}
+.schyssta-preview .live-muted{margin-top:9px;font-size:12px}
+.schyssta-actions a.schyssta-secondary{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;box-sizing:border-box}
+.schyssta-actions a.schyssta-secondary:focus-visible{outline:3px solid #f5bb65;outline-offset:3px}
+@media(max-width:440px){.schyssta-actions a.schyssta-secondary{width:100%;text-align:center}}
