@@ -50,7 +50,7 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
     const messages = turns.length
       ? '<ol class="mediator-messages" aria-label="Tillfälliga testmeddelanden">'
         + turns.map(turn => '<li class="mediator-message mediator-message-' + h(turn.role) + '"><strong>'
-          + (turn.role === 'user' ? 'Du' : 'Samtalsstödet') + '</strong><p>' + h(turn.text) + '</p></li>').join('')
+          + (turn.role === 'user' ? 'Du' : turn.role === 'safety' ? 'Säkerhetsinformation' : 'Samtalsstödet') + '</strong><p>' + h(turn.text) + '</p></li>').join('')
         + '</ol>'
       : '<p class="mediator-empty">Inga meddelanden ännu. Skriv ett fiktivt exempel för att testa samtalsstödet.</p>';
     const count = draft.length;
@@ -112,7 +112,7 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
         throw new Error(typeof result?.error === 'string' && result.error.length < 180
           ? result.error : 'AI:n kunde inte svara just nu.');
       }
-      turns = [...turns, { role: 'user', text: message }, { role: 'assistant', text: result.reply.trim() }];
+      turns = [...turns, { role: 'user', text: message }, { role: result.safetyNotice === true ? 'safety' : 'assistant', text: result.reply.trim() }];
       if (turns.length > 30) turns = turns.slice(-30);
       draft = '';
       remaining = Number.isInteger(result.remainingToday) && result.remainingToday >= 0
