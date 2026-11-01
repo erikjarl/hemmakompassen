@@ -7,7 +7,7 @@ await rm(out, { recursive: true, force: true });
 await mkdir(out, { recursive: true });
 await mkdir(join(out, 'vendor'), { recursive: true });
 await mkdir(join(out, 'personality'), { recursive: true });
-const assets = ['index.html', 'app.js', 'styles.css', 'live-app.css', 'favicon.svg', 'landscape.svg', 'backend-config.js', 'konto.html', 'konto.js', 'vendor/qrcode.js', 'home.js', 'live-app.js', 'card-catalog.js', 'personality/ipip50-v1.js', 'personality/ipip50-scoring.js', 'personality/ipip50-storage.js', 'personality/ipip50-ui.js', 'personality/ipip50-reference.js'];
+const assets = ['index.html', 'app.js', 'styles.css', 'live-app.css', 'favicon.svg', 'landscape.svg', 'backend-config.js', 'konto.html', 'konto.js', 'vendor/qrcode.js', 'home.js', 'live-app.js', 'card-catalog.js', 'personality/ipip50-v1.js', 'personality/ipip50-scoring.js', 'personality/ipip50-storage.js', 'personality/ipip50-ui.js', 'personality/ipip50-family-insights.js', 'personality/ipip50-reference.js'];
 for (const file of assets) await copyFile(join(root, file), join(out, file));
 await writeFile(join(out, '_headers'), [
   '/*',
