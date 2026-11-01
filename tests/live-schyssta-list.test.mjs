@@ -140,6 +140,14 @@ test('Schyssta first-time guidance, live rule preview and menus use safe local d
   assert.doesNotMatch(app,/schysstaDraft[^\n]{0,100}\.innerHTML=/);
 });
 
+test('Inte nu is a local deferral and never sends a backend decision',()=>{
+  assert.match(app,/const schysstaPausedIds=new Set\(\)/);
+  assert.match(app,/!schysstaPausedIds\.has\(row\.agreement_id\)/);
+  assert.match(app,/schysstaPausedIds\.add\(row\.agreement_id\)/);
+  assert.match(app,/schysstaPausedIds\.clear\(\)/);
+  assert.match(app,/Inget beslut har sparats/);
+});
+
 test('Schyssta fetch failure clears old data and bounds a stalled network request',()=>{
   assert.match(app,/results=await Promise\.race\(\[pending,new Promise/);
   assert.match(app,/setTimeout\(\(\)=>reject\(new Error\('Schyssta fetch timeout'\)\),15000\)/);
