@@ -1,6 +1,7 @@
 import {IPIP50_V1} from './ipip50-v1.js';
-import {scoreIPIP50,compareIPIP50Profiles} from './ipip50-scoring.js';
-import {IPIP50_REFERENCE,IPIP50_PERCENTILE_BANDS,approximateReferencePercentile,referenceLimits,describeReferenceProfile,formatSv} from './ipip50-reference.js?v=20261101-percentile-cachefix1';
+import {scoreIPIP50} from './ipip50-scoring.js';
+import {buildIPIP50FamilyInsights} from './ipip50-family-insights.js?v=20261101-family-insights1';
+import {IPIP50_REFERENCE,IPIP50_PERCENTILE_BANDS,approximateReferencePercentile,referenceLimits,describeReferenceProfile,formatSv} from './ipip50-reference.js?v=20261101-family-insights1';
 import {loadMyIPIP50Answers,saveMyIPIP50Answer} from './ipip50-storage.js';
 
 const esc=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -143,6 +144,43 @@ function table(self,other=null){
       '<td>'+formatSv(own.z,1)+' SD</td></tr>';
     }).join('')+'</tbody></table></div>';
 }
+
+function familyReflectionPanel(parentProfile,teenProfile){
+  const parent=Object.fromEntries(FACTORS.map(f=>[f.id,parentProfile.byFactor[f.id].sum]));
+  const teen=Object.fromEntries(FACTORS.map(f=>[f.id,teenProfile.byFactor[f.id].sum]));
+  const summary=buildIPIP50FamilyInsights({parent,teen});
+  const diffs=summary.featuredDifferences;
+  const similarities=summary.featuredSimilarities;
+  const labels=items=>items.map(i=>'”'+i.label.toLowerCase()+'”').join(', ').replace(/, ([^,]+)$/,' och $1');
+  const lead=diffs.length
+    ?'I era svar framträder särskilt skillnader kring '+esc(labels(diffs))+'. Det kan vara bra ämnen att förstå varandras perspektiv på.'
+    :'Ingen av de fem skalorna visar en tydlig skillnad enligt våra samtalsgränser.';
+  const similarityLead=similarities.length
+    ?'Ni beskriver er samtidigt ganska lika inom '+esc(labels(similarities))+'. Det kan vara utgångspunkter för gemensam förståelse.'
+    :'Det finns ingen skala där era resultat ligger särskilt nära enligt våra samtalsgränser. Ni kan ändå dela mycket i vardagen.';
+  const paragraph=(item)=>'<article class="pf-insight-card pf-insight-'+esc(item.status)+'">'+
+    '<h5>'+esc(item.label)+'</h5>'+
+    '<p>'+esc(item.observation)+' '+esc(item.suggestion)+'</p>'+
+    '<p class="pf-insight-question"><strong>Att prata om:</strong> '+esc(item.question)+'</p></article>';
+  const extra=[...summary.notable.slice(diffs.length),...summary.similar.slice(similarities.length),...summary.moderate]
+    .sort((a,b)=>b.absoluteDifference-a.absoluteDifference||a.order-b.order);
+  return '<section class="pf-family-reflections" aria-label="Anpassade reflektioner om era två profiler">'+
+    '<h3>Vad era profiler kan säga om samspelet</h3>'+
+    '<p class="pf-insight-intro">'+lead+' '+similarityLead+'</p>'+
+    '<div class="pf-insight-group"><h4>Skillnader att utforska</h4>'+
+    (diffs.length?diffs.map(paragraph).join(''):
+      '<p>Ni har inga större skillnader i självskattningarna enligt våra gränser. Det betyder inte att ni alltid fungerar på samma sätt.</p>')+'</div>'+
+    '<div class="pf-insight-group"><h4>Likheter att bygga vidare på</h4>'+
+    (similarities.length?similarities.map(paragraph).join(''):
+      '<p>Inga skalor är så lika att vi lyfter dem särskilt. Prata gärna om situationer där ni ändå känner igen er i varandra.</p>')+'</div>'+
+    (extra.length?'<details class="pf-insight-more"><summary>Fler nyanser från de fem skalorna ('+extra.length+')</summary>'+
+      '<div>'+extra.map(paragraph).join('')+'</div></details>':'')+
+    '<details class="pf-insight-method"><summary>Hur väljs likheter och skillnader ut?</summary>'+
+    '<p>Varje skala består av tio påståenden (10–50 poäng). Vi räknar 0–3 råpoängs skillnad som liknande svar, 4–8 som viss skillnad och 9 eller fler som tydlig skillnad. Skillnader från 15 poäng prioriteras högre. De viktigaste exemplen visas först, upp till tre i varje grupp.</p>'+
+    '<p>Gränserna är <strong>redaktionella tumregler</strong> för samtal, inte vetenskapligt validerade gränser eller statistiska signifikanstester. Vi jämför två personers egna svar, inte deras percentiler. Ålder, situation och hur man tolkar påståendena kan påverka svaren. Den svenska versionen är inte validerad för ungdomar. Föräldern har ett större ansvar för relationen och för sin egen känsloreglering.</p>'+
+    '</details></section>';
+}
+
 function statusPanel(message){return '<section class="live-panel"><p class="pf-status" role="status">'+esc(message)+'</p></section>';}
 
 export function createPersonalityExperience({db,onRender,isSharingEnabled=false}){
@@ -236,34 +274,15 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false}
       '<section class="live-panel"><h2>Delning ännu inte aktiverad</h2><p>Dina 50 svar och din profil är privata. Jämförelse med den andra familjemedlemmen aktiveras efter kontroll av serverbehörigheter och frivilligt samtycke.</p></section>';
     let comparison='';
     if(other&&role&&shareEnabled){
-      // The server returns only five scores after confirming two current consents.
-      const rows=compareIPIP50Profiles(own,other);
-      const ordered=[...rows].sort((a,b)=>Math.abs(a.difference)-Math.abs(b.difference));
-      const close=ordered.slice(0,2);
-      const distant=[...ordered].reverse().slice(0,2);
-      const sharedIdentical=rows.every(r=>r.difference===0);
-      const topics={
-        extraversion:'När tycker ni om att umgås och när vill ni hellre vara för er själva?',
-        agreeableness:'Vad uppskattar var och en av er när någon försöker visa omtanke?',
-        conscientiousness:'Hur vill ni planera saker som behöver bli gjorda?',
-        emotional_stability:'Vad brukar hjälpa när känslor blir starka eller stressen ökar?',
-        intellect_imagination:'Vad är ni nyfikna på och vad vill ni upptäcka tillsammans?'
-      };
-      const reflections='<section class="pf-reflections"><h3>Det ni verkar likna varandra i</h3>'+
-        '<p class="live-muted">På de här skalorna ligger era svarssummor närmast varandra. Det behöver inte betyda att ni alltid fungerar likadant.</p>'+
-        '<ul>'+close.map(r=>'<li>'+esc(r.labelSv)+'</li>').join('')+'</ul>'+
-        '<h3>Där era självskattningar skiljer sig</h3>'+
-        (sharedIdentical?'<p>Era svarssummor är lika inom samtliga fem skalor. Ni kan ändå uppleva situationer på olika sätt.</p>':
-         '<p class="live-muted">De här skillnaderna är störst <em>inom just era svar</em>, inte statistiskt säkerställda olikheter.</p>'+
-         '<ul>'+distant.map(r=>'<li><strong>'+esc(r.labelSv)+'</strong> — '+Math.abs(r.difference)+' poäng mellan era summor.</li>').join('')+'</ul>')+
-        '<h3>Frågor att utforska tillsammans</h3><ul>'+
-        distant.map(r=>'<li>'+esc(topics[r.factorId])+'</li>').join('')+
-        '</ul><p class="live-muted">Samtalsfrågorna är redaktionella förslag, inte individuella psykologiska råd.</p></section>';
+      // Compare five authorized sums; raw questionnaire answers remain private.
+      const parentProfile=role==='parent'?own:other;
+      const teenProfile=role==='teen'?own:other;
+      const reflections=familyReflectionPanel(parentProfile,teenProfile);
       comparison='<section class="live-panel pf-comparison"><h2>Våra profiler</h2><p>Två självskattningar jämförda med samma amerikanska vuxenreferens. Placeringarna är uppskattningar, inte svenska normer.</p>'+
         
-        percentileChart(own,other)+table(own,other)+referenceFeedback(other,'Den andras')+referenceCaveat()+
+        percentileChart(own,other)+reflections+table(own,other)+referenceFeedback(other,'Den andras')+referenceCaveat()+
         '<p class="live-muted">Markörerna visar uppskattad percentil jämfört med samma vuxenreferens. Tabellen visar råpoäng, medelvärde och SD. Skillnader är inte bevis för att ni fungerar olika.</p>'+
-        reflections+'</section>';
+        '</section>';
     }
     return heading+'<section class="live-panel pf-results"><h2>Din profil</h2><p>Dina fem skalor visar uppskattad placering jämfört med en amerikansk vuxenreferens, inte svenska normer.</p>'+
       percentileChart(own)+table(own)+referenceFeedback(own)+referenceCaveat()+

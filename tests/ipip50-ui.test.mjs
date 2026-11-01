@@ -99,10 +99,17 @@ test('two consents allow summary comparison and consent withdrawal hides it',asy
   const ui=createPersonalityExperience({db:mock.db,onRender:()=>{},isSharingEnabled:true});
   ui.reset('teen-id');await ui.load('teen-id');
   assert.doesNotMatch(ui.render({isPaired:true,viewerRole:'teen'}),/Våra profiler/);
+  assert.doesNotMatch(ui.render({isPaired:true,viewerRole:'teen'}),/Vad era profiler kan säga om samspelet/);
   await ui.handleClick(btn('share'),{isPaired:true});
   let html=ui.render({isPaired:true,viewerRole:'teen'});
   assert.match(html,/Våra profiler/);
   assert.match(html,/Den andras profil/);
+  assert.match(html,/Vad era profiler kan säga om samspelet/);
+  assert.match(html,/Likheter att bygga vidare på/);
+  assert.match(html,/Skillnader att utforska/);
+  assert.match(html,/Ingen av de fem skalorna visar en tydlig skillnad/);
+  assert.match(html,/Föräldern har ett större ansvar/);
+
   assert.match(html,/class="pf-score-dot pf-score-other"/);
   assert.match(html,/beräknade under antagande om normalfördelning/);
   assert.match(html,/Den andras resultat jämfört med vuxenreferensen/);
@@ -111,6 +118,7 @@ test('two consents allow summary comparison and consent withdrawal hides it',asy
   await ui.handleClick(btn('withdraw'),{isPaired:true});
   html=ui.render({isPaired:true,viewerRole:'teen'});
   assert.doesNotMatch(html,/Våra profiler/);
+  assert.doesNotMatch(html,/Vad era profiler kan säga om samspelet/);
 });
 
 test('malformed RPC payload is always rejected',async()=>{
@@ -150,11 +158,32 @@ test('public entry and nested personality modules share a cache-busting release 
   const tag=html.match(/<meta name="hk-ui-version" content="([^"]+)">/);
   assert.ok(tag,'Expected explicit app version metadata for cache troubleshooting');
   const version=tag[1];
-  assert.match(version,/^[0-9]{8}-percentile-cachefix[0-9]+$/);
+  assert.match(version,/^[0-9]{8}-(?:percentile-cachefix|family-insights)[0-9]+$/);
   assert.ok(html.includes('./live-app.css?v='+version));
   assert.ok(html.includes('./live-app.js?v='+version));
   assert.ok(app.includes("./personality/ipip50-ui.js?v="+version));
   assert.ok(personality.includes("./ipip50-reference.js?v="+version));
+  assert.ok(personality.includes("./ipip50-family-insights.js?v="+version));
   assert.ok(personality.includes('percentileChart(own,other)'));
   assert.ok(personality.includes('percentileChart(own)'));
+});
+
+test('parent/teen-specific narratives are generated only from authorized sums and show largest difference first',async()=>{
+  const mock=fakeClient(new Map(itemIds.map(id=>[id,3])));
+  const parent=Object.fromEntries(IPIP50_V1.factors.map(f=>[f.id,30]));
+  parent.conscientiousness=47;
+  parent.extraversion=42;
+  mock.setPartner({instrument_id:IPIP50_V1.id,viewer_role:'teen',profiles:[
+    {role:'parent',scores:parent},{role:'teen',scores:Object.fromEntries(IPIP50_V1.factors.map(f=>[f.id,30]))}
+  ]});
+  const ui=createPersonalityExperience({db:mock.db,onRender:()=>{},isSharingEnabled:true});
+  ui.reset('teen-id');await ui.load('teen-id');
+  await ui.handleClick(btn('share'),{isPaired:true});
+  const html=ui.render({isPaired:true,viewerRole:'teen'});
+  assert.match(html,/I era svar framträder särskilt skillnader kring ”samvetsgrannhet” och ”extraversion”/);
+  assert.match(html,/Föräldern beskriver större benägenhet till ordning och planering/);
+  assert.match(html,/Föräldern beskriver sig som mer utåtriktad än tonåringen/);
+  assert.match(html,/Likheter att bygga vidare på/);
+  assert.match(html,/Vad era profiler kan säga om samspelet/);
+  assert.doesNotMatch(html,/Am the life of the party/);
 });

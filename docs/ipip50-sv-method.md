@@ -126,3 +126,19 @@ Detta är **normalmodellerade positioner** och inte observerade empiriska percen
 Färgbanden har gränserna `Φ(-2)≈2,275 %`, `Φ(-1)≈15,866 %`, `Φ(1)≈84,134 %`, `Φ(2)≈97,725 %`, dvs mycket under / under / runt / över / mycket över genomsnittet. Det mellersta fältet är därför ~68,27 % av barens bredd; de närliggande fälten ~13,59 % var och ytterfälten ~2,28 % var. Detta motsvarar sannolikhetsandelar **under modellantagandet**, inte lika breda råpoängs- eller SD-intervall. Två profilers markörer ligger på separata vertikala nivåer för läsbarhet vid samma percentil, men vid exakt samma x-koordinat.
 
 Säkerhet: datakälla och delningsbehörighet ändras inte, och enskilda item-svar förblir privata. Kontrollera referenskällans lämplighet och pröva svensk översättning psykometriskt före extern användning. Automatiska tester kontrollerar axelankare, bandgränser, klassificering och tillstånd för delning/återkallelse.
+
+## Regelstyrd återkoppling för ett samtyckande familjepar (1 november 2026)
+
+`personality/ipip50-family-insights.js` ger förvalda reflektioner och familjesamtalsförslag, **inte** en psykologisk bedömning eller en skattning av relationens kvalitet. Funktionen körs endast när båda parter har samtyckt till att dela sina fem summerade skalpoäng och servern har verifierat detta; enskilda svar används inte för jämförelsen. Tonåringens och förälderns riktning hålls isär oavsett vilken roll som är inloggad.
+
+- Varje skala omfattar tio svar med 1–5 poäng. Skillnaden mellan två summor motsvarar alltså skillnaden i genomsnittligt svar per påstående × 10.
+- **0–3 råpoäng:** liknande svar (genomsnittlig skillnad högst 0,3 svarssteg)
+- **4–8 råpoäng:** viss skillnad (0,4–0,8 svarssteg)
+- **9–14 råpoäng:** tydlig skillnad (minst 0,9 svarssteg)
+- **15–40 råpoäng:** tydlig, särskilt prioriterad skillnad (minst 1,5 svarssteg)
+
+Dessa tal är **redaktionella och avsiktligt konservativa prioriteringsgränser**, inte empiriskt fastställda cutoffs, reliabel förändring, klinisk riskklassifikation eller signifikans. De mäter inte ålders- eller situationsinvarians. Likheter och skillnader identifieras oberoende med respektive gräns; ingen kategori tvingas fram om inga skalor kvalificerar sig. Högst tre viktigaste skillnader och tre likheter visas först; andra skalor går att expandera. Beräkningen bygger på råsummorna 10–50, **inte** den normalmodellerade vuxenpercentilen.
+
+De förvalda texter som kan visas per skala innefattar båda riktningarna (föräldern skattar högre respektive tonåringen skattar högre), likheter vid olika råpoängsnivåer samt en fråga och ett konkret förslag. De använder hypotetiskt språk och undviker orsaksförklaringar, diagnostik och påståenden om problem utifrån poäng. Förälderns ansvar ska alltid bevaras, särskilt vid emotionell stabilitet. Texten är avsedd att granskas/redigeras kliniskt och användartestas med både föräldrar och tonåringar före extern pilot.
+
+Relevant bakgrundslitteratur: van Tuijl m.fl. (2005), *Parent–offspring similarity in personality and adolescents' problem behaviour*, DOI: 10.1002/per.536 (288 ungdomar och föräldrar); TRAILS (2016), *Effects of parenting quality on adolescents' personality resemblance to their parents*, DOI: 10.1016/j.adolescence.2016.06.003 (741 ungdomar och föräldrar). Dessa studier visar att familjelikheter kan undersökas, men validerar **inte** Hemmakompassens gränser, språktexter eller slutsatser för svenska familjer.
