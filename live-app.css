@@ -124,6 +124,12 @@
 .schyssta-view .schyssta-list>li{scroll-margin-top:110px}
 @media(max-width:430px){.schyssta-compose button{width:100%}.schyssta-view .live-panel{padding:16px}}
 
+.schyssta-confirm{border-left:3px solid #f2c47f;background:#292537;padding:12px;margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.schyssta-confirm p{flex-basis:100%;margin:0;line-height:1.5}
+.schyssta-history{margin-top:18px;border:1px solid #58505b;padding:14px;border-radius:12px}
+.schyssta-history summary{font-weight:700;color:#efcb92;cursor:pointer}
+.schyssta-history summary:focus-visible{outline:3px solid #f6ca81;outline-offset:4px}
+@media(max-width:440px){.schyssta-confirm button{width:100%}}
 /* Schyssta listan: proposals and decisions remain visibly separate. */
 .schyssta-view>p{max-width:760px;line-height:1.65}
 .schyssta-list{display:grid;gap:12px;margin:16px 0 0;padding:0;list-style:none}
