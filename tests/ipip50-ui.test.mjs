@@ -180,7 +180,7 @@ test('parent/teen-specific narratives are generated only from authorized sums an
   ui.reset('teen-id');await ui.load('teen-id');
   await ui.handleClick(btn('share'),{isPaired:true});
   const html=ui.render({isPaired:true,viewerRole:'teen'});
-  assert.match(html,/I era svar framträder särskilt skillnader kring samvetsgrannhet och extraversion/);
+  assert.match(html,/I era svar framträder särskilt skillnader kring ”samvetsgrannhet” och ”extraversion”/);
   assert.match(html,/Föräldern beskriver större benägenhet till ordning och planering/);
   assert.match(html,/Föräldern beskriver sig som mer utåtriktad än tonåringen/);
   assert.match(html,/Likheter att bygga vidare på/);
