@@ -100,7 +100,7 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false}
     if(token===sequence&&viewer===userId)repaint();
   }
   function start(){active=true;saveError='';index=FIRST_UNANSWERED(answers);repaint();}
-  function render({isPaired=false}={}){
+  function render({isPaired=false,viewerRole='parent'}={}){
     const heading='<section class="pf-intro"><span class="swipe-eyebrow">LÄR KÄNNA DIG SJÄLV</span><h1>Min personlighet</h1><p>Utforska fem sidor av hur du brukar vara. Det finns inga rätt eller fel svar.</p></section>';
     if(!viewer)return heading+statusPanel('Logga in för att göra testet.');
     if(loading)return heading+statusPanel('Hämtar dina svar…');
@@ -128,7 +128,7 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false}
         '<button type="button" class="live-button" data-pf-action="start">'+(count?'Fortsätt testet':'Börja testet')+'</button></section>';
     }
     const own=result;
-    let other=null,role='parent',partnerStatus='';
+    let other=null,role=viewerRole;
     if(paired){
       role=paired.viewer_role;
       const partner=paired.profiles.find(p=>p.role!==role);
@@ -160,7 +160,9 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false}
   }
   async function handleClick(element,{isPaired=false}={}){
     const btn=element?.closest?.('[data-pf-action]');
-    if(!btn||!viewer||!loaded||saving||shareBusy)return false;
+    if(!btn||!viewer||saving||shareBusy)return false;
+    if(btn.dataset.pfAction==='reload'){await load(viewer);return true;}
+    if(!loaded)return false;
     const action=btn.dataset.pfAction;
     if(action==='start'||action==='review'){start();if(action==='review')index=0;}
     else if(action==='prev'){index=Math.max(0,index-1);repaint();}
