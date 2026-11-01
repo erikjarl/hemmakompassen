@@ -38,7 +38,7 @@ let sharedPollPending=false;
 let insightsRows=[],insightsLoading=false,insightsError='',insightsRequest=0;
 let sharedUnderstandingRows=[],understandingShareError='';
 let schysstaSuggestions=[],schysstaRules=[],schysstaManualRules=[],schysstaNotifications=[],schysstaReplacementLinks=[],schysstaHistory=[],schysstaEndTarget=null,schysstaLoading=false,schysstaError='',schysstaRequest=0;
-let schysstaDraft='',schysstaDraftOpen=false,schysstaDraftKey=null,schysstaEditTarget=null,schysstaSubmitting=false,schysstaMessage='',schysstaFocusId='';
+let schysstaDraft='',schysstaDraftOpen=false,schysstaDraftKey=null,schysstaEditTarget=null,schysstaSubmitting=false,schysstaMessage='',schysstaCopyMessage='',schysstaFocusId='';
 const schysstaSaving=new Set();
 const understandingShares=new Set();
 const understandingShareSaving=new Set();
@@ -640,6 +640,24 @@ function validSchysstaNotifications(rows){
     &&new Set(rows.map(row=>row.notification_id)).size===rows.length;
 }
 const schysstaUnreadCount=()=>schysstaNotifications.filter(n=>n.read_at===null).length;
+async function copySchysstaAgreements(){
+  if(!schysstaListEnabled||!user||members.length!==2||schysstaLoading||schysstaError)return;
+  const approved=schysstaAllRules().filter(item=>item.status==='accepted');
+  if(!approved.length)return;
+  const payload='Våra gemensamma överenskommelser\n\n'
+    +approved.map((item,index)=>(index+1)+'. '+item.body).join('\n');
+  const viewer=user.id,session=sharedSession;
+  try{
+    if(typeof navigator.clipboard?.writeText!=='function')throw new Error('Clipboard unsupported');
+    await navigator.clipboard.writeText(payload);
+    if(user?.id!==viewer||sharedSession!==session)return;
+    schysstaCopyMessage=approved.length===1?'Den aktuella regeln har kopierats.':'De '+approved.length+' aktuella reglerna har kopierats.';
+  }catch(e){
+    if(user?.id!==viewer||sharedSession!==session)return;
+    schysstaCopyMessage='Det gick inte att kopiera. Du kan markera och kopiera texten manuellt.';
+  }
+  render();
+}
 async function markSchysstaRead(id){
   if(!schysstaListEnabled||!user||!SCHYSSTA_UUID.test(id)||schysstaSaving.has(id))return;
   const viewer=user.id,session=sharedSession;schysstaSaving.add(id);
@@ -778,6 +796,7 @@ function schysstaView(){
       +(item.own_decision===true?'ja':item.own_decision===false?'nej':'inte lämnat')+'</p>'
       +(source==='Ändringsförslag'&&item.status==='proposed'?'<p class="live-muted">Den tidigare överenskommelsen gäller tills ni båda har godkänt den nya formuleringen.</p>':'')
       +'<div class="schyssta-actions">'+decisionActions+manageActions+'</div>'
+      +(item.status==='accepted'?'<details class="schyssta-review"><summary>Hur fungerar den här regeln för oss?</summary><p>Ni kan välja att prata om regeln när det passar båda. Det här är ingen bedömning av vem som gör rätt eller fel.</p><ul><li>Vad har fungerat bra för oss?</li><li>Finns det något som känns svårt eller orättvist?</li><li>Vill vi behålla regeln eller föreslå en ändring?</li></ul></details>':'')
       +(schysstaEndTarget===item.agreement_id?'<div class="schyssta-confirm" role="group" aria-label="Bekräfta avslut"><p>Om du avslutar gäller regeln inte längre som gemensam överenskommelse. Den finns kvar i historiken.</p><button class="live-button" type="button" data-schyssta-end-confirm="'+item.agreement_id+'">Ja, avsluta</button><button class="schyssta-secondary" type="button" id="schyssta-end-cancel">Avbryt</button></div>':'')
       +'</li>';
   };
@@ -806,7 +825,9 @@ function schysstaView(){
     +card('<h2>Behöver ditt svar'+(needs.length?' ('+needs.length+')':'')+'</h2><p>Förslag från den andra personen visas här först.</p>'+list(needs,'Inga nya förslag väntar på ditt svar.'))
     +firstRuleHint
     +card('<h2>'+(schysstaEditTarget?'Föreslå ändring av regel':'Skriv ett eget förslag')+'</h2>'+formHtml+(schysstaMessage?'<p role="status" class="schyssta-feedback">'+esc(schysstaMessage)+'</p>':''))
-    +card('<h2>Våra överenskommelser</h2>'+list(approved,'Ni har ännu inga regler som båda godkänt.'))
+    +card('<h2>Våra överenskommelser</h2>'+list(approved,'Ni har ännu inga regler som båda godkänt.')
+      +(approved.length?'<button class="schyssta-secondary" type="button" data-schyssta-copy>Kopiera aktuella regler</button>':'')
+      +(schysstaCopyMessage?'<p role="status" class="schyssta-feedback">'+esc(schysstaCopyMessage)+'</p>':''))
     +card('<h2>Förslag på gång</h2><p>Era förslag och överenskommelser som ännu inte fått två ja. Ett eget skickat förslag kräver också ditt separata godkännande.</p>'+list(ongoing,'Inga andra pågående förslag.'))
     +card('<h2>Gemensamma förslag</h2><p>Här kan bara regler som servern verifierat som JA+JA visas. Ett förslag är inte ett godkännande.</p>'+suggestionHtml)
     +(schysstaHistory.length?'<details class="schyssta-history" id="schyssta-history"><summary>Tidigare överenskommelser ('+schysstaHistory.length+')</summary><ul class="schyssta-list">'+schysstaHistory.map(item=>'<li id="schyssta-rule-'+item.agreement_id+'"><p>'+esc(item.body)+'</p><p class="live-muted">Avslutad överenskommelse</p></li>').join('')+'</ul></details>':'')
@@ -830,7 +851,7 @@ try{authResult=await db.auth.getUser();}
 catch(e){if(generation!==refreshGeneration)return;throw e;}
 if(generation!==refreshGeneration)return;
 const {data:{user:u},error}=authResult;if(error&&error.name!=='AuthSessionMissingError')throw error;user=u;profile=null;members=[];swipeAnswers.clear();swipeImportance.clear();importancePending.clear();importanceSaving.clear();importanceAvailable=false;importanceLoadError='';skippedUnderstanding.clear();understandingShares.clear();understandingShareSaving.clear();understandingShareError='';for(const answers of themeAnswers.values())answers.clear();activeThemeDeck=null;themeCategory='all';themeIndex=0;themeReview=false;themeSaveError='';swipeBusy=false;swipeLoadError='';swipeSaveError='';swipeReview=false;swipeIndex=0;sharedMatches=[];sharedPriorities=[];sharedDeckId='general';sharedError='';sharedLoading=false;sharedSession++;sharedRequest++;insightsRows=[];sharedUnderstandingRows=[];insightsLoading=false;insightsError='';insightsRequest++;themesUnlocked=false;themesLoading=false;themesError='';themesRequest++;
-if(typeof schysstaRequest!=='undefined'){schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];schysstaNotifications=[];schysstaReplacementLinks=[];schysstaHistory=[];schysstaEndTarget=null;schysstaLoading=false;schysstaError='';schysstaRequest++;schysstaSaving.clear();schysstaDraft='';schysstaDraftOpen=false;schysstaDraftKey=null;schysstaEditTarget=null;schysstaSubmitting=false;schysstaMessage='';schysstaFocusId='';}
+if(typeof schysstaRequest!=='undefined'){schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];schysstaNotifications=[];schysstaReplacementLinks=[];schysstaHistory=[];schysstaEndTarget=null;schysstaLoading=false;schysstaError='';schysstaRequest++;schysstaSaving.clear();schysstaDraft='';schysstaDraftOpen=false;schysstaDraftKey=null;schysstaEditTarget=null;schysstaSubmitting=false;schysstaMessage='';schysstaCopyMessage='';schysstaFocusId='';}
 if(user){const viewer=user.id;
 let loaded;
 try{loaded=await Promise.all([db.from('profiles').select('display_name').eq('user_id',viewer).maybeSingle(),db.rpc('my_family_members'),db.from('swipe_answers').select('deck_id,card_id,answer').eq('user_id',viewer),db.from('swipe_skips').select('deck_id,card_id').eq('user_id',viewer),db.from('swipe_importance').select('deck_id,card_id,importance').eq('user_id',viewer),sharedUnderstandingEnabled?db.from('understanding_card_shares').select('deck_id,card_id').eq('user_id',viewer):Promise.resolve({data:[],error:null})]);}
@@ -855,6 +876,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-swipe]');i
 if(e.target.closest('#insights-retry')&&!insightsLoading)void fetchInsights();
 if(e.target.closest('#schyssta-retry')&&!schysstaLoading)void fetchSchysstaList();
 if(e.target.closest('[data-schyssta-refresh]')&&!schysstaLoading)void fetchSchysstaList();
+if(e.target.closest('[data-schyssta-copy]'))void copySchysstaAgreements();
 if(e.target.closest('[data-schyssta-start]')){schysstaDraftOpen=true;schysstaEditTarget=null;schysstaDraft='';schysstaDraftKey=null;render();document.getElementById('schyssta-body')?.focus();}
 if(e.target.closest('#schyssta-compose')){schysstaDraftOpen=!schysstaDraftOpen;if(!schysstaDraftOpen){schysstaEditTarget=null;schysstaDraftKey=null;schysstaDraft='';}schysstaMessage='';render();}
 const openRule=e.target.closest('[data-schyssta-open]');
