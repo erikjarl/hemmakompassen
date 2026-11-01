@@ -56,7 +56,7 @@ test('Schyssta listan rejects incomplete, duplicate or contradictory RPC snapsho
   assert.equal(validate(null,[rule]),false,'Null RPC payload is not a legitimate empty array');
   assert.equal(validate([suggestion],null),false,'Missing agreements cannot imply an empty list');
   assert.equal(validate([suggestion],[{...rule,parent_decision:'yes'}]),false,'Reject invalid decision types');
-  assert.ok(app.includes("else if(!validSchysstaPayload(results[0].data,results[1].data)||!validManualSchysstaPayload(results[2].data,results[1].data))"),'Both sources fail closed together');
+  assert.ok(app.includes("else if(!validSchysstaPayload(results[0].data,results[1].data)||!validManualSchysstaPayload(results[2].data,results[1].data)||!validSchysstaNotifications(results[3].data))"),'All three sources fail closed together');
   assert.match(app,/Inga förslag eller överenskommelser visas/);
 });
 
