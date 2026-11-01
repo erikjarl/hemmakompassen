@@ -148,6 +148,11 @@ export function createHandler({ fetchAuth = fetch, now = () => new Date() } = {}
       return answer(503, { error: 'Inloggningen kunde inte kontrolleras just nu.' }, origin);
     }
     if (!userId) return answer(401, { error: 'Din inloggning behöver förnyas.' }, origin);
+    // Internal pilot: if the allowlist binding is missing, all AI access is denied.
+    // Only verified test accounts may read/write D1 chats or invoke the model.
+    const allowed = typeof env.AI_TEST_USERS === 'string'
+      ? env.AI_TEST_USERS.split(',').map(x => x.trim()).filter(Boolean) : [];
+    if (!allowed.includes(userId)) return answer(403, {error:'AI-medlaren är ännu bara öppen för de interna testkontona.'}, origin);
     // D1 remains inaccessible to clients; all operations receive verified userId only.
     if (isChatList || itemMatch) {
       try {
