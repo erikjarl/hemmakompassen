@@ -515,6 +515,8 @@ Listan är en samlad arbetsplan för att slutföra Gillaswajpen. Kryssa av förs
 - [ ] **Kvar innan release på `main`:** riktig autentiserad end-to-end-testning i två separata sessioner, Node/Actions-kontroller, mobiltest/Playwright och särskild granskning/merge av den renodlade AI-pull-requesten.
 - [ ] **AI-01D/AI-02/AI-03:** samtyckesstyrd serverkontext och frivilliga, rollanpassade AI-reflektioner för Gillaswajpen respektive Big Five först efter säkerhets- och behörighetstest.
 
+**Ytterligare intern säkerhetsgräns:** endast de två identifierade testkontona Fannyförälder och Tobbetonåring är tillåtna i den driftsatta Workern. Cloudflare har en server-only `AI_TEST_USERS`-bindning; kontonas UUID finns inte i GitHub, som i stället har en tom, fail-closed platshållare. Okända autentiserade konton och saknad allowlist ska ge 403 före modell- och chattanrop. Detta skyddar också gratisresurserna vid en offentligt tillgänglig webbadress.
+
 **Senaste tillägg:** Servern hämtar nu endast den verifierade användarens `parent`/`teen`-roll via befintlig Supabase-RPC med användarens Auth-token. Instruktionerna för AI-medlaren anpassas därefter till förälder respektive tonåring och faller tillbaka till neutralt läge om rollinformation inte kan verifieras. Rolluppgiften går att testa; fiktiva svenska modellprov visar ännu inte robust, tydlig kvalitetsskillnad mellan roller. Godkända GitHub Actions omfattar nu AI-Node-tester och den ordinarie UI/browser-testkedjan; faktisk autentiserad tvåkontotestning återstår.
 
 ### AI-01 — Grundläggande AI-medlare (byggs först)
