@@ -14,6 +14,10 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
   let activeChatId = null;
   let loading = false;
   let historyError = '';
+  let contextSections = [];
+  let contextError = '';
+  let contextLoading = false;
+  let contextRequest = 0;
   let listRequest = 0;
 
   const enabled = config.enableAiMediator === true
@@ -47,8 +51,28 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
     if (!res.ok) throw new Error(typeof result?.error === 'string' ? result.error : 'Privata samtal kan inte nås.');
     return result;
   }
+  async function loadContextStatus() {
+    if (!historyEnabled || !userId || contextLoading) return false;
+    const account=userId, myEpoch=epoch, request=++contextRequest;
+    contextLoading=true;contextError='';notify();
+    try {
+      const result=await callApi('/context','GET',account);
+      if(myEpoch!==epoch||userId!==account||request!==contextRequest)return false;
+      if(!Array.isArray(result.sections)||result.sections.length>12||
+         result.sections.some(x=>typeof x!=='string'||x.length>90))throw Error('Ogiltig översikt.');
+      contextSections=result.sections;
+      if(result.unavailableCount>0)contextError='Några uppgifter kunde inte hämtas. AI:n ska inte gissa vad de innehåller.';
+      return true;
+    } catch(e) {
+      if(myEpoch===epoch&&userId===account)contextError='Kunde inte kontrollera tillgängliga uppgifter.';
+      return false;
+    } finally {
+      if(myEpoch===epoch&&userId===account){contextLoading=false;notify();}
+    }
+  }
   async function loadList() {
     if (!historyEnabled || !userId || loading || sending) return false;
+    if(!contextSections.length&&!contextLoading)void loadContextStatus();
     const epochAtStart = epoch, account = userId, request = ++listRequest;
     loading = true;historyError = '';notify();
     try {
@@ -125,6 +149,10 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
     activeChatId = null;
     loading = false;
     historyError = '';
+    contextSections = [];
+    contextError = '';
+    contextLoading = false;
+    contextRequest++;
     listRequest++;
   }
   function clear() {
@@ -168,13 +196,19 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
       + '<header class="swipe-heading"><span class="swipe-eyebrow">PRIVAT · INTERN TESTVERSION</span><h1>AI-medlaren</h1>'
       + '<p>Utforska konflikter och möjliga samtalsvägar, utan att den andra familjemedlemmen ser chatten.</p></header>'
       + '<div class="live-panel mediator-notice"><h2>Viktig information</h2>'
-      + (historyEnabled?'<p><strong>Testa enbart med påhittade situationer.</strong> Dina samtal sparas i en privat testdatabas tills du raderar dem. '
-        + 'AI:n kan läsa de senaste meddelandena i just ditt aktuella samtal. '
+      + (historyEnabled?'<p><strong>Testa enbart med påhittade situationer.</strong> Dina samtal sparas tills de raderas. '
+        + 'AI:n får använda dina egna svar, behörigt delade resultat, överenskommelser och ett fåtal meddelanden från familjens inkorg. '
+        + 'Informationen hämtas på nytt inför varje svar, så ändrad delning respekteras. '
+        + 'Motpartens privata testsvar och privata AI-chattar läses inte in.</p>'
         : '<p><strong>Testa enbart med påhittade situationer.</strong> Inga meddelanden sparas. '
-        + 'Chatten minns inte tidigare turer när den svarar. ')
-      + 'Ingen information från Gillaswajpen, '
-      + 'personlighetstestet eller familjens inkorg läses in.</p>'
+        + 'Chatten minns inte tidigare turer när den svarar.</p>')
       + '<p>Det här är inte terapi eller krishjälp. Vid akut fara, ring 112.</p></div>'
+      + (historyEnabled ? '<section class="mediator-context"><h2>Uppgifter som AI:n får använda</h2>'
+        + (contextLoading ? '<p>Kontrollerar tillgängliga uppgifter…</p>' : '')
+        + (contextSections.length ? '<p>'+contextSections.map(h).join(' · ')+'</p>' :
+           '<p>Inga uppgifter har ännu bekräftats. AI:n ska inte hitta på saknade resultat.</p>')
+        + (contextError ? '<p class="mediator-error" role="status">'+h(contextError)+'</p>' : '')
+        + '<button type="button" class="mediator-clear" id="mediator-refresh-context">Uppdatera översikt</button></section>' : '')
       + historyBar + '<div class="live-panel mediator-chat">' + messages
       + '<form id="mediator-form">'
       + '<label for="mediator-input"><strong>Ditt testmeddelande</strong></label>'
@@ -251,6 +285,6 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
       }
     }
   }
-  return { render, reset, clear, input, submit, loadList, createChat, openChat, deleteChat,
-    getState: () => ({ userId, sending, draft, error, remaining, turns: turns.map(x => ({ ...x })), chats:chats.map(c=>({...c})),activeChatId,historyError }) };
+  return { render, reset, clear, input, submit, loadList, loadContextStatus, createChat, openChat, deleteChat,
+    getState: () => ({ userId, sending, draft, error, remaining, turns: turns.map(x => ({ ...x })), chats:chats.map(c=>({...c})),activeChatId,historyError,contextSections:[...contextSections],contextError }) };
 }

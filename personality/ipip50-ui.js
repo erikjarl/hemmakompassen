@@ -1,8 +1,8 @@
 import {IPIP50_V1} from './ipip50-v1.js';
 import {scoreIPIP50} from './ipip50-scoring.js';
-import {buildIPIP50FamilyInsights} from './ipip50-family-insights.js?v=20261101-family-reflections2';
-import {richFamilyReflection} from './ipip50-family-copy.js?v=20261101-family-reflections2';
-import {IPIP50_REFERENCE,IPIP50_PERCENTILE_BANDS,approximateReferencePercentile,referenceLimits,describeReferenceProfile,formatSv} from './ipip50-reference.js?v=20261101-family-reflections2';
+import {buildIPIP50FamilyInsights} from './ipip50-family-insights.js?v=20261101-family-reflections3';
+import {richFamilyReflection} from './ipip50-family-copy.js?v=20261101-family-reflections3';
+import {IPIP50_REFERENCE,IPIP50_PERCENTILE_BANDS,approximateReferencePercentile,referenceLimits,describeReferenceProfile,formatSv} from './ipip50-reference.js?v=20261101-family-reflections3';
 import {loadMyIPIP50Answers,saveMyIPIP50Answer} from './ipip50-storage.js';
 
 const esc=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
