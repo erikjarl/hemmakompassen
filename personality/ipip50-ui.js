@@ -144,7 +144,7 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false}
       (shareEnabled&&isPaired?'<button type="button" data-pf-action="refresh-share">Uppdatera jämförelse</button>':'')+'</section>':
       '<section class="live-panel"><h2>Delning ännu inte aktiverad</h2><p>Dina 50 svar och din profil är privata. Jämförelse med den andra familjemedlemmen aktiveras efter kontroll av serverbehörigheter och frivilligt samtycke.</p></section>';
     let comparison='';
-    if(other&&role){
+    if(other&&role&&shareEnabled){
       // The server returns only five scores after confirming two current consents.
       const rows=compareIPIP50Profiles(own,other);
       comparison='<section class="live-panel pf-comparison"><h2>Våra profiler</h2><p>Två självskattningar på samma svarsskala, inte ett mått på hur bra någon är som person.</p>'+
@@ -177,7 +177,7 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false}
       if(token!==sequence||viewer!==id)return true;
       shareBusy=false;
       if(r?.error){shareError='Kunde inte ändra delningen. Försök igen.';}
-      else{shareEnabled=action==='share';paired=null;await fetchPaired(id,token);}
+      else{shareEnabled=action==='share';paired=null;if(shareEnabled)await fetchPaired(id,token);}
       if(token===sequence&&viewer===id)repaint();
     }else return false;
     return true;
