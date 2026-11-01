@@ -551,6 +551,9 @@ try{
   assert.equal(await paired.page.evaluate(()=>window.__HK_SCHYSSTA_DECISION__?.args?.p_agreement_id==='30000000-0000-4000-8000-000000000001'),false,
     'Pausing does not send any approval or rejection decision');
   assert.match(await paired.page.locator('.schyssta-view').innerText(),/Inget beslut har sparats/);
+  await paired.page.locator('[data-schyssta-resume="30000000-0000-4000-8000-000000000001"]').click();
+  assert.equal(await paired.page.locator('#live-mobile-nav a[href="#regler"] .live-nav-count').innerText(),'2',
+    'A deferred proposal can be returned to the actionable list without any backend change');
   await paired.page.getByRole('button',{name:'+ Föreslå en regel'}).click();
   const prompts=paired.page.locator('.schyssta-tips');
   assert.equal(await prompts.count(),1,'Composing a rule offers optional, collapsed conversation prompts');
