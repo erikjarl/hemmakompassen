@@ -8,6 +8,8 @@
 
 **Säkerhetsgräns som kvarstår:** En publik URL är tekniskt åtkomlig för andra även om ingen har bjudits in. Behåll därför säker autentisering, self-only RLS, serververifierat A JA+JA, uttryckligt återkalleligt B-samtycke, skydd mot dataläckor, migrationsgranskning och regressionstester. Ändra inte befintliga användarsvar. Intern teststatus är inte tillstånd att aktivera osäker datadelning eller exponera hemligheter.
 
+**Förtydligande från Erik 2026-11-01:** Hela den publicerade webbplatsen används **endast för onlinetestning** och det finns enligt projektägaren inga andra användare än testkontona. Behandla därför Pages som den avsedda testmiljön: bygg och aktivera färdigimplementerade testfunktioner där efter tekniska tester, utan att hänvisa till en pågående extern lansering som blockerare. Upprätthåll alltid autentisering, familjeisolering och skydd för befintliga testsvar. Detta är inget tillstånd att fabricera tvåkontotester eller hävda att en icke-mergad branch är publicerad.
+
 **Ändring av status:** Endast när Erik uttryckligen meddelar att externa användare/pilot ska börja ändras denna grundförutsättning; genomför då separat lanserings-, integritets- och riskgranskning.
 
 
