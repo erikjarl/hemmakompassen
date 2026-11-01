@@ -115,3 +115,14 @@ Nästa backendsteg enligt ROADMAP PF-18–25: skapa versionssatta testomgångar 
 **UI-bugg och åtgärd:** svarsalternativ fick tidigare nästan ingen synlig bekräftelse på tryck, eftersom skärmen omedelbart ritades om till nästa fråga. Nu hålls det markerade alternativet kvar med kontrastfärg, kant och bock under sparning, i minst 650 millisekunder, innan frågeflödet går vidare. Om sparningen misslyckas går frågan inte vidare och ett felmeddelande visas. De val som redan finns sparade blir markerade vid återgång och granskning. Enhetstester och mobilwebbläsartest kontrollerar detta.
 
 **Status:** Teknisk referensvisning är implementerad, men motsvarar INTE att ett validerat svenskt test med svenska normer har skapats. Fortsatt översättningsgranskning och referensgruppsval finns i ROADMAP PF-29.
+
+
+## Horisontella percentilstaplar – modelluppskattning (1 november 2026)
+
+Radargrafen har ersatts av fem horisontella staplar för egen profil och samtyckt familjejämförelse. X-axeln går linjärt från 0 till 100 **uppskattad percentil**; 50 är exakt mitten och 75 exakt tre fjärdedelar. Profilmärkena ligger vid `100 × Φ((råsumma−M)/SD)`, där Φ är standardnormalfördelningens fördelningsfunktion och M/SD kommer från Skidmores engelskspråkiga Oregon-vuxenurval (N=570).
+
+Detta är **normalmodellerade positioner** och inte observerade empiriska percentiler i urvalet. Det finns ingen verifierad normalfördelning, mätinvarians, svensk populationsnorm eller tonårsnorm. Påstå därför inte att resultatet är en säkerställd percentil i Sverige eller ens ett exakt percentilvärde i Oregon-urvalet. Skriv `P≈` i UI och visa begränsningarna i en lättåtkomlig förklaring. Råpoäng, M och SD finns fortfarande i tabellen.
+
+Färgbanden har gränserna `Φ(-2)≈2,275 %`, `Φ(-1)≈15,866 %`, `Φ(1)≈84,134 %`, `Φ(2)≈97,725 %`, dvs mycket under / under / runt / över / mycket över genomsnittet. Det mellersta fältet är därför ~68,27 % av barens bredd; de närliggande fälten ~13,59 % var och ytterfälten ~2,28 % var. Detta motsvarar sannolikhetsandelar **under modellantagandet**, inte lika breda råpoängs- eller SD-intervall. Två profilers markörer ligger på separata vertikala nivåer för läsbarhet vid samma percentil, men vid exakt samma x-koordinat.
+
+Säkerhet: datakälla och delningsbehörighet ändras inte, och enskilda item-svar förblir privata. Kontrollera referenskällans lämplighet och pröva svensk översättning psykometriskt före extern användning. Automatiska tester kontrollerar axelankare, bandgränser, klassificering och tillstånd för delning/återkallelse.
