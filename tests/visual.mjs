@@ -542,6 +542,14 @@ try{
   assert.match(inboxText,/Vi pratar om hur vi delar på sysslorna/,'Inbox shows other member pending manual request');
   assert.doesNotMatch(inboxText,/Vi planerar veckans sysslor på söndag/,'Inbox does not present sender own proposal as incoming');
   assert.match(inboxText,/Meddelanden · 1 olästa/,'Server inbox shows persisted unread count');
+  // The home screen surfaces the latest personal inbox alert ahead of general family information.
+  await paired.page.goto(base+'#hem',{waitUntil:'load'});
+  await paired.page.getByRole('heading',{name:'Inkorgen · 1 olästa'}).waitFor();
+  const homeSections=await paired.page.locator('#live-app h2').allTextContents();
+  assert.ok(homeSections.findIndex(t=>t.startsWith('Inkorgen'))<homeSections.indexOf('Din familj'),
+    'Personal inbox alerts are placed above the family overview');
+  await paired.page.getByRole('link',{name:'Visa inkorgen'}).click();
+  await paired.page.getByRole('heading',{name:'Inkorg'}).waitFor();
   await paired.page.getByRole('button',{name:'Markera som läst'}).click();
   await paired.page.waitForFunction(()=>window.__HK_READ_NOTICE__?.args?.p_notification_id==='40000000-0000-4000-8000-000000000001');
   await paired.page.waitForFunction(()=>document.querySelector('#live-app')?.textContent?.includes('Meddelanden'));
