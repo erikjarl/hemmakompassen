@@ -141,7 +141,8 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
             if(name==='set_my_ipip50_share'){personalityConsent=args.p_share===true;window.__HK_PERSONALITY_SHARE__=personalityConsent;return {data:personalityConsent,error:null};}
             if(name==='my_ipip50_shared_profiles'){
               const scores={extraversion:30,agreeableness:30,conscientiousness:30,emotional_stability:30,intellect_imagination:30};
-              return {data:personalityConsent&&window.__HK_TEST_PERSONALITY_PARTNER_SHARED__?{instrument_id:'ipip50-sv-v1',viewer_role:window.__HK_TEST_ROLE__,profiles:[{role:'parent',scores},{role:'teen',scores}]}:null,error:null};
+              const teenScores={...scores,conscientiousness:45,agreeableness:40}; // Synthetic differences; extraversion remains equal for geometry tests.
+              return {data:personalityConsent&&window.__HK_TEST_PERSONALITY_PARTNER_SHARED__?{instrument_id:'ipip50-sv-v1',viewer_role:window.__HK_TEST_ROLE__,profiles:[{role:'parent',scores},{role:'teen',scores:teenScores}]}:null,error:null};
             }
             if(window.__HK_SCHYSSTA_EMPTY__===true&&['shared_schyssta_rule_suggestions','my_schyssta_rules','my_manual_schyssta_rules','my_schyssta_notifications','my_schyssta_replacement_links','my_schyssta_rule_history'].includes(name))return {data:[],error:null};
             if(name==='my_family_members')return {data:current()?(window.__HK_TEST_PAIRED__?[{user_id:'10000000-0000-0000-0000-000000000001',role:'parent',display_name:'Provförälder'},{user_id:'10000000-0000-0000-0000-000000000002',role:'teen',display_name:'Provtonåring'}]:[{user_id:current().id,role:window.__HK_TEST_ROLE__,display_name:window.__HK_TEST_ROLE__==='teen'?'Provtonåring':'Provförälder'}]):[],error:null};
@@ -429,6 +430,8 @@ try{
   assert.match(await consentPair.page.locator('.pf-family-reflections').innerText(),/Vad era profiler kan säga om samspelet/);
   assert.match(await consentPair.page.locator('.pf-family-reflections').innerText(),/Likheter att bygga vidare på/);
   assert.match(await consentPair.page.locator('.pf-family-reflections').innerText(),/Skillnader att utforska/);
+  assert.match(await consentPair.page.locator('.pf-family-reflections').innerText(),/Tonåringen beskriver större benägenhet till ordning och planering/);
+  assert.match(await consentPair.page.locator('.pf-family-reflections').innerText(),/Extraversion/);
   assert.equal(await consentPair.page.locator('.pf-comparison .pf-scale-track').count(),5);
   const pctGeometry=await consentPair.page.locator('.pf-comparison .pf-scale-row').first().evaluate(row=>{
     const bar=row.querySelector('.pf-scale-track').getBoundingClientRect();
