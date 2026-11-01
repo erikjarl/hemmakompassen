@@ -277,3 +277,10 @@
   .swipe-importance{padding:11px 12px 10px;margin-top:17px}
   .swipe-importance-scale{font-size:10px}
 }
+
+/* Optional shared-rule writing prompts: accessible, collapsed by default. */
+.schyssta-tips{width:100%;max-width:680px;border:1px solid #655877;border-radius:12px;padding:11px 14px;background:#1a2130;color:#e7e9f2}
+.schyssta-tips summary{cursor:pointer;font-weight:650;color:#f0d4aa;line-height:1.45}
+.schyssta-tips summary:focus-visible{outline:3px solid #f5bb65;outline-offset:3px}
+.schyssta-tips p,.schyssta-tips li{font-size:13px;line-height:1.6}
+.schyssta-tips ul{padding-left:24px;margin:8px 0 12px}
