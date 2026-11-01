@@ -40,6 +40,8 @@ let sharedUnderstandingRows=[],understandingShareError='';
 let schysstaSuggestions=[],schysstaRules=[],schysstaManualRules=[],schysstaNotifications=[],schysstaReplacementLinks=[],schysstaHistory=[],schysstaEndTarget=null,schysstaLoading=false,schysstaError='',schysstaRequest=0;
 let schysstaDraft='',schysstaDraftOpen=false,schysstaDraftKey=null,schysstaEditTarget=null,schysstaSubmitting=false,schysstaMessage='',schysstaCopyMessage='',schysstaFocusId='',schysstaSearch='',schysstaFilterStatus='all';
 const schysstaSaving=new Set();
+// A local, session-only pause never records a NO vote or changes shared data.
+const schysstaPausedIds=new Set();
 const understandingShares=new Set();
 const understandingShareSaving=new Set();
 const SHARED_POLL_INTERVAL_MS=15000;
@@ -654,7 +656,7 @@ function applySchysstaFilters(){
   if(summary)summary.textContent=phrase||schysstaFilterStatus!=='all'
     ?'Visar '+shown+' av '+total+' regler och förslag.':'';
 }
-const schysstaNeedsAnswer=()=>schysstaAllRules().filter(row=>row.status==='proposed'&&!row.proposed_by_me&&row.own_decision===null).sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at));
+const schysstaNeedsAnswer=()=>schysstaAllRules().filter(row=>row.status==='proposed'&&!row.proposed_by_me&&row.own_decision===null&&!schysstaPausedIds.has(row.agreement_id)).sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at));
 function validSchysstaNotifications(rows){
   const kinds=['rule_proposed','rule_accepted','rule_declined','rule_withdrawn'];
   return Array.isArray(rows)&&rows.every(row=>row&&typeof row==='object'&&!Array.isArray(row)
@@ -778,6 +780,8 @@ async function fetchSchysstaList(){
     schysstaNotifications=results[3].data;
     schysstaReplacementLinks=results[4].data;
     schysstaHistory=results[5].data;
+    const pendingIds=new Set(schysstaAllRules().filter(row=>row.status==='proposed'&&row.own_decision===null).map(row=>row.agreement_id));
+    for(const id of schysstaPausedIds)if(!pendingIds.has(id))schysstaPausedIds.delete(id);
   }
   if(['regler','inkorg','hem'].includes(page()))render();
   if(page()==='regler'&&schysstaFocusId){
@@ -884,7 +888,7 @@ function schysstaView(){
       +(schysstaCopyMessage?'<p role="status" class="schyssta-feedback">'+esc(schysstaCopyMessage)+'</p>':''))
     +'<p class="schyssta-no-results live-muted" hidden>Inga gemensamma regler matchar sökningen.</p></div>'
     +'<div class="schyssta-filter-group" data-schyssta-filter-group="ongoing">'
-    +card('<h2>Förslag på gång</h2><p>Era förslag och överenskommelser som ännu inte fått två ja. Ett eget skickat förslag kräver också ditt separata godkännande.</p>'+list(ongoing,'Inga andra pågående förslag.'))
+    +card('<h2>Förslag på gång</h2><p>Här hittar du även förslag där du valt Inte nu. Ett eget skickat förslag kräver också ditt separata godkännande.</p>'+list(ongoing,'Inga andra pågående förslag.'))
     +'<p class="schyssta-no-results live-muted" hidden>Inga pågående förslag matchar sökningen.</p></div>'
     +card('<h2>Gemensamma förslag</h2><p>Här kan bara regler som servern verifierat som JA+JA visas. Ett förslag är inte ett godkännande.</p>'+suggestionHtml)
     +(schysstaHistory.length?'<details class="schyssta-history" id="schyssta-history"><summary>Tidigare överenskommelser ('+schysstaHistory.length+')</summary><ul class="schyssta-list">'+schysstaHistory.map(item=>'<li id="schyssta-rule-'+item.agreement_id+'"><p>'+esc(item.body)+'</p><p class="live-muted">Avslutad överenskommelse</p></li>').join('')+'</ul></details>':'')
@@ -908,7 +912,7 @@ try{authResult=await db.auth.getUser();}
 catch(e){if(generation!==refreshGeneration)return;throw e;}
 if(generation!==refreshGeneration)return;
 const {data:{user:u},error}=authResult;if(error&&error.name!=='AuthSessionMissingError')throw error;user=u;profile=null;members=[];swipeAnswers.clear();swipeImportance.clear();importancePending.clear();importanceSaving.clear();importanceAvailable=false;importanceLoadError='';skippedUnderstanding.clear();understandingShares.clear();understandingShareSaving.clear();understandingShareError='';for(const answers of themeAnswers.values())answers.clear();activeThemeDeck=null;themeCategory='all';themeIndex=0;themeReview=false;themeSaveError='';swipeBusy=false;swipeLoadError='';swipeSaveError='';swipeReview=false;swipeIndex=0;sharedMatches=[];sharedPriorities=[];sharedDeckId='general';sharedError='';sharedLoading=false;sharedSession++;sharedRequest++;insightsRows=[];sharedUnderstandingRows=[];insightsLoading=false;insightsError='';insightsRequest++;themesUnlocked=false;themesLoading=false;themesError='';themesRequest++;
-if(typeof schysstaRequest!=='undefined'){schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];schysstaNotifications=[];schysstaReplacementLinks=[];schysstaHistory=[];schysstaEndTarget=null;schysstaLoading=false;schysstaError='';schysstaRequest++;schysstaSaving.clear();schysstaDraft='';schysstaDraftOpen=false;schysstaDraftKey=null;schysstaEditTarget=null;schysstaSubmitting=false;schysstaMessage='';schysstaCopyMessage='';schysstaFocusId='';schysstaSearch='';schysstaFilterStatus='all';}
+if(typeof schysstaRequest!=='undefined'){schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];schysstaNotifications=[];schysstaReplacementLinks=[];schysstaHistory=[];schysstaEndTarget=null;schysstaLoading=false;schysstaError='';schysstaRequest++;schysstaSaving.clear();schysstaPausedIds.clear();schysstaDraft='';schysstaDraftOpen=false;schysstaDraftKey=null;schysstaEditTarget=null;schysstaSubmitting=false;schysstaMessage='';schysstaCopyMessage='';schysstaFocusId='';schysstaSearch='';schysstaFilterStatus='all';}
 if(user){const viewer=user.id;
 let loaded;
 try{loaded=await Promise.all([db.from('profiles').select('display_name').eq('user_id',viewer).maybeSingle(),db.rpc('my_family_members'),db.from('swipe_answers').select('deck_id,card_id,answer').eq('user_id',viewer),db.from('swipe_skips').select('deck_id,card_id').eq('user_id',viewer),db.from('swipe_importance').select('deck_id,card_id,importance').eq('user_id',viewer),sharedUnderstandingEnabled?db.from('understanding_card_shares').select('deck_id,card_id').eq('user_id',viewer):Promise.resolve({data:[],error:null})]);}
@@ -954,7 +958,15 @@ if(startEdit&&SCHYSSTA_UUID.test(startEdit.dataset.schysstaEdit)){
     render();document.getElementById('schyssta-body')?.focus();}
 }
 const schysstaProposal=e.target.closest('[data-schyssta-propose]');if(schysstaProposal)void proposeSchysstaRule(schysstaProposal.dataset.schysstaPropose);
-const pause=e.target.closest('[data-schyssta-pause]');if(pause){schysstaMessage='Du kan ta ställning till förslaget senare. Inget beslut har registrerats.';render();}
+const pause=e.target.closest('[data-schyssta-pause]');
+if(pause&&SCHYSSTA_UUID.test(pause.dataset.schysstaPause)){
+  const row=schysstaAllRules().find(item=>item.agreement_id===pause.dataset.schysstaPause);
+  if(row&&row.status==='proposed'&&!row.proposed_by_me&&row.own_decision===null){
+    schysstaPausedIds.add(row.agreement_id);
+    schysstaMessage='Förslaget ligger nu under Förslag på gång. Du kan återkomma när du vill. Inget beslut har sparats.';
+    render();
+  }
+}
 const schysstaDecision=e.target.closest('[data-schyssta-decision]');if(schysstaDecision)void decideSchysstaRule(schysstaDecision.dataset.schysstaDecision,schysstaDecision.dataset.approved==='true');
 const understandingShare=e.target.closest('[data-understanding-share]');
 if(understandingShare&&user&&viewerRole()==='teen')void setUnderstandingShare(understandingShare.dataset.understandingShare,understandingShare.getAttribute('aria-pressed')!=='true',user.id,sharedSession);
