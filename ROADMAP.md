@@ -594,3 +594,11 @@ Listan är en samlad arbetsplan för att slutföra Gillaswajpen. Kryssa av förs
 - [x] Behåll tillhörande poängtabell, vuxenreferens M/SD, metodförbehåll, privat svarshistorik och separat dubbelsamtycke. Lägg till mobilstilar, förklaringsfält och automatiska kontrollfall.
 - [ ] Kontrollera GitHub Actions och visuella Playwright-bilder för både en profil och två profiler på liten mobil samt desktop efter PR-körning. Verifiera att färgzoner, markörer och texter inte överlappar.
 - [ ] Publicera på Pages först efter uttryckligen godkänd merge enligt arbetsrutinen ovan.
+
+## Big Five – personliga likheter och skillnader i textform (1 november 2026)
+- [x] Regelmotor med testade, transparenta råpoängsgränser: 0–3 lika, 4–8 viss, minst 9 tydlig, minst 15 särskilt prioriterad; inga konstgjorda toppskillnader om inget tröskelvärde passeras.
+- [x] Förvalda rollmedvetna reflektioner för alla fem skalor: riktning för tonåring/förälder, gemensamma styrkor, vardagsnära förståelse och konkreta samtalsfrågor.
+- [x] Anpassad sammanhängande sammanfattning, med viktigaste skillnader och likheter först, övriga aspekter expanderbara. Beskriv inga skillnader som statistiskt säkerställda eller riskfaktorer.
+- [x] Behåll serverkontrollerat dubbelsamtycke och fem summerade skalpoäng som enda gemensamma underlag. Återkallelse tar bort tolkningstexterna tillsammans med jämförelsediagrammet.
+- [x] Automatisk testning av riktningar, gränsvärden, lika profiler, ogiltiga resultat, mobilvyer och visning efter samtycke.
+- [ ] Användartesta texter och gränser med föräldrar/tonåringar samt genomför klinisk kvalitetsgranskning före extern pilot; gränserna är för närvarande redaktionella, inte vetenskapligt validerade.
