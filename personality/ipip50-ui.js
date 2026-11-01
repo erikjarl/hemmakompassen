@@ -35,8 +35,8 @@ function radarSvg(self,other=null,role='parent'){
   }).join('');
   const labels=['Extraversion','Vänlighet','Samvetsgrannhet','Emotionell stabilitet','Idéer och fantasi']
     .map((name,i)=>{
-      const a=-Math.PI/2+i*Math.PI*2/5,x=220+Math.cos(a)*165,y=198+Math.sin(a)*165;
-      const anchor=Math.cos(a)>.2?'start':Math.cos(a)<-.2?'end':'middle';
+      const a=-Math.PI/2+i*Math.PI*2/5,x=220+Math.cos(a)*148,y=198+Math.sin(a)*148;
+      const anchor='middle';
       const shortened=name==='Emotionell stabilitet'?'Emotionell balans':name;
       return '<text x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" text-anchor="'+anchor+'" font-size="12" fill="#e2e8f0">'+esc(shortened)+'</text>';
     }).join('');
@@ -148,13 +148,13 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false}
       // The server returns only five scores after confirming two current consents.
       const rows=compareIPIP50Profiles(own,other);
       comparison='<section class="live-panel pf-comparison"><h2>Våra profiler</h2><p>Två självskattningar på samma svarsskala, inte ett mått på hur bra någon är som person.</p>'+
-        '<div class="pf-legend"><span class="pf-legend-own">Din profil</span><span class="pf-legend-other">Den andras profil</span></div>'+
+        '<div class="pf-legend" style="--pf-own:'+(role==='teen'?'#f8b55b':'#55d6d2')+';--pf-other:'+(role==='teen'?'#55d6d2':'#f8b55b')+'"><span class="pf-legend-own">Din profil</span><span class="pf-legend-other">Den andras profil</span></div>'+
         radarSvg(own,other,role)+table(own,other)+
         '<p class="live-muted">Skillnaderna visas utan gränsvärden. De kan vara utgångspunkt för samtal, inte bevis för att ni fungerar olika.</p>'+
         '<ul class="pf-differences">'+rows.map(r=>'<li><strong>'+esc(r.labelSv)+'</strong>: '+Math.abs(r.difference)+' poängs skillnad i era svarssummor.</li>').join('')+'</ul></section>';
     }
     return heading+'<section class="live-panel pf-results"><h2>Din profil</h2><p>De fem skalorna sammanfattar dina svar. De är inte percentiler och inte jämförda med någon svensk normgrupp.</p>'+
-      '<div class="pf-legend"><span class="pf-legend-own">Du</span></div>'+radarSvg(own,null,role)+table(own)+
+      '<div class="pf-legend" style="--pf-own:'+(role==='teen'?'#f8b55b':'#55d6d2')+'"><span class="pf-legend-own">Du</span></div>'+radarSvg(own,null,role)+table(own)+
       '<p class="live-muted">Värdena beskriver din skattning inom svarsspannet 10–50. Högre eller lägre är varken bättre eller sämre. Översättningen behöver fortfarande prövas vetenskapligt.</p>'+
       '<button type="button" data-pf-action="review">Granska eller ändra mina svar</button></section>'+sharing+comparison;
   }
