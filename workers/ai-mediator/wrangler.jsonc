@@ -17,7 +17,7 @@
     {
       "binding": "LIMITS",
       "database_name": "hemmakompassen-ai-limits",
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "d1f88a44-40be-49b6-b79b-7eb3b4df565b",
       "migrations_dir": "./migrations"
     }
   ]
