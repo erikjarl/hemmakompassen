@@ -719,7 +719,7 @@ function schysstaView(){
       +'<p class="schyssta-status"><span>'+source+'</span> · <strong>'+statusLabel[item.status]+'</strong> · Ditt val: '
       +(item.own_decision===true?'ja':item.own_decision===false?'nej':'inte lämnat')+'</p>'
       +'<div class="schyssta-actions"><button class="live-button" type="button" data-schyssta-decision="'+item.agreement_id+'" data-approved="true"'+(action?' disabled':'')+'>Jag godkänner</button>'
-      +'<button class="schyssta-secondary" type="button" data-schyssta-decision="'+item.agreement_id+'" data-approved="false"'+(action?' disabled':'')+'>Jag avstår</button></div></li>';
+      +'<button class="schyssta-secondary" type="button" data-schyssta-decision="'+item.agreement_id+'" data-approved="false"'+(action?' disabled':'')+'>Avböj förslaget</button><button class="schyssta-secondary" type="button" data-schyssta-pause="'+item.agreement_id+'">Inte nu</button></div></li>';
   };
   const list=(rows,empty)=>rows.length?'<ul class="schyssta-list">'+rows.map(itemHtml).join('')+'</ul>':'<p class="live-muted">'+empty+'</p>';
   const rules=schysstaAllRules(), needs=schysstaNeedsAnswer();
@@ -792,6 +792,7 @@ if(openRule&&SCHYSSTA_UUID.test(openRule.dataset.schysstaOpen)){
 }
 const readNotice=e.target.closest('[data-schyssta-read]');if(readNotice)void markSchysstaRead(readNotice.dataset.schysstaRead);
 const schysstaProposal=e.target.closest('[data-schyssta-propose]');if(schysstaProposal)void proposeSchysstaRule(schysstaProposal.dataset.schysstaPropose);
+const pause=e.target.closest('[data-schyssta-pause]');if(pause){schysstaMessage='Du kan ta ställning till förslaget senare. Inget beslut har registrerats.';render();}
 const schysstaDecision=e.target.closest('[data-schyssta-decision]');if(schysstaDecision)void decideSchysstaRule(schysstaDecision.dataset.schysstaDecision,schysstaDecision.dataset.approved==='true');
 const understandingShare=e.target.closest('[data-understanding-share]');
 if(understandingShare&&user&&viewerRole()==='teen')void setUnderstandingShare(understandingShare.dataset.understandingShare,understandingShare.getAttribute('aria-pressed')!=='true',user.id,sharedSession);
