@@ -455,3 +455,26 @@
   .pf-band-key{grid-template-columns:1fr 1fr;gap:8px}
   .pf-scale-summary span{display:block}
 }
+
+
+/* Big Five family insights: readable, concise narrative aligned with Gillaswajpen. */
+.pf-family-reflections{margin:28px 0 30px;padding:22px clamp(15px,3vw,26px);border:1px solid #64748780;border-radius:18px;background:linear-gradient(140deg,#262d42,#1e2639)}
+.pf-family-reflections h3{font:600 clamp(1.35rem,3.5vw,1.65rem)/1.25 Georgia,serif;margin:0 0 14px;color:#f1f4fa}
+.pf-insight-intro{color:#e0e9f2;line-height:1.8;font-size:1rem;margin:0 0 22px}
+.pf-insight-group{margin-top:24px}
+.pf-insight-group>h4{color:#f5c77e;font-size:1.05rem;margin:0 0 14px;font-weight:700}
+.pf-insight-card{padding:16px 0 15px;border-top:1px solid #66748a66}
+.pf-insight-card h5{color:#e9f8f8;font-size:1rem;margin:0 0 7px}
+.pf-insight-card p{font-size:.94rem;line-height:1.7;margin:0 0 9px;color:#dce5ed}
+.pf-insight-question{color:#c5e6e4!important;font-size:.88rem!important}
+.pf-insight-group:not(:last-child){margin-bottom:16px}
+.pf-insight-more,.pf-insight-method{margin-top:18px;border-top:1px solid #6570878c;padding-top:13px}
+.pf-insight-more summary,.pf-insight-method summary{cursor:pointer;font-weight:650;color:#e7eafb;font-size:.88rem}
+.pf-insight-method p{font-size:.86rem;line-height:1.68;color:#c7d4e0}
+.pf-family-reflections details summary:focus-visible{outline:2px solid #f3c16a;outline-offset:5px;border-radius:4px}
+@media(max-width:420px){
+ .pf-family-reflections{margin:20px 0 24px;padding:17px 15px;border-radius:15px}
+ .pf-insight-intro{font-size:.94rem}
+ .pf-insight-card{padding:13px 0}
+ .pf-insight-card p{font-size:.9rem}
+}
