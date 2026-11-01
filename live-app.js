@@ -681,14 +681,39 @@ async function decideSchysstaRule(agreementId,approved){
   await fetchSchysstaList();
 }
 function schysstaView(){
-  if(!schysstaListEnabled)return '<h1>Schyssta listan</h1>'+card('<h2>Säker anslutning återstår</h2><p>Förslag och överenskommelser visas först när den granskade serverfunktionen och familjeisoleringen är verifierade. Privata swajpsvar visas aldrig här.</p>');
+  if(!schysstaListEnabled)return '<h1>Schyssta listan</h1>'+card('<p>Regelvyn är inte aktiverad i denna miljö.</p>');
   if(members.length!==2)return '<h1>Schyssta listan</h1>'+card('<h2>Koppla först en familjemedlem</h2><p>Listan kräver exakt en parad förälder och tonåring.</p><a class="live-button" href="./konto.html">Hantera familj</a>');
   if(schysstaLoading)return '<h1>Schyssta listan</h1>'+card('<p role="status">Hämtar serververifierade förslag…</p>');
   if(schysstaError)return '<h1>Schyssta listan</h1>'+card('<h2>Kunde inte visa listan</h2><p role="alert">'+esc(schysstaError)+'</p><button class="live-button" type="button" id="schyssta-retry">Försök igen</button>');
+  const statusLabel={proposed:'Väntar på bådas beslut',accepted:'Godkänd av båda',rejected:'Inte gemensamt godkänd'};
+  const itemHtml=item=>{
+    const source=item.source_card_id?'Från Gillaswajpen':'Eget regelförslag';
+    const action=schysstaSaving.has(item.agreement_id);
+    return '<li id="schyssta-rule-'+item.agreement_id+'"><p>'+esc(item.body)+'</p>'
+      +'<p class="schyssta-status"><span>'+source+'</span> · <strong>'+statusLabel[item.status]+'</strong> · Ditt val: '
+      +(item.own_decision===true?'ja':item.own_decision===false?'nej':'inte lämnat')+'</p>'
+      +'<div class="schyssta-actions"><button class="live-button" type="button" data-schyssta-decision="'+item.agreement_id+'" data-approved="true"'+(action?' disabled':'')+'>Jag godkänner</button>'
+      +'<button class="schyssta-secondary" type="button" data-schyssta-decision="'+item.agreement_id+'" data-approved="false"'+(action?' disabled':'')+'>Jag avstår</button></div></li>';
+  };
+  const list=(rows,empty)=>rows.length?'<ul class="schyssta-list">'+rows.map(itemHtml).join('')+'</ul>':'<p class="live-muted">'+empty+'</p>';
+  const rules=schysstaAllRules(), needs=schysstaNeedsAnswer();
+  const approved=rules.filter(item=>item.status==='accepted');
+  const ongoing=rules.filter(item=>item.status!=='accepted'&&!needs.includes(item));
   const suggestionHtml=schysstaSuggestions.length?'<ul class="schyssta-list">'+schysstaSuggestions.map(item=>'<li><p>'+esc(item.body)+'</p><button class="live-button" type="button" data-schyssta-propose="'+esc(item.card_id)+'"'+(schysstaSaving.has(item.card_id)?' disabled':'')+'>Föreslå</button></li>').join('')+'</ul>':'<p class="live-muted">Inga nya gemensamma ja-förslag finns just nu.</p>';
-  const statusLabel={proposed:'Väntar på två separata beslut',accepted:'Godkänd av båda',rejected:'Inte gemensamt godkänd'};
-  const rulesHtml=schysstaRules.length?'<ul class="schyssta-list">'+schysstaRules.map(item=>'<li><p>'+esc(item.body)+'</p><p class="schyssta-status"><strong>'+statusLabel[item.status]+'</strong> · Ditt val: '+(item.own_decision===true?'ja':item.own_decision===false?'nej':'inte lämnat')+'</p><div class="schyssta-actions"><button class="live-button" type="button" data-schyssta-decision="'+item.agreement_id+'" data-approved="true"'+(schysstaSaving.has(item.agreement_id)?' disabled':'')+'>Jag godkänner</button><button class="schyssta-secondary" type="button" data-schyssta-decision="'+item.agreement_id+'" data-approved="false"'+(schysstaSaving.has(item.agreement_id)?' disabled':'')+'>Jag avstår</button></div></li>').join('')+'</ul>':'<p class="live-muted">Ni har inga regelöverenskommelser ännu.</p>';
-  return '<div class="schyssta-view"><h1>Schyssta listan</h1><p>Prata först om vad regeln ska hjälpa er med. Föräldern ansvarar för att samtalet är tryggt och att tonåringen kan säga nej. <a href="#kommunikation">Öppna samtalsråd</a>.</p>'+card('<h2>Gemensamma förslag</h2><p>Här kan bara regler som servern verifierat som JA+JA visas. Ett förslag är inte ett godkännande.</p>'+suggestionHtml)+card('<h2>Era förslag och överenskommelser</h2><p>Båda behöver lämna ett eget ja innan en regel blir godkänd. Ett ändrat val slår igenom direkt.</p>'+rulesHtml)+'</div>';
+  const formHtml=schysstaDraftOpen?'<form id="schyssta-manual-form" class="schyssta-compose">'
+    +'<label for="schyssta-body">Vad vill du att ni båda ska kunna komma överens om?</label>'
+    +'<textarea id="schyssta-body" name="rule" rows="3" minlength="5" maxlength="500" required placeholder="Vi knackar innan vi går in i varandras rum…">'+esc(schysstaDraft)+'</textarea>'
+    +'<p class="live-muted">Skriv ett konkret förslag. Det skickas till den andra personen, men blir en överenskommelse först när ni båda sagt ja.</p>'
+    +'<button class="live-button" type="submit"'+(schysstaSubmitting?' disabled':'')+'>'+(schysstaSubmitting?'Skickar…':'Skicka regelförslag')+'</button>'
+    +'<button class="schyssta-secondary" type="button" id="schyssta-compose">Stäng formuläret</button></form>'
+    :'<button class="live-button" type="button" id="schyssta-compose">+ Föreslå en regel</button>';
+  return '<div class="schyssta-view"><h1>Schyssta listan</h1><p>Här samlar ni sådant ni båda har sagt ja till. Regler kan komma från Gillaswajpen eller skrivas av någon av er.</p>'
+    +card('<h2>Skriv ett eget förslag</h2>'+formHtml+(schysstaMessage?'<p role="status" class="schyssta-feedback">'+esc(schysstaMessage)+'</p>':''))
+    +card('<h2>Behöver ditt svar'+(needs.length?' ('+needs.length+')':'')+'</h2><p>Förslag från den andra personen visas här först.</p>'+list(needs,'Inga nya förslag väntar på ditt svar.'))
+    +card('<h2>Våra överenskommelser</h2>'+list(approved,'Ni har ännu inga regler som båda godkänt.'))
+    +card('<h2>Förslag på gång</h2><p>Era förslag och överenskommelser som ännu inte fått två ja. Ett eget skickat förslag kräver också ditt separata godkännande.</p>'+list(ongoing,'Inga andra pågående förslag.'))
+    +card('<h2>Gemensamma förslag</h2><p>Här kan bara regler som servern verifierat som JA+JA visas. Ett förslag är inte ett godkännande.</p>'+suggestionHtml)
+    +'</div>';
 }
 function section(key){
 const label=nav.find(n=>n[0]===key)?.[1]||'Hemmakompassen';
