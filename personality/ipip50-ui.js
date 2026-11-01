@@ -76,6 +76,12 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false}
     if(result?.error){partnerError='Kunde inte kontrollera delningen. Försök uppdatera.';paired=null;}
     else{partnerError='';paired=validatedPartnerPayload(result?.data);}
   }
+  async function refreshShared(){
+    if(!viewer||!loaded||!isSharingEnabled||!shareEnabled||active||saving||shareBusy)return;
+    const id=viewer,token=sequence,before=JSON.stringify(paired);
+    await fetchPaired(id,token);
+    if(id===viewer&&token===sequence&&before!==JSON.stringify(paired))repaint();
+  }
   async function load(userId){
     if(!userId)return;
     const token=++sequence;
@@ -147,11 +153,32 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false}
     if(other&&role&&shareEnabled){
       // The server returns only five scores after confirming two current consents.
       const rows=compareIPIP50Profiles(own,other);
+      const ordered=[...rows].sort((a,b)=>Math.abs(a.difference)-Math.abs(b.difference));
+      const close=ordered.slice(0,2);
+      const distant=[...ordered].reverse().slice(0,2);
+      const sharedIdentical=rows.every(r=>r.difference===0);
+      const topics={
+        extraversion:'När tycker ni om att umgås och när vill ni hellre vara för er själva?',
+        agreeableness:'Vad uppskattar var och en av er när någon försöker visa omtanke?',
+        conscientiousness:'Hur vill ni planera saker som behöver bli gjorda?',
+        emotional_stability:'Vad brukar hjälpa när känslor blir starka eller stressen ökar?',
+        intellect_imagination:'Vad är ni nyfikna på och vad vill ni upptäcka tillsammans?'
+      };
+      const reflections='<section class="pf-reflections"><h3>Det ni verkar likna varandra i</h3>'+
+        '<p class="live-muted">På de här skalorna ligger era svarssummor närmast varandra. Det behöver inte betyda att ni alltid fungerar likadant.</p>'+
+        '<ul>'+close.map(r=>'<li>'+esc(r.labelSv)+'</li>').join('')+'</ul>'+
+        '<h3>Där era självskattningar skiljer sig</h3>'+
+        (sharedIdentical?'<p>Era svarssummor är lika inom samtliga fem skalor. Ni kan ändå uppleva situationer på olika sätt.</p>':
+         '<p class="live-muted">De här skillnaderna är störst <em>inom just era svar</em>, inte statistiskt säkerställda olikheter.</p>'+
+         '<ul>'+distant.map(r=>'<li><strong>'+esc(r.labelSv)+'</strong> — '+Math.abs(r.difference)+' poäng mellan era summor.</li>').join('')+'</ul>')+
+        '<h3>Frågor att utforska tillsammans</h3><ul>'+
+        distant.map(r=>'<li>'+esc(topics[r.factorId])+'</li>').join('')+
+        '</ul><p class="live-muted">Samtalsfrågorna är redaktionella förslag, inte individuella psykologiska råd.</p></section>';
       comparison='<section class="live-panel pf-comparison"><h2>Våra profiler</h2><p>Två självskattningar på samma svarsskala, inte ett mått på hur bra någon är som person.</p>'+
         '<div class="pf-legend" style="--pf-own:'+(role==='teen'?'#f8b55b':'#55d6d2')+';--pf-other:'+(role==='teen'?'#55d6d2':'#f8b55b')+'"><span class="pf-legend-own">Din profil</span><span class="pf-legend-other">Den andras profil</span></div>'+
         radarSvg(own,other,role)+table(own,other)+
         '<p class="live-muted">Skillnaderna visas utan gränsvärden. De kan vara utgångspunkt för samtal, inte bevis för att ni fungerar olika.</p>'+
-        '<ul class="pf-differences">'+rows.map(r=>'<li><strong>'+esc(r.labelSv)+'</strong>: '+Math.abs(r.difference)+' poängs skillnad i era svarssummor.</li>').join('')+'</ul></section>';
+        reflections+'</section>';
     }
     return heading+'<section class="live-panel pf-results"><h2>Din profil</h2><p>De fem skalorna sammanfattar dina svar. De är inte percentiler och inte jämförda med någon svensk normgrupp.</p>'+
       '<div class="pf-legend" style="--pf-own:'+(role==='teen'?'#f8b55b':'#55d6d2')+'"><span class="pf-legend-own">Du</span></div>'+radarSvg(own,null,role)+table(own)+
@@ -198,5 +225,5 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false}
     repaint();
     return true;
   }
-  return {reset,load,render,handleClick,handleChange};
+  return {reset,load,refreshShared,render,handleClick,handleChange};
 }
