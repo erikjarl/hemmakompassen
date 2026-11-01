@@ -1,5 +1,14 @@
 # AI-01A: första säkra tekniska grunden (1 november 2026)
 
+## Verifierad molnstatus 2026-11-01
+- [x] Cloudflare-kontot har en D1-databas `hemmakompassen-ai-limits` med EU-jurisdiktion, skapad via Cloudflare API.
+- [x] `ai_daily_user_usage` har skapats i D1 och tabellens existens verifierats med SELECT från `sqlite_master`.
+- [x] Utvecklingsbranchens `workers/ai-mediator/wrangler.jsonc` har nu det faktiska D1-ID:t och saknar fortfarande aktiva AI-anrop från webbplatsen.
+- [ ] Faktisk Cloudflare-faktureringsplan kunde inte verifieras via anslutningen: API-anropet för abonnemang ger 403, saknar Billing Read. Ingen Worker har publicerats, och inga AI-inferenser har körts.
+- [ ] GitHub Actions-resultat för Worker-testfilen återstår att verifiera. Åtta lokala tester av motsvarande serverlogik passerade.
+- [ ] Serverns `SUPABASE_URL` och `SUPABASE_PUBLISHABLE_KEY` behöver konfigureras för den separata Workern inför testdriftsättning.
+
+
 **Status: endast på utvecklingsbranch, inte driftsatt eller inkopplad på webbplatsen.**
 
 ## Detta är implementerat i koden
