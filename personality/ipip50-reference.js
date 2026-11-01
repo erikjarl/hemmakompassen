@@ -19,13 +19,10 @@ export function referencePosition(factorId,score){
   if(!norm||!Number.isInteger(score)||score<10||score>50)throw new RangeError('Okänd skala eller ogiltig råpoäng');
   const z=(score-norm.mean)/norm.sd;
   const size=Math.abs(z);
-  const side=z<0?'lägre':'högre';
   const classification=size>=IPIP50_Z_LIMIT?'unusual':size>=1?'aboveOneSd':'nearAverage';
-  const description=classification==='unusual'
-    ?'Ovanligt '+(z<0?'lågt':'högt')+' i förhållande till den amerikanska vuxenreferensen (minst två standardavvikelser från dess medelvärde).'
-    :classification==='aboveOneSd'
-      ?'Mer än en standardavvikelse '+side+' än medelvärdet i den amerikanska vuxenreferensen.'
-      :'Inom en standardavvikelse från medelvärdet i den amerikanska vuxenreferensen.';
+  const label=z< -2?'Mycket under genomsnittet':z< -1?'Under genomsnittet':
+    z<=1?'Runt genomsnittet':z<=2?'Över genomsnittet':'Mycket över genomsnittet';
+  const description=label+' i jämförelsen med det amerikanska vuxenurvalets medelvärde och SD. Detta är ingen svensk norm.';
   return {factorId,score,mean:norm.mean,sd:norm.sd,z,classification,description};
 }
 
