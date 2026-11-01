@@ -45,6 +45,7 @@ function harness() {
     throw new Error('Unhandled test SQL: '+q.slice(0,100));
   }
   const env={
+    AI_TEST_USERS:A+','+B,
     APP_ORIGIN:ORIGIN,SUPABASE_URL:'https://example.supabase.co',SUPABASE_PUBLISHABLE_KEY:'public-test',
     AI:{async run(model,input){modelInputs.push({model,input});return {response:'Fiktivt svar: '+input.messages.at(-1).content};}},
     LIMITS:{
