@@ -66,7 +66,7 @@ test('normal-model percentile map anchors 50 at center, 75 at exactly three quar
   assert.ok(Math.abs(widths[0]-widths[4])<.0001);
   assert.ok(Math.abs(widths.reduce((sum,v)=>sum+v,0)-100)<1e-9);
   const score=approximateReferencePercentile('extraversion',39);
-  assert.equal(score.score,38);
+  assert.equal(score.score,39);
   assert.ok(score.percentile>50&&score.percentile<100);
   assert.match(score.category,/över genomsnittet/);
   assert.throws(()=>approximateReferencePercentile('extraversion',0),RangeError);
