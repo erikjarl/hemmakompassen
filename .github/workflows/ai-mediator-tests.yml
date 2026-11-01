@@ -8,12 +8,16 @@ on:
       - 'workers/ai-mediator/**'
       - 'tests/ai-mediator-worker.test.mjs'
       - 'tests/ai-mediator-ui.test.mjs'
+      - 'tests/ai-mediator-private-history.test.mjs'
       - 'ai-mediator-ui.js'
       - '.github/workflows/ai-mediator-tests.yml'
   pull_request:
     paths:
       - 'workers/ai-mediator/**'
       - 'tests/ai-mediator-worker.test.mjs'
+      - 'tests/ai-mediator-ui.test.mjs'
+      - 'tests/ai-mediator-private-history.test.mjs'
+      - 'ai-mediator-ui.js'
       - '.github/workflows/ai-mediator-tests.yml'
 
 permissions:
@@ -29,7 +33,7 @@ jobs:
         with:
           node-version: '22'
       - name: Run offline security tests
-        run: node --test tests/ai-mediator-worker.test.mjs tests/ai-mediator-ui.test.mjs
+        run: node --test tests/ai-mediator-worker.test.mjs tests/ai-mediator-ui.test.mjs tests/ai-mediator-private-history.test.mjs
       - name: JavaScript syntax checks
         run: |
           node --check ai-mediator-ui.js
