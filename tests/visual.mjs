@@ -100,6 +100,7 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
           {card_id:'regler-02',body:'Falsk text som aldrig får visas.'},
           {card_id:'regler-99',body:'Okänd privat uppgift'}
         ];
+        let schysstaManualRules=[{agreement_id:'30000000-0000-4000-8000-000000000001',body:'Vi pratar om hur vi delar på sysslorna.',status:'proposed',agreement_version:1,proposed_by_me:false,own_decision:null,parent_decision:null,teen_decision:null,created_at:'2026-10-30T12:00:00Z'}];
         let schysstaRules=[{agreement_id:'20000000-0000-4000-8000-000000000001',source_card_id:'regler-03',body:'Vi får pausa gräl och bestämmer när vi pratar vidare.',status:'proposed',proposed_by_me:false,own_decision:null,parent_decision:null,teen_decision:true,created_at:'2026-10-30T12:00:00Z'}];
         return {
           auth:{
@@ -158,6 +159,18 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
             }
             if(name==='shared_schyssta_rule_suggestions')return {data:window.__HK_TEST_PAIRED__?(window.__HK_SCHYSSTA_CLEAN_RPC__===true?schysstaSuggestions.filter(row=>row.card_id==='regler-01'):schysstaSuggestions):[],error:null};
             if(name==='my_schyssta_rules')return {data:window.__HK_TEST_PAIRED__?schysstaRules:[],error:null};
+            if(name==='my_manual_schyssta_rules')return {data:window.__HK_TEST_PAIRED__?schysstaManualRules.map(({request_key,...row})=>row):[],error:null};
+            if(name==='propose_manual_schyssta_rule'){
+              window.__HK_MANUAL_PROPOSE__={name,args};
+              if(!window.__HK_TEST_PAIRED__||!args.p_body||!args.p_request_key)return {data:null,error:{message:'invalid manual rule'}};
+              const existing=schysstaManualRules.find(row=>row.request_key===args.p_request_key);
+              if(existing)return {data:existing.agreement_id,error:null};
+              const row={agreement_id:'30000000-0000-4000-8000-000000000002',
+                body:args.p_body,status:'proposed',agreement_version:1,proposed_by_me:true,
+                own_decision:null,parent_decision:null,teen_decision:null,created_at:'2026-10-30T12:02:00Z'};
+              schysstaManualRules.push({...row,request_key:args.p_request_key});
+              return {data:row.agreement_id,error:null};
+            }
             if(name==='propose_schyssta_rule'){
               window.__HK_SCHYSSTA_PROPOSE__={name,args};
               const body={'regler-01':'Vi knackar innan vi går in i varandras rum.'}[args.p_card_id];
