@@ -491,7 +491,7 @@ export const IPIP50_V1 = {
     "population": "ESCS community participants, adults, Oregon USA, English IPIP 50; not representative of Swedish teens or adults",
     "scoring": "sum of ten 1–5 keyed items, minimum 10, maximum 50",
     "allowedForSwedishNormInterpretation": false,
-    "notes": "Derived from English-language instrument; modified Swedish language has not been psychometrically equated. Emotional stability = 60 − source Neuroticism sum (source M=24.99, SD=7.56). Descriptive reference only, do not produce z-scores/percentiles/labels.",
+    "notes": "Derived from English-language instrument; modified Swedish language has not been psychometrically equated. Emotional stability = 60 − source Neuroticism sum (source M=24.99, SD=7.56). Descriptive reference only: SD deviations may be displayed explicitly as a limited comparison to US English-language adult respondents; never produce normed Swedish percentiles, clinical labels, or representative population claims.",
     "scales": {
       "extraversion": {
         "mean": 30.45,

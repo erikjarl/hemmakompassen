@@ -1,5 +1,6 @@
 import {IPIP50_V1} from './ipip50-v1.js';
 import {scoreIPIP50,compareIPIP50Profiles} from './ipip50-scoring.js';
+import {IPIP50_REFERENCE,referenceLimits,describeReferenceProfile,formatSv} from './ipip50-reference.js';
 import {loadMyIPIP50Answers,saveMyIPIP50Answer} from './ipip50-storage.js';
 
 const esc=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -24,9 +25,23 @@ function point(i,sum,radius=120){
   return [Math.round((220+Math.cos(a)*radius*p)*100)/100,Math.round((198+Math.sin(a)*radius*p)*100)/100];
 }
 const polygon=values=>values.map((v,i)=>point(i,v).join(',')).join(' ');
+
+const clampScore=value=>Math.max(10,Math.min(50,value));
+// Concentric SD regions use each factor's own M and SD, so their
+// contours are not circles on the raw 10–50 axes.
+function sdContour(level){
+  return FACTORS.map(f=>{
+    const n=referenceLimits(f.id);
+    return clampScore(n.mean+level*n.sd);
+  });
+}
+function polygonPath(scores){
+  return scores.map((value,i)=>(i===0?'M':'L')+point(i,value).join(' ')).join(' ')+' Z';
+}
 function radarSvg(self,other=null,role='parent'){
   const values=FACTORS.map(f=>self.byFactor[f.id].sum);
   const otherValues=other?FACTORS.map(f=>other.byFactor[f.id].sum):null;
+  const means=FACTORS.map(f=>referenceLimits(f.id).mean);
   const rings=[10,20,30,40,50].map((n,i)=>
     '<polygon points="'+polygon(Array(5).fill(n))+'" fill="none" stroke="#657084" stroke-width="'+(i===4?'1.4':'0.7')+'" opacity=".65"/>').join('');
   const spokes=FACTORS.map((f,i)=>{
@@ -36,37 +51,72 @@ function radarSvg(self,other=null,role='parent'){
   const labels=['Extraversion','Vänlighet','Samvetsgrannhet','Emotionell stabilitet','Idéer och fantasi']
     .map((name,i)=>{
       const a=-Math.PI/2+i*Math.PI*2/5,x=220+Math.cos(a)*148,y=198+Math.sin(a)*148;
-      const anchor='middle';
       const shortened=name==='Emotionell stabilitet'?'Emotionell balans':name;
-      return '<text x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" text-anchor="'+anchor+'" font-size="12" fill="#e2e8f0">'+esc(shortened)+'</text>';
+      return '<text x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" text-anchor="middle" font-size="12" fill="#e2e8f0">'+esc(shortened)+'</text>';
     }).join('');
-  // Orange = teen, turquoise = parent, independent of viewer.
+  const outer=sdContour(1),inner=sdContour(-1);
+  const band='<path d="'+polygonPath(outer)+' '+polygonPath(inner)+
+    '" fill="#d1d7e4" fill-rule="evenodd" fill-opacity=".16" stroke="none"/>';
+  const tails=[-2,2].map(level=>'<polygon points="'+polygon(sdContour(level))+
+    '" fill="none" stroke="#aab5cb" stroke-width="1.1" opacity=".75" stroke-dasharray="2 5"/>').join('');
+  const referenceMean='<polygon points="'+polygon(means)+
+    '" fill="none" stroke="#f0f4ff" stroke-width="2" stroke-dasharray="5 4" opacity=".95"/>';
   const ownColor=role==='teen'?'#f8b55b':'#55d6d2';
   const otherColor=role==='teen'?'#55d6d2':'#f8b55b';
-  const own='<polygon points="'+polygon(values)+'" fill="'+ownColor+'" fill-opacity=".12" stroke="'+ownColor+'" stroke-width="3" stroke-linejoin="round"/>';
-  const second=otherValues?'<polygon points="'+polygon(otherValues)+'" fill="'+otherColor+'" fill-opacity=".06" stroke="'+otherColor+'" stroke-width="3" stroke-dasharray="7 5" stroke-linejoin="round"/>':'';
+  const own='<polygon points="'+polygon(values)+'" fill="'+ownColor+'" fill-opacity=".12" stroke="'+ownColor+'" stroke-width="3.3" stroke-linejoin="round"/>';
+  const second=otherValues?'<polygon points="'+polygon(otherValues)+'" fill="'+otherColor+'" fill-opacity=".06" stroke="'+otherColor+'" stroke-width="3" stroke-dasharray="8 5" stroke-linejoin="round"/>':'';
   return '<svg class="pf-radar" viewBox="0 0 440 398" role="img" aria-label="'+
-    (other?'Femaxlig figur med två profiler. Fullständiga värden visas i tabellen nedan.':'Femaxlig figur med din profil. Fullständiga värden visas i tabellen nedan.')+
-    '" xmlns="http://www.w3.org/2000/svg">'+rings+spokes+own+second+labels+'</svg>';
+    (other?'Era två profiler, amerikanskt vuxenmedelvärde samt plus och minus en och två standardavvikelser. Exakta värden finns i tabellen.':
+      'Din profil, amerikanskt vuxenmedelvärde samt plus och minus en och två standardavvikelser. Exakta värden finns i tabellen.')+
+    '" xmlns="http://www.w3.org/2000/svg">'+rings+spokes+band+tails+referenceMean+own+second+labels+'</svg>';
 }
+function referenceLegend(){
+  return '<div class="pf-reference-legend" aria-label="Förklaring av referenslinjer">'+
+    '<span class="pf-reference-mean">Vuxna: medelvärde</span>'+
+    '<span class="pf-reference-sd">Vuxna: ±1 SD (grått fält)</span>'+
+    '<span class="pf-reference-two">Vuxna: ±2 SD (prickade gränser)</span></div>';
+}
+function referenceFeedback(profile,roleLabel='Dina'){
+  const selfLabel=roleLabel==='Dina'?'ditt värde':'den andras värde';
+  const positions=describeReferenceProfile(profile);
+  return '<div class="pf-reference-feedback"><h3>'+esc(roleLabel)+' resultat jämfört med vuxenreferensen</h3>'+
+    '<ul>'+positions.map(p=>{
+      const factor=FACTORS.find(f=>f.id===p.factorId);
+      return '<li><strong>'+esc(factor.labelSv)+'</strong>: '+esc(p.description)+
+        ' (M '+formatSv(p.mean,2)+', SD '+formatSv(p.sd,2)+', '+esc(selfLabel)+' '+p.score+
+        '; '+formatSv(p.z)+' SD från medelvärdet.)</li>';
+    }).join('')+'</ul></div>';
+}
+function referenceCaveat(){
+  return '<p class="pf-reference-caveat">'+esc(IPIP50_REFERENCE.disclaimer)+
+    ' ”Ovanligt” betyder här minst två SD från ett jämförelsemedelvärde, inte en beräknad percentil eller en diagnos. '+
+    'Under 18 år beskriver jämförelsen fortfarande en <strong>vuxen</strong> referens, inte en tonårsnorm. '+
+    '<a href="'+esc(IPIP50_REFERENCE.studyUrl)+'" target="_blank" rel="noopener noreferrer">Referensstudie och urval</a>.</p>';
+}
+
 function profileFromSums(sums){
   return {complete:true,instrumentId:IPIP50_V1.id,version:IPIP50_V1.version,
     byFactor:Object.fromEntries(FACTORS.map(f=>[f.id,{sum:sums[f.id]}]))};
 }
 function table(self,other=null){
-  return '<div class="pf-table-wrap"><table class="pf-table"><caption>Skalpoäng från 10 till 50, utan normjämförelse</caption><thead><tr><th scope="col">Dimension</th><th scope="col">Din profil</th>'+
-    (other?'<th scope="col">Den andras</th>':'')+'</tr></thead><tbody>'+FACTORS.map(f=>'<tr><th scope="row">'+esc(f.labelSv)+'</th><td>'+self.byFactor[f.id].sum+' / 50</td>'+
-    (other?'<td>'+other.byFactor[f.id].sum+' / 50</td>':'')+'</tr>').join('')+'</tbody></table></div>';
+  return '<div class="pf-table-wrap"><table class="pf-table"><caption>Råpoäng (10–50) och amerikansk vuxenreferens. M = medelvärde; SD = standardavvikelse.</caption><thead><tr><th scope="col">Dimension</th><th scope="col">Du</th>'+
+    (other?'<th scope="col">Den andra</th>':'')+'<th scope="col">Vuxna M</th><th scope="col">Vuxna SD</th><th scope="col">Du från M</th></tr></thead><tbody>'+FACTORS.map(f=>{
+      const ref=referenceLimits(f.id),own=describeReferenceProfile(self).find(p=>p.factorId===f.id);
+      return '<tr><th scope="row">'+esc(f.labelSv)+'</th><td>'+self.byFactor[f.id].sum+'</td>'+
+      (other?'<td>'+other.byFactor[f.id].sum+'</td>':'')+
+      '<td>'+formatSv(ref.mean,2)+'</td><td>'+formatSv(ref.sd,2)+'</td>'+
+      '<td>'+formatSv(own.z,1)+' SD</td></tr>';
+    }).join('')+'</tbody></table></div>';
 }
 function statusPanel(message){return '<section class="live-panel"><p class="pf-status" role="status">'+esc(message)+'</p></section>';}
 
 export function createPersonalityExperience({db,onRender,isSharingEnabled=false}){
   let viewer=null,sequence=0,answers={},loading=false,loaded=false,loadError='',saving=false,saveError='';
-  let active=false,index=0,shareEnabled=false,shareBusy=false,shareError='',paired=null,partnerError='';
+  let active=false,index=0,selectedAnswer=null,shareEnabled=false,shareBusy=false,shareError='',paired=null,partnerError='';
   const repaint=()=>onRender();
   function reset(userId=null){
     viewer=userId;sequence++;answers={};loading=false;loaded=false;loadError='';saving=false;
-    saveError='';active=false;index=0;shareEnabled=false;shareBusy=false;shareError='';paired=null;partnerError='';
+    saveError='';active=false;index=0;selectedAnswer=null;shareEnabled=false;shareBusy=false;shareError='';paired=null;partnerError='';
   }
   async function fetchPaired(userId,token){
     if(!isSharingEnabled)return;
@@ -105,7 +155,7 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false}
     if(isSharingEnabled&&shareEnabled&&loadedAnswers.status.complete)await fetchPaired(userId,token);
     if(token===sequence&&viewer===userId)repaint();
   }
-  function start(){active=true;saveError='';index=FIRST_UNANSWERED(answers);repaint();}
+  function start(){active=true;saveError='';selectedAnswer=null;index=FIRST_UNANSWERED(answers);repaint();}
   function render({isPaired=false,viewerRole='parent'}={}){
     const heading='<section class="pf-intro"><span class="swipe-eyebrow">LÄR KÄNNA DIG SJÄLV</span><h1>Min personlighet</h1><p>Utforska fem sidor av hur du brukar vara. Det finns inga rätt eller fel svar.</p></section>';
     if(!viewer)return heading+statusPanel('Logga in för att göra testet.');
@@ -114,16 +164,16 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false}
     if(!loaded)return heading+statusPanel('Förbereder testet…');
     const result=scoreIPIP50(answers),count=result.answeredCount,complete=result.complete;
     if(active){
-      const item=ITEMS[index],old=answers[item.id],progress=Math.round(100*count/50);
+      const item=ITEMS[index],old=selectedAnswer?.id===item.id?selectedAnswer.value:answers[item.id],progress=Math.round(100*count/50);
       return heading+'<section class="live-panel pf-survey"><div class="pf-counter"><span>Fråga '+(index+1)+' av 50</span><span>'+count+' besvarade</span></div>'+
         '<div class="pf-progress" role="progressbar" aria-label="Besvarade frågor" aria-valuemin="0" aria-valuemax="50" aria-valuenow="'+count+'"><span style="width:'+progress+'%"></span></div>'+
         '<fieldset class="pf-question"'+(saving?' disabled':'')+'><legend>'+esc(item.sv)+'</legend>'+
         '<p class="live-muted">Hur väl stämmer det här på dig?</p>'+
-        IPIP50_V1.responseOptions.map(option=>'<label class="pf-option"><input type="radio" name="pf-answer" data-pf-answer="'+esc(item.id)+'" value="'+option.value+'"'+(old===option.value?' checked':'')+'><span>'+esc(option.label)+'</span></label>').join('')+'</fieldset>'+
+        IPIP50_V1.responseOptions.map(option=>'<label class="pf-option'+(old===option.value?' is-selected':'')+'"><input type="radio" name="pf-answer" data-pf-answer="'+esc(item.id)+'" value="'+option.value+'"'+(old===option.value?' checked':'')+'><span>'+esc(option.label)+'</span></label>').join('')+'</fieldset>'+
         '<div class="pf-controls"><button type="button" data-pf-action="prev"'+(index===0||saving?' disabled':'')+'>← Föregående</button>'+
         '<button type="button" data-pf-action="next"'+(index===49||saving?' disabled':'')+'>Nästa →</button>'+
         '<button type="button" data-pf-action="overview"'+(saving?' disabled':'')+'>Spara och avsluta för nu</button></div>'+
-        '<p class="pf-status" role="status">'+esc(saving?'Sparar privat i ditt konto…':saveError||'Dina svar sparas bara i ditt konto. Du kan ändra dina svar senare.')+'</p>'+
+        '<p class="pf-status" role="status">'+esc(saving?'Valt alternativ: '+IPIP50_V1.responseOptions.find(o=>o.value===selectedAnswer?.value)?.label+'. Sparar svaret…':saveError||'Dina svar sparas bara i ditt konto. Du kan ändra dina svar senare.')+'</p>'+
         (complete?'<button type="button" class="live-button" data-pf-action="result">Se min profil</button>':'')+'</section>';
     }
     if(!complete){
@@ -176,13 +226,13 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false}
         '</ul><p class="live-muted">Samtalsfrågorna är redaktionella förslag, inte individuella psykologiska råd.</p></section>';
       comparison='<section class="live-panel pf-comparison"><h2>Våra profiler</h2><p>Två självskattningar på samma svarsskala, inte ett mått på hur bra någon är som person.</p>'+
         '<div class="pf-legend" style="--pf-own:'+(role==='teen'?'#f8b55b':'#55d6d2')+';--pf-other:'+(role==='teen'?'#55d6d2':'#f8b55b')+'"><span class="pf-legend-own">Din profil</span><span class="pf-legend-other">Den andras profil</span></div>'+
-        radarSvg(own,other,role)+table(own,other)+
-        '<p class="live-muted">Skillnaderna visas utan gränsvärden. De kan vara utgångspunkt för samtal, inte bevis för att ni fungerar olika.</p>'+
+        radarSvg(own,other,role)+referenceLegend()+table(own,other)+referenceFeedback(other,'Den andras')+referenceCaveat()+
+        '<p class="live-muted">Skillnaderna mellan er visas som råpoäng, medan vuxenreferensen visas som M och SD. Det är inte bevis för att ni fungerar olika.</p>'+
         reflections+'</section>';
     }
     return heading+'<section class="live-panel pf-results"><h2>Din profil</h2><p>De fem skalorna sammanfattar dina svar. De är inte percentiler och inte jämförda med någon svensk normgrupp.</p>'+
-      '<div class="pf-legend" style="--pf-own:'+(role==='teen'?'#f8b55b':'#55d6d2')+'"><span class="pf-legend-own">Du</span></div>'+radarSvg(own,null,role)+table(own)+
-      '<p class="live-muted">Värdena beskriver din skattning inom svarsspannet 10–50. Högre eller lägre är varken bättre eller sämre. Översättningen behöver fortfarande prövas vetenskapligt.</p>'+
+      '<div class="pf-legend" style="--pf-own:'+(role==='teen'?'#f8b55b':'#55d6d2')+'"><span class="pf-legend-own">Du</span></div>'+radarSvg(own,null,role)+referenceLegend()+table(own)+referenceFeedback(own)+referenceCaveat()+
+      '<p class="live-muted">Skalorna bygger på dina svar (10–50). Högt eller lågt är inte i sig bättre eller sämre. Den svenska översättningen behöver prövas vetenskapligt.</p>'+
       '<button type="button" data-pf-action="review">Granska eller ändra mina svar</button></section>'+sharing+comparison;
   }
   async function handleClick(element,{isPaired=false}={}){
@@ -192,9 +242,9 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false}
     if(!loaded)return false;
     const action=btn.dataset.pfAction;
     if(action==='start'||action==='review'){start();if(action==='review')index=0;}
-    else if(action==='prev'){index=Math.max(0,index-1);repaint();}
-    else if(action==='next'){index=Math.min(49,index+1);repaint();}
-    else if(action==='overview'||action==='result'){active=false;repaint();}
+    else if(action==='prev'){selectedAnswer=null;index=Math.max(0,index-1);repaint();}
+    else if(action==='next'){selectedAnswer=null;index=Math.min(49,index+1);repaint();}
+    else if(action==='overview'||action==='result'){selectedAnswer=null;active=false;repaint();}
     else if(action==='reload'){await load(viewer);}
     else if(action==='refresh-share'){const tok=sequence,id=viewer;await fetchPaired(id,tok);if(tok===sequence)repaint();}
     else if(['share','withdraw'].includes(action)&&isSharingEnabled&&isPaired){
@@ -214,11 +264,24 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false}
     const item=ITEMS[index],value=Number(target.value);
     if(target.dataset.pfAnswer!==item.id||!Number.isInteger(value)||value<1||value>5)return false;
     const token=sequence,id=viewer;
-    saving=true;saveError='';repaint();
-    try{await saveMyIPIP50Answer(db,item.id,value);}
-    catch(e){if(token===sequence&&viewer===id){saving=false;saveError='Kunde inte spara svaret. Välj ett alternativ igen när anslutningen fungerar.';repaint();}return true;}
+    // Keep the radio visibly highlighted during save instead of immediately
+    // replacing the entire page with the next question.
+    selectedAnswer={id:item.id,value};saving=true;saveError='';repaint();
+    try{
+      await Promise.all([
+        saveMyIPIP50Answer(db,item.id,value),
+        new Promise(resolve=>setTimeout(resolve,650))
+      ]);
+    }catch(e){
+      if(token===sequence&&viewer===id){
+        selectedAnswer=null;saving=false;
+        saveError='Kunde inte spara svaret. Välj ett alternativ igen när anslutningen fungerar.';
+        repaint();
+      }
+      return true;
+    }
     if(token!==sequence||viewer!==id)return true;
-    answers[item.id]=value;saving=false;
+    answers[item.id]=value;selectedAnswer=null;saving=false;
     if(index<49)index++;
     else active=false;
     paired=null;shareError='';

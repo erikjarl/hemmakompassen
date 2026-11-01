@@ -289,6 +289,15 @@ try{
   await m.page.getByRole('button',{name:'Börja testet'}).click();
   assert.match(await m.page.locator('.pf-question').innerText(),/Jag brukar vara den som får igång stämningen/);
   await m.page.locator('label.pf-option').nth(3).click();
+  await m.page.locator('.pf-option.is-selected').waitFor();
+  const selectedAppearance=await m.page.locator('.pf-option.is-selected').evaluate(el=>{
+    const cs=getComputedStyle(el);
+    return {bg:cs.backgroundColor,border:cs.borderColor,text:el.textContent};
+  });
+  assert.ok(selectedAppearance.bg!=='rgb(38, 44, 64)' && selectedAppearance.border!=='rgb(73, 81, 104)',
+    'Selected option must have an unmistakably different background and border');
+  assert.match(selectedAppearance.text,/Stämmer ganska bra/);
+  assert.match(await m.page.locator('.pf-status').innerText(),/Sparar svaret/);
   await m.page.getByText('Fråga 2 av 50').waitFor();
   const pfSaved=await m.page.evaluate(()=>window.__HK_PERSONALITY_SAVE__);
   assert.equal(pfSaved.row.instrument_id,'ipip50-sv-v1');
@@ -391,6 +400,11 @@ try{
   await completedPersonality.page.getByRole('heading',{name:'Din profil'}).waitFor();
   assert.equal(await completedPersonality.page.locator('.pf-radar').count(),1);
   assert.equal(await completedPersonality.page.locator('.pf-table tbody tr').count(),5);
+  assert.equal(await completedPersonality.page.locator('.pf-reference-legend').count(),1);
+  assert.match(await completedPersonality.page.locator('.pf-table').innerText(),/Vuxna M/);
+  assert.match(await completedPersonality.page.locator('.pf-table').innerText(),/Vuxna SD/);
+  assert.match(await completedPersonality.page.locator('.pf-reference-feedback').innerText(),/amerikanska vuxenreferensen/);
+  assert.match(await completedPersonality.page.locator('.pf-reference-caveat').innerText(),/svenska översättning/);
   assert.equal(await completedPersonality.page.getByText('Våra profiler').count(),0,'No fabricated second profile');
   await checkOverflow(completedPersonality.page,'Private personality profile 390px');
   await capture(completedPersonality.page,'mobile-personality-profile.png');

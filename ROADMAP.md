@@ -397,6 +397,13 @@ Listan är en samlad arbetsplan för att slutföra Gillaswajpen. Kryssa av förs
 
 ## P1 — Big Five/personlighetstest: komplett plan för två profiler (1 november 2026)
 
+**Nytt önskemål/buggrapport – 1 november 2026 (prioriterat):**
+- [x] **PF-26 [A] Komplettera spindeldiagrammet med vuxenreferensens medelvärde och spridning.** En särskild kontur för M, grått band ±1 SD och prickade gränser ±2 SD per dimension, med tydlig legend. Visa även exakta M, SD och användarens avvikelse i SD i tabellen. Separera dessa från tonåring/förälders linjer och bevara 10–50-råpoäng.
+- [x] **PF-27 [A] Försiktig textbaserad referensåterkoppling.** När avståndet når minst |2,0| SD: ”ovanligt högt/lågt *i förhållande till det aktuella amerikanska vuxenurvalet*”. Vid |1,0|–|2,0|: över/under medel i SD; annars nära medel. Redovisa M, SD, poäng och skillnad; inga svenska percentiler eller diagnoser. Vid ungdomens profil förtydligas uttryckligen att jämförelsen är mot vuxna, inte en tonårsnorm. Visa båda profilerna först efter godkänd delning.
+- [x] **PF-28 [A] Svarsknapp markerar inte valt alternativ tydligt (bugg).** Svarsalternativet färgmarkeras med kontrasterande kant, bakgrund och ✓ omedelbart, även under asynkron sparning. Nästa fråga visas först när sparningen lyckats och användaren hunnit se markeringen. Markering även för tidigare besvarat alternativ vid backning/återbesök. Kontrollera på mobil, tangentbord och vid nätfel.
+- [ ] **PF-29 [A/E] Bedöm kommande normval.** Nuvarande källa: en icke-representativ engelsk vuxenreferens (Oregon, N=570). Granska översättning, mätinvarians mellan språk/ålder, om råpoäng är jämförbara, och lämplighet att formulera ”ovanligt” i användartexten; vid behov komplettera med annan större öppen internationell referens. Nuvarande SD-avvikelser är endast deskriptiva och ger inte verifierade populationspercentiler.
+
+
 **Ytterligare genomfört 2026-11-01 – PR #72:** `#personlighet` använder nu en riktig IPIP-50-vy med 50 vardagliga svenska formuleringar, privat sparning/återupptagning, kontroll av ofullständiga svar, femaxlig radargraf och tabell. En SQL-migration är installerad i befintlig Supabase: endast exakt aktivt par och **två separata, återkalleliga samtycken** låser upp fem serverberäknade totalsummor; aldrig enskilda item. RLS och nekad anonym åtkomst verifierade, liksom ett rollback-test med fullständiga syntetiska svar från två konton. Vuxenreferensdata finns kvar men används inte som svenska normer. Se `docs/ipip50-sv-method.md`. **Återstår:** tvåkontos verifiering i verklig webbläsarsession, psykometrisk och språklig granskning, separata testomgångar och säkert omtest/radering. De gamla PF-listpunkterna nedan är ursprungsplanen; detta är nyare implementeringsstatus.
 
 

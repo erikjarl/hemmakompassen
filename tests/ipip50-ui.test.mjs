@@ -39,7 +39,12 @@ test('real translated 50-item form advances only after a successful private save
   await ui.handleClick(btn('start'));
   assert.ok(ui.render().includes(IPIP50_V1.items[0].sv));
   assert.match(ui.render(),/Fråga 1 av 50/);
-  await ui.handleChange(radio('ipip50-001',4));
+  const saving=ui.handleChange(radio('ipip50-001',4));
+  const during=ui.render();
+  assert.match(during,/class="pf-option is-selected"/,'Selected answer gets an immediate visible state');
+  assert.match(during,/Valt alternativ: Stämmer ganska bra/);
+  assert.match(during,/Fråga 1 av 50/,'Answer stays visible while saving');
+  await saving;
   assert.equal(mock.writes.length,1);
   assert.deepEqual(mock.writes[0].row.answer,{value:4});
   assert.match(ui.render(),/Fråga 2 av 50/);
@@ -69,6 +74,12 @@ test('50 answers show individual radar and accessible table, no partner or conse
   assert.match(html,/class="pf-radar"/);
   assert.match(html,/<table/);
   assert.match(html,/Samvetsgrannhet/);
+  assert.match(html,/Vuxna M/);
+  assert.match(html,/Vuxna SD/);
+  assert.match(html,/pf-reference-legend/);
+  assert.match(html,/pf-reference-caveat/);
+  assert.match(html,/±1 SD/);
+  assert.match(html,/Ovanligt lågt.*amerikanska vuxenreferensen/);
   assert.doesNotMatch(html,/Våra profiler/);
   assert.doesNotMatch(html,/Den andras profil/);
   assert.doesNotMatch(html,/data-pf-action="share"/);
@@ -88,6 +99,8 @@ test('two consents allow summary comparison and consent withdrawal hides it',asy
   assert.match(html,/Våra profiler/);
   assert.match(html,/Den andras profil/);
   assert.match(html,/stroke-dasharray/);
+  assert.match(html,/Den andras resultat jämfört med vuxenreferensen/);
+  assert.match(html,/Amerikanska vuxna|amerikanska vuxenreferensen/);
   assert.doesNotMatch(html,/Am the life of the party/);
   await ui.handleClick(btn('withdraw'),{isPaired:true});
   html=ui.render({isPaired:true,viewerRole:'teen'});
