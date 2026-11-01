@@ -397,6 +397,9 @@ Listan är en samlad arbetsplan för att slutföra Gillaswajpen. Kryssa av förs
 
 ## P1 — Big Five/personlighetstest: komplett plan för två profiler (1 november 2026)
 
+**Ytterligare genomfört 2026-11-01 – PR #72:** `#personlighet` använder nu en riktig IPIP-50-vy med 50 vardagliga svenska formuleringar, privat sparning/återupptagning, kontroll av ofullständiga svar, femaxlig radargraf och tabell. En SQL-migration är installerad i befintlig Supabase: endast exakt aktivt par och **två separata, återkalleliga samtycken** låser upp fem serverberäknade totalsummor; aldrig enskilda item. RLS och nekad anonym åtkomst verifierade, liksom ett rollback-test med fullständiga syntetiska svar från två konton. Vuxenreferensdata finns kvar men används inte som svenska normer. Se `docs/ipip50-sv-method.md`. **Återstår:** tvåkontos verifiering i verklig webbläsarsession, psykometrisk och språklig granskning, separata testomgångar och säkert omtest/radering. De gamla PF-listpunkterna nedan är ursprungsplanen; detta är nyare implementeringsstatus.
+
+
 **Instrumentförberedelse 2026-11-01 (se [metoddokumentet](docs/ipip50-sv-method.md)):** 50 original-IPIP-frågor har nu fått en självständig vardaglig svensk översättning i `personality/ipip50-v1.js` (inte Bäckströms översättning). Alla fem tiopostskalor, originalets omvändningsnyckel, fullständig svarskontroll, poängsummering, vuxenreferens med uttryckligt normförbud för Sverige/tonåringar och self-only-adapter till befintlig `personality_answers` finns som fristående moduler; syntetiska Node-tester är tillagda. **Återstår:** ägarens språkliga/metodgranskning, svenska kognitiva intervjuer och psykometrisk prövning, fungerande test-UI, servervalidering och fullständiga individuella testomgångar, frivillig versionssäker resultatdelning samt verkliga tvåkontotester. Inga råsvar delas, ingen Supabase-migration gjord och testet är inte aktiverat i livevyn.
 
 

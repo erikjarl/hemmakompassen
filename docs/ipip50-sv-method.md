@@ -82,3 +82,20 @@ Adapterklienten tar själv aktuell auth-user, aldrig ett av klienten valt annat 
 Nästa backendsteg enligt ROADMAP PF-18–25: skapa versionssatta testomgångar (`personality_assessments`) och sparad poängsnapshot, bind svar till omgång, kontrollera nyckel och fullständighet **server-side**, ge möjlighet att göra om/radera, och införa separat dokumenterat samtycke för **fem domänresultat**. Utan uttryckligt och aktuell giltig tvåpartstillåtelse ska inga profilresultat kunna läsas av partner. Vid avparning, samtyckesåterkallelse eller kontobyte ska jämförelsen upphöra. Ingen användare ska kunna läsa den andras enskilda itemsvar.
 
 **Ingen befintlig demo har ersatts, ingen publik vy aktiverats och inga användarsvar har skrivits.** Denna commit förbereder instrument + återanvändbara backend-/frontendfunktioner.
+
+## Implementerat 2026-11-01 – inloggad IPIP-50-vy och säker sammanfattningsdelning
+
+- `live-app.js` ansluter nu `#personlighet` till den självständiga modulen `personality/ipip50-ui.js`: ett påstående per skärm, svar 1–5, automatisk privat sparning, föregående/nästa, återupptagning och granskning/ändring av egna svar.
+- Efter exakt 50 besvarade frågor används **samma** `scoreIPIP50` som i de automatiska testerna för femaxlig radar och läsbar poängtabell 10–50. Detta är *svarsspann*, inte svenska normer/percentiler. Ingen diagnos eller klassificering.
+- SQL-migration: `supabase/migrations/20261101170000_personality_ipip50_pair_sharing.sql`. **Installerad i befintlig Supabase 2026-11-01.** Den validerar IPIP-50-svar server-side och lägger till en separat självskyddad samtyckestabell och två snäva autentiserade RPC:er.
+  - `set_my_ipip50_share(p_share)` tillåter delning först efter exakt 50 giltiga svar och exakt en aktuell familj med en förälder och en tonåring. `false` återkallar. Direkt INS/UPD/DEL i samtyckestabellen är förbjuden för webbanvändare.
+  - `my_ipip50_shared_profiles()` räknar själv de fem svarssummorna ur 50 signerade nycklar, och lämnar *endast* fem tal per roll efter **bådas** aktuella samtycken och medlemskap (inklusive `joined_at`), annars `null`. Inga frågesvar, användar-ID eller individuella framsteg returneras.
+  - `backend-config.js` aktiverar endast detta särskilda dubbel-samtycke; ingen annan av Hemmakompassens delningsfunktioner förändras.
+- **Databastest:** SQL-transaktion med två befintliga interna testkonton och 100 tillfälliga syntetiska svar kontrollerade att en ensam delningsbegäran utan svar nekas, att enbart ett samtycke inte räcker, att två samtycken lämnar fem poäng, och att återkallelse genast ger `null`. `ROLLBACK` utfördes; efterkontroll gav 0 kvarvarande IPIP-50-svar och 0 delningsrader.
+- Webbläsaren uppdaterar jämförelsen när profilen öppnas, vid flikfokus och var 15:e sekund medan den visas, så att återkallad delning inte ligger kvar varaktigt. Detta är inte en push-prenumeration; kort fördröjning kan förekomma.
+- Frontend innehåller mobilanpassad graf, texttabell, deskriptiv likhet/skillnadsordning **utan normtrösklar**, och korta redaktionella samtalsfrågor.
+
+**Fortfarande öppet:** Äkta interaktiv tvåkontoinloggning via publika sidan med manuell visuell granskning, robust testomgångs-/historikmodell för ny testning, fullständig egen radering och dess återkallelse, metoden för samtyckeshantering vid förändrade svar, och psykometrisk validering av den nya svenska ungdomsöversättningen. Testet ska uttryckligen presenteras som en *preliminär reflektionsövning* så länge dessa psykometriska studier saknas.
+
+**Säkerhetsgräns:** Direkt klientläsning av den andra användarens `personality_answers` får aldrig införas. Om samma instrument översätts om, skapa ett NYTT `instrument_id`; byt inte tyst ut frågor under v1.
+
