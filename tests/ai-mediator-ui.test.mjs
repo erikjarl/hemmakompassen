@@ -10,10 +10,10 @@ const h=s=>String(s).replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','
 function fixture({enabled=true,sessionId=user1,reply='Vad skulle kännas som en bra början?',fetchImpl,fail=false}={}) {
   const calls=[];
   const db={auth:{getSession:async()=>({data:{session:{access_token:'test-access-token',user:{id:sessionId}}},error:null})}};
-  const fetcher=fetchImpl||async (requestUrl,options)=>{
+  const fetcher=fetchImpl||(async (requestUrl,options)=>{
     calls.push({requestUrl,options});
     return Response.json(fail?{error:'Tillfälligt fel'}:{reply,remainingToday:9,ephemeral:true},{status:fail?429:200});
-  };
+  });
   const ui=createAiMediatorExperience({db,config:{enableAiMediator:enabled,aiMediatorUrl:url},escapeHtml:h,fetchImpl:fetcher});
   ui.reset(user1);
   return {ui,calls,db};
