@@ -156,3 +156,21 @@ test('Schyssta fetch failure clears old data and bounds a stalled network reques
   assert.match(app,/window\.addEventListener\('online'/);
   assert.match(app,/schysstaError&&\['hem','inkorg','regler'\]\.includes\(page\(\)\)/);
 });
+
+test('Inbox has pair-private messages independent of rule decisions',()=>{
+  assert.match(app,/db\.rpc\('send_family_message'/);
+  assert.match(app,/db\.rpc\('my_family_messages'/);
+  assert.match(app,/db\.rpc\('my_family_unread_message_count'/);
+  assert.match(app,/db\.rpc\('mark_family_messages_read'/);
+  assert.match(app,/function validFamilyChatRows\(rows\)/);
+  assert.match(app,/function clearFamilyChat\(\)/);
+  assert.match(app,/familyChatRequestKey=crypto\.randomUUID\(\)/);
+  assert.match(app,/navigator\.clipboard\.writeText\(payload\)/);
+  assert.match(app,/id="family-chat-form"/);
+  assert.match(app,/data-family-chat-more/);
+  assert.match(app,/data-family-chat-refresh/);
+  assert.match(app,/familyChatDraft='';familyChatRequestKey=null/);
+  assert.match(app,/esc\(m\.body\)/);
+  assert.match(app,/!Number\.isNaN\(Date\.parse\(m\.created_at\)\)/);
+  assert.doesNotMatch(app,/familyChatMessages[^\n]*\.innerHTML/);
+});
