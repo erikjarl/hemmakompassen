@@ -20,6 +20,7 @@ create table public.family_members (
   family_id uuid not null references public.families(id),
   user_id uuid not null references auth.users(id),
   role text not null check (role in ('parent','teen')),
+  joined_at timestamptz not null default now(),
   primary key (family_id,user_id)
 );
 create table public.swipe_answers (
