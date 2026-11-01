@@ -101,6 +101,7 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
           {card_id:'regler-99',body:'Okänd privat uppgift'}
         ];
         let schysstaReplacementLinks=[];
+        let schysstaHistory=[];
         let schysstaNotifications=[{notification_id:'40000000-0000-4000-8000-000000000001',agreement_id:'30000000-0000-4000-8000-000000000001',kind:'rule_proposed',body:'Vi pratar om hur vi delar på sysslorna.',read_at:null,created_at:'2026-10-30T12:00:01Z'}];
         let schysstaManualRules=[{agreement_id:'30000000-0000-4000-8000-000000000001',body:'Vi pratar om hur vi delar på sysslorna.',status:'proposed',agreement_version:1,proposed_by_me:false,own_decision:null,parent_decision:null,teen_decision:null,created_at:'2026-10-30T12:00:00Z'}];
         schysstaManualRules.push({agreement_id:'30000000-0000-4000-8000-000000000003',body:'Vi frågar innan vi lånar saker.',status:'accepted',agreement_version:1,proposed_by_me:false,own_decision:true,parent_decision:true,teen_decision:true,created_at:'2026-10-30T12:00:00Z'});
@@ -162,6 +163,15 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
             }
             if(name==='shared_schyssta_rule_suggestions')return {data:window.__HK_TEST_PAIRED__?(window.__HK_SCHYSSTA_CLEAN_RPC__===true?schysstaSuggestions.filter(row=>row.card_id==='regler-01'):schysstaSuggestions):[],error:null};
             if(name==='my_schyssta_rules')return {data:window.__HK_TEST_PAIRED__?schysstaRules:[],error:null};
+            if(name==='my_schyssta_rule_history')return {data:window.__HK_TEST_PAIRED__?schysstaHistory:[],error:null};
+            if(name==='withdraw_schyssta_rule'){
+              window.__HK_WITHDRAW_RULE__={name,args};
+              const old=schysstaManualRules.find(row=>row.agreement_id===args.p_agreement_id&&row.status==='accepted');
+              if(!old)return {data:null,error:{message:'not accepted'}};
+              schysstaManualRules=schysstaManualRules.filter(row=>row.agreement_id!==args.p_agreement_id);
+              schysstaHistory.push({agreement_id:old.agreement_id,body:old.body,created_at:old.created_at});
+              return {data:null,error:null};
+            }
             if(name==='my_schyssta_replacement_links')return {data:window.__HK_TEST_PAIRED__?schysstaReplacementLinks:[],error:null};
             if(name==='propose_schyssta_change'){
               window.__HK_CHANGE_PROPOSE__={name,args};
@@ -508,6 +518,11 @@ try{
   await paired.page.waitForFunction(()=>window.__HK_CHANGE_PROPOSE__?.args?.p_body==='Vi frågar varandra innan vi lånar något.');
   assert.deepEqual(await paired.page.evaluate(()=>Object.keys(window.__HK_CHANGE_PROPOSE__.args).sort()),['p_agreement_id','p_body','p_request_key'],'Only approved source and changed text sent');
   assert.match(await paired.page.locator('.schyssta-view').innerText(),/Den tidigare överenskommelsen gäller tills ni båda har godkänt/,'Previous rule stays current until new agreement');
+  await paired.page.getByRole('button',{name:'Avsluta överenskommelsen'}).first().click();
+  assert.match(await paired.page.locator('.schyssta-confirm').innerText(),/Om du avslutar gäller regeln inte längre/,'Ending is a two-step action');
+  await paired.page.getByRole('button',{name:'Ja, avsluta'}).click();
+  await paired.page.waitForFunction(()=>window.__HK_WITHDRAW_RULE__?.args?.p_agreement_id==='30000000-0000-4000-8000-000000000003');
+  assert.match(await paired.page.locator('.schyssta-history').innerText(),/Vi frågar innan vi lånar saker/,'Withdrawn rule remains in history');
   await paired.page.goto(base+'#inkorg',{waitUntil:'load'});
   await paired.page.getByRole('heading',{name:'Inkorg'}).waitFor();
   const inboxText=await paired.page.locator('#live-app').innerText();
