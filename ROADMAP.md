@@ -48,6 +48,14 @@
 - [x] **Relaterad underhållsfix:** samordnad cacheversionsnyckel för huvudsida, AI-import och IPIP-moduler samt versionsregressionstester. Dokumentation om serverkontext, kvoter, opt-out och risker är uppdaterad.
 - [ ] **AI-01D – release och riktig verifiering:** merge av #84 är genomförd; verifiering av faktisk driftsättning av nya Cloudflare Worker, verklig tvåkontotestning med både inställningen på och av samt återkallat samtycke. **Ingen publicerad funktion eller reell tvåkontotest är ännu påstådd.**
 
+## Intern release – automatiska AI-reflektioner (2 november 2026)
+
+- [x] PR #85 är mergad till main och UI-/Pages-testkedjorna passerade.
+- [x] Cloudflare Worker har fått den nya analysmodulen: version b39fbdf4-2571-4295-b7d4-0dc243823ab2 aktiv till 100 %, med samtliga sex befintliga bindningar bevarade inklusive begränsningen till två testkonton.
+- [x] Frontend-flaggan för automatiska AI-reflektioner har slagits på i separat releasebranch, med uppdaterade cacheversioner. Detta är ännu inte publicerat på main.
+- [ ] Kontrollera CI, merge och verklig Pages-publicering för releasen.
+- [ ] Verifiera två inloggade testkonton och granska AI-texternas kvalitet och samtyckesåterkallelse. B-förståelsekort fortsatt avstängda.
+
 ## Produktbeslut och kodleverans 2 november 2026 – automatiska AI-reflektioner (AI-02/AI-03)
 
 **Nytt produktbeslut (ersätter tidigare opt-in-krav för analys av resultaten):** När en användare slutfört IPIP-50 ska en AI-analys starta automatiskt på samma resultatsida. När giltiga delade JA+JA har hämtats i Gillaswajpen ska en motsvarande AI-reflektion starta automatiskt där; i den samlade insiktsvyn gäller samma sak när den är aktiverad. AI ska ersätta förskrivna tolkande råd och hypotetiska relationstexter, **men inte ersätta eller förvanska faktiska poäng, diagram, behöriga kortmatchningar eller metodinformation**. Visa ett begripligt laddtillstånd direkt. Vid AI-fel: visa felstatus och möjlighet att generera igen, inte en påhittad analys.
