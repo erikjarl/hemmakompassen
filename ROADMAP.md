@@ -40,6 +40,14 @@
 - [ ] **AI-02/AI-03 – frivilliga AI-sammanfattningar** i Gillaswajpen respektive Big Five, separat från de redan implementerade, förskrivna sammanfattningarna. Integritetsgranska och bygg först efter relevant säkerhetsverifiering.
 
 
+## Genomfört 2 november 2026 – AI-medlarens av/på-kontroll för projektuppgifter (PR #84)
+
+- [x] **AI-01D – val per AI-svar (kod):** tydlig, tangentbordstillgänglig kryssruta för att slå av/på användning av uppgifter från övriga Hemmakompassen. Standard är på i intern testversion, men användaren kan uttryckligen välja av inför nästa svar. Valet lagras inte mellan konton. **Utvecklingsbranch, ännu inte mergad eller publicerad.**
+- [x] **AI-01D – serveravgränsning (kod):** `useProjectContext:false` hoppar över alla Supabase-RPC/läsningar av projektuppgifter, inklusive rollhämtning. Ogiltiga typer avvisas. Identitetsverifiering och egna tidigare chattmeddelanden är fortfarande tillåtna. Äldre klienter utan flaggan behåller nuvarande standard.
+- [x] **AI-01D – regressionskontroller:** Node-tester för av/på, kontoåterställning, fördröjd översikt, låsning under AI-svar och falska indata, plus Playwright av en verklig mobil DOM med simulerad Worker. Backend-CI och **senaste** UI-/browser-CI är gröna för kod- och regressionsändringarna; 28 Playwright-skärmbilder, inklusive mobil opt-out, och `visual-audit.json` genererades. Test av borttaget Big Five-samtycke i nästa serverkontext passerade också.
+- [x] **Relaterad underhållsfix:** samordnad cacheversionsnyckel för huvudsida, AI-import och IPIP-moduler samt versionsregressionstester. Dokumentation om serverkontext, kvoter, opt-out och risker är uppdaterad.
+- [ ] **AI-01D – release och riktig verifiering:** PR-granskning och merge, driftsättning av ny Cloudflare Worker, verklig tvåkontotestning med både inställningen på och av samt återkallat samtycke. **Ingen publicerad funktion eller reell tvåkontotest är ännu påstådd.**
+
 ## Projektstatus – intern utveckling och testning (beslut 2026-10-30)
 
 **Gäller tills Erik uttryckligen ändrar beslutet.** Hemmakompassen är fortfarande helt och hållet ett **internt utvecklings- och testprojekt**, även när webbplatsen ligger publikt på GitHub Pages. Enligt projektägaren finns **inga externa användare**, och tester sker internt med avgränsade testkonton och syntetiskt innehåll. Publicering till Pages är **inte** liktydig med produktionslansering eller extern pilot.
@@ -583,7 +591,8 @@ Listan är en samlad arbetsplan för att slutföra Gillaswajpen. Kryssa av förs
 - [x] **Teknisk kontextinläsning (PR #82):** Worker hämtar en ny, dataminimerad och JWT-/RLS-skyddad kontext inför varje AI-svar. Eget material kan inkludera egna Gillaswajpen-JA/NEJ/prioriteringar och egna fem IPIP-poäng. Gemensamma A JA+JA och partnerns fem poäng kräver respektive serververifierad matchning/samtycke. Ingen dold B-information tas med. Källöversikt visas vid chatstart.
 - [x] **Integrering med övrig behörig information (PR #82):** godkända Schyssta-regler markeras som godkända, förslag som förslag. Upp till fyra korta utdrag ur den aktuella användarens redan åtkomliga familjeinkorg får hämtas, men aldrig motpartens privata AI-historik. Äldre AI-svar återanvänds inte som modellkontext efter en möjlig återkallelse.
 - [ ] **Verklig säkerhetsverifiering:** testa två inloggade konton, tredje familj, saknat och återkallat samtycke, av-/omparning, utloggning, ändrat A-svar, felaktig serverdata samt att de korta inkorgsutdragen inte röjer obehörig information. Säkerställ att ingen äldre AI-text kan presenteras som ny behörig källa.
-- [ ] **Användarstyrning och UX:** möjlighet att stänga av projektkontext för ett enskilt samtal samt tydlig information om vilka datakategorier som används; en källöversikt finns men valbar avstängning är ännu inte verifierad/implementerad. Länka råd endast till existerande relevanta funktioner.
+- [x] **Användarstyrning (kod i PR #84):** opt-out inför varje AI-svar med informationsruta, källöversikt när aktiv och full serveravstängning av projektläsningar. Kontoväxling och sena källsvar hanteras i UI. **Ej mergad/driftsatt ännu.**
+- [ ] **Fortsatt UX:** utvärdera eventuell separat ihållande inställning per sparat samtal, tydligare källkontroll och länkar endast till existerande funktioner; verifiera i riktiga webbläsare.
 - [ ] **B-förståelsekort:** om den separata delningen senare aktiveras, kräv uttryckligt och återkalleligt tonåringssamtycke och serverkontroll innan B-information över huvud taget används i AI-kontext.
 
 **AI-01 klart för intern testning när:** Två autentiserade testkonton kan var för sig genomföra flera samtal, återuppta och radera dem, serverbaserad gratisgräns fungerar, inga privata data kan hämtas över konto-/familjegräns och fiktiva risk-/kvalitetstestfall är dokumenterade. Enbart lyckade automatiska tester innebär inte att riktigt tvåkontoflöde har verifierats.

@@ -105,3 +105,20 @@ test('own complete 50-item IPIP produces only five scored factor sums, never raw
  assert.ok(ctx.text.includes('Emotionell stabilitet: 30/50'));
  assert.ok(!ctx.text.includes('ipip50-001'));
 });
+
+test('revoked partner consent is removed from the very next fresh server context',async()=>{
+  let consentActive=true;
+  const original=fixture({share:shared}).fetchAuth;
+  const changingFetch=async(url,opts)=>{
+    if(url.includes('/my_ipip50_shared_profiles'))return Response.json(consentActive?shared:null);
+    return original(url,opts);
+  };
+  const before=await loadAuthorizedContext(ENV,'signed-in-test-token',UID,'parent',changingFetch);
+  assert.ok(before.sections.includes('Personlighetstest – samtyckt jämförelse'));
+  assert.match(before.text,/Tonåring: Extraversion: 40\/50/);
+  consentActive=false;
+  const after=await loadAuthorizedContext(ENV,'signed-in-test-token',UID,'parent',changingFetch);
+  assert.ok(!after.sections.includes('Personlighetstest – samtyckt jämförelse'));
+  assert.doesNotMatch(after.text,/Tonåring: Extraversion: 40\/50/);
+  assert.ok(after.text.length<=CONTEXT_LIMIT_CHARS);
+});

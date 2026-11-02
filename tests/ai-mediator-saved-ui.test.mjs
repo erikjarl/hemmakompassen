@@ -14,6 +14,7 @@ function harness(){
     sent.push({url,method:opts.method,body:opts.body||null,authorization:opts.headers.Authorization});
     assert.equal(opts.headers.Authorization,'Bearer private-token');
     assert.equal(opts.credentials,'omit');
+    if(url===BASE+'/context'&&opts.method==='GET')return response({sections:['Personlighetstest – egen profil'],unavailableCount:0});
     if(url===BASE+'/chats'&&opts.method==='GET')return response({chats:chats.map(x=>({...x}))});
     if(url===BASE+'/chats'&&opts.method==='POST'){
       const chat={id:'00000000-0000-4000-8000-'+String(++idIndex).padStart(12,'0'),title:'Nytt samtal'};
@@ -88,4 +89,73 @@ test('reset clears private content from old account and titles are escaped',asyn
   assert.equal(ui.getState().chats.length,0);
   assert.equal(ui.getState().turns.length,0);
   assert.equal(ui.render().includes('&lt;img'),false);
+});
+
+test('project-context opt-out is visible, sent per reply and reset on account change',async()=>{
+  const x=harness(),ui=x.make();ui.reset(USER);
+  assert.match(ui.render(),/id="mediator-use-context" checked/);
+  assert.equal(ui.setProjectContext(false),true);
+  assert.equal(ui.getState().includeProjectContext,false);
+  assert.match(ui.render(),/Avstängt\. AI:n får bara detta samtals egna meddelanden/);
+  assert.doesNotMatch(ui.render(),/id="mediator-refresh-context"/);
+  assert.equal(await ui.loadList(),true);
+  assert.equal(x.sent.filter(c=>c.url===BASE+'/context').length,0,
+    'do not even fetch context overview after opt-out');
+  ui.input('Jag vill prata utan projektuppgifter');
+  assert.equal(await ui.submit(),true);
+  const sent=x.sent.filter(c=>c.url===WORKER&&c.method==='POST');
+  assert.equal(sent.length,1);
+  assert.deepEqual(JSON.parse(sent[0].body).useProjectContext,false);
+  assert.equal(ui.setProjectContext(true),true);
+  assert.equal(ui.getState().includeProjectContext,true);
+  ui.input('Nu går det bra att använda mina uppgifter');
+  assert.equal(await ui.submit(),true);
+  assert.deepEqual(JSON.parse(x.sent.filter(c=>c.url===WORKER).at(-1).body).useProjectContext,true);
+  ui.reset('22222222-2222-4222-8222-222222222222');
+  assert.equal(ui.getState().includeProjectContext,true);
+  assert.deepEqual(ui.getState().contextSections,[]);
+});
+test('a delayed context overview cannot reappear after explicit opt-out',async()=>{
+  let complete;
+  const db={auth:{async getSession(){return {data:{session:{user:{id:USER},access_token:'private-token'}}};}}};
+  const fetchImpl=async (url)=>{
+    if(url===BASE+'/context')return new Promise(resolve=>{complete=()=>resolve({
+      ok:true,async json(){return {sections:['Private old context'],unavailableCount:0};}
+    });});
+    throw Error('Unexpected request '+url);
+  };
+  const ui=createAiMediatorExperience({db,
+    config:{enableAiMediator:true,enableAiHistory:true,aiMediatorUrl:WORKER},escapeHtml,fetchImpl});
+  ui.reset(USER);
+  const loading=ui.loadContextStatus();
+  for(let i=0;i<8&&!complete;i++)await Promise.resolve();
+  assert.equal(typeof complete,'function');
+  assert.equal(ui.setProjectContext(false),true);
+  complete();
+  await loading;
+  assert.deepEqual(ui.getState().contextSections,[]);
+  assert.doesNotMatch(ui.render(),/Private old context/);
+});
+test('checkbox is locked during a reply and state cannot change mid-request',async()=>{
+  let finish;
+  const db={auth:{async getSession(){return {data:{session:{user:{id:USER},access_token:'private-token'}}};}}};
+  let chatNumber=0;
+  const fetchImpl=async (url,opts)=>{
+    if(url===BASE+'/chats'&&opts.method==='POST')return {
+      ok:true,async json(){return {chat:{id:'00000000-0000-4000-8000-'+String(++chatNumber).padStart(12,'0'),title:'Nytt samtal'}};}
+    };
+    if(url===WORKER)return new Promise(resolve=>{finish=()=>resolve({
+      ok:true,async json(){return {reply:'OK',ephemeral:false,chatId:'00000000-0000-4000-8000-000000000001'};}
+    });});
+    throw Error('Unexpected request '+url);
+  };
+  const ui=createAiMediatorExperience({db,config:{enableAiMediator:true,enableAiHistory:true,aiMediatorUrl:WORKER},escapeHtml,fetchImpl});
+  ui.reset(USER);ui.setProjectContext(false);ui.input('Hej');
+  const pending=ui.submit();
+  for(let i=0;i<15&&!finish;i++)await Promise.resolve();
+  assert.equal(typeof finish,'function');
+  assert.equal(ui.setProjectContext(true),false);
+  assert.equal(ui.getState().includeProjectContext,false);
+  assert.match(ui.render(),/id="mediator-use-context"[^>]* disabled/);
+  finish();assert.equal(await pending,true);
 });

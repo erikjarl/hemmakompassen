@@ -539,6 +539,12 @@
 .mediator-thread-list button:focus-visible{outline:3px solid #f59e0b;outline-offset:3px}
 @media(max-width:600px){.mediator-thread-list button{flex-basis:155px}.mediator-history-heading .mediator-clear{width:auto}}
 
+/* Opt-out control for AI project context; remains legible on small screens. */
+.mediator-context-choice{display:flex;align-items:flex-start;gap:12px;padding:12px 13px;margin:10px 0 14px;border:1px solid #77849a;border-radius:12px;color:#f0f3f9;font-size:.96rem;line-height:1.5;cursor:pointer}
+.mediator-context-choice input{flex:none;width:20px;height:20px;margin:2px 0 0;accent-color:#f59e0b;cursor:pointer}
+.mediator-context-choice input:focus-visible{outline:3px solid #f59e0b;outline-offset:3px}
+.mediator-context-choice:has(input:disabled){opacity:.75;cursor:not-allowed}
+
 /* Private AI context-source preview; content stays server-side. */
 .mediator-context{margin:18px 0;padding:16px 19px;border:1px solid #59687a;border-radius:17px;background:#202a35}
 .mediator-context h2{font-size:1.12rem;margin:0 0 8px}

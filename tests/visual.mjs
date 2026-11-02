@@ -79,12 +79,12 @@ async function capture(page,name){
   await page.screenshot({path:path.join(output,name),fullPage:true,animations:"disabled"});
   captureRecords.push({file:name,viewport:page.viewportSize(),...overlays});
 }
-async function freshContext(options,{authenticated=false,paired=false,role="parent",unlocked=false,unlockUnavailable=false,priorityUnavailable=false,preansweredGeneral=false,emptySchyssta=false,personalityComplete=false,personalitySharing=false,personalityPartnerShared=false}={}){
+async function freshContext(options,{authenticated=false,paired=false,role="parent",unlocked=false,unlockUnavailable=false,priorityUnavailable=false,preansweredGeneral=false,emptySchyssta=false,personalityComplete=false,personalitySharing=false,personalityPartnerShared=false,aiMediator=false}={}){
   const context=await browser.newContext({...options,locale:"sv-SE",reducedMotion:"reduce"});
   await context.addInitScript(value=>{window.__HK_TEST_USER__=value.user;window.__HK_TEST_PAIRED__=value.paired;window.__HK_TEST_ROLE__=value.role;window.__HK_TEST_UNLOCKED__=value.unlocked;window.__HK_UNLOCK_RPC_UNAVAILABLE__=value.unlockUnavailable;window.__HK_PRIORITY_RPC_UNAVAILABLE__=value.priorityUnavailable;window.__HK_PREANSWERED_GENERAL__=value.preansweredGeneral;window.__HK_SCHYSSTA_EMPTY__=value.emptySchyssta;window.__HK_TEST_PERSONALITY_DONE__=value.personalityComplete;window.__HK_TEST_PERSONALITY_PARTNER_SHARED__=value.personalityPartnerShared;},{personalityPartnerShared,personalityComplete,emptySchyssta,preansweredGeneral,user:authenticated?{id:role==="teen"?"10000000-0000-0000-0000-000000000002":"10000000-0000-0000-0000-000000000001",email:"synthetic@example.invalid"}:null,paired,role,unlocked,unlockUnavailable,priorityUnavailable});
   await context.route(base+"backend-config.js*",route=>route.fulfill({
     contentType:"application/javascript",
-    body:"window.HEMMAKOMPASSEN_BACKEND=Object.freeze({supabaseUrl:'https://synthetic.invalid',supabasePublishableKey:'synthetic',enableSharedPriorities:true,enableSharedPolling:true,enableSharedInsights:true,enableSharedUnderstanding:true,enableSchysstaList:true,enablePersonalitySharing:"+String(personalitySharing)+"});"
+    body:"window.HEMMAKOMPASSEN_BACKEND=Object.freeze({supabaseUrl:'https://synthetic.invalid',supabasePublishableKey:'synthetic',enableSharedPriorities:true,enableSharedPolling:true,enableSharedInsights:true,enableSharedUnderstanding:true,enableSchysstaList:true,enablePersonalitySharing:"+String(personalitySharing)+",enableAiMediator:"+String(aiMediator)+",enableAiHistory:"+String(aiMediator)+",aiMediatorUrl:'https://hemmakompassen-ai-medlare.erikbertiljarl.workers.dev/api/ai/mediate'});"
   }));
   await context.route("https://esm.sh/**",route=>route.fulfill({
     contentType:"application/javascript",
@@ -113,6 +113,7 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
         return {
           auth:{
             async getUser(){return {data:{user:current()},error:current()?null:{name:'AuthSessionMissingError'}}},
+            async getSession(){return {data:{session:current()?{user:current(),access_token:'synthetic-jwt'}:null},error:null}},
             onAuthStateChange(){return {data:{subscription:{unsubscribe(){}}}}},
             async signInWithPassword(){return {error:null}}
           },
@@ -263,11 +264,34 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
       }
     `
   }));
+  const mediatorCalls=[];
+  if(aiMediator){
+    await context.route('https://hemmakompassen-ai-medlare.erikbertiljarl.workers.dev/api/ai/**',async route=>{
+      const req=route.request(),method=req.method(),pathname=new URL(req.url()).pathname;
+      const body=method==='POST' ? req.postDataJSON() : null;
+      mediatorCalls.push({pathname,method,body});
+      let result,status=200;
+      if(pathname==='/api/ai/context'&&method==='GET'){
+        result={sections:['Gillaswajpen – egna svar'],unavailableCount:0};
+      } else if(pathname==='/api/ai/chats'&&method==='GET'){
+        result={chats:[]};
+      } else if(pathname==='/api/ai/chats'&&method==='POST'){
+        status=201;
+        result={chat:{id:'00000000-0000-4000-8000-000000000001',title:'Nytt samtal'}};
+      } else if(pathname==='/api/ai/mediate'&&method==='POST'){
+        result={reply:'Vi kan utforska detta steg för steg.',chatId:body?.chatId,
+          ephemeral:false,remainingToday:9};
+      } else {
+        status=404;result={error:'Unexpected synthetic AI endpoint'};
+      }
+      await route.fulfill({status,contentType:'application/json',body:JSON.stringify(result)});
+    });
+  }
   const page=await context.newPage();
   page.on("pageerror",e=>errors.push(e.message));
   // Ignore external font/network warnings; JavaScript exceptions are checked via pageerror.
   await page.goto(base+"#hem",{waitUntil:"load"});
-  return {context,page};
+  return {context,page,mediatorCalls};
 }
 try{
   await fs.mkdir(output,{recursive:true});
@@ -892,6 +916,37 @@ try{
   await checkOverflow(desktopInsights.page,'Desktop Schyssta listan');
   await capture(desktopInsights.page,'desktop-schyssta-list.png');
   await desktopInsights.context.close();
+  // AI-01G: simulate the real page event handler and verify the outgoing opt-out,
+  // not just the isolated component method. All data are synthetic.
+  const mediatorMobile=await freshContext(
+    {viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},
+    {authenticated:true,paired:true,aiMediator:true}
+  );
+  await mediatorMobile.page.goto(base+'#medlare',{waitUntil:'load'});
+  const contextCheckbox=mediatorMobile.page.locator('#mediator-use-context');
+  await contextCheckbox.waitFor();
+  assert.equal(await contextCheckbox.isChecked(),true,'Context defaults on for internal test accounts');
+  await contextCheckbox.uncheck();
+  assert.equal(await contextCheckbox.isChecked(),false,'Checkbox changes the actual page state');
+  assert.match(await mediatorMobile.page.locator('.mediator-context').innerText(),/Avstängt/);
+  assert.equal(await mediatorMobile.page.locator('#mediator-refresh-context').count(),0);
+  await checkOverflow(mediatorMobile.page,'Mobile AI project-context opt-out');
+  await capture(mediatorMobile.page,'mobile-ai-context-optout.png');
+  await mediatorMobile.page.locator('#mediator-input').fill('Ett fiktivt samtal utan siduppgifter');
+  await mediatorMobile.page.locator('#mediator-form button[type="submit"]').click();
+  await mediatorMobile.page.getByText('Vi kan utforska detta steg för steg.').waitFor();
+  const sentOff=mediatorMobile.mediatorCalls.filter(c=>c.pathname==='/api/ai/mediate');
+  assert.equal(sentOff.length,1,'One AI reply from the simulated Worker');
+  assert.equal(sentOff[0].body.useProjectContext,false,'OFF is sent to the real mediator endpoint');
+  await contextCheckbox.check();
+  await mediatorMobile.page.locator('#mediator-input').fill('Ett andra fiktivt samtal');
+  await mediatorMobile.page.locator('#mediator-form button[type="submit"]').click();
+  await mediatorMobile.page.locator('.mediator-message-assistant').nth(1).waitFor();
+  const sentOn=mediatorMobile.mediatorCalls.filter(c=>c.pathname==='/api/ai/mediate');
+  assert.equal(sentOn.length,2);
+  assert.equal(sentOn[1].body.useProjectContext,true,'ON is sent after restoring the choice');
+  await mediatorMobile.context.close();
+
   const d=await freshContext({viewport:{width:1440,height:900},deviceScaleFactor:1},{authenticated:true});
   await d.page.getByRole("heading",{name:/Hej[ ,]+Provförälder/}).waitFor();
   assert.equal(await d.page.locator("#live-desktop-nav a").count(),8);
