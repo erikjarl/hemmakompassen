@@ -16,7 +16,7 @@
 - [x] **Kod:** gränssnittet skickar ett uttryckligt booleskt `useProjectContext` vid varje meddelande. Med `false` anropas **inga** projektkällor eller roll-RPC. Identitetskontroll och vanliga chatt-/kvotfunktioner fortsätter att fungera.
 - [x] **Kod:** när valet är av visas ingen gammal källöversikt, sena svar ignoreras, och valet låses under ett pågående AI-svar. Vid kontobyte återställs det till på. Ingen ny serverlagrad preferens eller ny migration har införts.
 - [x] **Automatiska regressionstester skapade** för backend och UI: explicit av, felaktig typ, standard på, läcka av gammal översikt, byte av konto och byte under pågående svar. Dessutom Playwright-mobiltest med simulerad Worker, en ny skärmbild och test av återkallat Big Five-samtycke.
-- [ ] **Återstår:** senaste UI-CI-körningen ska avslutas grönt; PR #84 behöver granskas och mergas efter #83. Ny Worker-kod måste driftsättas för att servern i den verkliga testmiljön ska respektera flaggan. Kör därefter manuell verifiering med båda kontona.
+- [ ] **Återstår:** PR #84 behöver granskas och mergas efter #83. Ny Worker-kod måste driftsättas för att servern i den verkliga testmiljön ska respektera flaggan. Kör därefter manuell verifiering med båda kontona.
 
 ### HTTP API
 
@@ -41,7 +41,8 @@
 - [x] PR #81: privat Worker/D1-testchatt, backendkvot, interna testkonton och grundläggande kod-/D1-tester.
 - [x] PR #82: JWT-baserad, nyinhämtad projektkontext, dataminimering och regressionstester; dokumenterat godkänd AI-/browser-CI och uppdaterad Worker.
 - [x] PR #84: opt-out-funktion och automatiska testfall **kodade på utvecklingsbranch**.
-- [ ] PR #84: full CI, granskning och merge. Notera utfallet i ROADMAP och `docs/CURRENT_TASKS.md`.
+- [x] PR #84: full AI- och UI-/browser-CI passerade på kod- och regressionstilläggen (AI-run #41419931803; UI-run #41419931438). 28 skärmbilder inklusive mobil opt-out och `visual-audit.json` genererades.
+- [ ] PR #84: manuell granskning och merge.
 - [ ] Driftsätt den nya Worker-versionen för opt-out och verifiera verklig Pages-version.
 - [ ] Genomför **riktiga** autentiserade tvåkontotester: A JA+JA, endast eget JA/NEJ, partnersamtycke saknas/återkallas, av-/omparning, annan familj, opt-out utan dataläsning, utloggning samt återupptagen/raderad chatt.
 - [ ] Klinisk, juridisk och dataskyddsmässig granskning inför verkliga känsliga ungdomssamtal och eventuell extern pilot.
