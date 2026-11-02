@@ -194,3 +194,35 @@ test('missing internal allowlist fails closed before any model call',async()=>{
   assert.equal(response.status,403);
   assert.equal(x.seen.model.length,0);
 });
+
+// AI-01D: server must honour explicit project-context opt-out, not merely hide UI.
+test('opt-out prevents every project/role RPC read while still allowing an authenticated chat reply',async()=>{
+  const x=harness();
+  const result=await x.handler(req({message:'Kan vi prata om skolan?',extra:{useProjectContext:false,
+    context:{fake:'SECRET_PARTNER_CONTEXT'},role:'parent'}}),x.env);
+  assert.equal(result.status,200);
+  assert.equal(x.seen.auth.length,1,'only identity /auth/v1/user may be read');
+  assert.match(x.seen.auth[0].url,/\/auth\/v1\/user$/);
+  assert.equal(x.seen.model.length,1);
+  const prompt=x.seen.model[0].args.messages[0].content;
+  assert.match(prompt,/stängt av projektkontext/);
+  assert.doesNotMatch(prompt,/SECRET_PARTNER_CONTEXT/);
+  assert.equal(JSON.stringify(x.seen.model).includes('SECRET_PARTNER_CONTEXT'),false);
+});
+test('project context defaults on for existing clients and can be explicitly enabled',async()=>{
+  const x=harness();
+  assert.equal((await x.handler(req({message:'Hej'}),x.env)).status,200);
+  assert.ok(x.seen.auth.length>1,'default loads authorized project context');
+  const before=x.seen.auth.length;
+  assert.equal((await x.handler(req({message:'Hej igen',extra:{useProjectContext:true}}),x.env)).status,200);
+  assert.ok(x.seen.auth.length>before+1);
+});
+test('malformed context choice is rejected before quota or project reads',async()=>{
+  const x=harness();
+  for(const invalid of ['false',0,1,null,[],{}]){
+    const res=await x.handler(req({extra:{useProjectContext:invalid}}),x.env);
+    assert.equal(res.status,400);
+  }
+  assert.equal(x.seen.model.length,0);
+  assert.equal(x.seen.auth.length,6,'each request verifies user identity before parsing');
+});
