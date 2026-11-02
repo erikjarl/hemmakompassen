@@ -205,13 +205,17 @@ export function createHandler({ fetchAuth = fetch, now = () => new Date() } = {}
     if (Number(request.headers.get('Content-Length') || '0') > 8192) {
       return answer(413, { error: 'Meddelandet är för långt.' }, origin);
     }
-    let message, chatId = null;
+    let message, chatId = null, useProjectContext = true;
     try {
       const raw = await request.text();
       if (raw.length > 8192) throw new Error('Size limit');
       const body = JSON.parse(raw);
       message = typeof body?.message === 'string' ? body.message.trim() : '';
       chatId = body?.chatId === undefined ? null : body.chatId;
+      if (body?.useProjectContext !== undefined && typeof body.useProjectContext !== 'boolean') {
+        throw new Error('Invalid context choice');
+      }
+      useProjectContext = body?.useProjectContext !== false;
     } catch {
       return answer(400, { error: 'Ogiltigt meddelande.' }, origin);
     }
@@ -251,9 +255,13 @@ export function createHandler({ fetchAuth = fetch, now = () => new Date() } = {}
     }
     if (!quota) return answer(429, { error: 'Dagens testkvot är slut. Försök nästa dag.' }, origin);
     try {
-      const viewerRole = await loadViewerRole(env, jwt, userId, fetchAuth);
+      // An explicit opt-out skips ALL page context reads, including role RPC.
+      // The verified identity, current chat messages and D1 quota are still in use.
+      const viewerRole = useProjectContext ? await loadViewerRole(env, jwt, userId, fetchAuth) : null;
       const roleGuidance = viewerRole ? ROLE_INSTRUCTIONS[viewerRole] : 'Ge neutralt, respektfullt stöd utan att gissa om personen är förälder eller tonåring.';
-      const authorized = await loadAuthorizedContext(env,jwt,userId,viewerRole,fetchAuth);
+      const authorized = useProjectContext
+        ? await loadAuthorizedContext(env,jwt,userId,viewerRole,fetchAuth)
+        : {text:'Användaren har stängt av projektkontext. Inga uppgifter från Hemmakompassens andra sidor har lästs. Anta inte att du känner till personens kortsvar, profil, regler eller inkorg.'};
       const result = await env.AI.run(MODEL, {
         messages: [
           { role: 'system', content: SYSTEM_PROMPT + ' ' + roleGuidance + '\n\n' + authorized.text },
