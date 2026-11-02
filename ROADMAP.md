@@ -40,6 +40,19 @@
 - [ ] **AI-02/AI-03 – frivilliga AI-sammanfattningar** i Gillaswajpen respektive Big Five, separat från de redan implementerade, förskrivna sammanfattningarna. Integritetsgranska och bygg först efter relevant säkerhetsverifiering.
 
 
+## Produktbeslut och kodleverans 2 november 2026 – automatiska AI-reflektioner (AI-02/AI-03)
+
+**Nytt produktbeslut (ersätter tidigare opt-in-krav för analys av resultaten):** När en användare slutfört IPIP-50 ska en AI-analys starta automatiskt på samma resultatsida. När giltiga delade JA+JA har hämtats i Gillaswajpen ska en motsvarande AI-reflektion starta automatiskt där; i den samlade insiktsvyn gäller samma sak när den är aktiverad. AI ska ersätta förskrivna tolkande råd och hypotetiska relationstexter, **men inte ersätta eller förvanska faktiska poäng, diagram, behöriga kortmatchningar eller metodinformation**. Visa ett begripligt laddtillstånd direkt. Vid AI-fel: visa felstatus och möjlighet att generera igen, inte en påhittad analys.
+
+- [x] **AI-02 – Gillaswajpen, kod på utvecklingsbranch PR #85:** ny serverkontrollerad AI-endpoint, enbart exakta A JA+JA från nuvarande server-RPC och befintlig kortkatalog. Enbart redan auktoriserade B-förståelsekort kan läggas till via separat server-RPC och `ENABLE_SHARED_UNDERSTANDING_AI=true`; denna B-del är **avstängd tills särskild aktivering och verklig samtyckestestning**. Inga NEJ, oenigheter eller privata kortsvar delas med den andre.
+- [x] **AI-03 – Personlighetstest, kod på PR #85:** färdigtestade fem IPIP-skalsummor beräknas server-side från den inloggades egna 50 svar. Vid aktivt dubbelsamtycke kan enbart partnerns fem skalpoäng adderas; enskilda svar skickas aldrig till modellen. Ett ofullständigt test genererar inget AI-anrop.
+- [x] **Gemensam funktion, kod på PR #85:** automatisk klientstart på slutfört resultat, rollanpassade och återhållsamma prompts, laddläge, testvarning, tydlig källförklaring, säker HTML-escaping, möjlighet att generera om, självbegränsad sessionscache och samma hårda D1-dagskvot som AI-medlaren. Ny UI-komponent och testsats.
+- [ ] **Verifiering:** granska CI/Playwright, syntetisk webbläsarverifiering, negativ säkerhetstestning, integritet kring återkallelse, samt kvalitet i svensk reflekterande text för båda rollerna.
+- [ ] **Aktivering och drift:** `enableAiResultAnalyses=false` tills den nya Cloudflare Worker-versionen med `/api/ai/analyze` är driftsatt och riktiga tvåkontotester genomförts. Därefter aktivera flaggan för intern test-UI. Den äldre förskrivna återkopplingen ligger endast kvar som kodväg när AI-funktionen ännu inte är aktiverad, inte som påhittat AI-svar.
+- [ ] **B-underlag:** när B-delning aktiveras på riktigt: serverflagga, rollsäker RPC, tonåringens uttryckliga återkalleliga JA samt full tvåkontotest och UI-integration i Gillaswajpens resultatsidor innan AI får använda B.
+
+**Metod/etik:** AI ska skilja observerade svar från hypoteser, validera känslor utan att automatiskt bekräfta sakpåståenden, inte framställa likheter som psykometriskt säkerställda eller olikheter som automatiska konflikter, och lägga större ansvar för trygghet och reparation på den vuxne. Automatisk bearbetning av självskattningar måste beskrivas begripligt inför extern pilot. Data används än så länge endast på interna testkonton och med fiktivt material.
+
 ## Projektstatus – intern utveckling och testning (beslut 2026-10-30)
 
 **Gäller tills Erik uttryckligen ändrar beslutet.** Hemmakompassen är fortfarande helt och hållet ett **internt utvecklings- och testprojekt**, även när webbplatsen ligger publikt på GitHub Pages. Enligt projektägaren finns **inga externa användare**, och tester sker internt med avgränsade testkonton och syntetiskt innehåll. Publicering till Pages är **inte** liktydig med produktionslansering eller extern pilot.
