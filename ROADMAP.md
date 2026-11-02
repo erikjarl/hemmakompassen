@@ -44,9 +44,9 @@
 
 - [x] **AI-01D – val per AI-svar (kod):** tydlig, tangentbordstillgänglig kryssruta för att slå av/på användning av uppgifter från övriga Hemmakompassen. Standard är på i intern testversion, men användaren kan uttryckligen välja av inför nästa svar. Valet lagras inte mellan konton. **Utvecklingsbranch, ännu inte mergad eller publicerad.**
 - [x] **AI-01D – serveravgränsning (kod):** `useProjectContext:false` hoppar över alla Supabase-RPC/läsningar av projektuppgifter, inklusive rollhämtning. Ogiltiga typer avvisas. Identitetsverifiering och egna tidigare chattmeddelanden är fortfarande tillåtna. Äldre klienter utan flaggan behåller nuvarande standard.
-- [x] **AI-01D – regressionskontroller (kod):** nya tester för av/på, kontoåterställning, fördröjd översikt, låsning under AI-svar och falska indata. Backend-Workflow har passerat Node-tester, syntax och bygge; UI-browser-CI slutgranskas separat.
+- [x] **AI-01D – regressionskontroller:** Node-tester för av/på, kontoåterställning, fördröjd översikt, låsning under AI-svar och falska indata, plus Playwright av en verklig mobil DOM med simulerad Worker. Backend-CI och tidigare UI-/browser-CI-körning gröna. Nytt test av borttaget Big Five-samtycke i nästa serverkontext ingår; senaste körning av hela UI-kedjan inväntar slutstatus.
 - [x] **Relaterad underhållsfix:** samordnad cacheversionsnyckel för huvudsida, AI-import och IPIP-moduler samt versionsregressionstester. Dokumentation om serverkontext, kvoter, opt-out och risker är uppdaterad.
-- [ ] **AI-01D – release och riktig verifiering:** UI/Playwright-CI, PR-granskning och merge, driftsättning av ny Cloudflare Worker, verklig tvåkontotestning med både inställningen på och av samt återkallat samtycke. **Ingen publicerad funktion eller reell tvåkontotest är ännu påstådd.**
+- [ ] **AI-01D – release och riktig verifiering:** slutlig UI/Playwright-CI efter senaste testtillägget, PR-granskning och merge, driftsättning av ny Cloudflare Worker, verklig tvåkontotestning med både inställningen på och av samt återkallat samtycke. **Ingen publicerad funktion eller reell tvåkontotest är ännu påstådd.**
 
 ## Projektstatus – intern utveckling och testning (beslut 2026-10-30)
 
