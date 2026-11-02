@@ -24,6 +24,9 @@ window.HEMMAKOMPASSEN_BACKEND = Object.freeze({
   // Internal AI mediator: owner-scoped D1 history, not a clinical service.
   enableAiMediator: true,
   enableAiHistory: true,
+  // Only turn on AFTER the new /api/ai/analyze Worker route is deployed and verified.
+  // Results are generated automatically on completion and use the same daily AI quota.
+  enableAiResultAnalyses: false,
   aiMediatorUrl: 'https://hemmakompassen-ai-medlare.erikbertiljarl.workers.dev/api/ai/mediate',
   // Until auth, family membership and privacy tests pass, the public UI remains a demo.
   liveModeEnabled: false
