@@ -79,12 +79,12 @@ async function capture(page,name){
   await page.screenshot({path:path.join(output,name),fullPage:true,animations:"disabled"});
   captureRecords.push({file:name,viewport:page.viewportSize(),...overlays});
 }
-async function freshContext(options,{authenticated=false,paired=false,role="parent",unlocked=false,unlockUnavailable=false,priorityUnavailable=false,preansweredGeneral=false,emptySchyssta=false,personalityComplete=false,personalitySharing=false,personalityPartnerShared=false,aiMediator=false}={}){
+async function freshContext(options,{authenticated=false,paired=false,role="parent",unlocked=false,unlockUnavailable=false,priorityUnavailable=false,preansweredGeneral=false,emptySchyssta=false,personalityComplete=false,personalitySharing=false,personalityPartnerShared=false,aiMediator=false,aiAnalyses=false}={}){
   const context=await browser.newContext({...options,locale:"sv-SE",reducedMotion:"reduce"});
   await context.addInitScript(value=>{window.__HK_TEST_USER__=value.user;window.__HK_TEST_PAIRED__=value.paired;window.__HK_TEST_ROLE__=value.role;window.__HK_TEST_UNLOCKED__=value.unlocked;window.__HK_UNLOCK_RPC_UNAVAILABLE__=value.unlockUnavailable;window.__HK_PRIORITY_RPC_UNAVAILABLE__=value.priorityUnavailable;window.__HK_PREANSWERED_GENERAL__=value.preansweredGeneral;window.__HK_SCHYSSTA_EMPTY__=value.emptySchyssta;window.__HK_TEST_PERSONALITY_DONE__=value.personalityComplete;window.__HK_TEST_PERSONALITY_PARTNER_SHARED__=value.personalityPartnerShared;},{personalityPartnerShared,personalityComplete,emptySchyssta,preansweredGeneral,user:authenticated?{id:role==="teen"?"10000000-0000-0000-0000-000000000002":"10000000-0000-0000-0000-000000000001",email:"synthetic@example.invalid"}:null,paired,role,unlocked,unlockUnavailable,priorityUnavailable});
   await context.route(base+"backend-config.js*",route=>route.fulfill({
     contentType:"application/javascript",
-    body:"window.HEMMAKOMPASSEN_BACKEND=Object.freeze({supabaseUrl:'https://synthetic.invalid',supabasePublishableKey:'synthetic',enableSharedPriorities:true,enableSharedPolling:true,enableSharedInsights:true,enableSharedUnderstanding:true,enableSchysstaList:true,enablePersonalitySharing:"+String(personalitySharing)+",enableAiMediator:"+String(aiMediator)+",enableAiHistory:"+String(aiMediator)+",aiMediatorUrl:'https://hemmakompassen-ai-medlare.erikbertiljarl.workers.dev/api/ai/mediate'});"
+    body:"window.HEMMAKOMPASSEN_BACKEND=Object.freeze({supabaseUrl:'https://synthetic.invalid',supabasePublishableKey:'synthetic',enableSharedPriorities:true,enableSharedPolling:true,enableSharedInsights:true,enableSharedUnderstanding:true,enableSchysstaList:true,enablePersonalitySharing:"+String(personalitySharing)+",enableAiMediator:"+String(aiMediator||aiAnalyses)+",enableAiHistory:"+String(aiMediator||aiAnalyses)+",enableAiResultAnalyses:"+String(aiAnalyses)+",aiMediatorUrl:'https://hemmakompassen-ai-medlare.erikbertiljarl.workers.dev/api/ai/mediate'});"
   }));
   await context.route("https://esm.sh/**",route=>route.fulfill({
     contentType:"application/javascript",
@@ -287,11 +287,22 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
       await route.fulfill({status,contentType:'application/json',body:JSON.stringify(result)});
     });
   }
+  const aiRequests=[];
+  if(aiAnalyses){
+    await context.route('https://hemmakompassen-ai-medlare.erikbertiljarl.workers.dev/api/ai/analyze',async route=>{
+      const body=route.request().postDataJSON();
+      aiRequests.push(body);
+      await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({
+        kind:body.kind,scope:body.scope,reply:'Ert resultat kan vara en bra samtalsstart. Vad fungerar redan?',
+        basis:'Enbart serververifierade resultat; syntetisk testsituation.'
+      })});
+    });
+  }
   const page=await context.newPage();
   page.on("pageerror",e=>errors.push(e.message));
   // Ignore external font/network warnings; JavaScript exceptions are checked via pageerror.
   await page.goto(base+"#hem",{waitUntil:"load"});
-  return {context,page,mediatorCalls};
+  return {context,page,mediatorCalls,aiRequests};
 }
 try{
   await fs.mkdir(output,{recursive:true});
@@ -946,6 +957,31 @@ try{
   assert.equal(sentOn.length,2);
   assert.equal(sentOn[1].body.useProjectContext,true,'ON is sent after restoring the choice');
   await mediatorMobile.context.close();
+
+  // Automatic result analyses are checked through the REAL browser DOM,
+  // with a mocked Worker and synthetic data, never real accounts.
+  const aiView=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},
+    {authenticated:true,paired:true,personalityComplete:true,aiAnalyses:true});
+  await aiView.page.goto(base+'#personlighet',{waitUntil:'load'});
+  await aiView.page.locator('.pf-results .ai-result-panel .ai-result-prose').waitFor();
+  assert.match(await aiView.page.locator('.pf-results .ai-result-prose').innerText(),/Ert resultat kan vara en bra samtalsstart/);
+  assert.equal(aiView.aiRequests[0].kind,'personality');
+  assert.equal(aiView.aiRequests[0].scope,'own');
+  assert.deepEqual(Object.keys(aiView.aiRequests[0]).sort(),['kind','scope']);
+  assert.equal(await aiView.page.locator('.pf-reference-feedback').count(),0,
+    'Old static personality advice is replaced when AI is enabled');
+  await checkOverflow(aiView.page,'AI personality result 390px');
+  await capture(aiView.page,'mobile-ai-personality-result.png');
+  await aiView.page.goto(base+'#swipe',{waitUntil:'load'});
+  await aiView.page.locator('.swipe-results .ai-result-panel .ai-result-prose').waitFor();
+  const swipeRequest=aiView.aiRequests.find(x=>x.kind==='swipe');
+  assert.equal(swipeRequest.scope,'general');
+  assert.deepEqual(Object.keys(swipeRequest).sort(),['kind','scope']);
+  assert.equal(await aiView.page.locator('.swipe-rule-summary').count(),0,
+    'Old static swipe advice is replaced when AI is enabled');
+  await checkOverflow(aiView.page,'AI swipe result 390px');
+  await capture(aiView.page,'mobile-ai-swipe-result.png');
+  await aiView.context.close();
 
   const d=await freshContext({viewport:{width:1440,height:900},deviceScaleFactor:1},{authenticated:true});
   await d.page.getByRole("heading",{name:/Hej[ ,]+Provförälder/}).waitFor();

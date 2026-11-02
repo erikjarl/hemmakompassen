@@ -1,8 +1,8 @@
 import {IPIP50_V1} from './ipip50-v1.js';
 import {scoreIPIP50} from './ipip50-scoring.js';
-import {buildIPIP50FamilyInsights} from './ipip50-family-insights.js?v=20261102-ai-context-optout1';
-import {richFamilyReflection} from './ipip50-family-copy.js?v=20261102-ai-context-optout1';
-import {IPIP50_REFERENCE,IPIP50_PERCENTILE_BANDS,approximateReferencePercentile,referenceLimits,describeReferenceProfile,formatSv} from './ipip50-reference.js?v=20261102-ai-context-optout1';
+import {buildIPIP50FamilyInsights} from './ipip50-family-insights.js?v=20261102-family-reflections4';
+import {richFamilyReflection} from './ipip50-family-copy.js?v=20261102-family-reflections4';
+import {IPIP50_REFERENCE,IPIP50_PERCENTILE_BANDS,approximateReferencePercentile,referenceLimits,describeReferenceProfile,formatSv} from './ipip50-reference.js?v=20261102-family-reflections4';
 import {loadMyIPIP50Answers,saveMyIPIP50Answer} from './ipip50-storage.js';
 
 const esc=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -196,7 +196,7 @@ function familyReflectionPanel(parentProfile,teenProfile,viewerRole){
 
 function statusPanel(message){return '<section class="live-panel"><p class="pf-status" role="status">'+esc(message)+'</p></section>';}
 
-export function createPersonalityExperience({db,onRender,isSharingEnabled=false}){
+export function createPersonalityExperience({db,onRender,isSharingEnabled=false,useAiAnalysis=false,analysisPanel=()=>''}){
   let viewer=null,sequence=0,answers={},loading=false,loaded=false,loadError='',saving=false,saveError='';
   let active=false,index=0,selectedAnswer=null,shareEnabled=false,shareBusy=false,shareError='',paired=null,partnerError='';
   const repaint=()=>onRender();
@@ -241,6 +241,11 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false}
     if(isSharingEnabled&&shareEnabled&&loadedAnswers.status.complete)await fetchPaired(userId,token);
     if(token===sequence&&viewer===userId)repaint();
   }
+  function getAiSnapshot(){
+    if(!viewer||!loaded||active||saving||!scoreIPIP50(answers).complete)return null;
+    // Local refresh fingerprint only. Raw item answers never go to AI.
+    return JSON.stringify([viewer,Object.entries(answers).sort(),shareEnabled,paired?.profiles||null]);
+  }
   function start(){active=true;saveError='';selectedAnswer=null;index=FIRST_UNANSWERED(answers);repaint();}
   function render({isPaired=false,viewerRole='parent'}={}){
     const heading='<section class="pf-intro"><span class="swipe-eyebrow">LÄR KÄNNA DIG SJÄLV</span><h1>Min personlighet</h1><p>Utforska fem sidor av hur du brukar vara. Det finns inga rätt eller fel svar.</p></section>';
@@ -266,6 +271,7 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false}
       return heading+'<section class="live-panel pf-overview"><h2>'+(count?'Fortsätt där du slutade':'Börja med 50 påståenden')+'</h2>'+
         '<p>Du svarar på 50 korta påståenden, ett i taget. Välj det som bäst beskriver hur du brukar vara. Du kan pausa, gå tillbaka och ändra svar. Det finns ingen tidsgräns.</p>'+
         '<p>Det här är en preliminär svensk version av IPIP-50, inte ett normerat eller diagnostiskt test. Varken föräldern eller tonåringen får automatiskt se den andras svar eller resultat.</p>'+
+        (useAiAnalysis?'<p><strong>AI-återkoppling:</strong> När du har besvarat alla frågor skapas automatiskt en reflekterande text från dina fem summerade poäng. De enskilda frågesvaren skickas inte till språkmodellen. En eventuell jämförelse bygger endast på bådas aktiva delningssamtycke.</p>':'')+
         '<p><strong>'+count+' av 50</strong> besvarade.</p><div class="pf-progress"><span style="width:'+Math.round(count/50*100)+'%"></span></div>'+
         '<button type="button" class="live-button" data-pf-action="start">'+(count?'Fortsätt testet':'Börja testet')+'</button></section>';
     }
@@ -290,15 +296,15 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false}
       // Compare five authorized sums; raw questionnaire answers remain private.
       const parentProfile=role==='parent'?own:other;
       const teenProfile=role==='teen'?own:other;
-      const reflections=familyReflectionPanel(parentProfile,teenProfile,role);
+      const reflections=useAiAnalysis?'':familyReflectionPanel(parentProfile,teenProfile,role);
       comparison='<section class="live-panel pf-comparison"><h2>Våra profiler</h2><p>Två självskattningar jämförda med samma amerikanska vuxenreferens. Placeringarna är uppskattningar, inte svenska normer.</p>'+
         
-        percentileChart(own,other)+reflections+table(own,other)+referenceFeedback(other,'Den andras')+referenceCaveat()+
+        percentileChart(own,other)+reflections+table(own,other)+(useAiAnalysis?'':referenceFeedback(other,'Den andras'))+referenceCaveat()+
         '<p class="live-muted">Markörerna visar uppskattad percentil jämfört med samma vuxenreferens. Tabellen visar råpoäng, medelvärde och SD. Skillnader är inte bevis för att ni fungerar olika.</p>'+
         '</section>';
     }
     return heading+'<section class="live-panel pf-results"><h2>Din profil</h2><p>Dina fem skalor visar uppskattad placering jämfört med en amerikansk vuxenreferens, inte svenska normer.</p>'+
-      percentileChart(own)+table(own)+referenceFeedback(own)+referenceCaveat()+
+      percentileChart(own)+table(own)+(useAiAnalysis?analysisPanel('personality','own',getAiSnapshot()):referenceFeedback(own))+referenceCaveat()+
       '<p class="live-muted">Skalorna bygger på dina svar (10–50). Högt eller lågt är inte i sig bättre eller sämre. Den svenska översättningen behöver prövas vetenskapligt.</p>'+
       '<button type="button" data-pf-action="review">Granska eller ändra mina svar</button></section>'+sharing+comparison;
   }
@@ -355,5 +361,5 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false}
     repaint();
     return true;
   }
-  return {reset,load,refreshShared,render,handleClick,handleChange};
+  return {reset,load,refreshShared,render,handleClick,handleChange,getAiSnapshot};
 }

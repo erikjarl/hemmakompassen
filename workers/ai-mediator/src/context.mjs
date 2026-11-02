@@ -27,7 +27,7 @@ function isValidScoreObject(value) {
     && Object.keys(value).length===5
     && [...FACTORS.keys()].every(k=>Number.isInteger(value[k])&&value[k]>=10&&value[k]<=50);
 }
-function scoreOwnIPIP(rows) {
+export function scoreOwnIPIP(rows) {
   if(!Array.isArray(rows) || rows.length!==50)return null;
   const valid = new Map();
   for (const r of rows) {

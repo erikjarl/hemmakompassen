@@ -549,3 +549,14 @@
 .mediator-context{margin:18px 0;padding:16px 19px;border:1px solid #59687a;border-radius:17px;background:#202a35}
 .mediator-context h2{font-size:1.12rem;margin:0 0 8px}
 .mediator-context p{line-height:1.6;margin:8px 0 14px;color:#cbd5e1}
+
+/* Server-grounded, automatically generated AI result reflections. */
+.ai-result-panel{margin:22px 0;padding:clamp(16px,3vw,24px);border:1px solid #72644c;border-radius:18px;background:#252938}
+.ai-result-panel h3{font-size:1.2rem;color:#f7deb2;margin:8px 0 12px}
+.ai-result-panel p{line-height:1.7}
+.ai-result-prose{white-space:pre-wrap;overflow-wrap:anywhere;font-size:1rem;line-height:1.78}
+.ai-result-panel details{margin:15px 0;color:#d6ddeb}
+.ai-result-panel summary{cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.ai-result-panel [role=alert]{color:#ffb3ac}
+.ai-result-panel [data-ai-analysis-retry]{margin-top:12px}
+@media(max-width:420px){.ai-result-panel{padding:16px}.ai-result-prose{font-size:.97rem}}
