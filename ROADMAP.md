@@ -37,7 +37,7 @@
 - [x] **AI-01A/B – privat AI-medlare för intern testning:** separat Cloudflare Worker/Workers AI, serverkontrollerad inloggning, D1-chattar som kan skapas, återupptas och raderas, kontobaserad kvot och rollbaserat bemötande. Mergad via PR #81; intern testfunktion, **inte** kliniskt validerad.
 - [x] **AI-01F – behörig AI-kontext:** uppdateras server-side inför varje AI-svar med den inloggades egna Gillaswajpen-svar/prioriteringar och fem Big Five-poäng, endast servergodkända gemensamma A JA+JA och ömsesidigt samtyckta partnerfaktorer, godkända/föreslagna Schyssta-regler och högst fyra korta, redan åtkomliga inkorgsutdrag. Separation mellan egen/gemensam information, källöversikt och dataminimering införda. PR #82 mergad; AI-/browser-CI och uppdaterad Cloudflare Worker dokumenterade. Ingen B-delning när den funktionen är avstängd.
 - [ ] **AI-01D – autentiserat tvåkontotest:** verifiera på riktigt genom webbläsare → Worker → Supabase, test av utloggning, omparning, saknat och återkallat samtycke samt negativa kontogränstester. Att koden finns och CI passerat räcker inte.
-- [ ] **AI-02/AI-03 – frivilliga AI-sammanfattningar** i Gillaswajpen respektive Big Five, separat från de redan implementerade, förskrivna sammanfattningarna. Integritetsgranska och bygg först efter relevant säkerhetsverifiering.
+- [x] **AI-02/AI-03 – automatisk AI-resultatåterkoppling, kod och intern testrelease:** Gillaswajpen och Big Five ersätter förskrivna råd med AI när serververifierade resultat finns (PR #85 och #86). **Återstår separat:** autentiserad slutverifiering, psykologisk språkgranskning och säker B-delning.
 
 
 ## Genomfört 2 november 2026 – AI-medlarens av/på-kontroll för projektuppgifter (PR #84)
@@ -46,14 +46,14 @@
 - [x] **AI-01D – serveravgränsning (kod):** `useProjectContext:false` hoppar över alla Supabase-RPC/läsningar av projektuppgifter, inklusive rollhämtning. Ogiltiga typer avvisas. Identitetsverifiering och egna tidigare chattmeddelanden är fortfarande tillåtna. Äldre klienter utan flaggan behåller nuvarande standard.
 - [x] **AI-01D – regressionskontroller:** Node-tester för av/på, kontoåterställning, fördröjd översikt, låsning under AI-svar och falska indata, plus Playwright av en verklig mobil DOM med simulerad Worker. Backend-CI och **senaste** UI-/browser-CI är gröna för kod- och regressionsändringarna; 28 Playwright-skärmbilder, inklusive mobil opt-out, och `visual-audit.json` genererades. Test av borttaget Big Five-samtycke i nästa serverkontext passerade också.
 - [x] **Relaterad underhållsfix:** samordnad cacheversionsnyckel för huvudsida, AI-import och IPIP-moduler samt versionsregressionstester. Dokumentation om serverkontext, kvoter, opt-out och risker är uppdaterad.
-- [ ] **AI-01D – release och riktig verifiering:** merge av #84 är genomförd; verifiering av faktisk driftsättning av nya Cloudflare Worker, verklig tvåkontotestning med både inställningen på och av samt återkallat samtycke. **Ingen publicerad funktion eller reell tvåkontotest är ännu påstådd.**
+- [ ] **AI-01D – release och riktig verifiering:** merge av #84 är genomförd; verifiering av faktisk driftsättning av nya Cloudflare Worker, verklig tvåkontotestning med både inställningen på och av samt återkallat samtycke. **Worker-koden är driftsatt; reell autentiserad tvåkontoverifiering är inte genomförd.**
 
 ## Intern release – automatiska AI-reflektioner (2 november 2026)
 
 - [x] PR #85 är mergad till main och UI-/Pages-testkedjorna passerade.
 - [x] Cloudflare Worker har fått den nya analysmodulen: version b39fbdf4-2571-4295-b7d4-0dc243823ab2 aktiv till 100 %, med samtliga sex befintliga bindningar bevarade inklusive begränsningen till två testkonton.
-- [x] Frontend-flaggan för automatiska AI-reflektioner har slagits på i separat releasebranch, med uppdaterade cacheversioner. Detta är ännu inte publicerat på main.
-- [ ] Kontrollera CI, merge och verklig Pages-publicering för releasen.
+- [x] Frontendflaggan för automatiska AI-reflektioner är mergad i PR #86 (`9adb1b8ff46c9af76a0dcdd93c97fd4fc069854e`) och publicerad genom godkänd Pages-kedja, med uppdaterade cacheversioner. Serverns allowlist omfattar fortsatt endast två interna testkonton.
+- [x] Release-kontrollerna godkända: UI/Playwright körning #41430090229, Pages build/deployment #41430089630 och merge PR #86. En autentiserad tvåkontokontroll i riktig webbläsare är fortfarande öppen.
 - [ ] Verifiera två inloggade testkonton och granska AI-texternas kvalitet och samtyckesåterkallelse. B-förståelsekort fortsatt avstängda.
 
 ## Produktbeslut och kodleverans 2 november 2026 – automatiska AI-reflektioner (AI-02/AI-03)
