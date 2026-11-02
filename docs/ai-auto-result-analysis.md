@@ -1,5 +1,17 @@
 # AI-02/AI-03 – automatisk resultatreflektion: verifiering och release
 
+## Aktuell releaseuppdatering – 2 november 2026
+
+- [x] PR #85 är mergad till main.
+- [x] Analysmodulen är driftsatt i Cloudflare: version `b39fbdf4-2571-4295-b7d4-0dc243823ab2`, deployment `061f9d1d-2d0c-49ea-ab7b-bdfb5a2d5532`. De ursprungliga sex bindningarna är kvar, även testkonto-allowlisten.
+- [x] Frontendflaggan `enableAiResultAnalyses:true` och nya cacheversioner kodade på releasebranch.
+- [ ] Godkänd release-CI, merge och verifierad Pages-deployment.
+- [ ] Fullständig autentiserad tvåkontoverifiering, faktisk språkmodellskvalitet och återkallelse. B-förståelsekort fortsatt av.
+
+Tidigare instruktioner nedan avser den tidigare fasen före merge och Worker-driftsättning.
+
+
+
 **Status:** Koden finns i PR #85. Den är ännu inte mergad eller driftsatt. Feature flag `enableAiResultAnalyses` är **false** tills Worker och behörighetskontroller verkligen fungerar. Endast de två interna testkontona och syntetiska uppgifter får användas under utveckling.
 
 ## Hur funktionen fungerar
