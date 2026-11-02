@@ -13,7 +13,7 @@
 ## Exakt releaseordning
 
 - [x] Serverkod och klientkod med automatiska säkerhets-/Playwrighttester i PR #85. Se Actions #41424425020 och #41424425062.
-- [ ] Granska och integrera PR #84 (medlarens kontext-opt-out) med PR #85; båda ändrar vissa gemensamma filer. Ta inte den ena som bevis att den andra är publicerad. Ingen force push, inga osäkerhetsförsämringar.
+- [x] PR #84 är mergad till `main`; dess opt-out-kod, regressionsfall och AI-02/03 från PR #85 har integrerats i merge-commit `acb1f48d79a95e68597e832ef115cd4b2fd606fd` utan force-push. GitHub visar PR #85 som mergebar. Testa hela kombinationen och säkerställ att opt-out fortfarande blockerar siduppgiftsläsning.
 - [ ] **Cloudflare Worker:** publicera ny version av `workers/ai-mediator/src/index.mjs`, `analysis.mjs`, `context.mjs`, `catalog.mjs` och historikmoduler med rätt modulimporter och bevarade AI-/D1-/Supabase-bindningar. Säkerställ att den **server-only testkonto-allowlisten** verkligen finns efter deployment. `wrangler.jsonc` innehåller en medvetet tom `AI_TEST_USERS`-platshållare: kör inte en blind deploy som råkar ersätta den riktiga testkonto-allowlisten med en tom sträng.
 - [ ] Verifiera autentiserat API-anrop till `POST /api/ai/analyze` med `{"kind":"personality","scope":"own"}` från ett testkonto och motsvarande Gillaswajp-anrop med `{"kind":"swipe","scope":"general"}`. Klienten ska inte skicka några profiler, familje-ID eller kortsvar. Testa ogiltig JWT, tredje användare, falska poängfält, ofullständigt test och tomma matchningar.
 - [ ] Verifiera att kvoten på tio AI-anrop per konto och UTC-dag delas med AI-medlarens chatt utan extra kostnad eller automatisk betald trafik.
