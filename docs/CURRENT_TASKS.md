@@ -4,6 +4,13 @@
 **Källa:** `main`-historiken 31 oktober–1 november (155 commits inklusive merge-commits), kod och konfiguration i `main`, dokumenterade tester/migrationer samt PR #56–#78.  
 **Syfte:** En enda kort, uppdaterad handlingslista för manuellt och schemalagt utvecklingsarbete. `ROADMAP.md` bevarar detaljerna och äldre beslut.
 
+## Delade uppgifter = samma uppgifter för AI och användare (2 november 2026)
+
+- [x] Kod för att visa gemensamma insikter och uttryckligen delade förståelsekort i testwebbplatsen, med befintlig server-RPC. Ingen andra AI-samtyckesknapp.
+- [x] Kod för att AI-medlaren och swajp-analysen använder samma behörighetsstyrda delade B-kort som den inloggade föräldern/tonåringen ser.
+- [x] Tester skapade för roller, ogiltiga B-ID:n, odelade kort och återkallelse.
+- [ ] CI, merge, ny Worker-deploy samt autentiserad tvåkontojämförelse av faktiska synliga kort och AI-underlag.
+
 ## Statusregler
 - **[x] Implementerat och automatiskt testat** = kod på `main`, med verifierat kontrakt/CI. Det betyder **inte** att riktig tvåläsarsession, användbarhet eller klinisk effekt har validerats.
 - **[ ] Kräver arbete/verifiering** = kvarstående funktion, integration, uppföljning eller verkligt test. Punkten kan ha fungerande delkod.
