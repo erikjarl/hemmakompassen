@@ -80,8 +80,8 @@
 ### Intern driftsättning av AI-reflektioner – 2 november 2026
 - [x] PR #85 mergad till main med godkänd CI.
 - [x] Ny Cloudflare Worker driftsatt till 100 %, sex ursprungliga bindningar kvar, allowlist med två testkonton.
-- [x] Frontendaktivering kodad i releasebranch med cacheversionsuppdatering.
-- [ ] Release-PR: kontrollera CI, merga, verifiera publicerad Pages-version.
+- [x] Frontendaktivering mergad och publicerad i PR #86 med synkroniserade cacheversioner. Servern begränsar fortsatt åtkomsten till de två interna AI-testkontona.
+- [x] Release-PR #86: mergad, UI-/Playwright-CI #41430090229 och GitHub Pages-deployment #41430089630 godkända. Riktig inloggad genomgång står kvar som egen uppgift.
 - [ ] Två verkliga autentiserade testkonton, återkallat samtycke, AI-textgranskning och återupptagning kräver ytterligare test. B-förståelsekort fortsatt avstängda.
 
 ### AI-02/03 – automatiska analyser i resultatvyerna (2 november 2026)
@@ -91,7 +91,7 @@
 - [x] **Testkod på PR #85:** autentisering, negativa klientsvar, serverkontrollerade delningsgränser, avbrutet test, kvot, XSS-escaping och återanvändning per resultatsession.
 - [x] **AI-02/03 automatisk CI/Playwright:** GitHub Actions AI #41424425020 samt UI #41424425062 gröna med syntetiskt mobiltest, 29 skärmbilder och verifierat statiskt bygge.
 - [ ] **AI-02/03 verklig kvalitet:** två autentiserade testkonton, språk/rollasymmetri, manuellt granskade mobilbilder, återkallelse och faktisk kvotförbrukning återstår.
-- [ ] **AI-02/03 driftsättning:** Cloudflare Worker `/api/ai/analyze` måste publiceras innan `enableAiResultAnalyses` slås på. Den är tills vidare **false** för att inte visa en felaktigt fungerande ersättning. B-förståelsekort kräver separat aktiverad och verifierad samtyckeskanal.
+- [x] **AI-02/03 teknisk intern release:** Cloudflare Workern med `/api/ai/analyze` är driftsatt till 100 %, `enableAiResultAnalyses:true` är publicerad genom PR #86. B-förståelsekort är fortsatt avstängda. Verkliga tvåkontotester och faktiska modelltextsvar återstår.
 
 ## Arbetsregel för följande utvecklingspass
 **Obligatoriskt enligt ROADMAP 2026-11-02:** kryssa av varje genomförd förändring i samma utvecklingspass, dela upp delvis färdiga uppgifter och ange PR/commit samt verifieringsnivå. `[x]` för branchkod betyder inte publicering eller riktig tvåkontoverifiering.
