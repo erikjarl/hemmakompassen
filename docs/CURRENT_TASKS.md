@@ -62,10 +62,14 @@
 ### P1 – AI-medlaren i intern testutveckling (2026-11-01)
 - [x] **AI-01A: Driftsatt separat Worker, Workers Free, autentisering, verklig D1-kvot och svensk fiktiv modellprovsvar.** Ingen publik webbplatsmerge.
 - [x] **AI-01B: Privat D1-chatt med skapande, lista, historik, radering, serverstyrd ägarisolering och rollstyrt stöd (parent/teen via verifierad RPC).** En ren AI-featurebranch mergades via PR #81 till `main` och chattgränssnittet ingår i webbplatsens källkod; live-test på Pages återstår.
-- [x] **AI-01C: Fiktiva databas- och V8-kodkontroller.** 28 automatiserade testfall från GitHub-koden passerade i simulerad körning; verklig D1 bekräftar ägarfilter, kaskadradering och stabil meddelandeordning. CI är ännu inte verifierad.
+- [x] **AI-01C: Fiktiva databas- och V8-kodkontroller.** 28 automatiserade testfall från GitHub-koden passerade i simulerad körning; verklig D1 bekräftar ägarfilter, kaskadradering och stabil meddelandeordning. AI- och UI-workflow har senare passerat för PR #82; detta ersätter den äldre uppgiften om ej verifierad CI.
 - [ ] **AI-01D: Verifiera två verkligt autentiserade testkonton, webbläsare/mobil och reella Worker-anrop** innan aktivering på GitHub Pages. Kontrollera även att säkerhetsmeddelanden och konto-/sessionsbyte fungerar som avsett.
 - [ ] **AI-01E: Granska barn-/ungdomsskydd, kliniska risker, säkerhet och dataskydd.** Endast fiktiva samtal hittills; enkel riskfrasmatchning är INTE en klinisk säkerhetslösning.
 - [ ] **AI-02/03: Driftsätt och kvalitetsverifiera automatiska, rollanpassade Gillaswajp-/personlighetsanalyser** efter att endpointen finns i Cloudflare och rätt samtycken verifierats. Kod och testfall ligger i PR #85; förskrivna råd ersätts först efter aktivering.
+
+- [x] **AI-01G – valbar projektkontext (implementerad kod på PR #84):** kryssruta för att använda/inte använda projektuppgifter inför svar. När av hoppar Worker över samtliga projekt-/roll-RPC:er; ogiltig flagga nekas. Node- och Playwright-mobiltest (simulerad Worker) för opt-out/återställning och serverkontroll, plus regression för återkallat Big Five-samtycke. **Inte publicerad; PR #83 är nu mergad och PR #84 riktas mot `main`.** 
+- [x] **AI-01G – automatisk CI:** AI-backend, Node, bygget och UI/Playwright passerade efter senaste kodändringen; 28 screenshots inklusive mobil opt-out genererade (GitHub Actions run #41419931438, AI run #41419931803).
+- [ ] **AI-01G – återstår till färdig leverans:** granskning och merge av #84, distribution av uppdaterad Cloudflare Worker och manuell verifiering med båda riktiga testkontona. Testa återkallat samtycke i den verkliga miljön separat.
 
 - [x] **AI-01F: Ge medlaren behörig kontext från Hemmakompassens andra sidor.** PR #82 mergad till main, uppdaterad Worker på Cloudflare, godkänd AI-/browser-CI. Implementerat: egna Gillaswajpen-svar och prioriteringar, servergodkända gemensamma ja-ja, egna Big Five-faktorer, endast samtyckt delad profil, godkända regler/förslag och högst fyra korta inkorgsutdrag. Underlaget hämtas om inför varje svar, med stark roll- och sekretessprompt. **Återstår:** manuell test med båda interna konton samt kontroll att återkallat samtycke slår igenom i AI-svaren.
 ### P2 – framtida tjänstekvalitet
@@ -82,6 +86,8 @@
 - [ ] **AI-02/03 driftsättning:** Cloudflare Worker `/api/ai/analyze` måste publiceras innan `enableAiResultAnalyses` slås på. Den är tills vidare **false** för att inte visa en felaktigt fungerande ersättning. B-förståelsekort kräver separat aktiverad och verifierad samtyckeskanal.
 
 ## Arbetsregel för följande utvecklingspass
+**Obligatoriskt enligt ROADMAP 2026-11-02:** kryssa av varje genomförd förändring i samma utvecklingspass, dela upp delvis färdiga uppgifter och ange PR/commit samt verifieringsnivå. `[x]` för branchkod betyder inte publicering eller riktig tvåkontoverifiering.
+
 1. Börja med högst prioriterade oavslutade `INT-*` / `SW-*` uppgifter och korrigera dokumenterade blockerare; om autentiserat test blockeras, fortsätt med en kod- eller UX-uppgift som går att genomföra utan extern hjälp.
 2. Spara i `ROADMAP.md` eller här: PR/commit, exakta kontroller, vad som är **implementerat**, **verifierat med mock/CI**, **verifierat i verkligt tvåkontoflöde** samt vad som inte är känt.
 3. Dra inte slutsatsen att en migrationsfil i GitHub är installerad eller att en flagga är på. Verifiera via rätt källa.
