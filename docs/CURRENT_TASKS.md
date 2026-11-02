@@ -9,7 +9,8 @@
 - [x] Kod för att visa gemensamma insikter och uttryckligen delade förståelsekort i testwebbplatsen, med befintlig server-RPC. Ingen andra AI-samtyckesknapp.
 - [x] Kod för att AI-medlaren och swajp-analysen använder samma behörighetsstyrda delade B-kort som den inloggade föräldern/tonåringen ser.
 - [x] Tester skapade för roller, ogiltiga B-ID:n, odelade kort och återkallelse.
-- [ ] CI, merge, ny Worker-deploy samt autentiserad tvåkontojämförelse av faktiska synliga kort och AI-underlag.
+- [x] **PR #88 driftsatt:** merge till main, båda testkedjorna och Pages-publicering godkända. Ny Worker-version `bf3f49d3-30b5-45fc-aeb4-8fa2866c5067` aktiv till 100 %, med testkonto-allowlist och befintliga bindningar bevarade.
+- [ ] **Verklig tvåkontojämförelse:** tonåring delar/återkallar B-kort, förälder och tonåring ser samma delade innehåll i respektive vy, AI använder samma tillåtna data vid ny analys. Kontrollera också att privat B-svar inte går till den andra.
 
 ## Statusregler
 - **[x] Implementerat och automatiskt testat** = kod på `main`, med verifierat kontrakt/CI. Det betyder **inte** att riktig tvåläsarsession, användbarhet eller klinisk effekt har validerats.

@@ -56,7 +56,8 @@
 - [x] **Kod, PR under granskning:** AI-resultatmodulen använder samma `shared_understanding_cards()` med inloggad JWT som resultatvyn – utan separat `ENABLE_SHARED_UNDERSTANDING_AI`-flagga. Servern avgör aktiv delning och familjetillhörighet.
 - [x] **Kod, PR under granskning:** AI-medlarens tillåtna sammanhang inkluderar de B-kort som samma användare ser via den serververifierade RPC:n, med samma rollanpassade text.
 - [x] **Tester skrivna:** behörig delning, inga odelade B-svar, båda rollerna och återkallelse. Automatiska testresultat och release är separat verifieringssteg.
-- [ ] **Driftsättning:** grön CI, merge och uppdaterad Cloudflare Worker; kontrollera att samma uppgifter syns i UI och AI med båda riktiga testkontona.
+- [x] **Teknisk driftsättning:** PR #88 mergad till main (`6cc85838913c25dad82a553011c0d96cf399f336`). AI-testkedjan #41446463761 och UI/Playwright #41446463753 godkända; main Pages-publicering #41446617623 och UI #41446619023 godkända. Cloudflare Worker-version `bf3f49d3-30b5-45fc-aeb4-8fa2866c5067` aktiv till 100 % med alla sex tidigare bindningar och två testkonton kvar.
+- [ ] **Verkliga tvåkontotester:** kontrollera att förståelsekort som tonåringen delar visas för båda och i respektive AI-svar, att återkallande slår igenom och att privata B-svar inte visas för föräldern.
 
 ## Intern release – automatiska AI-reflektioner (2 november 2026)
 
