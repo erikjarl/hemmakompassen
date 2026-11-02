@@ -48,6 +48,16 @@
 - [x] **Relaterad underhållsfix:** samordnad cacheversionsnyckel för huvudsida, AI-import och IPIP-moduler samt versionsregressionstester. Dokumentation om serverkontext, kvoter, opt-out och risker är uppdaterad.
 - [ ] **AI-01D – release och riktig verifiering:** merge av #84 är genomförd; verifiering av faktisk driftsättning av nya Cloudflare Worker, verklig tvåkontotestning med både inställningen på och av samt återkallat samtycke. **Worker-koden är driftsatt; reell autentiserad tvåkontoverifiering är inte genomförd.**
 
+## Princip för AI:s informationsåtkomst – samma som den inloggades vy (2 november 2026)
+
+**Beslut:** När förälder eller tonåring kan se ett svar som den andra redan har delat i Hemmakompassen, ska även den personens AI-medlare och resultatreflektioner kunna använda samma uppgift. **Ingen extra AI-delning eller andra parallella samtyckesflaggor.** Den inloggade användarens vanliga behörigheter och samma server-RPC ska alltid avgöra vad AI:n får se. Egen privat information används endast för den egna användarens AI. Valet att stänga av projektkontext i själva AI-medlaren finns kvar.
+
+- [x] **Kod, PR under granskning:** `enableSharedInsights:true` och `enableSharedUnderstanding:true` i den interna testwebbplatsen, så att tonåringen kan dela/återkalla förståelsekort och båda kan se dem i insiktsvyn.
+- [x] **Kod, PR under granskning:** AI-resultatmodulen använder samma `shared_understanding_cards()` med inloggad JWT som resultatvyn – utan separat `ENABLE_SHARED_UNDERSTANDING_AI`-flagga. Servern avgör aktiv delning och familjetillhörighet.
+- [x] **Kod, PR under granskning:** AI-medlarens tillåtna sammanhang inkluderar de B-kort som samma användare ser via den serververifierade RPC:n, med samma rollanpassade text.
+- [x] **Tester skrivna:** behörig delning, inga odelade B-svar, båda rollerna och återkallelse. Automatiska testresultat och release är separat verifieringssteg.
+- [ ] **Driftsättning:** grön CI, merge och uppdaterad Cloudflare Worker; kontrollera att samma uppgifter syns i UI och AI med båda riktiga testkontona.
+
 ## Intern release – automatiska AI-reflektioner (2 november 2026)
 
 - [x] PR #85 är mergad till main och UI-/Pages-testkedjorna passerade.

@@ -83,14 +83,30 @@ test('swipe input is server-only A JA+JA, rejects NO/unknown/wrong deck and excl
  const absent=await loadResultAnalysisInput(ENV,'auth-token',UID,'parent','swipe','general',mockSources().fetchAuth);
  assert.equal(absent,null);
 });
-test('consented B cards are added only with explicit server configuration and RPC',async()=>{
+test('AI sees exactly the viewer-visible shared B cards, without any extra AI consent flag',async()=>{
  const m=mockSources({matched:false,understanding:true});
- const disabled=await loadResultAnalysisInput(ENV,'auth-token',UID,'parent','swipe','general',m.fetchAuth);
- assert.equal(disabled,null);
- const enabled=await loadResultAnalysisInput({...ENV,ENABLE_SHARED_UNDERSTANDING_AI:'true'},'auth-token',UID,'parent','swipe','general',m.fetchAuth);
- assert.equal(enabled.sourceCount,1);
- assert.match(enabled.data,/TONÅRINGENS UTTRYCKLIGT DELADE/);
- assert.equal(m.calls.some(c=>c.path.endsWith('shared_understanding_cards')),true);
+ const parent=await loadResultAnalysisInput(ENV,'auth-token',UID,'parent','swipe','general',m.fetchAuth);
+ assert.equal(parent.sourceCount,1);
+ assert.match(parent.data,/TONÅRINGENS UTTRYCKLIGT DELADE/);
+ assert.equal(m.calls.filter(c=>c.path.endsWith('shared_understanding_cards')).length,1);
+ assert.ok(!parent.data.includes('general-01'),'unknown or A-only ids are never B messages');
+ const teen=await loadResultAnalysisInput(ENV,'auth-token',UID,'teen','swipe','general',mockSources({matched:false,understanding:true}).fetchAuth);
+ assert.equal(teen.sourceCount,1);
+ assert.notEqual(teen.data,parent.data,'AI receives the same role-specific wording displayed to each role');
+ const none=await loadResultAnalysisInput(ENV,'auth-token',UID,'parent','swipe','general',mockSources({matched:false,understanding:false}).fetchAuth);
+ assert.equal(none,null,'no active shares means no B analysis');
+});
+test('revoking a B share removes it from the next AI analysis, without cached consent',async()=>{
+ let isShared=true;
+ const source=mockSources({matched:false,understanding:true});
+ const get=async(url,opts)=>url.endsWith('/shared_understanding_cards')
+   ?Response.json(isShared?[{deck_id:'general',card_id:'general-02'}]:[])
+   :source.fetchAuth(url,opts);
+ const before=await loadResultAnalysisInput(ENV,'auth-token',UID,'parent','swipe','general',get);
+ assert.equal(before.sourceCount,1);
+ isShared=false;
+ const after=await loadResultAnalysisInput(ENV,'auth-token',UID,'parent','swipe','general',get);
+ assert.equal(after,null);
 });
 function worker({answers=complete,share=shared,matched=true}={}){
  const m=mockSources({answers,share,matched});

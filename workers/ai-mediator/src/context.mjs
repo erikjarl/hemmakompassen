@@ -86,10 +86,12 @@ export async function loadAuthorizedContext(env,jwt,userId,role,fetchAuth=fetch)
     ['agreedRules',rpc('my_schyssta_rules')],
     ['manualRules',rpc('my_manual_schyssta_rules')],
     ['inbox',rpc('my_family_messages',{p_before_created_at:null,p_before_id:null})],
+    // Exactly the same authenticated, current sharing RPC used by #insikter.
+    ['sharedUnderstanding',rpc('shared_understanding_cards')],
     ...DECKS.map(deck=>['match:'+deck,rpc('shared_swipe_matches',{p_deck_id:deck})])
   ];
-  // Deliberately exclude B-card sharing and aggregate insights while their UI
-  // feature flags are OFF. Any self-only item answers stay private to the owner.
+  // Shared B cards are returned only if the viewer can already see them.
+  // Never send an unshared teen answer, even if it is in the teen's private rows.
   const reads = await Promise.allSettled(sources.map(async ([name,req])=>[name,await requestSource(env,jwt,fetchAuth,req)]));
   const data=new Map();
   const unavailable=[];
@@ -137,7 +139,17 @@ export async function loadAuthorizedContext(env,jwt,userId,role,fetchAuth=fetch)
       'Bekräftade gemensamma JA (båda valt JA; '+matchRows.length+' totalt, urval): '+
       selected.map(x=>'['+x.deck+'] '+x.text).join(' | '));
   }
-  const ownScores=scoreOwnIPIP(data.get('ownPersonality'));
+  // Same B-card visibility as parent and teenager see in the shared insights view.
+  // A private JA is NOT a share; only server-confirmed B shares count.
+  const sharedB=Array.isArray(data.get('sharedUnderstanding'))?data.get('sharedUnderstanding'):[];
+  const visibleB=unique(sharedB.filter(row=>{
+    const card=safeCard(row?.card_id,row?.deck_id);
+    return row?.deck_id==='general'&&card?.type==='understanding';
+  }).map(row=>row.card_id)).slice(0,13);
+  if(visibleB.length)add('Gillaswajpen – delade förståelsekort',
+    'Tonåringens aktivt delade förståelsekort (inte A-matchningar, inte privat svar): '+
+    visibleB.map(id=>cardLabel(id,'general',role)).filter(Boolean).join(' | '));
+    const ownScores=scoreOwnIPIP(data.get('ownPersonality'));
   if(ownScores)add('Personlighetstest – egen profil',
     'IPIP-50 preliminär självskattning, endast egna fem summapoäng (10–50; inte normpercentiler eller diagnos): '+
       scoresText(ownScores));
@@ -171,6 +183,7 @@ export async function loadAuthorizedContext(env,jwt,userId,role,fetchAuth=fetch)
     'Personlighetstest – egen profil',
     'Schyssta listan – överenskommelser',
     'Gillaswajpen – gemensamma JA',
+    'Gillaswajpen – delade förståelsekort',
     'Gillaswajpen – egna prioriteringar',
     'Gillaswajpen – egna svar',
     'Schyssta listan – förslag',
