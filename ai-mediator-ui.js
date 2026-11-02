@@ -1,5 +1,5 @@
-// A deliberately ephemeral, one-turn AI chat for internal testing only.
-// No localStorage, no database writes, no family context or automatic AI requests.
+// Internal-test AI mediator: private, owner-scoped chat history lives in D1.
+// The optional authorized project context can be disabled for each reply.
 export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl = fetch, onRender = () => {} }) {
   const h = escapeHtml;
   let userId = null;
@@ -18,6 +18,7 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
   let contextError = '';
   let contextLoading = false;
   let contextRequest = 0;
+  let includeProjectContext = true;
   let listRequest = 0;
 
   const enabled = config.enableAiMediator === true
@@ -52,7 +53,7 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
     return result;
   }
   async function loadContextStatus() {
-    if (!historyEnabled || !userId || contextLoading) return false;
+    if (!historyEnabled || !userId || !includeProjectContext || contextLoading) return false;
     const account=userId, myEpoch=epoch, request=++contextRequest;
     contextLoading=true;contextError='';notify();
     try {
@@ -72,7 +73,7 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
   }
   async function loadList() {
     if (!historyEnabled || !userId || loading || sending) return false;
-    if(!contextSections.length&&!contextLoading)void loadContextStatus();
+    if(includeProjectContext&&!contextSections.length&&!contextLoading)void loadContextStatus();
     const epochAtStart = epoch, account = userId, request = ++listRequest;
     loading = true;historyError = '';notify();
     try {
@@ -135,6 +136,20 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
       notify();return true;
     }catch(e){if(myEpoch===epoch && account===userId){historyError=e?.message||'Kunde inte radera samtalet.';notify();}return false;}
   }
+  function setProjectContext(value) {
+    // An in-flight request uses its already captured setting.
+    if (sending || !historyEnabled) return false;
+    const enabledForReply = value === true;
+    if (includeProjectContext === enabledForReply) return true;
+    includeProjectContext = enabledForReply;
+    contextRequest++; // discard a delayed overview after opt-out
+    contextSections = [];
+    contextError = '';
+    contextLoading = false;
+    notify();
+    if (enabledForReply && userId) void loadContextStatus();
+    return true;
+  }
   function reset(nextId = null) {
     epoch++;
     if (controller) controller.abort();
@@ -153,6 +168,7 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
     contextError = '';
     contextLoading = false;
     contextRequest++;
+    includeProjectContext = true;
     listRequest++;
   }
   function clear() {
@@ -204,11 +220,17 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
         + 'Chatten minns inte tidigare turer när den svarar.</p>')
       + '<p>Det här är inte terapi eller krishjälp. Vid akut fara, ring 112.</p></div>'
       + (historyEnabled ? '<section class="mediator-context"><h2>Uppgifter som AI:n får använda</h2>'
-        + (contextLoading ? '<p>Kontrollerar tillgängliga uppgifter…</p>' : '')
-        + (contextSections.length ? '<p>'+contextSections.map(h).join(' · ')+'</p>' :
-           '<p>Inga uppgifter har ännu bekräftats. AI:n ska inte hitta på saknade resultat.</p>')
-        + (contextError ? '<p class="mediator-error" role="status">'+h(contextError)+'</p>' : '')
-        + '<button type="button" class="mediator-clear" id="mediator-refresh-context">Uppdatera översikt</button></section>' : '')
+         + '<label class="mediator-context-choice" for="mediator-use-context"><input type="checkbox" id="mediator-use-context"'
+         + (includeProjectContext ? ' checked' : '') + (sending ? ' disabled' : '')
+         + '> Använd mina uppgifter från övriga delar av Hemmakompassen när AI:n svarar</label>'
+         + (includeProjectContext
+            ? (contextLoading ? '<p>Kontrollerar tillgängliga uppgifter…</p>' : '')
+              + (contextSections.length ? '<p>'+contextSections.map(h).join(' · ')+'</p>'
+                : '<p>Inga uppgifter har ännu bekräftats. AI:n ska inte hitta på saknade resultat.</p>')
+              + (contextError ? '<p class="mediator-error" role="status">'+h(contextError)+'</p>' : '')
+              + '<button type="button" class="mediator-clear" id="mediator-refresh-context">Uppdatera översikt</button>'
+            : '<p role="status">Avstängt. AI:n får bara detta samtals egna meddelanden, inte nya uppgifter från Gillaswajpen, Big Five, Schyssta listan eller Inkorgen. Du kan slå på det inför nästa svar.</p>')
+         + '</section>' : '')
       + historyBar + '<div class="live-panel mediator-chat">' + messages
       + '<form id="mediator-form">'
       + '<label for="mediator-input"><strong>Ditt testmeddelande</strong></label>'
@@ -229,6 +251,7 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
     if (!message || message.length > 2000) return false;
     const requestEpoch = epoch;
     const requestUser = userId;
+    const useProjectContext = includeProjectContext;
     sending = true;
     error = '';
     controller = new AbortController();
@@ -248,7 +271,7 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
           Authorization: 'Bearer ' + accessToken,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(historyEnabled ? { message, chatId } : { message }),
+        body: JSON.stringify(historyEnabled ? { message, chatId, useProjectContext } : { message }),
         signal: currentController.signal,
         cache: 'no-store',
         credentials: 'omit',
@@ -285,6 +308,6 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
       }
     }
   }
-  return { render, reset, clear, input, submit, loadList, loadContextStatus, createChat, openChat, deleteChat,
-    getState: () => ({ userId, sending, draft, error, remaining, turns: turns.map(x => ({ ...x })), chats:chats.map(c=>({...c})),activeChatId,historyError,contextSections:[...contextSections],contextError }) };
+  return { render, reset, clear, input, submit, loadList, loadContextStatus, setProjectContext, createChat, openChat, deleteChat,
+    getState: () => ({ userId, sending, draft, error, remaining, turns: turns.map(x => ({ ...x })), chats:chats.map(c=>({...c})),activeChatId,historyError,contextSections:[...contextSections],contextError,includeProjectContext }) };
 }
