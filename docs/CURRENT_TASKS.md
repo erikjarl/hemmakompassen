@@ -73,6 +73,13 @@
 - [ ] **DATA-01: Datahantering och juridik för pilot.** Radering/export/retention, rättslig grund, information till ungdomar, incidenthantering och eventuell DPIA. Genomför innan externa verkliga användare.
 - [ ] **PILOT-01: Genomför verklig användbarhets- och etisk granskning** med föräldrar/ungdomar innan offentlig lansering. Mät förståelse och upplevd press; inga påståenden om behandlingseffekt utan evidens.
 
+### AI-02/03 – automatiska analyser i resultatvyerna (2 november 2026)
+- [x] **AI-02/03 kod på PR #85:** separat AI-analysendpoint med serverberäknade fem IPIP-poäng, endast ömsesidigt servergodkända A JA+JA, frivilligt delade partnerfaktorer samt rollanpassad analys. Inga klientinskickade poäng eller svar accepterade.
+- [x] **UI-kod på PR #85:** generera automatiskt vid färdigt personlighetstest och hämtade swajpmatchningar, visa analys på samma sida med laddstatus, felhantering och manuell omgenerering. Förskrivna tolkningsråd döljs när AI aktiveras; faktiska grafer och resultat finns kvar.
+- [x] **Testkod på PR #85:** autentisering, negativa klientsvar, serverkontrollerade delningsgränser, avbrutet test, kvot, XSS-escaping och återanvändning per resultatsession.
+- [ ] **AI-02/03 CI/UX och verklig kvalitet:** grön CI/Playwright, verklig jämförelse i två inloggade testkonton och granskning av språk, rollasymmetri, samtyckesåterkallelse och kostnadsförbrukning.
+- [ ] **AI-02/03 driftsättning:** Cloudflare Worker `/api/ai/analyze` måste publiceras innan `enableAiResultAnalyses` slås på. Den är tills vidare **false** för att inte visa en felaktigt fungerande ersättning. B-förståelsekort kräver separat aktiverad och verifierad samtyckeskanal.
+
 ## Arbetsregel för följande utvecklingspass
 1. Börja med högst prioriterade oavslutade `INT-*` / `SW-*` uppgifter och korrigera dokumenterade blockerare; om autentiserat test blockeras, fortsätt med en kod- eller UX-uppgift som går att genomföra utan extern hjälp.
 2. Spara i `ROADMAP.md` eller här: PR/commit, exakta kontroller, vad som är **implementerat**, **verifierat med mock/CI**, **verifierat i verkligt tvåkontoflöde** samt vad som inte är känt.
