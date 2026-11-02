@@ -83,6 +83,7 @@
 - [x] Frontendaktivering mergad och publicerad i PR #86 med synkroniserade cacheversioner. Servern begränsar fortsatt åtkomsten till de två interna AI-testkontona.
 - [x] Release-PR #86: mergad, UI-/Playwright-CI #41430090229 och GitHub Pages-deployment #41430089630 godkända. Riktig inloggad genomgång står kvar som egen uppgift.
 - [ ] Två verkliga autentiserade testkonton, återkallat samtycke, AI-textgranskning och återupptagning kräver ytterligare test. B-förståelsekort fortsatt avstängda.
+- [x] **QA-protokoll skapad:** `docs/ai-reflections-two-account-qa.md` med konkreta fall för egna/samtyckta profiler, JA+JA, B-förståelsekort, kvot och kontobyte. Dokumentet är en testplan, inte genomförda autentiserade tester.
 
 ### AI-02/03 – automatiska analyser i resultatvyerna (2 november 2026)
 - [x] **AI-02/03 konfliktlösning:** `main` inklusive mergade PR #84 och kod för PR #85 sammanförda i merge-commit `acb1f48d79a95e68597e832ef115cd4b2fd606fd`; GitHub markerar #85 som mergebar. CI för kombinationen ska verifieras innan eventuell merge.
