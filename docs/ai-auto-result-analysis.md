@@ -4,8 +4,8 @@
 
 - [x] PR #85 är mergad till main.
 - [x] Analysmodulen är driftsatt i Cloudflare: version `b39fbdf4-2571-4295-b7d4-0dc243823ab2`, deployment `061f9d1d-2d0c-49ea-ab7b-bdfb5a2d5532`. De ursprungliga sex bindningarna är kvar, även testkonto-allowlisten.
-- [x] Frontendflaggan `enableAiResultAnalyses:true` och nya cacheversioner kodade på releasebranch.
-- [ ] Godkänd release-CI, merge och verifierad Pages-deployment.
+- [x] Frontendflaggan `enableAiResultAnalyses:true` och cacheversion `20261102-ai-result-live1` mergade via PR #86 till `main`, med godkänd GitHub Pages-publicering.
+- [x] Release-CI, merge och Pages-deployment godkända: PR #86, Actions #41430090229 och #41430089630. Inget verkligt JWT-baserat tvåkontotest är genomfört.
 - [ ] Fullständig autentiserad tvåkontoverifiering, faktisk språkmodellskvalitet och återkallelse. B-förståelsekort fortsatt av.
 
 Tidigare instruktioner nedan avser den tidigare fasen före merge och Worker-driftsättning.
@@ -29,7 +29,7 @@ Tidigare instruktioner nedan avser den tidigare fasen före merge och Worker-dri
 - [ ] **Cloudflare Worker:** publicera ny version av `workers/ai-mediator/src/index.mjs`, `analysis.mjs`, `context.mjs`, `catalog.mjs` och historikmoduler med rätt modulimporter och bevarade AI-/D1-/Supabase-bindningar. Säkerställ att den **server-only testkonto-allowlisten** verkligen finns efter deployment. `wrangler.jsonc` innehåller en medvetet tom `AI_TEST_USERS`-platshållare: kör inte en blind deploy som råkar ersätta den riktiga testkonto-allowlisten med en tom sträng.
 - [ ] Verifiera autentiserat API-anrop till `POST /api/ai/analyze` med `{"kind":"personality","scope":"own"}` från ett testkonto och motsvarande Gillaswajp-anrop med `{"kind":"swipe","scope":"general"}`. Klienten ska inte skicka några profiler, familje-ID eller kortsvar. Testa ogiltig JWT, tredje användare, falska poängfält, ofullständigt test och tomma matchningar.
 - [ ] Verifiera att kvoten på tio AI-anrop per konto och UTC-dag delas med AI-medlarens chatt utan extra kostnad eller automatisk betald trafik.
-- [ ] När Worker är live och båda kontonas isolering och samtyckesåterkallelse testats: sätt `enableAiResultAnalyses:true` i `backend-config.js`, uppdatera cacheversion och merga till intern testsida enligt godkänd rutin. Kontrollera faktisk Pages-distribution och mobilvyer.
+- [x] Workern är driftsatt och frontendflaggan aktiverad på den interna testsidan via PR #86. Återstående tester: verkliga tvåkontosessioner, delningsåterkallelse, AI-svarens kvalitet och manuell mobilverifiering.
 - [ ] Granska två roller med realistiska **fiktiva** profiler: ensam profil, likheter, stora skillnader, ett gemensamt aktivitetskort, flera matchningar, B-förståelsekort efter separat samtycke, och återkallelse medan sidan är öppen. Dokumentera begriplighet, utfall, falsk säkerhet och kostnader.
 - [ ] För extern pilot: separat prövning av dataskydd, information om **automatisk** AI-bearbetning, ungdomars förståelse och eventuell möjlighet att avstå, kliniska risker samt hur en riskfylld eller oriktig AI-text kan rapporteras.
 
