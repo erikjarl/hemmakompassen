@@ -5,7 +5,8 @@ import vm from 'node:vm';
 const script=readFileSync(new URL('../live-app.js',import.meta.url),'utf8');
 const config=readFileSync(new URL('../backend-config.js',import.meta.url),'utf8');
 
-assert.match(config,/enableSharedUnderstanding:\s*false/,'B sharing stays disabled until migration and real two-account verification');
+assert.match(config,/enableSharedUnderstanding:\s*true/,'Shared B messages are visible in the internal test UI when explicitly shared');
+assert.match(config,/enableSharedInsights:\s*true/,'The same shared result is available to both roles in the insights view');
 assert.match(script,/db\.rpc\('shared_understanding_cards'\)/,'Shared B content comes only from the dedicated aggregate RPC');
 assert.match(script,/db\.rpc\('set_understanding_card_share',\{p_card_id:cardId,p_share:share\}\)/,'Consent and revocation use the role-checked RPC');
 assert.match(script,/db\.from\('understanding_card_shares'\)\.select\('deck_id,card_id'\)\.eq\('user_id',viewer\)/,'The teen reads only their own consent rows with an explicit filter');
