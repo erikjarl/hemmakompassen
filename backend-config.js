@@ -9,12 +9,12 @@ window.HEMMAKOMPASSEN_BACKEND = Object.freeze({
   // Enable only after the server's A-only RPC allowlist and authenticated
   // two-account match/revocation tests pass. Background polling is OFF by default.
   enableSharedPolling: false,
-  // All-deck A insights remain hidden until server A allowlist and authenticated
-  // two-account tests have passed. B sharing is not included in this flag.
-  enableSharedInsights: false,
-  // Separate explicit-consent B channel. Keep OFF until its migration and
-  // authenticated teen/parent consent and revocation tests are approved.
-  enableSharedUnderstanding: false,
+  // Shared insights use the same JWT-protected RPCs that the AI can read.
+  // Internal testing only; no private answers are shared automatically.
+  enableSharedInsights: true,
+  // Let both users see exactly the B messages the teenager chooses to share.
+  // The same existing RPC also provides those messages to the AI.
+  enableSharedUnderstanding: true,
   // Internal online test site only (no external users): enable Schyssta RPCs.
   // Keep authenticated pair authorization and versioned dual consent in backend.
   enableSchysstaList: true,
