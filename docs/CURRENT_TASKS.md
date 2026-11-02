@@ -65,7 +65,7 @@
 - [x] **AI-01C: Fiktiva databas- och V8-kodkontroller.** 28 automatiserade testfall från GitHub-koden passerade i simulerad körning; verklig D1 bekräftar ägarfilter, kaskadradering och stabil meddelandeordning. CI är ännu inte verifierad.
 - [ ] **AI-01D: Verifiera två verkligt autentiserade testkonton, webbläsare/mobil och reella Worker-anrop** innan aktivering på GitHub Pages. Kontrollera även att säkerhetsmeddelanden och konto-/sessionsbyte fungerar som avsett.
 - [ ] **AI-01E: Granska barn-/ungdomsskydd, kliniska risker, säkerhet och dataskydd.** Endast fiktiva samtal hittills; enkel riskfrasmatchning är INTE en klinisk säkerhetslösning.
-- [ ] **AI-02/03: AI-genererade frivilliga och rollanpassade Gillaswajp-/personlighetssammanfattningar** efter att AI-01 och serververifierat delningssamtycke fungerar.
+- [ ] **AI-02/03: Driftsätt och kvalitetsverifiera automatiska, rollanpassade Gillaswajp-/personlighetsanalyser** efter att endpointen finns i Cloudflare och rätt samtycken verifierats. Kod och testfall ligger i PR #85; förskrivna råd ersätts först efter aktivering.
 
 - [x] **AI-01F: Ge medlaren behörig kontext från Hemmakompassens andra sidor.** PR #82 mergad till main, uppdaterad Worker på Cloudflare, godkänd AI-/browser-CI. Implementerat: egna Gillaswajpen-svar och prioriteringar, servergodkända gemensamma ja-ja, egna Big Five-faktorer, endast samtyckt delad profil, godkända regler/förslag och högst fyra korta inkorgsutdrag. Underlaget hämtas om inför varje svar, med stark roll- och sekretessprompt. **Återstår:** manuell test med båda interna konton samt kontroll att återkallat samtycke slår igenom i AI-svaren.
 ### P2 – framtida tjänstekvalitet
