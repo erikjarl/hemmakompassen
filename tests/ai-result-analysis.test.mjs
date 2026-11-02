@@ -93,11 +93,15 @@ test('consented B cards are added only with explicit server configuration and RP
 function worker({answers=complete,share=shared,matched=true}={}){
  const m=mockSources({answers,share,matched});
  const model=[],usage=[];
- const env={...ENV,APP_ORIGIN:ORIGIN,AI_TEST_USERS:UID,AI:{async run(modelId,prompt){
-   model.push({modelId,prompt});return {response:'<b>Varsam reflektion</b>'};
- }},LIMITS:{prepare(){return {bind(id,day,max){return {async first(){
-   usage.push({id,day,max});return {request_count:usage.length};
- }}};}}}};
+ const env={
+   ...ENV,APP_ORIGIN:ORIGIN,AI_TEST_USERS:UID,
+   AI:{async run(modelId,prompt){
+     model.push({modelId,prompt});return {response:'<b>Varsam reflektion</b>'};
+   }},
+   LIMITS:{prepare:()=>({bind:(id,day,max)=>({first:async()=>{
+     usage.push({id,day,max});return {request_count:usage.length};
+   }})})}
+ };
  const handle=createHandler({fetchAuth:m.fetchAuth,now:()=>new Date('2026-11-02T09:00:00Z')});
  const request=(payload,token='auth-token')=>new Request('https://worker.test/api/ai/analyze',{
    method:'POST',headers:{Origin:ORIGIN,Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify(payload)
