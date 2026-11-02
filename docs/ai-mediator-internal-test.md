@@ -1,52 +1,51 @@
-# AI-medlaren – intern testversion med privata sparade samtal
+# AI-medlaren – intern testversion (uppdaterad 2 november 2026)
 
-**Status 2026-11-01:** AI-medlarens frontend och serverkod har mergats till `main` via PR #81 (commit `6fe4538`) och webbplatsens cacheversion har uppdaterats (commit `49a64d4`). Den separata Cloudflare Workern kör på Workers Free och godkänner bara de två interna testkontona. **Den faktiska GitHub Pages-distributionen och verklig tvåkontoinloggning har inte kunnat verifieras här.** Det är en intern testversion, enbart för fiktiva samtal.
+**Status:** Privat AI-chatt och behörig kontext är implementerade och mergade till `main` genom PR #81–82. Cloudflare Worker uppdaterades efter PR #82. **Opt-out-kontrollen ligger i utvecklings-PR #84 och är ännu inte mergad eller driftsatt.** Tills verkliga end-to-end-tester, ungdomsskydd och dataskyddsgranskning är färdiga får bara fiktiva testsamtal användas. En publik Pages-adress gör inte projektet redo för externa användare.
 
-## Arkitektur
-- GitHub Pages statisk frontend → separat Cloudflare Worker → verifierar Supabase Auth-token via `/auth/v1/user`.
-- Cloudflare Worker har AI-binding för `@cf/meta/llama-3.1-8b-instruct-fp8-fast` (fiktiva svenska API-testanrop har givit läsbara svar).
-- **Endast två interna testkonton** (Fannyförälder och Tobbetonåring) är tillåtna i Cloudflare-serverns separata `AI_TEST_USERS`-bindning. Kontonas UUID:n är inte inlagda i GitHub. Utan bindningen nekas alla AI-anrop (fail closed). Övriga inloggade konton får HTTP 403. Detta är en extra begränsning vid sidan av den obligatoriska verifieringen av varje Supabase Auth-token.
-- Workern läser enbart **den inloggades roll** (`parent` eller `teen`) genom befintliga Supabase-RPC:n `my_family_members`; övriga familjemedlemmars namn eller roller skickas inte till modellen. När anropet misslyckas används en neutral instruktion.
-- Samma Worker använder EU-jurisdiktionens Cloudflare D1 med migrationsfiler 0001/0002/0003.
-- **D1 håller privata chattsessioner och meddelanden, inte delad familjekontext.** Varje SQL-fråga begränsas till det verifierade Supabase-användar-ID:t, inklusive skapande, lista, läsning, meddelandesparning och radering.
-- Ingen Supabase service_role-nyckel används. Inga chattar eller IPIP/Gillaswajp-resultat läses från Supabase. Befintliga `private_ai_*`-tabeller i Supabase ändras inte och används ännu inte av AI-medlaren.
+## Arkitektur och behörighet
 
-## Test-API
-- `GET /api/ai/chats`: egna chattsessioner.
-- `POST /api/ai/chats`: nytt eget samtal (max 12).
-- `GET /api/ai/chats/{uuid}`: egna meddelanden (max 40).
-- `DELETE /api/ai/chats/{uuid}`: tar bort eget samtal och dess meddelanden.
-- `POST /api/ai/mediate`: `{"message":"...","chatId":"uuid"}`; servern hämtar de 10 senaste egna meddelandena som AI-kontext, sparar två nya meddelanden atomiskt och svarar med `{"reply":"...","ephemeral":false,"chatId":"..."}`. Utan `chatId` kan en gammal stateless request fortfarande ge `ephemeral:true` för tidigare kompatibilitet.
+- GitHub Pages frontend → Cloudflare Worker/Workers AI → serververifierad Supabase JWT via `/auth/v1/user`. Origin låses till `https://erikjarl.github.io`; **origin ersätter aldrig autentisering**.
+- Endast de två särskilda interna testkontona får åtkomst via serverbindningen `AI_TEST_USERS` (fail closed utan bindning). Inga service_role-nycklar i Worker eller frontend.
+- Cloudflare D1 i EU-omfång lagrar privata chattar och meddelanden; varje SQL-fråga begränsas till inloggad ägare. Det är separerat från familjens gemensamma data.
+- Vid aktiverad projektkontext hämtar servern med samma användares JWT **nya behörighetskontrollerade uppgifter inför varje AI-svar**: egna kortsvar och viktighetsskattningar; endast serververifierade gemensamma A JA+JA; egna fem IPIP-50-poäng; endast ömsesidigt samtyckta partnerpoäng; godkända och tydligt märkta föreslagna Schyssta-regler; samt högst fyra korta, åtkomliga inkorgsutdrag. Motpartens enskilda IPIP-svar, privata AI-chattar och ej aktiverad B-delning får inte hämtas.
+- Modellen får rollanpassade instruktioner vid aktiverad kontext. Källöversikten anger **datakategorier**, inte råa svar. Skickad kontext begränsas till 9 300 tecken. Historiska AI-svar återanvänds inte som promptkontext eftersom de kan innehålla tidigare delad och sedermera återkallad information.
 
-Klienten begär autentisering vid varje anrop; Workern verifierar token **på servern varje gång**. Ett manipulerat `chatId` från en annan familjemedlem ger 404, även om ID:t finns. Förfrågningar från annat origin än `https://erikjarl.github.io` nekas. Det är inte ett substitut för autentisering eller fullständiga säkerhetstester.
+## Ny integritetskontroll i PR #84 (ej publicerad)
 
-## Dataminimering och kostnad
-- Hård gräns 10 AI-anrop per Supabase-konto och UTC-dag, max 2000 tecken in, max 320 genererade tokens. D1-kvoten är testad mot riktig databas med 10 lyckade och 2 blockerade testanrop.
-- Högst 12 privata samtal per användare, högst 40 sparade meddelanden per samtal. Två meddelanden per utbyte: ett eget och ett serverskrivet AI-/säkerhetssvar.
-- Meddelanden sparas endast efter framgångsrikt AI-svar. Både meddelandena sparas i samma D1-batch.
-- Meddelanden sorteras med `sort_order` och inte enbart tidsstämpel. Verifierat i faktisk D1 att utbytesföljden är 1, 2, 3, 4 även med lika tidsstämpel.
-- Vid kontobyte eller utloggning rensar klienten sina lokala data och avbryter pågående anrop. Chattar på servern sparas tills de raderas. **Automatisk retention/export, dataskyddsanalys och kontoradering är ännu inte implementerade.**
-- Det här är intern testning; om användare senare får använda verkliga känsliga data krävs fullständig integritets-/juridisk/klinisk granskning.
+- [x] **Kod:** användaren ser en kryssruta `Använd mina uppgifter från övriga delar av Hemmakompassen när AI:n svarar`.
+- [x] **Kod:** gränssnittet skickar ett uttryckligt booleskt `useProjectContext` vid varje meddelande. Med `false` anropas **inga** projektkällor eller roll-RPC. Identitetskontroll och vanliga chatt-/kvotfunktioner fortsätter att fungera.
+- [x] **Kod:** när valet är av visas ingen gammal källöversikt, sena svar ignoreras, och valet låses under ett pågående AI-svar. Vid kontobyte återställs det till på. Ingen ny serverlagrad preferens eller ny migration har införts.
+- [x] **Automatiska regressionstester skapade** för backend och UI: explicit av, felaktig typ, standard på, läcka av gammal översikt, byte av konto och byte under pågående svar.
+- [ ] **Återstår:** PR #84 behöver ha grön AI- och UI-CI, granskas och mergas efter #83; ny Worker-kod måste driftsättas för att servern i den verkliga testmiljön ska respektera flaggan. Kör därefter manuell verifiering med båda kontona.
 
-## Riskhantering och kända begränsningar
-- Vid vissa tydliga ord om hot/våld eller suicidrisk ger Workern deterministisk säkerhetsinformation istället för att låta modellen besvara frågan. Även fortsättningen av ett sådant samtal styrs till säkerhetstext inom den hämtade kontexten.
-- Detta skydd är *bristfälligt* och kan missa risker. Fiktiva testsamtal visade att modellen ibland gav olämpliga råd i vålds-/suicidsituationer. Verkliga riskärenden får inte användas som underlag för att påstå tjänsten är säker.
-- AI:n är inte psykoterapi, diagnos, krishjälp eller objektiv skiljedomare; det finns ingen validerad behandlingseffekt.
-- Familjemedlemmars enskilda svar, privata chattar och inkorgsmeddelanden skickas inte till modellen. AI-02/AI-03 (frivilliga sammanfattningar av behörigt delade data) är senare steg.
+### HTTP API
 
-## Faktisk verifiering hittills
-- [x] Workers Free $0/månad bekräftat av användaren i Cloudflare-dashboard.
-- [x] Worker uppladdad på separat `workers.dev`, AI- och D1-bindningar verifierade.
-- [x] Riktig D1 SQL-test för kontoisolering, kaskadradering, lagring och stabil följd; syntetiska testposter raderade.
-- [x] Samtliga 28 tester från GitHub-kodfiler genomkörda i V8 med simulerade Request/Response, Supabase Auth, D1 och AI och **alla passerade**.
-- [x] Separata modellförfrågningar med påhittade svenska frågor har givit svar på gratisplanen.
-- [x] GitHub Actions **AI-mediator backend safety tests** har klarat Node-tester, syntaxkontroller och statiskt bygge på den renodlade PR-branchen. Den ordinarie webbplatsens UI-browser-workflow har också passerat efter att testharnessen uppdaterades för medlarens reset.
-- [ ] Verkliga autentiserade tvåkontotester och browser→Worker→Auth→AI-end-to-end-test **inte verifierade**. Direkta egna workers.dev-anrop blockerades tidigare av Cloudflare-verktygets egress; detta bevisar inte tjänstens svarskod.
-- [x] AI-branchen har granskats, haft gröna AI- och UI-GitHub Actions och mergats till `main` via PR #81. Cacheversionen för webbsidans JS, CSS och konfiguration har ändrats.
-- [ ] Verifiera att GitHub Pages faktiskt serverar den nya versionen och testa hela kedjan med Fannyförälder/Tobbetonåring i två riktiga sessioner.
+- `GET /api/ai/chats`: lista över egna chattar (max 12).
+- `POST /api/ai/chats`: skapa eget samtal.
+- `GET /api/ai/chats/{uuid}`: läs egna meddelanden.
+- `DELETE /api/ai/chats/{uuid}`: radera eget samtal och meddelanden.
+- `GET /api/ai/context`: tillgängliga **källkategorier** från egen tillåten kontext; inga råuppgifter.
+- `POST /api/ai/mediate`: exempel: `{"message":"Hej","chatId":"uuid","useProjectContext":false}`. Om fältet saknas används tidigare standard **på**. Endast `true` och `false` accepteras; strängar och `null` ska avvisas. Äldre stateless anrop utan `chatId` stöds fortfarande.
+- För ett sparat samtal används högst sex tidigare **egna** meddelanden (max 900 tecken var) i prompten. Tidigare AI-svar spelas inte tillbaka till modellen.
 
-## Länkar
-- [Cloudflare Workers AI-priser](https://developers.cloudflare.com/workers-ai/platform/pricing/)
-- [Cloudflare D1](https://developers.cloudflare.com/d1/)
-- [Supabase Auth](https://supabase.com/docs/guides/auth/users)
-- [Supabase RLS](https://supabase.com/docs/guides/database/postgres/row-level-security)
+## Kostnadsgränser och risker
+
+- Kvot: tio AI-anrop per konto och UTC-dag, säkrat i D1. Förfrågningar stoppas vid slut på kvot eller kvotfel, inte genom automatisk uppgradering till betald trafik.
+- Per meddelande: 2 000 tecken in, max `MAX_COMPLETION_TOKENS=420` ut. Högst 12 sparade chattar/användare och högst 40 sparade meddelanden/chatt.
+- Privata meddelanden kan raderas i UI, men automatisk retention, generell kontoradering och export kräver ytterligare arbete.
+- En enkel deterministisk riskfrasrutin fångar vissa tydliga omnämnanden av våld eller suicid, men kan både missa risk och larma fel. **Det är inte en kliniskt säker lösning.** AI:n är inte behandling, diagnos, krishjälp eller objektiv domare.
+- Allt som hämtas från formulär, meddelanden eller regler behandlas som **data**, aldrig som instruktioner. Detta minskar men eliminerar inte risken för prompt injection eller felaktiga slutsatser. Uteslut verkligt känsligt material tills separat juridisk/klinisk säkerhetsgranskning är klar.
+
+## Verifieringsstatus och checklista
+
+- [x] PR #81: privat Worker/D1-testchatt, backendkvot, interna testkonton och grundläggande kod-/D1-tester.
+- [x] PR #82: JWT-baserad, nyinhämtad projektkontext, dataminimering och regressionstester; dokumenterat godkänd AI-/browser-CI och uppdaterad Worker.
+- [x] PR #84: opt-out-funktion och automatiska testfall **kodade på utvecklingsbranch**.
+- [ ] PR #84: full CI, granskning och merge. Notera utfallet i ROADMAP och `docs/CURRENT_TASKS.md`.
+- [ ] Driftsätt den nya Worker-versionen för opt-out och verifiera verklig Pages-version.
+- [ ] Genomför **riktiga** autentiserade tvåkontotester: A JA+JA, endast eget JA/NEJ, partnersamtycke saknas/återkallas, av-/omparning, annan familj, opt-out utan dataläsning, utloggning samt återupptagen/raderad chatt.
+- [ ] Klinisk, juridisk och dataskyddsmässig granskning inför verkliga känsliga ungdomssamtal och eventuell extern pilot.
+
+## Tekniska referenser
+
+[Cloudflare Workers AI-priser](https://developers.cloudflare.com/workers-ai/platform/pricing/) · [Cloudflare D1](https://developers.cloudflare.com/d1/) · [Supabase Auth](https://supabase.com/docs/guides/auth/users) · [Supabase RLS](https://supabase.com/docs/guides/database/postgres/row-level-security)
