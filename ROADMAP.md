@@ -1,9 +1,9 @@
-# Hemmakompassen — utvecklingsplan (2026-10-17)
+# Hemmakompassen — utvecklingsplan (senast avstämd 2026-11-02)
 
 
-## NULÄGE – helgavstämning 1 november 2026 (läst först)
+## NULÄGE – avstämning 2 november 2026 (läs först)
 
-**Gäller framför historiska statusnoteringar nedan.** Genomgång av **155 commits på `main`** från 31 oktober och 1 november, inklusive merge-commits, samt förändringarna i PR **#56–#78**. Detaljerad och prioriterad aktuell checklista: **[docs/CURRENT_TASKS.md](docs/CURRENT_TASKS.md)**. Den äldre planen nedan bevaras som besluts-/ändringshistorik och kan innehålla exempelvis tidigare råd om radargraf, demo, driftsättning och upplåsning som senare har ersatts.
+**Gäller framför historiska statusnoteringar nedan.** Helggranskningen av 155 commits på `main` till och med PR #78 har kompletterats med gårdagens senare mergade PR **#79 (roadmap), #81 (AI-medlaren) och #82 (behörighetsstyrd AI-kontext)** samt efterföljande dokumentationscommits. PR **#80** är ett **öppet, ersatt utkast som inte ska mergas**. Detaljerad och prioriterad aktuell checklista: **[docs/CURRENT_TASKS.md](docs/CURRENT_TASKS.md)**. Äldre planer nedan finns kvar som historik; de kan beskriva en tidigare graf, ett tidigare funktionsläge eller en föråldrad releaseplan.
 
 | Del | Kod och automatisk kontroll | Viktig kvarstående begränsning |
 | --- | --- | --- |
@@ -11,12 +11,33 @@
 | **Inkorg** | **Implementerat**: riktiga privata familjemeddelanden i båda riktningar, historik, läskvittenser, familjeisolering och regelaviseringar (PR #60, #68–#69). | Testa verkliga konton, radering/retention och återanslutning. |
 | **Schyssta listan** | **Implementerat och aktiverat i intern test-UI**: manuella och kortbaserade förslag, separata JA, ändring, historik/återkallelse, notiser, sök/filter och neutral väntan (PR #56–#67). `enableSchysstaList=true`. | Autentiserad helhetsverifiering mellan två konton fortfarande en öppen uppgift. |
 | **Gillaswajpen** | **Delvis klar**: bred kortbank (bl.a. 104 aktiviteter + 104 samtalsämnen), A/B-modell, egen sparning och granskad servergrund. | `enableSharedPriorities`, `enableSharedPolling`, `enableSharedInsights`, `enableSharedUnderstanding` är **false** i `backend-config.js`. Gemensam insiktsyta, säker B-vy och privat prioritering får **inte** anges som aktiva. |
-| **Kommunikationsråd / AI-medlaren** | Grundläggande kommunikationsråd finns. | Särskild MI-sida saknas; AI-medlaren är en **platshållare**, inte en driftsatt privat AI-chatt. |
-| **Helgen som release** | PR #78 och senast relevant UI-/Pages-automation genomförda med grönt resultat. | CI/syntetiska Playwright-tester är **inte** samma sak som riktig tvåkontoverifiering, klinisk validering eller produktionsberedskap. |
+| **Kommunikationsråd / AI-medlaren** | Kommunikationsråd finns. **AI-medlarens privata testchatt med Cloudflare Worker/D1 är tekniskt implementerad på `main`** (PR #81), liksom färsk, serverhämtad och behörighetsstyrd kontext från Gillaswajpen, Big Five, Schyssta listan och begränsad inkorg (PR #82). Automatisk AI-/browser-CI är dokumenterat godkänd. | Särskild MI-sida saknas. **Riktigt autentiserat tvåkontotest, återkallelsetest, ungdomsskydd och klinisk/dataskyddsmässig granskning återstår.** AI-medlaren är en intern testfunktion, inte produktionsklar. |
+| **Helgens utveckling och publicering** | PR #56–#79 och #81–#82 är mergade; Big Five, inkorg, Schyssta listan och AI-medlaren har kod på `main`. AI-Worker har uppdaterats enligt senaste projektavstämningen. | Publicering i intern testmiljö och grön CI bevisar **inte** att hela webbplatsen har godkänts i två riktiga autentiserade sessioner, att samtyckesåterkallelse fungerar från början till slut eller att den är redo för externa användare. |
 
 **Statusförklaring för avkryssning nedan:** [x] betyder att den **identifierbara kod- eller redaktionsuppgiften** har implementerats och automatiskt testats. Om en äldre rad samtidigt innehåller bredare krav (t.ex. verkliga användartester, klinisk validering, full datalivscykel) gäller de fortfarande som **separata oavslutade** arbetsuppgifter i den nya kön. [ ] betyder återstår eller delvis färdigt. Ändra inte befintliga användarsvar för testning. Publicerad webbadress är tekniskt publik trots att den används internt.
 
-**Kort arbetsordning:** INT-01/02/03/04 (autentiserade tvåkontotester) → SW-01/02/03/04 (gillaswajp och godkända feature flags) → MI-01, PF-01/02/03, UX-01/02 och NOT-01 → AI/data/pilot. Se [aktuell utvecklingskö](docs/CURRENT_TASKS.md).
+**Kort arbetsordning:** INT-01/02/03/04 samt **AI-01D** (autentiserade tvåkontotester, framför allt sekretess och återkallelse) → SW-01/02/03/04 (gillaswajp och korrekt aktivering) → MI-01, PF-01/02/03, UX-01/02, NOT-01 → **AI-02/03** (frivilliga AI-sammanfattningar) → AI-skyddsgranskning/data/pilot. Se [aktuell utvecklingskö](docs/CURRENT_TASKS.md).
+
+
+## OBLIGATORISK ARBETSREGEL – uppdatera status efter VARJE genomförd förändring (beslut 2 november 2026)
+
+**Gäller alla framtida utvecklingspass, även schemalagda körningar, buggrättningar, dokumentation och små förbättringar.** Roadmap och den samlade listan i `docs/CURRENT_TASKS.md` ska hållas synkroniserade.
+
+1. **Varje faktiskt färdig förändring ska markeras som genomförd direkt i samma utvecklingspass**, helst i samma PR/commit. Ändra motsvarande `- [ ]` till `- [x]`. Saknas uppgiften i planen, skriv in den och markera den `[x]`. Lämna inte redan genomfört arbete okryssat till en senare helgavstämning.
+2. **Delvis färdiga uppgifter ska delas upp:** kryssa av den konkret färdiga och verifierade deluppgiften, men behåll återstående delar som `- [ ]` med nästa steg. Markera aldrig en övergripande funktion klar enbart för att en första kodversion eller mock finns.
+3. **Ange belägg och nivå:** datum, relevant PR/commit, vad som ändrats och vad som testats. Skilj mellan (a) kod på utvecklingsbranch, (b) mergad kod på `main`, (c) godkänd automatisk testning/CI, (d) faktisk distribution och (e) verklig autentiserad tvåkontoverifiering. En avbockad implementeringspunkt betyder inte automatiskt att alla fem nivåer är klara.
+4. **Vid merge, ändrade flaggor eller driftsättning:** uppdatera även nulägesöversikten och beroende punkter. Kontrollera eventuella äldre motsägande statusrader och märk dem som historiska eller korrigera dem. Låt `docs/CURRENT_TASKS.md` spegla återstående aktiva arbete.
+5. **Om dokumentationen inte kan sparas**, redovisa det som en öppen uppgift och hävda inte att roadmapen är uppdaterad. Bevara ursprungliga testsvar, samtycken och säkerhetsgränser.
+
+## Genomfört 1 november 2026 – nya ändringar efter tidigare helgavstämning
+
+- [x] **Personlighetstest:** svensk IPIP-50 med privat återupptagning, samtyckesstyrd dubbelprofil, vuxenreferensens M/SD, synlig svarsmarkering, horisontella percentilstaplar med SD-zoner och rollanpassade texter för likheter/skillnader. Kod på `main` via PR #71–#78; psykometrisk validering och riktiga tvåkontotester är **inte** avklarade.
+- [x] **Inkorg och Schyssta listan:** privata familjemeddelanden, lässtatus, regelnotiser och manuella/ömsesidiga regelförslag, ändringar och återkallelse. Kod på `main` via PR #59–#69; verkliga end-to-end-kontroller återstår.
+- [x] **Roadmap-/kögranskning:** aktuell utvecklingskö och historisk avprickning till och med PR #78 (PR #79).
+- [x] **AI-01A/B – privat AI-medlare för intern testning:** separat Cloudflare Worker/Workers AI, serverkontrollerad inloggning, D1-chattar som kan skapas, återupptas och raderas, kontobaserad kvot och rollbaserat bemötande. Mergad via PR #81; intern testfunktion, **inte** kliniskt validerad.
+- [x] **AI-01F – behörig AI-kontext:** uppdateras server-side inför varje AI-svar med den inloggades egna Gillaswajpen-svar/prioriteringar och fem Big Five-poäng, endast servergodkända gemensamma A JA+JA och ömsesidigt samtyckta partnerfaktorer, godkända/föreslagna Schyssta-regler och högst fyra korta, redan åtkomliga inkorgsutdrag. Separation mellan egen/gemensam information, källöversikt och dataminimering införda. PR #82 mergad; AI-/browser-CI och uppdaterad Cloudflare Worker dokumenterade. Ingen B-delning när den funktionen är avstängd.
+- [ ] **AI-01D – autentiserat tvåkontotest:** verifiera på riktigt genom webbläsare → Worker → Supabase, test av utloggning, omparning, saknat och återkallat samtycke samt negativa kontogränstester. Att koden finns och CI passerat räcker inte.
+- [ ] **AI-02/AI-03 – frivilliga AI-sammanfattningar** i Gillaswajpen respektive Big Five, separat från de redan implementerade, förskrivna sammanfattningarna. Integritetsgranska och bygg först efter relevant säkerhetsverifiering.
 
 
 ## Projektstatus – intern utveckling och testning (beslut 2026-10-30)
@@ -504,13 +525,14 @@ Listan är en samlad arbetsplan för att slutföra Gillaswajpen. Kryssa av förs
 
 **Senaste status för AI-kontext 2026-11-01:** PR #82 har mergats till main (2e2e110) efter godkända AI-/browser-tester. Den separata Cloudflare Workern är uppdaterad med fyra ES-moduler. Kontexthämtning, samtyckeskontroll och källöversikt är implementerade. **Verklig manuell tvåkontotestning av delningsåterkallelse och hela browser→Worker→Supabase-kedjan återstår**; därför ska funktionen fortfarande endast användas med fiktivt testmaterial.
 
-**AI-01F – behörighetsstyrd kontext från hela Hemmakompassen (pågående 2026-11-01):**
+**AI-01F – behörighetsstyrd kontext från Hemmakompassen (kod och distribution genomförda 2026-11-01; manuell verifiering återstår):**
 - [x] Worker-kod för att läsa underlag med den verifierade användarens JWT vid varje AI-svar – aldrig med service_role eller klientinskickade familjeuppgifter.
 - [x] Egna Gillaswajpen-JA/NEJ och privat viktighet (urval), endast godkända gemensamma JA+JA från server-RPC, egna fem IPIP-faktorer och tvåsidigt samtyckt delade faktorpoäng (inte råa enskilda frågesvar).
 - [x] Aktiva godkända och separat märkta föreslagna Schyssta-regler, begränsat utdrag ur den av användaren åtkomliga familjeinkorgen samt möjlighet att hänvisa till appens övriga funktioner.
 - [x] Uppdaterade rollanpassade AI-instruktioner, dataminimering till max 9 300 tecken, separation av egna och gemensamma svar samt en källa-översikt vid chatstart.
 - [x] Gamla AI-svar skickas inte tillbaka som modellkontext – de kan innehålla information vars delningssamtycke därefter har dragits tillbaka. Användarens egna tidigare meddelanden och en nyskapad auktoriserad kontext används.
-- [ ] Verifiera GitHub CI, distribuera alla Worker-moduler till Cloudflare och testa verkliga anrop med båda interna testkontona.
+- [x] AI-/browser-CI godkänd och alla aktuella Worker-moduler uppdaterade i Cloudflare enligt avstämningen efter PR #82.
+- [ ] Testa verkliga anrop i webbläsare med **båda** interna testkontona, inklusive borttaget samtycke, konto-/familjebyten och felaktig dataåtkomst.
 - [ ] Granska integritet, särskilt att korta inkorgsutdrag och samtyckta partnerpoäng inte används utöver användarens behörighet; ingen klinisk säkerhet är validerad.
 - [ ] Senare: separata frivilliga, rollanpassade AI-sammanfattningar på Gillaswajpen-/Big Five-resultatsidorna.
 
@@ -522,13 +544,16 @@ Listan är en samlad arbetsplan för att slutföra Gillaswajpen. Kryssa av förs
 ### Aktuell genomförandestatus 2026-11-01 — ersätter tidigare statusanteckningar
 - [x] **AI-01A — separat AI-server:** Cloudflare Worker `hemmakompassen-ai-medlare` är uppladdad och nåbar via eget workers.dev-subdomän; Workers Free $0/månad bekräftades på skärmbild. Llama 3.1 8B gav ett faktiskt svenskt svar på fiktivt modelltest. Supabase Auth-token verifieras server-side. Ingen service_role-nyckel har införts i klient eller Worker.
 - [x] **Hård kostnadsgräns:** Cloudflare D1 `hemmakompassen-ai-limits` ligger inom EU och kvoten 10 AI-anrop per konto/UTC-dag har testats med 12 verkliga D1-förfrågningar (10 tillåtna, 2 stoppade). D1 blockerar AI-anrop vid kvotfel.
-- [x] **AI-01B — privat lagring och återupptagning, första testversion:** Cloudflare D1 har migrationssteg 0002 och 0003 för privata chattsessioner, meddelanden och stabil sorteringsordning. Serverns API stöder skapa/lista/läsa/radera chattar och skickar endast den **inloggade användarens egna senaste meddelanden** som modellkontext. Ingen motpartsdata från Gillaswajpen, Big Five, familjens inkorg eller andra AI-chattar används.
+- [x] **AI-01B — privat lagring och återupptagning, första testversion:** Cloudflare D1 har migrationssteg 0002 och 0003 för privata chattsessioner, meddelanden och stabil sorteringsordning. Serverns API stöder skapa/lista/läsa/radera chattar. Från PR #82 inkluderas även **färsk, behörighetsstyrd projektkontext** enligt AI-01F ovan; den andra personens privata AI-chattar eller enskilda IPIP-svar delas inte.
 - [x] **Egen chattvy:** `ai-mediator-ui.js` har sparade samtalsflikar, ny konversation, radera med bekräftelse, återupptagning, tydliga testvarningar, felhantering, konto- och sessionsbyte, XSS-escaping och mobilstil. Koden har integrerats på en ren branch utgående från aktuell `main` för att bevara helgens andra utvecklingsarbete.
 - [x] **Säkerhetstester av kod och SQL:** 28 testfall från GitHub kördes med simulerade Fetch/Auth/D1/AI i isolerad miljö och passerade; 14 integrerade API-kontroller och 10 UI-livscykelkontroller passerade också i separata modellerade körningar. SQL-baserad testning mot riktig D1 verifierade kontoägarskap, kaskadradering och meddelandeföljd 1–4 även vid lika tidsstämplar. **Dessa tester är inte ett godkänt Node/CI- eller riktigt webbläsarbaserat tvåkontotest.**
 - [x] **Riskupptäckt vid tydliga fraser:** fiktiva svenska vålds-/suicidfall visade otillräcklig språkmodellshantering. Servern använder därför deterministiska säkerhetstexter och undviker modellgenerering för vissa tydliga riskfraser, inklusive uppföljningar i samma chatt. **Regelmatchningen kan missa farliga situationer; ingen klinisk riskbedömning eller terapeutisk effekt är verifierad.**
 - [ ] **Blockerande före verkliga ungdomssamtal:** ordentlig psykologisk och juridisk/dataskyddsmässig granskning, verifierat säkert läge, dokumenterad retention, rättigheter och hantering av kris/övergrepp. Använd enbart syntetiska testsamtal tills dess.
-- [ ] **Kvar innan release på `main`:** riktig autentiserad end-to-end-testning i två separata sessioner, Node/Actions-kontroller, mobiltest/Playwright och särskild granskning/merge av den renodlade AI-pull-requesten.
-- [ ] **AI-01D/AI-02/AI-03:** samtyckesstyrd serverkontext och frivilliga, rollanpassade AI-reflektioner för Gillaswajpen respektive Big Five först efter säkerhets- och behörighetstest.
+- [x] **Kodmerge och automatiska kontroller:** ren AI-PR #81 och kontext-PR #82 finns på `main`; AI-/browser-CI redovisades som godkänd.
+- [ ] **Kvar innan avslutad intern verifiering:** verkligt autentiserad end-to-end-testning i två separata sessioner, inklusive mobil, sessionsbyte och samtyckesåterkallelse. Verifiera faktisk publicerad version separat.
+- [x] **AI-01F:** teknisk serverkontext, behörighetskontroller och automatisk testning genomförda (PR #82).
+- [ ] **AI-01D:** manuell tvåkontoverifiering och skyddsgranskning återstår.
+- [ ] **AI-02/AI-03:** frivilliga, rollanpassade AI-reflektioner på Gillaswajpens respektive Big Fives egna resultatsidor återstår.
 
 **Ytterligare intern säkerhetsgräns:** endast de två identifierade testkontona Fannyförälder och Tobbetonåring är tillåtna i den driftsatta Workern. Cloudflare har en server-only `AI_TEST_USERS`-bindning; kontonas UUID finns inte i GitHub, som i stället har en tom, fail-closed platshållare. Okända autentiserade konton och saknad allowlist ska ge 403 före modell- och chattanrop. Detta skyddar också gratisresurserna vid en offentligt tillgänglig webbadress.
 
@@ -555,10 +580,11 @@ Listan är en samlad arbetsplan för att slutföra Gillaswajpen. Kryssa av förs
 - [ ] **[A]** Testa prompt-injection, försök att läsa andra familjemedlemmars data, falskt påstådd åtkomst, rollförväxling, kränkande/konfrontativa inlägg, överdriven säkerhet och hallucinerade råd med fiktiva svenska fall. Inför användbar feedback för olämpliga svar utan att oavsiktligt dela privata chattar.
 
 **AI-01D. Integrationer till medlarens privata råd**
-- [ ] **[A]** Skapa en *serververifierad, dataminimerad och versions-/samtyckeskontrollerad kontextfunktion*. För A-kort: bara bådas aktiva JA+JA från aktuellt par. För B-kort: endast tonåringens uttryckligt delade och icke återkallade JA via korrekt skyddad kanal; aldrig NEJ, överhoppat, ensidigt A-JA eller motpartens privata svar. Om B-delningen ännu inte är aktiverad används ingen B-information.
-- [ ] **[A]** För personlighetstestet: inkludera endast de fem delbara resultaten när båda aktuella kontona har giltigt delningssamtycke, inte enskilda IPIP-svar. Inkludera från Schyssta listan endast gemensamt godkända regler. Ingen privat meddelandehistorik från inkorgen eller från motpartens AI-chatt får användas.
-- [ ] **[A]** Användargränssnittet ska tydligt visa vilken godkänd projektkontext AI:n får använda och ge möjlighet att stänga av den för ett samtal. Kontrollera behörighet på nytt vid *varje* hämtning; radera/invalidera gamla genererade sammanfattningar vid återkallelse, avparning, kontobyte eller ändrat svar. Vid osäkerhet: generera inte.
-- [ ] **[A]** Länka AI-medlarens relevanta förslag till befintliga funktioner (Gillaswajpen, Kommunikationsråd, Schyssta listan, personlighetstestet) via riktiga vägar, inte uppdiktade funktioner eller nya delningsflöden.
+- [x] **Teknisk kontextinläsning (PR #82):** Worker hämtar en ny, dataminimerad och JWT-/RLS-skyddad kontext inför varje AI-svar. Eget material kan inkludera egna Gillaswajpen-JA/NEJ/prioriteringar och egna fem IPIP-poäng. Gemensamma A JA+JA och partnerns fem poäng kräver respektive serververifierad matchning/samtycke. Ingen dold B-information tas med. Källöversikt visas vid chatstart.
+- [x] **Integrering med övrig behörig information (PR #82):** godkända Schyssta-regler markeras som godkända, förslag som förslag. Upp till fyra korta utdrag ur den aktuella användarens redan åtkomliga familjeinkorg får hämtas, men aldrig motpartens privata AI-historik. Äldre AI-svar återanvänds inte som modellkontext efter en möjlig återkallelse.
+- [ ] **Verklig säkerhetsverifiering:** testa två inloggade konton, tredje familj, saknat och återkallat samtycke, av-/omparning, utloggning, ändrat A-svar, felaktig serverdata samt att de korta inkorgsutdragen inte röjer obehörig information. Säkerställ att ingen äldre AI-text kan presenteras som ny behörig källa.
+- [ ] **Användarstyrning och UX:** möjlighet att stänga av projektkontext för ett enskilt samtal samt tydlig information om vilka datakategorier som används; en källöversikt finns men valbar avstängning är ännu inte verifierad/implementerad. Länka råd endast till existerande relevanta funktioner.
+- [ ] **B-förståelsekort:** om den separata delningen senare aktiveras, kräv uttryckligt och återkalleligt tonåringssamtycke och serverkontroll innan B-information över huvud taget används i AI-kontext.
 
 **AI-01 klart för intern testning när:** Två autentiserade testkonton kan var för sig genomföra flera samtal, återuppta och radera dem, serverbaserad gratisgräns fungerar, inga privata data kan hämtas över konto-/familjegräns och fiktiva risk-/kvalitetstestfall är dokumenterade. Enbart lyckade automatiska tester innebär inte att riktigt tvåkontoflöde har verifierats.
 
@@ -716,6 +742,6 @@ Listan är en samlad arbetsplan för att slutföra Gillaswajpen. Kryssa av förs
 - [x] Varje tydlig skillnad (≥9 råpoäng) och varje tydlig likhet (≤3 råpoäng) får en egen kort, vardagsnära, hypotetisk reflektion, inte bara listor med poäng och frågor. Största skillnaderna och närmaste likheterna prioriteras.
 - [x] Texterna skrivna separat för förälder och tonåring, med skillnadens riktning och familjerelationens ansvarsfördelning beaktad; ingen diagnostik och inget antagande att olikheter automatiskt är problem.
 - [x] Konkret nästa steg och fördjupande samtalsfråga per dimension, länkat enbart till aktiva avsnitt (Gillaswajpen: Aktiviteter tillsammans, Sätt att visa uppskattning, Samtalsämnen; Kommunikationsråd; Schyssta listan).
-- [x] AI-medlaren är fortfarande en utvecklingsvy och rekommenderas därför inte som ett färdigt verktyg.
+- [x] AI-medlaren rekommenderas inte som ett färdigvaliderat verktyg i Big Five-råden. En intern AI-testchatt finns på `main` sedan PR #81, men autentiserad tvåkontoverifiering, skyddsgranskning och full integritetstestning återstår.
 - [x] Kontroll att de relevanta Gillaswajpen-kortlekarna existerar, skilda föräldra/tonåringstexter, tvåsamtyckesgrind och borttagning vid återkallelse; mobiltest för båda rollerna.
 - [ ] Klinisk och användarnära granskning av språkets hjälpsamhet och lämplighet före extern pilot. Gränserna är fortfarande redaktionella.
