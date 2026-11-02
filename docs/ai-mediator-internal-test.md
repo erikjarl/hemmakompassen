@@ -16,7 +16,7 @@
 - [x] **Kod:** gränssnittet skickar ett uttryckligt booleskt `useProjectContext` vid varje meddelande. Med `false` anropas **inga** projektkällor eller roll-RPC. Identitetskontroll och vanliga chatt-/kvotfunktioner fortsätter att fungera.
 - [x] **Kod:** när valet är av visas ingen gammal källöversikt, sena svar ignoreras, och valet låses under ett pågående AI-svar. Vid kontobyte återställs det till på. Ingen ny serverlagrad preferens eller ny migration har införts.
 - [x] **Automatiska regressionstester skapade** för backend och UI: explicit av, felaktig typ, standard på, läcka av gammal översikt, byte av konto och byte under pågående svar. Dessutom Playwright-mobiltest med simulerad Worker, en ny skärmbild och test av återkallat Big Five-samtycke.
-- [ ] **Återstår:** PR #84 behöver granskas och mergas efter #83. Ny Worker-kod måste driftsättas för att servern i den verkliga testmiljön ska respektera flaggan. Kör därefter manuell verifiering med båda kontona.
+- [ ] **Återstår:** PR #83 är redan mergad; PR #84 behöver granskas och mergas mot `main`. Ny Worker-kod måste driftsättas för att servern i den verkliga testmiljön ska respektera flaggan. Kör därefter manuell verifiering med båda kontona.
 
 ### HTTP API
 
