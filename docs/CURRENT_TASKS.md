@@ -67,9 +67,9 @@
 - [ ] **AI-01E: Granska barn-/ungdomsskydd, kliniska risker, säkerhet och dataskydd.** Endast fiktiva samtal hittills; enkel riskfrasmatchning är INTE en klinisk säkerhetslösning.
 - [ ] **AI-02/03: Driftsätt och kvalitetsverifiera automatiska, rollanpassade Gillaswajp-/personlighetsanalyser** efter att endpointen finns i Cloudflare och rätt samtycken verifierats. Kod och testfall ligger i PR #85; förskrivna råd ersätts först efter aktivering.
 
-- [x] **AI-01G – valbar projektkontext (implementerad kod på PR #84):** kryssruta för att använda/inte använda projektuppgifter inför svar. När av hoppar Worker över samtliga projekt-/roll-RPC:er; ogiltig flagga nekas. Node- och Playwright-mobiltest (simulerad Worker) för opt-out/återställning och serverkontroll, plus regression för återkallat Big Five-samtycke. **Inte publicerad; PR #83 är nu mergad och PR #84 riktas mot `main`.** 
+- [x] **AI-01G – valbar projektkontext (implementerad kod på PR #84):** kryssruta för att använda/inte använda projektuppgifter inför svar. När av hoppar Worker över samtliga projekt-/roll-RPC:er; ogiltig flagga nekas. Node- och Playwright-mobiltest (simulerad Worker) för opt-out/återställning och serverkontroll, plus regression för återkallat Big Five-samtycke. **PR #84 är nu mergad till `main`; faktisk Cloudflare Worker-release och tvåkontotester återstår.** 
 - [x] **AI-01G – automatisk CI:** AI-backend, Node, bygget och UI/Playwright passerade efter senaste kodändringen; 28 screenshots inklusive mobil opt-out genererade (GitHub Actions run #41419931438, AI run #41419931803).
-- [ ] **AI-01G – återstår till färdig leverans:** granskning och merge av #84, distribution av uppdaterad Cloudflare Worker och manuell verifiering med båda riktiga testkontona. Testa återkallat samtycke i den verkliga miljön separat.
+- [ ] **AI-01G – återstår till färdig leverans:** faktisk verifiering av distribution av uppdaterad Cloudflare Worker och manuell verifiering med båda riktiga testkontona. Testa återkallat samtycke i den verkliga miljön separat.
 
 - [x] **AI-01F: Ge medlaren behörig kontext från Hemmakompassens andra sidor.** PR #82 mergad till main, uppdaterad Worker på Cloudflare, godkänd AI-/browser-CI. Implementerat: egna Gillaswajpen-svar och prioriteringar, servergodkända gemensamma ja-ja, egna Big Five-faktorer, endast samtyckt delad profil, godkända regler/förslag och högst fyra korta inkorgsutdrag. Underlaget hämtas om inför varje svar, med stark roll- och sekretessprompt. **Återstår:** manuell test med båda interna konton samt kontroll att återkallat samtycke slår igenom i AI-svaren.
 ### P2 – framtida tjänstekvalitet
@@ -78,6 +78,7 @@
 - [ ] **PILOT-01: Genomför verklig användbarhets- och etisk granskning** med föräldrar/ungdomar innan offentlig lansering. Mät förståelse och upplevd press; inga påståenden om behandlingseffekt utan evidens.
 
 ### AI-02/03 – automatiska analyser i resultatvyerna (2 november 2026)
+- [x] **AI-02/03 konfliktlösning:** `main` inklusive mergade PR #84 och kod för PR #85 sammanförda i merge-commit `acb1f48d79a95e68597e832ef115cd4b2fd606fd`; GitHub markerar #85 som mergebar. CI för kombinationen ska verifieras innan eventuell merge.
 - [x] **AI-02/03 kod på PR #85:** separat AI-analysendpoint med serverberäknade fem IPIP-poäng, endast ömsesidigt servergodkända A JA+JA, frivilligt delade partnerfaktorer samt rollanpassad analys. Inga klientinskickade poäng eller svar accepterade.
 - [x] **UI-kod på PR #85:** generera automatiskt vid färdigt personlighetstest och hämtade swajpmatchningar, visa analys på samma sida med laddstatus, felhantering och manuell omgenerering. Förskrivna tolkningsråd döljs när AI aktiveras; faktiska grafer och resultat finns kvar.
 - [x] **Testkod på PR #85:** autentisering, negativa klientsvar, serverkontrollerade delningsgränser, avbrutet test, kvot, XSS-escaping och återanvändning per resultatsession.
