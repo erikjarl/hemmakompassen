@@ -77,6 +77,13 @@
 - [ ] **DATA-01: Datahantering och juridik för pilot.** Radering/export/retention, rättslig grund, information till ungdomar, incidenthantering och eventuell DPIA. Genomför innan externa verkliga användare.
 - [ ] **PILOT-01: Genomför verklig användbarhets- och etisk granskning** med föräldrar/ungdomar innan offentlig lansering. Mät förståelse och upplevd press; inga påståenden om behandlingseffekt utan evidens.
 
+### Intern driftsättning av AI-reflektioner – 2 november 2026
+- [x] PR #85 mergad till main med godkänd CI.
+- [x] Ny Cloudflare Worker driftsatt till 100 %, sex ursprungliga bindningar kvar, allowlist med två testkonton.
+- [x] Frontendaktivering kodad i releasebranch med cacheversionsuppdatering.
+- [ ] Release-PR: kontrollera CI, merga, verifiera publicerad Pages-version.
+- [ ] Två verkliga autentiserade testkonton, återkallat samtycke, AI-textgranskning och återupptagning kräver ytterligare test. B-förståelsekort fortsatt avstängda.
+
 ### AI-02/03 – automatiska analyser i resultatvyerna (2 november 2026)
 - [x] **AI-02/03 konfliktlösning:** `main` inklusive mergade PR #84 och kod för PR #85 sammanförda i merge-commit `acb1f48d79a95e68597e832ef115cd4b2fd606fd`; GitHub markerar #85 som mergebar. CI för kombinationen ska verifieras innan eventuell merge.
 - [x] **AI-02/03 kod på PR #85:** separat AI-analysendpoint med serverberäknade fem IPIP-poäng, endast ömsesidigt servergodkända A JA+JA, frivilligt delade partnerfaktorer samt rollanpassad analys. Inga klientinskickade poäng eller svar accepterade.
