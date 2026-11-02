@@ -339,14 +339,15 @@ function swipeResults(deckId='general'){
     .map(row=>matchedById.get(row.card_id))
     .sort((a,b)=>a.card.id.localeCompare(b.card.id));
   const priorityIds=new Set(priorityItems.map(item=>item.card.id));
-  const sig=swipeAiSignature(deckId);
+  const useAi=typeof aiResultEnabled!=='undefined'&&aiResultEnabled;
+  const sig=useAi?swipeAiSignature(deckId):null;
   const aiPriority=priorityItems.length?'<aside class="swipe-priority-summary"><h3>Viktigast att fokusera på</h3>'+
     '<p>Prioriterade, gemensamt bejakade kort:</p><ul>'+
     priorityItems.map(item=>'<li>'+esc(item.statement)+'</li>').join('')+'</ul></aside>':'';
   return title+'<p class="live-muted">Bara kort där ni båda svarat ja visas här. Se dem som möjliga samtalsöppningar, inte som färdiga överenskommelser.</p>'+
-    (aiResultEnabled?aiPriority:sharedPrioritySummary(priorityItems,deckId))+
+    (useAi?aiPriority:sharedPrioritySummary(priorityItems,deckId))+
     '<div class="swipe-match-group"><h3>Det ni båda svarat ja till</h3>'+themes+'</div>'+
-    (aiResultEnabled?aiResults.panel('swipe',deckId,sig):sharedSummary(groups,deckId,priorityIds))+
+    (useAi?aiResults.panel('swipe',deckId,sig):sharedSummary(groups,deckId,priorityIds))+
     button+'</section>';
 }
 async function fetchSwipeMatches(deckId='general',{quiet=false}={}){
