@@ -2,6 +2,7 @@
 // Tested on Workers Free: non-reasoning Llama replies within a short output limit.
 import { CHAT_ID_RE, listPrivateChats, createPrivateChat, getPrivateChat, deletePrivateChat, contextForChat, saveExchange } from './history.mjs';
 import { loadAuthorizedContext } from './context.mjs';
+import {loadResultAnalysisInput,isAnalysisScope,analysisInstructions} from './analysis.mjs';
 export const MODEL = '@cf/meta/llama-3.1-8b-instruct-fp8-fast';
 export const DAILY_LIMIT = 10;
 export const MAX_MESSAGE_CHARS = 2000;
@@ -136,10 +137,11 @@ export function createHandler({ fetchAuth = fetch, now = () => new Date() } = {}
     const isMediator = path === '/api/ai/mediate';
     const isChatList = path === '/api/ai/chats';
     const isContextStatus = path === '/api/ai/context';
+    const isAnalysis = path === '/api/ai/analyze';
     const itemMatch = /^\/api\/ai\/chats\/([^/]+)$/.exec(path);
-    if (!isMediator && !isChatList && !itemMatch && !isContextStatus) return answer(404, { error: 'Sidan finns inte.' }, origin);
+    if (!isMediator && !isChatList && !itemMatch && !isContextStatus && !isAnalysis) return answer(404, { error: 'Sidan finns inte.' }, origin);
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders });
-    if ((isMediator && request.method !== 'POST') ||
+    if (((isMediator || isAnalysis) && request.method !== 'POST') ||
         (isChatList && !['GET','POST'].includes(request.method)) ||
         (itemMatch && !['GET','DELETE'].includes(request.method)) ||
         (isContextStatus && request.method !== 'GET')) {
@@ -204,6 +206,54 @@ export function createHandler({ fetchAuth = fetch, now = () => new Date() } = {}
     }
     if (Number(request.headers.get('Content-Length') || '0') > 8192) {
       return answer(413, { error: 'Meddelandet är för långt.' }, origin);
+    }
+
+    if (isAnalysis) {
+      // Do not accept any scores, free-text cards, family IDs, prompt overrides
+      // or consent flags from the browser. The current JWT owns every read.
+      let kind,scope;
+      try {
+        const raw=await request.text();
+        if(raw.length>2000)throw Error('Oversized analysis request');
+        const payload=JSON.parse(raw);
+        if(!payload || typeof payload!=='object' || Array.isArray(payload) ||
+           Object.keys(payload).some(key=>!['kind','scope'].includes(key)))throw Error('Unexpected data');
+        ({kind,scope}=payload);
+      } catch {
+        return answer(400,{error:'Ogiltig begäran om resultatreflektion.'},origin);
+      }
+      if(!isAnalysisScope(kind,scope)){
+        return answer(400,{error:'Okänt resultat för AI-reflektion.'},origin);
+      }
+      let prepared;
+      try {
+        const role=await loadViewerRole(env,jwt,userId,fetchAuth);
+        if(!role) return answer(403,{error:'Din familjeroll kunde inte verifieras.'},origin);
+        prepared=await loadResultAnalysisInput(env,jwt,userId,role,kind,scope,fetchAuth);
+      } catch {
+        return answer(503,{error:'Resultatet kunde inte verifieras säkert. Försök igen.'},origin);
+      }
+      if(!prepared)return answer(200,{empty:true,reply:null},origin);
+      let quota;
+      try {quota=await reserveUsage(env,userId,now().toISOString().slice(0,10));}
+      catch {return answer(503,{error:'Kvotkontrollen fungerar inte just nu.'},origin);}
+      if(!quota)return answer(429,{error:'Dagens AI-kvot är slut. Försök en annan dag.'},origin);
+      try {
+        const response=await env.AI.run(MODEL,{
+          messages:[
+            {role:'system',content:analysisInstructions(prepared)},
+            {role:'user',content:'Skriv en individuell, varsam reflektion utifrån dessa verifierade data.\\n'+
+              prepared.basis+'\\n'+prepared.data}
+          ],
+          max_tokens:600,temperature:0.35,stream:false
+        });
+        const reply=cleanReply(response);
+        if(!reply || reply.length>9000)throw Error('Invalid model response');
+        return answer(200,{reply,kind,scope,basis:prepared.basis,
+          remainingToday:DAILY_LIMIT-Number(quota.request_count)},origin);
+      } catch {
+        return answer(502,{error:'AI-reflektionen kunde inte skapas just nu.'},origin);
+      }
     }
     let message, chatId = null;
     try {
