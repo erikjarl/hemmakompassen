@@ -1,5 +1,9 @@
 # AI-02/AI-03 – automatisk resultatreflektion: verifiering och release
 
+## Ny informationsprincip – samma delade data som är synliga för användaren
+
+AI-resultatanalysen och AI-medlaren får använda samma redan delade förståelsekort som förälder respektive tonåring ser. Läsning går **enbart** via den befintliga autentiserade `shared_understanding_cards()`-funktionen med samma JWT som användaren, inte genom extra AI-samtycke. Privata B-svar går inte till den andra användarens AI. Om tonåringen återkallar delning ska kommande AI-analyser använda den nya servervyn. AI-medlarens egen opt-out för projektkontext gäller fortfarande.
+
 ## Aktuell releaseuppdatering – 2 november 2026
 
 - [x] PR #85 är mergad till main.
