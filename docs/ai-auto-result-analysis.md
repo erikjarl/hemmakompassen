@@ -1,5 +1,9 @@
 # AI-02/AI-03 – automatisk resultatreflektion: verifiering och release
 
+## Driftsatt informationsprincip – 2 november 2026
+
+PR #88 har mergats till main och Pages-deployment har passerat. Worker-version `bf3f49d3-30b5-45fc-aeb4-8fa2866c5067` är distribuerad till 100 % med tidigare kontobegränsningar intakta. Kod- och Playwrighttester passerade. **Autentiserad tvåkontoverifiering av faktisk delning/återkallelse återstår.**
+
 ## Ny informationsprincip – samma delade data som är synliga för användaren
 
 AI-resultatanalysen och AI-medlaren får använda samma redan delade förståelsekort som förälder respektive tonåring ser. Läsning går **enbart** via den befintliga autentiserade `shared_understanding_cards()`-funktionen med samma JWT som användaren, inte genom extra AI-samtycke. Privata B-svar går inte till den andra användarens AI. Om tonåringen återkallar delning ska kommande AI-analyser använda den nya servervyn. AI-medlarens egen opt-out för projektkontext gäller fortfarande.
