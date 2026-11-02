@@ -77,7 +77,8 @@
 - [x] **AI-02/03 kod på PR #85:** separat AI-analysendpoint med serverberäknade fem IPIP-poäng, endast ömsesidigt servergodkända A JA+JA, frivilligt delade partnerfaktorer samt rollanpassad analys. Inga klientinskickade poäng eller svar accepterade.
 - [x] **UI-kod på PR #85:** generera automatiskt vid färdigt personlighetstest och hämtade swajpmatchningar, visa analys på samma sida med laddstatus, felhantering och manuell omgenerering. Förskrivna tolkningsråd döljs när AI aktiveras; faktiska grafer och resultat finns kvar.
 - [x] **Testkod på PR #85:** autentisering, negativa klientsvar, serverkontrollerade delningsgränser, avbrutet test, kvot, XSS-escaping och återanvändning per resultatsession.
-- [ ] **AI-02/03 CI/UX och verklig kvalitet:** grön CI/Playwright, verklig jämförelse i två inloggade testkonton och granskning av språk, rollasymmetri, samtyckesåterkallelse och kostnadsförbrukning.
+- [x] **AI-02/03 automatisk CI/Playwright:** GitHub Actions AI #41424425020 samt UI #41424425062 gröna med syntetiskt mobiltest, 29 skärmbilder och verifierat statiskt bygge.
+- [ ] **AI-02/03 verklig kvalitet:** två autentiserade testkonton, språk/rollasymmetri, manuellt granskade mobilbilder, återkallelse och faktisk kvotförbrukning återstår.
 - [ ] **AI-02/03 driftsättning:** Cloudflare Worker `/api/ai/analyze` måste publiceras innan `enableAiResultAnalyses` slås på. Den är tills vidare **false** för att inte visa en felaktigt fungerande ersättning. B-förståelsekort kräver separat aktiverad och verifierad samtyckeskanal.
 
 ## Arbetsregel för följande utvecklingspass
