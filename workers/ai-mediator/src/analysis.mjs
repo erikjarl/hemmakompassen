@@ -61,10 +61,12 @@ export async function loadResultAnalysisInput(env,jwt,userId,role,kind,scope,fet
       matches.push({deck:deck.title,text:cardText(card,role)});
     }
   }
-  // B is a separate, explicitly consented backend channel. Never include it
-  // merely because a client flag or a user's private JA is present.
+  // One rule for both UI and AI: only the cards returned by the SAME
+  // authenticated shared_understanding_cards RPC can be read. The RPC itself
+  // checks active pairing, explicit teen sharing and current card eligibility.
+  // No additional AI-specific consent or feature flag.
   const understanding=[];
-  if((scope==='general'||scope==='all')&&env.ENABLE_SHARED_UNDERSTANDING_AI==='true'){
+  if(scope==='general'||scope==='all'){
     const rows=await read(env,jwt,fetchAuth,'/rest/v1/rpc/shared_understanding_cards',{});
     if(!Array.isArray(rows)||rows.length>100)throw Error('Invalid understanding response');
     const seen=new Set();
