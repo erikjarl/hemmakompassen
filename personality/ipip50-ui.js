@@ -196,7 +196,7 @@ function familyReflectionPanel(parentProfile,teenProfile,viewerRole){
 
 function statusPanel(message){return '<section class="live-panel"><p class="pf-status" role="status">'+esc(message)+'</p></section>';}
 
-export function createPersonalityExperience({db,onRender,isSharingEnabled=false}){
+export function createPersonalityExperience({db,onRender,isSharingEnabled=false,useAiAnalysis=false,analysisPanel=()=>''}){
   let viewer=null,sequence=0,answers={},loading=false,loaded=false,loadError='',saving=false,saveError='';
   let active=false,index=0,selectedAnswer=null,shareEnabled=false,shareBusy=false,shareError='',paired=null,partnerError='';
   const repaint=()=>onRender();
@@ -240,6 +240,11 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false}
     loaded=true;loading=false;
     if(isSharingEnabled&&shareEnabled&&loadedAnswers.status.complete)await fetchPaired(userId,token);
     if(token===sequence&&viewer===userId)repaint();
+  }
+  function getAiSnapshot(){
+    if(!viewer||!loaded||active||saving||!scoreIPIP50(answers).complete)return null;
+    // Local refresh fingerprint only. Raw item answers never go to AI.
+    return JSON.stringify([viewer,Object.entries(answers).sort(),shareEnabled,paired?.profiles||null]);
   }
   function start(){active=true;saveError='';selectedAnswer=null;index=FIRST_UNANSWERED(answers);repaint();}
   function render({isPaired=false,viewerRole='parent'}={}){
@@ -290,15 +295,15 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false}
       // Compare five authorized sums; raw questionnaire answers remain private.
       const parentProfile=role==='parent'?own:other;
       const teenProfile=role==='teen'?own:other;
-      const reflections=familyReflectionPanel(parentProfile,teenProfile,role);
+      const reflections=useAiAnalysis?'':familyReflectionPanel(parentProfile,teenProfile,role);
       comparison='<section class="live-panel pf-comparison"><h2>Våra profiler</h2><p>Två självskattningar jämförda med samma amerikanska vuxenreferens. Placeringarna är uppskattningar, inte svenska normer.</p>'+
         
-        percentileChart(own,other)+reflections+table(own,other)+referenceFeedback(other,'Den andras')+referenceCaveat()+
+        percentileChart(own,other)+reflections+table(own,other)+(useAiAnalysis?'':referenceFeedback(other,'Den andras'))+referenceCaveat()+
         '<p class="live-muted">Markörerna visar uppskattad percentil jämfört med samma vuxenreferens. Tabellen visar råpoäng, medelvärde och SD. Skillnader är inte bevis för att ni fungerar olika.</p>'+
         '</section>';
     }
     return heading+'<section class="live-panel pf-results"><h2>Din profil</h2><p>Dina fem skalor visar uppskattad placering jämfört med en amerikansk vuxenreferens, inte svenska normer.</p>'+
-      percentileChart(own)+table(own)+referenceFeedback(own)+referenceCaveat()+
+      percentileChart(own)+table(own)+(useAiAnalysis?analysisPanel('personality','own',getAiSnapshot()):referenceFeedback(own))+referenceCaveat()+
       '<p class="live-muted">Skalorna bygger på dina svar (10–50). Högt eller lågt är inte i sig bättre eller sämre. Den svenska översättningen behöver prövas vetenskapligt.</p>'+
       '<button type="button" data-pf-action="review">Granska eller ändra mina svar</button></section>'+sharing+comparison;
   }
@@ -355,5 +360,5 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false}
     repaint();
     return true;
   }
-  return {reset,load,refreshShared,render,handleClick,handleChange};
+  return {reset,load,refreshShared,render,handleClick,handleChange,getAiSnapshot};
 }
