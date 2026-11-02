@@ -18,6 +18,8 @@ function mockSources({answers=complete,share=null,matched=true,understanding=fal
  const fetchAuth=async(url,opts)=>{
    const path=new URL(url).pathname;
    calls.push({path,headers:opts.headers,body:opts.body});
+   if(path==='/auth/v1/user'&&opts.headers.Authorization!=='Bearer auth-token')
+     return new Response('',{status:401});
    assert.equal(opts.headers.Authorization,'Bearer auth-token');
    if(path==='/auth/v1/user')return Response.json({id:UID});
    if(path.endsWith('/my_family_members'))return Response.json([{user_id:UID,role:'parent'}]);
