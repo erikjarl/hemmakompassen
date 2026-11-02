@@ -10,7 +10,7 @@ const shared={
   instrument_id:'ipip50-sv-v1',viewer_role:'parent',
   profiles:[{role:'parent',scores:FACTOR},{role:'teen',scores:{...FACTOR,extraversion:40}}]
 };
-function fixture({share=null,allowInbox=true,swipe=true,fail=null}={}){
+function fixture({share=null,allowInbox=true,swipe=true,understanding=[],fail=null}={}){
   const calls=[];
   const fetchAuth=async(url,options)=>{
     const path=new URL(url).pathname, params=new URL(url).searchParams;
@@ -19,6 +19,7 @@ function fixture({share=null,allowInbox=true,swipe=true,fail=null}={}){
     assert.equal(options.headers.apikey,ENV.SUPABASE_PUBLISHABLE_KEY);
     if(fail&&path.includes(fail))return Response.json({error:'unavailable'},{status:503});
     if(path.endsWith('/my_ipip50_shared_profiles'))return Response.json(share);
+    if(path.endsWith('/shared_understanding_cards'))return Response.json(understanding);
     if(path.endsWith('/my_manual_schyssta_rules'))return Response.json([{body:'Vi pratar om veckan.',status:'accepted'}]);
     if(path.endsWith('/my_schyssta_rules'))return Response.json([{body:'Vi knackar på dörren.',status:'accepted'},{body:'Vi ska fundera på sömntider.',status:'proposed'}]);
     if(path.endsWith('/my_family_messages'))return Response.json(allowInbox?[{body:'Kan vi ses och prata imorgon?',sent_by_me:false}]:[]);
@@ -121,4 +122,32 @@ test('revoked partner consent is removed from the very next fresh server context
   assert.ok(!after.sections.includes('Personlighetstest – samtyckt jämförelse'));
   assert.doesNotMatch(after.text,/Tonåring: Extraversion: 40\/50/);
   assert.ok(after.text.length<=CONTEXT_LIMIT_CHARS);
+});
+
+test('AI mediator sees the same shared B messages as the signed-in viewer and no private B answers',async()=>{
+  const rows=[{deck_id:'general',card_id:'general-02'},
+    {deck_id:'general',card_id:'general-01'}, // A is not a shared B
+    {deck_id:'fake',card_id:'general-03'}];
+  for(const role of ['parent','teen']){
+    const f=fixture({understanding:rows});
+    const x=await loadAuthorizedContext(ENV,'signed-in-test-token',UID,role,f.fetchAuth);
+    assert.ok(x.sections.includes('Gillaswajpen – delade förståelsekort'));
+    const b=x.text.split('Tonåringens aktivt delade förståelsekort')[1];
+    assert.ok(b && !b.includes('general-01'));
+    assert.ok(f.calls.some(call=>call.path.endsWith('/shared_understanding_cards')));
+  }
+  const unshared=await loadAuthorizedContext(ENV,'signed-in-test-token',UID,'parent',fixture().fetchAuth);
+  assert.ok(!unshared.sections.includes('Gillaswajpen – delade förståelsekort'));
+});
+test('after B share revocation, mediator refetch does not use the old message',async()=>{
+  let shared=true;
+  const f=fixture(),base=f.fetchAuth;
+  const fetchAuth=async(url,opts)=>url.includes('/shared_understanding_cards')
+    ?Response.json(shared?[{deck_id:'general',card_id:'general-02'}]:[])
+    :base(url,opts);
+  const first=await loadAuthorizedContext(ENV,'signed-in-test-token',UID,'parent',fetchAuth);
+  assert.ok(first.sections.includes('Gillaswajpen – delade förståelsekort'));
+  shared=false;
+  const later=await loadAuthorizedContext(ENV,'signed-in-test-token',UID,'parent',fetchAuth);
+  assert.ok(!later.sections.includes('Gillaswajpen – delade förståelsekort'));
 });
