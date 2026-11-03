@@ -1,8 +1,8 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261103-inbox-quiet6';
-import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261103-inbox-quiet6';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261103-inbox-quiet6';
-import {renderParentMiGuide} from './communication/mi-guide.js?v=20261103-inbox-quiet6';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261103-keyboard-nav1';
+import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261103-keyboard-nav1';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261103-keyboard-nav1';
+import {renderParentMiGuide} from './communication/mi-guide.js?v=20261103-keyboard-nav1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -761,7 +761,11 @@ function setupSwipeGesture(){const el=$('swipe-card');if(!el)return;let start=nu
 function page(){const h=decodeURIComponent(location.hash.slice(1));return ['insikter','mi-foralder'].includes(h)?h:nav.some(n=>n[0]===h)?h:'hem';}
 // On mobile, the scroll container is .live-main rather than window.
 function scrollLiveMainTop(){const main=document.querySelector('.live-main');if(main)main.scrollTop=0;window.scrollTo(0,0);}
+let previousMenuRoute=null;
 function menu(){
+  const route=page();
+  const routeChanged=route!==previousMenuRoute;
+  previousMenuRoute=route;
   const unread=schysstaListEnabled&&user&&members.length===2&&!schysstaError?schysstaUnreadCount():0;
   const pending=schysstaListEnabled&&user&&members.length===2&&!schysstaError?schysstaNeedsAnswer().length:0;
   const navItem=([key,label])=>{
@@ -769,9 +773,33 @@ function menu(){
     const descriptor=key==='inkorg'?' olästa meddelanden':' obesvarade regelförslag';
     const aria=count?' aria-label="'+label+', '+count+descriptor+'"':'';
     const badge=count?'<span class="live-nav-count" aria-hidden="true">'+(count>9?'9+':count)+'</span>':'';
-    return '<a href="#'+key+'"'+(page()===key||(page()==='mi-foralder'&&key==='kommunikation')?' aria-current="page"':'')+aria+'>'+label+badge+'</a>';
+    const active=route===key||(route==='mi-foralder'&&key==='kommunikation')||(route==='insikter'&&key==='swipe');
+    return '<a href="#'+key+'"'+(active?' aria-current="page"':'')+aria+'>'+label+badge+'</a>';
   };
-  for(const id of ['live-desktop-nav','live-mobile-nav'])$(id).innerHTML=nav.map(navItem).join('');
+  const html=nav.map(navItem).join('');
+  for(const id of ['live-desktop-nav','live-mobile-nav']){
+    const element=$(id);
+    // Do not replace an unchanged focused link during background refreshes.
+    if(element.innerHTML===html)continue;
+    const scrollLeft=element.scrollLeft;
+    const focusedHref=element.contains(document.activeElement)?document.activeElement.getAttribute('href'):null;
+    element.innerHTML=html;
+    element.scrollLeft=scrollLeft;
+    if(focusedHref){
+      const restored=[...element.querySelectorAll('a')].find(link=>link.getAttribute('href')===focusedHref);
+      restored?.focus({preventScroll:true});
+    }
+  }
+  // Bring the active tab into view only when changing pages, not during polling.
+  const mobile=$('live-mobile-nav');
+  if(routeChanged&&mobile.clientWidth){
+    const active=mobile.querySelector('a[aria-current="page"]');
+    if(active){
+      const outer=mobile.getBoundingClientRect(),bounds=active.getBoundingClientRect();
+      if(bounds.left<outer.left+4)mobile.scrollLeft-=outer.left+4-bounds.left;
+      else if(bounds.right>outer.right-4)mobile.scrollLeft+=bounds.right-(outer.right-4);
+    }
+  }
 }
 const card=html=>'<section class="live-panel">'+html+'</section>';
 const HOME_MODULE_INTROS=Object.freeze({
@@ -1231,6 +1259,7 @@ if(user&&members.length===2){
 }
 }
 document.addEventListener('click',e=>{
+if(e.target.closest('#live-skip-to-main')){e.preventDefault();$('live-app')?.focus({preventScroll:true});return;}
 const aiRetry=e.target.closest('[data-ai-analysis-retry]');
 if(aiRetry&&aiResultEnabled&&user){
   const [kind,scope]=aiRetry.dataset.aiAnalysisRetry.split(':');
@@ -1318,12 +1347,18 @@ document.addEventListener('keydown',e=>{
   if(e.target.matches?.('#family-chat-body')&&(e.ctrlKey||e.metaKey)&&e.key==='Enter'){
     e.preventDefault();e.target.closest('form')?.requestSubmit();return;
   }
-  if(page()==='swipe'&&user&&!['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName)&&['ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();advanceSwipe(e.key==='ArrowRight'?'yes':'no');}});
+  // Arrow keys may control the card only when no navigation, form or slider is focused.
+  // Without this guard, keyboard navigation could silently save an unintended answer.
+  const interactive=e.target.closest?.('a,button,input,textarea,select,[contenteditable],[role="slider"],[role="button"],[role="link"],[role="textbox"],[role="spinbutton"],[role="combobox"],[role="menuitem"],[role="radio"]');
+  if(page()==='swipe'&&user&&!interactive&&!e.altKey&&!e.ctrlKey&&!e.metaKey&&!e.shiftKey&&['ArrowLeft','ArrowRight'].includes(e.key)){
+    e.preventDefault();advanceSwipe(e.key==='ArrowRight'?'yes':'no');
+  }
+});
 document.addEventListener('submit',async e=>{if(e.target.id==='mediator-form'){e.preventDefault();await mediatorExperience.submit();return;}if(e.target.id==='family-chat-form'){e.preventDefault();await sendFamilyChatMessage();return;}if(e.target.id==='schyssta-manual-form'){e.preventDefault();await submitManualSchysstaRule();return;}if(e.target.id!=='live-login')return;e.preventDefault();const b=e.target.querySelector('button');b.disabled=true;const feedback=$('login-feedback');feedback.textContent='Loggar in…';const email=$('live-email').value.trim();try{const {error}=await db.auth.signInWithPassword({email,password:$('live-password').value});if(error)throw error;$('live-password') && ($('live-password').value='');await refresh();}catch(err){feedback.textContent='Kunde inte logga in. Kontrollera e-post och lösenord, eller välj ”Glömt lösenord eller saknar lösenord?”.';}finally{b.disabled=false;}});
 window.addEventListener('hashchange',()=>{
   if(page()!=='insikter'){insightsRows=[];sharedUnderstandingRows=[];insightsError='';insightsLoading=false;insightsRequest++;}
   if(page()!=='regler'&&page()!=='inkorg'){schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];schysstaNotifications=[];schysstaReplacementLinks=[];schysstaHistory=[];schysstaError='';schysstaLoading=false;schysstaRequest++;}
-  render();scrollLiveMainTop();
+  render();scrollLiveMainTop();$('live-app')?.focus({preventScroll:true});
   if(page()==='insikter')void fetchInsights();
   if(page()==='personlighet')void personalityExperience.refreshShared();
   if(page()==='medlare')void mediatorExperience.loadList();
