@@ -281,7 +281,7 @@ function sharedFactOverview(groups,title='Gemensamt i korthet'){
       '<span class="swipe-summary-icon-label">'+esc(icon.name)+': </span>'+
       '<p>'+esc(first)+(rest?' · och '+rest+' till':'')+'</p></div></li>';
   }).join('');
-  return '<aside class="swipe-rule-summary swipe-fact-summary" aria-labelledby="shared-fact-heading">'+
+  return '<aside class="swipe-fact-summary" aria-labelledby="shared-fact-heading">'+
     '<span class="swipe-summary-label">ÖVERSIKT · SERVERVERIFIERADE JA-SVAR</span>'+
     '<h3 id="shared-fact-heading">'+esc(title)+'</h3>'+
     '<p class="live-muted">En kort översikt över kort där ni båda sagt ja. Inga privata svar eller förskrivna råd visas här.</p>'+
