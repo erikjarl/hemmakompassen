@@ -267,6 +267,27 @@ const summaryIcon=icon=>'<svg class="swipe-summary-icon" viewBox="0 0 24 24" ari
 const sharedDeck=deckId=>deckId==='general'
   ?{id:'general',title:'Allmänna kortleken',cards:GENERAL_CARDS}
   :THEME_DECK_MODELS.find(deck=>deck.id===deckId);
+// This fact-only summary remains visible when AI replaces editorial advice.
+// It is constructed exclusively from server-verified mutual A-YES groups.
+function sharedFactOverview(groups,title='Gemensamt i korthet'){
+  const entries=[...groups.entries()].filter(([,items])=>items.length>0);
+  if(!entries.length)return '';
+  const overview=entries.map(([category,items])=>{
+    const icon=summaryIconFor(category);
+    const first=items[0].statement;
+    const rest=items.length-1;
+    return '<li>'+summaryIcon(icon)+'<div><h4>'+esc(category)+' · '+items.length+' '+
+      (items.length===1?'gemensamt ja-svar':'gemensamma ja-svar')+'</h4>'+
+      '<span class="swipe-summary-icon-label">'+esc(icon.name)+': </span>'+
+      '<p>'+esc(first)+(rest?' · och '+rest+' till':'')+'</p></div></li>';
+  }).join('');
+  return '<aside class="swipe-rule-summary swipe-fact-summary" aria-labelledby="shared-fact-heading">'+
+    '<span class="swipe-summary-label">ÖVERSIKT · SERVERVERIFIERADE JA-SVAR</span>'+
+    '<h3 id="shared-fact-heading">'+esc(title)+'</h3>'+
+    '<p class="live-muted">En kort översikt över kort där ni båda sagt ja. Inga privata svar eller förskrivna råd visas här.</p>'+
+    '<ul class="swipe-summary-overview">'+overview+'</ul></aside>';
+}
+
 function sharedSummary(groups,deckId='general',priorityIds=new Set()){
   const role=viewerRole();
   const roleLabel=role==='parent'?'förälder':role==='teen'?'tonåring':'familjemedlem';
@@ -371,7 +392,7 @@ function swipeResults(deckId='general'){
   return title+'<p class="live-muted">Bara kort där ni båda svarat ja visas här. Se dem som möjliga samtalsöppningar, inte som färdiga överenskommelser.</p>'+
     (useAi?aiPriority:sharedPrioritySummary(priorityItems,deckId))+
     '<div class="swipe-match-group"><h3>Det ni båda svarat ja till</h3>'+themes+'</div>'+
-    (useAi?aiResults.panel('swipe',deckId,sig):sharedSummary(groups,deckId,priorityIds))+
+    (useAi?sharedFactOverview(groups)+aiResults.panel('swipe',deckId,sig):sharedSummary(groups,deckId,priorityIds))+
     button+'</section>';
 }
 async function fetchSwipeMatches(deckId='general',{quiet=false}={}){
@@ -506,10 +527,19 @@ function insightsView(){
     ).join('')+
     '<button type="button" class="live-button" data-insight-open="'+esc(deck.id)+'">Öppna '+esc(deck.title)+'</button></section>'
   ).join('');
+  // Aggregate only the A cards that passed the existing verified byDeck filter.
+  const overviewGroups=new Map();
+  for(const {groups} of byDeck.values()){
+    for(const [category,texts] of groups){
+      if(!overviewGroups.has(category))overviewGroups.set(category,[]);
+      for(const statement of texts)overviewGroups.get(category).push({statement});
+    }
+  }
   const empty='<p class="live-muted">Inga gemensamma ja-svar att visa ännu. Ett kort syns först när ni båda har svarat ja.</p>';
   return title+'<section class="live-panel" aria-labelledby="insights-a-heading"><h2 id="insights-a-heading">Möjligt att utforska</h2>'+
     '<p class="live-muted">Endast serververifierade JA+JA på A-kort. Det här är möjligheter, inte färdiga överenskommelser.</p>'+
-    (sections||empty)+(aiResultEnabled&&insightsAiSignature()?aiResults.panel('swipe','all',insightsAiSignature()):'')+'</section>'+
+    (sections?sharedFactOverview(overviewGroups,'Gemensamt i alla kortlekar'): '')+(sections||empty)+
+    (aiResultEnabled&&insightsAiSignature()?aiResults.panel('swipe','all',insightsAiSignature()):'')+'</section>'+
     '<section class="live-panel" aria-labelledby="insights-b-heading"><h2 id="insights-b-heading">'+
     (viewerRole()==='parent'?'Så här funkar min tonåring':'Så här funkar jag')+
     '</h2>'+understandingInsights()+'</section>'+
