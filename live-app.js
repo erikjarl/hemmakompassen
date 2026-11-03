@@ -55,7 +55,7 @@ const schysstaSaving=new Set();
 let familyChatMessages=[],familyChatUnread=0,familyChatLoading=false,familyChatLoadingOlder=false,
   familyChatHasMore=false,familyChatError='',familyChatStatus='',familyChatDraft='',
   familyChatRequestKey=null,familyChatSending=false,familyChatRequest=0,familyChatCountRequest=0,
-  familyChatUnreadError=false;
+  familyChatUnreadError=false,familyChatReadBusy=false;
 const familyChatTimestamp=timestamp=>new Intl.DateTimeFormat('sv-SE',{dateStyle:'medium',timeStyle:'short'}).format(new Date(timestamp));
 function validFamilyChatRows(rows){
   return Array.isArray(rows)&&rows.length<=50
@@ -70,7 +70,7 @@ function validFamilyChatRows(rows){
 }
 function clearFamilyChat(){
   familyChatRequest++;familyChatCountRequest++;
-  familyChatMessages=[];familyChatUnread=0;familyChatUnreadError=false;familyChatLoading=false;familyChatLoadingOlder=false;
+  familyChatMessages=[];familyChatUnread=0;familyChatUnreadError=false;familyChatReadBusy=false;familyChatLoading=false;familyChatLoadingOlder=false;
   familyChatHasMore=false;familyChatError='';familyChatStatus='';familyChatDraft='';
   familyChatRequestKey=null;familyChatSending=false;
 }
@@ -83,7 +83,7 @@ async function fetchFamilyChatUnread(){
   if(result?.error||!Number.isInteger(result?.data)||result.data<0){
     familyChatUnread=0;familyChatUnreadError=true;
   }else {familyChatUnread=result.data;familyChatUnreadError=false;}
-  if(['hem','regler'].includes(page()))render();
+  if(['hem','regler'].includes(page())||(page()==='inkorg'&&!familyChatDraft.trim()))render();
   else menu();
 }
 async function fetchFamilyChat(older=false){
@@ -112,20 +112,32 @@ async function fetchFamilyChat(older=false){
   }else{
     familyChatMessages=older?[...familyChatMessages,...result.data]:result.data;
     familyChatHasMore=result.data.length===50;
-    if(!older&&page()==='inkorg'){
-      // Reading the conversation is not an approval of any proposal.
-      let marked;
-      try{marked=await db.rpc('mark_family_messages_read');}catch(e){marked={error:e};}
-      if(request!==familyChatRequest||viewer!==user?.id||session!==sharedSession)return;
-      if(!marked?.error&&Number.isInteger(marked?.data)&&marked.data>=0){
-        familyChatUnread=0;
-        // Refresh sender-side delivery/read ticks with later fetches, never forge remote approval.
-        familyChatMessages=familyChatMessages.map(m=>m.sent_by_me?m:{...m,read_at:m.read_at||new Date().toISOString()});
-      }else familyChatStatus='Meddelandena visas, men kunde inte markeras som lästa.';
-    }
+    // Loading a message page must never create a receipt for pages not viewed.
+    // Only the deliberate mark-all action below calls the RPC.
+    if(!older&&page()==='inkorg')void fetchFamilyChatUnread();
   }
   if(page()==='inkorg'&&!familyChatDraft.trim())render();
   else menu();
+}
+async function markAllFamilyChatRead(){
+  if(!user||members.length!==2||familyChatReadBusy||familyChatLoading||familyChatUnreadError||familyChatUnread<1)return false;
+  const viewer=user.id,session=sharedSession;
+  familyChatReadBusy=true;
+  familyChatStatus='Markerar alla meddelanden som lästa…';
+  render();
+  let result;
+  try{result=await db.rpc('mark_family_messages_read');}catch(e){result={error:e};}
+  if(user?.id!==viewer||sharedSession!==session)return false;
+  familyChatReadBusy=false;
+  if(result?.error||!Number.isInteger(result?.data)||result.data<0){
+    familyChatStatus='Det gick inte att markera meddelandena som lästa. Inga läskvittenser har bekräftats.';
+    render();return false;
+  }
+  // A count request started before this RPC must not restore the stale badge.
+  familyChatCountRequest++;
+  familyChatUnread=0;familyChatUnreadError=false;
+  familyChatStatus='Alla meddelanden har markerats som lästa.';
+  render();return true;
 }
 async function sendFamilyChatMessage(){
   if(!user||members.length!==2||familyChatSending)return;
@@ -897,9 +909,16 @@ function inboxView(){
       +'<p class="family-chat-text">'+esc(m.body)+'</p>'
       +(m.sent_by_me?'<p class="family-chat-receipt">'+(m.read_at?'Läst':'Skickat')+'</p>':'')+'</li>').join('')+'</ol>'
     :'<p class="live-muted">Inga meddelanden ännu. Skriv det första nedan.</p>';
+  const markAllHtml=familyChatUnreadError
+    ?'<p role="alert">Antalet olästa privata meddelanden kunde inte kontrolleras. Uppdatera konversationen för att försöka igen.</p>'
+    :familyChatUnread>0
+      ?'<div class="family-chat-read-controls"><p>'+familyChatUnread+' olästa privata meddelanden. De markeras inte som lästa bara för att du öppnar inkorgen.</p>'+
+        '<button type="button" class="schyssta-secondary" data-family-chat-mark-all-read'+(familyChatReadBusy||familyChatLoading?' disabled':'')+'>Markera alla meddelanden som lästa</button></div>'
+      :'';
   const chat=card('<div class="family-chat"><h2>Privata meddelanden med '+otherName+'</h2>'
     +'<p class="live-muted">Bara ni två i den aktuella familjeparningen kan läsa konversationen. Tidigare parningars meddelanden visas inte.</p>'
     +(familyChatError?'<p role="alert">'+esc(familyChatError)+'</p>':'')
+    +markAllHtml
     +(familyChatLoading?'<p role="status">Hämtar meddelanden…</p>':
       '<div class="family-chat-history">'
       +(familyChatHasMore?'<button type="button" class="schyssta-secondary" data-family-chat-more'+(familyChatLoadingOlder?' disabled':'')+'>Visa äldre meddelanden</button>':'')
@@ -1162,6 +1181,7 @@ if(e.target.closest('#swipe-review-skipped')&&viewerRole()==='teen'&&!swipeBusy)
 if(e.target.closest('#insights-retry')&&!insightsLoading)void fetchInsights();
 if(e.target.closest('#home-refresh-notices')&&user&&members.length===2){if(schysstaListEnabled&&!schysstaLoading)void fetchSchysstaList();void fetchFamilyChatUnread();}
 if(e.target.closest('[data-family-chat-refresh]'))void fetchFamilyChat();
+if(e.target.closest('[data-family-chat-mark-all-read]'))void markAllFamilyChatRead();
 if(e.target.closest('[data-family-chat-more]'))void fetchFamilyChat(true);
 if(e.target.closest('#schyssta-retry')&&!schysstaLoading)void fetchSchysstaList();
 if(e.target.closest('[data-schyssta-refresh]')&&!schysstaLoading)void fetchSchysstaList();
