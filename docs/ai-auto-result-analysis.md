@@ -14,9 +14,9 @@ AI-resultatanalysen och AI-medlaren får använda samma redan delade förståels
 - [x] Analysmodulen är driftsatt i Cloudflare: version `b39fbdf4-2571-4295-b7d4-0dc243823ab2`, deployment `061f9d1d-2d0c-49ea-ab7b-bdfb5a2d5532`. De ursprungliga sex bindningarna är kvar, även testkonto-allowlisten.
 - [x] Frontendflaggan `enableAiResultAnalyses:true` och cacheversion `20261102-ai-result-live1` mergade via PR #86 till `main`, med godkänd GitHub Pages-publicering.
 - [x] Release-CI, merge och Pages-deployment godkända: PR #86, Actions #41430090229 och #41430089630. Inget verkligt JWT-baserat tvåkontotest är genomfört.
-- [ ] Fullständig autentiserad tvåkontoverifiering, faktisk språkmodellskvalitet och återkallelse. B-förståelsekort fortsatt av.
+- [ ] Fullständig autentiserad tvåkontoverifiering, faktisk språkmodellskvalitet och återkallelse. B-förståelsekort är numera **aktiva med frivillig separat delning i testmiljön** efter PR #88; inget tidigare privat svar delas automatiskt.
 
-Tidigare instruktioner nedan avser den tidigare fasen före merge och Worker-driftsättning.
+Tidigare instruktioner nedan avser den tidigare fasen före merge och Worker-driftsättning. I synnerhet är den historiska texten om avstängda B-flaggor och en separat `ENABLE_SHARED_UNDERSTANDING_AI` **överspelad av PR #88**: samma autentiserade server-RPC avgör nu vad såväl användaren som AI får läsa.
 
 
 

@@ -12,6 +12,8 @@ assert.match(script,/db\.rpc\('set_understanding_card_share',\{p_card_id:cardId,
 assert.match(script,/db\.from\('understanding_card_shares'\)\.select\('deck_id,card_id'\)\.eq\('user_id',viewer\)/,'The teen reads only their own consent rows with an explicit filter');
 assert.match(script,/if\(share&&swipeAnswers\.get\(cardId\)!==true\)return/,'A private teen YES is required before sharing');
 assert.match(script,/Ett delat förståelsekort blir aldrig en A-matchning eller en överenskommelse/,'Consent is informed before the action');
+assert.match(script,/privat tills du själv väljer att dela ett ja-svar/,'B copy describes the actual enabled opt-in instead of outdated disabled state');
+assert.match(script,/sharedUnderstandingEnabled\?'Ditt svar sparas privat/,'The consent message follows the real feature flag');
 assert.match(script,/understandingShares\.delete\(row\.card_id\)/,'Changing a B answer clears stale client consent');
 assert.match(script,/understandingShares\.delete\(cardId\)/,'Skipping a B card clears stale client consent');
 assert.doesNotMatch(script,/sharedUnderstandingRows\s*=\s*\[\.\.\.swipeAnswers/,'Private answers never seed shared B content');

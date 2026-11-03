@@ -26,11 +26,12 @@
 - [ ] Jämför förälder- och tonåringstext för samma JA+JA; AI:n får inte hitta på relationskonflikter utifrån en gemensam aktivitet.
 - [ ] Byt kortlek, uppdatera matchningar och kontrollera att eventuella tidigare reflektioner inte presenteras under fel kortlek.
 
-## Test 4: Förståelsekort (B) – ännu inte aktiverade
+## Test 4: Förståelsekort (B) – aktivt i intern testmiljö, ej slutverifierat
 
-- [ ] Bekräfta att inga B-kort går till AI med nuvarande standardflaggor.
-- [ ] Innan separat aktivering: testa uttryckligt tonåringssamtycke, återkallelse, parbyte och förälders begränsade läsrätt i databasen. Det räcker **inte** att ett B-svar är JA.
-- [ ] Godkänn sedan separat, om säkerhets- och klinisk granskning passerat, båda feature flaggorna i klient och Worker.
+- [ ] Bekräfta med två inloggade konton att ett privat B-JA inte går till förälderns vy eller AI förrän tonåringen väljer **Dela med min förälder** på just det kortet.
+- [ ] Verifiera på samma server att båda rollerna därefter ser samma uttryckligen delade budskap, medan andra privata B-svar fortsatt är osynliga.
+- [ ] Återkalla delning, byt konto och familjeparning; verifiera att nya AI-analyser och vyer inte använder återkallat innehåll. En gammal redan genererad AI-text kan behöva ersättas/laddas om.
+- [ ] Jämför mobil UI och Worker med aktuella flaggor `enableSharedUnderstanding:true` och `enableSharedInsights:true`. Koden/CI och Worker är driftsatta (#88), men det verkliga tvåkontotestet är inte genomfört.
 
 ## Test 5: Kvot, integritet och återhämtning
 

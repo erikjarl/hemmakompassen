@@ -1,8 +1,15 @@
 # Hemmakompassen — aktuell utvecklingskö
 
-**Granskad:** söndag 1 november 2026, efter PR #78.  
-**Källa:** `main`-historiken 31 oktober–1 november (155 commits inklusive merge-commits), kod och konfiguration i `main`, dokumenterade tester/migrationer samt PR #56–#78.  
+**Granskad:** tisdag 3 november 2026, utifrån `main` till och med PR #89 och arbetsbranch `feature/mi-parent-guide-and-status-20261103`.  
+**Källa:** kod på `main`, `backend-config.js`, bekräftade tidigare PR #56–#89, dokumenterade CI/deploy-kedjor samt aktuell arbetsbranch. Detta är **inte** ett påstående om genomförda verkliga tvåkontotester.  
 **Syfte:** En enda kort, uppdaterad handlingslista för manuellt och schemalagt utvecklingsarbete. `ROADMAP.md` bevarar detaljerna och äldre beslut.
+
+## 3 november 2026 – denna utvecklingsbranch
+
+- [x] Redaktionell kodleverans: separat MI-inspirerad guide för förälder, tillgänglig från Kommunikationsråd och Schyssta listan, tre verifierbara källhänvisningar och automatisk roll-/mobiltest.
+- [x] UI-fix: aktuellt frivilligt delningsläge för förståelsekort kommuniceras korrekt i den allmänna kortleken när `enableSharedUnderstanding` är aktiv.
+- [x] Underhåll: en dubblerad fokuslyssnare för Gillaswajpens polling har tagits bort; dokumentationens gamla flagg- och AI-status har uppdaterats.
+- [ ] CI, merge, publicering och autentiserad verifiering är separata nivåer. Ändra inte denna punkt till klar förrän deras faktiska resultat är dokumenterade.
 
 ## Delade uppgifter = samma uppgifter för AI och användare (2 november 2026)
 
@@ -44,7 +51,8 @@
 - [x] Stabil kortmodell med A (matchning) och B (förståelse), versionssatta ID:n, 34 allmänna kort och omfattande temakortlekar (inklusive **104 Aktiviteter** och **104 Samtalsämnen**); redaktionell riskgranskning dokumenterad.
 - [x] Egen svarssparning, återupptagning, defensiv JA+JA-filtrering och automatiska integritetstester finns i koden.
 - [x] A-only-servervitlistan och separat B-delning finns dokumenterade som installerade per 30 oktober. Detta är **inte** samma sak som att samtliga delningsvyer är aktiverade eller slutverifierade.
-- [ ] `enableSharedPriorities`, `enableSharedPolling`, `enableSharedInsights` och `enableSharedUnderstanding` är fortfarande **false** i `backend-config.js`; kontrollera och aktivera varje del separat **först efter sitt verkliga tvåkontotest**.
+- [x] `enableSharedInsights:true` och `enableSharedUnderstanding:true` är kodade, mergade och driftsatta för interna konton genom PR #88; B-delning kräver ett uttryckligt aktivt tonåringsval per kort. **Ingen verklig tvåkontoverifiering är dokumenterad.**
+- [ ] `enableSharedPriorities:false` och `enableSharedPolling:false` är fortfarande avstängda. Aktivera först efter relevanta negativa tester och autentiserad end-to-end-kontroll.
 
 ## Prioriterad nästa arbetskö
 
@@ -59,7 +67,10 @@
 - [ ] **SW-02: Slutför den gemensamma insiktsytan** för alla kortlekar: endast serververifierat A JA+JA, separat behörig B-information, ”Möjligt att utforska” och ”Så här funkar jag/min tonåring”, korta förskrivna råd och meningsfull prioritering; därefter `enableSharedInsights`.
 - [ ] **SW-03: Koppla privat viktighetsskattning (tre lägen)** till faktisk gemensam prioritetsordning för godkända resultat. Behåll integritet och tydlig skillnad mellan individuell prioritet och gemensamt beslut; därefter `enableSharedPriorities`.
 - [ ] **SW-04: Validera överhoppning och live-matchningar** över stora kortlekar, inklusive ofullständig kortlek, återbesök, lås-/upplåsningslogik och ändrade kortversioner. Rätta eventuella kvarvarande synkfel innan polling aktiveras.
-- [ ] **MI-01: Skriv och implementera separat rollanpassad MI-sida för föräldrar** i Kommunikationsråd, med källor och tydlig gräns mellan lyssnande och manipulation; länka från Schyssta listan.
+- [x] **MI-01A – kod på utvecklingsbranch (3 nov):** separat MI-inspirerad föräldraguide under Kommunikationsråd, med vardagsexempel, autonomi, vuxenansvar och länkar till tre svenska myndighets-/kunskapskällor. Länk i Schyssta listan, förälders rollspärr, mobil- och statiska kontraktstester tillagda. Branch: `feature/mi-parent-guide-and-status-20261103`. **CI/merge återstår vid denna anteckning.**
+- [ ] **MI-01B – granska och följa upp:** kör CI/Pages och verifiera faktiskt förälder-/tonåringskonto samt språk och användbarhet i mobilen. Bedöm inte detta som en validerad MI-behandling.
+- [x] **SW-01A – begriplig B-information (3 nov, kod på samma branch):** rätta felaktig text som angav att förståelsedelning var avstängd trots aktiva interna flaggor. Förklara att ett B-JA fortsatt är privat tills ungdomen själv väljer delning, med direktlänk till Gemensamma insikter. Automatisk testuppdatering ingår; CI/merge återstår.
+- [ ] **SW-01B – autentiserad B-verifiering:** testa delning, återkallelse, äldre kortsvar, omparning samt exakt samma serverdata hos båda roller och AI innan den bredare SW-01-punkten kan markeras färdig.
 - [ ] **PF-01: Gör testomgångar versionssäkra.** Ny omtestningssession, datum, aktiv version, historik och självständig radering/export utan att tyst skriva över svar.
 - [ ] **PF-02: Fullfölj metodgranskning.** Översättningens begriplighet/validitet för ungdomar, mätinvarians mellan tonåring och vuxen, den amerikanska vuxenreferensens begränsningar samt lämpligheten av normalmodellerade percentiler.
 - [ ] **PF-03: Textkvalitet och återkoppling.** Testa råpoängsgränsernas begriplighet, att hypoteser inte uppfattas som diagnoser, textlängd och praktiskt värde från både föräldra- och tonårsperspektiv. Separera sorteringsgränser från psykometrisk säkerhet.
