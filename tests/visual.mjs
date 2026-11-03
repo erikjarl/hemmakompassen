@@ -79,9 +79,9 @@ async function capture(page,name){
   await page.screenshot({path:path.join(output,name),fullPage:true,animations:"disabled"});
   captureRecords.push({file:name,viewport:page.viewportSize(),...overlays});
 }
-async function freshContext(options,{authenticated=false,paired=false,role="parent",unlocked=false,unlockUnavailable=false,priorityUnavailable=false,preansweredGeneral=false,emptySchyssta=false,personalityComplete=false,personalitySharing=false,personalityPartnerShared=false,aiMediator=false,aiAnalyses=false}={}){
+async function freshContext(options,{authenticated=false,paired=false,role="parent",unlocked=false,unlockUnavailable=false,priorityUnavailable=false,preansweredGeneral=false,preansweredSkipped=false,emptySchyssta=false,personalityComplete=false,personalitySharing=false,personalityPartnerShared=false,aiMediator=false,aiAnalyses=false}={}){
   const context=await browser.newContext({...options,locale:"sv-SE",reducedMotion:"reduce"});
-  await context.addInitScript(value=>{window.__HK_TEST_USER__=value.user;window.__HK_TEST_PAIRED__=value.paired;window.__HK_TEST_ROLE__=value.role;window.__HK_TEST_UNLOCKED__=value.unlocked;window.__HK_UNLOCK_RPC_UNAVAILABLE__=value.unlockUnavailable;window.__HK_PRIORITY_RPC_UNAVAILABLE__=value.priorityUnavailable;window.__HK_PREANSWERED_GENERAL__=value.preansweredGeneral;window.__HK_SCHYSSTA_EMPTY__=value.emptySchyssta;window.__HK_TEST_PERSONALITY_DONE__=value.personalityComplete;window.__HK_TEST_PERSONALITY_PARTNER_SHARED__=value.personalityPartnerShared;},{personalityPartnerShared,personalityComplete,emptySchyssta,preansweredGeneral,user:authenticated?{id:role==="teen"?"10000000-0000-0000-0000-000000000002":"10000000-0000-0000-0000-000000000001",email:"synthetic@example.invalid"}:null,paired,role,unlocked,unlockUnavailable,priorityUnavailable});
+  await context.addInitScript(value=>{window.__HK_TEST_USER__=value.user;window.__HK_TEST_PAIRED__=value.paired;window.__HK_TEST_ROLE__=value.role;window.__HK_TEST_UNLOCKED__=value.unlocked;window.__HK_UNLOCK_RPC_UNAVAILABLE__=value.unlockUnavailable;window.__HK_PRIORITY_RPC_UNAVAILABLE__=value.priorityUnavailable;window.__HK_PREANSWERED_GENERAL__=value.preansweredGeneral;window.__HK_PREANSWERED_SKIPPED__=value.preansweredSkipped;window.__HK_SCHYSSTA_EMPTY__=value.emptySchyssta;window.__HK_TEST_PERSONALITY_DONE__=value.personalityComplete;window.__HK_TEST_PERSONALITY_PARTNER_SHARED__=value.personalityPartnerShared;},{personalityPartnerShared,personalityComplete,emptySchyssta,preansweredGeneral,preansweredSkipped,user:authenticated?{id:role==="teen"?"10000000-0000-0000-0000-000000000002":"10000000-0000-0000-0000-000000000001",email:"synthetic@example.invalid"}:null,paired,role,unlocked,unlockUnavailable,priorityUnavailable});
   await context.route(base+"backend-config.js*",route=>route.fulfill({
     contentType:"application/javascript",
     body:"window.HEMMAKOMPASSEN_BACKEND=Object.freeze({supabaseUrl:'https://synthetic.invalid',supabasePublishableKey:'synthetic',enableSharedPriorities:true,enableSharedPolling:true,enableSharedInsights:true,enableSharedUnderstanding:true,enableSchysstaList:true,enablePersonalitySharing:"+String(personalitySharing)+",enableAiMediator:"+String(aiMediator||aiAnalyses)+",enableAiHistory:"+String(aiMediator||aiAnalyses)+",enableAiResultAnalyses:"+String(aiAnalyses)+",aiMediatorUrl:'https://hemmakompassen-ai-medlare.erikbertiljarl.workers.dev/api/ai/mediate'});"
@@ -95,8 +95,10 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
         const personalityAnswers=new Map(window.__HK_TEST_PERSONALITY_DONE__?Array.from({length:50},(_,i)=>['ipip50-'+String(i+1).padStart(3,'0'),3]):[]);
         let personalityConsent=false;
         const skips=new Map();
+        if(window.__HK_PREANSWERED_SKIPPED__){answers.delete('general-02');skips.set('general-02',{deck_id:'general',card_id:'general-02'});}
         const importance=new Map();
         const understandingShares=new Set(window.__HK_TEST_PAIRED__?['general-02']:[]);
+        window.__HK_TEST_SET_SHARED_B__=ids=>{understandingShares.clear();for(const id of ids)understandingShares.add(id);};
         let schysstaSuggestions=[
           {card_id:'regler-01',body:'Vi knackar innan vi går in i varandras rum.'},
           {card_id:'regler-02',body:'Falsk text som aldrig får visas.'},
@@ -563,6 +565,27 @@ try{
   await checkOverflow(teenReview.page,'Mobile teen review after understanding skip');
   await capture(teenReview.page,'mobile-teen-review-after-skip.png');
   await teenReview.context.close();
+  // SW-04: an unanswered/overhopped B card is not a finished response.
+  // Revisit only the skipped card without forcing a review of all 34.
+  const skipAgain=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},
+    {authenticated:true,role:'teen',preansweredGeneral:true,preansweredSkipped:true});
+  await skipAgain.page.goto(base+'#swipe',{waitUntil:'load'});
+  await skipAgain.page.locator('#swipe-review-skipped').waitFor();
+  assert.match(await skipAgain.page.locator('.swipe-finished h2').innerText(),/1 kort kvar/,'Skipped cards are not described as fully answered');
+  await skipAgain.page.locator('#swipe-review-skipped').click();
+  await skipAgain.page.locator("#swipe-card[aria-label^='Kort 2 av 34']").waitFor();
+  assert.equal(await skipAgain.page.locator('.swipe-finished').count(),0);
+  await skipAgain.page.locator('#swipe-skip').click();
+  await skipAgain.page.locator('#swipe-review-skipped').waitFor();
+  assert.match(await skipAgain.page.locator('.swipe-finished').innerText(),/1 förståelsekort obesvarade/,'Skipping again leaves the card pending');
+  await skipAgain.page.locator('#swipe-review-skipped').click();
+  await skipAgain.page.locator("#swipe-card[aria-label^='Kort 2 av 34']").waitFor();
+  await skipAgain.page.getByRole('button',{name:'Ja'}).click();
+  await skipAgain.page.getByRole('heading',{name:'Alla 34 kort besvarade'}).waitFor();
+  assert.equal(await skipAgain.page.locator('#swipe-review-skipped').count(),0,'Completed B card leaves the skipped queue');
+  await checkOverflow(skipAgain.page,'Mobile skipped-card revisit');
+  await capture(skipAgain.page,'mobile-teen-skipped-revisit.png');
+  await skipAgain.context.close();
   const paired=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,paired:true});
   await paired.page.goto(base+"#swipe",{waitUntil:"load"});
   await paired.page.getByRole("heading",{name:"Era gemensamma svar"}).waitFor();
@@ -623,6 +646,16 @@ try{
   await capture(paired.page,'mobile-shared-insights.png');
   await paired.page.locator('.live-main').evaluate(el=>{el.scrollTop=el.scrollHeight;});
   await capture(paired.page,'mobile-shared-insights-bottom.png');
+  // Cross-tab consent change: the same viewer's current shared RPC must
+  // replace the old B-only message, while keeping mutual A results intact.
+  const beforeRevoke=await paired.page.locator('.insights-deck .swipe-match-list li').count();
+  await paired.page.evaluate(()=>{window.__HK_TEST_SET_SHARED_B__([]);window.dispatchEvent(new Event('focus'));});
+  await paired.page.waitForFunction(()=>document.querySelector('.insights-view')?.textContent?.includes('Inga förståelsekort är aktivt delade'));
+  assert.doesNotMatch(await paired.page.locator('.insights-view').innerText(),/Tonåringen vill få prata färdigt innan du kommer med råd/,'Remote B revocation clears text on viewer focus');
+  assert.equal(await paired.page.locator('.insights-deck .swipe-match-list li').count(),beforeRevoke,'Remote B revocation does not erase authorized mutual A');
+  await paired.page.evaluate(()=>{window.__HK_TEST_SET_SHARED_B__(['general-02']);window.dispatchEvent(new Event('focus'));});
+  await paired.page.getByText('Tonåringen vill få prata färdigt innan du kommer med råd').waitFor();
+  await capture(paired.page,'mobile-insights-remote-consent-refresh.png');
   await paired.page.evaluate(()=>{window.__HK_RPC_UNAVAILABLE__=true;});
   await paired.page.locator('#insights-retry').click();
   await paired.page.getByRole('alert').waitFor();
