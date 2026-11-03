@@ -20,7 +20,7 @@ test('MI editorial support states its limits, respects teenager autonomy, and us
 });
 
 test('MI gets a distinct route gated by parent role and correct navigation highlighting',()=>{
-  assert.match(live,/h==='mi-foralder'/);
+  assert.match(live,/\['insikter','mi-foralder'\]\.includes\(h\)/);
   assert.match(live,/key==='mi-foralder'\)return viewerRole\(\)==='parent'\?renderParentMiGuide\(\)/);
   assert.match(live,/if\(key==='kommunikation'\)return/);
   assert.match(live,/viewerRole\(\)==='parent'\?card/);
