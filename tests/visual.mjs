@@ -452,7 +452,7 @@ try{
   assert.doesNotMatch(await unavailableHome.page.locator('.live-cards').innerText(),/ansluts stegvis/,'No false generic status remains');
   await checkOverflow(unavailableHome.page,'Home with failed notification checks');
   await capture(unavailableHome.page,'mobile-home-unread-error.png');
-  await unavailableHome.page.evaluate(()=>{window.__HK_HOME_UNREAD_FAILURE__=false;});
+  await unavailableHome.page.evaluate(()=>{window.__HK_HOME_UNREAD_FAILURE__=false;window.__HK_SCHYSSTA_CLEAN_RPC__=true;});
   await unavailableHome.page.locator('#home-refresh-notices').click();
   await unavailableHome.page.locator('#home-refresh-notices').waitFor({state:'detached'});
   await unavailableHome.page.getByRole('heading',{name:/Inkorgen · 2 olästa/}).waitFor();
