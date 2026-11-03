@@ -15,6 +15,7 @@ on:
       - "supabase/migrations/20261028180000_shared_understanding_cards.sql"
       - "supabase/migrations/20261030090000_shared_swipe_all_a_only.sql"
       - "supabase/migrations/20261103110500_revoke_understanding_trigger_rpc_execute.sql"
+      - "supabase/migrations/20261103121500_revoke_legacy_family_table_grants.sql"
       - "supabase/migrations/20261030180000_schyssta_list_server_contract.sql"
       - "supabase/migrations/20261101110000_schyssta_manual_proposals.sql"
       - "supabase/migrations/20261101121500_schyssta_notifications.sql"
@@ -285,3 +286,37 @@ jobs:
             exit 1
           fi
           test "$(grep -Ec '^ok [0-9]+' /tmp/family-direct-messages.log)" -eq 24
+
+      - name: Verify legacy family tables and retired RPC lose direct API privileges
+        shell: bash
+        run: |
+          set -euo pipefail
+          # The standalone fixture deliberately includes only the swipe and
+          # Schyssta schema. Add two unused, synthetic legacy tables for this
+          # contract test; never load real family records.
+          docker exec -i "${{ job.services.postgres.id }}" \
+            psql -U postgres -d postgres -v ON_ERROR_STOP=1 -X -q <<'SQL'
+          create table if not exists public.invitations (id uuid primary key);
+          create table if not exists public.messages (id uuid primary key);
+          grant all privileges on public.families, public.family_members,
+            public.invitations, public.messages to public, anon, authenticated;
+          SQL
+          docker exec -i "${{ job.services.postgres.id }}" \
+            psql -U postgres -d postgres -v ON_ERROR_STOP=1 -X -q \
+            < supabase/migrations/20261103121500_revoke_legacy_family_table_grants.sql
+          actual="$(docker exec -i "${{ job.services.postgres.id }}" \
+            psql -U postgres -d postgres -v ON_ERROR_STOP=1 -X -q -A -t \
+            -c "select case when
+              not exists (
+                select 1 from unnest(array['families','family_members','invitations','messages']) t(name)
+                where has_table_privilege('anon','public.'||t.name,'SELECT')
+                   or has_table_privilege('authenticated','public.'||t.name,'SELECT')
+                   or has_table_privilege('authenticated','public.'||t.name,'INSERT')
+                   or has_table_privilege('authenticated','public.'||t.name,'UPDATE')
+                   or has_table_privilege('authenticated','public.'||t.name,'DELETE')
+              )
+              and not has_function_privilege('authenticated','public.shared_general_deck_complete()','EXECUTE')
+              and has_function_privilege('authenticated','public.shared_understanding_cards()','EXECUTE')
+              and has_function_privilege('authenticated','public.shared_swipe_matches(text)','EXECUTE')
+              then 'ok' else 'fail' end")"
+          test "$actual" = "ok"

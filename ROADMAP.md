@@ -19,6 +19,12 @@
 **Kort arbetsordning:** INT-01/02/03/04 samt **AI-01D** (autentiserade tvåkontotester, sekretess/återkallelse) → SW-01/02/03/04 (testa och färdigställ befintlig B-/insiktsfunktion; prioritets- och polling-flaggor är av) → MI-01B, PF-01/02/03, UX-01/02, NOT-01 → **AI-02/03: tvåkontotesta redan driftsatta AI-reflektioner** → SEC-02 och AI-skyddsgranskning/data/pilot. Se [aktuell utvecklingskö](docs/CURRENT_TASKS.md).
 
 
+## Säkerhetsuppföljning 3 november – befintlig RLS och äldre rättigheter (SEC-02)
+
+- [x] **Read-only audit av verklig Supabase:** `get_advisors(type=security)` rapporterade 8 tabeller med RLS utan policy, 27 `SECURITY DEFINER`-RPC:er exponerade för `authenticated` och läckta-lösenord-skydd inaktivt. `has_table_privilege` bekräftade att 4/8 RLS-tabeller redan har nekat direkt åtkomst och att äldre `families`, `family_members`, `invitations`, `messages` har överflödiga direkta privilegier trots ingen RLS-policy. Alla 27 granskade `SECURITY DEFINER` har `search_path=''` och källtext som refererar `auth.uid()`, men behöver fortfarande fullständig säkerhetsgranskning.
+- [x] **SEC-02B på branch:** minimal migration `20261103121500_revoke_legacy_family_table_grants.sql` (endast REVOKE) tar bort `PUBLIC`/anon/authenticated direktaccess från dessa fyra äldre tabeller och stänger det avvecklade `shared_general_deck_complete()`-RPC:t. Aktuella RPC:er bevaras. Node-kontrakttest och separat PostgreSQL-körning med syntetisk databas inkluderade.
+- [ ] **Verifiera och distribuera:** invänta grön CI, merge, apply migration i Supabase och direkt privilegiekontroll efteråt. Återstående RLS-lintervarningar, avsiktliga autentiserade RPC:er och läckt lösenord-skydd granskas separat före pilot.
+
 ## Personlighetstest 3 november – export av egna sparade svar (PF-01A)
 
 - [x] **PF-01A (mergad och publicerad PR #94):** särskild exportknapp på resultat- och delvis ifylld testvy, lokal JSON-fil med bara inloggade användarens giltiga svar, svenska frågetexter, instrumentversion och exportdatum. Ingen partnersvar, AI-text, kontoidentifierare eller ny databasskrivning. Användaren uppmanas att förvara filen privat.
