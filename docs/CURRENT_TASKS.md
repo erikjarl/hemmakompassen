@@ -1,12 +1,18 @@
 # Hemmakompassen — aktuell utvecklingskö
 
-**Granskad:** tisdag 3 november 2026, efter mergade PR #90 och #91 samt verifierad Supabase-migration.  
+**Granskad:** tisdag 3 november 2026, efter mergade PR #90–#92 och verifierad Supabase-migration; ett nytt startsidesarbete är på utvecklingsbranch.  
 **Källa:** kod på `main` inklusive PR #90 och #91, `backend-config.js`, GitHub Actions/UI/Pages, Supabase-migrationer och aktuell säkerhetsrådgivning samt read-only SQL-kontroll efter installation. Detta är **inte** ett påstående om genomförda verkliga tvåkontotester.  
 **Syfte:** En enda kort, uppdaterad handlingslista för manuellt och schemalagt utvecklingsarbete. `ROADMAP.md` bevarar detaljerna och äldre beslut.
 
-## 3 november 2026 – nästa utvecklingspass: SW-04 + SW-01, kod på branch
+## 3 november 2026 – startsida och aviseringar, branchkod
 
-- [x] **SW-04A – obesvarade förståelsekort (kod och test):** skilj överhoppade från färdiga svar. Slutvyn beskriver nu hur många som är obesvarade, och tonåringen kan öppna **bara** dessa kort utan att gå om hela kortleken. Nytt val att hoppa över igen behåller kortet obesvarat; ett faktiskt JA/NEJ tar bort överhoppningen. Kod på `feature/swipe-skip-review-insights-refresh-20261103`; mobila Playwrightfall och sessionsregressioner tillagda. **CI och merge måste ännu kontrolleras.**
+- [x] **NOT-01A – synliga fel vid okänt antal olästa (kod och tester):** startsidan skiljer nu misslyckade serverkontroller från ett känt nollvärde, visar ”minst X olästa” när en källa saknas och erbjuder en knapp för nytt försök. Inga meddelandetexter eller privata svar exponeras i felstatus. Syntetisk Playwright och Node-regression är tillagda på `fix/home-unread-status-modules-20261103`.
+- [x] **UX-03A – korrekta startsidebeskrivningar (kod):** ersatt felaktiga generiska platshållare med konkret information om Inkorg, Gillaswajpen, Big Five, Kommunikationsråd, Schyssta listan och AI-medlaren; upplysning om parningskrav för Inkorg/regler.
+- [ ] **NOT-01B – verkliga aviseringar och release:** kontrollera CI/Pages för branchkoden, därefter verkligt tvåkontotest av misslyckad hämtning och återanslutning. Nya aviseringar för aktivitetskort och resultat är inte implementerade.
+
+## 3 november 2026 – SW-04 + SW-01, mergad PR #92
+
+- [x] **SW-04A – obesvarade förståelsekort (kod och test):** skilj överhoppade från färdiga svar. Slutvyn beskriver nu hur många som är obesvarade, och tonåringen kan öppna **bara** dessa kort utan att gå om hela kortleken. Nytt val att hoppa över igen behåller kortet obesvarat; ett faktiskt JA/NEJ tar bort överhoppningen. Mergat via PR #92 till `main` med godkänd PR-CI **#41618370067**, main UI **#41618537342** och Pages **#41618536211**. Mobila Playwright- och sessionsregressioner tillagda.
 - [x] **SW-01C – upptäck extern B-återkallelse (kod och test):** när insiktsvyn är öppen återhämtas de sju serververifierade A-resultaten och de uttryckligen delade B-korten vid återkomst till fliken och som högst en gång per minut i förgrunden. Oförändrad datamängd ger ingen omrendering eller ny AI-reflektion. Vid fel rensas A+B tillsammans i stället för att behålla en gammal sammanställning. Mottagarens gamla redan genererade AI-text kan dock finnas kvar fram till nästa lyckade kontroll.
 - [ ] **SW-01D – autentiserat tvåkontotest:** verklig Supabase/Worker-verifiering av B-delningsåterkallelse i två sessioner, inkl. konto- och familjebyten, är fortfarande inte genomförd. De nya testen använder syntetiska konton.
 
