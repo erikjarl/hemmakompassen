@@ -16,7 +16,7 @@ Det finns även äldre lokala demofiler `app.js`/`styles.css`, men de är **inte
 
 ## Implementerat i den interna testversionen
 
-- **Gillaswajpen:** 34 allmänna A/B-kort, sex temakortlekar, 104 aktiviteter och 104 samtalsämnen, privata svar, återupptagning och serverbaserad A-matchning. Gemensam insiktsvy och frivillig separat B-delning är aktiva för interna testkonton, men tvåkontotest av återkallelse/isolering återstår.
+- **Gillaswajpen:** 34 allmänna A/B-kort, sex temakortlekar, 104 aktiviteter och 104 samtalsämnen, privata svar, återupptagning och serverbaserad A-matchning. Gemensam insiktsvy och frivillig separat B-delning är aktiva för interna testkonton. Tonåringen ser nu en **privat** översikt över egna mycket viktiga A-kort där båda sagt ja (PR #100–#101); detta delas ännu inte med föräldern. Tvåkontotest av återkallelse/isolering återstår.
 - **Inkorg:** privata familjemeddelanden i båda riktningar, historik, meddelandestatus och olästa regelaviseringar. Backend har familje- och parningskontroller. Verkligt heltäckande tvåkontotest är kvarstående.
 - **Schyssta listan:** familjeavgränsade förslag från regelkort och fritext, separata godkännanden, förfrågningsstatus, ändringar, omprövning/återkallelse, arkiv, sök- och filterfunktion samt inkorgskoppling. `enableSchysstaList=true` i intern testversion.
 - **Min personlighet:** versionssatt svenskspråkigt IPIP-50 (50 frågor) med privata svar, fem summaskalor, frivillig delning av endast fem sammanfattande poäng efter bådas aktiva samtycke, fem horisontella jämförelsestaplar och automatiska AI-reflektioner i intern testmiljö. Beräknade `P≈` utgår från en normalmodell och en icke-representativ amerikansk vuxenreferens, **inte** svenska normpercentiler.
