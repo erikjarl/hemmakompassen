@@ -6,8 +6,8 @@
 
 ## 3 november 2026 – UX-02A: ikonöversikt även med aktiva AI-reflektioner
 
-- [x] **Kod och regressionstester på utvecklingsbranch:** ai-dev/compact-mutual-yes-20261103 visar en kort, ämnesgrupperad ikonöversikt från **enbart serververifierade A JA+JA** i både den enskilda kortlekens resultat och samlade insikter. AI-reflektionen finns kvar på samma sida. Förskrivna redaktionella råd visas inte i den AI-aktiverade vyn. Kortöversikten visar rollanpassad text och antal gemensamma svar, aldrig enskilda B-/NEJ-/okända kort eller privat viktighet.
-- [ ] **Slutverifiering UX-02A:** kontrollera PR-CI, mobilskärmbilder och senare riktiga tvåkonton med återkallelse, breda kortlekar och iOS Safari. Denna kodändring innebär inte att UX-02 eller SW-02 är helt klara.
+- [x] **PR #98 – kod och tester på separat utvecklingsbranch (inte mergad):** ai-dev/compact-mutual-yes-20261103 visar en kort, ämnesgrupperad ikonöversikt från **enbart serververifierade A JA+JA** i både den enskilda kortlekens resultat och samlade insikter. AI-reflektionen finns kvar på samma sida utan återgång till förskrivna råd. Översikten innehåller rollanpassad text och antal gemensamma svar, aldrig enskilda B-/NEJ-/okända kort eller privat viktighet. Node-/kontraktstester, byggkontroll och syntetiskt Playwright-UI är **gröna i GitHub Actions #41671120244 (3 nov)**. 35 screenshots producerades, desktop- och mobilbilder av gemensamma insikter samt mobil AI-swipe har öppnats och granskats. Detta är inte en autentiserad tvåkontoverifiering.
+- [ ] **UX-02A återstår:** review/merge/publicering av PR #98, riktiga tvåkonton med återkallelse och breda kortlekar, samt iOS Safari. CI och syntetiska screenshots är verifierade, men funktionerna UX-02 och SW-02 är inte helt klara.
 
 ## 3 november 2026 – INT-03C/UX-01: tyst bakgrundsuppdatering av Inkorgen
 
