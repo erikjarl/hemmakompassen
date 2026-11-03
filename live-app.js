@@ -1,7 +1,7 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261102-shared-context1';
-import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261102-shared-context1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261102-shared-context1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261103-mi1';
+import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261103-mi1';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261103-mi1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261103-mi1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
