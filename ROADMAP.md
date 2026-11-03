@@ -3,7 +3,7 @@
 
 ## NULÄGE – avstämning 3 november 2026 (läs först)
 
-**Gäller framför historiska statusnoteringar nedan.** PR **#90–#97** är mergade och publicerade till `main` med godkänd kod-/UI-/Pages-verifiering. PR #91:s riktade migration är installerad och verifierad i Supabase. PR #94 omfattar endast egen IPIP-svarexport, inte hela användarkontots data. PR **#80** är ett **öppet, ersatt utkast som inte ska mergas**. Detaljerad aktuell checklista: **[docs/CURRENT_TASKS.md](docs/CURRENT_TASKS.md)**. Äldre planer nedan finns kvar som historik och kan beskriva föråldrade lägen.
+**Gäller framför historiska statusnoteringar nedan.** PR **#90–#98** är mergade och publicerade till `main` med godkänd kod-/UI-/Pages-verifiering. PR #91:s riktade migration är installerad och verifierad i Supabase. PR #94 omfattar endast egen IPIP-svarexport, inte hela användarkontots data. PR **#80** är ett **öppet, ersatt utkast som inte ska mergas**. Detaljerad aktuell checklista: **[docs/CURRENT_TASKS.md](docs/CURRENT_TASKS.md)**. Äldre planer nedan finns kvar som historik och kan beskriva föråldrade lägen.
 
 | Del | Kod och automatisk kontroll | Viktig kvarstående begränsning |
 | --- | --- | --- |
@@ -19,10 +19,17 @@
 **Kort arbetsordning:** INT-01/02/03/04 samt **AI-01D** (autentiserade tvåkontotester, sekretess/återkallelse) → SW-01/02/03/04 (testa och färdigställ befintlig B-/insiktsfunktion; prioritets- och polling-flaggor är av) → MI-01B, PF-01/02/03, UX-01/02, NOT-01 → **AI-02/03: tvåkontotesta redan driftsatta AI-reflektioner** → SEC-02 och AI-skyddsgranskning/data/pilot. Se [aktuell utvecklingskö](docs/CURRENT_TASKS.md).
 
 
+## AI-01H – resultatanalys med tidsgräns och avbrutna gamla anrop (3 november 2026)
+
+- [x] **Kod på utvecklingsbranch (inte mergad):** automatisk AI-analys får högst 25 sekunder på sig innan ett tydligt fel och manuell omförsöksknapp visas. Vid kontobyte, ny resultatsignatur (t.ex. delning/återkallelse) eller återställning avbryts föråldrade webbläsaranrop. Även om ett nätverksanrop ignorerar avbrytning kan en föråldrad analys inte ersätta den nya; ingen automatisk extra AI-kvot försöks förbruka vid timeout. Ingen ny serverrättighet eller databasändring. Kod: ai-dev/ai-result-timeout-cancel-20261103.
+- [x] **Regressionsfall tillagda i kod:** fastnat anrop, synlig timeout, explicit återförsök, ändrad delning, sent svar och konto-/sessionsbyte. CI-värdering återstår.
+- [ ] **AI-01H slutverifiering:** PR-CI/Playwright, publicering och verkligt tvåkontotest av delningsåterkallelse återstår. Klientavbrott kan inte garantera att redan påbörjad AI-serverkörning inte debiterar kvot.
+
 ## 3 november 2026 – UX-02A: ikonöversikt även med aktiva AI-reflektioner
 
-- [x] **PR #98 – kod och tester på separat utvecklingsbranch (inte mergad):** ai-dev/compact-mutual-yes-20261103 visar en kort, ämnesgrupperad ikonöversikt från **enbart serververifierade A JA+JA** i både den enskilda kortlekens resultat och samlade insikter. AI-reflektionen finns kvar på samma sida utan återgång till förskrivna råd. Översikten innehåller rollanpassad text och antal gemensamma svar, aldrig enskilda B-/NEJ-/okända kort eller privat viktighet. Node-/kontraktstester, byggkontroll och syntetiskt Playwright-UI är **gröna i GitHub Actions #41671120244 (3 nov)**. 35 screenshots producerades, desktop- och mobilbilder av gemensamma insikter samt mobil AI-swipe har öppnats och granskats. Detta är inte en autentiserad tvåkontoverifiering.
-- [ ] **UX-02A återstår:** review/merge/publicering av PR #98, riktiga tvåkonton med återkallelse och breda kortlekar, samt iOS Safari. CI och syntetiska screenshots är verifierade, men funktionerna UX-02 och SW-02 är inte helt klara.
+- [x] **PR #98 mergad och publicerad – kod och tester:** ai-dev/compact-mutual-yes-20261103 visar en kort, ämnesgrupperad ikonöversikt från **enbart serververifierade A JA+JA** i både den enskilda kortlekens resultat och samlade insikter. AI-reflektionen finns kvar på samma sida utan återgång till förskrivna råd. Översikten innehåller rollanpassad text och antal gemensamma svar, aldrig enskilda B-/NEJ-/okända kort eller privat viktighet. Node-/kontraktstester, byggkontroll och syntetiskt Playwright-UI är **gröna i GitHub Actions #41671120244 (3 nov)**. 35 screenshots producerades, desktop- och mobilbilder av gemensamma insikter samt mobil AI-swipe har öppnats och granskats. Detta är inte en autentiserad tvåkontoverifiering.
+- [x] **PR #98 release:** merge 5c91abb76d3a5dd78e8565546edf0b6ec6b3532b, main UI #41678506279 och Pages #41678505271 godkända den 3 november 2026. Tidigare dokumenterad PR-CI gäller branchkod, nu är även main och distribution verifierade.
+- [ ] **UX-02A återstår:** riktiga tvåkonton med återkallelse och breda kortlekar samt iOS Safari. Funktionen UX-02/SW-02 är inte fullständigt slutförd.
 
 ## Inkorgens tysta uppdatering och mobilskroll – INT-03C
 

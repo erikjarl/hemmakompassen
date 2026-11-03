@@ -176,3 +176,57 @@ test('AI result UI deduplicates in a session, escapes HTML and never sends local
  ui.reset(OTHER);
  assert.equal(ui.snapshot('personality','own'),undefined);
 });
+
+test('AI result timeout exits loading and allows explicit retry without reusing stale data',async()=>{
+ const requests=[];
+ const db={auth:{async getSession(){return {data:{session:{user:{id:UID},access_token:'test-token'}}};}}};
+ const ui=createAiResultExperience({db,
+   config:{enableAiMediator:true,enableAiResultAnalyses:true,aiMediatorUrl:'https://hemmakompassen-ai-medlare.erikbertiljarl.workers.dev/api/ai/mediate'},
+   timeoutMs:25,
+   fetchImpl:(_,options)=>{
+     requests.push(options);
+     if(requests.length===1)return new Promise(()=>{});
+     return Promise.resolve(Response.json({kind:'personality',scope:'own',reply:'Ny reflektion',basis:'Egna faktorer'}));
+   }
+ });
+ ui.reset(UID);
+ assert.equal(await ui.ensure('personality','own','snapshot-v1'),false,'Hanging Worker must stop loading');
+ assert.equal(requests[0].signal.aborted,true,'Timed-out fetch is actively aborted');
+ assert.match(ui.panel('personality','own','snapshot-v1'),/AI-servern svarade inte i tid/);
+ assert.equal(await ui.ensure('personality','own','snapshot-v1'),false,'No automatic repeated quota usage on error');
+ assert.equal(await ui.ensure('personality','own','snapshot-v1',{force:true}),true);
+ assert.match(ui.panel('personality','own','snapshot-v1'),/Ny reflektion/);
+ assert.equal(requests.length,2);
+});
+
+test('changing shared-result signature cancels obsolete analysis, and reset prevents cross-account replay',async()=>{
+ const requests=[];
+ const resolvers=[];
+ const db={auth:{async getSession(){return {data:{session:{user:{id:UID},access_token:'test-token'}}};}}};
+ const ui=createAiResultExperience({db,
+  config:{enableAiMediator:true,enableAiResultAnalyses:true,aiMediatorUrl:'https://hemmakompassen-ai-medlare.erikbertiljarl.workers.dev/api/ai/mediate'},
+  fetchImpl:(_,options)=>{requests.push(options);return new Promise(resolve=>resolvers.push(resolve));}
+ });
+ ui.reset(UID);
+ const old=ui.ensure('swipe','general','before-revocation');
+ await Promise.resolve();await Promise.resolve();
+ assert.equal(requests.length,1);
+ const updated=ui.ensure('swipe','general','after-revocation');
+ await Promise.resolve();await Promise.resolve();
+ assert.equal(requests[0].signal.aborted,true,'Old response is aborted after consent/result change');
+ assert.equal(requests.length,2);
+ resolvers[1](Response.json({kind:'swipe',scope:'general',reply:'Bara nu delade resultat',basis:'Aktuella JA+JA'}));
+ assert.equal(await updated,true);
+ resolvers[0](Response.json({kind:'swipe',scope:'general',reply:'FÖRÅLDRAD DELNING',basis:'Tidigare B'}));
+ assert.equal(await old,false);
+ assert.doesNotMatch(ui.panel('swipe','general','after-revocation'),/FÖRÅLDRAD DELNING/);
+ const waiting=ui.ensure('swipe','general','another-signature');
+ await Promise.resolve();await Promise.resolve();
+ assert.equal(requests.length,3);
+ ui.reset(OTHER);
+ assert.equal(requests[2].signal.aborted,true,'Account reset aborts active analysis');
+ resolvers[2](Response.json({kind:'swipe',scope:'general',reply:'GAMMALT KONTO',basis:'Skyddad data'}));
+ assert.equal(await waiting,false);
+ assert.equal(ui.snapshot('swipe','general'),undefined);
+});
+

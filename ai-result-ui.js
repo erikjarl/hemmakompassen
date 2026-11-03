@@ -1,19 +1,27 @@
 // Automatic, ephemeral analysis in the result views. No raw results are
 // accepted by the Worker: browser sends only kind/scope and Supabase JWT.
 const escape=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
-export function createAiResultExperience({db,config,fetchImpl=fetch,onRender=()=>{}}){
+export function createAiResultExperience({db,config,fetchImpl=fetch,onRender=()=>{},timeoutMs=25000}){
   const enabled=config.enableAiResultAnalyses===true && config.enableAiMediator===true
     && typeof config.aiMediatorUrl==='string'
     && /^https:\/\/[a-z0-9-]+\.erikbertiljarl\.workers\.dev\/api\/ai\/mediate$/.test(config.aiMediatorUrl);
   let userId=null,epoch=0;
   const results=new Map();
+  const pending=new Map();
+  const maxWaitMs=Number.isFinite(timeoutMs)&&timeoutMs>0?Math.min(timeoutMs,60000):25000;
   const sourceKey=(kind,scope)=>kind+':'+scope;
+  function cancel(key){
+    const controller=pending.get(key);
+    if(controller){pending.delete(key);controller.abort();}
+  }
   function reset(nextUserId=null){
-    epoch++;userId=nextUserId;results.clear();
-    // Pending fetches are ignored by epoch guard even if the network completes.
+    epoch++;userId=nextUserId;
+    for(const key of pending.keys())cancel(key);
+    results.clear();
+    // Even if a backend ignores abort, obsolete replies cannot restore another account.
   }
   function invalidate(kind,scope){
-    const key=sourceKey(kind,scope);results.delete(key);
+    const key=sourceKey(kind,scope);cancel(key);results.delete(key);
   }
   async function ensure(kind,scope,signature,{force=false}={}){
     if(!enabled||!userId||typeof signature!=='string'||!signature)return false;
@@ -22,22 +30,40 @@ export function createAiResultExperience({db,config,fetchImpl=fetch,onRender=()=
     const key=sourceKey(kind,scope),previous=results.get(key);
     if(!force&&previous?.signature===signature)return false;
     const account=userId,requestEpoch=epoch;
+    // Changing a signature or retrying replaces any obsolete client request.
+    // This does not undo a Worker invocation already accepted server-side.
+    cancel(key);
+    const controller=new AbortController();
+    pending.set(key,controller);
     // Client-only fingerprint controls refresh, NEVER sent over the wire.
     const request={signature,status:'loading',reply:'',error:'',basis:''};
     results.set(key,request);
     onRender();
+    let timer;
     try{
+      // Time-limit both session lookup and fetch. Some adapters ignore abort,
+      // so Promise.race prevents a permanently stuck loading indicator.
+      const operation=(async()=>{
       const session=await db.auth.getSession();
       if(session?.error||session?.data?.session?.user?.id!==account||!session?.data?.session?.access_token)
         throw Error('Din inloggning behöver förnyas.');
       const url=config.aiMediatorUrl.replace(/\/mediate$/,'')+'/analyze';
       const response=await fetchImpl(url,{method:'POST',headers:{
         Authorization:'Bearer '+session.data.session.access_token,'Content-Type':'application/json'
-      },body:JSON.stringify({kind,scope}),credentials:'omit',cache:'no-store',referrerPolicy:'no-referrer'});
+      },body:JSON.stringify({kind,scope}),credentials:'omit',cache:'no-store',referrerPolicy:'no-referrer',signal:controller.signal});
       let payload;
       try{payload=await response.json();}catch{throw Error('AI-servern gav ett oläsligt svar.');}
       if(!response.ok)throw Error(typeof payload?.error==='string'&&payload.error.length<190?
         payload.error:'Kunde inte skapa AI-reflektionen.');
+      return payload;
+      })();
+      const timeout=new Promise((_,reject)=>{
+        timer=setTimeout(()=>{
+          controller.abort();
+          reject(Error('AI-servern svarade inte i tid. Försök igen.'));
+        },maxWaitMs);
+      });
+      const payload=await Promise.race([operation,timeout]);
       if(account!==userId||requestEpoch!==epoch||results.get(key)!==request)return false;
       if(payload?.empty===true){
         request.status='empty';
@@ -49,8 +75,14 @@ export function createAiResultExperience({db,config,fetchImpl=fetch,onRender=()=
       onRender();return true;
     }catch(err){
       if(account!==userId||requestEpoch!==epoch||results.get(key)!==request)return false;
-      request.status='error';request.error=err?.message||'AI-analysen kunde inte visas.';
+      request.status='error';
+      request.error=controller.signal.aborted
+        ?'AI-servern svarade inte i tid. Försök igen.'
+        :err?.message||'AI-analysen kunde inte visas.';
       onRender();return false;
+    }finally{
+      clearTimeout(timer);
+      if(pending.get(key)===controller)pending.delete(key);
     }
   }
   function panel(kind,scope,signature){
