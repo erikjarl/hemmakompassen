@@ -3,7 +3,7 @@
 
 ## NULÄGE – avstämning 3 november 2026 (läs först)
 
-**Gäller framför historiska statusnoteringar nedan.** PR **#90** (MI-guide, B-text och frontend) och **#91** (begränsning av intern databasfunktion) är mergade till `main` efter gröna tester; #91:s riktade migration är installerad och verifierad i Supabase. PR **#80** är ett **öppet, ersatt utkast som inte ska mergas**. Detaljerad aktuell checklista: **[docs/CURRENT_TASKS.md](docs/CURRENT_TASKS.md)**. Äldre planer nedan finns kvar som historik och kan beskriva föråldrade lägen.
+**Gäller framför historiska statusnoteringar nedan.** PR **#90–#92** är mergade till `main` med godkänd kod-/UI-/Pages-verifiering. PR #91:s riktade migration är installerad och verifierad i Supabase. Nästa startsidesförbättring finns ännu på utvecklingsbranch. PR **#80** är ett **öppet, ersatt utkast som inte ska mergas**. Detaljerad aktuell checklista: **[docs/CURRENT_TASKS.md](docs/CURRENT_TASKS.md)**. Äldre planer nedan finns kvar som historik och kan beskriva föråldrade lägen.
 
 | Del | Kod och automatisk kontroll | Viktig kvarstående begränsning |
 | --- | --- | --- |
@@ -19,12 +19,20 @@
 **Kort arbetsordning:** INT-01/02/03/04 samt **AI-01D** (autentiserade tvåkontotester, sekretess/återkallelse) → SW-01/02/03/04 (testa och färdigställ befintlig B-/insiktsfunktion; prioritets- och polling-flaggor är av) → MI-01B, PF-01/02/03, UX-01/02, NOT-01 → **AI-02/03: tvåkontotesta redan driftsatta AI-reflektioner** → SEC-02 och AI-skyddsgranskning/data/pilot. Se [aktuell utvecklingskö](docs/CURRENT_TASKS.md).
 
 
+## Nytt delsteg 3 november – startsida/aviseringar (branchkod)
+
+- [x] **NOT-01A:** okänt antal olästa meddelanden visas som fel/okänd kontroll, inte som säkert noll. Startsidan märker partiellt kända summor ”minst”, ger en knapp för nytt försök och visar inga känsliga meddelandetexter i varningen.
+- [x] **UX-03A:** de sex startsidekorten beskriver nu riktiga funktioner, inklusive begränsningar i AI- och samtyckesflöden; inga generiska ”ansluts stegvis”-texter.
+- [x] **Automatiska tester på branch:** Node-kontroller för okänd/rättad lässtatus och Playwright med syntetiska serverfel och återhämtning. Branch: `fix/home-unread-status-modules-20261103`.
+- [ ] **Slutför release:** grön CI, merge och Pages samt senare autentiserad verifiering. Framtida aktivitets-/resultataviseringar är fortfarande en öppen separat del av NOT-01.
+
 ## Kodleverans i nytt utvecklingspass 3 november 2026 – överhoppning och delningsuppdatering
 
-- [x] **SW-04A (branchkod):** överhoppade B-kort räknas inte som besvarade i slutvyn; välj *Gå till överhoppade kort* och besvara bara kvarvarande kort. Att hoppa över igen blir inte ett NO eller ett färdigt svar. Fysiska databassvar ändras enbart vid användarens egna sparningar.
-- [x] **SW-01C (branchkod):** separat behörighetsstyrd återkontroll av insiktsvyn vid fokus, flikåterkomst och högst en gång i minuten i förgrunden. Alla delade resultat hämtas genom samma existerande RPC:er som förut; inga nya databastabeller eller API-behörigheter. Ändrad/återkallad B-delning förändrar AI-signaturen; identisk data återanvänds för att undvika extra AI-kvot.
-- [x] **Tester (branchkod):** nya Node-fall för identiska/ändrade/ogiltiga svar och äldre asynkrona svar, samt syntetisk Playwright för tonåringens överhoppade kort och extern B-återkallelse i en redan öppen föräldervy.
-- [ ] **Release/verklig verifiering:** kontrollera GitHub Actions, merge och Pages, följ sedan upp med autentiserat tvåkontotest. En återkallelse synkroniseras inte omedelbart över samtliga öppna enheter. Detta är fortfarande en intern testfunktion.
+- [x] **SW-04A (mergad PR #92):** överhoppade B-kort räknas inte som besvarade i slutvyn; välj *Gå till överhoppade kort* och besvara bara kvarvarande kort. Att hoppa över igen blir inte ett NO eller ett färdigt svar. Fysiska databassvar ändras enbart vid användarens egna sparningar.
+- [x] **SW-01C (mergad PR #92):** separat behörighetsstyrd återkontroll av insiktsvyn vid fokus, flikåterkomst och högst en gång i minuten i förgrunden. Alla delade resultat hämtas genom samma existerande RPC:er som förut; inga nya databastabeller eller API-behörigheter. Ändrad/återkallad B-delning förändrar AI-signaturen; identisk data återanvänds för att undvika extra AI-kvot.
+- [x] **Tester (PR #92):** nya Node-fall för identiska/ändrade/ogiltiga svar och äldre asynkrona svar, samt syntetisk Playwright för tonåringens överhoppade kort och extern B-återkallelse i en redan öppen föräldervy.
+- [x] **Teknisk release PR #92:** PR-CI #41618370067, main UI #41618537342 och Pages #41618536211 godkända; merge commit `6751de667bf3051233a6fdd699def8ac4204032c`.
+- [ ] **Verklig verifiering:** autentiserade tvåkontotester av delning och återkallelse samt visuell Safari-granskning kvarstår. En återkallelse synkroniseras inte omedelbart över samtliga öppna enheter. Detta är fortfarande en intern testfunktion.
 
 ## Kodleverans 3 november 2026 – avgränsade förbättringar
 
