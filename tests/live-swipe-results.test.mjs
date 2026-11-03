@@ -153,6 +153,19 @@ assert.match(script,/sharedFactOverview\(overviewGroups,'Gemensamt i alla kortle
   'Cross-deck insights reuse the factual icon overview');
 assert.match(script,/for\(const \{groups\} of byDeck.values\(\)\)/,
   'Cross-deck overview uses only the A-only byDeck result, not private swipe answers');
+
+{
+  // Topic icons must follow the actual approved card text as well as broad
+  // category labels: phone-free time should not be marked with a generic heart.
+  const state={
+    GENERAL_CARDS:[],THEME_DECK_MODELS:[],
+    esc:s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))
+  };
+  vm.runInNewContext(sharedViewFunctions[0]+'\nthis.facts=sharedFactOverview;',state);
+  const phone=state.facts(new Map([['Relationer',[{statement:'Vi lägger undan mobiltelefonerna'}]]]));
+  assert.match(phone,/Mobil:/,'A phone-related mutual YES gets the phone icon even in a broad category');
+  assert.doesNotMatch(phone,/REDAKTIONELLA RÅD/,'Fact labels never claim to contain editorial advice');
+}
 console.log('PASS: compact factual icon overview is compatible with AI and excludes unshared answers');
 
 console.log('PASS: shared result renderer and role summaries reject B, NO and unknown cards');
