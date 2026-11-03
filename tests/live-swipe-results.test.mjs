@@ -58,7 +58,7 @@ function renderSharedResult(rows,role='parent',priorityRows=[],adviceByKey={'gen
     importanceAvailable:options.importanceAvailable!==false,
     sharedPrioritiesEnabled:options.sharedPrioritiesEnabled===true,
     swipeImportance:new Map(Object.entries(options.importance||{})),
-    importanceKey:(deckId,cardId)=>deckId+'\\u0000'+cardId,
+    importanceKey:(deckId,cardId)=>deckId+String.fromCharCode(0)+cardId,
     aiResults:{panel:()=>'<div data-testid="ai-reflection">AI-genererat svar</div>'},
     swipeAiSignature:()=> 'verified-A-YES-signature',
     adviceKeyForCard:card=>card.id,
@@ -179,10 +179,10 @@ assert.match(script,/for\(const \{groups\} of byDeck.values\(\)\)/,
     {card_id:'general-04',answer:true}
   ];
   const own={
-    ['general'+'\\u0000'+'general-01']:1,
-    ['general'+'\\u0000'+'general-02']:1,
-    ['general'+'\\u0000'+'general-03']:1,
-    ['general'+'\\u0000'+'general-04']:0
+    ['general'+String.fromCharCode(0)+'general-01']:1,
+    ['general'+String.fromCharCode(0)+'general-02']:1,
+    ['general'+String.fromCharCode(0)+'general-03']:1,
+    ['general'+String.fromCharCode(0)+'general-04']:0
   };
   const teen=renderSharedResult(matching,'teen',[],{}, {ai:true,importance:own});
   assert.match(teen,/Mina viktigaste gemensamma ja-svar/,'Teen sees own important matches privately with AI active');
