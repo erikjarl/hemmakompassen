@@ -44,7 +44,7 @@ console.log('PASS: mutual-YES-only RPC results, role-specific rule summary, them
 // Execute the actual shared-view and summary functions with synthetic data.
 const sharedViewFunctions=script.match(/const joinSwedish=[\s\S]*?(?=\nasync function fetchSwipeMatches\()/);
 assert.ok(sharedViewFunctions,'Shared result rendering can be tested independently');
-function renderSharedResult(rows,role='parent',priorityRows=[],adviceByKey={'general-01':'Välj en gemensam dag.','general-04':'Lyssna färdigt och välj ett litet nästa steg.'}){
+function renderSharedResult(rows,role='parent',priorityRows=[],adviceByKey={'general-01':'Välj en gemensam dag.','general-04':'Lyssna färdigt och välj ett litet nästa steg.'},options={}){
   const state={
     members:[{role:'parent'},{role:'teen'}],sharedLoading:false,sharedDeckId:'general',sharedError:'',sharedMatches:rows.map(row=>({deck_id:'general',...row})),sharedPriorities:priorityRows.map(row=>({deck_id:'general',...row})),
     GENERAL_CARDS:[
@@ -54,6 +54,9 @@ function renderSharedResult(rows,role='parent',priorityRows=[],adviceByKey={'gen
       {id:'general-04',type:'match',category:'Samtal',teenText:'Tonåringens andra gemensamma kort',parentText:'Förälderns andra gemensamma kort'},
     ],
     THEME_DECK_MODELS:[],ADVICE_BY_KEY:adviceByKey,
+    aiResultEnabled:options.ai===true,
+    aiResults:{panel:()=>'<div data-testid="ai-reflection">AI-genererat svar</div>'},
+    swipeAiSignature:()=> 'verified-A-YES-signature',
     adviceKeyForCard:card=>card.id,
     cardTextForRole:(card,viewerRole)=>viewerRole==='parent'?(card.parentText||card.teenText):card.teenText,
     viewerRole:()=>role,
@@ -126,6 +129,32 @@ function renderSharedResult(rows,role='parent',priorityRows=[],adviceByKey={'gen
   const prioritised=renderSharedResult(matches,'parent',[{card_id:'general-01'}],duplicateAdvice);
   assert.equal(prioritised.split('Välj en gemensam dag.').length-1,1,'A priority tip is not duplicated in the ordinary summary');
 }
+
+{
+  const html=renderSharedResult([
+    {card_id:'general-01',answer:true},
+    {card_id:'general-02',answer:true},
+    {card_id:'general-03',answer:false},
+    {card_id:'general-04',answer:true},
+    {card_id:'unknown',answer:true},
+  ],'parent',[],{'general-01':'GAMMALT REDAKTIONELLT RÅD','general-04':'ANNA GAMLA RÅD'},{ai:true});
+  assert.match(html,/Gemensamt i korthet/,'The compact factual icon overview appears with automatic AI enabled');
+  assert.match(html,/swipe-summary-icon/,'Every factual overview category has a decorative topic icon');
+  assert.match(html,/ÖVERSIKT · SERVERVERIFIERADE JA-SVAR/,'Facts are labelled separately from AI advice');
+  assert.match(html,/data-testid="ai-reflection"/,'AI reflection remains visible alongside factual results');
+  assert.match(html,/Förälderns ansvarstagande aktivitet/,'The overview shows only reviewed role-specific A wording');
+  assert.doesNotMatch(html,/GAMMALT REDAKTIONELLT RÅD|ANNA GAMLA RÅD|REDAKTIONELLA RÅD · INTE AI/,'Old static advice does not return when AI is active');
+  assert.doesNotMatch(html,/HEMLIGT|unknown/,'B cards, mutual NO and unknown rows are absent from both summary and AI page');
+  const empty=renderSharedResult([{card_id:'general-02',answer:true},{card_id:'general-03',answer:false}],
+    'teen',[],{}, {ai:true});
+  assert.doesNotMatch(empty,/swipe-fact-summary|data-testid="ai-reflection"/,'No summary is fabricated without verified A matches');
+}
+assert.match(script,/sharedFactOverview\(overviewGroups,'Gemensamt i alla kortlekar'\)/,
+  'Cross-deck insights reuse the factual icon overview');
+assert.match(script,/for\(const \{groups\} of byDeck.values\(\)\)/,
+  'Cross-deck overview uses only the A-only byDeck result, not private swipe answers');
+console.log('PASS: compact factual icon overview is compatible with AI and excludes unshared answers');
+
 console.log('PASS: shared result renderer and role summaries reject B, NO and unknown cards');
 
 {
