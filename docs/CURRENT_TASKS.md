@@ -4,6 +4,11 @@
 **Källa:** kod på `main` inklusive PR #90–#94, `backend-config.js`, kontrollerade GitHub Actions/UI/Pages-körningar, Supabase-migrationer och read-only SQL efter installation. Detta är **inte** ett påstående om genomförda verkliga tvåkontotester.  
 **Syfte:** En enda kort, uppdaterad handlingslista för manuellt och schemalagt utvecklingsarbete. `ROADMAP.md` bevarar detaljerna och äldre beslut.
 
+## 3 november 2026 – INT-03C/UX-01: tyst bakgrundsuppdatering av Inkorgen
+
+- [x] **INT-03C – kod och syntetisk test:** oförändrade meddelanden och oförändrat antal olästa ska inte rita om Inkorgen var femtonde sekund; regelbunden serverkontroll fortsätter. Vid ny data uppdateras vyn, vid fel rensas osäkert tidigare innehåll som förut. En manuell uppdatering med redan inlästa meddelanden döljer inte konversationen i väntan på servern. Mobilens huvudskroll bevaras vid omritning. Node-regression och Playwright på mobil ligger på branch `fix/inbox-quiet-refresh-scroll-20261103`.
+- [ ] **INT-03C release/QA:** grön UI-/Playwright-CI, merge och Pages återstår; testa därefter en faktisk tvåkontosession och iOS-Safari samt långa inkorgstrådar. Tyst uppdatering betyder inte att meddelanden raderas eller att läskvittenser skapas.
+
 ## 3 november 2026 – ytterligare read-only negativtest av verkliga RPC:er
 
 - [x] **INT-01/03N – obehörig, icke-existerande identitet (SQL i realdatabasen):** under `BEGIN READ ONLY` med lokal `authenticated`-roll och en syntetisk UUID som inte är kopplad till en familj gav `my_family_members()`, `shared_swipe_matches('general')`, `shared_understanding_cards()`, `my_family_messages()` och `my_family_unread_message_count()` alla **0**. Transaktionen återställdes med `ROLLBACK`. Ingen faktisk inloggning skedde; provet bevisar **inte** tvåkontotest eller JWT-signaturvalidering.
