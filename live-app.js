@@ -2,14 +2,15 @@ import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
 import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261102-shared-context1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261102-shared-context1';
 import {createAiResultExperience} from './ai-result-ui.js?v=20261102-shared-context1';
+import {renderParentMiGuide} from './communication/mi-guide.js?v=20261103-mi1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
 // Do not activate background polling until the server-side A allowlist and
 // authenticated two-account revocation tests have been approved.
 const sharedPollingEnabled=c.enableSharedPolling===true;
-// The all-deck insights page remains OFF until the server A allowlist and
-// authenticated two-account tests are verified. B sharing has a separate gate.
+// Shared insights and explicitly shared B cards are enabled for internal testing.
+// Authenticated two-account and revocation verification is still required.
 const sharedInsightsEnabled=c.enableSharedInsights===true;
 const sharedUnderstandingEnabled=c.enableSharedUnderstanding===true;
 const schysstaListEnabled=c.enableSchysstaList===true;
@@ -676,7 +677,7 @@ function nextVisibleAfter(index){return visibleGeneralIndices().find(i=>i>index)
 function advanceSwipe(direction){if(activeThemeDeck){advanceThemeSwipe(direction);return;}if(swipeBusy||importanceSaving.size||page()!=='swipe'||!user||swipeIndex>=STATEMENTS.length||!visibleGeneralIndices().includes(swipeIndex))return;const el=$('swipe-card');if(!el)return;const index=swipeIndex,viewer=user.id,session=sharedSession;swipeBusy=true;const reduce=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;if(!reduce){el.style.transform='translateX('+(direction==='yes'?'120vw':'-120vw')+') rotate('+(direction==='yes'?18:-18)+'deg)';el.style.opacity='0';}setTimeout(()=>saveSwipeAnswer(direction,index,viewer,session),reduce?0:220);}
 function setupSwipeGesture(){const el=$('swipe-card');if(!el)return;let start=null;const reset=()=>{start=null;el.style.transform='';el.classList.remove('swipe-dragging','swipe-preview-yes','swipe-preview-no');};el.addEventListener('pointerdown',e=>{if(e.target.closest?.('[data-importance-control]')||(e.button!==undefined&&e.button!==0))return;start={id:e.pointerId,x:e.clientX,y:e.clientY,dragging:false};});el.addEventListener('pointermove',e=>{if(!start||start.id!==e.pointerId||swipeBusy)return;const dx=e.clientX-start.x,dy=e.clientY-start.y;if(!start.dragging&&Math.abs(dy)>Math.abs(dx)&&Math.abs(dy)>12){start=null;return;}if(Math.abs(dx)>10&&Math.abs(dx)>Math.abs(dy)){start.dragging=true;el.setPointerCapture?.(e.pointerId);}if(!start.dragging)return;el.classList.add('swipe-dragging');el.classList.toggle('swipe-preview-yes',dx>35);el.classList.toggle('swipe-preview-no',dx< -35);el.style.transform='translateX('+dx+'px) rotate('+Math.max(-13,Math.min(13,dx/18))+'deg)';});el.addEventListener('pointerup',e=>{if(!start||start.id!==e.pointerId)return;const dx=e.clientX-start.x,dragged=start.dragging;reset();if(dragged&&Math.abs(dx)>=85)advanceSwipe(dx>0?'yes':'no');});el.addEventListener('pointercancel',reset);}
 
-function page(){const h=decodeURIComponent(location.hash.slice(1));return h==='insikter'?'insikter':nav.some(n=>n[0]===h)?h:'hem';}
+function page(){const h=decodeURIComponent(location.hash.slice(1));return ['insikter','mi-foralder'].includes(h)?h:nav.some(n=>n[0]===h)?h:'hem';}
 // On mobile, the scroll container is .live-main rather than window.
 function scrollLiveMainTop(){const main=document.querySelector('.live-main');if(main)main.scrollTop=0;window.scrollTo(0,0);}
 function menu(){
@@ -687,7 +688,7 @@ function menu(){
     const descriptor=key==='inkorg'?' olästa meddelanden':' obesvarade regelförslag';
     const aria=count?' aria-label="'+label+', '+count+descriptor+'"':'';
     const badge=count?'<span class="live-nav-count" aria-hidden="true">'+(count>9?'9+':count)+'</span>':'';
-    return '<a href="#'+key+'"'+(page()===key?' aria-current="page"':'')+aria+'>'+label+badge+'</a>';
+    return '<a href="#'+key+'"'+(page()===key||(page()==='mi-foralder'&&key==='kommunikation')?' aria-current="page"':'')+aria+'>'+label+badge+'</a>';
   };
   for(const id of ['live-desktop-nav','live-mobile-nav'])$(id).innerHTML=nav.map(navItem).join('');
 }
@@ -1029,11 +1030,13 @@ function schysstaView(){
     +'<p>Beskriv helst vad ni vill göra, snarare än vad den andra ska sluta med.</p>'
     +'<ul><li>När ska regeln gälla?</li><li>Vad betyder den i praktiken för var och en?</li><li>När vill ni prata om hur den fungerar?</li></ul>'
     +'<p>Ni får båda föreslå ändringar. Vuxnas ansvar för trygghet och omsorg ska inte läggas på tonåringen.</p>'
-    +(viewerRole()==='parent'?'<p>Som förälder: prova att prata om förslaget och lyssna på tonåringens perspektiv innan du skickar. <a href="#kommunikation">Öppna kommunikationsråden</a>.</p>':'')+'</details>'
+    +(viewerRole()==='parent'?'<p>Som förälder: prova att prata om förslaget och lyssna på tonåringens perspektiv innan du skickar. <a href="#mi-foralder">Läs guiden om att lyssna före förslag</a>.</p>':'')+'</details>'
     +'<button class="live-button" type="submit"'+(schysstaSubmitting?' disabled':'')+'>'+(schysstaSubmitting?'Skickar…':schysstaEditTarget?'Skicka ändringsförslag':'Skicka regelförslag')+'</button>'
     +'<button class="schyssta-secondary" type="button" id="schyssta-compose">Stäng formuläret</button></form>'
     :'<button class="live-button" type="button" id="schyssta-compose">+ Föreslå en regel</button>';
-  return '<div class="schyssta-view"><h1>Schyssta listan</h1><p>Här samlar ni sådant ni båda har sagt ja till. Regler kan komma från Gillaswajpen eller skrivas av någon av er.</p><button class="schyssta-secondary" type="button" data-schyssta-refresh>Uppdatera listan</button>'
+  return '<div class="schyssta-view"><h1>Schyssta listan</h1><p>Här samlar ni sådant ni båda har sagt ja till. Regler kan komma från Gillaswajpen eller skrivas av någon av er.</p>'
+    +(viewerRole()==='parent'?'<p><a href="#mi-foralder">För dig som förälder: lyssna före regelförslaget</a></p>':'')
+    +'<button class="schyssta-secondary" type="button" data-schyssta-refresh>Uppdatera listan</button>'
     +card('<h2>Behöver ditt svar'+(needs.length?' ('+needs.length+')':'')+'</h2><p>Förslag från den andra personen visas här först.</p>'+list(needs,'Inga nya förslag väntar på ditt svar.'))
     +firstRuleHint
     +card('<h2>'+(schysstaEditTarget?'Föreslå ändring av regel':'Skriv ett eget förslag')+'</h2>'+formHtml+(schysstaMessage?'<p role="status" class="schyssta-feedback">'+esc(schysstaMessage)+'</p>':''))
@@ -1059,7 +1062,10 @@ if(key==='personlighet')return personalityExperience.render({isPaired:members.le
 if(key==='regler')return schysstaView();
 if(key==='inkorg')return inboxView();
 if(key==='medlare')return mediatorExperience.render();
-if(key==='kommunikation')return '<h1>Kommunikationsråd</h1><p>Konkreta samtalsöppningar från den tidigare Hemmakompassen.</p>'+COMMUNICATION_GUIDES.map(([title,intro,tips])=>card('<h2>'+esc(title)+'</h2><p>'+esc(intro)+'</p><ul>'+tips.map(t=>'<li>'+esc(t)+'</li>').join('')+'</ul>')).join('');
+if(key==='mi-foralder')return viewerRole()==='parent'?renderParentMiGuide():'<h1>Samtalsstöd för föräldrar</h1>'+card('<p>Den här guiden är skriven för föräldrar. Du kan läsa de gemensamma råden i stället.</p><a href="#kommunikation">Till Kommunikationsråd</a>');
+if(key==='kommunikation')return '<h1>Kommunikationsråd</h1><p>Konkreta samtalsöppningar som ni kan pröva utan att någon måste hålla med.</p>'
+  +(viewerRole()==='parent'?card('<h2>För dig som förälder</h2><p>Öva på att förstå tonåringens perspektiv innan du ger råd eller föreslår regler. En MI-inspirerad guide med exempel och källor.</p><a class="live-button" href="#mi-foralder">Lyssna innan du föreslår</a>'):'')
+  +COMMUNICATION_GUIDES.map(([title,intro,tips])=>card('<h2>'+esc(title)+'</h2><p>'+esc(intro)+'</p><ul>'+tips.map(t=>'<li>'+esc(t)+'</li>').join('')+'</ul>')).join('');
 return '<h1>'+label+'</h1>'+card('<h2>Funktionen är under utveckling</h2><p>Du är inloggad som '+esc(profile?.display_name||user.email)+'. Vi bygger nu den riktiga kopplingen till Supabase så att dina svar och den andra familjemedlemmens uppgifter hålls åtskilda.</p><p>Här visas inga påhittade demodata och inga svar lagras lokalt som om de vore delade med familjen.</p><a class="live-button" href="#hem">Till startsidan</a>');
 }
 function autoAnalyze(){
@@ -1236,7 +1242,6 @@ window.setInterval(()=>{
   if(page()==='inkorg'&&!familyChatDraft.trim()&&!familyChatSending&&!familyChatLoading)void fetchFamilyChat();
   else if(page()==='hem')void fetchFamilyChatUnread();
 },15000);
-window.addEventListener('focus',()=>void pollSharedMatches());
 window.setInterval(()=>void pollSharedMatches(),SHARED_POLL_INTERVAL_MS);
 // If the other family member withdraws consent, remove their profile on the next check.
 window.setInterval(()=>{if(!document.hidden&&page()==='personlighet'&&user)void personalityExperience.refreshShared();},15000);
