@@ -571,3 +571,8 @@
 .pf-export button{min-height:44px;max-width:100%;padding:10px 15px;border:1px solid #ad946d;border-radius:10px;background:transparent;color:#f2d5a6;font:inherit;cursor:pointer}
 .pf-export button:focus-visible{outline:3px solid #f5bb65;outline-offset:3px}
 .pf-export .live-muted{font-size:13px;line-height:1.6;margin-top:12px}
+
+/* Explicit acknowledgement is not implied by opening the private inbox. */
+.family-chat-read-controls{display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:14px 16px;margin:14px 0;border:1px solid #a99271;border-radius:12px}
+.family-chat-read-controls p{margin:0;flex:1 1 230px;line-height:1.55}
+.family-chat-read-controls button{min-height:44px;white-space:normal}
