@@ -5,13 +5,14 @@
 - [x] **UX-01C – implementerat på utvecklingsgrenen:** en tangentbordssynlig länk ”Hoppa till huvudinnehållet” i den inloggade appen flyttar fokus till `#live-app` utan att ändra SPA-routens hash. Vid riktigt sidbyte flyttas fokus till nytt huvudinnehåll. Identiska bakgrundsuppdateringar bygger inte längre om redan fokuserade menylänkar; en meny som måste uppdateras återställer länken och horisontell skroll.
 - [x] **UX-01C – mobil och Gillaswajpen:** aktiv mobilflik flyttas fram i den horisontella menyn vid sidbyte. Undersidan Gemensamma insikter markerar Gillaswajpen som aktuell primär flik. Globala kortgenvägar med vänster-/högerpil sparar inte ett oavsiktligt JA/NEJ om fokus ligger på länkar, knappar, formulärkontroller eller andra interaktiva element, och inte heller med modifieringstangenter.
 - [x] **Automatisk verifiering på branch, PR #103:** GitHub Actions UI/browser-test **#41726616629 godkänd** efter rättad MI-guide-kontraktsassertion. Inkluderar Node-kontrakttest, statiskt bygge och syntetiska Chromium/Playwright-prov med tangentbordsfokus, genväg till main, aktiv sista mobilflik, insiktsflik och inget oavsiktligt swajpsvar från fokuserad menylänk. Versionssträngen har höjts konsekvent i HTML och importkedja.
-- [ ] **Release och verklig UX-QA:** verifiera PR-merge, main-CI och Pages separat. Riktiga inloggade konton, fysisk iOS Safari med VoiceOver, 320/390 px, stora tecken och skärmläsare är **inte** genomförda genom denna syntetiska Chromium-testning. UX-01 som helhet är fortsatt öppen.
+- [x] **UX-01C release verifierad 3 november 2026:** PR #103 är mergad i `main` som `57c54c3b2092b28d71666380e2b447f4594123bb`. Slutlig PR-CI **#41726909258**, main UI/Node/Playwright **#41727106770** och Pages **#41727105396** är alla **godkända**. Endast kod, tester och dokumentation – inga databasskrivningar eller förändrade delningsflaggor.
+- [ ] **UX-01C verklig QA återstår:** två riktiga autentiserade testkonton, fysisk iOS Safari med VoiceOver, skärmläsare, 320/390 px och stora tecken är **inte** verifierade genom syntetiskt Chromium. Fortsätt UX-01 före extern pilot.
 
 
 
 ## NULÄGE – avstämning 3 november 2026 (läs först)
 
-**Gäller framför historiska statusnoteringar nedan.** PR **#90–#101** är mergade och publicerade till `main` med godkänd kod-/UI-/Pages-verifiering. PR #91:s riktade migration är installerad och verifierad i Supabase. PR #94 omfattar endast egen IPIP-svarexport, inte hela användarkontots data. PR **#80** är ett **öppet, ersatt utkast som inte ska mergas**. Detaljerad aktuell checklista: **[docs/CURRENT_TASKS.md](docs/CURRENT_TASKS.md)**. Äldre planer nedan finns kvar som historik och kan beskriva föråldrade lägen.
+**Gäller framför historiska statusnoteringar nedan.** PR **#90–#103** är mergade och publicerade till `main` med godkänd kod-/UI-/Pages-verifiering. PR #91:s riktade migration är installerad och verifierad i Supabase. PR #94 omfattar endast egen IPIP-svarexport, inte hela användarkontots data. PR **#80** är ett **öppet, ersatt utkast som inte ska mergas**. Detaljerad aktuell checklista: **[docs/CURRENT_TASKS.md](docs/CURRENT_TASKS.md)**. Äldre planer nedan finns kvar som historik och kan beskriva föråldrade lägen.
 
 | Del | Kod och automatisk kontroll | Viktig kvarstående begränsning |
 | --- | --- | --- |
