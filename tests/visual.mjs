@@ -320,6 +320,13 @@ try{
   await checkOverflow(m.page,"Mobile homepage");
   await capture(m.page,"mobile-home.png");
   await checkMobileNavigation(m.page,'390px mobile navigation');
+  await m.page.goto(base+'#kommunikation',{waitUntil:'load'});
+  await m.page.getByRole('link',{name:'Lyssna innan du föreslår'}).click();
+  await m.page.getByRole('heading',{name:'Lyssna innan du föreslår'}).waitFor();
+  assert.equal(await m.page.locator('.mi-parent-guide a[href="#regler"]').count(),1,'MI guide links to mutual agreements');
+  assert.equal(await m.page.locator('#live-mobile-nav a[href="#kommunikation"]').getAttribute('aria-current'),'page','MI subpage retains communication tab');
+  await checkOverflow(m.page,'390px parent MI guide');
+  await capture(m.page,'mobile-mi-parent-guide.png');
   await m.page.goto(base+"#personlighet",{waitUntil:"load"});
   await m.page.getByRole('button',{name:'Börja testet'}).waitFor();
   await m.page.getByRole('button',{name:'Börja testet'}).click();
@@ -517,6 +524,11 @@ try{
   await capture(narrow.page,'mobile-320-navigation.png');
   await narrow.context.close();
   const soloTeen=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,role:'teen'});
+  await soloTeen.page.goto(base+'#kommunikation',{waitUntil:'load'});
+  assert.equal(await soloTeen.page.getByRole('link',{name:'Lyssna innan du föreslår'}).count(),0,'Parent MI guide is not advertised to teens');
+  await soloTeen.page.goto(base+'#mi-foralder',{waitUntil:'load'});
+  await soloTeen.page.getByRole('heading',{name:'Samtalsstöd för föräldrar'}).waitFor();
+  assert.equal(await soloTeen.page.locator('.mi-parent-guide').count(),0,'Direct route cannot render parent MI content for a teen');
   await soloTeen.page.goto(base+'#swipe',{waitUntil:'load'});
   await soloTeen.page.locator("#swipe-card[aria-label^='Kort 1 av 34']").waitFor();
   await soloTeen.page.getByRole('button',{name:'Ja'}).click();
