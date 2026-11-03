@@ -22,7 +22,8 @@ test('MI editorial support states its limits, respects teenager autonomy, and us
 test('MI gets a distinct route gated by parent role and correct navigation highlighting',()=>{
   assert.match(live,/h==='mi-foralder'/);
   assert.match(live,/key==='mi-foralder'\)return viewerRole\(\)==='parent'\?renderParentMiGuide\(\)/);
-  assert.match(live,/key==='kommunikation'&&viewerRole\(\)==='parent'/);
+  assert.match(live,/if\(key==='kommunikation'\)return/);
+  assert.match(live,/viewerRole\(\)==='parent'\?card/);
   assert.match(live,/page\(\)==='mi-foralder'&&key==='kommunikation'/);
   assert.match(live,/viewerRole\(\)==='parent'\?'<p><a href="#mi-foralder"/);
   assert.match(build,/communication\/mi-guide\.js/);
