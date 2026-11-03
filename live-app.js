@@ -1,8 +1,8 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261103-swipe-sync2';
-import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261103-swipe-sync2';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261103-swipe-sync2';
-import {renderParentMiGuide} from './communication/mi-guide.js?v=20261103-swipe-sync2';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261103-home-notices3';
+import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261103-home-notices3';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261103-home-notices3';
+import {renderParentMiGuide} from './communication/mi-guide.js?v=20261103-home-notices3';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
