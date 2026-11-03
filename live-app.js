@@ -273,7 +273,7 @@ function sharedFactOverview(groups,title='Gemensamt i korthet'){
   const entries=[...groups.entries()].filter(([,items])=>items.length>0);
   if(!entries.length)return '';
   const overview=entries.map(([category,items])=>{
-    const icon=summaryIconFor(category);
+    const icon=summaryIconFor(category,items[0].statement);
     const first=items[0].statement;
     const rest=items.length-1;
     return '<li>'+summaryIcon(icon)+'<div><h4>'+esc(category)+' · '+items.length+' '+
