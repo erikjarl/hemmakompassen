@@ -1,5 +1,13 @@
 # Hemmakompassen — utvecklingsplan (senast avstämd 2026-11-03)
 
+## 3 november 2026 – UX-01C: tangentbordsfokus, mobilmeny och säkra piltangenter (PR #103)
+
+- [x] **UX-01C – implementerat på utvecklingsgrenen:** en tangentbordssynlig länk ”Hoppa till huvudinnehållet” i den inloggade appen flyttar fokus till `#live-app` utan att ändra SPA-routens hash. Vid riktigt sidbyte flyttas fokus till nytt huvudinnehåll. Identiska bakgrundsuppdateringar bygger inte längre om redan fokuserade menylänkar; en meny som måste uppdateras återställer länken och horisontell skroll.
+- [x] **UX-01C – mobil och Gillaswajpen:** aktiv mobilflik flyttas fram i den horisontella menyn vid sidbyte. Undersidan Gemensamma insikter markerar Gillaswajpen som aktuell primär flik. Globala kortgenvägar med vänster-/högerpil sparar inte ett oavsiktligt JA/NEJ om fokus ligger på länkar, knappar, formulärkontroller eller andra interaktiva element, och inte heller med modifieringstangenter.
+- [x] **Automatisk verifiering på branch, PR #103:** GitHub Actions UI/browser-test **#41726616629 godkänd** efter rättad MI-guide-kontraktsassertion. Inkluderar Node-kontrakttest, statiskt bygge och syntetiska Chromium/Playwright-prov med tangentbordsfokus, genväg till main, aktiv sista mobilflik, insiktsflik och inget oavsiktligt swajpsvar från fokuserad menylänk. Versionssträngen har höjts konsekvent i HTML och importkedja.
+- [ ] **Release och verklig UX-QA:** verifiera PR-merge, main-CI och Pages separat. Riktiga inloggade konton, fysisk iOS Safari med VoiceOver, 320/390 px, stora tecken och skärmläsare är **inte** genomförda genom denna syntetiska Chromium-testning. UX-01 som helhet är fortsatt öppen.
+
+
 
 ## NULÄGE – avstämning 3 november 2026 (läs först)
 
