@@ -329,6 +329,29 @@ try{
   await checkOverflow(m.page,"Mobile homepage");
   await capture(m.page,"mobile-home.png");
   await checkMobileNavigation(m.page,'390px mobile navigation');
+  // UX-01: verify keyboard navigation and actual browser focus.
+  const skipHash=new URL(m.page.url()).hash;
+  await m.page.locator('#live-skip-to-main').focus();
+  const skipVisible=await m.page.locator('#live-skip-to-main').evaluate(el=>{
+    const rect=el.getBoundingClientRect();
+    return rect.top>=0&&rect.left>=0&&rect.bottom<=window.innerHeight;
+  });
+  assert.ok(skipVisible,'Skip link becomes visible when focused');
+  await m.page.keyboard.press('Enter');
+  assert.equal(await m.page.evaluate(()=>document.activeElement?.id),'live-app','Skip link focuses the main landmark');
+  assert.equal(new URL(m.page.url()).hash,skipHash,'Skip link must not change the SPA route');
+  await m.page.locator('#live-mobile-nav a[href="#installningar"]').focus();
+  await m.page.keyboard.press('Enter');
+  await m.page.getByRole('heading',{name:'Inställningar'}).waitFor();
+  assert.equal(await m.page.evaluate(()=>document.activeElement?.id),'live-app','Route changes move focus to new content');
+  const settingsNav=await m.page.locator('#live-mobile-nav').boundingBox();
+  const settingsTab=await m.page.locator('#live-mobile-nav a[href="#installningar"]').boundingBox();
+  assert.ok(settingsNav&&settingsTab&&settingsTab.x>=settingsNav.x-2&&settingsTab.x+settingsTab.width<=settingsNav.x+settingsNav.width+2,
+    'Last mobile tab is revealed automatically when activated via keyboard');
+  await m.page.goto(base+'#insikter',{waitUntil:'load'});
+  assert.equal(await m.page.locator('#live-mobile-nav a[href="#swipe"]').getAttribute('aria-current'),'page',
+    'The insights subpage keeps Gillaswajpen marked as the active primary tab');
+  await m.page.goto(base+'#hem',{waitUntil:'load'});
   await m.page.goto(base+'#kommunikation',{waitUntil:'load'});
   await m.page.getByRole('link',{name:'Lyssna innan du föreslår'}).click();
   await m.page.getByRole('heading',{name:'Lyssna innan du föreslår'}).waitFor();
