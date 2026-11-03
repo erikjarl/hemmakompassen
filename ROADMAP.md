@@ -3,12 +3,12 @@
 
 ## NULÄGE – avstämning 3 november 2026 (läs först)
 
-**Gäller framför historiska statusnoteringar nedan.** PR **#90–#96** är mergade och publicerade till `main` med godkänd kod-/UI-/Pages-verifiering. PR #91:s riktade migration är installerad och verifierad i Supabase. PR #94 omfattar endast egen IPIP-svarexport, inte hela användarkontots data. PR **#80** är ett **öppet, ersatt utkast som inte ska mergas**. Detaljerad aktuell checklista: **[docs/CURRENT_TASKS.md](docs/CURRENT_TASKS.md)**. Äldre planer nedan finns kvar som historik och kan beskriva föråldrade lägen.
+**Gäller framför historiska statusnoteringar nedan.** PR **#90–#97** är mergade och publicerade till `main` med godkänd kod-/UI-/Pages-verifiering. PR #91:s riktade migration är installerad och verifierad i Supabase. PR #94 omfattar endast egen IPIP-svarexport, inte hela användarkontots data. PR **#80** är ett **öppet, ersatt utkast som inte ska mergas**. Detaljerad aktuell checklista: **[docs/CURRENT_TASKS.md](docs/CURRENT_TASKS.md)**. Äldre planer nedan finns kvar som historik och kan beskriva föråldrade lägen.
 
 | Del | Kod och automatisk kontroll | Viktig kvarstående begränsning |
 | --- | --- | --- |
 | **Big Five/IPIP-50** | **Implementerat på main**: 50 egna svar, fem skalor, privat återupptagning, samtyckesstyrd fempoängsdelning, horisontella percentilstaplar (PR #71–#78), automatiska AI-reflektioner (PR #85–#86) och egen JSON-svarexport (PR #94). | Ingen fastställd svensk/ungdomsnorm eller mätinvarians. Inget heltäckande autentiserat sluttest eller versionssäkra omtestomgångar verifierade. |
-| **Inkorg** | **Implementerat**: riktiga privata familjemeddelanden i båda riktningar, historik, läskvittenser, familjeisolering och regelaviseringar (PR #60, #68–#69). | Testa verkliga konton, radering/retention och återanslutning. |
+| **Inkorg** | **Implementerat**: privata tvåvägsmeddelanden, läskvittenser efter uttryckligt aktivt val, skydd mot dubbla anrop och onödiga bakgrundsomritningar, familjeisolering och regelaviseringar (PR #60, #68–#69, #96–#97). | Testa verkliga konton, radering/retention och återanslutning. |
 | **Schyssta listan** | **Implementerat och aktiverat i intern test-UI**: manuella och kortbaserade förslag, separata JA, ändring, historik/återkallelse, notiser, sök/filter och neutral väntan (PR #56–#67). `enableSchysstaList=true`. | Autentiserad helhetsverifiering mellan två konton fortfarande en öppen uppgift. |
 | **Gillaswajpen** | **Delvis klar**: bred kortbank, A/B-modell, egen sparning, AI-reflektion vid säkra JA+JA (PR #85–#86). Gemensam insiktsvy och **uttryckligt återkallelig B-delning** aktiva för intern testning (PR #88). | `enableSharedPriorities` och `enableSharedPolling` är fortfarande **false**. B-vy och AI måste genomgå autentiserat tvåkontotest, inklusive återkallelse, innan extern användning. Ingen automatisk delning av tidigare B-JA. |
 | **Kommunikationsråd / AI-medlaren** | AI-medlarens privata testchatt och behöriga kontext är driftsatta internt (PR #81–#89). Separat MI-inspirerad föräldraguide med källor är kodad, testad, mergad och publicerad via PR #90. | **Riktigt autentiserat tvåkontotest, återkallelsetest, ungdomsskydd och klinisk/dataskyddsmässig granskning återstår.** MI-sidans användbarhet och pedagogiska säkerhet är inte validerad. |
@@ -21,9 +21,9 @@
 
 ## Inkorgens tysta uppdatering och mobilskroll – INT-03C
 
-- [x] **Kod på utvecklingsbranch:** om den serververifierade meddelandelistan och antalet olästa inte ändras gör 15-sekunders bakgrundskontrollen ingen onödig fullständig omritning. Ny data/fel visas fortfarande. En manuell uppdatering håller kvar redan visad konversation under hämtning, och inkorgens skrollposition bevaras när innehåll faktiskt byts.
-- [x] **Tester skapade:** Node-tester för identisk/ändrad och misslyckad hämtning samt återkommande oläst-räkning; syntetiskt Playwright-mobiltest för att behålla konversationen och skrollposition vid manuell uppdatering. Branch `fix/inbox-quiet-refresh-scroll-20261103`.
-- [ ] **Release och verklig QA:** CI, merge, Pages samt riktig autentiserad tvåkontokontroll och Safari-/skärmläsargranskning återstår.
+- [x] **PR #97 mergad och publicerad:** om den serververifierade meddelandelistan och antalet olästa inte ändras gör 15-sekunders bakgrundskontrollen ingen onödig fullständig omritning. Ny data/fel visas fortfarande. En manuell uppdatering håller kvar redan visad konversation under hämtning, och inkorgens skrollposition bevaras när innehåll faktiskt byts.
+- [x] **Tester och release verifierade:** Node-tester för identisk/ändrad och misslyckad hämtning, konkurrerande historikpaginering och oläst-räkning; syntetiskt Playwright-mobiltest för konversation och skrollposition. PR UI **#41628025008**, main UI **#41628216811**, Pages **#41628215427** godkända, merge `5f9d445fc88dc4974b57c493a265942a64362cd4`.
+- [ ] **Verklig QA:** autentiserad tvåkontokontroll, långa konversationer, Safari- och skärmläsargranskning återstår. CI, merge och Pages är klara.
 
 ## INT-01/03 – negativt auktoriseringsprov i verkliga Supabase (utan dataändringar)
 
