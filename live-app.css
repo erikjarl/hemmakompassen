@@ -565,3 +565,9 @@
 .swipe-finished-actions{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:12px;margin-top:22px}
 .swipe-finished-actions .live-button{min-height:44px;max-width:100%;white-space:normal}
 @media(max-width:430px){.swipe-finished-actions{flex-direction:column}.swipe-finished-actions .live-button{width:100%}}
+
+/* Personal IPIP export is self-only and available for partial or complete answers. */
+.pf-export{margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
+.pf-export button{min-height:44px;max-width:100%;padding:10px 15px;border:1px solid #ad946d;border-radius:10px;background:transparent;color:#f2d5a6;font:inherit;cursor:pointer}
+.pf-export button:focus-visible{outline:3px solid #f5bb65;outline-offset:3px}
+.pf-export .live-muted{font-size:13px;line-height:1.6;margin-top:12px}

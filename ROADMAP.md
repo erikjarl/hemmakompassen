@@ -3,7 +3,7 @@
 
 ## NULÄGE – avstämning 3 november 2026 (läs först)
 
-**Gäller framför historiska statusnoteringar nedan.** PR **#90–#92** är mergade till `main` med godkänd kod-/UI-/Pages-verifiering. PR #91:s riktade migration är installerad och verifierad i Supabase. Nästa startsidesförbättring finns ännu på utvecklingsbranch. PR **#80** är ett **öppet, ersatt utkast som inte ska mergas**. Detaljerad aktuell checklista: **[docs/CURRENT_TASKS.md](docs/CURRENT_TASKS.md)**. Äldre planer nedan finns kvar som historik och kan beskriva föråldrade lägen.
+**Gäller framför historiska statusnoteringar nedan.** PR **#90–#93** är mergade och publicerade till `main` med godkänd kod-/UI-/Pages-verifiering. PR #91:s riktade migration är installerad och verifierad i Supabase. Egen IPIP-export är under utveckling på separat branch. PR **#80** är ett **öppet, ersatt utkast som inte ska mergas**. Detaljerad aktuell checklista: **[docs/CURRENT_TASKS.md](docs/CURRENT_TASKS.md)**. Äldre planer nedan finns kvar som historik och kan beskriva föråldrade lägen.
 
 | Del | Kod och automatisk kontroll | Viktig kvarstående begränsning |
 | --- | --- | --- |
@@ -19,12 +19,18 @@
 **Kort arbetsordning:** INT-01/02/03/04 samt **AI-01D** (autentiserade tvåkontotester, sekretess/återkallelse) → SW-01/02/03/04 (testa och färdigställ befintlig B-/insiktsfunktion; prioritets- och polling-flaggor är av) → MI-01B, PF-01/02/03, UX-01/02, NOT-01 → **AI-02/03: tvåkontotesta redan driftsatta AI-reflektioner** → SEC-02 och AI-skyddsgranskning/data/pilot. Se [aktuell utvecklingskö](docs/CURRENT_TASKS.md).
 
 
-## Nytt delsteg 3 november – startsida/aviseringar (branchkod)
+## Personlighetstest 3 november – export av egna sparade svar (PF-01A)
+
+- [x] **PF-01A (branchkod):** särskild exportknapp på resultat- och delvis ifylld testvy, lokal JSON-fil med bara inloggade användarens giltiga svar, svenska frågetexter, instrumentversion och exportdatum. Ingen partnersvar, AI-text, kontoidentifierare eller ny databasskrivning. Användaren uppmanas att förvara filen privat.
+- [x] **Testkod:** Node-tester för partiella/kompletta exporter samt Playwright som läser tillbaka den faktiska webbläsarnedladdningen och validerar innehåll/privat data. Branch: `feature/ipip-own-answer-export-20261103`.
+- [ ] **PF-01B:** genomför CI/merge/Pages, verklig iOS Safari-granskning och separat arbete med versionssäkra omtestningssessioner, historik, fullständig export och radering. Funktionen innebär inte att full datarättighetshantering är klar.
+
+## Nytt delsteg 3 november – startsida/aviseringar (PR #93)
 
 - [x] **NOT-01A:** okänt antal olästa meddelanden visas som fel/okänd kontroll, inte som säkert noll. Startsidan märker partiellt kända summor ”minst”, ger en knapp för nytt försök och visar inga känsliga meddelandetexter i varningen.
 - [x] **UX-03A:** de sex startsidekorten beskriver nu riktiga funktioner, inklusive begränsningar i AI- och samtyckesflöden; inga generiska ”ansluts stegvis”-texter.
-- [x] **Automatiska tester på branch:** Node-kontroller för okänd/rättad lässtatus och Playwright med syntetiska serverfel och återhämtning. Branch: `fix/home-unread-status-modules-20261103`.
-- [ ] **Slutför release:** grön CI, merge och Pages samt senare autentiserad verifiering. Framtida aktivitets-/resultataviseringar är fortfarande en öppen separat del av NOT-01.
+- [x] **Automatiska tester och release #93:** Node-kontroller för okänd/rättad lässtatus och Playwright med syntetiska serverfel och återhämtning. Grön PR-CI #41619480644, main UI #41619633238 och Pages #41619631482. Merge `f94221ce3d3fa208f75d7efc614162afcaeb90da`.
+- [ ] **Kvarstår:** autentiserad tvåkontoverifiering och framtida aktivitets-/resultataviseringar som separat del av NOT-01.
 
 ## Kodleverans i nytt utvecklingspass 3 november 2026 – överhoppning och delningsuppdatering
 

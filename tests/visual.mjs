@@ -472,6 +472,20 @@ try{
   assert.match(await completedPersonality.page.locator('.pf-reference-feedback').innerText(),/amerikanska vuxenurvalets/);
   assert.match(await completedPersonality.page.locator('.pf-reference-caveat').innerText(),/svenska översättning/);
   assert.equal(await completedPersonality.page.getByText('Våra profiler').count(),0,'No fabricated second profile');
+  // PF-01A: click the REAL UI export and inspect the downloaded local JSON.
+  const localDownload=completedPersonality.page.waitForEvent('download');
+  await completedPersonality.page.getByRole('button',{name:'Exportera mina egna svar (JSON)'}).click();
+  const savedExport=await localDownload;
+  assert.match(savedExport.suggestedFilename(),/^hemmakompassen-ipip50-egna-svar-\d{4}-\d{2}-\d{2}\.json$/);
+  const downloaded=JSON.parse(await fs.readFile(await savedExport.path(),'utf8'));
+  assert.equal(downloaded.instrument_id,'ipip50-sv-v1');
+  assert.equal(downloaded.answered_count,50);
+  assert.equal(downloaded.responses.length,50);
+  assert.equal(downloaded.responses[0].statement_sv.length>5,true);
+  assert.ok(!JSON.stringify(downloaded).includes('10000000-0000-0000'),'Downloaded self-answers contain no family identifiers');
+  assert.equal(Object.hasOwn(downloaded,'partner'),false,'Downloaded self-answers never contain partner profile');
+  assert.match(await completedPersonality.page.locator('.pf-export').innerText(),/Filen innehåller bara dina egna sparade svar/);
+
   await checkOverflow(completedPersonality.page,'Private personality profile 390px');
   await capture(completedPersonality.page,'mobile-personality-profile.png');
   await completedPersonality.page.locator('.pf-percentile-chart').screenshot({path:path.join(output,'mobile-personality-bars.png'),animations:'disabled'});

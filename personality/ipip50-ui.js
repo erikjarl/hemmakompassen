@@ -1,13 +1,42 @@
 import {IPIP50_V1} from './ipip50-v1.js';
 import {scoreIPIP50} from './ipip50-scoring.js';
-import {buildIPIP50FamilyInsights} from './ipip50-family-insights.js?v=20261103-home-notices3';
-import {richFamilyReflection} from './ipip50-family-copy.js?v=20261103-home-notices3';
-import {IPIP50_REFERENCE,IPIP50_PERCENTILE_BANDS,approximateReferencePercentile,referenceLimits,describeReferenceProfile,formatSv} from './ipip50-reference.js?v=20261103-home-notices3';
+import {buildIPIP50FamilyInsights} from './ipip50-family-insights.js?v=20261103-ipip-export4';
+import {richFamilyReflection} from './ipip50-family-copy.js?v=20261103-ipip-export4';
+import {IPIP50_REFERENCE,IPIP50_PERCENTILE_BANDS,approximateReferencePercentile,referenceLimits,describeReferenceProfile,formatSv} from './ipip50-reference.js?v=20261103-ipip-export4';
 import {loadMyIPIP50Answers,saveMyIPIP50Answer} from './ipip50-storage.js';
 
 const esc=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const ITEMS=IPIP50_V1.items;
 const FACTORS=IPIP50_V1.factors;
+// Export only the current viewer's explicitly saved answers; do not include
+// identity, another family member's profile, sharing status or AI text.
+export function buildOwnIPIP50Export(answers,exportedAt=new Date().toISOString()){
+  const responses=ITEMS.flatMap(item=>{
+    const value=answers?.[item.id];
+    return Number.isInteger(value)&&value>=1&&value<=5
+      ?[{item_id:item.id,statement_sv:item.sv,value}]
+      :[];
+  });
+  return {
+    format:'hemmakompassen-own-ipip50-v1',
+    instrument_id:IPIP50_V1.id,
+    instrument_version:IPIP50_V1.version,
+    language:IPIP50_V1.language,
+    exported_at:exportedAt,
+    answered_count:responses.length,
+    complete:responses.length===ITEMS.length,
+    note:'Preliminär svensk översättning. Inte ett diagnostiskt eller vetenskapligt validerat svenskt ungdomstest.',
+    responses
+  };
+}
+function downloadOwnIPIP50Export(filename,data){
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json;charset=utf-8'});
+  const blobUrl=URL.createObjectURL(blob);
+  const link=document.createElement('a');
+  link.href=blobUrl;link.download=filename;link.hidden=true;
+  document.body.appendChild(link);link.click();link.remove();
+  window.setTimeout(()=>URL.revokeObjectURL(blobUrl),30000);
+}
 const FIRST_UNANSWERED=answers=>Math.max(0,ITEMS.findIndex(item=>!Object.hasOwn(answers,item.id)));
 const SUM_KEYS=FACTORS.map(f=>f.id);
 function validatedPartnerPayload(data){
@@ -196,13 +225,13 @@ function familyReflectionPanel(parentProfile,teenProfile,viewerRole){
 
 function statusPanel(message){return '<section class="live-panel"><p class="pf-status" role="status">'+esc(message)+'</p></section>';}
 
-export function createPersonalityExperience({db,onRender,isSharingEnabled=false,useAiAnalysis=false,analysisPanel=()=>''}){
+export function createPersonalityExperience({db,onRender,isSharingEnabled=false,useAiAnalysis=false,analysisPanel=()=>'',saveExport=downloadOwnIPIP50Export}){
   let viewer=null,sequence=0,answers={},loading=false,loaded=false,loadError='',saving=false,saveError='';
-  let active=false,index=0,selectedAnswer=null,shareEnabled=false,shareBusy=false,shareError='',paired=null,partnerError='';
+  let active=false,index=0,selectedAnswer=null,shareEnabled=false,shareBusy=false,shareError='',paired=null,partnerError='',exportFeedback='';
   const repaint=()=>onRender();
   function reset(userId=null){
     viewer=userId;sequence++;answers={};loading=false;loaded=false;loadError='';saving=false;
-    saveError='';active=false;index=0;selectedAnswer=null;shareEnabled=false;shareBusy=false;shareError='';paired=null;partnerError='';
+    saveError='';active=false;index=0;selectedAnswer=null;shareEnabled=false;shareBusy=false;shareError='';paired=null;partnerError='';exportFeedback='';
   }
   async function fetchPaired(userId,token){
     if(!isSharingEnabled)return;
@@ -254,6 +283,9 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false,
     if(loadError)return heading+'<section class="live-panel"><p role="alert">'+esc(loadError)+'</p><button class="live-button" data-pf-action="reload" type="button">Försök igen</button></section>';
     if(!loaded)return heading+statusPanel('Förbereder testet…');
     const result=scoreIPIP50(answers),count=result.answeredCount,complete=result.complete;
+    const exportControls=count?'<div class="pf-export"><button type="button" data-pf-action="export">Exportera mina egna svar (JSON)</button>'+
+      '<p class="live-muted">Filen innehåller bara dina egna sparade svar och frågetexter – inga partnersvar eller AI-reflektioner. Förvara filen privat på din enhet.</p>'+
+      (exportFeedback?'<p role="status">'+esc(exportFeedback)+'</p>':'')+'</div>':'';
     if(active){
       const item=ITEMS[index],old=selectedAnswer?.id===item.id?selectedAnswer.value:answers[item.id],progress=Math.round(100*count/50);
       return heading+'<section class="live-panel pf-survey"><div class="pf-counter"><span>Fråga '+(index+1)+' av 50</span><span>'+count+' besvarade</span></div>'+
@@ -273,7 +305,7 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false,
         '<p>Det här är en preliminär svensk version av IPIP-50, inte ett normerat eller diagnostiskt test. Varken föräldern eller tonåringen får automatiskt se den andras svar eller resultat.</p>'+
         (useAiAnalysis?'<p><strong>AI-återkoppling:</strong> När du har besvarat alla frågor skapas automatiskt en reflekterande text från dina fem summerade poäng. De enskilda frågesvaren skickas inte till språkmodellen. En eventuell jämförelse bygger endast på bådas aktiva delningssamtycke.</p>':'')+
         '<p><strong>'+count+' av 50</strong> besvarade.</p><div class="pf-progress"><span style="width:'+Math.round(count/50*100)+'%"></span></div>'+
-        '<button type="button" class="live-button" data-pf-action="start">'+(count?'Fortsätt testet':'Börja testet')+'</button></section>';
+        '<button type="button" class="live-button" data-pf-action="start">'+(count?'Fortsätt testet':'Börja testet')+'</button>'+exportControls+'</section>';
     }
     const own=result;
     let other=null,role=viewerRole;
@@ -306,7 +338,7 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false,
     return heading+'<section class="live-panel pf-results"><h2>Din profil</h2><p>Dina fem skalor visar uppskattad placering jämfört med en amerikansk vuxenreferens, inte svenska normer.</p>'+
       percentileChart(own)+table(own)+(useAiAnalysis?analysisPanel('personality','own',getAiSnapshot()):referenceFeedback(own))+referenceCaveat()+
       '<p class="live-muted">Skalorna bygger på dina svar (10–50). Högt eller lågt är inte i sig bättre eller sämre. Den svenska översättningen behöver prövas vetenskapligt.</p>'+
-      '<button type="button" data-pf-action="review">Granska eller ändra mina svar</button></section>'+sharing+comparison;
+      '<button type="button" data-pf-action="review">Granska eller ändra mina svar</button>'+exportControls+'</section>'+sharing+comparison;
   }
   async function handleClick(element,{isPaired=false}={}){
     const btn=element?.closest?.('[data-pf-action]');
@@ -314,7 +346,17 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false,
     if(btn.dataset.pfAction==='reload'){await load(viewer);return true;}
     if(!loaded)return false;
     const action=btn.dataset.pfAction;
-    if(action==='start'||action==='review'){start();if(action==='review')index=0;}
+    if(action==='export'){
+      const payload=buildOwnIPIP50Export(answers);
+      if(!payload.responses.length)return false;
+      const filename='hemmakompassen-ipip50-egna-svar-'+payload.exported_at.slice(0,10)+'.json';
+      try{
+        saveExport(filename,payload);
+        exportFeedback='Exporten har öppnats. Kontrollera att filen sparades på din enhet.';
+      }catch(e){exportFeedback='Exporten kunde inte öppnas. Försök igen eller kontrollera webbläsarens nedladdningar.';}
+      repaint();
+    }
+    else if(action==='start'||action==='review'){start();if(action==='review')index=0;}
     else if(action==='prev'){selectedAnswer=null;index=Math.max(0,index-1);repaint();}
     else if(action==='next'){selectedAnswer=null;index=Math.min(49,index+1);repaint();}
     else if(action==='overview'||action==='result'){selectedAnswer=null;active=false;repaint();}
@@ -354,7 +396,7 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false,
       return true;
     }
     if(token!==sequence||viewer!==id)return true;
-    answers[item.id]=value;selectedAnswer=null;saving=false;
+    answers[item.id]=value;selectedAnswer=null;saving=false;exportFeedback='';
     if(index<49)index++;
     else active=false;
     paired=null;shareError='';
