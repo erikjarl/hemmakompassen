@@ -1,14 +1,19 @@
 # Hemmakompassen — aktuell utvecklingskö
 
-**Granskad:** tisdag 3 november 2026, efter mergade PR #90–#92 och verifierad Supabase-migration; ett nytt startsidesarbete är på utvecklingsbranch.  
+**Granskad:** tisdag 3 november 2026, efter mergade och publicerade PR #90–#93; IPIP-export byggs på utvecklingsbranch.  
 **Källa:** kod på `main` inklusive PR #90 och #91, `backend-config.js`, GitHub Actions/UI/Pages, Supabase-migrationer och aktuell säkerhetsrådgivning samt read-only SQL-kontroll efter installation. Detta är **inte** ett påstående om genomförda verkliga tvåkontotester.  
 **Syfte:** En enda kort, uppdaterad handlingslista för manuellt och schemalagt utvecklingsarbete. `ROADMAP.md` bevarar detaljerna och äldre beslut.
 
-## 3 november 2026 – startsida och aviseringar, branchkod
+## 3 november 2026 – IPIP egen dataexport, branchkod
 
-- [x] **NOT-01A – synliga fel vid okänt antal olästa (kod och tester):** startsidan skiljer nu misslyckade serverkontroller från ett känt nollvärde, visar ”minst X olästa” när en källa saknas och erbjuder en knapp för nytt försök. Inga meddelandetexter eller privata svar exponeras i felstatus. Syntetisk Playwright och Node-regression är tillagda på `fix/home-unread-status-modules-20261103`.
+- [x] **PF-01A – exportera egna IPIP-svar (kod och tester):** lokal JSON-export av giltiga besvarade frågor med svensk frågetext, instrument-ID, version, datum och information om preliminär översättning. Fungerar även vid ofullständigt test, utan att skriva något i Supabase. Ingen familjeidentitet, partnerprofil, delningsstatus eller AI-text ingår i filen. Playwright testar faktiskt nedladdad fil och Node testar partiellt/färdigt test. Branch: `feature/ipip-own-answer-export-20261103`.
+- [ ] **PF-01B – kvar:** grön CI/merge/Pages för PF-01A, verklig Safari-/iOS-kontroll och framtida versionssäkra testomgångar, export/radering av samtliga kontodata. Denna del-export ersätter inte GDPR-arbetet.
+
+## 3 november 2026 – startsida och aviseringar, PR #93 mergad
+
+- [x] **NOT-01A – synliga fel vid okänt antal olästa (kod och tester):** startsidan skiljer nu misslyckade serverkontroller från ett känt nollvärde, visar ”minst X olästa” när en källa saknas och erbjuder en knapp för nytt försök. Inga meddelandetexter eller privata svar exponeras i felstatus. Testkod mergad via PR #93, PR-CI **#41619480644**, main UI **#41619633238** och Pages **#41619631482** godkända.
 - [x] **UX-03A – korrekta startsidebeskrivningar (kod):** ersatt felaktiga generiska platshållare med konkret information om Inkorg, Gillaswajpen, Big Five, Kommunikationsråd, Schyssta listan och AI-medlaren; upplysning om parningskrav för Inkorg/regler.
-- [ ] **NOT-01B – verkliga aviseringar och release:** kontrollera CI/Pages för branchkoden, därefter verkligt tvåkontotest av misslyckad hämtning och återanslutning. Nya aviseringar för aktivitetskort och resultat är inte implementerade.
+- [ ] **NOT-01B – framtida aviseringar och riktig verifiering:** kontrollera återanslutning med två autentiserade konton. Nya aviseringar för aktivitetskort och resultat är inte implementerade.
 
 ## 3 november 2026 – SW-04 + SW-01, mergad PR #92
 
@@ -83,7 +88,7 @@
 - [ ] **MI-01B – granska och följa upp:** CI/Pages passerade för #90. Verifiera med faktiskt förälder-/tonåringskonto samt språk, källornas relevans och användbarhet i mobilen. Bedöm inte detta som en validerad MI-behandling.
 - [x] **SW-01A – korrekt B-information mergad och publicerad (#90):** texten som felaktigt sade att delning var avstängd är ersatt. Förklarar att varje förståelsekort förblir privat tills tonåringen uttryckligen delar och länkar till Gemensamma insikter. Kod-, mobil- och build-tester passerade 3 november.
 - [ ] **SW-01B – autentiserad B-verifiering:** testa delning, återkallelse, äldre kortsvar, omparning samt exakt samma serverdata hos båda roller och AI innan den bredare SW-01-punkten kan markeras färdig.
-- [ ] **PF-01: Gör testomgångar versionssäkra.** Ny omtestningssession, datum, aktiv version, historik och självständig radering/export utan att tyst skriva över svar.
+- [ ] **PF-01: Versionssäkra testomgångar och full datahantering.** Egen IPIP-JSON-export är kodad separat i PF-01A. Ny omtestningssession, datum/version, historik och självständig radering/export av all användardata utan att tyst skriva över svar återstår.
 - [ ] **PF-02: Fullfölj metodgranskning.** Översättningens begriplighet/validitet för ungdomar, mätinvarians mellan tonåring och vuxen, den amerikanska vuxenreferensens begränsningar samt lämpligheten av normalmodellerade percentiler.
 - [ ] **PF-03: Textkvalitet och återkoppling.** Testa råpoängsgränsernas begriplighet, att hypoteser inte uppfattas som diagnoser, textlängd och praktiskt värde från både föräldra- och tonårsperspektiv. Separera sorteringsgränser från psykometrisk säkerhet.
 - [ ] **UX-01: Gör slutlig mobil- och tillgänglighetsgenomgång.** Granska den tidigare rapporterade avklippta nedersta menyn, bredder 320/390 px, stora tecken, skärmläsare, tangentbord, fokus, felmeddelanden och scrollbar.
