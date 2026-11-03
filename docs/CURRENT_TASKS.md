@@ -4,10 +4,15 @@
 **Källa:** kod på `main` inklusive PR #90–#94, `backend-config.js`, kontrollerade GitHub Actions/UI/Pages-körningar, Supabase-migrationer och read-only SQL efter installation. Detta är **inte** ett påstående om genomförda verkliga tvåkontotester.  
 **Syfte:** En enda kort, uppdaterad handlingslista för manuellt och schemalagt utvecklingsarbete. `ROADMAP.md` bevarar detaljerna och äldre beslut.
 
+## 3 november 2026 – ytterligare read-only negativtest av verkliga RPC:er
+
+- [x] **INT-01/03N – obehörig, icke-existerande identitet (SQL i realdatabasen):** under `BEGIN READ ONLY` med lokal `authenticated`-roll och en syntetisk UUID som inte är kopplad till en familj gav `my_family_members()`, `shared_swipe_matches('general')`, `shared_understanding_cards()`, `my_family_messages()` och `my_family_unread_message_count()` alla **0**. Transaktionen återställdes med `ROLLBACK`. Ingen faktisk inloggning skedde; provet bevisar **inte** tvåkontotest eller JWT-signaturvalidering.
+- [ ] **INT-01/03N komplettering:** autentiserade riktiga testkonton med både delad och privat data samt browser/Worker-beteende återstår.
+
 ## 3 november 2026 – INT-03A: ärliga läskvittenser i Inkorgen
 
-- [x] **INT-03A – explicit läsmarkering (kod + test på branch):** öppning av Inkorgen och automatiska konversationsuppdateringar markerar inte längre alla familjemeddelanden som lästa. Användaren får en separat knapp **Markera alla meddelanden som lästa** när olästa finns och ser tydligt att även meddelanden på äldre sidor ingår. Vid serverfel bevaras oläst antal och inget läskvitto påstås vara sparat. Ändringen använder samma redan behörighetskontrollerade RPC, utan migrationskrav. Node- och mobil-Playwrightfall täcker misslyckat/successfullt försök, kontobyte och skydd mot dubbla anrop. Branch `fix/inbox-explicit-read-receipts-20261103`.
-- [ ] **INT-03B – återstår:** invänta grön UI-CI, merge och Pages, därefter verkligt test med föräldra- och tonårskonto, paginering, utloggning/omparning, radering/retention och visuell mobilgranskning. Markera inte hela INT-03 färdigt.
+- [x] **INT-03A – explicit läsmarkering (mergad, testad och publicerad PR #96):** öppning av Inkorgen och automatiska konversationsuppdateringar markerar inte längre alla familjemeddelanden som lästa. Användaren får en separat knapp **Markera alla meddelanden som lästa** när olästa finns och ser tydligt att även meddelanden på äldre sidor ingår. Vid serverfel bevaras oläst antal och inget läskvitto påstås vara sparat. Ändringen använder samma redan behörighetskontrollerade RPC, utan migrationskrav. Node- och mobil-Playwrightfall täcker misslyckat/successfullt försök, kontobyte och skydd mot dubbla anrop. PR #96 CI **#41626412219**, main UI **#41626593652** och Pages **#41626592863** godkända; merge commit `f009f1cff2b9ff3ae81ab9651ef6efecee4c0643`.
+- [ ] **INT-03B – återstår:** verkligt autentiserat tvåkontotest med förälder/tonåring, paginering, utloggning/omparning, radering/retention och iOS-Safari. PR #96:s automatiska tester innebär inte att hela INT-03 är validerat.
 
 ## 3 november 2026 – SEC-02A: verifierat databasskydd och minimerade gamla behörigheter
 
