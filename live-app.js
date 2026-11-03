@@ -54,7 +54,8 @@ const schysstaSaving=new Set();
 // Independent of agreement notifications: a current family's private 1:1 conversation.
 let familyChatMessages=[],familyChatUnread=0,familyChatLoading=false,familyChatLoadingOlder=false,
   familyChatHasMore=false,familyChatError='',familyChatStatus='',familyChatDraft='',
-  familyChatRequestKey=null,familyChatSending=false,familyChatRequest=0,familyChatCountRequest=0;
+  familyChatRequestKey=null,familyChatSending=false,familyChatRequest=0,familyChatCountRequest=0,
+  familyChatUnreadError=false;
 const familyChatTimestamp=timestamp=>new Intl.DateTimeFormat('sv-SE',{dateStyle:'medium',timeStyle:'short'}).format(new Date(timestamp));
 function validFamilyChatRows(rows){
   return Array.isArray(rows)&&rows.length<=50
@@ -69,19 +70,19 @@ function validFamilyChatRows(rows){
 }
 function clearFamilyChat(){
   familyChatRequest++;familyChatCountRequest++;
-  familyChatMessages=[];familyChatUnread=0;familyChatLoading=false;familyChatLoadingOlder=false;
+  familyChatMessages=[];familyChatUnread=0;familyChatUnreadError=false;familyChatLoading=false;familyChatLoadingOlder=false;
   familyChatHasMore=false;familyChatError='';familyChatStatus='';familyChatDraft='';
   familyChatRequestKey=null;familyChatSending=false;
 }
 async function fetchFamilyChatUnread(){
-  if(!user||members.length!==2){familyChatUnread=0;return;}
+  if(!user||members.length!==2){familyChatUnread=0;familyChatUnreadError=false;return;}
   const request=++familyChatCountRequest,viewer=user.id,session=sharedSession;
   let result;
   try{result=await db.rpc('my_family_unread_message_count');}catch(e){result={error:e};}
   if(request!==familyChatCountRequest||user?.id!==viewer||sharedSession!==session)return;
   if(result?.error||!Number.isInteger(result?.data)||result.data<0){
-    familyChatUnread=0;
-  }else familyChatUnread=result.data;
+    familyChatUnread=0;familyChatUnreadError=true;
+  }else {familyChatUnread=result.data;familyChatUnreadError=false;}
   if(['hem','regler'].includes(page()))render();
   else menu();
 }
@@ -706,6 +707,14 @@ function menu(){
   for(const id of ['live-desktop-nav','live-mobile-nav'])$(id).innerHTML=nav.map(navItem).join('');
 }
 const card=html=>'<section class="live-panel">'+html+'</section>';
+const HOME_MODULE_INTROS=Object.freeze({
+  inkorg:'Läs privata meddelanden och svara på förfrågningar om gemensamma regler.',
+  swipe:'Svara privat på frågor och hitta möjliga samtal eller aktiviteter där ni båda har valt ja.',
+  personlighet:'Utforska fem personlighetsdimensioner med 50 frågor och jämför profiler först efter bådas samtycke.',
+  kommunikation:'Pröva öppna frågor, lyssnande och samtalsstöd. Föräldrar har också en MI-inspirerad guide.',
+  regler:'Föreslå överenskommelser och ändringar. En regel gäller gemensamt först när båda har godkänt samma text.',
+  medlare:'Utforska fiktiva samtal med privat AI-stöd i testversion. Inte terapi eller akut hjälp.'
+});
 function login(){
 return '<h1>Välkommen till Hemmakompassen</h1>'+card('<h2>Logga in</h2><form id="live-login"><label class="live-field">E-postadress<input id="live-email" type="email" autocomplete="username" required></label><label class="live-field">Lösenord<input id="live-password" type="password" autocomplete="current-password" required></label><button class="live-button" type="submit">Logga in</button></form><p id="login-feedback" role="status"></p><p><a href="./konto.html#reset">Glömt lösenord eller saknar lösenord?</a></p><p><a href="./konto.html#register">Skapa konto</a></p>');
 }
@@ -716,10 +725,12 @@ const unread=schysstaListEnabled?schysstaUnreadCount():0;
 const needs=schysstaListEnabled?schysstaNeedsAnswer().length:0;
 const pendingBanner=needs?card('<h2>Behöver ditt svar · '+needs+' förslag</h2><p>Den andra personen väntar på ditt beslut. Du kan också välja att svara senare.</p><a class="live-button" href="#regler">Ta ställning i Schyssta listan</a>'):'';
 const totalUnread=unread+familyChatUnread;
-const inboxBanner=totalUnread?card('<h2>Inkorgen · '+totalUnread+' olästa</h2><p>'+(
+const incompleteNoticeCheck=members.length===2&&(!!schysstaError||familyChatUnreadError);
+const noticeWarning=incompleteNoticeCheck?card('<h2>Alla aviseringar kunde inte kontrolleras</h2><p role="alert">Någon av kontrollerna för meddelanden eller regelförslag misslyckades. Noll betyder därför inte säkert att inkorgen är tom.</p><button type="button" class="live-button" id="home-refresh-notices">Försök kontrollera igen</button>'):'';
+const inboxBanner=totalUnread?card('<h2>Inkorgen · '+(incompleteNoticeCheck?'minst ':'')+totalUnread+' olästa</h2><p>'+(
   familyChatUnread?('Du har '+familyChatUnread+' olästa privata meddelanden'+(unread?' och '+unread+' nya regelhändelser':'')+'.')
     :'Du har fått nya meddelanden om era överenskommelser.')+'</p><a class="live-button" href="#inkorg">Visa inkorgen</a>'):'';
-return '<section class="home-hero"><div class="home-hero-inner"><span class="home-kicker">✦ '+(members.length>1?'ERT GEMENSAMMA RUM':'VÄNTAR PÅ DIN MOTPART')+'</span><h1>Hej '+esc(name)+'.<em>Välkommen till ert rum.</em></h1><p>'+(members.length>1?'Ett rum för att förstå varandra bättre, ett steg i taget.':'Medan du väntar kan du utforska Gillaswajpen och börja hitta nya samtalsämnen.')+'</p><a class="home-hero-link" href="#swipe">Utforska Gillaswajpen <span aria-hidden="true">→</span></a></div><div class="home-orbit" aria-hidden="true"><span></span></div></section>'+pendingBanner+inboxBanner+card('<h2>Din familj</h2><p>'+roster+'</p><p class="live-muted">'+(members.length===1?'Den andra familjemedlemmen har ännu inte anslutit.':'Familjemedlemskap hämtat från Supabase.')+'</p><a class="live-button" href="./konto.html">Hantera familj och inbjudningar</a>')+'<h2>Utforska Hemmakompassen</h2><div class="live-cards">'+nav.slice(1,7).map(([key,label])=>card('<h3>'+label+'</h3><p class="live-muted">Den här funktionen ansluts stegvis till riktiga konton.</p><a href="#'+key+'">Öppna →</a>')).join('')+'</div>';
+return '<section class="home-hero"><div class="home-hero-inner"><span class="home-kicker">✦ '+(members.length>1?'ERT GEMENSAMMA RUM':'VÄNTAR PÅ DIN MOTPART')+'</span><h1>Hej '+esc(name)+'.<em>Välkommen till ert rum.</em></h1><p>'+(members.length>1?'Ett rum för att förstå varandra bättre, ett steg i taget.':'Medan du väntar kan du utforska Gillaswajpen och börja hitta nya samtalsämnen.')+'</p><a class="home-hero-link" href="#swipe">Utforska Gillaswajpen <span aria-hidden="true">→</span></a></div><div class="home-orbit" aria-hidden="true"><span></span></div></section>'+noticeWarning+pendingBanner+inboxBanner+card('<h2>Din familj</h2><p>'+roster+'</p><p class="live-muted">'+(members.length===1?'Den andra familjemedlemmen har ännu inte anslutit.':'Familjemedlemskap hämtat från Supabase.')+'</p><a class="live-button" href="./konto.html">Hantera familj och inbjudningar</a>')+'<h2>Utforska Hemmakompassen</h2><div class="live-cards">'+nav.slice(1,7).map(([key,label])=>card('<h3>'+esc(label)+'</h3><p class="live-muted">'+esc(members.length!==2&&['inkorg','regler'].includes(key)?'Koppla ihop era konton för att använda funktionen.':HOME_MODULE_INTROS[key])+'</p><a href="#'+key+'">Öppna →</a>')).join('')+'</div>';
 }
 const SCHYSSTA_UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 function validSchysstaSuggestion(row){
@@ -1149,6 +1160,7 @@ if(aiRetry&&aiResultEnabled&&user){
 if(e.target.closest('#mediator-clear')){mediatorExperience.clear();return;}if(e.target.closest('#mediator-new')){void mediatorExperience.createChat();return;}if(e.target.closest('#mediator-refresh-context')){void mediatorExperience.loadContextStatus();return;}if(e.target.closest('#mediator-delete')){if(window.confirm('Vill du radera hela detta privata samtal permanent?'))void mediatorExperience.deleteChat();return;}const mediatorOpen=e.target.closest('[data-mediator-open]');if(mediatorOpen){void mediatorExperience.openChat(mediatorOpen.dataset.mediatorOpen);return;}if(e.target.closest('[data-pf-action]')){void personalityExperience.handleClick(e.target,{isPaired:members.length===2&&members.some(m=>m.role==='parent')&&members.some(m=>m.role==='teen')});return;}const b=e.target.closest('[data-swipe]');if(b)advanceSwipe(b.dataset.swipe);if(e.target.closest('#swipe-restart')){swipeSkippedReview=false;swipeReview=true;swipeIndex=visibleGeneralIndices()[0]??STATEMENTS.length;render();}
 if(e.target.closest('#swipe-review-skipped')&&viewerRole()==='teen'&&!swipeBusy){swipeSkippedReview=true;swipeReview=false;swipeIndex=nextSkippedAfter(-1);render();}if(e.target.closest('#swipe-skip')&&viewerRole()==='teen'&&GENERAL_CARDS[swipeIndex]?.type==='understanding'&&!swipeBusy)void skipUnderstandingCard(swipeIndex,user.id,sharedSession);if(e.target.closest('#swipe-reload'))refresh().catch(showError);const refreshMatches=e.target.closest('[data-refresh-matches]');if(refreshMatches&&!sharedLoading)void fetchSwipeMatches(refreshMatches.dataset.refreshMatches);if(e.target.closest('#retry-theme-unlock')&&!themesLoading)void fetchThemeUnlock();
 if(e.target.closest('#insights-retry')&&!insightsLoading)void fetchInsights();
+if(e.target.closest('#home-refresh-notices')&&user&&members.length===2){if(schysstaListEnabled&&!schysstaLoading)void fetchSchysstaList();void fetchFamilyChatUnread();}
 if(e.target.closest('[data-family-chat-refresh]'))void fetchFamilyChat();
 if(e.target.closest('[data-family-chat-more]'))void fetchFamilyChat(true);
 if(e.target.closest('#schyssta-retry')&&!schysstaLoading)void fetchSchysstaList();
