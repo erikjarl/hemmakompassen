@@ -1,14 +1,17 @@
 # Hemmakompassen — aktuell utvecklingskö
 
-**Granskad:** tisdag 3 november 2026, efter mergade och publicerade PR #90–#99, samt separat verifierad Supabase-migration #95.  
-**Källa:** kod på `main` inklusive PR #90–#99, `backend-config.js`, kontrollerade GitHub Actions/UI/Pages-körningar, Supabase-migrationer och read-only SQL efter installation. Detta är **inte** ett påstående om genomförda verkliga tvåkontotester.  
+**Granskad:** tisdag 3 november 2026, efter mergade och publicerade PR #90–#100, samt separat verifierad Supabase-migration #95.  
+**Källa:** kod på `main` inklusive PR #90–#100, `backend-config.js`, kontrollerade GitHub Actions/UI/Pages-körningar, Supabase-migrationer och read-only SQL efter installation. Detta är **inte** ett påstående om genomförda verkliga tvåkontotester.  
 **Syfte:** En enda kort, uppdaterad handlingslista för manuellt och schemalagt utvecklingsarbete. `ROADMAP.md` bevarar detaljerna och äldre beslut.
 
 ## 3 november 2026 – SW-03A: egen viktigast-översikt och fortsatt privat prioritering
 
-- [x] **Kod på separat utvecklingsbranch:** tonåringen får en egen, tydligt privat lista över **redan serververifierade gemensamma A JA+JA** som hen själv markerat som mycket viktiga. Ingen B-fråga, NEJ, okänt kort eller neutralt/lågt värde visas i den listan. Föräldern får inte den privata listan, och den döljs om en särskilt kontrollerad gemensam prioritetsfunktion senare aktiveras. UI upplyser korrekt om att AI-medlaren kan använda användarens egna skattningar när projektkontext är på. PR/CI återstår.
-- [x] **Regressionsfall skrivna:** säker selektering av egna viktiga JA+JA, föräldervy utan privata markeringar, fel i lagringshämtning och framtida shared-mode utan dubblerad lista. Testerna använder syntetiska data.
+- [x] **SW-03A mergad och publicerad PR #100:** tonåringen har en egen, tydligt privat lista över redan serververifierade gemensamma A JA+JA där hen själv valt Mycket viktigt. Förälderns vy visar inte listan; B, NEJ och neutrala nivåer filtreras. Texten informerar om att AI-medlaren kan använda egna prioriteringar när projektkontext är på. PR-UI #41680382345, main UI #41680605178 och Pages #41680603854 **godkända**; merge `3e96a5ea8ea96b4082a982f120c522fe50a729a5`. Ingen databasändring eller förändring av sparade svar.
+- [x] **Regressionstester verifierade:** syntetisk selektering av egna viktiga A JA+JA, föräldervy utan privata markeringar, fel i lagringshämtning, kontroll av AI-information samt framtida shared-mode utan dubbletter. Godkända i PR #100 UI-CI #41680382345.
 - [ ] **SW-03B – blockering före delning:** i verkliga Supabase saknas RPC `public.shared_swipe_priorities(text)` trots att förberedd SQL och syntetiska tester finns i GitHub. Den tidigare UI-texten lovar att viktighetsskattningar sparas privat. Publicera därför **inte** automatiskt tidigare privata höga tonåringsmarkeringar via en ny RPC utan begripligt aktivt delningsval, nya kontrakttester och autentiserad tvåkontoverifiering. Flaggan `enableSharedPriorities:false` lämnas orörd.
+
+- [x] **SW-03A mobilbrowser-QA tillagd på utvecklingsbranch:** `ai-dev/teen-priority-browser-qa-20261103` innehåller syntetiskt Playwright-test med ett tonåringskonto och en föräldervy, kontrollerar enbart tillåtna A JA+JA, att privata B och neutrala nivåer inte visas, att den avstängda prioritets-RPC:n inte anropas samt skärmbild och 390 px-överlapp. CI och PR-merge återstår vid denna avstämning.
+- [ ] **SW-03A verklig QA återstår:** autentiserade tvåkontosessioner, iOS Safari och framtida uttryckligt prioritetssamtycke.
 
 ## INT-01/03/04 – read-only positiva rollprov i verkliga Supabase (3 november 2026)
 
