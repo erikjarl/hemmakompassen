@@ -1,14 +1,14 @@
 # Hemmakompassen — aktuell utvecklingskö
 
-**Granskad:** tisdag 3 november 2026, efter mergad PR #90; en separat säkerhetsbranch är under CI.  
-**Källa:** kod på `main` inklusive PR #90, `backend-config.js`, GitHub Actions/UI/Pages, skrivskyddad Supabase Advisor/RPC-granskning och separat testbranch. Detta är **inte** ett påstående om genomförda verkliga tvåkontotester.  
+**Granskad:** tisdag 3 november 2026, efter mergade PR #90 och #91 samt verifierad Supabase-migration.  
+**Källa:** kod på `main` inklusive PR #90 och #91, `backend-config.js`, GitHub Actions/UI/Pages, Supabase-migrationer och aktuell säkerhetsrådgivning samt read-only SQL-kontroll efter installation. Detta är **inte** ett påstående om genomförda verkliga tvåkontotester.  
 **Syfte:** En enda kort, uppdaterad handlingslista för manuellt och schemalagt utvecklingsarbete. `ROADMAP.md` bevarar detaljerna och äldre beslut.
 
-## 3 november 2026 – denna utvecklingsbranch
+## 3 november 2026 – genomförda och verifierade leveranser
 
 - [x] **PR #90 mergad, kod- och UI-testad och publicerad:** förälders MI-inspirerade guide med källor, korrekt förklaring av separat B-samtycke i kortleken, borttagen dubblerad polling-fokuslyssnare och rättad dokumentation. PR-CI **#41612247828**, main UI **#41612435895**, Pages **#41612433986** godkända; merge commit `c20bd52b918ffb27a3c53db09dcbe2ee679f74e2`. Inget verkligt autentiserat tvåkontotest.
-- [x] **SEC-01A – granskad begränsning på utvecklingsbranch:** Supabase Advisor på den riktiga databasen rapporterade 3 november att intern `revoke_understanding_share_on_private_change()` (triggerfunktion `SECURITY DEFINER`) var direkt exekverbar av `anon`, `authenticated` och `PUBLIC`. Läst funktionsdefinition och båda anslutna databas-triggers. En minimal SQL-migration med endast riktad `REVOKE` och Node/pgTAP-liknande verkligt PostgreSQL-baserad syntetisk kontroll har skrivits på `fix/limit-b-trigger-function-execute-20261103`.
-- [ ] **SEC-01B – CI, merge och installation:** kontrollera PostgreSQL-/UI-CI, merga säkerhets-PR om tester är gröna, applicera migrationen i verklig Supabase och verifiera med SQL + ny Advisor att direkt-EXECUTE är avstängt medan triggers finns kvar. Lagra inte privata testsvar i loggar.
+- [x] **SEC-01 – begränsad intern triggerfunktion (#91):** Advisor identifierade `public.revoke_understanding_share_on_private_change()` som `SECURITY DEFINER` exekverbar av `anon`/`authenticated`. Granskade triggerkopplingarna. PR #91 mergades med godkända UI-/Node- och syntetiska PostgreSQL-tester (**#41612814260**, **#41612814569**). Migration `20261103094113` är installerad i verklig Supabase. **Verifierat direkt i SQL:** `anon_execute=false`, `authenticated_execute=false`, `active_trigger_count=2`. Den anonyma SECURITY DEFINER-varningen försvann från Advisor. Ingen familjedata ändrades.
+- [ ] **SEC-02 – övrig säkerhetsuppföljning:** Advisor har fortsatt 27 varningar för autentiserade `SECURITY DEFINER`-RPC:er, som kan vara avsiktliga och inte får stängas av generellt; åtta RLS-tabeller saknar policy (kan vara avsiktligt om bara säkra RPC:er ska användas). Advisor rapporterar också att skyddet mot läckta lösenord är avstängt. Granska före extern pilot: [Supabase säkerhetsrådgivning](https://supabase.com/docs/guides/observability/advisors?lint=0029_authenticated_security_definer_function_executable).
 - [ ] **Fortfarande öppet:** riktiga autentiserade tvåkontotester för B-samtycke/återkallelse, AI-kontext, MI-sidans begriplighet och säkerhet.
 
 ## Delade uppgifter = samma uppgifter för AI och användare (2 november 2026)
@@ -63,12 +63,12 @@
 - [ ] **INT-04: Big Five i två riktiga sessioner.** Prova återupptagning, svarsversion, dubbelsamtycke, återkallelse, utloggning/omparning, korrekta rolltexter och samma poäng i tabell/graf. Begränsa testdata och ändra inte tidigare testsvar.
 
 ### P1 – funktioner som ännu inte är klara/aktiverade
-- [ ] **SW-01: Slutför säker B-förståelsedelning** i UI och backend, inklusive tonåringens separata JA, nej/överhoppning, återkallelse, rollanpassad sammanfattning och kontrollerad aktivering av `enableSharedUnderstanding`.
-- [ ] **SW-02: Slutför den gemensamma insiktsytan** för alla kortlekar: endast serververifierat A JA+JA, separat behörig B-information, ”Möjligt att utforska” och ”Så här funkar jag/min tonåring”, korta förskrivna råd och meningsfull prioritering; därefter `enableSharedInsights`.
+- [ ] **SW-01: Verifiera och färdigställ B-förståelsedelning** som redan är aktiverad internt (`enableSharedUnderstanding:true` via #88): realtidsavstämning, uttryckligt samtycke, nej/överhoppning, återkallelse, rollanpassad sammanfattning och tvåkontotest. Aktivering i kod är inte lika med färdig användarvalidering.
+- [ ] **SW-02: Slutverifiera den aktiva gemensamma insiktsytan** (`enableSharedInsights:true` via #88) för alla kortlekar: serververifierat A JA+JA, separat behörig B-information, ”Möjligt att utforska” och ”Så här funkar jag/min tonåring”, kvalitativa råd och meningsfull prioritering. Riktiga tvåkontotester och sluten prioriteringsfunktion återstår.
 - [ ] **SW-03: Koppla privat viktighetsskattning (tre lägen)** till faktisk gemensam prioritetsordning för godkända resultat. Behåll integritet och tydlig skillnad mellan individuell prioritet och gemensamt beslut; därefter `enableSharedPriorities`.
 - [ ] **SW-04: Validera överhoppning och live-matchningar** över stora kortlekar, inklusive ofullständig kortlek, återbesök, lås-/upplåsningslogik och ändrade kortversioner. Rätta eventuella kvarvarande synkfel innan polling aktiveras.
 - [x] **MI-01A – mergad och publicerad 3 nov (#90):** separat MI-inspirerad föräldraguide under Kommunikationsråd, med vardagsexempel, autonomi, vuxenansvar och länkar till tre svenska kunskapskällor. Länk i Schyssta listan, rollbegränsad vy, mobil- och Node-tester. PR-CI #41612247828, main UI #41612435895 och Pages #41612433986 gröna. Verklig rollkontroll med två autentiserade konton återstår.
-- [ ] **MI-01B – granska och följa upp:** kör CI/Pages och verifiera faktiskt förälder-/tonåringskonto samt språk och användbarhet i mobilen. Bedöm inte detta som en validerad MI-behandling.
+- [ ] **MI-01B – granska och följa upp:** CI/Pages passerade för #90. Verifiera med faktiskt förälder-/tonåringskonto samt språk, källornas relevans och användbarhet i mobilen. Bedöm inte detta som en validerad MI-behandling.
 - [x] **SW-01A – korrekt B-information mergad och publicerad (#90):** texten som felaktigt sade att delning var avstängd är ersatt. Förklarar att varje förståelsekort förblir privat tills tonåringen uttryckligen delar och länkar till Gemensamma insikter. Kod-, mobil- och build-tester passerade 3 november.
 - [ ] **SW-01B – autentiserad B-verifiering:** testa delning, återkallelse, äldre kortsvar, omparning samt exakt samma serverdata hos båda roller och AI innan den bredare SW-01-punkten kan markeras färdig.
 - [ ] **PF-01: Gör testomgångar versionssäkra.** Ny omtestningssession, datum, aktiv version, historik och självständig radering/export utan att tyst skriva över svar.
@@ -84,7 +84,7 @@
 - [x] **AI-01C: Fiktiva databas- och V8-kodkontroller.** 28 automatiserade testfall från GitHub-koden passerade i simulerad körning; verklig D1 bekräftar ägarfilter, kaskadradering och stabil meddelandeordning. AI- och UI-workflow har senare passerat för PR #82; detta ersätter den äldre uppgiften om ej verifierad CI.
 - [ ] **AI-01D: Verifiera två verkligt autentiserade testkonton, webbläsare/mobil och reella Worker-anrop** innan aktivering på GitHub Pages. Kontrollera även att säkerhetsmeddelanden och konto-/sessionsbyte fungerar som avsett.
 - [ ] **AI-01E: Granska barn-/ungdomsskydd, kliniska risker, säkerhet och dataskydd.** Endast fiktiva samtal hittills; enkel riskfrasmatchning är INTE en klinisk säkerhetslösning.
-- [ ] **AI-02/03: Driftsätt och kvalitetsverifiera automatiska, rollanpassade Gillaswajp-/personlighetsanalyser** efter att endpointen finns i Cloudflare och rätt samtycken verifierats. Kod och testfall ligger i PR #85; förskrivna råd ersätts först efter aktivering.
+- [ ] **AI-02/03: Kvalitetsverifiera redan aktiva automatiska Gillaswajp-/personlighetsanalyser** (Worker och intern `enableAiResultAnalyses:true` via #86). Granska faktiska modelltexter, behörig kontext, språk, rollasymmetri och korrekt uppdatering efter återkallat samtycke. Tvåkontotest saknas.
 
 - [x] **AI-01G – valbar projektkontext (implementerad kod på PR #84):** kryssruta för att använda/inte använda projektuppgifter inför svar. När av hoppar Worker över samtliga projekt-/roll-RPC:er; ogiltig flagga nekas. Node- och Playwright-mobiltest (simulerad Worker) för opt-out/återställning och serverkontroll, plus regression för återkallat Big Five-samtycke. **PR #84 är nu mergad till `main`; faktisk Cloudflare Worker-release och tvåkontotester återstår.** 
 - [x] **AI-01G – automatisk CI:** AI-backend, Node, bygget och UI/Playwright passerade efter senaste kodändringen; 28 screenshots inklusive mobil opt-out genererade (GitHub Actions run #41419931438, AI run #41419931803).
@@ -111,7 +111,7 @@
 - [x] **Testkod på PR #85:** autentisering, negativa klientsvar, serverkontrollerade delningsgränser, avbrutet test, kvot, XSS-escaping och återanvändning per resultatsession.
 - [x] **AI-02/03 automatisk CI/Playwright:** GitHub Actions AI #41424425020 samt UI #41424425062 gröna med syntetiskt mobiltest, 29 skärmbilder och verifierat statiskt bygge.
 - [ ] **AI-02/03 verklig kvalitet:** två autentiserade testkonton, språk/rollasymmetri, manuellt granskade mobilbilder, återkallelse och faktisk kvotförbrukning återstår.
-- [x] **AI-02/03 teknisk intern release:** Cloudflare Workern med `/api/ai/analyze` är driftsatt till 100 %, `enableAiResultAnalyses:true` är publicerad genom PR #86. B-förståelsekort är fortsatt avstängda. Verkliga tvåkontotester och faktiska modelltextsvar återstår.
+- [x] **AI-02/03 teknisk intern release:** Cloudflare Worker `/api/ai/analyze` och `enableAiResultAnalyses:true` är driftsatta via #86. Behörig B-delning genom #88 tillåter bara uttryckligen delade förståelsekort. Verkliga tvåkontotester, återkallelse och granskning av faktiska modelltextsvar återstår.
 
 ## Arbetsregel för följande utvecklingspass
 **Obligatoriskt enligt ROADMAP 2026-11-02:** kryssa av varje genomförd förändring i samma utvecklingspass, dela upp delvis färdiga uppgifter och ange PR/commit samt verifieringsnivå. `[x]` för branchkod betyder inte publicering eller riktig tvåkontoverifiering.
