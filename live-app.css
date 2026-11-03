@@ -560,3 +560,8 @@
 .ai-result-panel [role=alert]{color:#ffb3ac}
 .ai-result-panel [data-ai-analysis-retry]{margin-top:12px}
 @media(max-width:420px){.ai-result-panel{padding:16px}.ai-result-prose{font-size:.97rem}}
+
+/* SW-04: the skipped-only review is a distinct, reversible action. */
+.swipe-finished-actions{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:12px;margin-top:22px}
+.swipe-finished-actions .live-button{min-height:44px;max-width:100%;white-space:normal}
+@media(max-width:430px){.swipe-finished-actions{flex-direction:column}.swipe-finished-actions .live-button{width:100%}}
