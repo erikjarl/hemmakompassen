@@ -55,6 +55,10 @@ function renderSharedResult(rows,role='parent',priorityRows=[],adviceByKey={'gen
     ],
     THEME_DECK_MODELS:[],ADVICE_BY_KEY:adviceByKey,
     aiResultEnabled:options.ai===true,
+    importanceAvailable:options.importanceAvailable!==false,
+    sharedPrioritiesEnabled:options.sharedPrioritiesEnabled===true,
+    swipeImportance:new Map(Object.entries(options.importance||{})),
+    importanceKey:(deckId,cardId)=>deckId+'\\u0000'+cardId,
     aiResults:{panel:()=>'<div data-testid="ai-reflection">AI-genererat svar</div>'},
     swipeAiSignature:()=> 'verified-A-YES-signature',
     adviceKeyForCard:card=>card.id,
@@ -166,6 +170,37 @@ assert.match(script,/for\(const \{groups\} of byDeck.values\(\)\)/,
   assert.match(phone,/Mobil:/,'A phone-related mutual YES gets the phone icon even in a broad category');
   assert.doesNotMatch(phone,/REDAKTIONELLA RÅD/,'Fact labels never claim to contain editorial advice');
 }
+
+{
+  const matching=[
+    {card_id:'general-01',answer:true},
+    {card_id:'general-02',answer:true},
+    {card_id:'general-03',answer:false},
+    {card_id:'general-04',answer:true}
+  ];
+  const own={
+    ['general'+'\\u0000'+'general-01']:1,
+    ['general'+'\\u0000'+'general-02']:1,
+    ['general'+'\\u0000'+'general-03']:1,
+    ['general'+'\\u0000'+'general-04']:0
+  };
+  const teen=renderSharedResult(matching,'teen',[],{}, {ai:true,importance:own});
+  assert.match(teen,/Mina viktigaste gemensamma ja-svar/,'Teen sees own important matches privately with AI active');
+  assert.match(teen,/ENDAST FÖR DIG · INTE DELAT/,'Never describe private importance as a shared priority');
+  const preview=teen.match(/<aside class="swipe-priority-summary swipe-private-priority"[^]*?<\/aside>/)?.[0];
+  assert.ok(preview,'Private preview has its own distinguishable section');
+  assert.match(preview,/Tonåringens frivilliga aktivitet/,'Only catalogued mutually-approved A matches may be prioritised');
+  assert.doesNotMatch(preview,/Tonåringens andra gemensamma kort|HEMLIGT|NEJ-SVAR/,'Neutral importance, private B and NO remain absent');
+  assert.match(teen,/data-testid="ai-reflection"/,'AI may coexist but must not receive private priority as input');
+  const parent=renderSharedResult(matching,'parent',[],{}, {ai:true,importance:own});
+  assert.doesNotMatch(parent,/swipe-private-priority|Mina viktigaste gemensamma ja-svar/,'Parent cannot see teen private importance');
+  const noData=renderSharedResult(matching,'teen',[],{}, {importance:own,importanceAvailable:false});
+  assert.doesNotMatch(noData,/swipe-private-priority/,'Unavailable own importance is not presented as a known result');
+  const sharedMode=renderSharedResult(matching,'teen',[],{}, {importance:own,sharedPrioritiesEnabled:true});
+  assert.doesNotMatch(sharedMode,/swipe-private-priority/,'Preview does not duplicate a future separately authorised priority view');
+}
+console.log('PASS: private teen priorities show only own importance among verified A matches');
+
 console.log('PASS: compact factual icon overview is compatible with AI and excludes unshared answers');
 
 console.log('PASS: shared result renderer and role summaries reject B, NO and unknown cards');
