@@ -19,6 +19,11 @@
 **Kort arbetsordning:** INT-01/02/03/04 samt **AI-01D** (autentiserade tvåkontotester, sekretess/återkallelse) → SW-01/02/03/04 (testa och färdigställ befintlig B-/insiktsfunktion; prioritets- och polling-flaggor är av) → MI-01B, PF-01/02/03, UX-01/02, NOT-01 → **AI-02/03: tvåkontotesta redan driftsatta AI-reflektioner** → SEC-02 och AI-skyddsgranskning/data/pilot. Se [aktuell utvecklingskö](docs/CURRENT_TASKS.md).
 
 
+## 3 november 2026 – UX-02A: ikonöversikt även med aktiva AI-reflektioner
+
+- [x] **PR #98 – kod och tester på separat utvecklingsbranch (inte mergad):** ai-dev/compact-mutual-yes-20261103 visar en kort, ämnesgrupperad ikonöversikt från **enbart serververifierade A JA+JA** i både den enskilda kortlekens resultat och samlade insikter. AI-reflektionen finns kvar på samma sida utan återgång till förskrivna råd. Översikten innehåller rollanpassad text och antal gemensamma svar, aldrig enskilda B-/NEJ-/okända kort eller privat viktighet. Node-/kontraktstester, byggkontroll och syntetiskt Playwright-UI är **gröna i GitHub Actions #41671120244 (3 nov)**. 35 screenshots producerades, desktop- och mobilbilder av gemensamma insikter samt mobil AI-swipe har öppnats och granskats. Detta är inte en autentiserad tvåkontoverifiering.
+- [ ] **UX-02A återstår:** review/merge/publicering av PR #98, riktiga tvåkonton med återkallelse och breda kortlekar, samt iOS Safari. CI och syntetiska screenshots är verifierade, men funktionerna UX-02 och SW-02 är inte helt klara.
+
 ## Inkorgens tysta uppdatering och mobilskroll – INT-03C
 
 - [x] **PR #97 mergad och publicerad:** om den serververifierade meddelandelistan och antalet olästa inte ändras gör 15-sekunders bakgrundskontrollen ingen onödig fullständig omritning. Ny data/fel visas fortfarande. En manuell uppdatering håller kvar redan visad konversation under hämtning, och inkorgens skrollposition bevaras när innehåll faktiskt byts.

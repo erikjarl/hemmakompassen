@@ -44,7 +44,7 @@ console.log('PASS: mutual-YES-only RPC results, role-specific rule summary, them
 // Execute the actual shared-view and summary functions with synthetic data.
 const sharedViewFunctions=script.match(/const joinSwedish=[\s\S]*?(?=\nasync function fetchSwipeMatches\()/);
 assert.ok(sharedViewFunctions,'Shared result rendering can be tested independently');
-function renderSharedResult(rows,role='parent',priorityRows=[],adviceByKey={'general-01':'Välj en gemensam dag.','general-04':'Lyssna färdigt och välj ett litet nästa steg.'}){
+function renderSharedResult(rows,role='parent',priorityRows=[],adviceByKey={'general-01':'Välj en gemensam dag.','general-04':'Lyssna färdigt och välj ett litet nästa steg.'},options={}){
   const state={
     members:[{role:'parent'},{role:'teen'}],sharedLoading:false,sharedDeckId:'general',sharedError:'',sharedMatches:rows.map(row=>({deck_id:'general',...row})),sharedPriorities:priorityRows.map(row=>({deck_id:'general',...row})),
     GENERAL_CARDS:[
@@ -54,6 +54,9 @@ function renderSharedResult(rows,role='parent',priorityRows=[],adviceByKey={'gen
       {id:'general-04',type:'match',category:'Samtal',teenText:'Tonåringens andra gemensamma kort',parentText:'Förälderns andra gemensamma kort'},
     ],
     THEME_DECK_MODELS:[],ADVICE_BY_KEY:adviceByKey,
+    aiResultEnabled:options.ai===true,
+    aiResults:{panel:()=>'<div data-testid="ai-reflection">AI-genererat svar</div>'},
+    swipeAiSignature:()=> 'verified-A-YES-signature',
     adviceKeyForCard:card=>card.id,
     cardTextForRole:(card,viewerRole)=>viewerRole==='parent'?(card.parentText||card.teenText):card.teenText,
     viewerRole:()=>role,
@@ -126,6 +129,45 @@ function renderSharedResult(rows,role='parent',priorityRows=[],adviceByKey={'gen
   const prioritised=renderSharedResult(matches,'parent',[{card_id:'general-01'}],duplicateAdvice);
   assert.equal(prioritised.split('Välj en gemensam dag.').length-1,1,'A priority tip is not duplicated in the ordinary summary');
 }
+
+{
+  const html=renderSharedResult([
+    {card_id:'general-01',answer:true},
+    {card_id:'general-02',answer:true},
+    {card_id:'general-03',answer:false},
+    {card_id:'general-04',answer:true},
+    {card_id:'unknown',answer:true},
+  ],'parent',[],{'general-01':'GAMMALT REDAKTIONELLT RÅD','general-04':'ANNA GAMLA RÅD'},{ai:true});
+  assert.match(html,/Gemensamt i korthet/,'The compact factual icon overview appears with automatic AI enabled');
+  assert.match(html,/swipe-summary-icon/,'Every factual overview category has a decorative topic icon');
+  assert.match(html,/ÖVERSIKT · SERVERVERIFIERADE JA-SVAR/,'Facts are labelled separately from AI advice');
+  assert.match(html,/data-testid="ai-reflection"/,'AI reflection remains visible alongside factual results');
+  assert.match(html,/Förälderns ansvarstagande aktivitet/,'The overview shows only reviewed role-specific A wording');
+  assert.doesNotMatch(html,/GAMMALT REDAKTIONELLT RÅD|ANNA GAMLA RÅD|REDAKTIONELLA RÅD · INTE AI/,'Old static advice does not return when AI is active');
+  assert.doesNotMatch(html,/HEMLIGT|unknown/,'B cards, mutual NO and unknown rows are absent from both summary and AI page');
+  const empty=renderSharedResult([{card_id:'general-02',answer:true},{card_id:'general-03',answer:false}],
+    'teen',[],{}, {ai:true});
+  assert.doesNotMatch(empty,/swipe-fact-summary|data-testid="ai-reflection"/,'No summary is fabricated without verified A matches');
+}
+assert.match(script,/sharedFactOverview\(overviewGroups,'Gemensamt i alla kortlekar'\)/,
+  'Cross-deck insights reuse the factual icon overview');
+assert.match(script,/for\(const \{groups\} of byDeck.values\(\)\)/,
+  'Cross-deck overview uses only the A-only byDeck result, not private swipe answers');
+
+{
+  // Topic icons must follow the actual approved card text as well as broad
+  // category labels: phone-free time should not be marked with a generic heart.
+  const state={
+    GENERAL_CARDS:[],THEME_DECK_MODELS:[],
+    esc:s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))
+  };
+  vm.runInNewContext(sharedViewFunctions[0]+'\nthis.facts=sharedFactOverview;',state);
+  const phone=state.facts(new Map([['Relationer',[{statement:'Vi lägger undan mobiltelefonerna'}]]]));
+  assert.match(phone,/Mobil:/,'A phone-related mutual YES gets the phone icon even in a broad category');
+  assert.doesNotMatch(phone,/REDAKTIONELLA RÅD/,'Fact labels never claim to contain editorial advice');
+}
+console.log('PASS: compact factual icon overview is compatible with AI and excludes unshared answers');
+
 console.log('PASS: shared result renderer and role summaries reject B, NO and unknown cards');
 
 {
@@ -217,4 +259,50 @@ const safeGeneral=insightState.sanitize('general',[
 assert.equal(JSON.stringify(safeGeneral),JSON.stringify([{deck_id:'general',card_id:'general-01',answer:true}]),'Only one known A JA+JA survives malformed RPC rows');
 assert.equal(insightState.sanitize('samtal',[{deck_id:'samtal',card_id:'samtal-01',answer:true}]).length,1,'Valid themed A matches are preserved');
 assert.throws(()=>insightState.sanitize('general',null),/Invalid shared results/,'Malformed server data fails closed');
+
+{
+  // Execute the actual cross-deck insights markup, not just a source-code regex.
+  const viewSource=script.match(/function insightsView\(\)\{[\s\S]*?(?=\nasync function fetchInsights\()/);
+  assert.ok(viewSource,'Cross-deck view is available for a synthetic DOM-independent test');
+  const state={
+    user:{id:'viewer'},members:[{user_id:'viewer',role:'parent'},{user_id:'partner',role:'teen'}],
+    sharedInsightsEnabled:true,insightsLoading:false,insightsError:'',aiResultEnabled:true,
+    sharedUnderstandingRows:[],insightsRows:[
+      {deck_id:'general',card_id:'general-01',answer:true},
+      {deck_id:'general',card_id:'general-02',answer:true},
+      {deck_id:'general',card_id:'general-03',answer:false},
+      {deck_id:'general',card_id:'unknown',answer:true},
+      {deck_id:'samtal',card_id:'samtal-01',answer:true}
+    ],
+    GENERAL_CARDS:[
+      {id:'general-01',type:'match',category:'Fritid',parentText:'Gemensam frivillig aktivitet'},
+      {id:'general-02',type:'understanding',category:'Känslor',parentText:'PRIVAT B-KORT'},
+      {id:'general-03',type:'match',category:'Samtal',parentText:'PRIVAT NEJ-KORT'}
+    ],
+    THEME_DECK_MODELS:[{id:'samtal',title:'Samtalsämnen',cards:[
+      {id:'samtal-01',type:'match',category:'Samtal',parentText:'Prata om en gemensam bok'}
+    ]}],
+    viewerRole:()=> 'parent',
+    cardTextForRole:card=>card.parentText,
+    esc:s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])),
+    card:s=>'<div>'+s+'</div>',understandingInsights:()=> '',
+    insightsAiSignature:()=> 'synthetic-signature',
+    aiResults:{panel:()=> '<div data-testid="all-deck-ai">AI-reflektion</div>'}
+  };
+  vm.runInNewContext(sharedViewFunctions[0]+'\n'+viewSource[0]+'\nthis.view=insightsView;',state);
+  const html=state.view();
+  assert.match(html,/Gemensamt i alla kortlekar/,'Cross-deck facts appear above the full results');
+  assert.match(html,/Gemensam frivillig aktivitet/,'Only real catalogued A YES is summarised');
+  assert.match(html,/Prata om en gemensam bok/,'The factual icon overview combines multiple approved decks');
+  assert.match(html,/data-testid="all-deck-ai"/,'The AI analysis remains alongside the factual overview');
+  assert.doesNotMatch(html,/PRIVAT B-KORT|PRIVAT NEJ-KORT|unknown/,'Unknown, NO and B rows never enter a cross-deck icon');
+  state.insightsRows=[];
+  const empty=state.view();
+  assert.doesNotMatch(empty,/swipe-fact-summary/,'No overview is invented with no verified matches');
+  state.insightsError='Simulerat serverfel';
+  const failed=state.view();
+  assert.doesNotMatch(failed,/swipe-fact-summary|Gemensam frivillig aktivitet/,'A failed refresh does not show stale approved responses');
+}
+console.log('PASS: real cross-deck icon summary markup respects A-only results, revocation error and AI');
+
 console.log('PASS: all-deck insights gate, A-only sanitizer, B/NO isolation, session and error guards');
