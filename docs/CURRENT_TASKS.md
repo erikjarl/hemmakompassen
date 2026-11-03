@@ -1,15 +1,15 @@
 # Hemmakompassen — aktuell utvecklingskö
 
-**Granskad:** tisdag 3 november 2026, utifrån `main` till och med PR #89 och arbetsbranch `feature/mi-parent-guide-and-status-20261103`.  
-**Källa:** kod på `main`, `backend-config.js`, bekräftade tidigare PR #56–#89, dokumenterade CI/deploy-kedjor samt aktuell arbetsbranch. Detta är **inte** ett påstående om genomförda verkliga tvåkontotester.  
+**Granskad:** tisdag 3 november 2026, efter mergad PR #90; en separat säkerhetsbranch är under CI.  
+**Källa:** kod på `main` inklusive PR #90, `backend-config.js`, GitHub Actions/UI/Pages, skrivskyddad Supabase Advisor/RPC-granskning och separat testbranch. Detta är **inte** ett påstående om genomförda verkliga tvåkontotester.  
 **Syfte:** En enda kort, uppdaterad handlingslista för manuellt och schemalagt utvecklingsarbete. `ROADMAP.md` bevarar detaljerna och äldre beslut.
 
 ## 3 november 2026 – denna utvecklingsbranch
 
-- [x] Redaktionell kodleverans: separat MI-inspirerad guide för förälder, tillgänglig från Kommunikationsråd och Schyssta listan, tre verifierbara källhänvisningar och automatisk roll-/mobiltest.
-- [x] UI-fix: aktuellt frivilligt delningsläge för förståelsekort kommuniceras korrekt i den allmänna kortleken när `enableSharedUnderstanding` är aktiv.
-- [x] Underhåll: en dubblerad fokuslyssnare för Gillaswajpens polling har tagits bort; dokumentationens gamla flagg- och AI-status har uppdaterats.
-- [ ] CI, merge, publicering och autentiserad verifiering är separata nivåer. Ändra inte denna punkt till klar förrän deras faktiska resultat är dokumenterade.
+- [x] **PR #90 mergad, kod- och UI-testad och publicerad:** förälders MI-inspirerade guide med källor, korrekt förklaring av separat B-samtycke i kortleken, borttagen dubblerad polling-fokuslyssnare och rättad dokumentation. PR-CI **#41612247828**, main UI **#41612435895**, Pages **#41612433986** godkända; merge commit `c20bd52b918ffb27a3c53db09dcbe2ee679f74e2`. Inget verkligt autentiserat tvåkontotest.
+- [x] **SEC-01A – granskad begränsning på utvecklingsbranch:** Supabase Advisor på den riktiga databasen rapporterade 3 november att intern `revoke_understanding_share_on_private_change()` (triggerfunktion `SECURITY DEFINER`) var direkt exekverbar av `anon`, `authenticated` och `PUBLIC`. Läst funktionsdefinition och båda anslutna databas-triggers. En minimal SQL-migration med endast riktad `REVOKE` och Node/pgTAP-liknande verkligt PostgreSQL-baserad syntetisk kontroll har skrivits på `fix/limit-b-trigger-function-execute-20261103`.
+- [ ] **SEC-01B – CI, merge och installation:** kontrollera PostgreSQL-/UI-CI, merga säkerhets-PR om tester är gröna, applicera migrationen i verklig Supabase och verifiera med SQL + ny Advisor att direkt-EXECUTE är avstängt medan triggers finns kvar. Lagra inte privata testsvar i loggar.
+- [ ] **Fortfarande öppet:** riktiga autentiserade tvåkontotester för B-samtycke/återkallelse, AI-kontext, MI-sidans begriplighet och säkerhet.
 
 ## Delade uppgifter = samma uppgifter för AI och användare (2 november 2026)
 
@@ -67,9 +67,9 @@
 - [ ] **SW-02: Slutför den gemensamma insiktsytan** för alla kortlekar: endast serververifierat A JA+JA, separat behörig B-information, ”Möjligt att utforska” och ”Så här funkar jag/min tonåring”, korta förskrivna råd och meningsfull prioritering; därefter `enableSharedInsights`.
 - [ ] **SW-03: Koppla privat viktighetsskattning (tre lägen)** till faktisk gemensam prioritetsordning för godkända resultat. Behåll integritet och tydlig skillnad mellan individuell prioritet och gemensamt beslut; därefter `enableSharedPriorities`.
 - [ ] **SW-04: Validera överhoppning och live-matchningar** över stora kortlekar, inklusive ofullständig kortlek, återbesök, lås-/upplåsningslogik och ändrade kortversioner. Rätta eventuella kvarvarande synkfel innan polling aktiveras.
-- [x] **MI-01A – kod på utvecklingsbranch (3 nov):** separat MI-inspirerad föräldraguide under Kommunikationsråd, med vardagsexempel, autonomi, vuxenansvar och länkar till tre svenska myndighets-/kunskapskällor. Länk i Schyssta listan, förälders rollspärr, mobil- och statiska kontraktstester tillagda. Branch: `feature/mi-parent-guide-and-status-20261103`. **CI/merge återstår vid denna anteckning.**
+- [x] **MI-01A – mergad och publicerad 3 nov (#90):** separat MI-inspirerad föräldraguide under Kommunikationsråd, med vardagsexempel, autonomi, vuxenansvar och länkar till tre svenska kunskapskällor. Länk i Schyssta listan, rollbegränsad vy, mobil- och Node-tester. PR-CI #41612247828, main UI #41612435895 och Pages #41612433986 gröna. Verklig rollkontroll med två autentiserade konton återstår.
 - [ ] **MI-01B – granska och följa upp:** kör CI/Pages och verifiera faktiskt förälder-/tonåringskonto samt språk och användbarhet i mobilen. Bedöm inte detta som en validerad MI-behandling.
-- [x] **SW-01A – begriplig B-information (3 nov, kod på samma branch):** rätta felaktig text som angav att förståelsedelning var avstängd trots aktiva interna flaggor. Förklara att ett B-JA fortsatt är privat tills ungdomen själv väljer delning, med direktlänk till Gemensamma insikter. Automatisk testuppdatering ingår; CI/merge återstår.
+- [x] **SW-01A – korrekt B-information mergad och publicerad (#90):** texten som felaktigt sade att delning var avstängd är ersatt. Förklarar att varje förståelsekort förblir privat tills tonåringen uttryckligen delar och länkar till Gemensamma insikter. Kod-, mobil- och build-tester passerade 3 november.
 - [ ] **SW-01B – autentiserad B-verifiering:** testa delning, återkallelse, äldre kortsvar, omparning samt exakt samma serverdata hos båda roller och AI innan den bredare SW-01-punkten kan markeras färdig.
 - [ ] **PF-01: Gör testomgångar versionssäkra.** Ny omtestningssession, datum, aktiv version, historik och självständig radering/export utan att tyst skriva över svar.
 - [ ] **PF-02: Fullfölj metodgranskning.** Översättningens begriplighet/validitet för ungdomar, mätinvarians mellan tonåring och vuxen, den amerikanska vuxenreferensens begränsningar samt lämpligheten av normalmodellerade percentiler.
