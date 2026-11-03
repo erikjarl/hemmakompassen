@@ -1,23 +1,30 @@
-# Hemmakompassen — utvecklingsplan (senast avstämd 2026-11-02)
+# Hemmakompassen — utvecklingsplan (senast avstämd 2026-11-03)
 
 
-## NULÄGE – avstämning 2 november 2026 (läs först)
+## NULÄGE – avstämning 3 november 2026 (läs först)
 
-**Gäller framför historiska statusnoteringar nedan.** Helggranskningen av 155 commits på `main` till och med PR #78 har kompletterats med gårdagens senare mergade PR **#79 (roadmap), #81 (AI-medlaren) och #82 (behörighetsstyrd AI-kontext)** samt efterföljande dokumentationscommits. PR **#80** är ett **öppet, ersatt utkast som inte ska mergas**. Detaljerad och prioriterad aktuell checklista: **[docs/CURRENT_TASKS.md](docs/CURRENT_TASKS.md)**. Äldre planer nedan finns kvar som historik; de kan beskriva en tidigare graf, ett tidigare funktionsläge eller en föråldrad releaseplan.
+**Gäller framför historiska statusnoteringar nedan.** Arbetet till och med PR **#89** är på `main` (inklusive AI-medlaren, automatiska AI-resultatreflektioner och behörig B-vy från PR #88). Arbetsbranch 3 november: `feature/mi-parent-guide-and-status-20261103`. PR **#80** är ett **öppet, ersatt utkast som inte ska mergas**. Detaljerad aktuell checklista: **[docs/CURRENT_TASKS.md](docs/CURRENT_TASKS.md)**. Äldre planer nedan finns kvar som historik och kan beskriva föråldrade lägen.
 
 | Del | Kod och automatisk kontroll | Viktig kvarstående begränsning |
 | --- | --- | --- |
-| **Big Five/IPIP-50** | **Implementerat på main**: 50 egna svar, fem skalor, privat återupptagning, samtyckesstyrd fempoängsdelning och horisontella percentilstaplar (PR #71–#78). **AI-analys som ersätter förskrivna råd är kodad i PR #85 men ännu inte aktiverad.** | Ingen fastställd svensk/ungdomsnorm eller mätinvarians. Inget heltäckande autentiserat sluttest eller versionssäkra omtestomgångar verifierade. |
+| **Big Five/IPIP-50** | **Implementerat på main**: 50 egna svar, fem skalor, privat återupptagning, samtyckesstyrd fempoängsdelning, horisontella percentilstaplar (PR #71–#78) och automatiska AI-reflektioner i intern testmiljö (PR #85–#86). | Ingen fastställd svensk/ungdomsnorm eller mätinvarians. Inget heltäckande autentiserat sluttest eller versionssäkra omtestomgångar verifierade. |
 | **Inkorg** | **Implementerat**: riktiga privata familjemeddelanden i båda riktningar, historik, läskvittenser, familjeisolering och regelaviseringar (PR #60, #68–#69). | Testa verkliga konton, radering/retention och återanslutning. |
 | **Schyssta listan** | **Implementerat och aktiverat i intern test-UI**: manuella och kortbaserade förslag, separata JA, ändring, historik/återkallelse, notiser, sök/filter och neutral väntan (PR #56–#67). `enableSchysstaList=true`. | Autentiserad helhetsverifiering mellan två konton fortfarande en öppen uppgift. |
-| **Gillaswajpen** | **Delvis klar**: bred kortbank, A/B-modell, egen sparning, granskad servergrund och **ny kod i PR #85 för AI-reflektion vid giltiga gemensamma JA**. | `enableSharedPriorities`, `enableSharedPolling`, `enableSharedInsights`, `enableSharedUnderstanding` är **false** i `backend-config.js`. Gemensam insiktsyta, säker B-vy och privat prioritering får **inte** anges som aktiva. |
-| **Kommunikationsråd / AI-medlaren** | Kommunikationsråd finns. **AI-medlarens privata testchatt med Cloudflare Worker/D1 är tekniskt implementerad på `main`** (PR #81), liksom färsk, serverhämtad och behörighetsstyrd kontext från Gillaswajpen, Big Five, Schyssta listan och begränsad inkorg (PR #82). Automatisk AI-/browser-CI är dokumenterat godkänd. | Särskild MI-sida saknas. **Riktigt autentiserat tvåkontotest, återkallelsetest, ungdomsskydd och klinisk/dataskyddsmässig granskning återstår.** AI-medlaren är en intern testfunktion, inte produktionsklar. |
-| **Helgens utveckling och publicering** | PR #56–#79 och #81–#82 är mergade; Big Five, inkorg, Schyssta listan och AI-medlaren har kod på `main`. AI-Worker har uppdaterats enligt senaste projektavstämningen. | Publicering i intern testmiljö och grön CI bevisar **inte** att hela webbplatsen har godkänts i två riktiga autentiserade sessioner, att samtyckesåterkallelse fungerar från början till slut eller att den är redo för externa användare. |
+| **Gillaswajpen** | **Delvis klar**: bred kortbank, A/B-modell, egen sparning, AI-reflektion vid säkra JA+JA (PR #85–#86). Gemensam insiktsvy och **uttryckligt återkallelig B-delning** aktiva för intern testning (PR #88). | `enableSharedPriorities` och `enableSharedPolling` är fortfarande **false**. B-vy och AI måste genomgå autentiserat tvåkontotest, inklusive återkallelse, innan extern användning. Ingen automatisk delning av tidigare B-JA. |
+| **Kommunikationsråd / AI-medlaren** | AI-medlarens privata testchatt och behöriga kontext är driftsatta internt (PR #81–#89). Den separata MI-inspirerade föräldraguiden med källor finns på arbetsbranch 3 november; koden och testerna ska granskas före merge. | **Riktigt autentiserat tvåkontotest, återkallelsetest, ungdomsskydd och klinisk/dataskyddsmässig granskning återstår.** MI-sidans användbarhet och pedagogiska säkerhet är inte validerad. |
+| **Senaste publiceringen** | PR #56–#79 och #81–#89 är mergade till `main`; Workers/Pages-versioner är dokumenterade i respektive avsnitt. Nya MI- och B-textändringar befinner sig initialt på utvecklingsbranch. | Publicering i intern testmiljö och grön CI bevisar **inte** att hela webbplatsen har godkänts i två riktiga autentiserade sessioner, att samtyckesåterkallelse fungerar från början till slut eller att den är redo för externa användare. |
 
 **Statusförklaring för avkryssning nedan:** [x] betyder att den **identifierbara kod- eller redaktionsuppgiften** har implementerats och automatiskt testats. Om en äldre rad samtidigt innehåller bredare krav (t.ex. verkliga användartester, klinisk validering, full datalivscykel) gäller de fortfarande som **separata oavslutade** arbetsuppgifter i den nya kön. [ ] betyder återstår eller delvis färdigt. Ändra inte befintliga användarsvar för testning. Publicerad webbadress är tekniskt publik trots att den används internt.
 
 **Kort arbetsordning:** INT-01/02/03/04 samt **AI-01D** (autentiserade tvåkontotester, framför allt sekretess och återkallelse) → SW-01/02/03/04 (gillaswajp och korrekt aktivering) → MI-01, PF-01/02/03, UX-01/02, NOT-01 → **AI-02/03: driftsätt och tvåkontotesta automatiska AI-reflektioner** → AI-skyddsgranskning/data/pilot. Se [aktuell utvecklingskö](docs/CURRENT_TASKS.md).
 
+
+## Kodleverans 3 november 2026 – avgränsade förbättringar
+
+- [x] **MI-01A (branchkod):** MI-inspirerad rollspärrad föräldraguide, länkning från Schyssta listan, källor och nya UI-/Node-tester. Inte påstått autentiserat verifierad.
+- [x] **SW-01A (branchkod):** rättad tonåringstext om valbar, uttrycklig B-delning i Gillaswajpen. Ingen delning av tidigare svar, samtycke fortsatt separat per kort.
+- [x] **Underhåll (branchkod):** ta bort dubblerad fokuslyssnare för polling, uppdatera relevanta dokument som felaktigt sade att AI eller B-funktionen var avstängd.
+- [ ] **Separata kontroller:** godkänd CI/Pages-publicering och autentiserad tvåkontoverifiering i verklig tjänst måste redovisas efter genomförande, inte antas.
 
 ## OBLIGATORISK ARBETSREGEL – uppdatera status efter VARJE genomförd förändring (beslut 2 november 2026)
 
@@ -423,10 +430,10 @@ Listan är en samlad arbetsplan för att slutföra Gillaswajpen. Kryssa av förs
 **Arbetsordning för kommande automatiserade utvecklingspass:** När säkert självständigt Gillaswajpen-arbete är färdigt eller faktiskt blockerat, fortsätt direkt med **SL-01 → SL-08**, därefter **SL-09 → SL-17** och sedan kvalitet/efter-MVP. Gör faktiska kod-/teständringar varje pass där möjligt; dokumentera konkret blockerare och fortsätt med nästa oberoende SL-punkt. Skapa commits och länka GitHub Actions; ingen automatisk merge till `main` eller osäker flaggaktivering.
 
 ### P1 – Kommunikationsråd för förälder: motiverande samtal (MI)
-- [ ] **[A]** Skapa en särskild MI-informationssida i föräldervyn (inte tonårsvyn), nåbar från Kommunikationsråd och förälderns regel-förslagsflöde.
-- [ ] **[A]** Skriv kort, källgranskad psykoedukation: öppna frågor, reflektioner/speglingar, bekräftelser, sammanfattningar, autonomistöd, att möta motstånd utan argumentation och att be om lov/bjuda in innan gemensam problemlösning. Beskriv hur föräldern kan adressera problem utan att övergå för snabbt till råd och lösningar.
-- [ ] **[A]** Ge ett konkret exempel på samtalssekvens: lyssna och spegla → utforska perspektiv och behov → fråga om lov att ta upp oro → bjud in till gemensam problemlösning. MI ska inte framställas som manipulation, garanti för förändring eller evidens för appens effekt.
-- [ ] **[B]** Granska psykologisk precision, tillgängligt språk och vetenskapliga källor innan publicering av pedagogiskt innehåll.
+- [x] **[A] Implementerad på utvecklingsbranch 3 nov:** separat MI-inspirerad föräldraguide (egen hash-rutt, endast föräldervyn), länkad från Kommunikationsråd och Schyssta listan. Automatiska Node-/Playwrighttester tillagda; CI/merge och verkligt rolltest återstår som separat kontroll.
+- [x] **[A] Kodad 3 nov:** kort MI-inspirerad introduktion med öppna frågor, reflektion, bekräftelse, sammanfattning, autonomistöd, lov att ge råd och förälderns vuxenansvar. Källor: Socialstyrelsen, Folkhälsomyndigheten och Kunskapsguiden. Hävda inte att just denna föräldraadaptation har dokumenterad behandlingseffekt.
+- [x] **[A] Kodad 3 nov:** dialogexempel med mobilgränser som skiljer lyssnande från ansvar för sömn och säkerhet. Ett nej likställs inte med samtycke; guiden utlovar inte MI-behandling eller effekt.
+- [ ] **[B]** Granska manuellt psykologisk precision, tillgängligt språk och de svenska myndighetskällorna i den verkliga mobilvyn; automatiskt innehållstest och källlänkar är ett första steg men ersätter inte användartest.
 
 ### Genomförandeordning och säkerhetsgränser
 1. Först mobilnavigering och befintliga visuella/testrelaterade brister, därefter allmänna swajpkort och resultatlogik.
