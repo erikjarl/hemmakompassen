@@ -534,7 +534,8 @@ try{
   await soloTeen.page.getByRole('button',{name:'Ja'}).click();
   await soloTeen.page.locator("#swipe-card[aria-label^='Kort 2 av 34']").waitFor();
   assert.match(await soloTeen.page.locator('#swipe-card').innerText(),/Jag vill helst prata färdigt/,'Understanding card is visible to teen');
-  assert.match(await soloTeen.page.locator('.swipe-understanding-notice').innerText(),/Delning med förälder är ännu inte aktiverad/,'Teen is not misled about sharing status');
+  assert.match(await soloTeen.page.locator('.swipe-understanding-notice').innerText(),/privat tills du själv väljer att dela ett ja-svar/,'Teen is told that B sharing needs a separate action');
+  assert.equal(await soloTeen.page.locator('.swipe-understanding-notice a[href="#insikter"]').count(),1,'Teen has a direct path to voluntary sharing');
   const beforeSkip=await soloTeen.page.evaluate(()=>window.__HK_SAVED_SWIPE__.row.card_id);
   await soloTeen.page.getByRole('button',{name:'Vill inte svara just nu'}).click();
   await soloTeen.page.locator("#swipe-card[aria-label^='Kort 3 av 34']").waitFor();
