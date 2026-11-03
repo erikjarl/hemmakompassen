@@ -1,14 +1,24 @@
 # Hemmakompassen — aktuell utvecklingskö
 
-**Granskad:** tisdag 3 november 2026, efter mergade och publicerade PR #90–#98, samt separat verifierad Supabase-migration #95.  
-**Källa:** kod på `main` inklusive PR #90–#98, `backend-config.js`, kontrollerade GitHub Actions/UI/Pages-körningar, Supabase-migrationer och read-only SQL efter installation. Detta är **inte** ett påstående om genomförda verkliga tvåkontotester.  
+**Granskad:** tisdag 3 november 2026, efter mergade och publicerade PR #90–#99, samt separat verifierad Supabase-migration #95.  
+**Källa:** kod på `main` inklusive PR #90–#99, `backend-config.js`, kontrollerade GitHub Actions/UI/Pages-körningar, Supabase-migrationer och read-only SQL efter installation. Detta är **inte** ett påstående om genomförda verkliga tvåkontotester.  
 **Syfte:** En enda kort, uppdaterad handlingslista för manuellt och schemalagt utvecklingsarbete. `ROADMAP.md` bevarar detaljerna och äldre beslut.
+
+## 3 november 2026 – SW-03A: egen viktigast-översikt och fortsatt privat prioritering
+
+- [x] **Kod på separat utvecklingsbranch:** tonåringen får en egen, tydligt privat lista över **redan serververifierade gemensamma A JA+JA** som hen själv markerat som mycket viktiga. Ingen B-fråga, NEJ, okänt kort eller neutralt/lågt värde visas i den listan. Föräldern får inte den privata listan, och den döljs om en särskilt kontrollerad gemensam prioritetsfunktion senare aktiveras. UI upplyser korrekt om att AI-medlaren kan använda användarens egna skattningar när projektkontext är på. PR/CI återstår.
+- [x] **Regressionsfall skrivna:** säker selektering av egna viktiga JA+JA, föräldervy utan privata markeringar, fel i lagringshämtning och framtida shared-mode utan dubblerad lista. Testerna använder syntetiska data.
+- [ ] **SW-03B – blockering före delning:** i verkliga Supabase saknas RPC `public.shared_swipe_priorities(text)` trots att förberedd SQL och syntetiska tester finns i GitHub. Den tidigare UI-texten lovar att viktighetsskattningar sparas privat. Publicera därför **inte** automatiskt tidigare privata höga tonåringsmarkeringar via en ny RPC utan begripligt aktivt delningsval, nya kontrakttester och autentiserad tvåkontoverifiering. Flaggan `enableSharedPriorities:false` lämnas orörd.
+
+## INT-01/03/04 – read-only positiva rollprov i verkliga Supabase (3 november 2026)
+
+- [x] **Rollbaserad SQL-kontroll utan dataändringar:** befintligt förälder–tonåringpar kördes med `BEGIN READ ONLY`, lokalt `authenticated` och simulerat `request.jwt.claim.sub` i två separata transaktioner med `ROLLBACK`. Båda fick 2 familjemedlemmar, 12 gemensamma A-JA i general, 5 i aktiviteter, 0 delade B, 2 meddelanden och en tillgänglig delad IPIP-profil; oläst: 0 förälder, 1 tonåring. Ingen rå text, identitet, privata svar eller meddelandeinnehåll återges i planen.
+- [ ] **Begränsning:** dessa är riktiga, körda, behörighetsstyrda DB-RPC:er men **inte** signerade inloggningar eller två webbläsarsessioner. Fulla INT-01/02/03/04, återkallelse och Worker-test kvarstår.
 
 ## AI-01H – resultatanalys med tidsgräns och avbrutna gamla anrop (3 november 2026)
 
-- [x] **Kod på utvecklingsbranch (inte mergad):** automatisk AI-analys får högst 25 sekunder på sig innan ett tydligt fel och manuell omförsöksknapp visas. Vid kontobyte, ny resultatsignatur (t.ex. delning/återkallelse) eller återställning avbryts föråldrade webbläsaranrop. Även om ett nätverksanrop ignorerar avbrytning kan en föråldrad analys inte ersätta den nya; ingen automatisk extra AI-kvot försöks förbruka vid timeout. Ingen ny serverrättighet eller databasändring. Kod: ai-dev/ai-result-timeout-cancel-20261103.
-- [x] **Regressionsfall tillagda i kod:** fastnat anrop, synlig timeout, explicit återförsök, ändrad delning, sent svar och konto-/sessionsbyte. CI-värdering återstår.
-- [ ] **AI-01H slutverifiering:** PR-CI/Playwright, publicering och verkligt tvåkontotest av delningsåterkallelse återstår. Klientavbrott kan inte garantera att redan påbörjad AI-serverkörning inte debiterar kvot.
+- [x] **AI-01H merged/publicerad PR #99:** 25-sekunders timeout och abort av föråldrade AI-anrop ingår på `main` via merge `f64e0c681f9d26579279e3f3c1487b1fed17129c`. PR-CI AI #41679064612 och UI #41679064432 godkända, main UI #41679759399 och Pages #41679758227 godkända. Ändringen påverkar bara klienten, inte Worker-kontrakt eller sparade svar.
+- [ ] **AI-01H återstår:** verkligt tvåkontotest av återkallelse/konto- och sessionsbyte; UI-avbrott bevisar inte att redan påbörjat serveranrop slutar konsumera AI-kvot.
 
 ## 3 november 2026 – UX-02A: ikonöversikt även med aktiva AI-reflektioner
 
