@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {IPIP50_V1} from '../personality/ipip50-v1.js';
-import {createPersonalityExperience} from '../personality/ipip50-ui.js';
+import {createPersonalityExperience,buildOwnIPIP50Export} from '../personality/ipip50-ui.js';
 
 const itemIds=IPIP50_V1.items.map(item=>item.id);
 function fakeClient(initial=new Map()){
@@ -208,4 +208,39 @@ test('parent sees a distinct narrative for the same shared scores',async()=>{
   assert.match(html,/Tonåringen kanske uppskattar tydliga planer mer än du själv gör/);
   assert.doesNotMatch(html,/Om din förälder vill ha ordning och framförhållning/);
   assert.match(html,/href="#regler"/);
+});
+
+
+test('versioned own-answer export contains only valid self answers and stable question text',()=>{
+  const partial=buildOwnIPIP50Export({
+    'ipip50-001':5,'ipip50-002':2,'ipip50-003':8,
+    'foreign':3
+  },'2026-11-03T12:00:00.000Z');
+  assert.equal(partial.instrument_id,IPIP50_V1.id);
+  assert.equal(partial.instrument_version,IPIP50_V1.version);
+  assert.equal(partial.language,'sv-SE');
+  assert.equal(partial.exported_at,'2026-11-03T12:00:00.000Z');
+  assert.equal(partial.answered_count,2);
+  assert.equal(partial.complete,false);
+  assert.deepEqual(partial.responses.map(item=>[item.item_id,item.value]),[['ipip50-001',5],['ipip50-002',2]]);
+  assert.equal(partial.responses[0].statement_sv,IPIP50_V1.items[0].sv);
+  assert.equal(Object.hasOwn(partial,'user_id'),false);
+  assert.equal(Object.hasOwn(partial,'partner'),false);
+  assert.equal(Object.hasOwn(partial,'shared'),false);
+});
+
+test('export control saves the viewer own 50 answers without writing to database',async()=>{
+  const mock=fakeClient(new Map(itemIds.map(id=>[id,3])));
+  const downloads=[];
+  const ui=createPersonalityExperience({db:mock.db,onRender:()=>{},saveExport:(filename,payload)=>downloads.push({filename,payload})});
+  ui.reset('teen-id');await ui.load('teen-id');
+  assert.match(ui.render({viewerRole:'teen'}),/Exportera mina egna svar \(JSON\)/);
+  await ui.handleClick(btn('export'));
+  assert.equal(downloads.length,1);
+  assert.match(downloads[0].filename,/^hemmakompassen-ipip50-egna-svar-\d{4}-\d{2}-\d{2}\.json$/);
+  assert.equal(downloads[0].payload.responses.length,50);
+  assert.equal(downloads[0].payload.complete,true);
+  assert.equal(mock.writes.length,0,'Export is read-only and never changes any saved answers');
+  assert.doesNotMatch(JSON.stringify(downloads[0].payload),/teen-id|parent-id|family_id|partner|access_token/);
+  assert.match(ui.render(),/Kontrollera att filen sparades/);
 });
