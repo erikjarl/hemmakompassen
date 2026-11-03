@@ -391,6 +391,14 @@ try{
    assert.equal(await m.page.evaluate(()=>window.__HK_MATCH_RPC_CALLS__||0),0,'Unpaired member must not request aggregate matches');
   assert.equal(await m.page.evaluate(()=>window.__HK_UNLOCK_RPC_CALLS__||0),0,'Unpaired member must not request theme unlock status');
   assert.match(await m.page.locator("#swipe-card").getAttribute("aria-label"),/Kort 1 av 21/);
+  // ArrowRight on a focused navigation link must NOT save a private swipe answer.
+  await m.page.locator('#live-mobile-nav a[href="#personlighet"]').focus();
+  await m.page.keyboard.press('ArrowRight');
+  await m.page.waitForTimeout(300);
+  assert.match(await m.page.locator('#swipe-card').getAttribute('aria-label'),/Kort 1 av 21/,
+    'Focused navigation arrow must not advance the private swipe deck');
+  assert.equal(await m.page.evaluate(()=>window.__HK_SWIPE_SAVE__??null),null,
+    'Focused navigation arrow must not write a swipe answer');
   assert.equal(await m.page.locator('#swipe-skip').count(),0,'Parent must never see a teen-only skip control');
   const importance= m.page.locator('[data-importance]');
   assert.ok(await importance.isEnabled(),'Importance is enabled when the private table is available');

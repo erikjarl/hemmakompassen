@@ -1347,7 +1347,13 @@ document.addEventListener('keydown',e=>{
   if(e.target.matches?.('#family-chat-body')&&(e.ctrlKey||e.metaKey)&&e.key==='Enter'){
     e.preventDefault();e.target.closest('form')?.requestSubmit();return;
   }
-  if(page()==='swipe'&&user&&!['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName)&&['ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();advanceSwipe(e.key==='ArrowRight'?'yes':'no');}});
+  // Arrow keys may control the card only when no navigation, form or slider is focused.
+  // Without this guard, keyboard navigation could silently save an unintended answer.
+  const interactive=e.target.closest?.('a,button,input,textarea,select,[contenteditable],[role="slider"],[role="button"],[role="link"],[role="textbox"],[role="spinbutton"],[role="combobox"],[role="menuitem"],[role="radio"]');
+  if(page()==='swipe'&&user&&!interactive&&!e.altKey&&!e.ctrlKey&&!e.metaKey&&!e.shiftKey&&['ArrowLeft','ArrowRight'].includes(e.key)){
+    e.preventDefault();advanceSwipe(e.key==='ArrowRight'?'yes':'no');
+  }
+});
 document.addEventListener('submit',async e=>{if(e.target.id==='mediator-form'){e.preventDefault();await mediatorExperience.submit();return;}if(e.target.id==='family-chat-form'){e.preventDefault();await sendFamilyChatMessage();return;}if(e.target.id==='schyssta-manual-form'){e.preventDefault();await submitManualSchysstaRule();return;}if(e.target.id!=='live-login')return;e.preventDefault();const b=e.target.querySelector('button');b.disabled=true;const feedback=$('login-feedback');feedback.textContent='Loggar in…';const email=$('live-email').value.trim();try{const {error}=await db.auth.signInWithPassword({email,password:$('live-password').value});if(error)throw error;$('live-password') && ($('live-password').value='');await refresh();}catch(err){feedback.textContent='Kunde inte logga in. Kontrollera e-post och lösenord, eller välj ”Glömt lösenord eller saknar lösenord?”.';}finally{b.disabled=false;}});
 window.addEventListener('hashchange',()=>{
   if(page()!=='insikter'){insightsRows=[];sharedUnderstandingRows=[];insightsError='';insightsLoading=false;insightsRequest++;}
