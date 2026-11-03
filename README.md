@@ -1,6 +1,6 @@
 # Hemmakompassen
 
-**Aktuell status: intern testversion, 1 november 2026.** Hemmakompassen är en responsiv webbapp för förälder och tonåring med fokus på dialog, ömsesidig förståelse och gemensamma överenskommelser. GitHub Pages är tillgänglig på internet, men projektet är ännu inte granskat eller lanserat för externa verkliga familjer.
+**Aktuell status: intern testversion, 3 november 2026.** Hemmakompassen är en responsiv webbapp för förälder och tonåring med fokus på dialog, ömsesidig förståelse och gemensamma överenskommelser. GitHub Pages är tillgänglig på internet, men projektet är ännu inte granskat eller lanserat för externa verkliga familjer.
 
 - **Vad som gjordes under helgen / återstående arbete:** [Aktuell utvecklingskö](docs/CURRENT_TASKS.md).
 - **Hela produktvisionen och historiken:** [ROADMAP.md](ROADMAP.md).
@@ -16,16 +16,16 @@ Det finns även äldre lokala demofiler `app.js`/`styles.css`, men de är **inte
 
 ## Implementerat i den interna testversionen
 
-- **Gillaswajpen:** 34 allmänna A/B-kort, sex temakortlekar, stora kataloger (104 aktiviteter och 104 samtalsämnen), privata svar, återupptagning och serverbaserad grund för A-matchningar. **Inte alla gemensamma funktioner är aktiverade** (se nedan).
+- **Gillaswajpen:** 34 allmänna A/B-kort, sex temakortlekar, 104 aktiviteter och 104 samtalsämnen, privata svar, återupptagning och serverbaserad A-matchning. Gemensam insiktsvy och frivillig separat B-delning är aktiva för interna testkonton, men tvåkontotest av återkallelse/isolering återstår.
 - **Inkorg:** privata familjemeddelanden i båda riktningar, historik, meddelandestatus och olästa regelaviseringar. Backend har familje- och parningskontroller. Verkligt heltäckande tvåkontotest är kvarstående.
 - **Schyssta listan:** familjeavgränsade förslag från regelkort och fritext, separata godkännanden, förfrågningsstatus, ändringar, omprövning/återkallelse, arkiv, sök- och filterfunktion samt inkorgskoppling. `enableSchysstaList=true` i intern testversion.
-- **Min personlighet:** versionssatt svenskspråkigt IPIP-50 (50 frågor) med privata svar, fem summaskalor, frivillig delning av endast fem sammanfattande poäng efter bådas aktiva samtycke, fem horisontella jämförelsestaplar och förskrivna rollanpassade reflektionsråd. Beräknade `P≈` utgår från en normalmodell och en icke-representativ amerikansk vuxenreferens, **inte** svenska normpercentiler.
-- **Kommunikationsråd:** befintliga allmänna råd; särskild MI-sida för förälder kvarstår.
+- **Min personlighet:** versionssatt svenskspråkigt IPIP-50 (50 frågor) med privata svar, fem summaskalor, frivillig delning av endast fem sammanfattande poäng efter bådas aktiva samtycke, fem horisontella jämförelsestaplar och automatiska AI-reflektioner i intern testmiljö. Beräknade `P≈` utgår från en normalmodell och en icke-representativ amerikansk vuxenreferens, **inte** svenska normpercentiler.
+- **Kommunikationsråd:** allmänna samtalsråd och en separat MI-inspirerad föräldraguide med metodkällor, exempel och tydlig gräns mot övertalning (3 november, efter godkänd merge).
 
 ## Kvarvarande begränsningar – läs innan extern testning
 
-- Konfigurationen i `backend-config.js` håller `enableSharedPriorities`, `enableSharedPolling`, `enableSharedInsights` och `enableSharedUnderstanding` **avstängda**. Att migrationsfiler eller frontendkod finns betyder inte att dessa funktioner är aktiva.
-- **AI-medlaren är inte färdig:** den är fortfarande en utvecklingsvy, inte en fungerande privat AI-medlingschatt.
+- Konfigurationen håller **`enableSharedPriorities` och `enableSharedPolling` avstängda**, men **`enableSharedInsights` och `enableSharedUnderstanding` aktiverade för intern testning**. Delning av B-kort är fortfarande frivillig per kort och återkallelig, inte automatisk. Verklig tvåkontoverifiering saknas fortfarande.
+- **AI-medlaren och automatiska AI-reflektioner finns i den interna testversionen:** Cloudflare Worker och resultatvyerna är kodade, distribuerade och begränsade till två tillåtna testkonton. Fullständiga autentiserade tvåkontotester, säkerhets- och innehållsgranskning återstår. Inte produktionsklart.
 - IPIP-50-översättningens psykometriska egenskaper och jämförbarhet mellan svenska ungdomar och vuxna är inte fastställda; tolkningsråd och godtyckliga råpoängströsklar är redaktionella samtalshjälpmedel, inte kliniska gränser.
 - Simulerade Node-/PostgreSQL-/Playwright-tester bevisar **inte** att hela flödet fungerar med två verkligt autentiserade konton, särskilt vid omparning, fel och samtyckesåterkallelse. Följ testkön i [CURRENT_TASKS.md](docs/CURRENT_TASKS.md).
 - Krav på dataportabilitet/radering, informationsflöden för minderåriga, juridisk bedömning, säkerhets- och användbarhetsgranskning återstår inför en extern pilot.
