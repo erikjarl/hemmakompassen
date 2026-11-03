@@ -14,6 +14,7 @@ on:
       - "supabase/migrations/20261027195833_shared_swipe_priorities.sql"
       - "supabase/migrations/20261028180000_shared_understanding_cards.sql"
       - "supabase/migrations/20261030090000_shared_swipe_all_a_only.sql"
+      - "supabase/migrations/20261103110500_revoke_understanding_trigger_rpc_execute.sql"
       - "supabase/migrations/20261030180000_schyssta_list_server_contract.sql"
       - "supabase/migrations/20261101110000_schyssta_manual_proposals.sql"
       - "supabase/migrations/20261101121500_schyssta_notifications.sql"
@@ -108,6 +109,22 @@ jobs:
           docker exec -i "${{ job.services.postgres.id }}" \
             psql -U postgres -d postgres -v ON_ERROR_STOP=1 -X -q \
             < supabase/migrations/20261028180000_shared_understanding_cards.sql
+      - name: Apply trigger helper least-privilege revocation
+        run: |
+          docker exec -i "${{ job.services.postgres.id }}" \
+            psql -U postgres -d postgres -v ON_ERROR_STOP=1 -X -q \
+            < supabase/migrations/20261103110500_revoke_understanding_trigger_rpc_execute.sql
+      - name: Assert internal trigger helper is not a public or authenticated RPC
+        shell: bash
+        run: |
+          set -euo pipefail
+          actual="$(docker exec -i "${{ job.services.postgres.id }}" \
+            psql -U postgres -d postgres -v ON_ERROR_STOP=1 -X -q -A -t \
+            -c "select case when not has_function_privilege('anon','public.revoke_understanding_share_on_private_change()','EXECUTE')
+              and not has_function_privilege('authenticated','public.revoke_understanding_share_on_private_change()','EXECUTE')
+              and (select count(*) from pg_trigger where tgname in ('revoke_understanding_share_after_answer','revoke_understanding_share_after_skip') and tgenabled='O')=2
+              then 'ok' else 'fail' end")"
+          test "$actual" = "ok"
       - name: Restrict every shared swipe deck to its versioned A catalogue
         run: |
           docker exec -i "${{ job.services.postgres.id }}" \
