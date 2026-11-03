@@ -361,7 +361,7 @@ function privateTeenPrioritySummary(matchedById,deckId){
     '<h3>Mina viktigaste gemensamma ja-svar</h3>'+
     '<p>Här ser du sådant som ni båda svarat ja till och som du själv markerat som mycket viktigt.</p>'+
     '<ul class="swipe-match-list">'+entries+'</ul>'+
-    '<p class="live-muted">Den här listan visas bara för dig. Din viktighetsskattning delas inte med föräldern eller AI:n.</p></aside>';
+    '<p class="live-muted">Den här listan visas bara för dig. Föräldern ser inte dina privata viktighetsskattningar här. AI-medlaren kan använda dina egna skattningar när projektkontexten är påslagen.</p></aside>';
 }
 
 function swipeResults(deckId='general'){
