@@ -80,20 +80,25 @@ async function fetchFamilyChatUnread(){
   let result;
   try{result=await db.rpc('my_family_unread_message_count');}catch(e){result={error:e};}
   if(request!==familyChatCountRequest||user?.id!==viewer||sharedSession!==session)return;
+  const beforeCount=familyChatUnread,beforeError=familyChatUnreadError;
   if(result?.error||!Number.isInteger(result?.data)||result.data<0){
     familyChatUnread=0;familyChatUnreadError=true;
   }else {familyChatUnread=result.data;familyChatUnreadError=false;}
+  // Keep a reader's scroll/focus still if the count and confidence are unchanged.
+  if(beforeCount===familyChatUnread&&beforeError===familyChatUnreadError)return;
   if(['hem','regler'].includes(page())||(page()==='inkorg'&&!familyChatDraft.trim()))render();
   else menu();
 }
-async function fetchFamilyChat(older=false){
+async function fetchFamilyChat(older=false,{quiet=false}={}){
   if(!user||members.length!==2)return;
   if(older?(!familyChatHasMore||familyChatLoadingOlder||familyChatLoading):familyChatLoading)return;
   const viewer=user.id,session=sharedSession,request=++familyChatRequest;
   const oldest=older?familyChatMessages[familyChatMessages.length-1]:null;
-  familyChatError='';familyChatStatus='';
+  const previous=quiet?JSON.stringify([familyChatMessages,familyChatHasMore,familyChatError]):null;
+  familyChatError='';
+  if(!quiet)familyChatStatus='';
   if(older)familyChatLoadingOlder=true;else familyChatLoading=true;
-  if(page()==='inkorg'&&!familyChatDraft.trim())render();
+  if(!quiet&&page()==='inkorg'&&!familyChatDraft.trim())render();
   let result,timer;
   try{
     result=await Promise.race([
@@ -116,8 +121,9 @@ async function fetchFamilyChat(older=false){
     // Only the deliberate mark-all action below calls the RPC.
     if(!older&&page()==='inkorg')void fetchFamilyChatUnread();
   }
-  if(page()==='inkorg'&&!familyChatDraft.trim())render();
-  else menu();
+  const changed=!quiet||previous!==JSON.stringify([familyChatMessages,familyChatHasMore,familyChatError]);
+  if(changed&&page()==='inkorg'&&!familyChatDraft.trim())render();
+  else if(changed)menu();
 }
 async function markAllFamilyChatRead(){
   if(!user||members.length!==2||familyChatReadBusy||familyChatLoading||familyChatUnreadError||familyChatUnread<1)return false;
@@ -1127,7 +1133,15 @@ function autoAnalyze(){
 }
 function render(){
   if(activeThemeDeck&&!themeAccessAllowed())activeThemeDeck=null;
+  // Inbox can rerender after a remote message or an explicit read action.
+  // Preserve the mobile main scroller instead of jumping to the heading.
+  // Hash navigation explicitly calls scrollLiveMainTop() after its render.
+  const mainScroll=page()==='inkorg'?document.querySelector('.live-main')?.scrollTop:null;
   menu();$('live-app').innerHTML=user?(page()==='hem'?home():section(page())):login();
+  if(mainScroll!=null){
+    const main=document.querySelector('.live-main');
+    if(main)main.scrollTop=Math.min(mainScroll,Math.max(0,main.scrollHeight-main.clientHeight));
+  }
   if(page()==='regler'&&user)applySchysstaFilters();
   setupSwipeGesture();$('sidebar-account').textContent=user?'Inloggad: '+(profile?.display_name||user.email):'Inte inloggad';
   $('account-link').textContent=user?'Ditt konto →':'Logga in →';
@@ -1287,7 +1301,7 @@ window.addEventListener('focus',()=>{void pollSharedMatches();if(page()==='insik
 // Light polling while the tab is visible. Never rerender the message composer mid-draft.
 window.setInterval(()=>{
   if(document.hidden||!user||members.length!==2)return;
-  if(page()==='inkorg'&&!familyChatDraft.trim()&&!familyChatSending&&!familyChatLoading)void fetchFamilyChat();
+  if(page()==='inkorg'&&!familyChatDraft.trim()&&!familyChatSending&&!familyChatLoading)void fetchFamilyChat(false,{quiet:true});
   else if(page()==='hem')void fetchFamilyChatUnread();
 },15000);
 window.setInterval(()=>void pollSharedMatches(),SHARED_POLL_INTERVAL_MS);
