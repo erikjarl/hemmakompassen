@@ -19,6 +19,11 @@
 **Kort arbetsordning:** INT-01/02/03/04 samt **AI-01D** (autentiserade tvåkontotester, sekretess/återkallelse) → SW-01/02/03/04 (testa och färdigställ befintlig B-/insiktsfunktion; prioritets- och polling-flaggor är av) → MI-01B, PF-01/02/03, UX-01/02, NOT-01 → **AI-02/03: tvåkontotesta redan driftsatta AI-reflektioner** → SEC-02 och AI-skyddsgranskning/data/pilot. Se [aktuell utvecklingskö](docs/CURRENT_TASKS.md).
 
 
+## 3 november 2026 – UX-02A: ikonöversikt även med aktiva AI-reflektioner
+
+- [x] **Kod och regressionstester på utvecklingsbranch:** ai-dev/compact-mutual-yes-20261103 visar en kort, ämnesgrupperad ikonöversikt från **enbart serververifierade A JA+JA** i både den enskilda kortlekens resultat och samlade insikter. AI-reflektionen finns kvar på samma sida. Förskrivna redaktionella råd visas inte i den AI-aktiverade vyn. Kortöversikten visar rollanpassad text och antal gemensamma svar, aldrig enskilda B-/NEJ-/okända kort eller privat viktighet.
+- [ ] **Slutverifiering UX-02A:** kontrollera PR-CI, mobilskärmbilder och senare riktiga tvåkonton med återkallelse, breda kortlekar och iOS Safari. Denna kodändring innebär inte att UX-02 eller SW-02 är helt klara.
+
 ## Inkorgens tysta uppdatering och mobilskroll – INT-03C
 
 - [x] **PR #97 mergad och publicerad:** om den serververifierade meddelandelistan och antalet olästa inte ändras gör 15-sekunders bakgrundskontrollen ingen onödig fullständig omritning. Ny data/fel visas fortfarande. En manuell uppdatering håller kvar redan visad konversation under hämtning, och inkorgens skrollposition bevaras när innehåll faktiskt byts.
