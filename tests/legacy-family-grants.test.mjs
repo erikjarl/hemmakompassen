@@ -18,6 +18,6 @@ test('the deprecated deck RPC is unused but current authorised pairing and match
   assert.match(source,/db\.rpc\('my_family_members'\)/);
   assert.match(source,/db\.rpc\('shared_swipe_matches',\{p_deck_id:deckId\}\)/);
   assert.match(workflow,/20261103121500_revoke_legacy_family_table_grants\.sql/);
-  assert.match(workflow,/has_table_privilege\('authenticated','public\.families','SELECT'\)/);
-  assert.match(workflow,/has_function_privilege\('authenticated','public\.my_family_members\(\)','EXECUTE'\)/);
+  assert.ok(workflow.includes("has_table_privilege('authenticated','public.'||t.name,'SELECT')"));
+  assert.ok(workflow.includes("has_function_privilege('authenticated','public.shared_understanding_cards()','EXECUTE')"));
 });
