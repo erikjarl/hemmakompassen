@@ -4,7 +4,7 @@ import vm from 'node:vm';
 import {readFileSync} from 'node:fs';
 
 const source=readFileSync(new URL('../live-app.js',import.meta.url),'utf8');
-const loader=source.match(/async function fetchFamilyChat\(older=false\)\{[\s\S]*?(?=\nasync function markAllFamilyChatRead\()/)?.[0];
+const loader=source.match(/async function fetchFamilyChat\(older=false,(?:\{quiet=false\}=\{\})?\)\{[\s\S]*?(?=\nasync function markAllFamilyChatRead\()/)?.[0];
 const action=source.match(/async function markAllFamilyChatRead\(\)\{[\s\S]*?(?=\nasync function sendFamilyChatMessage\()/)?.[0];
 assert.ok(loader&&action,'Production inbox loader and read action remain present');
 
