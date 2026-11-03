@@ -1,13 +1,13 @@
 # Hemmakompassen — aktuell utvecklingskö
 
-**Granskad:** tisdag 3 november 2026, efter mergade och publicerade PR #90–#93; IPIP-export byggs på utvecklingsbranch.  
-**Källa:** kod på `main` inklusive PR #90 och #91, `backend-config.js`, GitHub Actions/UI/Pages, Supabase-migrationer och aktuell säkerhetsrådgivning samt read-only SQL-kontroll efter installation. Detta är **inte** ett påstående om genomförda verkliga tvåkontotester.  
+**Granskad:** tisdag 3 november 2026, efter mergade, kodtestade och publicerade PR #90–#94.  
+**Källa:** kod på `main` inklusive PR #90–#94, `backend-config.js`, kontrollerade GitHub Actions/UI/Pages-körningar, Supabase-migrationer och read-only SQL efter installation. Detta är **inte** ett påstående om genomförda verkliga tvåkontotester.  
 **Syfte:** En enda kort, uppdaterad handlingslista för manuellt och schemalagt utvecklingsarbete. `ROADMAP.md` bevarar detaljerna och äldre beslut.
 
-## 3 november 2026 – IPIP egen dataexport, branchkod
+## 3 november 2026 – IPIP egen dataexport, mergad PR #94
 
-- [x] **PF-01A – exportera egna IPIP-svar (kod och tester):** lokal JSON-export av giltiga besvarade frågor med svensk frågetext, instrument-ID, version, datum och information om preliminär översättning. Fungerar även vid ofullständigt test, utan att skriva något i Supabase. Ingen familjeidentitet, partnerprofil, delningsstatus eller AI-text ingår i filen. Playwright testar faktiskt nedladdad fil och Node testar partiellt/färdigt test. Branch: `feature/ipip-own-answer-export-20261103`.
-- [ ] **PF-01B – kvar:** grön CI/merge/Pages för PF-01A, verklig Safari-/iOS-kontroll och framtida versionssäkra testomgångar, export/radering av samtliga kontodata. Denna del-export ersätter inte GDPR-arbetet.
+- [x] **PF-01A – exportera egna IPIP-svar (kod och tester):** lokal JSON-export av giltiga besvarade frågor med svensk frågetext, instrument-ID, version, datum och information om preliminär översättning. Fungerar även vid ofullständigt test, utan att skriva något i Supabase. Ingen familjeidentitet, partnerprofil, delningsstatus eller AI-text ingår i filen. Playwright testar faktiskt nedladdad fil och Node testar partiellt/färdigt test. **PR #94 mergad och publicerad:** PR-CI **#41620136382**, main UI **#41620395476** och GitHub Pages **#41620394681** godkända. Merge commit `8377fa96e2d7e3f2e9261a8c3a50297c229d4ffc`. Inga användarsvar ändrade.
+- [ ] **PF-01B – kvar:** genomför verklig Safari-/iOS-kontroll, versionssäkra nya testomgångar, historik och export/radering av samtliga kontodata. PR #94:s gröna CI/merge/Pages innebär **inte** att fullständig GDPR-datahantering är färdig.
 
 ## 3 november 2026 – startsida och aviseringar, PR #93 mergad
 
