@@ -1,7 +1,7 @@
 # Hemmakompassen — aktuell utvecklingskö
 
-**Granskad:** tisdag 3 november 2026, efter mergade och publicerade PR #90–#100, samt separat verifierad Supabase-migration #95.  
-**Källa:** kod på `main` inklusive PR #90–#100, `backend-config.js`, kontrollerade GitHub Actions/UI/Pages-körningar, Supabase-migrationer och read-only SQL efter installation. Detta är **inte** ett påstående om genomförda verkliga tvåkontotester.  
+**Granskad:** tisdag 3 november 2026, efter mergade och publicerade PR #90–#101, samt separat verifierad Supabase-migration #95.  
+**Källa:** kod på `main` inklusive PR #90–#101, `backend-config.js`, kontrollerade GitHub Actions/UI/Pages-körningar, Supabase-migrationer och read-only SQL efter installation. Detta är **inte** ett påstående om genomförda verkliga tvåkontotester.  
 **Syfte:** En enda kort, uppdaterad handlingslista för manuellt och schemalagt utvecklingsarbete. `ROADMAP.md` bevarar detaljerna och äldre beslut.
 
 ## 3 november 2026 – SW-03A: egen viktigast-översikt och fortsatt privat prioritering
@@ -10,7 +10,7 @@
 - [x] **Regressionstester verifierade:** syntetisk selektering av egna viktiga A JA+JA, föräldervy utan privata markeringar, fel i lagringshämtning, kontroll av AI-information samt framtida shared-mode utan dubbletter. Godkända i PR #100 UI-CI #41680382345.
 - [ ] **SW-03B – blockering före delning:** i verkliga Supabase saknas RPC `public.shared_swipe_priorities(text)` trots att förberedd SQL och syntetiska tester finns i GitHub. Den tidigare UI-texten lovar att viktighetsskattningar sparas privat. Publicera därför **inte** automatiskt tidigare privata höga tonåringsmarkeringar via en ny RPC utan begripligt aktivt delningsval, nya kontrakttester och autentiserad tvåkontoverifiering. Flaggan `enableSharedPriorities:false` lämnas orörd.
 
-- [x] **SW-03A mobilbrowser-QA tillagd på utvecklingsbranch:** `ai-dev/teen-priority-browser-qa-20261103` innehåller syntetiskt Playwright-test med ett tonåringskonto och en föräldervy, kontrollerar enbart tillåtna A JA+JA, att privata B och neutrala nivåer inte visas, att den avstängda prioritets-RPC:n inte anropas samt skärmbild och 390 px-överlapp. CI och PR-merge återstår vid denna avstämning.
+- [x] **SW-03A mobilbrowser-QA mergad och publicerad (PR #101):** syntetisk Chromium/Playwright-kontroll med tonårings- och föräldervy, endast serververifierade A JA+JA och tonåringens egen prioritet, skydd mot B/NEJ/neutrala värden samt avstängd prioritets-RPC. Ny 390 px-mobilbild `mobile-teen-private-priority-preview.png` har öppnats och granskats utan uppenbar klippning i själva listan. PR UI **#41680969356**, main UI **#41681186915** och Pages **#41681184672** godkända; merge `18c4bde1daed599ae456ec33270f831f1f729ad1`. Autentiserade tvåkontotester är fortfarande öppna.
 - [ ] **SW-03A verklig QA återstår:** autentiserade tvåkontosessioner, iOS Safari och framtida uttryckligt prioritetssamtycke.
 
 ## INT-01/03/04 – read-only positiva rollprov i verkliga Supabase (3 november 2026)
