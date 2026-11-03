@@ -19,6 +19,12 @@
 **Kort arbetsordning:** INT-01/02/03/04 samt **AI-01D** (autentiserade tvåkontotester, sekretess/återkallelse) → SW-01/02/03/04 (testa och färdigställ befintlig B-/insiktsfunktion; prioritets- och polling-flaggor är av) → MI-01B, PF-01/02/03, UX-01/02, NOT-01 → **AI-02/03: tvåkontotesta redan driftsatta AI-reflektioner** → SEC-02 och AI-skyddsgranskning/data/pilot. Se [aktuell utvecklingskö](docs/CURRENT_TASKS.md).
 
 
+## Inkorgens tysta uppdatering och mobilskroll – INT-03C
+
+- [x] **Kod på utvecklingsbranch:** om den serververifierade meddelandelistan och antalet olästa inte ändras gör 15-sekunders bakgrundskontrollen ingen onödig fullständig omritning. Ny data/fel visas fortfarande. En manuell uppdatering håller kvar redan visad konversation under hämtning, och inkorgens skrollposition bevaras när innehåll faktiskt byts.
+- [x] **Tester skapade:** Node-tester för identisk/ändrad och misslyckad hämtning samt återkommande oläst-räkning; syntetiskt Playwright-mobiltest för att behålla konversationen och skrollposition vid manuell uppdatering. Branch `fix/inbox-quiet-refresh-scroll-20261103`.
+- [ ] **Release och verklig QA:** CI, merge, Pages samt riktig autentiserad tvåkontokontroll och Safari-/skärmläsargranskning återstår.
+
 ## INT-01/03 – negativt auktoriseringsprov i verkliga Supabase (utan dataändringar)
 
 - [x] **Read-only serverkontroll:** `BEGIN READ ONLY; SET LOCAL ROLE authenticated` samt syntetiskt JWT-subject utan befintlig familj gav 0 familjemedlemmar, 0 gemensamma A-svar, 0 delade B-kort, 0 privata meddelanden och 0 olästa. `ROLLBACK` genomfördes. Detta testar den verkliga RPC-koden med en icke-medlem, **inte** riktiga signerade användarsessioner eller tvåkontoflöden.

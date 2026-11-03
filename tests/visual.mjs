@@ -204,6 +204,7 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
               return {data:id,error:null};
             }
             if(name==='my_family_messages'){
+              window.__HK_CHAT_FETCHES__=(window.__HK_CHAT_FETCHES__||0)+1;
               if(!window.__HK_TEST_PAIRED__)return {data:[],error:null};
               let rows=chatMessages.slice().sort((a,b)=>b.created_at.localeCompare(a.created_at)||b.message_id.localeCompare(a.message_id));
               if(args?.p_before_created_at&&args?.p_before_id)rows=rows.filter(row=>
@@ -879,6 +880,19 @@ try{
   await paired.page.getByRole('button',{name:'Skicka meddelande'}).click();
   await paired.page.locator('.family-chat-mine').filter({hasText:'<img src=x onerror=alert(1)>'}).waitFor();
   assert.equal(await paired.page.locator('.family-chat-text img').count(),0,'Message content never runs HTML');
+  // A manual refresh after the thread has loaded must not clear its height
+  // and reset mobile scroll. The same protection covers background polling.
+  const refreshChat=paired.page.locator('[data-family-chat-refresh]');
+  await refreshChat.scrollIntoViewIfNeeded();
+  const scrollBefore=await paired.page.locator('.live-main').evaluate(el=>el.scrollTop);
+  const fetchCount=await paired.page.evaluate(()=>window.__HK_CHAT_FETCHES__||0);
+  await refreshChat.click();
+  await paired.page.waitForFunction(n=>(window.__HK_CHAT_FETCHES__||0)>n,fetchCount);
+  await paired.page.waitForTimeout(120);
+  const scrollAfter=await paired.page.locator('.live-main').evaluate(el=>el.scrollTop);
+  assert.ok(Math.abs(scrollAfter-scrollBefore)<=9,'Inbox refresh preserves mobile scroll position; before '+scrollBefore+', after '+scrollAfter);
+  assert.match(await paired.page.locator('.family-chat-history').innerText(),/Hej tillbaka/,'Message history remains intact after refresh');
+
   const inboxText=await paired.page.locator('#live-app').innerText();
   assert.match(inboxText,/Vi pratar om hur vi delar på sysslorna/,'Inbox shows other member pending manual request');
   assert.doesNotMatch(inboxText,/Vi planerar veckans sysslor på söndag/,'Inbox does not present sender own proposal as incoming');
