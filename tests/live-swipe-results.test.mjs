@@ -246,4 +246,50 @@ const safeGeneral=insightState.sanitize('general',[
 assert.equal(JSON.stringify(safeGeneral),JSON.stringify([{deck_id:'general',card_id:'general-01',answer:true}]),'Only one known A JA+JA survives malformed RPC rows');
 assert.equal(insightState.sanitize('samtal',[{deck_id:'samtal',card_id:'samtal-01',answer:true}]).length,1,'Valid themed A matches are preserved');
 assert.throws(()=>insightState.sanitize('general',null),/Invalid shared results/,'Malformed server data fails closed');
+
+{
+  // Execute the actual cross-deck insights markup, not just a source-code regex.
+  const viewSource=script.match(/function insightsView\(\)\{[\s\S]*?(?=\nasync function fetchInsights\()/);
+  assert.ok(viewSource,'Cross-deck view is available for a synthetic DOM-independent test');
+  const state={
+    user:{id:'viewer'},members:[{user_id:'viewer',role:'parent'},{user_id:'partner',role:'teen'}],
+    sharedInsightsEnabled:true,insightsLoading:false,insightsError:'',aiResultEnabled:true,
+    sharedUnderstandingRows:[],insightsRows:[
+      {deck_id:'general',card_id:'general-01',answer:true},
+      {deck_id:'general',card_id:'general-02',answer:true},
+      {deck_id:'general',card_id:'general-03',answer:false},
+      {deck_id:'general',card_id:'unknown',answer:true},
+      {deck_id:'samtal',card_id:'samtal-01',answer:true}
+    ],
+    GENERAL_CARDS:[
+      {id:'general-01',type:'match',category:'Fritid',parentText:'Gemensam frivillig aktivitet'},
+      {id:'general-02',type:'understanding',category:'Känslor',parentText:'PRIVAT B-KORT'},
+      {id:'general-03',type:'match',category:'Samtal',parentText:'PRIVAT NEJ-KORT'}
+    ],
+    THEME_DECK_MODELS:[{id:'samtal',title:'Samtalsämnen',cards:[
+      {id:'samtal-01',type:'match',category:'Samtal',parentText:'Prata om en gemensam bok'}
+    ]}],
+    viewerRole:()=> 'parent',
+    cardTextForRole:card=>card.parentText,
+    esc:s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])),
+    card:s=>'<div>'+s+'</div>',understandingInsights:()=> '',
+    insightsAiSignature:()=> 'synthetic-signature',
+    aiResults:{panel:()=> '<div data-testid="all-deck-ai">AI-reflektion</div>'}
+  };
+  vm.runInNewContext(sharedViewFunctions[0]+'\n'+viewSource[0]+'\nthis.view=insightsView;',state);
+  const html=state.view();
+  assert.match(html,/Gemensamt i alla kortlekar/,'Cross-deck facts appear above the full results');
+  assert.match(html,/Gemensam frivillig aktivitet/,'Only real catalogued A YES is summarised');
+  assert.match(html,/Prata om en gemensam bok/,'The factual icon overview combines multiple approved decks');
+  assert.match(html,/data-testid="all-deck-ai"/,'The AI analysis remains alongside the factual overview');
+  assert.doesNotMatch(html,/PRIVAT B-KORT|PRIVAT NEJ-KORT|unknown/,'Unknown, NO and B rows never enter a cross-deck icon');
+  state.insightsRows=[];
+  const empty=state.view();
+  assert.doesNotMatch(empty,/swipe-fact-summary/,'No overview is invented with no verified matches');
+  state.insightsError='Simulerat serverfel';
+  const failed=state.view();
+  assert.doesNotMatch(failed,/swipe-fact-summary|Gemensam frivillig aktivitet/,'A failed refresh does not show stale approved responses');
+}
+console.log('PASS: real cross-deck icon summary markup respects A-only results, revocation error and AI');
+
 console.log('PASS: all-deck insights gate, A-only sanitizer, B/NO isolation, session and error guards');
