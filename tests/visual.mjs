@@ -397,7 +397,7 @@ try{
   await m.page.waitForTimeout(300);
   assert.match(await m.page.locator('#swipe-card').getAttribute('aria-label'),/Kort 1 av 21/,
     'Focused navigation arrow must not advance the private swipe deck');
-  assert.equal(await m.page.evaluate(()=>window.__HK_SWIPE_SAVE__??null),null,
+  assert.equal(await m.page.evaluate(()=>window.__HK_SAVED_SWIPE__??null),null,
     'Focused navigation arrow must not write a swipe answer');
   assert.equal(await m.page.locator('#swipe-skip').count(),0,'Parent must never see a teen-only skip control');
   const importance= m.page.locator('[data-importance]');
