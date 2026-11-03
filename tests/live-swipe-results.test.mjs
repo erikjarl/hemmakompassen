@@ -187,6 +187,7 @@ assert.match(script,/for\(const \{groups\} of byDeck.values\(\)\)/,
   const teen=renderSharedResult(matching,'teen',[],{}, {ai:true,importance:own});
   assert.match(teen,/Mina viktigaste gemensamma ja-svar/,'Teen sees own important matches privately with AI active');
   assert.match(teen,/ENDAST FÖR DIG · INTE DELAT/,'Never describe private importance as a shared priority');
+  assert.match(teen,/AI-medlaren kan använda dina egna skattningar/,'Privacy copy must explain the mediator context honestly');
   const preview=teen.match(/<aside class="swipe-priority-summary swipe-private-priority"[^]*?<\/aside>/)?.[0];
   assert.ok(preview,'Private preview has its own distinguishable section');
   assert.match(preview,/Tonåringens frivilliga aktivitet/,'Only catalogued mutually-approved A matches may be prioritised');
