@@ -755,7 +755,7 @@ try{
   assert.equal(await prompts.locator('summary').innerText(),'Tips för en tydlig och rättvis överenskommelse');
   await prompts.locator('summary').click();
   assert.match(await prompts.innerText(),/Vuxnas ansvar för trygghet och omsorg/, 'Prompts retain parent responsibility');
-  assert.equal(await prompts.getByRole('link',{name:'Öppna kommunikationsråden'}).count(),1,
+  assert.equal(await prompts.getByRole('link',{name:'Läs guiden om att lyssna före förslag'}).count(),1,
     'Parent can open conversation support without requiring teen compliance');
   await paired.page.locator('#schyssta-body').fill('Vi planerar veckans sysslor på söndag.');
   assert.equal(await paired.page.locator('#schyssta-preview-text').innerText(),'Vi planerar veckans sysslor på söndag.','Live preview uses the typed text');
