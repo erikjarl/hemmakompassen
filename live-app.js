@@ -347,6 +347,23 @@ function sharedPrioritySummary(items,deckId='general'){
     '<p class="live-muted">Sektionen bygger endast på serververifierat JA+JA och tonåringens höga markering. Låga, neutrala och privata nivåer visas aldrig.</p></aside>';
 }
 
+// Personal preview only. Shared priority data is not exposed while the
+// consent-verified shared-priority feature is disabled in the test release.
+function privateTeenPrioritySummary(matchedById,deckId){
+  if(sharedPrioritiesEnabled||viewerRole()!=='teen'||!importanceAvailable)return '';
+  const selected=[...matchedById.values()]
+    .filter(item=>swipeImportance.get(importanceKey(deckId,item.card.id))===1)
+    .sort((a,b)=>a.card.id.localeCompare(b.card.id));
+  if(!selected.length)return '';
+  const entries=selected.map(item=>'<li><p>'+esc(item.statement)+'</p></li>').join('');
+  return '<aside class="swipe-priority-summary swipe-private-priority" aria-label="Dina privata prioriteringar">'+
+    '<span class="swipe-summary-label">ENDAST FÖR DIG · INTE DELAT</span>'+
+    '<h3>Mina viktigaste gemensamma ja-svar</h3>'+
+    '<p>Här ser du sådant som ni båda svarat ja till och som du själv markerat som mycket viktigt.</p>'+
+    '<ul class="swipe-match-list">'+entries+'</ul>'+
+    '<p class="live-muted">Den här listan visas bara för dig. Din viktighetsskattning delas inte med föräldern eller AI:n.</p></aside>';
+}
+
 function swipeResults(deckId='general'){
   const deck=sharedDeck(deckId);
   if(!deck)return '';
@@ -379,6 +396,7 @@ function swipeResults(deckId='general'){
     '</ul></section>'
   ).join('');
   const matchedById=new Map([...groups.values()].flat().map(item=>[item.card.id,item]));
+  const privatePriority=privateTeenPrioritySummary(matchedById,deckId);
   const priorityItems=sharedPriorities
     .filter(row=>row?.deck_id===deckId&&matchedById.has(row.card_id))
     .map(row=>matchedById.get(row.card_id))
@@ -390,6 +408,7 @@ function swipeResults(deckId='general'){
     '<p>Prioriterade, gemensamt bejakade kort:</p><ul>'+
     priorityItems.map(item=>'<li>'+esc(item.statement)+'</li>').join('')+'</ul></aside>':'';
   return title+'<p class="live-muted">Bara kort där ni båda svarat ja visas här. Se dem som möjliga samtalsöppningar, inte som färdiga överenskommelser.</p>'+
+    privatePriority+
     (useAi?aiPriority:sharedPrioritySummary(priorityItems,deckId))+
     '<div class="swipe-match-group"><h3>Det ni båda svarat ja till</h3>'+themes+'</div>'+
     (useAi?sharedFactOverview(groups)+aiResults.panel('swipe',deckId,sig):sharedSummary(groups,deckId,priorityIds))+
