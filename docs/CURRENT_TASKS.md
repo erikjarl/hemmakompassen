@@ -4,6 +4,11 @@
 **Källa:** kod på `main` inklusive PR #90–#97, `backend-config.js`, kontrollerade GitHub Actions/UI/Pages-körningar, Supabase-migrationer och read-only SQL efter installation. Detta är **inte** ett påstående om genomförda verkliga tvåkontotester.  
 **Syfte:** En enda kort, uppdaterad handlingslista för manuellt och schemalagt utvecklingsarbete. `ROADMAP.md` bevarar detaljerna och äldre beslut.
 
+## 3 november 2026 – UX-02A: ikonöversikt även med aktiva AI-reflektioner
+
+- [x] **Kod och regressionstester på utvecklingsbranch:** ai-dev/compact-mutual-yes-20261103 visar en kort, ämnesgrupperad ikonöversikt från **enbart serververifierade A JA+JA** i både den enskilda kortlekens resultat och samlade insikter. AI-reflektionen finns kvar på samma sida. Förskrivna redaktionella råd visas inte i den AI-aktiverade vyn. Kortöversikten visar rollanpassad text och antal gemensamma svar, aldrig enskilda B-/NEJ-/okända kort eller privat viktighet.
+- [ ] **Slutverifiering UX-02A:** kontrollera PR-CI, mobilskärmbilder och senare riktiga tvåkonton med återkallelse, breda kortlekar och iOS Safari. Denna kodändring innebär inte att UX-02 eller SW-02 är helt klara.
+
 ## 3 november 2026 – INT-03C/UX-01: tyst bakgrundsuppdatering av Inkorgen
 
 - [x] **INT-03C – mergad, testad och publicerad PR #97:** oförändrade meddelanden och oförändrat antal olästa ska inte rita om Inkorgen var femtonde sekund; regelbunden serverkontroll fortsätter. Vid ny data uppdateras vyn, vid fel rensas osäkert tidigare innehåll som förut. En manuell uppdatering med redan inlästa meddelanden döljer inte konversationen i väntan på servern. Mobilens huvudskroll bevaras vid omritning. Node-regression och Playwright på mobil finns på `main` via **PR #97**. Även konkurrerande hämtning av äldre meddelanden skyddas mot bakgrundspolling. PR-CI **#41628025008**, main UI **#41628216811** och Pages **#41628215427** är godkända, merge `5f9d445fc88dc4974b57c493a265942a64362cd4`.
