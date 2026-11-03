@@ -91,7 +91,7 @@ async function fetchFamilyChatUnread(){
 }
 async function fetchFamilyChat(older=false,{quiet=false}={}){
   if(!user||members.length!==2)return;
-  if(older?(!familyChatHasMore||familyChatLoadingOlder||familyChatLoading):familyChatLoading)return;
+  if(older?(!familyChatHasMore||familyChatLoadingOlder||familyChatLoading):(familyChatLoading||familyChatLoadingOlder))return;
   const viewer=user.id,session=sharedSession,request=++familyChatRequest;
   const oldest=older?familyChatMessages[familyChatMessages.length-1]:null;
   const previous=quiet?JSON.stringify([familyChatMessages,familyChatHasMore,familyChatError]):null;
@@ -1301,7 +1301,7 @@ window.addEventListener('focus',()=>{void pollSharedMatches();if(page()==='insik
 // Light polling while the tab is visible. Never rerender the message composer mid-draft.
 window.setInterval(()=>{
   if(document.hidden||!user||members.length!==2)return;
-  if(page()==='inkorg'&&!familyChatDraft.trim()&&!familyChatSending&&!familyChatLoading)void fetchFamilyChat(false,{quiet:true});
+  if(page()==='inkorg'&&!familyChatDraft.trim()&&!familyChatSending&&!familyChatLoading&&!familyChatLoadingOlder)void fetchFamilyChat(false,{quiet:true});
   else if(page()==='hem')void fetchFamilyChatUnread();
 },15000);
 window.setInterval(()=>void pollSharedMatches(),SHARED_POLL_INTERVAL_MS);
