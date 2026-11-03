@@ -1,13 +1,13 @@
 # Hemmakompassen — aktuell utvecklingskö
 
-**Granskad:** tisdag 3 november 2026, efter mergade, kodtestade och publicerade PR #90–#94.  
-**Källa:** kod på `main` inklusive PR #90–#94, `backend-config.js`, kontrollerade GitHub Actions/UI/Pages-körningar, Supabase-migrationer och read-only SQL efter installation. Detta är **inte** ett påstående om genomförda verkliga tvåkontotester.  
+**Granskad:** tisdag 3 november 2026, efter mergade och publicerade PR #90–#97, samt separat verifierad Supabase-migration #95.  
+**Källa:** kod på `main` inklusive PR #90–#97, `backend-config.js`, kontrollerade GitHub Actions/UI/Pages-körningar, Supabase-migrationer och read-only SQL efter installation. Detta är **inte** ett påstående om genomförda verkliga tvåkontotester.  
 **Syfte:** En enda kort, uppdaterad handlingslista för manuellt och schemalagt utvecklingsarbete. `ROADMAP.md` bevarar detaljerna och äldre beslut.
 
 ## 3 november 2026 – INT-03C/UX-01: tyst bakgrundsuppdatering av Inkorgen
 
-- [x] **INT-03C – kod och syntetisk test:** oförändrade meddelanden och oförändrat antal olästa ska inte rita om Inkorgen var femtonde sekund; regelbunden serverkontroll fortsätter. Vid ny data uppdateras vyn, vid fel rensas osäkert tidigare innehåll som förut. En manuell uppdatering med redan inlästa meddelanden döljer inte konversationen i väntan på servern. Mobilens huvudskroll bevaras vid omritning. Node-regression och Playwright på mobil ligger på branch `fix/inbox-quiet-refresh-scroll-20261103`.
-- [ ] **INT-03C release/QA:** grön UI-/Playwright-CI, merge och Pages återstår; testa därefter en faktisk tvåkontosession och iOS-Safari samt långa inkorgstrådar. Tyst uppdatering betyder inte att meddelanden raderas eller att läskvittenser skapas.
+- [x] **INT-03C – mergad, testad och publicerad PR #97:** oförändrade meddelanden och oförändrat antal olästa ska inte rita om Inkorgen var femtonde sekund; regelbunden serverkontroll fortsätter. Vid ny data uppdateras vyn, vid fel rensas osäkert tidigare innehåll som förut. En manuell uppdatering med redan inlästa meddelanden döljer inte konversationen i väntan på servern. Mobilens huvudskroll bevaras vid omritning. Node-regression och Playwright på mobil finns på `main` via **PR #97**. Även konkurrerande hämtning av äldre meddelanden skyddas mot bakgrundspolling. PR-CI **#41628025008**, main UI **#41628216811** och Pages **#41628215427** är godkända, merge `5f9d445fc88dc4974b57c493a265942a64362cd4`.
+- [ ] **INT-03C verklig QA:** autentiserat tvåkontotest, iOS-Safari, skärmläsare och långa konversationer återstår. Teknisk CI, merge och Pages är genomförda.
 
 ## 3 november 2026 – ytterligare read-only negativtest av verkliga RPC:er
 
