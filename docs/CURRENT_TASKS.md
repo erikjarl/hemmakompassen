@@ -4,6 +4,12 @@
 **Källa:** kod på `main` inklusive PR #90 och #91, `backend-config.js`, GitHub Actions/UI/Pages, Supabase-migrationer och aktuell säkerhetsrådgivning samt read-only SQL-kontroll efter installation. Detta är **inte** ett påstående om genomförda verkliga tvåkontotester.  
 **Syfte:** En enda kort, uppdaterad handlingslista för manuellt och schemalagt utvecklingsarbete. `ROADMAP.md` bevarar detaljerna och äldre beslut.
 
+## 3 november 2026 – nästa utvecklingspass: SW-04 + SW-01, kod på branch
+
+- [x] **SW-04A – obesvarade förståelsekort (kod och test):** skilj överhoppade från färdiga svar. Slutvyn beskriver nu hur många som är obesvarade, och tonåringen kan öppna **bara** dessa kort utan att gå om hela kortleken. Nytt val att hoppa över igen behåller kortet obesvarat; ett faktiskt JA/NEJ tar bort överhoppningen. Kod på `feature/swipe-skip-review-insights-refresh-20261103`; mobila Playwrightfall och sessionsregressioner tillagda. **CI och merge måste ännu kontrolleras.**
+- [x] **SW-01C – upptäck extern B-återkallelse (kod och test):** när insiktsvyn är öppen återhämtas de sju serververifierade A-resultaten och de uttryckligen delade B-korten vid återkomst till fliken och som högst en gång per minut i förgrunden. Oförändrad datamängd ger ingen omrendering eller ny AI-reflektion. Vid fel rensas A+B tillsammans i stället för att behålla en gammal sammanställning. Mottagarens gamla redan genererade AI-text kan dock finnas kvar fram till nästa lyckade kontroll.
+- [ ] **SW-01D – autentiserat tvåkontotest:** verklig Supabase/Worker-verifiering av B-delningsåterkallelse i två sessioner, inkl. konto- och familjebyten, är fortfarande inte genomförd. De nya testen använder syntetiska konton.
+
 ## 3 november 2026 – genomförda och verifierade leveranser
 
 - [x] **PR #90 mergad, kod- och UI-testad och publicerad:** förälders MI-inspirerade guide med källor, korrekt förklaring av separat B-samtycke i kortleken, borttagen dubblerad polling-fokuslyssnare och rättad dokumentation. PR-CI **#41612247828**, main UI **#41612435895**, Pages **#41612433986** godkända; merge commit `c20bd52b918ffb27a3c53db09dcbe2ee679f74e2`. Inget verkligt autentiserat tvåkontotest.

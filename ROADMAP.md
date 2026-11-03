@@ -19,6 +19,13 @@
 **Kort arbetsordning:** INT-01/02/03/04 samt **AI-01D** (autentiserade tvåkontotester, sekretess/återkallelse) → SW-01/02/03/04 (testa och färdigställ befintlig B-/insiktsfunktion; prioritets- och polling-flaggor är av) → MI-01B, PF-01/02/03, UX-01/02, NOT-01 → **AI-02/03: tvåkontotesta redan driftsatta AI-reflektioner** → SEC-02 och AI-skyddsgranskning/data/pilot. Se [aktuell utvecklingskö](docs/CURRENT_TASKS.md).
 
 
+## Kodleverans i nytt utvecklingspass 3 november 2026 – överhoppning och delningsuppdatering
+
+- [x] **SW-04A (branchkod):** överhoppade B-kort räknas inte som besvarade i slutvyn; välj *Gå till överhoppade kort* och besvara bara kvarvarande kort. Att hoppa över igen blir inte ett NO eller ett färdigt svar. Fysiska databassvar ändras enbart vid användarens egna sparningar.
+- [x] **SW-01C (branchkod):** separat behörighetsstyrd återkontroll av insiktsvyn vid fokus, flikåterkomst och högst en gång i minuten i förgrunden. Alla delade resultat hämtas genom samma existerande RPC:er som förut; inga nya databastabeller eller API-behörigheter. Ändrad/återkallad B-delning förändrar AI-signaturen; identisk data återanvänds för att undvika extra AI-kvot.
+- [x] **Tester (branchkod):** nya Node-fall för identiska/ändrade/ogiltiga svar och äldre asynkrona svar, samt syntetisk Playwright för tonåringens överhoppade kort och extern B-återkallelse i en redan öppen föräldervy.
+- [ ] **Release/verklig verifiering:** kontrollera GitHub Actions, merge och Pages, följ sedan upp med autentiserat tvåkontotest. En återkallelse synkroniseras inte omedelbart över samtliga öppna enheter. Detta är fortfarande en intern testfunktion.
+
 ## Kodleverans 3 november 2026 – avgränsade förbättringar
 
 - [x] **MI-01A (mergad #90):** MI-inspirerad rollspärrad föräldraguide, länkning från Schyssta listan, källor och nya UI-/Node-tester.
