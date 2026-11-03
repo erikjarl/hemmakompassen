@@ -98,7 +98,7 @@ async function fetchFamilyChat(older=false,{quiet=false}={}){
   familyChatError='';
   if(!quiet)familyChatStatus='';
   if(older)familyChatLoadingOlder=true;else familyChatLoading=true;
-  if(!quiet&&page()==='inkorg'&&!familyChatDraft.trim())render();
+  if(!quiet&&page()==='inkorg'&&!familyChatDraft.trim()&&!familyChatMessages.length)render();
   let result,timer;
   try{
     result=await Promise.race([
