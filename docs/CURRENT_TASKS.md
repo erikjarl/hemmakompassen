@@ -4,6 +4,11 @@
 **Källa:** kod på `main` inklusive PR #90–#94, `backend-config.js`, kontrollerade GitHub Actions/UI/Pages-körningar, Supabase-migrationer och read-only SQL efter installation. Detta är **inte** ett påstående om genomförda verkliga tvåkontotester.  
 **Syfte:** En enda kort, uppdaterad handlingslista för manuellt och schemalagt utvecklingsarbete. `ROADMAP.md` bevarar detaljerna och äldre beslut.
 
+## 3 november 2026 – INT-03A: ärliga läskvittenser i Inkorgen
+
+- [x] **INT-03A – explicit läsmarkering (kod + test på branch):** öppning av Inkorgen och automatiska konversationsuppdateringar markerar inte längre alla familjemeddelanden som lästa. Användaren får en separat knapp **Markera alla meddelanden som lästa** när olästa finns och ser tydligt att även meddelanden på äldre sidor ingår. Vid serverfel bevaras oläst antal och inget läskvitto påstås vara sparat. Ändringen använder samma redan behörighetskontrollerade RPC, utan migrationskrav. Node- och mobil-Playwrightfall täcker misslyckat/successfullt försök, kontobyte och skydd mot dubbla anrop. Branch `fix/inbox-explicit-read-receipts-20261103`.
+- [ ] **INT-03B – återstår:** invänta grön UI-CI, merge och Pages, därefter verkligt test med föräldra- och tonårskonto, paginering, utloggning/omparning, radering/retention och visuell mobilgranskning. Markera inte hela INT-03 färdigt.
+
 ## 3 november 2026 – SEC-02A: verifierat databasskydd och minimerade gamla behörigheter
 
 - [x] **SEC-02A granskat i verkliga Supabase, read-only:** åtta RLS-tabeller utan policy identifierade via Advisor. Fyra (agreements, agreement_approvals, family_direct_messages, schyssta_notifications) saknar redan direkt SELECT/INSERT/UPDATE/DELETE för `anon` och `authenticated`. Fyra äldre (families, family_members, invitations, messages) hade däremot breda databasrättigheter men inga RLS-policyer. Ingen privat data lästes. Databasens 27 autentiserade SECURITY DEFINER-varningar har `search_path=''` och refererar `auth.uid()`; detta räcker inte för att bevisa att varje funktion är korrekt behörighetskontrollerad.

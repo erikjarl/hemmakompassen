@@ -214,6 +214,7 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
             if(name==='my_family_unread_message_count')
               return {data:window.__HK_TEST_PAIRED__?chatMessages.filter(row=>!row.sent_by_me&&row.read_at===null).length:0,error:null};
             if(name==='mark_family_messages_read'){
+              if(window.__HK_MARK_READ_FAIL__===true)return {data:null,error:{message:'simulated read receipt failure'}};
               window.__HK_MARK_CHAT_READ__=(window.__HK_MARK_CHAT_READ__||0)+1;
               const unread=chatMessages.filter(row=>!row.sent_by_me&&row.read_at===null).length;
               chatMessages=chatMessages.map(row=>row.sent_by_me?row:{...row,read_at:row.read_at||'2026-11-01T11:00:00Z'});
@@ -855,7 +856,19 @@ try{
   await paired.page.locator('.family-chat-bubble').filter({hasText:'Hej, ska vi prata senare?'}).waitFor();
   assert.equal(await paired.page.locator('.family-chat-bubble.family-chat-theirs').count(),1,
     'Received chat message is rendered as coming from counterpart');
+  assert.equal(await paired.page.evaluate(()=>window.__HK_MARK_CHAT_READ__||0),0,'Opening the inbox must never create a read receipt');
+  await paired.page.getByRole('button',{name:'Markera alla meddelanden som lästa'}).waitFor();
+  assert.match(await paired.page.locator('.family-chat-read-controls').innerText(),/De markeras inte som lästa bara för att du öppnar inkorgen/);
+  await paired.page.evaluate(()=>{window.__HK_MARK_READ_FAIL__=true;});
+  await paired.page.getByRole('button',{name:'Markera alla meddelanden som lästa'}).click();
+  await paired.page.getByText(/Inga läskvittenser har bekräftats/).waitFor();
+  assert.equal(await paired.page.evaluate(()=>window.__HK_MARK_CHAT_READ__||0),0,'A failed mark-all must not invent a read receipt');
+  assert.equal(await paired.page.getByRole('button',{name:'Markera alla meddelanden som lästa'}).count(),1,'Read retry remains possible');
+  await paired.page.evaluate(()=>{window.__HK_MARK_READ_FAIL__=false;});
+  await paired.page.getByRole('button',{name:'Markera alla meddelanden som lästa'}).click();
   await paired.page.waitForFunction(()=>window.__HK_MARK_CHAT_READ__>0);
+  await paired.page.getByText('Alla meddelanden har markerats som lästa.').waitFor();
+  assert.equal(await paired.page.getByRole('button',{name:'Markera alla meddelanden som lästa'}).count(),0,'Acknowledged read receipt clears the action');
   await paired.page.locator('#family-chat-body').fill('Hej tillbaka! Vi kan prata efter maten.');
   await paired.page.getByRole('button',{name:'Skicka meddelande'}).click();
   await paired.page.waitForFunction(()=>window.__HK_CHAT_SEND__?.args?.p_body==='Hej tillbaka! Vi kan prata efter maten.');

@@ -19,6 +19,12 @@
 **Kort arbetsordning:** INT-01/02/03/04 samt **AI-01D** (autentiserade tvåkontotester, sekretess/återkallelse) → SW-01/02/03/04 (testa och färdigställ befintlig B-/insiktsfunktion; prioritets- och polling-flaggor är av) → MI-01B, PF-01/02/03, UX-01/02, NOT-01 → **AI-02/03: tvåkontotesta redan driftsatta AI-reflektioner** → SEC-02 och AI-skyddsgranskning/data/pilot. Se [aktuell utvecklingskö](docs/CURRENT_TASKS.md).
 
 
+## Inkorgen 3 november – mottagarstyrda läskvittenser (INT-03A)
+
+- [x] **Kod på branch:** ny kontroll för att uttryckligen markera ALLA mottagna meddelanden som lästa. Att öppna eller uppdatera konversationen gör inte längre automatiskt en sådan uppdatering. Underliggande RPC `mark_family_messages_read()` är oförändrad och säkerställer aktuellt familjepar; fel kvitteras inte lokalt som lyckade. Äldre icke visade sidor inkluderas endast när användaren medvetet väljer "alla". Branschnamn `fix/inbox-explicit-read-receipts-20261103`.
+- [x] **Testkod:** Node-test för konto-/sessionsbyte, misslyckad kvittens, dubbla klick och ogiltigt oläst antal, plus syntetisk Playwright-mobiltest för att öppning inte skapar läskvitto och att knappen fungerar efter fel. Inga lagrade familjedata ändras i utvecklingstestet.
+- [ ] **Release och autentiserad verifiering:** kontrollera CI, merge, Pages och fulla tvåkontotestet med faktiska konton, historisk paginering, borttagning och retention före pilot.
+
 ## Säkerhetsuppföljning 3 november – befintlig RLS och äldre rättigheter (SEC-02)
 
 - [x] **Read-only audit av verklig Supabase:** `get_advisors(type=security)` rapporterade 8 tabeller med RLS utan policy, 27 `SECURITY DEFINER`-RPC:er exponerade vid audit före PR #95 (26 efter verifierad fix) för `authenticated` och läckta-lösenord-skydd inaktivt. `has_table_privilege` bekräftade att 4/8 RLS-tabeller redan har nekat direkt åtkomst och att äldre `families`, `family_members`, `invitations`, `messages` har överflödiga direkta privilegier trots ingen RLS-policy. Alla 27 granskade `SECURITY DEFINER` har `search_path=''` och källtext som refererar `auth.uid()`, men behöver fortfarande fullständig säkerhetsgranskning.
