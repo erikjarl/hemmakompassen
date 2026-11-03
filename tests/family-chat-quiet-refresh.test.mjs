@@ -62,6 +62,17 @@ test('quiet checks preserve any existing form status and account boundaries',asy
   assert.equal(h.counts.render,before);
 });
 
+test('background refresh never races a pending older-page retrieval',async()=>{
+  const h=harness();
+  h.state.familyChatLoadingOlder=true;
+  await h.state.poll(false,{quiet:true});
+  assert.equal(h.counts.read,0);
+  assert.equal(h.state.familyChatRequest,0);
+  h.state.familyChatLoadingOlder=false;
+  await h.state.poll(false,{quiet:true});
+  assert.equal(h.counts.read,1);
+});
+
 test('unchanged unread count never rerenders inbox, change or unavailable state does',async()=>{
   let result={data:1,error:null};
   const h=harness();
