@@ -316,7 +316,7 @@ jobs:
                    or has_table_privilege('authenticated','public.'||t.name,'DELETE')
               )
               and not has_function_privilege('authenticated','public.shared_general_deck_complete()','EXECUTE')
-              and has_function_privilege('authenticated','public.my_family_members()','EXECUTE')
+              and has_function_privilege('authenticated','public.shared_understanding_cards()','EXECUTE')
               and has_function_privilege('authenticated','public.shared_swipe_matches(text)','EXECUTE')
               then 'ok' else 'fail' end")"
           test "$actual" = "ok"
