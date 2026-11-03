@@ -79,12 +79,12 @@ async function capture(page,name){
   await page.screenshot({path:path.join(output,name),fullPage:true,animations:"disabled"});
   captureRecords.push({file:name,viewport:page.viewportSize(),...overlays});
 }
-async function freshContext(options,{authenticated=false,paired=false,role="parent",unlocked=false,unlockUnavailable=false,priorityUnavailable=false,preansweredGeneral=false,preansweredSkipped=false,emptySchyssta=false,homeUnreadFailure=false,personalityComplete=false,personalitySharing=false,personalityPartnerShared=false,aiMediator=false,aiAnalyses=false}={}){
+async function freshContext(options,{authenticated=false,paired=false,role="parent",unlocked=false,unlockUnavailable=false,priorityUnavailable=false,priorityFeature=true,privateImportance=false,preansweredGeneral=false,preansweredSkipped=false,emptySchyssta=false,homeUnreadFailure=false,personalityComplete=false,personalitySharing=false,personalityPartnerShared=false,aiMediator=false,aiAnalyses=false}={}){
   const context=await browser.newContext({...options,locale:"sv-SE",reducedMotion:"reduce"});
-  await context.addInitScript(value=>{window.__HK_TEST_USER__=value.user;window.__HK_TEST_PAIRED__=value.paired;window.__HK_TEST_ROLE__=value.role;window.__HK_TEST_UNLOCKED__=value.unlocked;window.__HK_UNLOCK_RPC_UNAVAILABLE__=value.unlockUnavailable;window.__HK_PRIORITY_RPC_UNAVAILABLE__=value.priorityUnavailable;window.__HK_PREANSWERED_GENERAL__=value.preansweredGeneral;window.__HK_PREANSWERED_SKIPPED__=value.preansweredSkipped;window.__HK_SCHYSSTA_EMPTY__=value.emptySchyssta;window.__HK_HOME_UNREAD_FAILURE__=value.homeUnreadFailure;window.__HK_TEST_PERSONALITY_DONE__=value.personalityComplete;window.__HK_TEST_PERSONALITY_PARTNER_SHARED__=value.personalityPartnerShared;},{personalityPartnerShared,personalityComplete,emptySchyssta,homeUnreadFailure,preansweredGeneral,preansweredSkipped,user:authenticated?{id:role==="teen"?"10000000-0000-0000-0000-000000000002":"10000000-0000-0000-0000-000000000001",email:"synthetic@example.invalid"}:null,paired,role,unlocked,unlockUnavailable,priorityUnavailable});
+  await context.addInitScript(value=>{window.__HK_TEST_USER__=value.user;window.__HK_TEST_PAIRED__=value.paired;window.__HK_TEST_ROLE__=value.role;window.__HK_TEST_UNLOCKED__=value.unlocked;window.__HK_UNLOCK_RPC_UNAVAILABLE__=value.unlockUnavailable;window.__HK_PRIORITY_RPC_UNAVAILABLE__=value.priorityUnavailable;window.__HK_PRIORITISED_TEEN__=value.privateImportance;window.__HK_PREANSWERED_GENERAL__=value.preansweredGeneral;window.__HK_PREANSWERED_SKIPPED__=value.preansweredSkipped;window.__HK_SCHYSSTA_EMPTY__=value.emptySchyssta;window.__HK_HOME_UNREAD_FAILURE__=value.homeUnreadFailure;window.__HK_TEST_PERSONALITY_DONE__=value.personalityComplete;window.__HK_TEST_PERSONALITY_PARTNER_SHARED__=value.personalityPartnerShared;},{personalityPartnerShared,personalityComplete,emptySchyssta,homeUnreadFailure,preansweredGeneral,preansweredSkipped,user:authenticated?{id:role==="teen"?"10000000-0000-0000-0000-000000000002":"10000000-0000-0000-0000-000000000001",email:"synthetic@example.invalid"}:null,paired,role,unlocked,unlockUnavailable,priorityUnavailable,privateImportance});
   await context.route(base+"backend-config.js*",route=>route.fulfill({
     contentType:"application/javascript",
-    body:"window.HEMMAKOMPASSEN_BACKEND=Object.freeze({supabaseUrl:'https://synthetic.invalid',supabasePublishableKey:'synthetic',enableSharedPriorities:true,enableSharedPolling:true,enableSharedInsights:true,enableSharedUnderstanding:true,enableSchysstaList:true,enablePersonalitySharing:"+String(personalitySharing)+",enableAiMediator:"+String(aiMediator||aiAnalyses)+",enableAiHistory:"+String(aiMediator||aiAnalyses)+",enableAiResultAnalyses:"+String(aiAnalyses)+",aiMediatorUrl:'https://hemmakompassen-ai-medlare.erikbertiljarl.workers.dev/api/ai/mediate'});"
+    body:"window.HEMMAKOMPASSEN_BACKEND=Object.freeze({supabaseUrl:'https://synthetic.invalid',supabasePublishableKey:'synthetic',enableSharedPriorities:"+String(priorityFeature)+",enableSharedPolling:true,enableSharedInsights:true,enableSharedUnderstanding:true,enableSchysstaList:true,enablePersonalitySharing:"+String(personalitySharing)+",enableAiMediator:"+String(aiMediator||aiAnalyses)+",enableAiHistory:"+String(aiMediator||aiAnalyses)+",enableAiResultAnalyses:"+String(aiAnalyses)+",aiMediatorUrl:'https://hemmakompassen-ai-medlare.erikbertiljarl.workers.dev/api/ai/mediate'});"
   }));
   await context.route("https://esm.sh/**",route=>route.fulfill({
     contentType:"application/javascript",
@@ -96,7 +96,11 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
         let personalityConsent=false;
         const skips=new Map();
         if(window.__HK_PREANSWERED_SKIPPED__){answers.delete('general-02');skips.set('general-02',{deck_id:'general',card_id:'general-02'});}
-        const importance=new Map();
+        const importance=new Map(window.__HK_PRIORITISED_TEEN__?[
+          ['general:general-01',{deck_id:'general',card_id:'general-01',importance:1}],
+          ['general:general-02',{deck_id:'general',card_id:'general-02',importance:1}],
+          ['general:general-10',{deck_id:'general',card_id:'general-10',importance:0}]
+        ]:[]);
         const understandingShares=new Set(window.__HK_TEST_PAIRED__?['general-02']:[]);
         window.__HK_TEST_SET_SHARED_B__=ids=>{understandingShares.clear();for(const id of ids)understandingShares.add(id);};
         let schysstaSuggestions=[
@@ -703,6 +707,39 @@ try{
   await paired.page.locator("#swipe-card[aria-label^='Temakort 1 av 104']").waitFor();
   await paired.page.locator('#theme-back').click();
   await paired.page.getByRole('heading',{name:'Era gemensamma svar'}).waitFor();
+
+  // SW-03A: the teenager alone sees own high-ranked, server-verifiable A YES.
+  // Keep the future shared priority feature off: no private importance may
+  // become automatically visible to the parent or be read via priority RPC.
+  const teenPriority=await freshContext(
+    {viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},
+    {authenticated:true,paired:true,role:'teen',privateImportance:true,priorityFeature:false}
+  );
+  await teenPriority.page.goto(base+'#swipe',{waitUntil:'load'});
+  await teenPriority.page.locator('.swipe-private-priority').waitFor();
+  const privatePreview=await teenPriority.page.locator('.swipe-private-priority').innerText();
+  assert.match(privatePreview,/Mina viktigaste gemensamma ja-svar/);
+  assert.match(privatePreview,/ENDAST FÖR DIG · INTE DELAT/);
+  assert.match(privatePreview,/AI-medlaren kan använda dina egna skattningar/,'Disclose permitted personal AI context accurately');
+  assert.equal(await teenPriority.page.locator('.swipe-private-priority .swipe-match-list li').count(),1,
+    'Only teen-high, mutual A YES appears, not private B or neutral A');
+  assert.equal(await teenPriority.page.evaluate(()=>window.__HK_PRIORITY_RPC_CALLS__||0),0,
+    'Preview uses only self-owned importance and already approved A matches, not a priority RPC');
+  await checkOverflow(teenPriority.page,'Teen private mutual-YES priority preview 390px');
+  await teenPriority.page.locator('.swipe-private-priority').scrollIntoViewIfNeeded();
+  await capture(teenPriority.page,'mobile-teen-private-priority-preview.png');
+  await teenPriority.context.close();
+
+  const parentPriority=await freshContext(
+    {viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},
+    {authenticated:true,paired:true,role:'parent',privateImportance:true,priorityFeature:false}
+  );
+  await parentPriority.page.goto(base+'#swipe',{waitUntil:'load'});
+  await parentPriority.page.locator('.swipe-results .swipe-match-list li').first().waitFor();
+  assert.equal(await parentPriority.page.locator('.swipe-private-priority').count(),0,
+    'Private teen priorities never appear in parent results');
+  assert.equal(await parentPriority.page.evaluate(()=>window.__HK_PRIORITY_RPC_CALLS__||0),0);
+  await parentPriority.context.close();
 
   const teenInsights=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,paired:true,role:'teen',unlocked:true,preansweredGeneral:true});
   await teenInsights.page.evaluate(()=>{location.hash='insikter';});
