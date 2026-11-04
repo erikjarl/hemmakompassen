@@ -103,7 +103,7 @@ export function createAiResultExperience({db,config,fetchImpl=fetch,onRender=()=
       '<span class="swipe-summary-label">AI-GENERERAD REFLEKTION · INTERN TESTVERSION</span>'+
       '<h3>'+escape(title)+'</h3>'+
       '<p class="live-muted">Genereras automatiskt från serverkontrollerade resultat. En AI kan ha fel och tolkningen är inte en diagnos eller en bedömning av relationens orsaker.</p>'+
-      body+(status==='error'||status==='ready'
+      body+(status==='ready'?'<p class="ai-result-resources">Vill du pröva ett konkret samtalsverktyg? <a href="#kommunikation">Läs Kommunikationsråd</a> eller <a href="#nvc">bygg ett jag-budskap med NVC</a>. Dessa länkar utgår inte från en bedömning av era svar.</p>':'')+(status==='error'||status==='ready'
         ?'<button type="button" class="mediator-clear" data-ai-analysis-retry="'+escape(kind+':'+scope)+'">Generera ny reflektion</button>'
         :'')+'</section>';
   }

@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261104-communication1';
-import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261104-communication1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261104-communication1';
-import {renderParentMiGuide} from './communication/mi-guide.js?v=20261104-communication1';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence} from './communication/toolkit.js?v=20261104-communication1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261104-communication2';
+import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261104-communication2';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261104-communication2';
+import {renderParentMiGuide} from './communication/mi-guide.js?v=20261104-communication2';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence} from './communication/toolkit.js?v=20261104-communication2';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -39,7 +39,7 @@ const COMMUNICATION_GUIDES=[["Vi har svårt att lyssna","När båda vill bli fö
 const STATEMENTS=GENERAL_CARDS.map(card=>[card.category,card.teenText]);
 const THEME_DECKS=THEME_DECK_MODELS.map(deck=>({...deck,cards:deck.cards.map(card=>card.teenText),cardIds:deck.cards.map(card=>card.id)}));
 let user=null,profile=null,members=[],refreshGeneration=0;
-const mediatorExperience=createAiMediatorExperience({db,config:c,escapeHtml:esc,onRender:()=>{if(user&&page()==='medlare')render();}});
+const mediatorExperience=createAiMediatorExperience({db,config:c,escapeHtml:esc,getViewerRole:()=>viewerRole(),onRender:()=>{if(user&&page()==='medlare')render();}});
 const aiResults=createAiResultExperience({db,config:c,onRender:()=>{if(user&&['personlighet','swipe','insikter'].includes(page()))render();}});
 const personalityExperience=createPersonalityExperience({db,isSharingEnabled:personalitySharingEnabled,
   useAiAnalysis:aiResultEnabled,analysisPanel:(kind,scope,signature)=>aiResults.panel(kind,scope,signature),
@@ -803,6 +803,21 @@ function menu(){
   }
 }
 const card=html=>'<section class="live-panel">'+html+'</section>';
+const COMMUNICATION_BRIDGES=Object.freeze({
+  swipe:'Känns ett kort svårt att prata om? Pröva att lyssna och formulera ett behov utan att pressa fram ett svar.',
+  insikter:'När ni vill utforska en matchning eller ett delat behov kan ni börja med ett konkret samtalsverktyg.',
+  regler:'Innan ni diskuterar eller omprövar en regel: prova ett gemensamt problemlösningssamtal.',
+  inkorg:'Vill du skriva ett känsligt meddelande? Du kan öva på ett jag-budskap först. Ingenting skickas automatiskt.',
+  personlighet:'Självskattningar förklarar inte varför ni reagerar olika. Verktygen kan hjälpa er prata om era perspektiv utan etiketter.',
+  medlare:'Vill du prova ett av förslagen i en övning utan AI? Börja med NVC eller någon av de sex samtalsövningarna.'
+});
+function communicationBridge(key){
+  const text=COMMUNICATION_BRIDGES[key];
+  if(!text)return '';
+  return '<aside class="comm-crosslink" aria-label="Relaterat samtalsstöd"><strong>Prata vidare tillsammans</strong><p>'+text+'</p><div class="comm-crosslink-links"><a href="#kommunikation">Alla kommunikationsverktyg</a><a href="#nvc">Bygg ett jag-budskap (NVC)</a>'
+    +(viewerRole()==='parent'?'<a href="#mi-foralder">MI för föräldrar</a>':'')+'</div></aside>';
+}
+
 const HOME_MODULE_INTROS=Object.freeze({
   inkorg:'Läs privata meddelanden och svara på förfrågningar om gemensamma regler.',
   swipe:'Svara privat på frågor och hitta möjliga samtal eller aktiviteter där ni båda har valt ja.',
@@ -1183,12 +1198,12 @@ function schysstaView(){
 function section(key){
 const label=nav.find(n=>n[0]===key)?.[1]||'Hemmakompassen';
 if(key==='installningar')return '<h1>Inställningar</h1>'+card('<h2>Ditt konto</h2><p>Inloggad som '+esc(user.email)+'</p><p>Visningsnamn: '+esc(profile?.display_name||'Inte angivet')+'</p><a class="live-button" href="./konto.html">Ändra namn, familj eller logga ut</a>');
-if(key==='swipe')return swipeView();
-if(key==='personlighet')return personalityExperience.render({isPaired:members.length===2 && members.some(m=>m.role==='parent') && members.some(m=>m.role==='teen'),viewerRole:viewerRole()});
- if(key==='insikter')return insightsView();
-if(key==='regler')return schysstaView();
-if(key==='inkorg')return inboxView();
-if(key==='medlare')return mediatorExperience.render();
+if(key==='swipe')return swipeView()+communicationBridge('swipe');
+if(key==='personlighet')return personalityExperience.render({isPaired:members.length===2 && members.some(m=>m.role==='parent') && members.some(m=>m.role==='teen'),viewerRole:viewerRole()})+communicationBridge('personlighet');
+ if(key==='insikter')return insightsView()+communicationBridge('insikter');
+if(key==='regler')return schysstaView()+communicationBridge('regler');
+if(key==='inkorg')return inboxView()+communicationBridge('inkorg');
+if(key==='medlare')return mediatorExperience.render()+communicationBridge('medlare');
 if(key==='mi-foralder')return viewerRole()==='parent'?renderParentMiGuide():'<h1>Samtalsstöd för föräldrar</h1>'+card('<p>Den här guiden är skriven för föräldrar. Du kan läsa de gemensamma råden i stället.</p><a href="#kommunikation">Till Kommunikationsråd</a>');
 if(key==='kommunikation')return renderCommunicationToolkit(viewerRole());
 if(key==='nvc')return renderNvcExercise(viewerRole());

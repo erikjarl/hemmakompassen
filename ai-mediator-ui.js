@@ -1,6 +1,16 @@
 // Internal-test AI mediator: private, owner-scoped chat history lives in D1.
 // The optional authorized project context can be disabled for each reply.
-export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl = fetch, onRender = () => {} }) {
+// A strict allowlist: only known local communication routes become clickable.
+export function renderMediatorInternalLinks(text,escapeHtml,getViewerRole=()=>null) {
+  const source=String(text??'');
+  const re=/(https:\/\/erikjarl\.github\.io\/hemmakompassen\/#(?:kommunikation|nvc|mi-foralder))(?![A-Za-z0-9_-])/g;
+  return source.split(re).map(piece=>{
+    const match=/^https:\/\/erikjarl\.github\.io\/hemmakompassen\/#(kommunikation|nvc|mi-foralder)$/.exec(piece);
+    if(!match||match[1]==='mi-foralder'&&getViewerRole()!=='parent')return escapeHtml(piece);
+    return '<a href="#'+match[1]+'">'+escapeHtml(piece)+'</a>';
+  }).join('');
+}
+export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl = fetch, onRender = () => {}, getViewerRole=()=>null }) {
   const h = escapeHtml;
   let userId = null;
   let epoch = 0;
@@ -203,7 +213,7 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
     const messages = turns.length
       ? '<ol class="mediator-messages" aria-label="Tillfälliga testmeddelanden">'
         + turns.map(turn => '<li class="mediator-message mediator-message-' + h(turn.role) + '"><strong>'
-          + (turn.role === 'user' ? 'Du' : turn.role === 'safety' ? 'Säkerhetsinformation' : 'Samtalsstödet') + '</strong><p>' + h(turn.text) + '</p></li>').join('')
+          + (turn.role === 'user' ? 'Du' : turn.role === 'safety' ? 'Säkerhetsinformation' : 'Samtalsstödet') + '</strong><p>' + (turn.role==='assistant'?renderMediatorInternalLinks(turn.text,h,getViewerRole):h(turn.text)) + '</p></li>').join('')
         + '</ol>'
       : '<p class="mediator-empty">Inga meddelanden ännu. Skriv ett fiktivt exempel för att testa samtalsstödet.</p>';
     const count = draft.length;
@@ -218,7 +228,7 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
         + 'Motpartens privata testsvar och privata AI-chattar läses inte in.</p>'
         : '<p><strong>Testa enbart med påhittade situationer.</strong> Inga meddelanden sparas. '
         + 'Chatten minns inte tidigare turer när den svarar.</p>')
-      + '<p>Det här är inte terapi eller krishjälp. Vid akut fara, ring 112.</p></div>'
+      + '<p>Det här är inte terapi eller krishjälp. Vid akut fara, ring 112.</p><p>Du kan också läsa <a href="#kommunikation">Kommunikationsråd</a> eller <a href="#nvc">öva på NVC</a> direkt. AI:n kan föreslå länkar till de verktygen i ett svar.</p></div>'
       + (historyEnabled ? '<section class="mediator-context"><h2>Uppgifter som AI:n får använda</h2>'
          + '<label class="mediator-context-choice" for="mediator-use-context"><input type="checkbox" id="mediator-use-context"'
          + (includeProjectContext ? ' checked' : '') + (sending ? ' disabled' : '')
