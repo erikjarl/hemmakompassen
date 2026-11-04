@@ -92,11 +92,19 @@ $$;
 
 create function public.shared_swipe_priorities(p_deck_id text)
 returns table(deck_id text, card_id text)
-language sql
+language plpgsql
 stable
 security definer
 set search_path = ''
 as $$
+begin
+  -- Check identity before the query. A SQL-only wrapper could otherwise be
+  -- optimized to an empty result before the nested eligibility RPC executes.
+  if (select auth.uid()) is null then
+    raise exception 'authentication required' using errcode = '42501';
+  end if;
+
+  return query
   select eligible.deck_id, eligible.card_id
   from public.eligible_swipe_priorities(p_deck_id) as eligible
   join public.family_members as caller
@@ -117,6 +125,8 @@ as $$
         and skipped.card_id = eligible.card_id
     )
   order by eligible.card_id
+  ;
+end
 $$;
 
 create function public.revoke_swipe_priority_share_on_importance_change()

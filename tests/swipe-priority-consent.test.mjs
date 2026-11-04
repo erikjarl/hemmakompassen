@@ -13,6 +13,7 @@ test('shared priority requires explicit pair-bound teen consent',()=>{
   assert.match(migration,/count\(\*\).*family_id = member\.family_id\) = 2/is);
   assert.match(migration,/eligible_swipe_priorities\(p_deck_id\)/i);
   assert.match(migration,/join public\.swipe_priority_shares as consent/i);
+  assert.match(migration,/if \(select auth\.uid\(\)\) is null then[\s\S]*authentication required/i);
   assert.doesNotMatch(migration,/grant\s+(insert|update|delete).*swipe_priority_shares.*authenticated/is);
 });
 
