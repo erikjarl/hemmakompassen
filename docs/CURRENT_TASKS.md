@@ -1,5 +1,15 @@
 # Hemmakompassen — aktuell utvecklingskö
 
+## 4 november 2026 – KOM-03: situationsstyrt kommunikationsstöd (utvecklingsgren)
+
+- [x] **KOM-03A – implementerat på utvecklingsgren:** sex situationsval öppnar direkt rätt befintlig eller ny samtalsövning. Tangentbordsfokus flyttas till öppnad övning. Ingen ny hash-route, familjedata, databasförändring eller lagring.
+- [x] **KOM-03B – innehåll implementerat på utvecklingsgren:** tre nya redaktionella övningar om validering utan medhåll, konkreta frivilliga önskemål och respektfull gränssättning. Den sista har olika råd för förälder respektive tonåring och tydliggör vuxenansvar och säkerhet.
+- [x] **KOM-03C – regressionstester tillagda i koden:** kontrakt för att alla situationsval har en målövning, rollanpassning, interaktion och frånvaro av lagring. Tester måste köras i CI.
+- [ ] **KOM-03D – verifiera och leverera:** kör GitHub Actions (Node, statisk build, Playwright om tillgängligt), granska resultat och merga endast med verifierad kvalitet. Markera inte som publicerat innan faktisk merge och Pages-status.
+- [ ] **KOM-03E – verklig QA:** prova med båda autentiserade testkontona på fysisk iOS Safari och med skärmläsare, även större tecken; kontrollera fokus, begriplighet och att valen aldrig skapar meddelanden eller delning.
+- [ ] **KOM-04 – metod- och språkgranskning:** bedöm NVC-övningar, MI-överföring till föräldraskap och tillkommande verktyg kritiskt utifrån källor, målgrupp, maktasymmetri och risksituationer. Undvik behandlings- eller effektanspråk utan stöd.
+- [ ] **KOM-05 – nästa integrationssteg:** utvärdera direkta säkra länkar till specifika övningar från AI-medlaren och Gillaswajpen, men bygg först en testad ankarmekanism som inte bryter SPA-navigation eller exponerar privata svar.
+
 ## 4 november 2026 – KOM-02: samtalsverktyg i hela appen och AI-medlarens länkar (PR #105)
 
 - [x] **KOM-02A – mergad navigation:** Gillaswajpen, Gemensamma insikter, Min personlighet, Schyssta listan, Inkorgen och AI-medlaren får kontextuella genvägar till `#kommunikation` och `#nvc`. Endast föräldravyn har dessutom `#mi-foralder`. Inga privata svar förs med i länkarna och navigering skickar inga meddelanden.
