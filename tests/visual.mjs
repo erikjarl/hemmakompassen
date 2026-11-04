@@ -621,6 +621,14 @@ try{
   await checkOverflow(narrow.page,'320px mobile homepage');
   await narrow.page.locator('#live-mobile-nav a[href="#kommunikation"]').scrollIntoViewIfNeeded();
   await capture(narrow.page,'mobile-320-navigation.png');
+  await narrow.page.goto(base+'#kommunikation',{waitUntil:'load'});
+  await narrow.page.getByRole('heading',{name:'Verktyg för bättre samtal'}).waitFor();
+  await checkOverflow(narrow.page,'Communication toolkit 320px');
+  await capture(narrow.page,'mobile-320-communication.png');
+  await narrow.page.goto(base+'#nvc',{waitUntil:'load'});
+  await narrow.page.getByRole('heading',{name:'Nonviolent Communication',exact:true}).waitFor();
+  await checkOverflow(narrow.page,'NVC builder 320px');
+  await capture(narrow.page,'mobile-320-nvc.png');
   await narrow.context.close();
   const soloTeen=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,role:'teen'});
   await soloTeen.page.goto(base+'#kommunikation',{waitUntil:'load'});
