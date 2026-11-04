@@ -9,11 +9,11 @@ assert.ok(extracted,'General swipe save and skip functions exist');
 function harness({upsert=async()=>({error:null}),rpc=async()=>({error:null})}={}){
   const calls={writes:0,rpcs:[],renders:0,matches:0,unlocks:0};
   const state={
-    user:{id:'parent'},sharedSession:7,swipeBusy:true,swipeReview:false,swipeSaveError:'',swipeIndex:1,
+    user:{id:'parent'},sharedSession:7,swipeBusy:true,swipeReview:false,swipeSkippedReview:false,swipeSaveError:'',swipeIndex:1,
     swipeAnswers:new Map([['general-01',true]]),skippedUnderstanding:new Set(),understandingShares:new Set(),members:[{role:'parent'},{role:'teen'}],
     visibleGeneralIndices:()=>[0,1],swipeCardId:i=>'general-'+String(i+1).padStart(2,'0'),
     GENERAL_CARDS:[{type:'match'},{type:'match'},{type:'match'}],viewerRole:()=>state.user?.id==='teen'?'teen':'parent',
-    nextVisibleAfter:i=>i+1,nextUnanswered:i=>i,
+    nextVisibleAfter:i=>i+1,nextSkippedAfter:i=>3,nextUnanswered:i=>i,
     $:()=>({textContent:''}),render:()=>{calls.renders++;},
     fetchSwipeMatches:()=>{calls.matches++;},fetchThemeUnlock:()=>{calls.unlocks++;},
     db:{
@@ -122,8 +122,11 @@ const deferred=()=>{let resolve,reject;const promise=new Promise((ok,no)=>{resol
   const state={
     refreshGeneration:0,user:null,profile:null,members:[],
     personalityExperience:{reset(){},load:async()=>{}},
+    // The refresh function now also resets the private AI-chat lifecycle.
+    mediatorExperience:{reset(){},loadList:async()=>{}},
+    aiResults:{reset(){}},
     swipeAnswers:new Map(),swipeImportance:new Map(),importancePending:new Map(),importanceSaving:new Set(),importanceAvailable:false,importanceLoadError:'',skippedUnderstanding:new Set(),understandingShares:new Set(),understandingShareSaving:new Set(),understandingShareError:'',sharedUnderstandingEnabled:false,themeAnswers:new Map(),
-    activeThemeDeck:null,themeIndex:0,themeReview:false,themeSaveError:'',
+    activeThemeDeck:null,themeIndex:0,themeReview:false,themeSaveError:'',swipeSkippedReview:false,
     swipeBusy:false,swipeLoadError:'',swipeSaveError:'',swipeReview:false,swipeIndex:0,
     sharedMatches:[],sharedError:'',sharedLoading:false,sharedSession:0,sharedRequest:0,
      insightsRows:[],sharedUnderstandingRows:[],insightsLoading:false,insightsError:'',insightsRequest:0,page:()=> 'hem',

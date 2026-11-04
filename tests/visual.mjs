@@ -79,12 +79,12 @@ async function capture(page,name){
   await page.screenshot({path:path.join(output,name),fullPage:true,animations:"disabled"});
   captureRecords.push({file:name,viewport:page.viewportSize(),...overlays});
 }
-async function freshContext(options,{authenticated=false,paired=false,role="parent",unlocked=false,unlockUnavailable=false,priorityUnavailable=false,preansweredGeneral=false,emptySchyssta=false,personalityComplete=false,personalitySharing=false,personalityPartnerShared=false}={}){
+async function freshContext(options,{authenticated=false,paired=false,role="parent",unlocked=false,unlockUnavailable=false,priorityUnavailable=false,priorityFeature=true,privateImportance=false,preansweredGeneral=false,preansweredSkipped=false,emptySchyssta=false,homeUnreadFailure=false,personalityComplete=false,personalitySharing=false,personalityPartnerShared=false,aiMediator=false,aiAnalyses=false}={}){
   const context=await browser.newContext({...options,locale:"sv-SE",reducedMotion:"reduce"});
-  await context.addInitScript(value=>{window.__HK_TEST_USER__=value.user;window.__HK_TEST_PAIRED__=value.paired;window.__HK_TEST_ROLE__=value.role;window.__HK_TEST_UNLOCKED__=value.unlocked;window.__HK_UNLOCK_RPC_UNAVAILABLE__=value.unlockUnavailable;window.__HK_PRIORITY_RPC_UNAVAILABLE__=value.priorityUnavailable;window.__HK_PREANSWERED_GENERAL__=value.preansweredGeneral;window.__HK_SCHYSSTA_EMPTY__=value.emptySchyssta;window.__HK_TEST_PERSONALITY_DONE__=value.personalityComplete;window.__HK_TEST_PERSONALITY_PARTNER_SHARED__=value.personalityPartnerShared;},{personalityPartnerShared,personalityComplete,emptySchyssta,preansweredGeneral,user:authenticated?{id:role==="teen"?"10000000-0000-0000-0000-000000000002":"10000000-0000-0000-0000-000000000001",email:"synthetic@example.invalid"}:null,paired,role,unlocked,unlockUnavailable,priorityUnavailable});
-  await context.route(base+"backend-config.js",route=>route.fulfill({
+  await context.addInitScript(value=>{window.__HK_TEST_USER__=value.user;window.__HK_TEST_PAIRED__=value.paired;window.__HK_TEST_ROLE__=value.role;window.__HK_TEST_UNLOCKED__=value.unlocked;window.__HK_UNLOCK_RPC_UNAVAILABLE__=value.unlockUnavailable;window.__HK_PRIORITY_RPC_UNAVAILABLE__=value.priorityUnavailable;window.__HK_PRIORITISED_TEEN__=value.privateImportance;window.__HK_PREANSWERED_GENERAL__=value.preansweredGeneral;window.__HK_PREANSWERED_SKIPPED__=value.preansweredSkipped;window.__HK_SCHYSSTA_EMPTY__=value.emptySchyssta;window.__HK_HOME_UNREAD_FAILURE__=value.homeUnreadFailure;window.__HK_TEST_PERSONALITY_DONE__=value.personalityComplete;window.__HK_TEST_PERSONALITY_PARTNER_SHARED__=value.personalityPartnerShared;},{personalityPartnerShared,personalityComplete,emptySchyssta,homeUnreadFailure,preansweredGeneral,preansweredSkipped,user:authenticated?{id:role==="teen"?"10000000-0000-0000-0000-000000000002":"10000000-0000-0000-0000-000000000001",email:"synthetic@example.invalid"}:null,paired,role,unlocked,unlockUnavailable,priorityUnavailable,privateImportance});
+  await context.route(base+"backend-config.js*",route=>route.fulfill({
     contentType:"application/javascript",
-    body:"window.HEMMAKOMPASSEN_BACKEND=Object.freeze({supabaseUrl:'https://synthetic.invalid',supabasePublishableKey:'synthetic',enableSharedPriorities:true,enableSharedPolling:true,enableSharedInsights:true,enableSharedUnderstanding:true,enableSchysstaList:true,enablePersonalitySharing:"+String(personalitySharing)+"});"
+    body:"window.HEMMAKOMPASSEN_BACKEND=Object.freeze({supabaseUrl:'https://synthetic.invalid',supabasePublishableKey:'synthetic',enableSharedPriorities:"+String(priorityFeature)+",enableSharedPolling:true,enableSharedInsights:true,enableSharedUnderstanding:true,enableSchysstaList:true,enablePersonalitySharing:"+String(personalitySharing)+",enableAiMediator:"+String(aiMediator||aiAnalyses)+",enableAiHistory:"+String(aiMediator||aiAnalyses)+",enableAiResultAnalyses:"+String(aiAnalyses)+",aiMediatorUrl:'https://hemmakompassen-ai-medlare.erikbertiljarl.workers.dev/api/ai/mediate'});"
   }));
   await context.route("https://esm.sh/**",route=>route.fulfill({
     contentType:"application/javascript",
@@ -95,8 +95,14 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
         const personalityAnswers=new Map(window.__HK_TEST_PERSONALITY_DONE__?Array.from({length:50},(_,i)=>['ipip50-'+String(i+1).padStart(3,'0'),3]):[]);
         let personalityConsent=false;
         const skips=new Map();
-        const importance=new Map();
+        if(window.__HK_PREANSWERED_SKIPPED__){answers.delete('general-02');skips.set('general-02',{deck_id:'general',card_id:'general-02'});}
+        const importance=new Map(window.__HK_PRIORITISED_TEEN__?[
+          ['general:general-01',{deck_id:'general',card_id:'general-01',importance:1}],
+          ['general:general-02',{deck_id:'general',card_id:'general-02',importance:1}],
+          ['general:general-10',{deck_id:'general',card_id:'general-10',importance:0}]
+        ]:[]);
         const understandingShares=new Set(window.__HK_TEST_PAIRED__?['general-02']:[]);
+        window.__HK_TEST_SET_SHARED_B__=ids=>{understandingShares.clear();for(const id of ids)understandingShares.add(id);};
         let schysstaSuggestions=[
           {card_id:'regler-01',body:'Vi knackar innan vi går in i varandras rum.'},
           {card_id:'regler-02',body:'Falsk text som aldrig får visas.'},
@@ -113,6 +119,7 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
         return {
           auth:{
             async getUser(){return {data:{user:current()},error:current()?null:{name:'AuthSessionMissingError'}}},
+            async getSession(){return {data:{session:current()?{user:current(),access_token:'synthetic-jwt'}:null},error:null}},
             onAuthStateChange(){return {data:{subscription:{unsubscribe(){}}}}},
             async signInWithPassword(){return {error:null}}
           },
@@ -141,8 +148,10 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
             if(name==='set_my_ipip50_share'){personalityConsent=args.p_share===true;window.__HK_PERSONALITY_SHARE__=personalityConsent;return {data:personalityConsent,error:null};}
             if(name==='my_ipip50_shared_profiles'){
               const scores={extraversion:30,agreeableness:30,conscientiousness:30,emotional_stability:30,intellect_imagination:30};
-              return {data:personalityConsent&&window.__HK_TEST_PERSONALITY_PARTNER_SHARED__?{instrument_id:'ipip50-sv-v1',viewer_role:window.__HK_TEST_ROLE__,profiles:[{role:'parent',scores},{role:'teen',scores}]}:null,error:null};
+              const teenScores={...scores,conscientiousness:45,agreeableness:40}; // Synthetic differences; extraversion remains equal for geometry tests.
+              return {data:personalityConsent&&window.__HK_TEST_PERSONALITY_PARTNER_SHARED__?{instrument_id:'ipip50-sv-v1',viewer_role:window.__HK_TEST_ROLE__,profiles:[{role:'parent',scores},{role:'teen',scores:teenScores}]}:null,error:null};
             }
+            if(window.__HK_HOME_UNREAD_FAILURE__===true&&['my_family_unread_message_count','my_schyssta_notifications'].includes(name))return {data:null,error:{message:'Synthetic notification source unavailable'}};
             if(window.__HK_SCHYSSTA_EMPTY__===true&&['shared_schyssta_rule_suggestions','my_schyssta_rules','my_manual_schyssta_rules','my_schyssta_notifications','my_schyssta_replacement_links','my_schyssta_rule_history'].includes(name))return {data:[],error:null};
             if(name==='my_family_members')return {data:current()?(window.__HK_TEST_PAIRED__?[{user_id:'10000000-0000-0000-0000-000000000001',role:'parent',display_name:'Provförälder'},{user_id:'10000000-0000-0000-0000-000000000002',role:'teen',display_name:'Provtonåring'}]:[{user_id:current().id,role:window.__HK_TEST_ROLE__,display_name:window.__HK_TEST_ROLE__==='teen'?'Provtonåring':'Provförälder'}]):[],error:null};
              if(name==='shared_swipe_matches'){
@@ -199,6 +208,7 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
               return {data:id,error:null};
             }
             if(name==='my_family_messages'){
+              window.__HK_CHAT_FETCHES__=(window.__HK_CHAT_FETCHES__||0)+1;
               if(!window.__HK_TEST_PAIRED__)return {data:[],error:null};
               let rows=chatMessages.slice().sort((a,b)=>b.created_at.localeCompare(a.created_at)||b.message_id.localeCompare(a.message_id));
               if(args?.p_before_created_at&&args?.p_before_id)rows=rows.filter(row=>
@@ -209,6 +219,7 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
             if(name==='my_family_unread_message_count')
               return {data:window.__HK_TEST_PAIRED__?chatMessages.filter(row=>!row.sent_by_me&&row.read_at===null).length:0,error:null};
             if(name==='mark_family_messages_read'){
+              if(window.__HK_MARK_READ_FAIL__===true)return {data:null,error:{message:'simulated read receipt failure'}};
               window.__HK_MARK_CHAT_READ__=(window.__HK_MARK_CHAT_READ__||0)+1;
               const unread=chatMessages.filter(row=>!row.sent_by_me&&row.read_at===null).length;
               chatMessages=chatMessages.map(row=>row.sent_by_me?row:{...row,read_at:row.read_at||'2026-11-01T11:00:00Z'});
@@ -262,11 +273,45 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
       }
     `
   }));
+  const mediatorCalls=[];
+  if(aiMediator){
+    await context.route('https://hemmakompassen-ai-medlare.erikbertiljarl.workers.dev/api/ai/**',async route=>{
+      const req=route.request(),method=req.method(),pathname=new URL(req.url()).pathname;
+      const body=method==='POST' ? req.postDataJSON() : null;
+      mediatorCalls.push({pathname,method,body});
+      let result,status=200;
+      if(pathname==='/api/ai/context'&&method==='GET'){
+        result={sections:['Gillaswajpen – egna svar'],unavailableCount:0};
+      } else if(pathname==='/api/ai/chats'&&method==='GET'){
+        result={chats:[]};
+      } else if(pathname==='/api/ai/chats'&&method==='POST'){
+        status=201;
+        result={chat:{id:'00000000-0000-4000-8000-000000000001',title:'Nytt samtal'}};
+      } else if(pathname==='/api/ai/mediate'&&method==='POST'){
+        result={reply:'Vi kan utforska detta steg för steg.',chatId:body?.chatId,
+          ephemeral:false,remainingToday:9};
+      } else {
+        status=404;result={error:'Unexpected synthetic AI endpoint'};
+      }
+      await route.fulfill({status,contentType:'application/json',body:JSON.stringify(result)});
+    });
+  }
+  const aiRequests=[];
+  if(aiAnalyses){
+    await context.route('https://hemmakompassen-ai-medlare.erikbertiljarl.workers.dev/api/ai/analyze',async route=>{
+      const body=route.request().postDataJSON();
+      aiRequests.push(body);
+      await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({
+        kind:body.kind,scope:body.scope,reply:'Ert resultat kan vara en bra samtalsstart. Vad fungerar redan?',
+        basis:'Enbart serververifierade resultat; syntetisk testsituation.'
+      })});
+    });
+  }
   const page=await context.newPage();
   page.on("pageerror",e=>errors.push(e.message));
   // Ignore external font/network warnings; JavaScript exceptions are checked via pageerror.
   await page.goto(base+"#hem",{waitUntil:"load"});
-  return {context,page};
+  return {context,page,mediatorCalls,aiRequests};
 }
 try{
   await fs.mkdir(output,{recursive:true});
@@ -284,6 +329,77 @@ try{
   await checkOverflow(m.page,"Mobile homepage");
   await capture(m.page,"mobile-home.png");
   await checkMobileNavigation(m.page,'390px mobile navigation');
+  // UX-01: verify keyboard navigation and actual browser focus.
+  const skipHash=new URL(m.page.url()).hash;
+  await m.page.locator('#live-skip-to-main').focus();
+  const skipVisible=await m.page.locator('#live-skip-to-main').evaluate(el=>{
+    const rect=el.getBoundingClientRect();
+    return rect.top>=0&&rect.left>=0&&rect.bottom<=window.innerHeight;
+  });
+  assert.ok(skipVisible,'Skip link becomes visible when focused');
+  await m.page.keyboard.press('Enter');
+  assert.equal(await m.page.evaluate(()=>document.activeElement?.id),'live-app','Skip link focuses the main landmark');
+  assert.equal(new URL(m.page.url()).hash,skipHash,'Skip link must not change the SPA route');
+  await m.page.locator('#live-mobile-nav a[href="#installningar"]').focus();
+  await m.page.keyboard.press('Enter');
+  await m.page.getByRole('heading',{name:'Inställningar'}).waitFor();
+  assert.equal(await m.page.evaluate(()=>document.activeElement?.id),'live-app','Route changes move focus to new content');
+  const settingsNav=await m.page.locator('#live-mobile-nav').boundingBox();
+  const settingsTab=await m.page.locator('#live-mobile-nav a[href="#installningar"]').boundingBox();
+  assert.ok(settingsNav&&settingsTab&&settingsTab.x>=settingsNav.x-2&&settingsTab.x+settingsTab.width<=settingsNav.x+settingsNav.width+2,
+    'Last mobile tab is revealed automatically when activated via keyboard');
+  await m.page.goto(base+'#insikter',{waitUntil:'load'});
+  assert.equal(await m.page.locator('#live-mobile-nav a[href="#swipe"]').getAttribute('aria-current'),'page',
+    'The insights subpage keeps Gillaswajpen marked as the active primary tab');
+  await m.page.goto(base+'#hem',{waitUntil:'load'});
+  for(const route of ['swipe','personlighet','insikter','regler','inkorg','medlare']){
+    await m.page.goto(base+'#'+route,{waitUntil:'load'});
+    await m.page.locator('.comm-crosslink a[href="#kommunikation"]').waitFor();
+    assert.equal(await m.page.locator('.comm-crosslink a[href="#nvc"]').count(),1,'NVC is available from '+route);
+    assert.equal(await m.page.locator('.comm-crosslink a[href="#mi-foralder"]').count(),1,'Parent MI is available from '+route);
+  }
+  await m.page.goto(base+'#regler',{waitUntil:'load'});
+  await m.page.locator('.comm-crosslink a[href="#nvc"]').click();
+  await m.page.getByRole('heading',{name:'Nonviolent Communication',exact:true}).waitFor();
+  assert.equal(await m.page.locator('#live-mobile-nav a[href="#kommunikation"]').getAttribute('aria-current'),'page',
+    'Cross-module NVC links select the communication tab');
+  await m.page.goto(base+'#kommunikation',{waitUntil:'load'});
+  await m.page.getByRole('heading',{name:'Verktyg för bättre samtal'}).waitFor();
+  assert.equal(await m.page.locator('.comm-exercise').count(),9,'Nine shared communication techniques are available');
+  assert.equal(await m.page.getByRole('link',{name:'Öppna MI-övningarna'}).count(),1,'Only parents see MI entry');
+  await m.page.locator('[data-comm-open="validera"]').click();
+  assert.equal(await m.page.locator('.comm-exercise[data-comm-skill="validera"]').evaluate(el=>el.open),true,'Situation opens matching skill');
+  assert.equal(await m.page.evaluate(()=>document.activeElement?.closest('.comm-exercise')?.dataset.commSkill),'validera','Keyboard focus follows opened skill');
+  assert.equal(new URL(m.page.url()).hash,'#kommunikation','Situation does not change SPA route');
+  await checkOverflow(m.page,'Communication toolkit 390px parent');
+  await capture(m.page,'mobile-communication-parent.png');
+  await m.page.getByRole('link',{name:'Bygg ett jag-budskap'}).click();
+  await m.page.getByRole('heading',{name:'Nonviolent Communication',exact:true}).waitFor();
+  await m.page.locator('#comm-observation').fill('vi pratar över varandra');
+  await m.page.locator('#comm-feeling').fill('mig ledsen');
+  await m.page.locator('#comm-need').fill('lugn');
+  await m.page.locator('#comm-request').fill('prata efter maten');
+  await m.page.getByRole('button',{name:'Sätt ihop min formulering'}).click();
+  assert.equal(await m.page.locator('#comm-nvc-output').innerText(),
+    'När vi pratar över varandra känner jag mig ledsen. Jag behöver lugn. Skulle du vilja prata efter maten?');
+  assert.equal(await m.page.evaluate(()=>document.activeElement?.id),'comm-nvc-output','Preview is keyboard focusable');
+  await m.page.locator('#comm-observation').fill('<img src=x onerror=alert(1)>');
+  await m.page.getByRole('button',{name:'Sätt ihop min formulering'}).click();
+  assert.match(await m.page.locator('#comm-nvc-output').innerText(),/<img src=x onerror=alert\(1\)>/,'Untrusted draft is shown literally');
+  assert.equal(await m.page.locator('#comm-nvc-output img').count(),0,'Draft markup cannot execute');
+  await m.page.getByRole('button',{name:'Töm fälten'}).click();
+  assert.equal(await m.page.locator('#comm-observation').inputValue(),'','Reset removes transient draft');
+  assert.match(await m.page.locator('#comm-nvc-output').innerText(),/Din formulering visas här/);
+  assert.equal(await m.page.evaluate(()=>window.__HK_CHAT_SEND__??null),null,'Draft is not sent as a family message');
+  await checkOverflow(m.page,'NVC builder 390px parent');
+  await capture(m.page,'mobile-nvc-parent.png');
+  await m.page.goto(base+'#kommunikation',{waitUntil:'load'});
+  await m.page.getByRole('link',{name:'Öppna MI-övningarna'}).click();
+  await m.page.getByRole('heading',{name:'Lyssna innan du föreslår'}).waitFor();
+  assert.equal(await m.page.locator('.mi-parent-guide a[href="#regler"]').count(),1,'MI guide links to mutual agreements');
+  assert.equal(await m.page.locator('#live-mobile-nav a[href="#kommunikation"]').getAttribute('aria-current'),'page','MI subpage retains communication tab');
+  await checkOverflow(m.page,'390px parent MI guide');
+  await capture(m.page,'mobile-mi-parent-guide.png');
   await m.page.goto(base+"#personlighet",{waitUntil:"load"});
   await m.page.getByRole('button',{name:'Börja testet'}).waitFor();
   await m.page.getByRole('button',{name:'Börja testet'}).click();
@@ -316,6 +432,14 @@ try{
    assert.equal(await m.page.evaluate(()=>window.__HK_MATCH_RPC_CALLS__||0),0,'Unpaired member must not request aggregate matches');
   assert.equal(await m.page.evaluate(()=>window.__HK_UNLOCK_RPC_CALLS__||0),0,'Unpaired member must not request theme unlock status');
   assert.match(await m.page.locator("#swipe-card").getAttribute("aria-label"),/Kort 1 av 21/);
+  // ArrowRight on a focused navigation link must NOT save a private swipe answer.
+  await m.page.locator('#live-mobile-nav a[href="#personlighet"]').focus();
+  await m.page.keyboard.press('ArrowRight');
+  await m.page.waitForTimeout(300);
+  assert.match(await m.page.locator('#swipe-card').getAttribute('aria-label'),/Kort 1 av 21/,
+    'Focused navigation arrow must not advance the private swipe deck');
+  assert.equal(await m.page.evaluate(()=>window.__HK_SAVED_SWIPE__??null),null,
+    'Focused navigation arrow must not write a swipe answer');
   assert.equal(await m.page.locator('#swipe-skip').count(),0,'Parent must never see a teen-only skip control');
   const importance= m.page.locator('[data-importance]');
   assert.ok(await importance.isEnabled(),'Importance is enabled when the private table is available');
@@ -395,6 +519,25 @@ try{
   await checkOverflow(m.page,"Mobile authenticated section");
   await capture(m.page,"mobile-inbox.png");
   await m.context.close();
+  // NOT-01: failed unread RPCs must not silently look like an empty inbox.
+  const unavailableHome=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},
+    {authenticated:true,paired:true,homeUnreadFailure:true});
+  await unavailableHome.page.goto(base+'#hem',{waitUntil:'load'});
+  await unavailableHome.page.locator('#home-refresh-notices').waitFor();
+  assert.match(await unavailableHome.page.getByRole('alert').innerText(),/Noll betyder därför inte säkert att inkorgen är tom/);
+  assert.equal(await unavailableHome.page.locator('.live-cards .live-panel').count(),6,'All actual feature cards remain available');
+  assert.match(await unavailableHome.page.locator('.live-cards').innerText(),/50 frågor/,'Home reflects the real personality feature');
+  assert.doesNotMatch(await unavailableHome.page.locator('.live-cards').innerText(),/ansluts stegvis/,'No false generic status remains');
+  await checkOverflow(unavailableHome.page,'Home with failed notification checks');
+  await capture(unavailableHome.page,'mobile-home-unread-error.png');
+  await unavailableHome.page.evaluate(()=>{window.__HK_HOME_UNREAD_FAILURE__=false;window.__HK_SCHYSSTA_CLEAN_RPC__=true;});
+  await unavailableHome.page.locator('#home-refresh-notices').click();
+  await unavailableHome.page.locator('#home-refresh-notices').waitFor({state:'detached'});
+  await unavailableHome.page.getByRole('heading',{name:/Inkorgen · 2 olästa/}).waitFor();
+  await checkOverflow(unavailableHome.page,'Home after notification retry');
+  await capture(unavailableHome.page,'mobile-home-unread-recovered.png');
+  await unavailableHome.context.close();
+
   const completedPersonality=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,personalityComplete:true,role:'teen'});
   await completedPersonality.page.goto(base+'#personlighet',{waitUntil:'load'});
   await completedPersonality.page.getByRole('heading',{name:'Din profil'}).waitFor();
@@ -407,6 +550,20 @@ try{
   assert.match(await completedPersonality.page.locator('.pf-reference-feedback').innerText(),/amerikanska vuxenurvalets/);
   assert.match(await completedPersonality.page.locator('.pf-reference-caveat').innerText(),/svenska översättning/);
   assert.equal(await completedPersonality.page.getByText('Våra profiler').count(),0,'No fabricated second profile');
+  // PF-01A: click the REAL UI export and inspect the downloaded local JSON.
+  const localDownload=completedPersonality.page.waitForEvent('download');
+  await completedPersonality.page.getByRole('button',{name:'Exportera mina egna svar (JSON)'}).click();
+  const savedExport=await localDownload;
+  assert.match(savedExport.suggestedFilename(),/^hemmakompassen-ipip50-egna-svar-\d{4}-\d{2}-\d{2}\.json$/);
+  const downloaded=JSON.parse(await fs.readFile(await savedExport.path(),'utf8'));
+  assert.equal(downloaded.instrument_id,'ipip50-sv-v1');
+  assert.equal(downloaded.answered_count,50);
+  assert.equal(downloaded.responses.length,50);
+  assert.equal(downloaded.responses[0].statement_sv.length>5,true);
+  assert.ok(!JSON.stringify(downloaded).includes('10000000-0000-0000'),'Downloaded self-answers contain no family identifiers');
+  assert.equal(Object.hasOwn(downloaded,'partner'),false,'Downloaded self-answers never contain partner profile');
+  assert.match(await completedPersonality.page.locator('.pf-export').innerText(),/Filen innehåller bara dina egna sparade svar/);
+
   await checkOverflow(completedPersonality.page,'Private personality profile 390px');
   await capture(completedPersonality.page,'mobile-personality-profile.png');
   await completedPersonality.page.locator('.pf-percentile-chart').screenshot({path:path.join(output,'mobile-personality-bars.png'),animations:'disabled'});
@@ -425,6 +582,16 @@ try{
   await consentPair.page.getByRole('button',{name:'Jag vill dela mina fem skalpoäng'}).click();
   await consentPair.page.getByRole('heading',{name:'Våra profiler'}).waitFor();
   assert.equal(await consentPair.page.locator('.pf-comparison .pf-table tbody tr').count(),5);
+  assert.equal(await consentPair.page.locator('.pf-family-reflections').count(),1);
+  assert.match(await consentPair.page.locator('.pf-family-reflections').innerText(),/Att förstå era likheter och olikheter/);
+  assert.match(await consentPair.page.locator('.pf-family-reflections').innerText(),/Likheter som kan hjälpa er/);
+  assert.match(await consentPair.page.locator('.pf-family-reflections').innerText(),/Skillnader som kan vara värda att prata om/);
+  assert.match(await consentPair.page.locator('.pf-family-reflections').innerText(),/Tonåringen kanske uppskattar tydliga planer mer än du själv gör/);
+  assert.match(await consentPair.page.locator('.pf-family-reflections').innerText(),/Extraversion/);
+  assert.match(await consentPair.page.locator('.pf-family-reflections').innerText(),/För dig som förälder/);
+  assert.equal(await consentPair.page.locator('.pf-insight-resource a[href="#regler"]').count(),1);
+  assert.ok(await consentPair.page.locator('.pf-insight-resource a[href="#swipe"]').count()>=1);
+  assert.equal(await consentPair.page.locator('.pf-family-reflections .pf-insight-card').count(),5);
   assert.equal(await consentPair.page.locator('.pf-comparison .pf-scale-track').count(),5);
   const pctGeometry=await consentPair.page.locator('.pf-comparison .pf-scale-row').first().evaluate(row=>{
     const bar=row.querySelector('.pf-scale-track').getBoundingClientRect();
@@ -443,24 +610,70 @@ try{
   await checkOverflow(consentPair.page,'Two consenting personality profiles 390px');
   await capture(consentPair.page,'mobile-personality-two-consents.png');
   await consentPair.page.locator('.pf-comparison .pf-percentile-chart').screenshot({path:path.join(output,'mobile-personality-bars-comparison.png'),animations:'disabled'});
+  await consentPair.page.locator('.pf-family-reflections h3').scrollIntoViewIfNeeded();
+  await consentPair.page.screenshot({path:path.join(output,'mobile-personality-family-reflections-viewport.png'),animations:'disabled'});
+  await consentPair.page.locator('.pf-insight-group').last().scrollIntoViewIfNeeded();
+  await consentPair.page.screenshot({path:path.join(output,'mobile-personality-family-similarities-viewport.png'),animations:'disabled'});
   await consentPair.page.getByRole('button',{name:'Sluta dela min profil'}).click();
   await consentPair.page.getByRole('heading',{name:'Våra profiler'}).waitFor({state:'detached'});
+  assert.equal(await consentPair.page.locator('.pf-family-reflections').count(),0,'Withdrawal hides the entire narrative');
   assert.equal(await consentPair.page.evaluate(()=>window.__HK_PERSONALITY_SHARE__),false);
   await consentPair.context.close();
+  const teenReflection=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},
+    {authenticated:true,paired:true,role:'teen',personalityComplete:true,personalitySharing:true,personalityPartnerShared:true});
+  await teenReflection.page.goto(base+'#personlighet',{waitUntil:'load'});
+  await teenReflection.page.getByRole('button',{name:'Jag vill dela mina fem skalpoäng'}).click();
+  await teenReflection.page.locator('.pf-family-reflections').waitFor();
+  assert.match(await teenReflection.page.locator('.pf-family-reflections').innerText(),/För dig som tonåring/);
+  assert.match(await teenReflection.page.locator('.pf-family-reflections').innerText(),/Det kan vara skönt när ni ungefär känner igen varandras sätt att vara med människor/);
+  await checkOverflow(teenReflection.page,'Teen-specific reflections 390px');
+  await teenReflection.page.locator('.pf-family-reflections h3').scrollIntoViewIfNeeded();
+  await teenReflection.page.screenshot({path:path.join(output,'mobile-personality-teen-reflections.png'),animations:'disabled'});
+  await teenReflection.context.close();
   const narrow=await freshContext({viewport:{width:320,height:700},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true});
   await narrow.page.getByRole("heading",{name:/Hej[ ,]+Provförälder/}).waitFor();
   await checkMobileNavigation(narrow.page,'320px mobile navigation');
   await checkOverflow(narrow.page,'320px mobile homepage');
   await narrow.page.locator('#live-mobile-nav a[href="#kommunikation"]').scrollIntoViewIfNeeded();
   await capture(narrow.page,'mobile-320-navigation.png');
+  await narrow.page.goto(base+'#kommunikation',{waitUntil:'load'});
+  await narrow.page.getByRole('heading',{name:'Verktyg för bättre samtal'}).waitFor();
+  await checkOverflow(narrow.page,'Communication toolkit 320px');
+  await capture(narrow.page,'mobile-320-communication.png');
+  await narrow.page.goto(base+'#nvc',{waitUntil:'load'});
+  await narrow.page.getByRole('heading',{name:'Nonviolent Communication',exact:true}).waitFor();
+  await checkOverflow(narrow.page,'NVC builder 320px');
+  await capture(narrow.page,'mobile-320-nvc.png');
   await narrow.context.close();
   const soloTeen=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,role:'teen'});
+  await soloTeen.page.goto(base+'#inkorg',{waitUntil:'load'});
+  assert.equal(await soloTeen.page.locator('.comm-crosslink a[href="#nvc"]').count(),1,'Teen may navigate to NVC from inbox');
+  assert.equal(await soloTeen.page.locator('.comm-crosslink a[href="#mi-foralder"]').count(),0,'Teen does not see parent MI cross-links');
+  await soloTeen.page.locator('.comm-crosslink a[href="#nvc"]').click();
+  await soloTeen.page.getByRole('heading',{name:'Nonviolent Communication',exact:true}).waitFor();
+  await soloTeen.page.goto(base+'#kommunikation',{waitUntil:'load'});
+  assert.equal(await soloTeen.page.getByRole('link',{name:'Öppna MI-övningarna'}).count(),0,'Teen does not see parent MI entry');
+  assert.match(await soloTeen.page.locator('.comm-feature-grid').innerText(),/Din röst är viktig/);
+  assert.equal(await soloTeen.page.locator('.comm-exercise').count(),9,'Teen gets all common exercises');
+  await soloTeen.page.locator('[data-comm-open="grans"]').focus();
+  await soloTeen.page.keyboard.press('Enter');
+  assert.equal(await soloTeen.page.locator('.comm-exercise[data-comm-skill="grans"]').evaluate(el=>el.open),true,'Teen can open boundary exercise by keyboard');
+  assert.match(await soloTeen.page.locator('.comm-exercise[data-comm-skill="grans"]').innerText(),/sök hjälp hos en trygg vuxen/);
+  await soloTeen.page.getByRole('link',{name:'Träna på att uttrycka dig'}).click();
+  await soloTeen.page.getByRole('heading',{name:'Nonviolent Communication',exact:true}).waitFor();
+  assert.match(await soloTeen.page.locator('.comm-example').first().innerText(),/ger råd innan jag har berättat färdigt/);
+  await checkOverflow(soloTeen.page,'Teen NVC builder 390px');
+  await capture(soloTeen.page,'mobile-nvc-teen.png');
+  await soloTeen.page.goto(base+'#mi-foralder',{waitUntil:'load'});
+  await soloTeen.page.getByRole('heading',{name:'Samtalsstöd för föräldrar'}).waitFor();
+  assert.equal(await soloTeen.page.locator('.mi-parent-guide').count(),0,'Direct route cannot render parent MI content for a teen');
   await soloTeen.page.goto(base+'#swipe',{waitUntil:'load'});
   await soloTeen.page.locator("#swipe-card[aria-label^='Kort 1 av 34']").waitFor();
   await soloTeen.page.getByRole('button',{name:'Ja'}).click();
   await soloTeen.page.locator("#swipe-card[aria-label^='Kort 2 av 34']").waitFor();
   assert.match(await soloTeen.page.locator('#swipe-card').innerText(),/Jag vill helst prata färdigt/,'Understanding card is visible to teen');
-  assert.match(await soloTeen.page.locator('.swipe-understanding-notice').innerText(),/Delning med förälder är ännu inte aktiverad/,'Teen is not misled about sharing status');
+  assert.match(await soloTeen.page.locator('.swipe-understanding-notice').innerText(),/privat tills du själv väljer att dela ett ja-svar/,'Teen is told that B sharing needs a separate action');
+  assert.equal(await soloTeen.page.locator('.swipe-understanding-notice a[href="#insikter"]').count(),1,'Teen has a direct path to voluntary sharing');
   const beforeSkip=await soloTeen.page.evaluate(()=>window.__HK_SAVED_SWIPE__.row.card_id);
   await soloTeen.page.getByRole('button',{name:'Vill inte svara just nu'}).click();
   await soloTeen.page.locator("#swipe-card[aria-label^='Kort 3 av 34']").waitFor();
@@ -488,6 +701,27 @@ try{
   await checkOverflow(teenReview.page,'Mobile teen review after understanding skip');
   await capture(teenReview.page,'mobile-teen-review-after-skip.png');
   await teenReview.context.close();
+  // SW-04: an unanswered/overhopped B card is not a finished response.
+  // Revisit only the skipped card without forcing a review of all 34.
+  const skipAgain=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},
+    {authenticated:true,role:'teen',preansweredGeneral:true,preansweredSkipped:true});
+  await skipAgain.page.goto(base+'#swipe',{waitUntil:'load'});
+  await skipAgain.page.locator('#swipe-review-skipped').waitFor();
+  assert.match(await skipAgain.page.locator('.swipe-finished h2').innerText(),/1 kort kvar/,'Skipped cards are not described as fully answered');
+  await skipAgain.page.locator('#swipe-review-skipped').click();
+  await skipAgain.page.locator("#swipe-card[aria-label^='Kort 2 av 34']").waitFor();
+  assert.equal(await skipAgain.page.locator('.swipe-finished').count(),0);
+  await skipAgain.page.locator('#swipe-skip').click();
+  await skipAgain.page.locator('#swipe-review-skipped').waitFor();
+  assert.match(await skipAgain.page.locator('.swipe-finished').innerText(),/1 förståelsekort obesvarade/,'Skipping again leaves the card pending');
+  await skipAgain.page.locator('#swipe-review-skipped').click();
+  await skipAgain.page.locator("#swipe-card[aria-label^='Kort 2 av 34']").waitFor();
+  await skipAgain.page.getByRole('button',{name:'Ja'}).click();
+  await skipAgain.page.getByRole('heading',{name:'Alla 34 kort besvarade'}).waitFor();
+  assert.equal(await skipAgain.page.locator('#swipe-review-skipped').count(),0,'Completed B card leaves the skipped queue');
+  await checkOverflow(skipAgain.page,'Mobile skipped-card revisit');
+  await capture(skipAgain.page,'mobile-teen-skipped-revisit.png');
+  await skipAgain.context.close();
   const paired=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,paired:true});
   await paired.page.goto(base+"#swipe",{waitUntil:"load"});
   await paired.page.getByRole("heading",{name:"Era gemensamma svar"}).waitFor();
@@ -548,6 +782,16 @@ try{
   await capture(paired.page,'mobile-shared-insights.png');
   await paired.page.locator('.live-main').evaluate(el=>{el.scrollTop=el.scrollHeight;});
   await capture(paired.page,'mobile-shared-insights-bottom.png');
+  // Cross-tab consent change: the same viewer's current shared RPC must
+  // replace the old B-only message, while keeping mutual A results intact.
+  const beforeRevoke=await paired.page.locator('.insights-deck .swipe-match-list li').count();
+  await paired.page.evaluate(()=>{window.__HK_TEST_SET_SHARED_B__([]);window.dispatchEvent(new Event('focus'));});
+  await paired.page.waitForFunction(()=>document.querySelector('.insights-view')?.textContent?.includes('Inga förståelsekort är aktivt delade'));
+  assert.doesNotMatch(await paired.page.locator('.insights-view').innerText(),/Tonåringen vill få prata färdigt innan du kommer med råd/,'Remote B revocation clears text on viewer focus');
+  assert.equal(await paired.page.locator('.insights-deck .swipe-match-list li').count(),beforeRevoke,'Remote B revocation does not erase authorized mutual A');
+  await paired.page.evaluate(()=>{window.__HK_TEST_SET_SHARED_B__(['general-02']);window.dispatchEvent(new Event('focus'));});
+  await paired.page.getByText('Tonåringen vill få prata färdigt innan du kommer med råd').waitFor();
+  await capture(paired.page,'mobile-insights-remote-consent-refresh.png');
   await paired.page.evaluate(()=>{window.__HK_RPC_UNAVAILABLE__=true;});
   await paired.page.locator('#insights-retry').click();
   await paired.page.getByRole('alert').waitFor();
@@ -559,6 +803,39 @@ try{
   await paired.page.locator("#swipe-card[aria-label^='Temakort 1 av 104']").waitFor();
   await paired.page.locator('#theme-back').click();
   await paired.page.getByRole('heading',{name:'Era gemensamma svar'}).waitFor();
+
+  // SW-03A: the teenager alone sees own high-ranked, server-verifiable A YES.
+  // Keep the future shared priority feature off: no private importance may
+  // become automatically visible to the parent or be read via priority RPC.
+  const teenPriority=await freshContext(
+    {viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},
+    {authenticated:true,paired:true,role:'teen',privateImportance:true,priorityFeature:false}
+  );
+  await teenPriority.page.goto(base+'#swipe',{waitUntil:'load'});
+  await teenPriority.page.locator('.swipe-private-priority').waitFor();
+  const privatePreview=await teenPriority.page.locator('.swipe-private-priority').innerText();
+  assert.match(privatePreview,/Mina viktigaste gemensamma ja-svar/);
+  assert.match(privatePreview,/ENDAST FÖR DIG · INTE DELAT/);
+  assert.match(privatePreview,/AI-medlaren kan använda dina egna skattningar/,'Disclose permitted personal AI context accurately');
+  assert.equal(await teenPriority.page.locator('.swipe-private-priority .swipe-match-list li').count(),1,
+    'Only teen-high, mutual A YES appears, not private B or neutral A');
+  assert.equal(await teenPriority.page.evaluate(()=>window.__HK_PRIORITY_RPC_CALLS__||0),0,
+    'Preview uses only self-owned importance and already approved A matches, not a priority RPC');
+  await checkOverflow(teenPriority.page,'Teen private mutual-YES priority preview 390px');
+  await teenPriority.page.locator('.swipe-private-priority').scrollIntoViewIfNeeded();
+  await capture(teenPriority.page,'mobile-teen-private-priority-preview.png');
+  await teenPriority.context.close();
+
+  const parentPriority=await freshContext(
+    {viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},
+    {authenticated:true,paired:true,role:'parent',privateImportance:true,priorityFeature:false}
+  );
+  await parentPriority.page.goto(base+'#swipe',{waitUntil:'load'});
+  await parentPriority.page.locator('.swipe-results .swipe-match-list li').first().waitFor();
+  assert.equal(await parentPriority.page.locator('.swipe-private-priority').count(),0,
+    'Private teen priorities never appear in parent results');
+  assert.equal(await parentPriority.page.evaluate(()=>window.__HK_PRIORITY_RPC_CALLS__||0),0);
+  await parentPriority.context.close();
 
   const teenInsights=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,paired:true,role:'teen',unlocked:true,preansweredGeneral:true});
   await teenInsights.page.evaluate(()=>{location.hash='insikter';});
@@ -680,7 +957,7 @@ try{
   assert.equal(await prompts.locator('summary').innerText(),'Tips för en tydlig och rättvis överenskommelse');
   await prompts.locator('summary').click();
   assert.match(await prompts.innerText(),/Vuxnas ansvar för trygghet och omsorg/, 'Prompts retain parent responsibility');
-  assert.equal(await prompts.getByRole('link',{name:'Öppna kommunikationsråden'}).count(),1,
+  assert.equal(await prompts.getByRole('link',{name:'Läs guiden om att lyssna före förslag'}).count(),1,
     'Parent can open conversation support without requiring teen compliance');
   await paired.page.locator('#schyssta-body').fill('Vi planerar veckans sysslor på söndag.');
   assert.equal(await paired.page.locator('#schyssta-preview-text').innerText(),'Vi planerar veckans sysslor på söndag.','Live preview uses the typed text');
@@ -713,7 +990,19 @@ try{
   await paired.page.locator('.family-chat-bubble').filter({hasText:'Hej, ska vi prata senare?'}).waitFor();
   assert.equal(await paired.page.locator('.family-chat-bubble.family-chat-theirs').count(),1,
     'Received chat message is rendered as coming from counterpart');
+  assert.equal(await paired.page.evaluate(()=>window.__HK_MARK_CHAT_READ__||0),0,'Opening the inbox must never create a read receipt');
+  await paired.page.getByRole('button',{name:'Markera alla meddelanden som lästa'}).waitFor();
+  assert.match(await paired.page.locator('.family-chat-read-controls').innerText(),/De markeras inte som lästa bara för att du öppnar inkorgen/);
+  await paired.page.evaluate(()=>{window.__HK_MARK_READ_FAIL__=true;});
+  await paired.page.getByRole('button',{name:'Markera alla meddelanden som lästa'}).click();
+  await paired.page.getByText(/Inga läskvittenser har bekräftats/).waitFor();
+  assert.equal(await paired.page.evaluate(()=>window.__HK_MARK_CHAT_READ__||0),0,'A failed mark-all must not invent a read receipt');
+  assert.equal(await paired.page.getByRole('button',{name:'Markera alla meddelanden som lästa'}).count(),1,'Read retry remains possible');
+  await paired.page.evaluate(()=>{window.__HK_MARK_READ_FAIL__=false;});
+  await paired.page.getByRole('button',{name:'Markera alla meddelanden som lästa'}).click();
   await paired.page.waitForFunction(()=>window.__HK_MARK_CHAT_READ__>0);
+  await paired.page.getByText('Alla meddelanden har markerats som lästa.').waitFor();
+  assert.equal(await paired.page.getByRole('button',{name:'Markera alla meddelanden som lästa'}).count(),0,'Acknowledged read receipt clears the action');
   await paired.page.locator('#family-chat-body').fill('Hej tillbaka! Vi kan prata efter maten.');
   await paired.page.getByRole('button',{name:'Skicka meddelande'}).click();
   await paired.page.waitForFunction(()=>window.__HK_CHAT_SEND__?.args?.p_body==='Hej tillbaka! Vi kan prata efter maten.');
@@ -724,6 +1013,19 @@ try{
   await paired.page.getByRole('button',{name:'Skicka meddelande'}).click();
   await paired.page.locator('.family-chat-mine').filter({hasText:'<img src=x onerror=alert(1)>'}).waitFor();
   assert.equal(await paired.page.locator('.family-chat-text img').count(),0,'Message content never runs HTML');
+  // A manual refresh after the thread has loaded must not clear its height
+  // and reset mobile scroll. The same protection covers background polling.
+  const refreshChat=paired.page.locator('[data-family-chat-refresh]');
+  await refreshChat.scrollIntoViewIfNeeded();
+  const scrollBefore=await paired.page.locator('.live-main').evaluate(el=>el.scrollTop);
+  const fetchCount=await paired.page.evaluate(()=>window.__HK_CHAT_FETCHES__||0);
+  await refreshChat.click();
+  await paired.page.waitForFunction(n=>(window.__HK_CHAT_FETCHES__||0)>n,fetchCount);
+  await paired.page.waitForTimeout(120);
+  const scrollAfter=await paired.page.locator('.live-main').evaluate(el=>el.scrollTop);
+  assert.ok(Math.abs(scrollAfter-scrollBefore)<=9,'Inbox refresh preserves mobile scroll position; before '+scrollBefore+', after '+scrollAfter);
+  assert.match(await paired.page.locator('.family-chat-history').innerText(),/Hej tillbaka/,'Message history remains intact after refresh');
+
   const inboxText=await paired.page.locator('#live-app').innerText();
   assert.match(inboxText,/Vi pratar om hur vi delar på sysslorna/,'Inbox shows other member pending manual request');
   assert.doesNotMatch(inboxText,/Vi planerar veckans sysslor på söndag/,'Inbox does not present sender own proposal as incoming');
@@ -865,6 +1167,62 @@ try{
   await checkOverflow(desktopInsights.page,'Desktop Schyssta listan');
   await capture(desktopInsights.page,'desktop-schyssta-list.png');
   await desktopInsights.context.close();
+  // AI-01G: simulate the real page event handler and verify the outgoing opt-out,
+  // not just the isolated component method. All data are synthetic.
+  const mediatorMobile=await freshContext(
+    {viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},
+    {authenticated:true,paired:true,aiMediator:true}
+  );
+  await mediatorMobile.page.goto(base+'#medlare',{waitUntil:'load'});
+  const contextCheckbox=mediatorMobile.page.locator('#mediator-use-context');
+  await contextCheckbox.waitFor();
+  assert.equal(await contextCheckbox.isChecked(),true,'Context defaults on for internal test accounts');
+  await contextCheckbox.uncheck();
+  assert.equal(await contextCheckbox.isChecked(),false,'Checkbox changes the actual page state');
+  assert.match(await mediatorMobile.page.locator('.mediator-context').innerText(),/Avstängt/);
+  assert.equal(await mediatorMobile.page.locator('#mediator-refresh-context').count(),0);
+  await checkOverflow(mediatorMobile.page,'Mobile AI project-context opt-out');
+  await capture(mediatorMobile.page,'mobile-ai-context-optout.png');
+  await mediatorMobile.page.locator('#mediator-input').fill('Ett fiktivt samtal utan siduppgifter');
+  await mediatorMobile.page.locator('#mediator-form button[type="submit"]').click();
+  await mediatorMobile.page.getByText('Vi kan utforska detta steg för steg.').waitFor();
+  const sentOff=mediatorMobile.mediatorCalls.filter(c=>c.pathname==='/api/ai/mediate');
+  assert.equal(sentOff.length,1,'One AI reply from the simulated Worker');
+  assert.equal(sentOff[0].body.useProjectContext,false,'OFF is sent to the real mediator endpoint');
+  await contextCheckbox.check();
+  await mediatorMobile.page.locator('#mediator-input').fill('Ett andra fiktivt samtal');
+  await mediatorMobile.page.locator('#mediator-form button[type="submit"]').click();
+  await mediatorMobile.page.locator('.mediator-message-assistant').nth(1).waitFor();
+  const sentOn=mediatorMobile.mediatorCalls.filter(c=>c.pathname==='/api/ai/mediate');
+  assert.equal(sentOn.length,2);
+  assert.equal(sentOn[1].body.useProjectContext,true,'ON is sent after restoring the choice');
+  await mediatorMobile.context.close();
+
+  // Automatic result analyses are checked through the REAL browser DOM,
+  // with a mocked Worker and synthetic data, never real accounts.
+  const aiView=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},
+    {authenticated:true,paired:true,personalityComplete:true,aiAnalyses:true});
+  await aiView.page.goto(base+'#personlighet',{waitUntil:'load'});
+  await aiView.page.locator('.pf-results .ai-result-panel .ai-result-prose').waitFor();
+  assert.match(await aiView.page.locator('.pf-results .ai-result-prose').innerText(),/Ert resultat kan vara en bra samtalsstart/);
+  assert.equal(aiView.aiRequests[0].kind,'personality');
+  assert.equal(aiView.aiRequests[0].scope,'own');
+  assert.deepEqual(Object.keys(aiView.aiRequests[0]).sort(),['kind','scope']);
+  assert.equal(await aiView.page.locator('.pf-reference-feedback').count(),0,
+    'Old static personality advice is replaced when AI is enabled');
+  await checkOverflow(aiView.page,'AI personality result 390px');
+  await capture(aiView.page,'mobile-ai-personality-result.png');
+  await aiView.page.goto(base+'#swipe',{waitUntil:'load'});
+  await aiView.page.locator('.swipe-results .ai-result-panel .ai-result-prose').waitFor();
+  const swipeRequest=aiView.aiRequests.find(x=>x.kind==='swipe');
+  assert.equal(swipeRequest.scope,'general');
+  assert.deepEqual(Object.keys(swipeRequest).sort(),['kind','scope']);
+  assert.equal(await aiView.page.locator('.swipe-rule-summary').count(),0,
+    'Old static swipe advice is replaced when AI is enabled');
+  await checkOverflow(aiView.page,'AI swipe result 390px');
+  await capture(aiView.page,'mobile-ai-swipe-result.png');
+  await aiView.context.close();
+
   const d=await freshContext({viewport:{width:1440,height:900},deviceScaleFactor:1},{authenticated:true});
   await d.page.getByRole("heading",{name:/Hej[ ,]+Provförälder/}).waitFor();
   assert.equal(await d.page.locator("#live-desktop-nav a").count(),8);

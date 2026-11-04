@@ -9,23 +9,24 @@ window.HEMMAKOMPASSEN_BACKEND = Object.freeze({
   // Enable only after the server's A-only RPC allowlist and authenticated
   // two-account match/revocation tests pass. Background polling is OFF by default.
   enableSharedPolling: false,
-  // All-deck A insights remain hidden until server A allowlist and authenticated
-  // two-account tests have passed. B sharing is not included in this flag.
-  enableSharedInsights: false,
-  // Separate explicit-consent B channel. Keep OFF until its migration and
-  // authenticated teen/parent consent and revocation tests are approved.
-  enableSharedUnderstanding: false,
+  // Shared insights use the same JWT-protected RPCs that the AI can read.
+  // Internal testing only; no private answers are shared automatically.
+  enableSharedInsights: true,
+  // Let both users see exactly the B messages the teenager chooses to share.
+  // The same existing RPC also provides those messages to the AI.
+  enableSharedUnderstanding: true,
   // Internal online test site only (no external users): enable Schyssta RPCs.
   // Keep authenticated pair authorization and versioned dual consent in backend.
   enableSchysstaList: true,
   // IPIP-50: all individual item answers stay self-only. Shared FIVE scores
   // require exact current pair + both opt-ins in verified server-side RPCs.
   enablePersonalitySharing: true,
-  // First internal-only AI chat: ephemeral one-turn Worker, no shared family context.
-  // This is a test-only UI on the development branch, not clinical service.
+  // Internal AI mediator: owner-scoped D1 history, not a clinical service.
   enableAiMediator: true,
-  // Internal-only private saved conversations in EU-jurisdiction D1.
   enableAiHistory: true,
+  // Enabled for the two allowlisted internal test accounts after Worker deployment 2026-11-02.
+  // Automatically generates role-specific results; shares the same hard D1 daily AI quota.
+  enableAiResultAnalyses: true,
   aiMediatorUrl: 'https://hemmakompassen-ai-medlare.erikbertiljarl.workers.dev/api/ai/mediate',
   // Until auth, family membership and privacy tests pass, the public UI remains a demo.
   liveModeEnabled: false

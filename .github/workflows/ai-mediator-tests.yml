@@ -4,12 +4,20 @@ on:
   push:
     branches:
       - ai-dev/utveckling
+      - feature/ai-medlare-privat-test-20261101
+      - feature/ai-samtyckesstyrd-kontext-20261101
+      - feature/ai-auto-result-reflections-20261102
     paths:
       - 'workers/ai-mediator/**'
       - 'tests/ai-mediator-worker.test.mjs'
       - 'tests/ai-mediator-ui.test.mjs'
       - 'tests/ai-mediator-private-history.test.mjs'
+      - 'tests/ai-mediator-saved-ui.test.mjs'
+      - 'tests/ai-mediator-context.test.mjs'
       - 'ai-mediator-ui.js'
+      - 'ai-result-ui.js'
+      - 'tests/communication-crosslinks.test.mjs'
+      - 'tests/ai-result-analysis.test.mjs'
       - '.github/workflows/ai-mediator-tests.yml'
   pull_request:
     paths:
@@ -17,7 +25,12 @@ on:
       - 'tests/ai-mediator-worker.test.mjs'
       - 'tests/ai-mediator-ui.test.mjs'
       - 'tests/ai-mediator-private-history.test.mjs'
+      - 'tests/ai-mediator-saved-ui.test.mjs'
+      - 'tests/ai-mediator-context.test.mjs'
       - 'ai-mediator-ui.js'
+      - 'ai-result-ui.js'
+      - 'tests/communication-crosslinks.test.mjs'
+      - 'tests/ai-result-analysis.test.mjs'
       - '.github/workflows/ai-mediator-tests.yml'
 
 permissions:
@@ -33,11 +46,14 @@ jobs:
         with:
           node-version: '22'
       - name: Run offline security tests
-        run: node --test tests/ai-mediator-worker.test.mjs tests/ai-mediator-ui.test.mjs tests/ai-mediator-private-history.test.mjs
+        run: node --test tests/ai-mediator-worker.test.mjs tests/ai-mediator-ui.test.mjs tests/ai-mediator-private-history.test.mjs tests/ai-mediator-saved-ui.test.mjs tests/ai-mediator-context.test.mjs tests/ai-result-analysis.test.mjs tests/communication-crosslinks.test.mjs
       - name: JavaScript syntax checks
         run: |
           node --check ai-mediator-ui.js
+          node --check ai-result-ui.js
+          node --check workers/ai-mediator/src/analysis.mjs
           node --check live-app.js
           node --check workers/ai-mediator/src/index.mjs
+          node --check workers/ai-mediator/src/context.mjs
       - name: Static site build
         run: npm run build

@@ -5,12 +5,15 @@ import vm from 'node:vm';
 const script=readFileSync(new URL('../live-app.js',import.meta.url),'utf8');
 const config=readFileSync(new URL('../backend-config.js',import.meta.url),'utf8');
 
-assert.match(config,/enableSharedUnderstanding:\s*false/,'B sharing stays disabled until migration and real two-account verification');
+assert.match(config,/enableSharedUnderstanding:\s*true/,'Shared B messages are visible in the internal test UI when explicitly shared');
+assert.match(config,/enableSharedInsights:\s*true/,'The same shared result is available to both roles in the insights view');
 assert.match(script,/db\.rpc\('shared_understanding_cards'\)/,'Shared B content comes only from the dedicated aggregate RPC');
 assert.match(script,/db\.rpc\('set_understanding_card_share',\{p_card_id:cardId,p_share:share\}\)/,'Consent and revocation use the role-checked RPC');
 assert.match(script,/db\.from\('understanding_card_shares'\)\.select\('deck_id,card_id'\)\.eq\('user_id',viewer\)/,'The teen reads only their own consent rows with an explicit filter');
 assert.match(script,/if\(share&&swipeAnswers\.get\(cardId\)!==true\)return/,'A private teen YES is required before sharing');
 assert.match(script,/Ett delat förståelsekort blir aldrig en A-matchning eller en överenskommelse/,'Consent is informed before the action');
+assert.match(script,/privat tills du själv väljer att dela ett ja-svar/,'B copy describes the actual enabled opt-in instead of outdated disabled state');
+assert.match(script,/sharedUnderstandingEnabled\?'Ditt svar sparas privat/,'The consent message follows the real feature flag');
 assert.match(script,/understandingShares\.delete\(row\.card_id\)/,'Changing a B answer clears stale client consent');
 assert.match(script,/understandingShares\.delete\(cardId\)/,'Skipping a B card clears stale client consent');
 assert.doesNotMatch(script,/sharedUnderstandingRows\s*=\s*\[\.\.\.swipeAnswers/,'Private answers never seed shared B content');

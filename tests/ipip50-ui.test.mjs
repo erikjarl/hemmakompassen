@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
 import {IPIP50_V1} from '../personality/ipip50-v1.js';
-import {createPersonalityExperience} from '../personality/ipip50-ui.js';
+import {createPersonalityExperience,buildOwnIPIP50Export} from '../personality/ipip50-ui.js';
 
 const itemIds=IPIP50_V1.items.map(item=>item.id);
 function fakeClient(initial=new Map()){
@@ -98,10 +99,17 @@ test('two consents allow summary comparison and consent withdrawal hides it',asy
   const ui=createPersonalityExperience({db:mock.db,onRender:()=>{},isSharingEnabled:true});
   ui.reset('teen-id');await ui.load('teen-id');
   assert.doesNotMatch(ui.render({isPaired:true,viewerRole:'teen'}),/Våra profiler/);
+  assert.doesNotMatch(ui.render({isPaired:true,viewerRole:'teen'}),/Att förstå era likheter och olikheter/);
   await ui.handleClick(btn('share'),{isPaired:true});
   let html=ui.render({isPaired:true,viewerRole:'teen'});
   assert.match(html,/Våra profiler/);
   assert.match(html,/Den andras profil/);
+  assert.match(html,/Att förstå era likheter och olikheter/);
+  assert.match(html,/Likheter som kan hjälpa er/);
+  assert.match(html,/Skillnader som kan vara värda att prata om/);
+  assert.match(html,/ingen tydlig skillnad/);
+  assert.match(html,/du ska inte ensam behöva lösa konflikter/);
+
   assert.match(html,/class="pf-score-dot pf-score-other"/);
   assert.match(html,/beräknade under antagande om normalfördelning/);
   assert.match(html,/Den andras resultat jämfört med vuxenreferensen/);
@@ -110,6 +118,7 @@ test('two consents allow summary comparison and consent withdrawal hides it',asy
   await ui.handleClick(btn('withdraw'),{isPaired:true});
   html=ui.render({isPaired:true,viewerRole:'teen'});
   assert.doesNotMatch(html,/Våra profiler/);
+  assert.doesNotMatch(html,/Att förstå era likheter och olikheter/);
 });
 
 test('malformed RPC payload is always rejected',async()=>{
@@ -139,4 +148,99 @@ test('two-person markers preserve independent x percentages when raw scores matc
   assert.match(html,/pf-score-other/);
   assert.match(html,/Normalmodell|normalmodell|normalfördelning/);
   assert.match(html,/50 ligger exakt i mitten och 75 vid tre fjärdedelar/);
+});
+
+test('public entry and nested personality modules share a cache-busting release version',async()=>{
+  const read=filename=>readFile(new URL('../'+filename,import.meta.url),'utf8');
+  const [html,app,personality]=await Promise.all([
+    read('index.html'),read('live-app.js'),read('personality/ipip50-ui.js')
+  ]);
+  const tag=html.match(/<meta name="hk-ui-version" content="([^"]+)">/);
+  assert.ok(tag,'Expected explicit app version metadata for cache troubleshooting');
+  const version=tag[1];
+  assert.match(version,/^[0-9]{8}-[a-z][a-z0-9-]*[0-9]+$/);
+  assert.ok(html.includes('./live-app.css?v='+version));
+  assert.ok(html.includes('./live-app.js?v='+version));
+  assert.ok(app.includes("./personality/ipip50-ui.js?v="+version));
+  assert.ok(personality.includes("./ipip50-reference.js?v="+version));
+  assert.ok(personality.includes("./ipip50-family-insights.js?v="+version));
+  assert.ok(personality.includes("./ipip50-family-copy.js?v="+version));
+  assert.ok(personality.includes('percentileChart(own,other)'));
+  assert.ok(personality.includes('percentileChart(own)'));
+});
+
+test('parent/teen-specific narratives are generated only from authorized sums and show largest difference first',async()=>{
+  const mock=fakeClient(new Map(itemIds.map(id=>[id,3])));
+  const parent=Object.fromEntries(IPIP50_V1.factors.map(f=>[f.id,30]));
+  parent.conscientiousness=47;
+  parent.extraversion=42;
+  mock.setPartner({instrument_id:IPIP50_V1.id,viewer_role:'teen',profiles:[
+    {role:'parent',scores:parent},{role:'teen',scores:Object.fromEntries(IPIP50_V1.factors.map(f=>[f.id,30]))}
+  ]});
+  const ui=createPersonalityExperience({db:mock.db,onRender:()=>{},isSharingEnabled:true});
+  ui.reset('teen-id');await ui.load('teen-id');
+  await ui.handleClick(btn('share'),{isPaired:true});
+  const html=ui.render({isPaired:true,viewerRole:'teen'});
+  assert.match(html,/Störst skillnader i era svar syns inom ”samvetsgrannhet” och ”extraversion”/);
+  assert.match(html,/Om din förälder vill ha ordning och framförhållning/);
+  assert.match(html,/När en förälder gärna vill prata eller hitta på saker/);
+  assert.match(html,/Likheter som kan hjälpa er/);
+  assert.match(html,/Att förstå era likheter och olikheter/);
+  assert.doesNotMatch(html,/Am the life of the party/);
+  assert.match(html,/href="#regler"/);
+  assert.match(html,/href="#swipe"/);
+  assert.match(html,/För dig som tonåring/);
+  assert.ok((html.match(/class="pf-insight-card /g)||[]).length>=5);
+});
+
+test('parent sees a distinct narrative for the same shared scores',async()=>{
+  const mock=fakeClient(new Map(itemIds.map(id=>[id,3])));
+  const parent=Object.fromEntries(IPIP50_V1.factors.map(f=>[f.id,30]));
+  const teen={...parent,conscientiousness:47};
+  mock.setPartner({instrument_id:IPIP50_V1.id,viewer_role:'parent',profiles:[
+    {role:'parent',scores:parent},{role:'teen',scores:teen}
+  ]});
+  const ui=createPersonalityExperience({db:mock.db,onRender:()=>{},isSharingEnabled:true});
+  ui.reset('teen-id');await ui.load('teen-id');
+  await ui.handleClick(btn('share'),{isPaired:true});
+  const html=ui.render({isPaired:true,viewerRole:'parent'});
+  assert.match(html,/För dig som förälder/);
+  assert.match(html,/Tonåringen kanske uppskattar tydliga planer mer än du själv gör/);
+  assert.doesNotMatch(html,/Om din förälder vill ha ordning och framförhållning/);
+  assert.match(html,/href="#regler"/);
+});
+
+
+test('versioned own-answer export contains only valid self answers and stable question text',()=>{
+  const partial=buildOwnIPIP50Export({
+    'ipip50-001':5,'ipip50-002':2,'ipip50-003':8,
+    'foreign':3
+  },'2026-11-03T12:00:00.000Z');
+  assert.equal(partial.instrument_id,IPIP50_V1.id);
+  assert.equal(partial.instrument_version,IPIP50_V1.version);
+  assert.equal(partial.language,'sv-SE');
+  assert.equal(partial.exported_at,'2026-11-03T12:00:00.000Z');
+  assert.equal(partial.answered_count,2);
+  assert.equal(partial.complete,false);
+  assert.deepEqual(partial.responses.map(item=>[item.item_id,item.value]),[['ipip50-001',5],['ipip50-002',2]]);
+  assert.equal(partial.responses[0].statement_sv,IPIP50_V1.items[0].sv);
+  assert.equal(Object.hasOwn(partial,'user_id'),false);
+  assert.equal(Object.hasOwn(partial,'partner'),false);
+  assert.equal(Object.hasOwn(partial,'shared'),false);
+});
+
+test('export control saves the viewer own 50 answers without writing to database',async()=>{
+  const mock=fakeClient(new Map(itemIds.map(id=>[id,3])));
+  const downloads=[];
+  const ui=createPersonalityExperience({db:mock.db,onRender:()=>{},saveExport:(filename,payload)=>downloads.push({filename,payload})});
+  ui.reset('teen-id');await ui.load('teen-id');
+  assert.match(ui.render({viewerRole:'teen'}),/Exportera mina egna svar \(JSON\)/);
+  await ui.handleClick(btn('export'));
+  assert.equal(downloads.length,1);
+  assert.match(downloads[0].filename,/^hemmakompassen-ipip50-egna-svar-\d{4}-\d{2}-\d{2}\.json$/);
+  assert.equal(downloads[0].payload.responses.length,50);
+  assert.equal(downloads[0].payload.complete,true);
+  assert.equal(mock.writes.length,0,'Export is read-only and never changes any saved answers');
+  assert.doesNotMatch(JSON.stringify(downloads[0].payload),/teen-id|parent-id|family_id|partner|access_token/);
+  assert.match(ui.render(),/Kontrollera att filen sparades/);
 });

@@ -1,6 +1,16 @@
-// A deliberately ephemeral, one-turn AI chat for internal testing only.
-// No localStorage, no database writes, no family context or automatic AI requests.
-export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl = fetch, onRender = () => {} }) {
+// Internal-test AI mediator: private, owner-scoped chat history lives in D1.
+// The optional authorized project context can be disabled for each reply.
+// A strict allowlist: only known local communication routes become clickable.
+export function renderMediatorInternalLinks(text,escapeHtml,getViewerRole=()=>null) {
+  const source=String(text??'');
+  const re=/(https:\/\/erikjarl\.github\.io\/hemmakompassen\/#(?:kommunikation|nvc|mi-foralder))(?![A-Za-z0-9_-])/g;
+  return source.split(re).map(piece=>{
+    const match=/^https:\/\/erikjarl\.github\.io\/hemmakompassen\/#(kommunikation|nvc|mi-foralder)$/.exec(piece);
+    if(!match||match[1]==='mi-foralder'&&getViewerRole()!=='parent')return escapeHtml(piece);
+    return '<a href="#'+match[1]+'">'+escapeHtml(piece)+'</a>';
+  }).join('');
+}
+export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl = fetch, onRender = () => {}, getViewerRole=()=>null }) {
   const h = escapeHtml;
   let userId = null;
   let epoch = 0;
@@ -14,6 +24,11 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
   let activeChatId = null;
   let loading = false;
   let historyError = '';
+  let contextSections = [];
+  let contextError = '';
+  let contextLoading = false;
+  let contextRequest = 0;
+  let includeProjectContext = true;
   let listRequest = 0;
 
   const enabled = config.enableAiMediator === true
@@ -47,8 +62,28 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
     if (!res.ok) throw new Error(typeof result?.error === 'string' ? result.error : 'Privata samtal kan inte nås.');
     return result;
   }
+  async function loadContextStatus() {
+    if (!historyEnabled || !userId || !includeProjectContext || contextLoading) return false;
+    const account=userId, myEpoch=epoch, request=++contextRequest;
+    contextLoading=true;contextError='';notify();
+    try {
+      const result=await callApi('/context','GET',account);
+      if(myEpoch!==epoch||userId!==account||request!==contextRequest)return false;
+      if(!Array.isArray(result.sections)||result.sections.length>12||
+         result.sections.some(x=>typeof x!=='string'||x.length>90))throw Error('Ogiltig översikt.');
+      contextSections=result.sections;
+      if(result.unavailableCount>0)contextError='Några uppgifter kunde inte hämtas. AI:n ska inte gissa vad de innehåller.';
+      return true;
+    } catch(e) {
+      if(myEpoch===epoch&&userId===account)contextError='Kunde inte kontrollera tillgängliga uppgifter.';
+      return false;
+    } finally {
+      if(myEpoch===epoch&&userId===account){contextLoading=false;notify();}
+    }
+  }
   async function loadList() {
     if (!historyEnabled || !userId || loading || sending) return false;
+    if(includeProjectContext&&!contextSections.length&&!contextLoading)void loadContextStatus();
     const epochAtStart = epoch, account = userId, request = ++listRequest;
     loading = true;historyError = '';notify();
     try {
@@ -111,6 +146,20 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
       notify();return true;
     }catch(e){if(myEpoch===epoch && account===userId){historyError=e?.message||'Kunde inte radera samtalet.';notify();}return false;}
   }
+  function setProjectContext(value) {
+    // An in-flight request uses its already captured setting.
+    if (sending || !historyEnabled) return false;
+    const enabledForReply = value === true;
+    if (includeProjectContext === enabledForReply) return true;
+    includeProjectContext = enabledForReply;
+    contextRequest++; // discard a delayed overview after opt-out
+    contextSections = [];
+    contextError = '';
+    contextLoading = false;
+    notify();
+    if (enabledForReply && userId) void loadContextStatus();
+    return true;
+  }
   function reset(nextId = null) {
     epoch++;
     if (controller) controller.abort();
@@ -125,6 +174,11 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
     activeChatId = null;
     loading = false;
     historyError = '';
+    contextSections = [];
+    contextError = '';
+    contextLoading = false;
+    contextRequest++;
+    includeProjectContext = true;
     listRequest++;
   }
   function clear() {
@@ -159,7 +213,7 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
     const messages = turns.length
       ? '<ol class="mediator-messages" aria-label="Tillfälliga testmeddelanden">'
         + turns.map(turn => '<li class="mediator-message mediator-message-' + h(turn.role) + '"><strong>'
-          + (turn.role === 'user' ? 'Du' : turn.role === 'safety' ? 'Säkerhetsinformation' : 'Samtalsstödet') + '</strong><p>' + h(turn.text) + '</p></li>').join('')
+          + (turn.role === 'user' ? 'Du' : turn.role === 'safety' ? 'Säkerhetsinformation' : 'Samtalsstödet') + '</strong><p>' + (turn.role==='assistant'?renderMediatorInternalLinks(turn.text,h,getViewerRole):h(turn.text)) + '</p></li>').join('')
         + '</ol>'
       : '<p class="mediator-empty">Inga meddelanden ännu. Skriv ett fiktivt exempel för att testa samtalsstödet.</p>';
     const count = draft.length;
@@ -168,13 +222,25 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
       + '<header class="swipe-heading"><span class="swipe-eyebrow">PRIVAT · INTERN TESTVERSION</span><h1>AI-medlaren</h1>'
       + '<p>Utforska konflikter och möjliga samtalsvägar, utan att den andra familjemedlemmen ser chatten.</p></header>'
       + '<div class="live-panel mediator-notice"><h2>Viktig information</h2>'
-      + (historyEnabled?'<p><strong>Testa enbart med påhittade situationer.</strong> Dina samtal sparas i en privat testdatabas tills du raderar dem. '
-        + 'AI:n kan läsa de senaste meddelandena i just ditt aktuella samtal. '
+      + (historyEnabled?'<p><strong>Testa enbart med påhittade situationer.</strong> Dina samtal sparas tills de raderas. '
+        + 'AI:n får använda dina egna svar, behörigt delade resultat, överenskommelser och ett fåtal meddelanden från familjens inkorg. '
+        + 'Informationen hämtas på nytt inför varje svar, så ändrad delning respekteras. '
+        + 'Motpartens privata testsvar och privata AI-chattar läses inte in.</p>'
         : '<p><strong>Testa enbart med påhittade situationer.</strong> Inga meddelanden sparas. '
-        + 'Chatten minns inte tidigare turer när den svarar. ')
-      + 'Ingen information från Gillaswajpen, '
-      + 'personlighetstestet eller familjens inkorg läses in.</p>'
-      + '<p>Det här är inte terapi eller krishjälp. Vid akut fara, ring 112.</p></div>'
+        + 'Chatten minns inte tidigare turer när den svarar.</p>')
+      + '<p>Det här är inte terapi eller krishjälp. Vid akut fara, ring 112.</p><p>Du kan också läsa <a href="#kommunikation">Kommunikationsråd</a> eller <a href="#nvc">öva på NVC</a> direkt. AI:n kan föreslå länkar till de verktygen i ett svar.</p></div>'
+      + (historyEnabled ? '<section class="mediator-context"><h2>Uppgifter som AI:n får använda</h2>'
+         + '<label class="mediator-context-choice" for="mediator-use-context"><input type="checkbox" id="mediator-use-context"'
+         + (includeProjectContext ? ' checked' : '') + (sending ? ' disabled' : '')
+         + '> Använd mina uppgifter från övriga delar av Hemmakompassen när AI:n svarar</label>'
+         + (includeProjectContext
+            ? (contextLoading ? '<p>Kontrollerar tillgängliga uppgifter…</p>' : '')
+              + (contextSections.length ? '<p>'+contextSections.map(h).join(' · ')+'</p>'
+                : '<p>Inga uppgifter har ännu bekräftats. AI:n ska inte hitta på saknade resultat.</p>')
+              + (contextError ? '<p class="mediator-error" role="status">'+h(contextError)+'</p>' : '')
+              + '<button type="button" class="mediator-clear" id="mediator-refresh-context">Uppdatera översikt</button>'
+            : '<p role="status">Avstängt. AI:n får bara detta samtals egna meddelanden, inte nya uppgifter från Gillaswajpen, Big Five, Schyssta listan eller Inkorgen. Du kan slå på det inför nästa svar.</p>')
+         + '</section>' : '')
       + historyBar + '<div class="live-panel mediator-chat">' + messages
       + '<form id="mediator-form">'
       + '<label for="mediator-input"><strong>Ditt testmeddelande</strong></label>'
@@ -195,6 +261,7 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
     if (!message || message.length > 2000) return false;
     const requestEpoch = epoch;
     const requestUser = userId;
+    const useProjectContext = includeProjectContext;
     sending = true;
     error = '';
     controller = new AbortController();
@@ -214,7 +281,7 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
           Authorization: 'Bearer ' + accessToken,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(historyEnabled ? { message, chatId } : { message }),
+        body: JSON.stringify(historyEnabled ? { message, chatId, useProjectContext } : { message }),
         signal: currentController.signal,
         cache: 'no-store',
         credentials: 'omit',
@@ -251,6 +318,6 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
       }
     }
   }
-  return { render, reset, clear, input, submit, loadList, createChat, openChat, deleteChat,
-    getState: () => ({ userId, sending, draft, error, remaining, turns: turns.map(x => ({ ...x })), chats:chats.map(c=>({...c})),activeChatId,historyError }) };
+  return { render, reset, clear, input, submit, loadList, loadContextStatus, setProjectContext, createChat, openChat, deleteChat,
+    getState: () => ({ userId, sending, draft, error, remaining, turns: turns.map(x => ({ ...x })), chats:chats.map(c=>({...c})),activeChatId,historyError,contextSections:[...contextSections],contextError,includeProjectContext }) };
 }

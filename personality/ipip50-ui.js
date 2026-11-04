@@ -1,11 +1,42 @@
 import {IPIP50_V1} from './ipip50-v1.js';
-import {scoreIPIP50,compareIPIP50Profiles} from './ipip50-scoring.js';
-import {IPIP50_REFERENCE,IPIP50_PERCENTILE_BANDS,approximateReferencePercentile,referenceLimits,describeReferenceProfile,formatSv} from './ipip50-reference.js';
+import {scoreIPIP50} from './ipip50-scoring.js';
+import {buildIPIP50FamilyInsights} from './ipip50-family-insights.js?v=20261104-communication3';
+import {richFamilyReflection} from './ipip50-family-copy.js?v=20261104-communication3';
+import {IPIP50_REFERENCE,IPIP50_PERCENTILE_BANDS,approximateReferencePercentile,referenceLimits,describeReferenceProfile,formatSv} from './ipip50-reference.js?v=20261104-communication3';
 import {loadMyIPIP50Answers,saveMyIPIP50Answer} from './ipip50-storage.js';
 
 const esc=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const ITEMS=IPIP50_V1.items;
 const FACTORS=IPIP50_V1.factors;
+// Export only the current viewer's explicitly saved answers; do not include
+// identity, another family member's profile, sharing status or AI text.
+export function buildOwnIPIP50Export(answers,exportedAt=new Date().toISOString()){
+  const responses=ITEMS.flatMap(item=>{
+    const value=answers?.[item.id];
+    return Number.isInteger(value)&&value>=1&&value<=5
+      ?[{item_id:item.id,statement_sv:item.sv,value}]
+      :[];
+  });
+  return {
+    format:'hemmakompassen-own-ipip50-v1',
+    instrument_id:IPIP50_V1.id,
+    instrument_version:IPIP50_V1.version,
+    language:IPIP50_V1.language,
+    exported_at:exportedAt,
+    answered_count:responses.length,
+    complete:responses.length===ITEMS.length,
+    note:'Preliminär svensk översättning. Inte ett diagnostiskt eller vetenskapligt validerat svenskt ungdomstest.',
+    responses
+  };
+}
+function downloadOwnIPIP50Export(filename,data){
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json;charset=utf-8'});
+  const blobUrl=URL.createObjectURL(blob);
+  const link=document.createElement('a');
+  link.href=blobUrl;link.download=filename;link.hidden=true;
+  document.body.appendChild(link);link.click();link.remove();
+  window.setTimeout(()=>URL.revokeObjectURL(blobUrl),30000);
+}
 const FIRST_UNANSWERED=answers=>Math.max(0,ITEMS.findIndex(item=>!Object.hasOwn(answers,item.id)));
 const SUM_KEYS=FACTORS.map(f=>f.id);
 function validatedPartnerPayload(data){
@@ -143,15 +174,64 @@ function table(self,other=null){
       '<td>'+formatSv(own.z,1)+' SD</td></tr>';
     }).join('')+'</tbody></table></div>';
 }
+
+function familyReflectionPanel(parentProfile,teenProfile,viewerRole){
+  const parent=Object.fromEntries(FACTORS.map(f=>[f.id,parentProfile.byFactor[f.id].sum]));
+  const teen=Object.fromEntries(FACTORS.map(f=>[f.id,teenProfile.byFactor[f.id].sum]));
+  const summary=buildIPIP50FamilyInsights({parent,teen});
+  const parentView=viewerRole==='parent';
+  const roleHeading=parentView?'För dig som förälder':'För dig som tonåring';
+  const roleIntro=parentView
+    ?'Skillnader kan skapa missförstånd även när båda vill väl. Som vuxen har du ett särskilt ansvar att lyssna, erbjuda stöd och anpassa dina förväntningar. Använd texterna som förslag att pröva, inte som sanningar om er.'
+    :'Det kan vara svårt när du och din förälder tänker, reagerar eller planerar olika. Dina behov får också ta plats, och du ska inte ensam behöva lösa konflikter. Texterna ger idéer att prova, inte facit på hur ni är.';
+  const formatTitle=items=>items.map(i=>'”'+i.label.toLowerCase()+'”').join(', ').replace(/, ([^,]+)$/,' och $1');
+  const big=summary.notable; // All qualifying differences, largest first.
+  const close=summary.similar; // All qualifying similarities, closest first.
+  const lead=big.length
+    ?'Störst skillnader i era svar syns inom '+esc(formatTitle(big))+'. Skillnaderna kan vara värda att utforska, men behöver inte innebära något problem.'
+    :'Era fem självskattningar visar ingen tydlig skillnad enligt våra preliminära gränser.';
+  const similarities=close.length
+    ?'Ni beskriver er samtidigt ganska lika inom '+esc(formatTitle(close))+'. Det kan ge en gemensam utgångspunkt.'
+    :'Ingen skala ligger inom vår gräns för särskilt liknande svar. Ni kan ändå känna igen er i varandra på många sätt.';
+  const story=(item,index)=>{
+    const detail=richFamilyReflection(item,viewerRole);
+    const type=item.status==='similarity'?'Likhet att bygga vidare på':item.status==='notable'?'Skillnad att utforska':'Ytterligare en nyans';
+    const opening=''; // Role-specific prose already expresses similarity without unvalidated raw-score labels.
+    return '<article class="pf-insight-card pf-insight-'+esc(item.status)+'">'+
+      '<div class="pf-insight-header"><span class="pf-insight-type">'+esc(type)+'</span><h5>'+esc(item.label)+'</h5></div>'+
+      opening+'<p class="pf-insight-narrative">'+esc(detail.paragraph)+'</p>'+
+      '<p class="pf-insight-question"><strong>En fråga att ta med er:</strong> '+esc(item.question)+'</p>'+
+      '<div class="pf-insight-resource"><a href="'+esc(detail.resource.href)+'">Utforska i '+esc(detail.resource.title)+'</a>'+
+      '<p>'+esc(detail.resource.instruction)+'</p></div></article>';
+  };
+  const moderate=summary.moderate; // No arbitrary promotion to "large difference".
+  return '<section class="pf-family-reflections" aria-label="Personlig återkoppling om era profiler">'+
+    '<h3>Att förstå era likheter och olikheter</h3>'+
+    '<p class="pf-insight-audience">'+esc(roleHeading)+'</p>'+
+    '<p class="pf-insight-intro">'+esc(roleIntro)+'</p>'+
+    '<p class="pf-insight-overview">'+lead+' '+similarities+'</p>'+
+    '<div class="pf-insight-group"><h4>Skillnader som kan vara värda att prata om</h4>'+
+    (big.length?big.map(story).join(''):'<p class="pf-insight-empty">Här finns inga stora skillnader att lyfta fram. I vardagen kan ni ändå ha olika önskemål, även om ni svarat liknande.</p>')+
+    '</div><div class="pf-insight-group"><h4>Likheter som kan hjälpa er</h4>'+
+    (close.length?close.map(story).join(''):'<p class="pf-insight-empty">Ingen skala ligger särskilt nära enligt vår gräns. Det säger inte att ni saknar gemensamma intressen eller värderingar.</p>')+
+    '</div>'+
+    (moderate.length?'<details class="pf-insight-more"><summary>Även andra skillnader kan vara intressanta ('+moderate.length+')</summary>'+
+      moderate.map(story).join('')+'</details>':'')+
+    '<details class="pf-insight-method"><summary>Vad bygger tolkningen på?</summary>'+
+    '<p>Skalorna jämför bara era summerade självskattningar: 0–3 råpoängs skillnad lyfts som likhet, 4–8 som viss skillnad och minst 9 som tydlig skillnad; från 15 poäng får skillnaden högre prioritet. Det är redaktionella sorteringsgränser, <strong>inte</strong> validerade kliniska eller statistiska gränsvärden. Den svenska testversionen är inte validerad för tonåringar.</p>'+
+    '<p>Råden är möjliga vardagsscenarier och samtalsförslag, inte bedömningar av er relation. Vissa funktioner och kortlekar kan kräva en parad familj och att de är upplåsta. AI-medlaren är ännu under utveckling och används därför inte som färdigt verktyg här.</p>'+
+    '</details></section>';
+}
+
 function statusPanel(message){return '<section class="live-panel"><p class="pf-status" role="status">'+esc(message)+'</p></section>';}
 
-export function createPersonalityExperience({db,onRender,isSharingEnabled=false}){
+export function createPersonalityExperience({db,onRender,isSharingEnabled=false,useAiAnalysis=false,analysisPanel=()=>'',saveExport=downloadOwnIPIP50Export}){
   let viewer=null,sequence=0,answers={},loading=false,loaded=false,loadError='',saving=false,saveError='';
-  let active=false,index=0,selectedAnswer=null,shareEnabled=false,shareBusy=false,shareError='',paired=null,partnerError='';
+  let active=false,index=0,selectedAnswer=null,shareEnabled=false,shareBusy=false,shareError='',paired=null,partnerError='',exportFeedback='';
   const repaint=()=>onRender();
   function reset(userId=null){
     viewer=userId;sequence++;answers={};loading=false;loaded=false;loadError='';saving=false;
-    saveError='';active=false;index=0;selectedAnswer=null;shareEnabled=false;shareBusy=false;shareError='';paired=null;partnerError='';
+    saveError='';active=false;index=0;selectedAnswer=null;shareEnabled=false;shareBusy=false;shareError='';paired=null;partnerError='';exportFeedback='';
   }
   async function fetchPaired(userId,token){
     if(!isSharingEnabled)return;
@@ -190,6 +270,11 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false}
     if(isSharingEnabled&&shareEnabled&&loadedAnswers.status.complete)await fetchPaired(userId,token);
     if(token===sequence&&viewer===userId)repaint();
   }
+  function getAiSnapshot(){
+    if(!viewer||!loaded||active||saving||!scoreIPIP50(answers).complete)return null;
+    // Local refresh fingerprint only. Raw item answers never go to AI.
+    return JSON.stringify([viewer,Object.entries(answers).sort(),shareEnabled,paired?.profiles||null]);
+  }
   function start(){active=true;saveError='';selectedAnswer=null;index=FIRST_UNANSWERED(answers);repaint();}
   function render({isPaired=false,viewerRole='parent'}={}){
     const heading='<section class="pf-intro"><span class="swipe-eyebrow">LÄR KÄNNA DIG SJÄLV</span><h1>Min personlighet</h1><p>Utforska fem sidor av hur du brukar vara. Det finns inga rätt eller fel svar.</p></section>';
@@ -198,6 +283,9 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false}
     if(loadError)return heading+'<section class="live-panel"><p role="alert">'+esc(loadError)+'</p><button class="live-button" data-pf-action="reload" type="button">Försök igen</button></section>';
     if(!loaded)return heading+statusPanel('Förbereder testet…');
     const result=scoreIPIP50(answers),count=result.answeredCount,complete=result.complete;
+    const exportControls=count?'<div class="pf-export"><button type="button" data-pf-action="export">Exportera mina egna svar (JSON)</button>'+
+      '<p class="live-muted">Filen innehåller bara dina egna sparade svar och frågetexter – inga partnersvar eller AI-reflektioner. Förvara filen privat på din enhet.</p>'+
+      (exportFeedback?'<p role="status">'+esc(exportFeedback)+'</p>':'')+'</div>':'';
     if(active){
       const item=ITEMS[index],old=selectedAnswer?.id===item.id?selectedAnswer.value:answers[item.id],progress=Math.round(100*count/50);
       return heading+'<section class="live-panel pf-survey"><div class="pf-counter"><span>Fråga '+(index+1)+' av 50</span><span>'+count+' besvarade</span></div>'+
@@ -215,8 +303,9 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false}
       return heading+'<section class="live-panel pf-overview"><h2>'+(count?'Fortsätt där du slutade':'Börja med 50 påståenden')+'</h2>'+
         '<p>Du svarar på 50 korta påståenden, ett i taget. Välj det som bäst beskriver hur du brukar vara. Du kan pausa, gå tillbaka och ändra svar. Det finns ingen tidsgräns.</p>'+
         '<p>Det här är en preliminär svensk version av IPIP-50, inte ett normerat eller diagnostiskt test. Varken föräldern eller tonåringen får automatiskt se den andras svar eller resultat.</p>'+
+        (useAiAnalysis?'<p><strong>AI-återkoppling:</strong> När du har besvarat alla frågor skapas automatiskt en reflekterande text från dina fem summerade poäng. De enskilda frågesvaren skickas inte till språkmodellen. En eventuell jämförelse bygger endast på bådas aktiva delningssamtycke.</p>':'')+
         '<p><strong>'+count+' av 50</strong> besvarade.</p><div class="pf-progress"><span style="width:'+Math.round(count/50*100)+'%"></span></div>'+
-        '<button type="button" class="live-button" data-pf-action="start">'+(count?'Fortsätt testet':'Börja testet')+'</button></section>';
+        '<button type="button" class="live-button" data-pf-action="start">'+(count?'Fortsätt testet':'Börja testet')+'</button>'+exportControls+'</section>';
     }
     const own=result;
     let other=null,role=viewerRole;
@@ -236,39 +325,20 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false}
       '<section class="live-panel"><h2>Delning ännu inte aktiverad</h2><p>Dina 50 svar och din profil är privata. Jämförelse med den andra familjemedlemmen aktiveras efter kontroll av serverbehörigheter och frivilligt samtycke.</p></section>';
     let comparison='';
     if(other&&role&&shareEnabled){
-      // The server returns only five scores after confirming two current consents.
-      const rows=compareIPIP50Profiles(own,other);
-      const ordered=[...rows].sort((a,b)=>Math.abs(a.difference)-Math.abs(b.difference));
-      const close=ordered.slice(0,2);
-      const distant=[...ordered].reverse().slice(0,2);
-      const sharedIdentical=rows.every(r=>r.difference===0);
-      const topics={
-        extraversion:'När tycker ni om att umgås och när vill ni hellre vara för er själva?',
-        agreeableness:'Vad uppskattar var och en av er när någon försöker visa omtanke?',
-        conscientiousness:'Hur vill ni planera saker som behöver bli gjorda?',
-        emotional_stability:'Vad brukar hjälpa när känslor blir starka eller stressen ökar?',
-        intellect_imagination:'Vad är ni nyfikna på och vad vill ni upptäcka tillsammans?'
-      };
-      const reflections='<section class="pf-reflections"><h3>Det ni verkar likna varandra i</h3>'+
-        '<p class="live-muted">På de här skalorna ligger era svarssummor närmast varandra. Det behöver inte betyda att ni alltid fungerar likadant.</p>'+
-        '<ul>'+close.map(r=>'<li>'+esc(r.labelSv)+'</li>').join('')+'</ul>'+
-        '<h3>Där era självskattningar skiljer sig</h3>'+
-        (sharedIdentical?'<p>Era svarssummor är lika inom samtliga fem skalor. Ni kan ändå uppleva situationer på olika sätt.</p>':
-         '<p class="live-muted">De här skillnaderna är störst <em>inom just era svar</em>, inte statistiskt säkerställda olikheter.</p>'+
-         '<ul>'+distant.map(r=>'<li><strong>'+esc(r.labelSv)+'</strong> — '+Math.abs(r.difference)+' poäng mellan era summor.</li>').join('')+'</ul>')+
-        '<h3>Frågor att utforska tillsammans</h3><ul>'+
-        distant.map(r=>'<li>'+esc(topics[r.factorId])+'</li>').join('')+
-        '</ul><p class="live-muted">Samtalsfrågorna är redaktionella förslag, inte individuella psykologiska råd.</p></section>';
+      // Compare five authorized sums; raw questionnaire answers remain private.
+      const parentProfile=role==='parent'?own:other;
+      const teenProfile=role==='teen'?own:other;
+      const reflections=useAiAnalysis?'':familyReflectionPanel(parentProfile,teenProfile,role);
       comparison='<section class="live-panel pf-comparison"><h2>Våra profiler</h2><p>Två självskattningar jämförda med samma amerikanska vuxenreferens. Placeringarna är uppskattningar, inte svenska normer.</p>'+
         
-        percentileChart(own,other)+table(own,other)+referenceFeedback(other,'Den andras')+referenceCaveat()+
+        percentileChart(own,other)+reflections+table(own,other)+(useAiAnalysis?'':referenceFeedback(other,'Den andras'))+referenceCaveat()+
         '<p class="live-muted">Markörerna visar uppskattad percentil jämfört med samma vuxenreferens. Tabellen visar råpoäng, medelvärde och SD. Skillnader är inte bevis för att ni fungerar olika.</p>'+
-        reflections+'</section>';
+        '</section>';
     }
     return heading+'<section class="live-panel pf-results"><h2>Din profil</h2><p>Dina fem skalor visar uppskattad placering jämfört med en amerikansk vuxenreferens, inte svenska normer.</p>'+
-      percentileChart(own)+table(own)+referenceFeedback(own)+referenceCaveat()+
+      percentileChart(own)+table(own)+(useAiAnalysis?analysisPanel('personality','own',getAiSnapshot()):referenceFeedback(own))+referenceCaveat()+
       '<p class="live-muted">Skalorna bygger på dina svar (10–50). Högt eller lågt är inte i sig bättre eller sämre. Den svenska översättningen behöver prövas vetenskapligt.</p>'+
-      '<button type="button" data-pf-action="review">Granska eller ändra mina svar</button></section>'+sharing+comparison;
+      '<button type="button" data-pf-action="review">Granska eller ändra mina svar</button>'+exportControls+'</section>'+sharing+comparison;
   }
   async function handleClick(element,{isPaired=false}={}){
     const btn=element?.closest?.('[data-pf-action]');
@@ -276,7 +346,17 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false}
     if(btn.dataset.pfAction==='reload'){await load(viewer);return true;}
     if(!loaded)return false;
     const action=btn.dataset.pfAction;
-    if(action==='start'||action==='review'){start();if(action==='review')index=0;}
+    if(action==='export'){
+      const payload=buildOwnIPIP50Export(answers);
+      if(!payload.responses.length)return false;
+      const filename='hemmakompassen-ipip50-egna-svar-'+payload.exported_at.slice(0,10)+'.json';
+      try{
+        saveExport(filename,payload);
+        exportFeedback='Exporten har öppnats. Kontrollera att filen sparades på din enhet.';
+      }catch(e){exportFeedback='Exporten kunde inte öppnas. Försök igen eller kontrollera webbläsarens nedladdningar.';}
+      repaint();
+    }
+    else if(action==='start'||action==='review'){start();if(action==='review')index=0;}
     else if(action==='prev'){selectedAnswer=null;index=Math.max(0,index-1);repaint();}
     else if(action==='next'){selectedAnswer=null;index=Math.min(49,index+1);repaint();}
     else if(action==='overview'||action==='result'){selectedAnswer=null;active=false;repaint();}
@@ -316,12 +396,12 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false}
       return true;
     }
     if(token!==sequence||viewer!==id)return true;
-    answers[item.id]=value;selectedAnswer=null;saving=false;
+    answers[item.id]=value;selectedAnswer=null;saving=false;exportFeedback='';
     if(index<49)index++;
     else active=false;
     paired=null;shareError='';
     repaint();
     return true;
   }
-  return {reset,load,refreshShared,render,handleClick,handleChange};
+  return {reset,load,refreshShared,render,handleClick,handleChange,getAiSnapshot};
 }

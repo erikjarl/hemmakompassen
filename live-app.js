@@ -1,18 +1,22 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js';
-import {createAiMediatorExperience} from './ai-mediator-ui.js';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261104-communication3';
+import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261104-communication3';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261104-communication3';
+import {renderParentMiGuide} from './communication/mi-guide.js?v=20261104-communication3';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence} from './communication/toolkit.js?v=20261104-communication3';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
 // Do not activate background polling until the server-side A allowlist and
 // authenticated two-account revocation tests have been approved.
 const sharedPollingEnabled=c.enableSharedPolling===true;
-// The all-deck insights page remains OFF until the server A allowlist and
-// authenticated two-account tests are verified. B sharing has a separate gate.
+// Shared insights and explicitly shared B cards are enabled for internal testing.
+// Authenticated two-account and revocation verification is still required.
 const sharedInsightsEnabled=c.enableSharedInsights===true;
 const sharedUnderstandingEnabled=c.enableSharedUnderstanding===true;
 const schysstaListEnabled=c.enableSchysstaList===true;
 const personalitySharingEnabled=c.enablePersonalitySharing===true;
+const aiResultEnabled=c.enableAiResultAnalyses===true;
 const db=createClient(c.supabaseUrl,c.supabasePublishableKey,{auth:{flowType:'pkce',detectSessionInUrl:true}});
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??'').replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x]));
@@ -35,8 +39,11 @@ const COMMUNICATION_GUIDES=[["Vi har svårt att lyssna","När båda vill bli fö
 const STATEMENTS=GENERAL_CARDS.map(card=>[card.category,card.teenText]);
 const THEME_DECKS=THEME_DECK_MODELS.map(deck=>({...deck,cards:deck.cards.map(card=>card.teenText),cardIds:deck.cards.map(card=>card.id)}));
 let user=null,profile=null,members=[],refreshGeneration=0;
-const mediatorExperience=createAiMediatorExperience({db,config:c,escapeHtml:esc,onRender:()=>{if(user&&page()==='medlare')render();}});
-const personalityExperience=createPersonalityExperience({db,isSharingEnabled:personalitySharingEnabled,onRender:()=>{if(user&&page()==='personlighet')render();}});
+const mediatorExperience=createAiMediatorExperience({db,config:c,escapeHtml:esc,getViewerRole:()=>viewerRole(),onRender:()=>{if(user&&page()==='medlare')render();}});
+const aiResults=createAiResultExperience({db,config:c,onRender:()=>{if(user&&['personlighet','swipe','insikter'].includes(page()))render();}});
+const personalityExperience=createPersonalityExperience({db,isSharingEnabled:personalitySharingEnabled,
+  useAiAnalysis:aiResultEnabled,analysisPanel:(kind,scope,signature)=>aiResults.panel(kind,scope,signature),
+  onRender:()=>{if(user&&page()==='personlighet')render();}});
 let swipeIndex=0,swipeBusy=false,swipeReview=false,swipeLoadError='',swipeSaveError='';
 let sharedMatches=[],sharedPriorities=[],sharedDeckId='general',sharedError='',sharedLoading=false,sharedSession=0,sharedRequest=0;
 let sharedPollPending=false;
@@ -48,7 +55,8 @@ const schysstaSaving=new Set();
 // Independent of agreement notifications: a current family's private 1:1 conversation.
 let familyChatMessages=[],familyChatUnread=0,familyChatLoading=false,familyChatLoadingOlder=false,
   familyChatHasMore=false,familyChatError='',familyChatStatus='',familyChatDraft='',
-  familyChatRequestKey=null,familyChatSending=false,familyChatRequest=0,familyChatCountRequest=0;
+  familyChatRequestKey=null,familyChatSending=false,familyChatRequest=0,familyChatCountRequest=0,
+  familyChatUnreadError=false,familyChatReadBusy=false;
 const familyChatTimestamp=timestamp=>new Intl.DateTimeFormat('sv-SE',{dateStyle:'medium',timeStyle:'short'}).format(new Date(timestamp));
 function validFamilyChatRows(rows){
   return Array.isArray(rows)&&rows.length<=50
@@ -63,30 +71,35 @@ function validFamilyChatRows(rows){
 }
 function clearFamilyChat(){
   familyChatRequest++;familyChatCountRequest++;
-  familyChatMessages=[];familyChatUnread=0;familyChatLoading=false;familyChatLoadingOlder=false;
+  familyChatMessages=[];familyChatUnread=0;familyChatUnreadError=false;familyChatReadBusy=false;familyChatLoading=false;familyChatLoadingOlder=false;
   familyChatHasMore=false;familyChatError='';familyChatStatus='';familyChatDraft='';
   familyChatRequestKey=null;familyChatSending=false;
 }
 async function fetchFamilyChatUnread(){
-  if(!user||members.length!==2){familyChatUnread=0;return;}
+  if(!user||members.length!==2){familyChatUnread=0;familyChatUnreadError=false;return;}
   const request=++familyChatCountRequest,viewer=user.id,session=sharedSession;
   let result;
   try{result=await db.rpc('my_family_unread_message_count');}catch(e){result={error:e};}
   if(request!==familyChatCountRequest||user?.id!==viewer||sharedSession!==session)return;
+  const beforeCount=familyChatUnread,beforeError=familyChatUnreadError;
   if(result?.error||!Number.isInteger(result?.data)||result.data<0){
-    familyChatUnread=0;
-  }else familyChatUnread=result.data;
-  if(['hem','regler'].includes(page()))render();
+    familyChatUnread=0;familyChatUnreadError=true;
+  }else {familyChatUnread=result.data;familyChatUnreadError=false;}
+  // Keep a reader's scroll/focus still if the count and confidence are unchanged.
+  if(beforeCount===familyChatUnread&&beforeError===familyChatUnreadError)return;
+  if(['hem','regler'].includes(page())||(page()==='inkorg'&&!familyChatDraft.trim()))render();
   else menu();
 }
-async function fetchFamilyChat(older=false){
+async function fetchFamilyChat(older=false,{quiet=false}={}){
   if(!user||members.length!==2)return;
-  if(older?(!familyChatHasMore||familyChatLoadingOlder||familyChatLoading):familyChatLoading)return;
+  if(older?(!familyChatHasMore||familyChatLoadingOlder||familyChatLoading):(familyChatLoading||familyChatLoadingOlder))return;
   const viewer=user.id,session=sharedSession,request=++familyChatRequest;
   const oldest=older?familyChatMessages[familyChatMessages.length-1]:null;
-  familyChatError='';familyChatStatus='';
+  const previous=quiet?JSON.stringify([familyChatMessages,familyChatHasMore,familyChatError]):null;
+  familyChatError='';
+  if(!quiet)familyChatStatus='';
   if(older)familyChatLoadingOlder=true;else familyChatLoading=true;
-  if(page()==='inkorg'&&!familyChatDraft.trim())render();
+  if(!quiet&&page()==='inkorg'&&!familyChatDraft.trim()&&!familyChatMessages.length)render();
   let result,timer;
   try{
     result=await Promise.race([
@@ -105,20 +118,33 @@ async function fetchFamilyChat(older=false){
   }else{
     familyChatMessages=older?[...familyChatMessages,...result.data]:result.data;
     familyChatHasMore=result.data.length===50;
-    if(!older&&page()==='inkorg'){
-      // Reading the conversation is not an approval of any proposal.
-      let marked;
-      try{marked=await db.rpc('mark_family_messages_read');}catch(e){marked={error:e};}
-      if(request!==familyChatRequest||viewer!==user?.id||session!==sharedSession)return;
-      if(!marked?.error&&Number.isInteger(marked?.data)&&marked.data>=0){
-        familyChatUnread=0;
-        // Refresh sender-side delivery/read ticks with later fetches, never forge remote approval.
-        familyChatMessages=familyChatMessages.map(m=>m.sent_by_me?m:{...m,read_at:m.read_at||new Date().toISOString()});
-      }else familyChatStatus='Meddelandena visas, men kunde inte markeras som lästa.';
-    }
+    // Loading a message page must never create a receipt for pages not viewed.
+    // Only the deliberate mark-all action below calls the RPC.
+    if(!older&&page()==='inkorg')void fetchFamilyChatUnread();
   }
-  if(page()==='inkorg'&&!familyChatDraft.trim())render();
-  else menu();
+  const changed=!quiet||previous!==JSON.stringify([familyChatMessages,familyChatHasMore,familyChatError]);
+  if(changed&&page()==='inkorg'&&!familyChatDraft.trim())render();
+  else if(changed)menu();
+}
+async function markAllFamilyChatRead(){
+  if(!user||members.length!==2||familyChatReadBusy||familyChatLoading||familyChatUnreadError||familyChatUnread<1)return false;
+  const viewer=user.id,session=sharedSession;
+  familyChatReadBusy=true;
+  familyChatStatus='Markerar alla meddelanden som lästa…';
+  render();
+  let result;
+  try{result=await db.rpc('mark_family_messages_read');}catch(e){result={error:e};}
+  if(user?.id!==viewer||sharedSession!==session)return false;
+  familyChatReadBusy=false;
+  if(result?.error||!Number.isInteger(result?.data)||result.data<0){
+    familyChatStatus='Det gick inte att markera meddelandena som lästa. Inga läskvittenser har bekräftats.';
+    render();return false;
+  }
+  // A count request started before this RPC must not restore the stale badge.
+  familyChatCountRequest++;
+  familyChatUnread=0;familyChatUnreadError=false;
+  familyChatStatus='Alla meddelanden har markerats som lästa.';
+  render();return true;
 }
 async function sendFamilyChatMessage(){
   if(!user||members.length!==2||familyChatSending)return;
@@ -143,6 +169,8 @@ const schysstaPausedIds=new Set();
 const understandingShares=new Set();
 const understandingShareSaving=new Set();
 const SHARED_POLL_INTERVAL_MS=15000;
+// Consent-sensitive shared insights refresh independently of general match polling.
+const INSIGHTS_CONSENT_REFRESH_MS=60000;
 let themesUnlocked=false,themesLoading=false,themesError='',themesRequest=0;
 const swipeAnswers=new Map();
 const themeAnswers=new Map(THEME_DECKS.map(deck=>[deck.id,new Map()]));
@@ -151,6 +179,7 @@ const importancePending=new Map();
 const importanceSaving=new Set();
 let importanceAvailable=false,importanceLoadError='';
 let activeThemeDeck=null,themeCategory='all',themeIndex=0,themeReview=false,themeSaveError='';
+let swipeSkippedReview=false;
 const themeCardId=(deck,index)=>deck.cardIds[index];
 const themeCardModel=(deck,index)=>THEME_DECK_MODELS.find(model=>model.id===deck.id)?.cards[index];
 const themeAccessAllowed=()=>!!user&&members.length===2&&themesUnlocked&&!themesLoading&&!themesError;
@@ -176,6 +205,7 @@ const generalStatement=index=>{
 };
 const visibleGeneralIndices=()=>GENERAL_CARDS.flatMap((card,index)=>card.type==='match'||viewerRole()==='teen'?[index]:[]);
 const skippedUnderstanding=new Set();
+const nextSkippedAfter=index=>visibleGeneralIndices().find(i=>i>index&&skippedUnderstanding.has(swipeCardId(i)))??STATEMENTS.length;
 function nextUnanswered(start=0){const visible=visibleGeneralIndices();const pending=i=>!swipeAnswers.has(swipeCardId(i))&&!skippedUnderstanding.has(swipeCardId(i));return visible.find(i=>i>=start&&pending(i))??visible.find(i=>i<start&&pending(i))??STATEMENTS.length;}
 
 const importanceKey=(deckId,cardId)=>deckId+'\u0000'+cardId;
@@ -238,6 +268,27 @@ const summaryIcon=icon=>'<svg class="swipe-summary-icon" viewBox="0 0 24 24" ari
 const sharedDeck=deckId=>deckId==='general'
   ?{id:'general',title:'Allmänna kortleken',cards:GENERAL_CARDS}
   :THEME_DECK_MODELS.find(deck=>deck.id===deckId);
+// This fact-only summary remains visible when AI replaces editorial advice.
+// It is constructed exclusively from server-verified mutual A-YES groups.
+function sharedFactOverview(groups,title='Gemensamt i korthet'){
+  const entries=[...groups.entries()].filter(([,items])=>items.length>0);
+  if(!entries.length)return '';
+  const overview=entries.map(([category,items])=>{
+    const icon=summaryIconFor(category,items[0].statement);
+    const first=items[0].statement;
+    const rest=items.length-1;
+    return '<li>'+summaryIcon(icon)+'<div><h4>'+esc(category)+' · '+items.length+' '+
+      (items.length===1?'gemensamt ja-svar':'gemensamma ja-svar')+'</h4>'+
+      '<span class="swipe-summary-icon-label">'+esc(icon.name)+': </span>'+
+      '<p>'+esc(first)+(rest?' · och '+rest+' till':'')+'</p></div></li>';
+  }).join('');
+  return '<aside class="swipe-fact-summary" aria-labelledby="shared-fact-heading">'+
+    '<span class="swipe-summary-label">ÖVERSIKT · SERVERVERIFIERADE JA-SVAR</span>'+
+    '<h3 id="shared-fact-heading">'+esc(title)+'</h3>'+
+    '<p class="live-muted">En kort översikt över kort där ni båda sagt ja. Inga privata svar eller förskrivna råd visas här.</p>'+
+    '<ul class="swipe-summary-overview">'+overview+'</ul></aside>';
+}
+
 function sharedSummary(groups,deckId='general',priorityIds=new Set()){
   const role=viewerRole();
   const roleLabel=role==='parent'?'förälder':role==='teen'?'tonåring':'familjemedlem';
@@ -297,6 +348,23 @@ function sharedPrioritySummary(items,deckId='general'){
     '<p class="live-muted">Sektionen bygger endast på serververifierat JA+JA och tonåringens höga markering. Låga, neutrala och privata nivåer visas aldrig.</p></aside>';
 }
 
+// Personal preview only. Shared priority data is not exposed while the
+// consent-verified shared-priority feature is disabled in the test release.
+function privateTeenPrioritySummary(matchedById,deckId){
+  if(sharedPrioritiesEnabled||viewerRole()!=='teen'||!importanceAvailable)return '';
+  const selected=[...matchedById.values()]
+    .filter(item=>swipeImportance.get(importanceKey(deckId,item.card.id))===1)
+    .sort((a,b)=>a.card.id.localeCompare(b.card.id));
+  if(!selected.length)return '';
+  const entries=selected.map(item=>'<li><p>'+esc(item.statement)+'</p></li>').join('');
+  return '<aside class="swipe-priority-summary swipe-private-priority" aria-label="Dina privata prioriteringar">'+
+    '<span class="swipe-summary-label">ENDAST FÖR DIG · INTE DELAT</span>'+
+    '<h3>Mina viktigaste gemensamma ja-svar</h3>'+
+    '<p>Här ser du sådant som ni båda svarat ja till och som du själv markerat som mycket viktigt.</p>'+
+    '<ul class="swipe-match-list">'+entries+'</ul>'+
+    '<p class="live-muted">Den här listan visas bara för dig. Föräldern ser inte dina privata viktighetsskattningar här. AI-medlaren kan använda dina egna skattningar när projektkontexten är påslagen.</p></aside>';
+}
+
 function swipeResults(deckId='general'){
   const deck=sharedDeck(deckId);
   if(!deck)return '';
@@ -329,15 +397,22 @@ function swipeResults(deckId='general'){
     '</ul></section>'
   ).join('');
   const matchedById=new Map([...groups.values()].flat().map(item=>[item.card.id,item]));
+  const privatePriority=privateTeenPrioritySummary(matchedById,deckId);
   const priorityItems=sharedPriorities
     .filter(row=>row?.deck_id===deckId&&matchedById.has(row.card_id))
     .map(row=>matchedById.get(row.card_id))
     .sort((a,b)=>a.card.id.localeCompare(b.card.id));
   const priorityIds=new Set(priorityItems.map(item=>item.card.id));
+  const useAi=typeof aiResultEnabled!=='undefined'&&aiResultEnabled;
+  const sig=useAi?swipeAiSignature(deckId):null;
+  const aiPriority=priorityItems.length?'<aside class="swipe-priority-summary"><h3>Viktigast att fokusera på</h3>'+
+    '<p>Prioriterade, gemensamt bejakade kort:</p><ul>'+
+    priorityItems.map(item=>'<li>'+esc(item.statement)+'</li>').join('')+'</ul></aside>':'';
   return title+'<p class="live-muted">Bara kort där ni båda svarat ja visas här. Se dem som möjliga samtalsöppningar, inte som färdiga överenskommelser.</p>'+
-    sharedPrioritySummary(priorityItems,deckId)+
+    privatePriority+
+    (useAi?aiPriority:sharedPrioritySummary(priorityItems,deckId))+
     '<div class="swipe-match-group"><h3>Det ni båda svarat ja till</h3>'+themes+'</div>'+
-    sharedSummary(groups,deckId,priorityIds)+
+    (useAi?sharedFactOverview(groups)+aiResults.panel('swipe',deckId,sig):sharedSummary(groups,deckId,priorityIds))+
     button+'</section>';
 }
 async function fetchSwipeMatches(deckId='general',{quiet=false}={}){
@@ -435,6 +510,17 @@ function understandingInsights(){
 function insightsEntry(){
   return sharedInsightsEnabled?'<p class="insights-entry"><a class="live-button" href="#insikter">Gemensamma insikter från alla kortlekar →</a></p>':'';
 }
+function swipeAiSignature(deckId){
+  if(!user||sharedLoading||sharedError||sharedDeckId!==deckId||!sharedMatches.length)return null;
+  const deck=sharedDeck(deckId);
+  const allowed=sharedMatches.filter(row=>row.answer===true&&row.deck_id===deckId&&
+    deck?.cards.some(card=>card.id===row.card_id&&card.type==='match'));
+  return allowed.length?JSON.stringify([user.id,viewerRole(),deckId,allowed,sharedPriorities]):null;
+}
+function insightsAiSignature(){
+  if(!user||insightsLoading||insightsError||(!insightsRows.length&&!sharedUnderstandingRows.length))return null;
+  return JSON.stringify([user.id,viewerRole(),insightsRows,sharedUnderstandingEnabled?sharedUnderstandingRows:[]]);
+}
 function insightsView(){
   const title='<div class="swipe-experience insights-view"><header class="swipe-heading"><span class="swipe-eyebrow">ENDAST REDAN DELADE SVAR</span><h1>Era gemensamma insikter</h1><p>Här samlas möjliga samtalsöppningar från alla kortlekar. Ni kan fortsätta swajpa i er egen takt.</p><a class="live-button" href="#swipe">← Till Gillaswajpen</a></header>';
   if(!sharedInsightsEnabled)return title+card('<h2>Insiktsytan förbereds</h2><p>Den aktiveras först efter säker serververifiering med två konton.</p>')+'</div>';
@@ -461,23 +547,38 @@ function insightsView(){
     ).join('')+
     '<button type="button" class="live-button" data-insight-open="'+esc(deck.id)+'">Öppna '+esc(deck.title)+'</button></section>'
   ).join('');
+  // Aggregate only the A cards that passed the existing verified byDeck filter.
+  const overviewGroups=new Map();
+  for(const {groups} of byDeck.values()){
+    for(const [category,texts] of groups){
+      if(!overviewGroups.has(category))overviewGroups.set(category,[]);
+      for(const statement of texts)overviewGroups.get(category).push({statement});
+    }
+  }
   const empty='<p class="live-muted">Inga gemensamma ja-svar att visa ännu. Ett kort syns först när ni båda har svarat ja.</p>';
   return title+'<section class="live-panel" aria-labelledby="insights-a-heading"><h2 id="insights-a-heading">Möjligt att utforska</h2>'+
     '<p class="live-muted">Endast serververifierade JA+JA på A-kort. Det här är möjligheter, inte färdiga överenskommelser.</p>'+
-    (sections||empty)+'</section>'+
+    (sections?sharedFactOverview(overviewGroups,'Gemensamt i alla kortlekar'): '')+(sections||empty)+
+    (aiResultEnabled&&insightsAiSignature()?aiResults.panel('swipe','all',insightsAiSignature()):'')+'</section>'+
     '<section class="live-panel" aria-labelledby="insights-b-heading"><h2 id="insights-b-heading">'+
     (viewerRole()==='parent'?'Så här funkar min tonåring':'Så här funkar jag')+
     '</h2>'+understandingInsights()+'</section>'+
     '<button type="button" class="live-button" id="insights-retry">Uppdatera gemensamma insikter</button></div>';
 }
-async function fetchInsights(){
+async function fetchInsights({quiet=false}={}){
+  if(quiet&&insightsLoading)return;
   const viewer=user?.id,session=sharedSession,request=++insightsRequest;
-  // Fail closed: never retain a previous result during a new request,
-  // family/session change, network error or partial multi-deck failure.
-  insightsRows=[];sharedUnderstandingRows=[];insightsError='';insightsLoading=false;
+  const previousSnapshot=quiet?JSON.stringify([insightsRows,sharedUnderstandingRows,insightsError]):null;
+  // Full manual refresh clears first. Quiet consent rechecks keep the prior
+  // server-verified display until a new all-deck snapshot is confirmed.
+  // Failure clears BOTH A and B results, rather than retaining stale data.
+  if(!quiet){insightsRows=[];sharedUnderstandingRows=[];insightsError='';insightsLoading=false;}
   if(!sharedInsightsEnabled||!viewer||members.length!==2||!members.some(m=>m.user_id===viewer)||
-     !members.some(m=>m.role==='parent')||!members.some(m=>m.role==='teen')||page()!=='insikter'){render();return;}
-  insightsLoading=true;render();
+     !members.some(m=>m.role==='parent')||!members.some(m=>m.role==='teen')||page()!=='insikter'){
+    insightsRows=[];sharedUnderstandingRows=[];insightsError='';insightsLoading=false;render();return;
+  }
+  insightsLoading=true;
+  if(!quiet)render();
   try{
     const [responses,understandingResponse]=await Promise.all([
       Promise.all(INSIGHT_DECK_IDS.map(deckId=>db.rpc('shared_swipe_matches',{p_deck_id:deckId}))),
@@ -500,7 +601,10 @@ async function fetchInsights(){
     insightsError='Gemensamma insikter är inte tillgängliga just nu. Inga tidigare resultat visas.';
   }finally{
     if(request===insightsRequest&&session===sharedSession&&user?.id===viewer&&page()==='insikter'){
-      insightsLoading=false;render();
+      insightsLoading=false;
+      // Same data: avoid unnecessary rerenders, scroll jumps and AI requests.
+      // Changed/revoked sharing creates a different analysis signature.
+      if(!quiet||previousSnapshot!==JSON.stringify([insightsRows,sharedUnderstandingRows,insightsError]))render();
     }
   }
 }
@@ -607,7 +711,7 @@ function advanceThemeSwipe(direction){
   setTimeout(()=>saveThemeAnswer(direction,index,deckId,viewer,session),reduce?0:220);
 }
 
-function swipeView(){if(activeThemeDeck)return themeSwipeView();const total=visibleGeneralIndices().length,answered=visibleGeneralIndices().filter(i=>swipeAnswers.has(swipeCardId(i))).length,item=generalStatement(swipeIndex),isUnderstanding=GENERAL_CARDS[swipeIndex]?.type==='understanding',ordinal=visibleGeneralIndices().indexOf(swipeIndex)+1;if(swipeLoadError)return '<div class="swipe-experience"><header class="swipe-heading"><span class="swipe-eyebrow">UPPTÄCK VARANDRA</span><h1>Gillaswajpen</h1></header>'+card('<h2>Kunde inte hämta dina svar</h2><p role="alert">'+esc(swipeLoadError)+'</p><button class="live-button" type="button" id="swipe-reload">Försök igen</button>')+'</div>';return '<div class="swipe-experience"><header class="swipe-heading"><span class="swipe-eyebrow">UPPTÄCK VARANDRA</span><h1>Gillaswajpen</h1><p>Vad är viktigt för dig? Utforska korten i din egen takt.</p></header>'+(isUnderstanding?'<p class="swipe-understanding-notice">Förståelsekort: ditt svar sparas tills vidare privat. Delning med förälder är ännu inte aktiverad och gamla svar delas aldrig automatiskt.</p>':'')+'<div class="swipe-stage"><div class="swipe-stage-top"><span>ALLMÄNNA KORTLEKEN</span><span role="status">'+(item?ordinal+' / '+total:answered+' svar, '+skippedUnderstanding.size+' överhoppade av '+total)+'</span></div><div class="swipe-track"><div class="swipe-track-fill" style="width:'+Math.round(100*(item?(swipeReview?ordinal-1:answered+skippedUnderstanding.size):total)/total)+'%"></div></div>'+(item?'<div id="swipe-card" class="swipe-playing-card" tabindex="0" aria-label="Kort '+ordinal+' av '+total+'. Svep höger för ja eller vänster för nej."><span class="swipe-stamp swipe-stamp-no" aria-hidden="true">NEJ</span><span class="swipe-stamp swipe-stamp-yes" aria-hidden="true">JA</span><span class="swipe-category">'+esc(item[0])+'</span><h2>'+esc(item[1])+'</h2><span class="swipe-card-hint">Dra kortet åt höger eller vänster</span>'+importanceControl('general',swipeCardId(swipeIndex))+'</div><div class="swipe-actions"><button type="button" class="swipe-choice swipe-no" data-swipe="no" aria-label="Nej">✕ <span>Nej</span></button><button type="button" class="swipe-choice swipe-yes" data-swipe="yes" aria-label="Ja">♥ <span>Ja</span></button></div>'+(isUnderstanding?'<button type="button" id="swipe-skip" class="swipe-skip">Vill inte svara just nu</button>':''):'<div class="swipe-finished"><h2>Alla '+total+' kort genomgångna</h2><p>Du har sparat '+answered+' svar'+(skippedUnderstanding.size?' och hoppat över '+skippedUnderstanding.size+' förståelsekort':'')+'. Du kan gå igenom korten igen och ändra dina egna svar.</p><button class="live-button" type="button" id="swipe-restart">Gå igenom igen</button></div>')+'<p id="swipe-save-status" class="swipe-disclaimer" role="status">'+(swipeSaveError?esc(swipeSaveError):(isUnderstanding?'Ditt svar sparas privat. Förståelsekort delas inte förrän säker delning är aktiverad.':'Ditt svar sparas privat i ditt konto. Matchningskort visas gemensamt först när båda svarat ja.'))+'</p></div>'+swipeResults()+insightsEntry()+themeDecksView()+'</div>';}
+function swipeView(){if(activeThemeDeck)return themeSwipeView();const total=visibleGeneralIndices().length,answered=visibleGeneralIndices().filter(i=>swipeAnswers.has(swipeCardId(i))).length,item=generalStatement(swipeIndex),isUnderstanding=GENERAL_CARDS[swipeIndex]?.type==='understanding',ordinal=visibleGeneralIndices().indexOf(swipeIndex)+1;if(swipeLoadError)return '<div class="swipe-experience"><header class="swipe-heading"><span class="swipe-eyebrow">UPPTÄCK VARANDRA</span><h1>Gillaswajpen</h1></header>'+card('<h2>Kunde inte hämta dina svar</h2><p role="alert">'+esc(swipeLoadError)+'</p><button class="live-button" type="button" id="swipe-reload">Försök igen</button>')+'</div>';return '<div class="swipe-experience"><header class="swipe-heading"><span class="swipe-eyebrow">UPPTÄCK VARANDRA</span><h1>Gillaswajpen</h1><p>Vad är viktigt för dig? Utforska korten i din egen takt.</p></header>'+(isUnderstanding?'<p class="swipe-understanding-notice">'+(sharedUnderstandingEnabled?'Förståelsekort: ditt svar förblir privat tills du själv väljer att dela ett ja-svar i <a href="#insikter">Gemensamma insikter</a>. Du kan återkalla delningen när som helst. Inga tidigare svar delas automatiskt.':'Förståelsekort: ditt svar sparas tills vidare privat. Delning med förälder är inte aktiverad här och gamla svar delas aldrig automatiskt.')+'</p>':'')+'<div class="swipe-stage"><div class="swipe-stage-top"><span>ALLMÄNNA KORTLEKEN</span><span role="status">'+(item?ordinal+' / '+total:answered+' svar, '+skippedUnderstanding.size+' överhoppade av '+total)+'</span></div><div class="swipe-track"><div class="swipe-track-fill" style="width:'+Math.round(100*(item?(swipeReview?ordinal-1:answered+skippedUnderstanding.size):total)/total)+'%"></div></div>'+(item?'<div id="swipe-card" class="swipe-playing-card" tabindex="0" aria-label="Kort '+ordinal+' av '+total+'. Svep höger för ja eller vänster för nej."><span class="swipe-stamp swipe-stamp-no" aria-hidden="true">NEJ</span><span class="swipe-stamp swipe-stamp-yes" aria-hidden="true">JA</span><span class="swipe-category">'+esc(item[0])+'</span><h2>'+esc(item[1])+'</h2><span class="swipe-card-hint">Dra kortet åt höger eller vänster</span>'+importanceControl('general',swipeCardId(swipeIndex))+'</div><div class="swipe-actions"><button type="button" class="swipe-choice swipe-no" data-swipe="no" aria-label="Nej">✕ <span>Nej</span></button><button type="button" class="swipe-choice swipe-yes" data-swipe="yes" aria-label="Ja">♥ <span>Ja</span></button></div>'+(isUnderstanding?'<button type="button" id="swipe-skip" class="swipe-skip">Vill inte svara just nu</button>':''):'<div class="swipe-finished"><h2>'+(skippedUnderstanding.size?'Du har '+skippedUnderstanding.size+' kort kvar att svara på':'Alla '+total+' kort besvarade')+'</h2><p>Du har sparat '+answered+' svar'+(skippedUnderstanding.size?' och lämnat '+skippedUnderstanding.size+' förståelsekort obesvarade för tillfället':'')+'. Du kan ändra dina egna svar när du vill.</p>'+'<div class="swipe-finished-actions">'+(skippedUnderstanding.size?'<button class="live-button" type="button" id="swipe-review-skipped">Gå till överhoppade kort</button>':'')+'<button class="live-button" type="button" id="swipe-restart">Gå igenom alla kort igen</button></div></div>')+'<p id="swipe-save-status" class="swipe-disclaimer" role="status">'+(swipeSaveError?esc(swipeSaveError):(isUnderstanding?(sharedUnderstandingEnabled?'Ditt svar sparas privat. Ett ja på förståelsekort blir inte delat förrän du själv väljer Dela med min förälder i Gemensamma insikter.':'Ditt svar sparas privat. Förståelsekort delas inte förrän säker delning är aktiverad.'):'Ditt svar sparas privat i ditt konto. Matchningskort visas gemensamt först när båda svarat ja.'))+'</p></div>'+swipeResults()+insightsEntry()+themeDecksView()+'</div>';}
 async function saveSwipeAnswer(direction,index,viewer,session){
   // An animated swipe can finish after sign-out or a switch to another account.
   // Never write or render its result in the new user's session.
@@ -626,7 +730,7 @@ async function saveSwipeAnswer(direction,index,viewer,session){
   skippedUnderstanding.delete(row.card_id);
   if(GENERAL_CARDS[index]?.type==='understanding')understandingShares.delete(row.card_id);
   swipeSaveError='';
-  swipeIndex=swipeReview?nextVisibleAfter(index):nextUnanswered(index+1);
+  swipeIndex=swipeSkippedReview?nextSkippedAfter(index):swipeReview?nextVisibleAfter(index):nextUnanswered(index+1);
   swipeBusy=false;render();
   if(members.length===2){
     void fetchSwipeMatches('general');
@@ -647,7 +751,7 @@ async function skipUnderstandingCard(index,viewer,session){
   swipeAnswers.delete(cardId);
   skippedUnderstanding.add(cardId);
   understandingShares.delete(cardId);
-  swipeIndex=swipeReview?nextVisibleAfter(index):nextUnanswered(index+1);
+  swipeIndex=swipeSkippedReview?nextSkippedAfter(index):swipeReview?nextVisibleAfter(index):nextUnanswered(index+1);
   swipeBusy=false;render();
   if(members.length===2&&visibleGeneralIndices().every(i=>swipeAnswers.has(swipeCardId(i))||skippedUnderstanding.has(swipeCardId(i))))void fetchThemeUnlock();
 }
@@ -655,10 +759,14 @@ function nextVisibleAfter(index){return visibleGeneralIndices().find(i=>i>index)
 function advanceSwipe(direction){if(activeThemeDeck){advanceThemeSwipe(direction);return;}if(swipeBusy||importanceSaving.size||page()!=='swipe'||!user||swipeIndex>=STATEMENTS.length||!visibleGeneralIndices().includes(swipeIndex))return;const el=$('swipe-card');if(!el)return;const index=swipeIndex,viewer=user.id,session=sharedSession;swipeBusy=true;const reduce=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;if(!reduce){el.style.transform='translateX('+(direction==='yes'?'120vw':'-120vw')+') rotate('+(direction==='yes'?18:-18)+'deg)';el.style.opacity='0';}setTimeout(()=>saveSwipeAnswer(direction,index,viewer,session),reduce?0:220);}
 function setupSwipeGesture(){const el=$('swipe-card');if(!el)return;let start=null;const reset=()=>{start=null;el.style.transform='';el.classList.remove('swipe-dragging','swipe-preview-yes','swipe-preview-no');};el.addEventListener('pointerdown',e=>{if(e.target.closest?.('[data-importance-control]')||(e.button!==undefined&&e.button!==0))return;start={id:e.pointerId,x:e.clientX,y:e.clientY,dragging:false};});el.addEventListener('pointermove',e=>{if(!start||start.id!==e.pointerId||swipeBusy)return;const dx=e.clientX-start.x,dy=e.clientY-start.y;if(!start.dragging&&Math.abs(dy)>Math.abs(dx)&&Math.abs(dy)>12){start=null;return;}if(Math.abs(dx)>10&&Math.abs(dx)>Math.abs(dy)){start.dragging=true;el.setPointerCapture?.(e.pointerId);}if(!start.dragging)return;el.classList.add('swipe-dragging');el.classList.toggle('swipe-preview-yes',dx>35);el.classList.toggle('swipe-preview-no',dx< -35);el.style.transform='translateX('+dx+'px) rotate('+Math.max(-13,Math.min(13,dx/18))+'deg)';});el.addEventListener('pointerup',e=>{if(!start||start.id!==e.pointerId)return;const dx=e.clientX-start.x,dragged=start.dragging;reset();if(dragged&&Math.abs(dx)>=85)advanceSwipe(dx>0?'yes':'no');});el.addEventListener('pointercancel',reset);}
 
-function page(){const h=decodeURIComponent(location.hash.slice(1));return h==='insikter'?'insikter':nav.some(n=>n[0]===h)?h:'hem';}
+function page(){const h=decodeURIComponent(location.hash.slice(1));return ['insikter','mi-foralder','nvc'].includes(h)?h:nav.some(n=>n[0]===h)?h:'hem';}
 // On mobile, the scroll container is .live-main rather than window.
 function scrollLiveMainTop(){const main=document.querySelector('.live-main');if(main)main.scrollTop=0;window.scrollTo(0,0);}
+let previousMenuRoute=null;
 function menu(){
+  const route=page();
+  const routeChanged=route!==previousMenuRoute;
+  previousMenuRoute=route;
   const unread=schysstaListEnabled&&user&&members.length===2&&!schysstaError?schysstaUnreadCount():0;
   const pending=schysstaListEnabled&&user&&members.length===2&&!schysstaError?schysstaNeedsAnswer().length:0;
   const navItem=([key,label])=>{
@@ -666,11 +774,58 @@ function menu(){
     const descriptor=key==='inkorg'?' olästa meddelanden':' obesvarade regelförslag';
     const aria=count?' aria-label="'+label+', '+count+descriptor+'"':'';
     const badge=count?'<span class="live-nav-count" aria-hidden="true">'+(count>9?'9+':count)+'</span>':'';
-    return '<a href="#'+key+'"'+(page()===key?' aria-current="page"':'')+aria+'>'+label+badge+'</a>';
+    const active=route===key||(['mi-foralder','nvc'].includes(route)&&key==='kommunikation')||(route==='insikter'&&key==='swipe');
+    return '<a href="#'+key+'"'+(active?' aria-current="page"':'')+aria+'>'+label+badge+'</a>';
   };
-  for(const id of ['live-desktop-nav','live-mobile-nav'])$(id).innerHTML=nav.map(navItem).join('');
+  const html=nav.map(navItem).join('');
+  for(const id of ['live-desktop-nav','live-mobile-nav']){
+    const element=$(id);
+    // Do not replace an unchanged focused link during background refreshes.
+    if(element.innerHTML===html)continue;
+    const scrollLeft=element.scrollLeft;
+    const focusedHref=element.contains(document.activeElement)?document.activeElement.getAttribute('href'):null;
+    element.innerHTML=html;
+    element.scrollLeft=scrollLeft;
+    if(focusedHref){
+      const restored=[...element.querySelectorAll('a')].find(link=>link.getAttribute('href')===focusedHref);
+      restored?.focus({preventScroll:true});
+    }
+  }
+  // Bring the active tab into view only when changing pages, not during polling.
+  const mobile=$('live-mobile-nav');
+  if(routeChanged&&mobile.clientWidth){
+    const active=mobile.querySelector('a[aria-current="page"]');
+    if(active){
+      const outer=mobile.getBoundingClientRect(),bounds=active.getBoundingClientRect();
+      if(bounds.left<outer.left+4)mobile.scrollLeft-=outer.left+4-bounds.left;
+      else if(bounds.right>outer.right-4)mobile.scrollLeft+=bounds.right-(outer.right-4);
+    }
+  }
 }
 const card=html=>'<section class="live-panel">'+html+'</section>';
+const COMMUNICATION_BRIDGES=Object.freeze({
+  swipe:'Känns ett kort svårt att prata om? Pröva att lyssna och formulera ett behov utan att pressa fram ett svar.',
+  insikter:'När ni vill utforska en matchning eller ett delat behov kan ni börja med ett konkret samtalsverktyg.',
+  regler:'Innan ni diskuterar eller omprövar en regel: prova ett gemensamt problemlösningssamtal.',
+  inkorg:'Vill du skriva ett känsligt meddelande? Du kan öva på ett jag-budskap först. Ingenting skickas automatiskt.',
+  personlighet:'Självskattningar förklarar inte varför ni reagerar olika. Verktygen kan hjälpa er prata om era perspektiv utan etiketter.',
+  medlare:'Vill du prova ett av förslagen i en övning utan AI? Börja med NVC eller någon av de sex samtalsövningarna.'
+});
+function communicationBridge(key){
+  const text=COMMUNICATION_BRIDGES[key];
+  if(!text)return '';
+  return '<aside class="comm-crosslink" aria-label="Relaterat samtalsstöd"><strong>Prata vidare tillsammans</strong><p>'+text+'</p><div class="comm-crosslink-links"><a href="#kommunikation">Alla kommunikationsverktyg</a><a href="#nvc">Bygg ett jag-budskap (NVC)</a>'
+    +(viewerRole()==='parent'?'<a href="#mi-foralder">MI för föräldrar</a>':'')+'</div></aside>';
+}
+
+const HOME_MODULE_INTROS=Object.freeze({
+  inkorg:'Läs privata meddelanden och svara på förfrågningar om gemensamma regler.',
+  swipe:'Svara privat på frågor och hitta möjliga samtal eller aktiviteter där ni båda har valt ja.',
+  personlighet:'Utforska fem personlighetsdimensioner med 50 frågor och jämför profiler först efter bådas samtycke.',
+  kommunikation:'Öva på NVC, lyssnande, pauser och reparation efter gräl. Föräldrar får även en MI-inspirerad guide.',
+  regler:'Föreslå överenskommelser och ändringar. En regel gäller gemensamt först när båda har godkänt samma text.',
+  medlare:'Utforska fiktiva samtal med privat AI-stöd i testversion. Inte terapi eller akut hjälp.'
+});
 function login(){
 return '<h1>Välkommen till Hemmakompassen</h1>'+card('<h2>Logga in</h2><form id="live-login"><label class="live-field">E-postadress<input id="live-email" type="email" autocomplete="username" required></label><label class="live-field">Lösenord<input id="live-password" type="password" autocomplete="current-password" required></label><button class="live-button" type="submit">Logga in</button></form><p id="login-feedback" role="status"></p><p><a href="./konto.html#reset">Glömt lösenord eller saknar lösenord?</a></p><p><a href="./konto.html#register">Skapa konto</a></p>');
 }
@@ -681,10 +836,12 @@ const unread=schysstaListEnabled?schysstaUnreadCount():0;
 const needs=schysstaListEnabled?schysstaNeedsAnswer().length:0;
 const pendingBanner=needs?card('<h2>Behöver ditt svar · '+needs+' förslag</h2><p>Den andra personen väntar på ditt beslut. Du kan också välja att svara senare.</p><a class="live-button" href="#regler">Ta ställning i Schyssta listan</a>'):'';
 const totalUnread=unread+familyChatUnread;
-const inboxBanner=totalUnread?card('<h2>Inkorgen · '+totalUnread+' olästa</h2><p>'+(
+const incompleteNoticeCheck=members.length===2&&(!!schysstaError||familyChatUnreadError);
+const noticeWarning=incompleteNoticeCheck?card('<h2>Alla aviseringar kunde inte kontrolleras</h2><p role="alert">Någon av kontrollerna för meddelanden eller regelförslag misslyckades. Noll betyder därför inte säkert att inkorgen är tom.</p><button type="button" class="live-button" id="home-refresh-notices">Försök kontrollera igen</button>'):'';
+const inboxBanner=totalUnread?card('<h2>Inkorgen · '+(incompleteNoticeCheck?'minst ':'')+totalUnread+' olästa</h2><p>'+(
   familyChatUnread?('Du har '+familyChatUnread+' olästa privata meddelanden'+(unread?' och '+unread+' nya regelhändelser':'')+'.')
     :'Du har fått nya meddelanden om era överenskommelser.')+'</p><a class="live-button" href="#inkorg">Visa inkorgen</a>'):'';
-return '<section class="home-hero"><div class="home-hero-inner"><span class="home-kicker">✦ '+(members.length>1?'ERT GEMENSAMMA RUM':'VÄNTAR PÅ DIN MOTPART')+'</span><h1>Hej '+esc(name)+'.<em>Välkommen till ert rum.</em></h1><p>'+(members.length>1?'Ett rum för att förstå varandra bättre, ett steg i taget.':'Medan du väntar kan du utforska Gillaswajpen och börja hitta nya samtalsämnen.')+'</p><a class="home-hero-link" href="#swipe">Utforska Gillaswajpen <span aria-hidden="true">→</span></a></div><div class="home-orbit" aria-hidden="true"><span></span></div></section>'+pendingBanner+inboxBanner+card('<h2>Din familj</h2><p>'+roster+'</p><p class="live-muted">'+(members.length===1?'Den andra familjemedlemmen har ännu inte anslutit.':'Familjemedlemskap hämtat från Supabase.')+'</p><a class="live-button" href="./konto.html">Hantera familj och inbjudningar</a>')+'<h2>Utforska Hemmakompassen</h2><div class="live-cards">'+nav.slice(1,7).map(([key,label])=>card('<h3>'+label+'</h3><p class="live-muted">Den här funktionen ansluts stegvis till riktiga konton.</p><a href="#'+key+'">Öppna →</a>')).join('')+'</div>';
+return '<section class="home-hero"><div class="home-hero-inner"><span class="home-kicker">✦ '+(members.length>1?'ERT GEMENSAMMA RUM':'VÄNTAR PÅ DIN MOTPART')+'</span><h1>Hej '+esc(name)+'.<em>Välkommen till ert rum.</em></h1><p>'+(members.length>1?'Ett rum för att förstå varandra bättre, ett steg i taget.':'Medan du väntar kan du utforska Gillaswajpen och börja hitta nya samtalsämnen.')+'</p><a class="home-hero-link" href="#swipe">Utforska Gillaswajpen <span aria-hidden="true">→</span></a></div><div class="home-orbit" aria-hidden="true"><span></span></div></section>'+noticeWarning+pendingBanner+inboxBanner+card('<h2>Din familj</h2><p>'+roster+'</p><p class="live-muted">'+(members.length===1?'Den andra familjemedlemmen har ännu inte anslutit.':'Familjemedlemskap hämtat från Supabase.')+'</p><a class="live-button" href="./konto.html">Hantera familj och inbjudningar</a>')+'<h2>Utforska Hemmakompassen</h2><div class="live-cards">'+nav.slice(1,7).map(([key,label])=>card('<h3>'+esc(label)+'</h3><p class="live-muted">'+esc(members.length!==2&&['inkorg','regler'].includes(key)?'Koppla ihop era konton för att använda funktionen.':HOME_MODULE_INTROS[key])+'</p><a href="#'+key+'">Öppna →</a>')).join('')+'</div>';
 }
 const SCHYSSTA_UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 function validSchysstaSuggestion(row){
@@ -851,9 +1008,16 @@ function inboxView(){
       +'<p class="family-chat-text">'+esc(m.body)+'</p>'
       +(m.sent_by_me?'<p class="family-chat-receipt">'+(m.read_at?'Läst':'Skickat')+'</p>':'')+'</li>').join('')+'</ol>'
     :'<p class="live-muted">Inga meddelanden ännu. Skriv det första nedan.</p>';
+  const markAllHtml=familyChatUnreadError
+    ?'<p role="alert">Antalet olästa privata meddelanden kunde inte kontrolleras. Uppdatera konversationen för att försöka igen.</p>'
+    :familyChatUnread>0
+      ?'<div class="family-chat-read-controls"><p>'+familyChatUnread+' olästa privata meddelanden. De markeras inte som lästa bara för att du öppnar inkorgen.</p>'+
+        '<button type="button" class="schyssta-secondary" data-family-chat-mark-all-read'+(familyChatReadBusy||familyChatLoading?' disabled':'')+'>Markera alla meddelanden som lästa</button></div>'
+      :'';
   const chat=card('<div class="family-chat"><h2>Privata meddelanden med '+otherName+'</h2>'
     +'<p class="live-muted">Bara ni två i den aktuella familjeparningen kan läsa konversationen. Tidigare parningars meddelanden visas inte.</p>'
     +(familyChatError?'<p role="alert">'+esc(familyChatError)+'</p>':'')
+    +markAllHtml
     +(familyChatLoading?'<p role="status">Hämtar meddelanden…</p>':
       '<div class="family-chat-history">'
       +(familyChatHasMore?'<button type="button" class="schyssta-secondary" data-family-chat-more'+(familyChatLoadingOlder?' disabled':'')+'>Visa äldre meddelanden</button>':'')
@@ -1008,11 +1172,13 @@ function schysstaView(){
     +'<p>Beskriv helst vad ni vill göra, snarare än vad den andra ska sluta med.</p>'
     +'<ul><li>När ska regeln gälla?</li><li>Vad betyder den i praktiken för var och en?</li><li>När vill ni prata om hur den fungerar?</li></ul>'
     +'<p>Ni får båda föreslå ändringar. Vuxnas ansvar för trygghet och omsorg ska inte läggas på tonåringen.</p>'
-    +(viewerRole()==='parent'?'<p>Som förälder: prova att prata om förslaget och lyssna på tonåringens perspektiv innan du skickar. <a href="#kommunikation">Öppna kommunikationsråden</a>.</p>':'')+'</details>'
+    +(viewerRole()==='parent'?'<p>Som förälder: prova att prata om förslaget och lyssna på tonåringens perspektiv innan du skickar. <a href="#mi-foralder">Läs guiden om att lyssna före förslag</a>.</p>':'')+'</details>'
     +'<button class="live-button" type="submit"'+(schysstaSubmitting?' disabled':'')+'>'+(schysstaSubmitting?'Skickar…':schysstaEditTarget?'Skicka ändringsförslag':'Skicka regelförslag')+'</button>'
     +'<button class="schyssta-secondary" type="button" id="schyssta-compose">Stäng formuläret</button></form>'
     :'<button class="live-button" type="button" id="schyssta-compose">+ Föreslå en regel</button>';
-  return '<div class="schyssta-view"><h1>Schyssta listan</h1><p>Här samlar ni sådant ni båda har sagt ja till. Regler kan komma från Gillaswajpen eller skrivas av någon av er.</p><button class="schyssta-secondary" type="button" data-schyssta-refresh>Uppdatera listan</button>'
+  return '<div class="schyssta-view"><h1>Schyssta listan</h1><p>Här samlar ni sådant ni båda har sagt ja till. Regler kan komma från Gillaswajpen eller skrivas av någon av er.</p>'
+    +(viewerRole()==='parent'?'<p><a href="#mi-foralder">För dig som förälder: lyssna före regelförslaget</a></p>':'')
+    +'<button class="schyssta-secondary" type="button" data-schyssta-refresh>Uppdatera listan</button>'
     +card('<h2>Behöver ditt svar'+(needs.length?' ('+needs.length+')':'')+'</h2><p>Förslag från den andra personen visas här först.</p>'+list(needs,'Inga nya förslag väntar på ditt svar.'))
     +firstRuleHint
     +card('<h2>'+(schysstaEditTarget?'Föreslå ändring av regel':'Skriv ett eget förslag')+'</h2>'+formHtml+(schysstaMessage?'<p role="status" class="schyssta-feedback">'+esc(schysstaMessage)+'</p>':''))
@@ -1032,23 +1198,54 @@ function schysstaView(){
 function section(key){
 const label=nav.find(n=>n[0]===key)?.[1]||'Hemmakompassen';
 if(key==='installningar')return '<h1>Inställningar</h1>'+card('<h2>Ditt konto</h2><p>Inloggad som '+esc(user.email)+'</p><p>Visningsnamn: '+esc(profile?.display_name||'Inte angivet')+'</p><a class="live-button" href="./konto.html">Ändra namn, familj eller logga ut</a>');
-if(key==='swipe')return swipeView();
-if(key==='personlighet')return personalityExperience.render({isPaired:members.length===2 && members.some(m=>m.role==='parent') && members.some(m=>m.role==='teen'),viewerRole:viewerRole()});
- if(key==='insikter')return insightsView();
-if(key==='regler')return schysstaView();
-if(key==='inkorg')return inboxView();
-if(key==='medlare')return mediatorExperience.render();
-if(key==='kommunikation')return '<h1>Kommunikationsråd</h1><p>Konkreta samtalsöppningar från den tidigare Hemmakompassen.</p>'+COMMUNICATION_GUIDES.map(([title,intro,tips])=>card('<h2>'+esc(title)+'</h2><p>'+esc(intro)+'</p><ul>'+tips.map(t=>'<li>'+esc(t)+'</li>').join('')+'</ul>')).join('');
+if(key==='swipe')return swipeView()+communicationBridge('swipe');
+if(key==='personlighet')return personalityExperience.render({isPaired:members.length===2 && members.some(m=>m.role==='parent') && members.some(m=>m.role==='teen'),viewerRole:viewerRole()})+communicationBridge('personlighet');
+ if(key==='insikter')return insightsView()+communicationBridge('insikter');
+if(key==='regler')return schysstaView()+communicationBridge('regler');
+if(key==='inkorg')return inboxView()+communicationBridge('inkorg');
+if(key==='medlare')return mediatorExperience.render()+communicationBridge('medlare');
+if(key==='mi-foralder')return viewerRole()==='parent'?renderParentMiGuide():'<h1>Samtalsstöd för föräldrar</h1>'+card('<p>Den här guiden är skriven för föräldrar. Du kan läsa de gemensamma råden i stället.</p><a href="#kommunikation">Till Kommunikationsråd</a>');
+if(key==='kommunikation')return renderCommunicationToolkit(viewerRole());
+if(key==='nvc')return renderNvcExercise(viewerRole());
 return '<h1>'+label+'</h1>'+card('<h2>Funktionen är under utveckling</h2><p>Du är inloggad som '+esc(profile?.display_name||user.email)+'. Vi bygger nu den riktiga kopplingen till Supabase så att dina svar och den andra familjemedlemmens uppgifter hålls åtskilda.</p><p>Här visas inga påhittade demodata och inga svar lagras lokalt som om de vore delade med familjen.</p><a class="live-button" href="#hem">Till startsidan</a>');
 }
-function render(){if(activeThemeDeck&&!themeAccessAllowed())activeThemeDeck=null;menu();$('live-app').innerHTML=user?(page()==='hem'?home():section(page())):login();if(page()==='regler'&&user)applySchysstaFilters();setupSwipeGesture();$('sidebar-account').textContent=user?'Inloggad: '+(profile?.display_name||user.email):'Inte inloggad';$('account-link').textContent=user?'Ditt konto →':'Logga in →';}
+function autoAnalyze(){
+  if(!aiResultEnabled||!user)return;
+  if(page()==='personlighet'){
+    const signature=personalityExperience.getAiSnapshot();
+    if(signature)void aiResults.ensure('personality','own',signature);
+  }else if(page()==='swipe'){
+    const deckId=activeThemeDeck||'general';
+    const signature=swipeAiSignature(deckId);
+    if(signature)void aiResults.ensure('swipe',deckId,signature);
+  }else if(page()==='insikter'&&sharedInsightsEnabled){
+    const signature=insightsAiSignature();
+    if(signature)void aiResults.ensure('swipe','all',signature);
+  }
+}
+function render(){
+  if(activeThemeDeck&&!themeAccessAllowed())activeThemeDeck=null;
+  // Inbox can rerender after a remote message or an explicit read action.
+  // Preserve the mobile main scroller instead of jumping to the heading.
+  // Hash navigation explicitly calls scrollLiveMainTop() after its render.
+  const mainScroll=page()==='inkorg'?document.querySelector('.live-main')?.scrollTop:null;
+  menu();$('live-app').innerHTML=user?(page()==='hem'?home():section(page())):login();
+  if(mainScroll!=null){
+    const main=document.querySelector('.live-main');
+    if(main)main.scrollTop=Math.min(mainScroll,Math.max(0,main.scrollHeight-main.clientHeight));
+  }
+  if(page()==='regler'&&user)applySchysstaFilters();
+  setupSwipeGesture();$('sidebar-account').textContent=user?'Inloggad: '+(profile?.display_name||user.email):'Inte inloggad';
+  $('account-link').textContent=user?'Ditt konto →':'Logga in →';
+  if(aiResultEnabled&&user)queueMicrotask(autoAnalyze);
+}
 async function refresh(){
 const generation=++refreshGeneration;
 let authResult;
 try{authResult=await db.auth.getUser();}
 catch(e){if(generation!==refreshGeneration)return;throw e;}
 if(generation!==refreshGeneration)return;
-const {data:{user:u},error}=authResult;if(error&&error.name!=='AuthSessionMissingError')throw error;user=u;profile=null;members=[];mediatorExperience.reset(u?.id??null);personalityExperience.reset(u?.id??null);swipeAnswers.clear();swipeImportance.clear();importancePending.clear();importanceSaving.clear();importanceAvailable=false;importanceLoadError='';skippedUnderstanding.clear();understandingShares.clear();understandingShareSaving.clear();understandingShareError='';for(const answers of themeAnswers.values())answers.clear();activeThemeDeck=null;themeCategory='all';themeIndex=0;themeReview=false;themeSaveError='';swipeBusy=false;swipeLoadError='';swipeSaveError='';swipeReview=false;swipeIndex=0;sharedMatches=[];sharedPriorities=[];sharedDeckId='general';sharedError='';sharedLoading=false;sharedSession++;sharedRequest++;insightsRows=[];sharedUnderstandingRows=[];insightsLoading=false;insightsError='';insightsRequest++;themesUnlocked=false;themesLoading=false;themesError='';themesRequest++;
+const {data:{user:u},error}=authResult;if(error&&error.name!=='AuthSessionMissingError')throw error;user=u;profile=null;members=[];mediatorExperience.reset(u?.id??null);aiResults.reset(u?.id??null);personalityExperience.reset(u?.id??null);swipeAnswers.clear();swipeImportance.clear();importancePending.clear();importanceSaving.clear();importanceAvailable=false;importanceLoadError='';skippedUnderstanding.clear();understandingShares.clear();understandingShareSaving.clear();understandingShareError='';for(const answers of themeAnswers.values())answers.clear();activeThemeDeck=null;themeCategory='all';themeIndex=0;themeReview=false;themeSaveError='';swipeBusy=false;swipeLoadError='';swipeSaveError='';swipeReview=false;swipeSkippedReview=false;swipeIndex=0;sharedMatches=[];sharedPriorities=[];sharedDeckId='general';sharedError='';sharedLoading=false;sharedSession++;sharedRequest++;insightsRows=[];sharedUnderstandingRows=[];insightsLoading=false;insightsError='';insightsRequest++;themesUnlocked=false;themesLoading=false;themesError='';themesRequest++;
 if(typeof schysstaRequest!=='undefined'){schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];schysstaNotifications=[];schysstaReplacementLinks=[];schysstaHistory=[];schysstaEndTarget=null;schysstaLoading=false;schysstaError='';schysstaRequest++;schysstaSaving.clear();schysstaPausedIds.clear();clearFamilyChat();schysstaDraft='';schysstaDraftOpen=false;schysstaDraftKey=null;schysstaEditTarget=null;schysstaSubmitting=false;schysstaMessage='';schysstaCopyMessage='';schysstaFocusId='';schysstaSearch='';schysstaFilterStatus='all';}
 if(user){const viewer=user.id;
 let loaded;
@@ -1063,7 +1260,7 @@ if(!s.error)for(const answer of s.data||[]){
 }if(!k.error)for(const skipped of k.data||[])if(skipped.deck_id==='general'&&GENERAL_CARDS.some(card=>card.id===skipped.card_id&&card.type==='understanding'))skippedUnderstanding.add(skipped.card_id);
 if(i.error)importanceLoadError='Den säkra lagringen är inte aktiverad.';else{importanceAvailable=true;for(const row of i.data||[])if([-1,0,1].includes(row.importance)&&validImportanceCard(row.deck_id,row.card_id))swipeImportance.set(importanceKey(row.deck_id,row.card_id),row.importance);}
 if(sharedUnderstandingEnabled){if(b.error)understandingShareError='Delningsstatus kunde inte hämtas.';else if(viewerRole()==='teen')for(const row of b.data||[])if(row.deck_id==='general'&&GENERAL_CARDS.some(card=>card.id===row.card_id&&card.type==='understanding'))understandingShares.add(row.card_id);}
-swipeIndex=nextUnanswered();}
+swipeIndex=nextUnanswered();swipeSkippedReview=false;}
 if(generation!==refreshGeneration)return;
 render();
 if(user)void personalityExperience.load(user.id);
@@ -1076,9 +1273,34 @@ if(user&&members.length===2){
   else void fetchFamilyChatUnread();
 }
 }
-document.addEventListener('click',e=>{if(e.target.closest('#mediator-clear')){mediatorExperience.clear();return;}if(e.target.closest('#mediator-new')){void mediatorExperience.createChat();return;}if(e.target.closest('#mediator-delete')){if(window.confirm('Vill du radera hela detta privata samtal permanent?'))void mediatorExperience.deleteChat();return;}const mediatorOpen=e.target.closest('[data-mediator-open]');if(mediatorOpen){void mediatorExperience.openChat(mediatorOpen.dataset.mediatorOpen);return;}if(e.target.closest('[data-pf-action]')){void personalityExperience.handleClick(e.target,{isPaired:members.length===2&&members.some(m=>m.role==='parent')&&members.some(m=>m.role==='teen')});return;}const b=e.target.closest('[data-swipe]');if(b)advanceSwipe(b.dataset.swipe);if(e.target.closest('#swipe-restart')){swipeReview=true;swipeIndex=visibleGeneralIndices()[0]??STATEMENTS.length;render();}if(e.target.closest('#swipe-skip')&&viewerRole()==='teen'&&GENERAL_CARDS[swipeIndex]?.type==='understanding'&&!swipeBusy)void skipUnderstandingCard(swipeIndex,user.id,sharedSession);if(e.target.closest('#swipe-reload'))refresh().catch(showError);const refreshMatches=e.target.closest('[data-refresh-matches]');if(refreshMatches&&!sharedLoading)void fetchSwipeMatches(refreshMatches.dataset.refreshMatches);if(e.target.closest('#retry-theme-unlock')&&!themesLoading)void fetchThemeUnlock();
+document.addEventListener('click',e=>{
+if(page()==='kommunikation'){
+   const choice=e.target.closest('[data-comm-open]');
+   if(choice){
+     const skill=choice.dataset.commOpen;
+     if(['lyssna','pausa','reparera','losning','validera','grans'].includes(skill)){
+       const detail=document.querySelector('.comm-exercise[data-comm-skill="'+skill+'"]');
+       if(detail){detail.open=true;detail.querySelector('summary')?.focus({preventScroll:true});detail.scrollIntoView({block:'nearest',behavior:'auto'});}
+     }
+     return;
+   }
+ }
+ if(page()==='nvc'&&e.target.closest('[data-comm-reset]')){const form=$('comm-nvc-form');form?.reset();const output=$('comm-nvc-output');if(output)output.textContent='Din formulering visas här när du är redo.';$('comm-observation')?.focus();return;}
+if(e.target.closest('#live-skip-to-main')){e.preventDefault();$('live-app')?.focus({preventScroll:true});return;}
+const aiRetry=e.target.closest('[data-ai-analysis-retry]');
+if(aiRetry&&aiResultEnabled&&user){
+  const [kind,scope]=aiRetry.dataset.aiAnalysisRetry.split(':');
+  const signature=kind==='personality'?personalityExperience.getAiSnapshot():
+    scope==='all'?insightsAiSignature():swipeAiSignature(scope);
+  if(signature)void aiResults.ensure(kind,scope,signature,{force:true});
+  return;
+}
+if(e.target.closest('#mediator-clear')){mediatorExperience.clear();return;}if(e.target.closest('#mediator-new')){void mediatorExperience.createChat();return;}if(e.target.closest('#mediator-refresh-context')){void mediatorExperience.loadContextStatus();return;}if(e.target.closest('#mediator-delete')){if(window.confirm('Vill du radera hela detta privata samtal permanent?'))void mediatorExperience.deleteChat();return;}const mediatorOpen=e.target.closest('[data-mediator-open]');if(mediatorOpen){void mediatorExperience.openChat(mediatorOpen.dataset.mediatorOpen);return;}if(e.target.closest('[data-pf-action]')){void personalityExperience.handleClick(e.target,{isPaired:members.length===2&&members.some(m=>m.role==='parent')&&members.some(m=>m.role==='teen')});return;}const b=e.target.closest('[data-swipe]');if(b)advanceSwipe(b.dataset.swipe);if(e.target.closest('#swipe-restart')){swipeSkippedReview=false;swipeReview=true;swipeIndex=visibleGeneralIndices()[0]??STATEMENTS.length;render();}
+if(e.target.closest('#swipe-review-skipped')&&viewerRole()==='teen'&&!swipeBusy){swipeSkippedReview=true;swipeReview=false;swipeIndex=nextSkippedAfter(-1);render();}if(e.target.closest('#swipe-skip')&&viewerRole()==='teen'&&GENERAL_CARDS[swipeIndex]?.type==='understanding'&&!swipeBusy)void skipUnderstandingCard(swipeIndex,user.id,sharedSession);if(e.target.closest('#swipe-reload'))refresh().catch(showError);const refreshMatches=e.target.closest('[data-refresh-matches]');if(refreshMatches&&!sharedLoading)void fetchSwipeMatches(refreshMatches.dataset.refreshMatches);if(e.target.closest('#retry-theme-unlock')&&!themesLoading)void fetchThemeUnlock();
 if(e.target.closest('#insights-retry')&&!insightsLoading)void fetchInsights();
+if(e.target.closest('#home-refresh-notices')&&user&&members.length===2){if(schysstaListEnabled&&!schysstaLoading)void fetchSchysstaList();void fetchFamilyChatUnread();}
 if(e.target.closest('[data-family-chat-refresh]'))void fetchFamilyChat();
+if(e.target.closest('[data-family-chat-mark-all-read]'))void markAllFamilyChatRead();
 if(e.target.closest('[data-family-chat-more]'))void fetchFamilyChat(true);
 if(e.target.closest('#schyssta-retry')&&!schysstaLoading)void fetchSchysstaList();
 if(e.target.closest('[data-schyssta-refresh]')&&!schysstaLoading)void fetchSchysstaList();
@@ -1137,6 +1359,7 @@ if(e.target.closest('#theme-restart')&&themeAccessAllowed()){const deck=THEME_DE
 });
 document.addEventListener('input',e=>{if(e.target.matches?.('#mediator-input')){mediatorExperience.input(e.target.value);const count=document.getElementById('mediator-char-count');if(count)count.textContent=e.target.value.length+' / 2000 tecken';const send=document.querySelector('#mediator-form button[type="submit"]');if(send)send.disabled=!e.target.value.trim();return;}if(e.target.matches?.('#family-chat-body')){familyChatDraft=e.target.value;familyChatRequestKey=null;familyChatStatus='';return;}if(e.target.matches?.('#schyssta-search')){schysstaSearch=e.target.value.slice(0,100);applySchysstaFilters();return;}if(e.target.matches?.('#schyssta-body')){schysstaDraft=e.target.value;schysstaDraftKey=null;schysstaMessage='';const preview=document.getElementById('schyssta-preview-text');if(preview)preview.textContent=schysstaDraft.trim()||'Skriv en regel ovan för att förhandsgranska texten.';const count=document.getElementById('schyssta-length');if(count)count.textContent=schysstaDraft.length+' av 500 tecken';return;}if(!e.target.matches?.('[data-importance]'))return;e.target.setAttribute('aria-valuetext',importanceValueText(Number(e.target.value)));});
 document.addEventListener('change',e=>{
+  if(e.target.matches?.('#mediator-use-context')){mediatorExperience.setProjectContext(e.target.checked);return;}
   if(e.target.matches?.('input[data-pf-answer]')){void personalityExperience.handleChange(e.target);return;}
   if(e.target.matches?.('#schyssta-status-filter')){schysstaFilterStatus=['all','approved','ongoing'].includes(e.target.value)?e.target.value:'all';applySchysstaFilters();return;}
   if(e.target.matches?.('#theme-category')&&activeThemeDeck&&themeAccessAllowed()){
@@ -1151,12 +1374,18 @@ document.addEventListener('keydown',e=>{
   if(e.target.matches?.('#family-chat-body')&&(e.ctrlKey||e.metaKey)&&e.key==='Enter'){
     e.preventDefault();e.target.closest('form')?.requestSubmit();return;
   }
-  if(page()==='swipe'&&user&&!['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName)&&['ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();advanceSwipe(e.key==='ArrowRight'?'yes':'no');}});
-document.addEventListener('submit',async e=>{if(e.target.id==='mediator-form'){e.preventDefault();await mediatorExperience.submit();return;}if(e.target.id==='family-chat-form'){e.preventDefault();await sendFamilyChatMessage();return;}if(e.target.id==='schyssta-manual-form'){e.preventDefault();await submitManualSchysstaRule();return;}if(e.target.id!=='live-login')return;e.preventDefault();const b=e.target.querySelector('button');b.disabled=true;const feedback=$('login-feedback');feedback.textContent='Loggar in…';const email=$('live-email').value.trim();try{const {error}=await db.auth.signInWithPassword({email,password:$('live-password').value});if(error)throw error;$('live-password') && ($('live-password').value='');await refresh();}catch(err){feedback.textContent='Kunde inte logga in. Kontrollera e-post och lösenord, eller välj ”Glömt lösenord eller saknar lösenord?”.';}finally{b.disabled=false;}});
+  // Arrow keys may control the card only when no navigation, form or slider is focused.
+  // Without this guard, keyboard navigation could silently save an unintended answer.
+  const interactive=e.target.closest?.('a,button,input,textarea,select,[contenteditable],[role="slider"],[role="button"],[role="link"],[role="textbox"],[role="spinbutton"],[role="combobox"],[role="menuitem"],[role="radio"]');
+  if(page()==='swipe'&&user&&!interactive&&!e.altKey&&!e.ctrlKey&&!e.metaKey&&!e.shiftKey&&['ArrowLeft','ArrowRight'].includes(e.key)){
+    e.preventDefault();advanceSwipe(e.key==='ArrowRight'?'yes':'no');
+  }
+});
+document.addEventListener('submit',async e=>{if(e.target.id==='comm-nvc-form'){e.preventDefault();if(page()!=='nvc'||!user)return;const values=Object.fromEntries(new FormData(e.target));const sentence=buildNvcSentence(values);const output=$('comm-nvc-output');if(output){output.textContent=sentence||'Fyll i alla fyra steg innan du skapar en formulering.';output.focus();}return;}if(e.target.id==='mediator-form'){e.preventDefault();await mediatorExperience.submit();return;}if(e.target.id==='family-chat-form'){e.preventDefault();await sendFamilyChatMessage();return;}if(e.target.id==='schyssta-manual-form'){e.preventDefault();await submitManualSchysstaRule();return;}if(e.target.id!=='live-login')return;e.preventDefault();const b=e.target.querySelector('button');b.disabled=true;const feedback=$('login-feedback');feedback.textContent='Loggar in…';const email=$('live-email').value.trim();try{const {error}=await db.auth.signInWithPassword({email,password:$('live-password').value});if(error)throw error;$('live-password') && ($('live-password').value='');await refresh();}catch(err){feedback.textContent='Kunde inte logga in. Kontrollera e-post och lösenord, eller välj ”Glömt lösenord eller saknar lösenord?”.';}finally{b.disabled=false;}});
 window.addEventListener('hashchange',()=>{
   if(page()!=='insikter'){insightsRows=[];sharedUnderstandingRows=[];insightsError='';insightsLoading=false;insightsRequest++;}
   if(page()!=='regler'&&page()!=='inkorg'){schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];schysstaNotifications=[];schysstaReplacementLinks=[];schysstaHistory=[];schysstaError='';schysstaLoading=false;schysstaRequest++;}
-  render();scrollLiveMainTop();
+  render();scrollLiveMainTop();$('live-app')?.focus({preventScroll:true});
   if(page()==='insikter')void fetchInsights();
   if(page()==='personlighet')void personalityExperience.refreshShared();
   if(page()==='medlare')void mediatorExperience.loadList();
@@ -1169,23 +1398,25 @@ document.addEventListener('visibilitychange',()=>{
   if(document.hidden)return;
   void pollSharedMatches();
   if(page()==='personlighet')void personalityExperience.refreshShared();
+  if(page()==='insikter'&&user&&members.length===2)void fetchInsights({quiet:true});
   // Refresh the family's inbox after returning to the tab, without overwriting a draft.
   if(schysstaListEnabled&&user&&members.length===2&&!schysstaLoading&&!schysstaDraftOpen
     &&['hem','inkorg','regler'].includes(page()))void fetchSchysstaList();
 });
 window.addEventListener('online',()=>{
+  if(page()==='insikter'&&user&&members.length===2)void fetchInsights({quiet:true});
   if(schysstaListEnabled&&user&&members.length===2&&!schysstaDraftOpen&&!schysstaLoading
      &&schysstaError&&['hem','inkorg','regler'].includes(page()))void fetchSchysstaList();
 });
-window.addEventListener('focus',()=>void pollSharedMatches());
+window.addEventListener('focus',()=>{void pollSharedMatches();if(page()==='insikter'&&user&&members.length===2)void fetchInsights({quiet:true});});
 // Light polling while the tab is visible. Never rerender the message composer mid-draft.
 window.setInterval(()=>{
   if(document.hidden||!user||members.length!==2)return;
-  if(page()==='inkorg'&&!familyChatDraft.trim()&&!familyChatSending&&!familyChatLoading)void fetchFamilyChat();
+  if(page()==='inkorg'&&!familyChatDraft.trim()&&!familyChatSending&&!familyChatLoading&&!familyChatLoadingOlder)void fetchFamilyChat(false,{quiet:true});
   else if(page()==='hem')void fetchFamilyChatUnread();
 },15000);
-window.addEventListener('focus',()=>void pollSharedMatches());
 window.setInterval(()=>void pollSharedMatches(),SHARED_POLL_INTERVAL_MS);
+window.setInterval(()=>{if(!document.hidden&&page()==='insikter'&&user&&members.length===2)void fetchInsights({quiet:true});},INSIGHTS_CONSENT_REFRESH_MS);
 // If the other family member withdraws consent, remove their profile on the next check.
 window.setInterval(()=>{if(!document.hidden&&page()==='personlighet'&&user)void personalityExperience.refreshShared();},15000);
 db.auth.onAuthStateChange(()=>setTimeout(()=>refresh().catch(showError),0));

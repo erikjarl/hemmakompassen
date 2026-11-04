@@ -1,16 +1,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createHandler, DAILY_LIMIT, MODEL, safetyResponse } from '../workers/ai-mediator/src/index.mjs';
+import { createHandler, DAILY_LIMIT, MODEL, safetyResponse, loadViewerRole } from '../workers/ai-mediator/src/index.mjs';
 
 const ORIGIN = 'https://erikjarl.github.io';
 const USER_A = '11111111-1111-4111-8111-111111111111';
 const USER_B = '22222222-2222-4222-8222-222222222222';
 
-function harness({ noQuota = false, modelFails = false, authFails = false } = {}) {
+function harness({ noQuota = false, modelFails = false, authFails = false, verifiedRole = null } = {}) {
   const seen = { auth: [], model: [] };
   const usage = new Map();
   const env = {
     APP_ORIGIN: ORIGIN,
+    AI_TEST_USERS: USER_A+','+USER_B,
     SUPABASE_URL: 'https://example.supabase.co',
     SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_test',
     AI: { async run(model, args) {
@@ -39,6 +40,9 @@ function harness({ noQuota = false, modelFails = false, authFails = false } = {}
     fetchAuth: async (url, options) => {
       seen.auth.push({ url, options });
       if (authFails) return new Response('', { status: 500 });
+      if(url.endsWith('/rest/v1/rpc/my_family_members')&&verifiedRole){
+        return Response.json([{user_id:USER_A,role:verifiedRole},{user_id:USER_B,role:verifiedRole==='parent'?'teen':'parent'}]);
+      }
       const bearer = options.headers.Authorization;
       const id = bearer === 'Bearer valid-a' ? USER_A : bearer === 'Bearer valid-b' ? USER_B : null;
       return id ? Response.json({ id }) : new Response('', { status: 401 });
@@ -147,4 +151,99 @@ test('passiv beskrivning av våld fångas utan AI-anrop',async()=>{
  assert.equal(response.status,200);
  assert.equal((await response.json()).safetyNotice,true);
  assert.equal(x.seen.model.length,0);
+});
+
+test('role advice uses only the verified viewer row, not the partner role/name',async()=>{
+  const peer='PRIVATE_PARTNER_NAME_SHOULD_NOT_BE_SENT';
+  const env={SUPABASE_URL:'https://example.supabase.co',SUPABASE_PUBLISHABLE_KEY:'publishable'};
+  const calls=[];
+  const role=await loadViewerRole(env,'valid-jwt',USER_A,async(url,options)=>{
+    calls.push({url,options});
+    return Response.json([
+      {user_id:USER_B,role:'parent',display_name:peer},
+      {user_id:USER_A,role:'teen',display_name:'Self'}
+    ]);
+  });
+  assert.equal(role,'teen');
+  assert.equal(calls.length,1);
+  assert.match(calls[0].url,/\/rest\/v1\/rpc\/my_family_members$/);
+  assert.equal(calls[0].options.method,'POST');
+  assert.equal(calls[0].options.headers.Authorization,'Bearer valid-jwt');
+});
+test('role lookup never guesses the partner role if the viewer row is missing',async()=>{
+  const env={SUPABASE_URL:'https://example.supabase.co',SUPABASE_PUBLISHABLE_KEY:'publishable'};
+  const role=await loadViewerRole(env,'valid-jwt',USER_A,async()=>Response.json([
+    {user_id:USER_B,role:'parent',display_name:'private'}
+  ]));
+  assert.equal(role,null);
+});
+test('role lookup falls back neutrally when RLS/RPC is unavailable',async()=>{
+  const env={SUPABASE_URL:'https://example.supabase.co',SUPABASE_PUBLISHABLE_KEY:'publishable'};
+  const role=await loadViewerRole(env,'valid-jwt',USER_A,async()=>new Response('',{status:403}));
+  assert.equal(role,null);
+});
+
+test('authenticated users outside the internal pilot allowlist are denied',async()=>{
+  const x=harness();
+  x.env.AI_TEST_USERS=USER_B;
+  const response=await x.handler(req({token:'valid-a'}),x.env);
+  assert.equal(response.status,403);
+  assert.equal(x.seen.model.length,0);
+});
+test('missing internal allowlist fails closed before any model call',async()=>{
+  const x=harness();
+  delete x.env.AI_TEST_USERS;
+  const response=await x.handler(req({token:'valid-a'}),x.env);
+  assert.equal(response.status,403);
+  assert.equal(x.seen.model.length,0);
+});
+
+// AI-01D: server must honour explicit project-context opt-out, not merely hide UI.
+test('opt-out prevents every project/role RPC read while still allowing an authenticated chat reply',async()=>{
+  const x=harness();
+  const result=await x.handler(req({message:'Kan vi prata om skolan?',extra:{useProjectContext:false,
+    context:{fake:'SECRET_PARTNER_CONTEXT'},role:'parent'}}),x.env);
+  assert.equal(result.status,200);
+  assert.equal(x.seen.auth.length,1,'only identity /auth/v1/user may be read');
+  assert.match(x.seen.auth[0].url,/\/auth\/v1\/user$/);
+  assert.equal(x.seen.model.length,1);
+  const prompt=x.seen.model[0].args.messages[0].content;
+  assert.match(prompt,/stängt av projektkontext/);
+  assert.doesNotMatch(prompt,/SECRET_PARTNER_CONTEXT/);
+  assert.equal(JSON.stringify(x.seen.model).includes('SECRET_PARTNER_CONTEXT'),false);
+});
+test('project context defaults on for existing clients and can be explicitly enabled',async()=>{
+  const x=harness();
+  assert.equal((await x.handler(req({message:'Hej'}),x.env)).status,200);
+  assert.ok(x.seen.auth.length>1,'default loads authorized project context');
+  const before=x.seen.auth.length;
+  assert.equal((await x.handler(req({message:'Hej igen',extra:{useProjectContext:true}}),x.env)).status,200);
+  assert.ok(x.seen.auth.length>before+1);
+});
+test('malformed context choice is rejected before quota or project reads',async()=>{
+  const x=harness();
+  for(const invalid of ['false',0,1,null,[],{}]){
+    const res=await x.handler(req({extra:{useProjectContext:invalid}}),x.env);
+    assert.equal(res.status,400);
+  }
+  assert.equal(x.seen.model.length,0);
+  assert.equal(x.seen.auth.length,6,'each request verifies user identity before parsing');
+});
+
+test('verified parent may receive the MI URL, while teen and context-opt-out cannot',async()=>{
+  const url='https://erikjarl.github.io/hemmakompassen/#mi-foralder';
+  const nvc='https://erikjarl.github.io/hemmakompassen/#nvc';
+  const parent=harness({verifiedRole:'parent'});
+  assert.equal((await parent.handler(req({message:'Hur kan jag lyssna bättre?'}),parent.env)).status,200);
+  const parentPrompt=parent.seen.model[0].args.messages[0].content;
+  assert.ok(parentPrompt.includes(url));
+  assert.ok(parentPrompt.includes(nvc));
+  const teen=harness({verifiedRole:'teen'});
+  assert.equal((await teen.handler(req({message:'Hur kan jag bli lyssnad på?'}),teen.env)).status,200);
+  assert.ok(!teen.seen.model[0].args.messages[0].content.includes(url));
+  assert.ok(teen.seen.model[0].args.messages[0].content.includes(nvc));
+  const optedOut=harness({verifiedRole:'parent'});
+  assert.equal((await optedOut.handler(req({message:'Hur kan jag prata?',extra:{useProjectContext:false}}),optedOut.env)).status,200);
+  assert.ok(!optedOut.seen.model[0].args.messages[0].content.includes(url));
+  assert.ok(optedOut.seen.model[0].args.messages[0].content.includes(nvc));
 });
