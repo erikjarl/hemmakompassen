@@ -1,11 +1,11 @@
 # Hemmakompassen — aktuell utvecklingskö
 
-## 4 november 2026 – KOM-03: situationsstyrt kommunikationsstöd (utvecklingsgren)
+## 4 november 2026 – KOM-03: situationsstyrt kommunikationsstöd (PR #106 – mergad och publicerad)
 
-- [x] **KOM-03A – implementerat på utvecklingsgren:** sex situationsval öppnar direkt rätt befintlig eller ny samtalsövning. Tangentbordsfokus flyttas till öppnad övning. Ingen ny hash-route, familjedata, databasförändring eller lagring.
-- [x] **KOM-03B – innehåll implementerat på utvecklingsgren:** tre nya redaktionella övningar om validering utan medhåll, konkreta frivilliga önskemål och respektfull gränssättning. Den sista har olika råd för förälder respektive tonåring och tydliggör vuxenansvar och säkerhet.
-- [x] **KOM-03C – regressionstester tillagda i koden:** kontrakt för att alla situationsval har en målövning, rollanpassning, interaktion och frånvaro av lagring. Tester måste köras i CI.
-- [ ] **KOM-03D – verifiera och leverera:** kör GitHub Actions (Node, statisk build, Playwright om tillgängligt), granska resultat och merga endast med verifierad kvalitet. Markera inte som publicerat innan faktisk merge och Pages-status.
+- [x] **KOM-03A – mergad till main:** sex situationsval öppnar direkt rätt befintlig eller ny samtalsövning. Tangentbordsfokus flyttas till öppnad övning. Ingen ny hash-route, familjedata, databasförändring eller lagring.
+- [x] **KOM-03B – innehåll mergat:** tre nya redaktionella övningar om validering utan medhåll, konkreta frivilliga önskemål och respektfull gränssättning. Den sista har olika råd för förälder respektive tonåring och tydliggör vuxenansvar och säkerhet.
+- [x] **KOM-03C – regressionstester verifierade:** kontrakt för målövningar, rollanpassning, säker interaktion och frånvaro av lagring, samt Chromium/Playwright-övningsval på mobil med både pek- och tangentbordsstyrning.
+- [x] **KOM-03D – release verifierad 4 november 2026:** PR #106 mergad som `c70cf497184067106a676ab169448ed317711f4a`. PR UI/Node/Playwright **#41826421254 godkänd**, main UI **#41826651841 godkänd** och GitHub Pages **#41826649578 godkänd**. Syntetiska tester är inte verkliga tvåkontotester.
 - [ ] **KOM-03E – verklig QA:** prova med båda autentiserade testkontona på fysisk iOS Safari och med skärmläsare, även större tecken; kontrollera fokus, begriplighet och att valen aldrig skapar meddelanden eller delning.
 - [ ] **KOM-04 – metod- och språkgranskning:** bedöm NVC-övningar, MI-överföring till föräldraskap och tillkommande verktyg kritiskt utifrån källor, målgrupp, maktasymmetri och risksituationer. Undvik behandlings- eller effektanspråk utan stöd.
 - [ ] **KOM-05 – nästa integrationssteg:** utvärdera direkta säkra länkar till specifika övningar från AI-medlaren och Gillaswajpen, men bygg först en testad ankarmekanism som inte bryter SPA-navigation eller exponerar privata svar.
@@ -37,8 +37,8 @@
 - [ ] **UX-01C verklig QA återstår:** två riktiga autentiserade testkonton, fysisk iOS Safari med VoiceOver, skärmläsare, 320/390 px och stora tecken är **inte** verifierade genom syntetiskt Chromium. Fortsätt UX-01 före extern pilot.
 
 
-**Granskad:** onsdag 4 november 2026, efter mergade och publicerade PR #90–#105, samt separat verifierad Supabase-migration #95.  
-**Källa:** kod på `main` inklusive PR #90–#105, `backend-config.js`, kontrollerade GitHub Actions/UI/Pages-körningar, Supabase-migrationer och read-only SQL efter installation. Detta är **inte** ett påstående om genomförda verkliga tvåkontotester.  
+**Granskad:** onsdag 4 november 2026, efter mergade och publicerade PR #90–#106, samt separat verifierad Supabase-migration #95.  
+**Källa:** kod på `main` inklusive PR #90–#106, `backend-config.js`, kontrollerade GitHub Actions/UI/Pages-körningar, Supabase-migrationer och read-only SQL efter installation. Detta är **inte** ett påstående om genomförda verkliga tvåkontotester.  
 **Syfte:** En enda kort, uppdaterad handlingslista för manuellt och schemalagt utvecklingsarbete. `ROADMAP.md` bevarar detaljerna och äldre beslut.
 
 ## 3 november 2026 – SW-03A: egen viktigast-översikt och fortsatt privat prioritering
