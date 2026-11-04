@@ -365,8 +365,12 @@ try{
     'Cross-module NVC links select the communication tab');
   await m.page.goto(base+'#kommunikation',{waitUntil:'load'});
   await m.page.getByRole('heading',{name:'Verktyg för bättre samtal'}).waitFor();
-  assert.equal(await m.page.locator('.comm-exercise').count(),6,'Six shared communication techniques are available');
+  assert.equal(await m.page.locator('.comm-exercise').count(),9,'Nine shared communication techniques are available');
   assert.equal(await m.page.getByRole('link',{name:'Öppna MI-övningarna'}).count(),1,'Only parents see MI entry');
+  await m.page.locator('[data-comm-open="validera"]').click();
+  assert.equal(await m.page.locator('.comm-exercise[data-comm-skill="validera"]').evaluate(el=>el.open),true,'Situation opens matching skill');
+  assert.equal(await m.page.evaluate(()=>document.activeElement?.closest('.comm-exercise')?.dataset.commSkill),'validera','Keyboard focus follows opened skill');
+  assert.equal(new URL(m.page.url()).hash,'#kommunikation','Situation does not change SPA route');
   await checkOverflow(m.page,'Communication toolkit 390px parent');
   await capture(m.page,'mobile-communication-parent.png');
   await m.page.getByRole('link',{name:'Bygg ett jag-budskap'}).click();
@@ -650,7 +654,11 @@ try{
   await soloTeen.page.goto(base+'#kommunikation',{waitUntil:'load'});
   assert.equal(await soloTeen.page.getByRole('link',{name:'Öppna MI-övningarna'}).count(),0,'Teen does not see parent MI entry');
   assert.match(await soloTeen.page.locator('.comm-feature-grid').innerText(),/Din röst är viktig/);
-  assert.equal(await soloTeen.page.locator('.comm-exercise').count(),6,'Teen gets all common exercises');
+  assert.equal(await soloTeen.page.locator('.comm-exercise').count(),9,'Teen gets all common exercises');
+  await soloTeen.page.locator('[data-comm-open="grans"]').focus();
+  await soloTeen.page.keyboard.press('Enter');
+  assert.equal(await soloTeen.page.locator('.comm-exercise[data-comm-skill="grans"]').evaluate(el=>el.open),true,'Teen can open boundary exercise by keyboard');
+  assert.match(await soloTeen.page.locator('.comm-exercise[data-comm-skill="grans"]').innerText(),/sök hjälp hos en trygg vuxen/);
   await soloTeen.page.getByRole('link',{name:'Träna på att uttrycka dig'}).click();
   await soloTeen.page.getByRole('heading',{name:'Nonviolent Communication',exact:true}).waitFor();
   assert.match(await soloTeen.page.locator('.comm-example').first().innerText(),/ger råd innan jag har berättat färdigt/);
