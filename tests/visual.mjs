@@ -352,6 +352,17 @@ try{
   assert.equal(await m.page.locator('#live-mobile-nav a[href="#swipe"]').getAttribute('aria-current'),'page',
     'The insights subpage keeps Gillaswajpen marked as the active primary tab');
   await m.page.goto(base+'#hem',{waitUntil:'load'});
+  for(const route of ['swipe','personlighet','insikter','regler','inkorg','medlare']){
+    await m.page.goto(base+'#'+route,{waitUntil:'load'});
+    await m.page.locator('.comm-crosslink a[href="#kommunikation"]').waitFor();
+    assert.equal(await m.page.locator('.comm-crosslink a[href="#nvc"]').count(),1,'NVC is available from '+route);
+    assert.equal(await m.page.locator('.comm-crosslink a[href="#mi-foralder"]').count(),1,'Parent MI is available from '+route);
+  }
+  await m.page.goto(base+'#regler',{waitUntil:'load'});
+  await m.page.locator('.comm-crosslink a[href="#nvc"]').click();
+  await m.page.getByRole('heading',{name:'Nonviolent Communication',exact:true}).waitFor();
+  assert.equal(await m.page.locator('#live-mobile-nav a[href="#kommunikation"]').getAttribute('aria-current'),'page',
+    'Cross-module NVC links select the communication tab');
   await m.page.goto(base+'#kommunikation',{waitUntil:'load'});
   await m.page.getByRole('heading',{name:'Verktyg för bättre samtal'}).waitFor();
   assert.equal(await m.page.locator('.comm-exercise').count(),6,'Six shared communication techniques are available');
@@ -631,6 +642,11 @@ try{
   await capture(narrow.page,'mobile-320-nvc.png');
   await narrow.context.close();
   const soloTeen=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,role:'teen'});
+  await soloTeen.page.goto(base+'#inkorg',{waitUntil:'load'});
+  assert.equal(await soloTeen.page.locator('.comm-crosslink a[href="#nvc"]').count(),1,'Teen may navigate to NVC from inbox');
+  assert.equal(await soloTeen.page.locator('.comm-crosslink a[href="#mi-foralder"]').count(),0,'Teen does not see parent MI cross-links');
+  await soloTeen.page.locator('.comm-crosslink a[href="#nvc"]').click();
+  await soloTeen.page.getByRole('heading',{name:'Nonviolent Communication',exact:true}).waitFor();
   await soloTeen.page.goto(base+'#kommunikation',{waitUntil:'load'});
   assert.equal(await soloTeen.page.getByRole('link',{name:'Öppna MI-övningarna'}).count(),0,'Teen does not see parent MI entry');
   assert.match(await soloTeen.page.locator('.comm-feature-grid').innerText(),/Din röst är viktig/);

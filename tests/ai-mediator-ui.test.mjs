@@ -132,3 +132,15 @@ test('deterministisk säkerhetsinformation märks inte som genererad AI',async()
  assert.match(x.ui.render(),/Säkerhetsinformation/);
  assert.equal(x.ui.getState().turns[1].role,'safety');
 });
+
+test('assistant deep links are clickable but messages from user and safety stay plain',async()=>{
+ const internal='https://erikjarl.github.io/hemmakompassen/#nvc';
+ const x=fixture({reply:'Prova '+internal+' och <script>alert(1)</script>'});
+ x.ui.input('Visa '+internal);
+ assert.equal(await x.ui.submit(),true);
+ const markup=x.ui.render();
+ assert.match(markup,/<a href="#nvc">https:\/\/erikjarl\.github\.io\/hemmakompassen\/#nvc<\/a>/);
+ assert.equal((markup.match(/<a href="#nvc">/g)||[]).length,1,'only the AI reply contains a clickable link');
+ assert.ok(markup.includes('&lt;script&gt;alert(1)&lt;/script&gt;'));
+ assert.doesNotMatch(markup,/<script\b/);
+});
