@@ -36,4 +36,4 @@ Playwright lägger skärmbilder och `visual-audit.json` i `artifacts/` och ladda
 
 Den tidigare noteringen om att sista matchningsmigrationen ”inte är installerad” var en äldre status före den dokumenterade 30 oktober-installationen. Utgå från nya, explicit verifierade statusuppgifter i ROADMAP och [CURRENT_TASKS.md](../docs/CURRENT_TASKS.md), och kontrollera riktiga databasen innan nya påståenden om livefunktioner.
 
-- KOM-02 (PR #105): verifierad/okänd familjeroll, MI-länk enbart till förälder, AI-chattsvar med endast tre tillåtna klickbara lokala URL:er, skydd mot HTML-injektion och mobilnavigation från sex andra moduler. Endast syntetiska tester – inte riktiga testkonto-/Worker-samtal.
+- KOM-02 (PR #105): verifierad/okänd familjeroll, MI-länk enbart till förälder, AI-chattsvar med endast tre tillåtna klickbara lokala URL:er, skydd mot HTML-injektion och mobilnavigation från sex andra moduler. Endast syntetiska tester – inte riktiga testkonto-/Worker-samtal. UI/AI-CI för PR #105, main-UI/Pages och faktisk Worker-deploy är granskade, men inte modellens live-svar med autentiserade användare.

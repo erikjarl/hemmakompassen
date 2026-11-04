@@ -2,10 +2,10 @@
 
 ## 4 november 2026 – KOM-02: samtalsverktyg i hela appen och AI-medlarens länkar (PR #105)
 
-- [x] **KOM-02A – kodad navigation:** Gillaswajpen, Gemensamma insikter, Min personlighet, Schyssta listan, Inkorgen och AI-medlaren får kontextuella genvägar till `#kommunikation` och `#nvc`. Endast föräldravyn har dessutom `#mi-foralder`. Inga privata svar förs med i länkarna och navigering skickar inga meddelanden.
-- [x] **KOM-02B – AI-systemprompt och chatt-UI i kod:** Worker-systemprompten har de verkliga absoluta Pages-adresserna `https://erikjarl.github.io/hemmakompassen/#kommunikation` och `#nvc`; förälderns särskilda MI-adress läggs bara till vid verifierad föräldraroll, aldrig vid tonåringsroll, okänd roll eller valt bort projektkontext. Chatt-UI gör enbart de tre exakt tillåtna adresserna klickbara i AI-svar efter HTML-escaping. Övriga adresser och användar-/säkerhetsmeddelanden förblir ren text.
+- [x] **KOM-02A – mergad navigation:** Gillaswajpen, Gemensamma insikter, Min personlighet, Schyssta listan, Inkorgen och AI-medlaren får kontextuella genvägar till `#kommunikation` och `#nvc`. Endast föräldravyn har dessutom `#mi-foralder`. Inga privata svar förs med i länkarna och navigering skickar inga meddelanden.
+- [x] **KOM-02B – AI-systemprompt och chatt-UI driftsatta:** Worker-systemprompten har de verkliga absoluta Pages-adresserna `https://erikjarl.github.io/hemmakompassen/#kommunikation` och `#nvc`; förälderns särskilda MI-adress läggs bara till vid verifierad föräldraroll, aldrig vid tonåringsroll, okänd roll eller valt bort projektkontext. Chatt-UI gör enbart de tre exakt tillåtna adresserna klickbara i AI-svar efter HTML-escaping. Övriga adresser och användar-/säkerhetsmeddelanden förblir ren text.
 - [x] **KOM-02C – tester skapade:** Node- och Worker-kontroller för tillåtna länkar, XSS, verifierad roll och projektkontext av/på samt Playwright-kontroll av klickbar navigation för båda rollerna i mobilen. AI-reflektioner har även generella övningslänkar utan tolkning av privat profil.
-- [ ] **KOM-02D – release/driftsättning:** invänta godkänd PR-CI, merge till `main` och Pages. **Viktigt:** GitHub Pages publicerar inte automatiskt ändringar i Cloudflare Workern. Systempromptens faktiska tillgänglighet i live-AI kräver separat Worker-version, bibehållna sex bindningar och verifierad deploy. Markera först därefter klart.
+- [x] **KOM-02D – teknisk release och Worker-driftsättning verifierad 4 november 2026:** PR #105 mergad till `main` som `5e55e0e55d8daeb800646e7fd04d8776cee0daf7`. Slutlig PR-CI för AI **#41792070496** och UI/Playwright **#41792070332** godkända. Main-UI **#41792217065** och Pages **#41792216243** godkända. Cloudflare Worker-version **`6ed65aba-94b2-463a-94a7-d6b766674a49`** (version 11) uppladdad som komplett femmodulspaket med strikt ärvda bindningar och aktiverad för **100 % trafik**; sex tidigare bindningar kontrollerades kvar, inklusive AI, D1-kvot, Origin, Supabase och två interna testkonton. Inga databas-/kortsvar ändrade. Gröna tester visar kodkontrakt, inte att modellen alltid väljer att länka.
 - [ ] **KOM-02E – verklig QA:** verifiera med två autentiserade testkonton att chatten länkar korrekt vid relevant fråga, MI inte föreslås till tonåring, avstängd projektkontext inte läser data och att inga länkar ges vid risksamtal. Fysiskt iOS-/skärmläsartest saknas.
 
 
@@ -27,8 +27,8 @@
 - [ ] **UX-01C verklig QA återstår:** två riktiga autentiserade testkonton, fysisk iOS Safari med VoiceOver, skärmläsare, 320/390 px och stora tecken är **inte** verifierade genom syntetiskt Chromium. Fortsätt UX-01 före extern pilot.
 
 
-**Granskad:** onsdag 4 november 2026, efter mergade och publicerade PR #90–#104, samt separat verifierad Supabase-migration #95.  
-**Källa:** kod på `main` inklusive PR #90–#104, `backend-config.js`, kontrollerade GitHub Actions/UI/Pages-körningar, Supabase-migrationer och read-only SQL efter installation. Detta är **inte** ett påstående om genomförda verkliga tvåkontotester.  
+**Granskad:** onsdag 4 november 2026, efter mergade och publicerade PR #90–#105, samt separat verifierad Supabase-migration #95.  
+**Källa:** kod på `main` inklusive PR #90–#105, `backend-config.js`, kontrollerade GitHub Actions/UI/Pages-körningar, Supabase-migrationer och read-only SQL efter installation. Detta är **inte** ett påstående om genomförda verkliga tvåkontotester.  
 **Syfte:** En enda kort, uppdaterad handlingslista för manuellt och schemalagt utvecklingsarbete. `ROADMAP.md` bevarar detaljerna och äldre beslut.
 
 ## 3 november 2026 – SW-03A: egen viktigast-översikt och fortsatt privat prioritering
