@@ -14,7 +14,10 @@ test('MI editorial support states its limits, respects teenager autonomy, and us
   assert.match(html,/Forskning om MI i vård kan inte automatiskt överföras/);
   assert.match(html,/Schyssta listan/);
   assert.match(html,/Förstod jag rätt/);
-  assert.equal(MI_PARENT_SOURCES.length,3);
+  assert.match(html,/Fråga om lov innan du berättar/);
+  assert.match(html,/Utforska ambivalens utan att argumentera/);
+  assert.match(html,/du måste kunna acceptera att svaret blir nej/);
+  assert.equal(MI_PARENT_SOURCES.length,4);
   assert.ok(MI_PARENT_SOURCES.every(x=>x.url.startsWith('https://')&&html.includes(x.url)));
   assert.ok(!html.includes('onclick='));
 });
