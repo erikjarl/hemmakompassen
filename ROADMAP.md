@@ -1,5 +1,14 @@
 # Hemmakompassen — utvecklingsplan (senast avstämd 2026-11-04)
 
+## 4 november 2026 – KOM-02: samtalsverktyg i hela appen och AI-medlarens länkar (PR #105)
+
+- [x] **KOM-02A – kodad navigation:** Gillaswajpen, Gemensamma insikter, Min personlighet, Schyssta listan, Inkorgen och AI-medlaren får kontextuella genvägar till `#kommunikation` och `#nvc`. Endast föräldravyn har dessutom `#mi-foralder`. Inga privata svar förs med i länkarna och navigering skickar inga meddelanden.
+- [x] **KOM-02B – AI-systemprompt och chatt-UI i kod:** Worker-systemprompten har de verkliga absoluta Pages-adresserna `https://erikjarl.github.io/hemmakompassen/#kommunikation` och `#nvc`; förälderns särskilda MI-adress läggs bara till vid verifierad föräldraroll, aldrig vid tonåringsroll, okänd roll eller valt bort projektkontext. Chatt-UI gör enbart de tre exakt tillåtna adresserna klickbara i AI-svar efter HTML-escaping. Övriga adresser och användar-/säkerhetsmeddelanden förblir ren text.
+- [x] **KOM-02C – tester skapade:** Node- och Worker-kontroller för tillåtna länkar, XSS, verifierad roll och projektkontext av/på samt Playwright-kontroll av klickbar navigation för båda rollerna i mobilen. AI-reflektioner har även generella övningslänkar utan tolkning av privat profil.
+- [ ] **KOM-02D – release/driftsättning:** invänta godkänd PR-CI, merge till `main` och Pages. **Viktigt:** GitHub Pages publicerar inte automatiskt ändringar i Cloudflare Workern. Systempromptens faktiska tillgänglighet i live-AI kräver separat Worker-version, bibehållna sex bindningar och verifierad deploy. Markera först därefter klart.
+- [ ] **KOM-02E – verklig QA:** verifiera med två autentiserade testkonton att chatten länkar korrekt vid relevant fråga, MI inte föreslås till tonåring, avstängd projektkontext inte läser data och att inga länkar ges vid risksamtal. Fysiskt iOS-/skärmläsartest saknas.
+
+
 ## 4 november 2026 – KOM-01: utökad kommunikationsverktygslåda (PR #104)
 
 - [x] **KOM-01A – kod mergad till main:** Kommunikationsråd har fått en rollanpassad startsida med tydliga ingångar: MI för förälder, NVC för båda samt sex praktiska övningar (spegling, paus med återkomst, reparation, gemensam problemlösning, kravlös kontakt och svåra samtal). Förälderns redan befintliga MI-guide kompletteras med övningar i att fråga om lov och utforska ambivalens, med uttrycklig gräns mot övertalning och förälders fortsatt vuxenansvar.
