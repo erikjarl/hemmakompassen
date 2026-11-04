@@ -20,7 +20,7 @@ Det finns även äldre lokala demofiler `app.js`/`styles.css`, men de är **inte
 - **Inkorg:** privata familjemeddelanden i båda riktningar, historik, meddelandestatus och olästa regelaviseringar. Backend har familje- och parningskontroller. Verkligt heltäckande tvåkontotest är kvarstående.
 - **Schyssta listan:** familjeavgränsade förslag från regelkort och fritext, separata godkännanden, förfrågningsstatus, ändringar, omprövning/återkallelse, arkiv, sök- och filterfunktion samt inkorgskoppling. `enableSchysstaList=true` i intern testversion.
 - **Min personlighet:** versionssatt svenskspråkigt IPIP-50 (50 frågor) med privata svar, fem summaskalor, frivillig delning av endast fem sammanfattande poäng efter bådas aktiva samtycke, fem horisontella jämförelsestaplar och automatiska AI-reflektioner i intern testmiljö. Beräknade `P≈` utgår från en normalmodell och en icke-representativ amerikansk vuxenreferens, **inte** svenska normpercentiler.
-- **Kommunikationsråd:** allmänna samtalsråd och en separat MI-inspirerad föräldraguide med metodkällor, exempel och tydlig gräns mot övertalning (3 november, efter godkänd merge).
+- **Kommunikationsråd:** gemensamma övningar för spegling, konflikter och problemlösning, NVC:s fyra steg med lokal, osparad samtalsbyggare samt MI/OARS-föräldraguiden med övningar om lov och ambivalens (PR #104). Metodbeskrivningarna är inte belägg för klinisk behandlingseffekt i familjer.
 - **Mobilmeny och tangentbord:** hopp till huvudinnehållet, fokus vid sidbyten, aktiv flik som hålls synlig och skydd mot oavsiktliga ja/nej när piltangenter används på länkar/knappar (PR #103, grön main-CI och Pages). Riktig iOS-/skärmläsar-QA återstår.
 
 ## Kvarvarande begränsningar – läs innan extern testning

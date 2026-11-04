@@ -25,6 +25,7 @@ node tests/visual.mjs
 - Schyssta listan: föreslagna/antagna/avslutade regler, dubbelgodkännande, ändringar, omparning och behöriga regelnotiser.
 - Inkorg: syntetiska privata meddelanden i båda riktningar, read/unread, läskvittenser, sessionsbyte och avvisning av felaktig data.
 - IPIP-50: 50 frågor, poängberäkning, referensbeskrivning, positionsgeometri för P50/P75, privat sparning, samtyckesstyrd tvåprofilvisning, rollanpassade reflektioner och giltiga hänvisningar till befintliga kortlekar.
+- Kommunikationsråd: rollstyrd MI-ingång, sex gemensamma samtalsövningar och lokal NVC-byggare med XSS-säkert textinnehåll, rensning och inga serverskrivningar.
 - Playwright: mobil 320/390 px samt desktop i Chromium med mockad Supabase-klient; exempel på vyer och bilder för personlighet med en eller två profiler.
 
 Testerna ska **aldrig** skriva i produktionsdatabasen eller ändra verkliga användares svar. Syntetiska fixtures är **inte** en fullständig Supabase-installation. En migrationsfil som ligger i repo eller klarar pgTAP är inte per automatik installerad i den riktiga databasen. Nuvarande installationsuppgifter finns i dokumenterade databasgenomgångar i ROADMAP, men slutlig autentiserad verifiering av två riktiga testkonton återstår för flera delsystem.
