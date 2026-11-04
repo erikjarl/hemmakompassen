@@ -16,7 +16,7 @@ test('the AI system prompt contains real canonical route addresses and role gati
   assert.ok(worker.includes(u('mi-foralder')));
   const beginning=worker.slice(worker.indexOf('const SYSTEM_PROMPT'),worker.indexOf('const ROLE_INSTRUCTIONS'));
   assert.ok(!beginning.includes(u('mi-foralder')),'MI deep-link must only appear inside verified parent role guidance');
-  assert.match(worker,/rollen är tonåring eller okänd/);
+  assert.match(worker,/för tonåring eller okänd roll/);
   assert.match(worker,/Vid hot, våld eller tvång/);
   assert.match(worker,/utan Markdown/);
   assert.match(worker,/Använd enbart den faktiskt bifogade behörighetskontrollerade kontexten/);
