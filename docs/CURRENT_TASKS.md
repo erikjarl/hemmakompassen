@@ -2,10 +2,11 @@
 
 ## 4 november 2026 – KOM-01: utökad kommunikationsverktygslåda (PR #104)
 
-- [x] **KOM-01A – kod på utvecklingsgrenen:** Kommunikationsråd har fått en rollanpassad startsida med tydliga ingångar: MI för förälder, NVC för båda samt sex praktiska övningar (spegling, paus med återkomst, reparation, gemensam problemlösning, kravlös kontakt och svåra samtal). Förälderns redan befintliga MI-guide kompletteras med övningar i att fråga om lov och utforska ambivalens, med uttrycklig gräns mot övertalning och förälders fortsatt vuxenansvar.
+- [x] **KOM-01A – kod mergad till main:** Kommunikationsråd har fått en rollanpassad startsida med tydliga ingångar: MI för förälder, NVC för båda samt sex praktiska övningar (spegling, paus med återkomst, reparation, gemensam problemlösning, kravlös kontakt och svåra samtal). Förälderns redan befintliga MI-guide kompletteras med övningar i att fråga om lov och utforska ambivalens, med uttrycklig gräns mot övertalning och förälders fortsatt vuxenansvar.
 - [x] **KOM-01B – privat NVC-övning implementerad:** separat sida med observation, känsla, behov, konkret önskemål och lokal formulering i webbläsaren. Utkast läggs enbart med `textContent`, kan nollställas och skickas inte till Supabase, AI eller partner. Ingen migration, inga nya delningsflaggor eller ändrade användarsvar.
 - [x] **KOM-01C – automatiska tester i PR #104:** Node-kontrakt för rollvyer, metodkällor, NVC-validering och injektionssäker text; syntetisk Playwright-Chromium i 390px för förälder/tonåring, NVC-formulering, reset, synlig navigation och MI-spärr. Anpassad CI-kommandorad och statisk build.
-- [ ] **KOM-01D – kvar:** kontrollera slutlig PR-CI, merge till `main` och Pages-release; därefter manuell granskning av begriplighet, tillgänglighet, metodbegrepp, 320px, fysisk iOS Safari och två autentiserade roller före extern pilot. Metoderna i sidan är redaktionella verktyg och **inte** en kliniskt utvärderad familjebehandling.
+- [x] **KOM-01D – teknisk release 4 november 2026 verifierad:** PR #104 mergad till `main` som `9174dd53ce98062907747f67ca250f32174f955e`. Slutlig PR-CI **#41787467096**, main UI/Node/Playwright **#41787606895** och GitHub Pages **#41787606278** godkända. Även syntetiska mobilkontroller i **320 och 390 px** passerade. Ingen databasändring eller sparad familjedata påverkades.
+- [ ] **KOM-01E – faktisk användbarhets- och metodgranskning kvar:** autentiserad tvårollskontroll, fysisk iOS Safari, VoiceOver, stora tecken, tonåringars begriplighet och språk-/metodgranskning före extern pilot. NVC- och MI-delarna är redaktionellt anpassade samtalsverktyg, **inte** en kliniskt utvärderad familjebehandling.
 
 
 ## 3 november 2026 – UX-01C: tangentbordsfokus, mobilmeny och säkra piltangenter (PR #103)
@@ -17,8 +18,8 @@
 - [ ] **UX-01C verklig QA återstår:** två riktiga autentiserade testkonton, fysisk iOS Safari med VoiceOver, skärmläsare, 320/390 px och stora tecken är **inte** verifierade genom syntetiskt Chromium. Fortsätt UX-01 före extern pilot.
 
 
-**Granskad:** tisdag 3 november 2026, efter mergade och publicerade PR #90–#103, samt separat verifierad Supabase-migration #95.  
-**Källa:** kod på `main` inklusive PR #90–#103, `backend-config.js`, kontrollerade GitHub Actions/UI/Pages-körningar, Supabase-migrationer och read-only SQL efter installation. Detta är **inte** ett påstående om genomförda verkliga tvåkontotester.  
+**Granskad:** onsdag 4 november 2026, efter mergade och publicerade PR #90–#104, samt separat verifierad Supabase-migration #95.  
+**Källa:** kod på `main` inklusive PR #90–#104, `backend-config.js`, kontrollerade GitHub Actions/UI/Pages-körningar, Supabase-migrationer och read-only SQL efter installation. Detta är **inte** ett påstående om genomförda verkliga tvåkontotester.  
 **Syfte:** En enda kort, uppdaterad handlingslista för manuellt och schemalagt utvecklingsarbete. `ROADMAP.md` bevarar detaljerna och äldre beslut.
 
 ## 3 november 2026 – SW-03A: egen viktigast-översikt och fortsatt privat prioritering

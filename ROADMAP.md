@@ -1,11 +1,12 @@
-# Hemmakompassen — utvecklingsplan (senast avstämd 2026-11-03)
+# Hemmakompassen — utvecklingsplan (senast avstämd 2026-11-04)
 
 ## 4 november 2026 – KOM-01: utökad kommunikationsverktygslåda (PR #104)
 
-- [x] **KOM-01A – kod på utvecklingsgrenen:** Kommunikationsråd har fått en rollanpassad startsida med tydliga ingångar: MI för förälder, NVC för båda samt sex praktiska övningar (spegling, paus med återkomst, reparation, gemensam problemlösning, kravlös kontakt och svåra samtal). Förälderns redan befintliga MI-guide kompletteras med övningar i att fråga om lov och utforska ambivalens, med uttrycklig gräns mot övertalning och förälders fortsatt vuxenansvar.
+- [x] **KOM-01A – kod mergad till main:** Kommunikationsråd har fått en rollanpassad startsida med tydliga ingångar: MI för förälder, NVC för båda samt sex praktiska övningar (spegling, paus med återkomst, reparation, gemensam problemlösning, kravlös kontakt och svåra samtal). Förälderns redan befintliga MI-guide kompletteras med övningar i att fråga om lov och utforska ambivalens, med uttrycklig gräns mot övertalning och förälders fortsatt vuxenansvar.
 - [x] **KOM-01B – privat NVC-övning implementerad:** separat sida med observation, känsla, behov, konkret önskemål och lokal formulering i webbläsaren. Utkast läggs enbart med `textContent`, kan nollställas och skickas inte till Supabase, AI eller partner. Ingen migration, inga nya delningsflaggor eller ändrade användarsvar.
 - [x] **KOM-01C – automatiska tester i PR #104:** Node-kontrakt för rollvyer, metodkällor, NVC-validering och injektionssäker text; syntetisk Playwright-Chromium i 390px för förälder/tonåring, NVC-formulering, reset, synlig navigation och MI-spärr. Anpassad CI-kommandorad och statisk build.
-- [ ] **KOM-01D – kvar:** kontrollera slutlig PR-CI, merge till `main` och Pages-release; därefter manuell granskning av begriplighet, tillgänglighet, metodbegrepp, 320px, fysisk iOS Safari och två autentiserade roller före extern pilot. Metoderna i sidan är redaktionella verktyg och **inte** en kliniskt utvärderad familjebehandling.
+- [x] **KOM-01D – teknisk release 4 november 2026 verifierad:** PR #104 mergad till `main` som `9174dd53ce98062907747f67ca250f32174f955e`. Slutlig PR-CI **#41787467096**, main UI/Node/Playwright **#41787606895** och GitHub Pages **#41787606278** godkända. Även syntetiska mobilkontroller i **320 och 390 px** passerade. Ingen databasändring eller sparad familjedata påverkades.
+- [ ] **KOM-01E – faktisk användbarhets- och metodgranskning kvar:** autentiserad tvårollskontroll, fysisk iOS Safari, VoiceOver, stora tecken, tonåringars begriplighet och språk-/metodgranskning före extern pilot. NVC- och MI-delarna är redaktionellt anpassade samtalsverktyg, **inte** en kliniskt utvärderad familjebehandling.
 
 
 ## 3 november 2026 – UX-01C: tangentbordsfokus, mobilmeny och säkra piltangenter (PR #103)
@@ -18,9 +19,9 @@
 
 
 
-## NULÄGE – avstämning 3 november 2026 (läs först)
+## NULÄGE – avstämning 4 november 2026 (läs först)
 
-**Gäller framför historiska statusnoteringar nedan.** PR **#90–#103** är mergade och publicerade till `main` med godkänd kod-/UI-/Pages-verifiering. PR #91:s riktade migration är installerad och verifierad i Supabase. PR #94 omfattar endast egen IPIP-svarexport, inte hela användarkontots data. PR **#80** är ett **öppet, ersatt utkast som inte ska mergas**. Detaljerad aktuell checklista: **[docs/CURRENT_TASKS.md](docs/CURRENT_TASKS.md)**. Äldre planer nedan finns kvar som historik och kan beskriva föråldrade lägen.
+**Gäller framför historiska statusnoteringar nedan.** PR **#90–#104** är mergade och publicerade till `main` med godkänd kod-/UI-/Pages-verifiering. PR #91:s riktade migration är installerad och verifierad i Supabase. PR #94 omfattar endast egen IPIP-svarexport, inte hela användarkontots data. PR **#80** är ett **öppet, ersatt utkast som inte ska mergas**. Detaljerad aktuell checklista: **[docs/CURRENT_TASKS.md](docs/CURRENT_TASKS.md)**. Äldre planer nedan finns kvar som historik och kan beskriva föråldrade lägen.
 
 | Del | Kod och automatisk kontroll | Viktig kvarstående begränsning |
 | --- | --- | --- |
@@ -28,7 +29,7 @@
 | **Inkorg** | **Implementerat**: privata tvåvägsmeddelanden, läskvittenser efter uttryckligt aktivt val, skydd mot dubbla anrop och onödiga bakgrundsomritningar, familjeisolering och regelaviseringar (PR #60, #68–#69, #96–#97). | Testa verkliga konton, radering/retention och återanslutning. |
 | **Schyssta listan** | **Implementerat och aktiverat i intern test-UI**: manuella och kortbaserade förslag, separata JA, ändring, historik/återkallelse, notiser, sök/filter och neutral väntan (PR #56–#67). `enableSchysstaList=true`. | Autentiserad helhetsverifiering mellan två konton fortfarande en öppen uppgift. |
 | **Gillaswajpen** | **Delvis klar**: bred kortbank, A/B-modell, egen sparning, AI-reflektion vid säkra JA+JA (PR #85–#86). Gemensam insiktsvy och **uttryckligt återkallelig B-delning** aktiva för intern testning (PR #88). | `enableSharedPriorities` och `enableSharedPolling` är fortfarande **false**. B-vy och AI måste genomgå autentiserat tvåkontotest, inklusive återkallelse, innan extern användning. Ingen automatisk delning av tidigare B-JA. |
-| **Kommunikationsråd / AI-medlaren** | AI-medlarens privata testchatt och behöriga kontext är driftsatta internt (PR #81–#89). Separat MI-inspirerad föräldraguide med källor är kodad, testad, mergad och publicerad via PR #90. | **Riktigt autentiserat tvåkontotest, återkallelsetest, ungdomsskydd och klinisk/dataskyddsmässig granskning återstår.** MI-sidans användbarhet och pedagogiska säkerhet är inte validerad. |
+| **Kommunikationsråd / AI-medlaren** | AI-medlarens privata testchatt och behöriga kontext är driftsatta internt (PR #81–#89). MI-inspirerad föräldraguide och rollanpassad NVC-/kommunikationsverktygslåda är kodade, testade och publicerade via PR #90 och #104. | **Riktigt autentiserat tvåkontotest, återkallelsetest, ungdomsskydd och klinisk/dataskyddsmässig granskning återstår.** MI/NVC-sidornas användbarhet och pedagogiska säkerhet är inte validerade. |
 | **Senaste leveranser** | PR #92–#94 är mergade och publicerade: #92 Pages #41618536211, #93 Pages #41619631482, #94 Pages #41620394681. Main UI passerade för alla tre; PR #91:s migration `20261103094113` är installerad och verifierad i Supabase. | Publicering i intern testmiljö och grön CI bevisar **inte** att hela webbplatsen har godkänts i två riktiga autentiserade sessioner, att samtyckesåterkallelse fungerar från början till slut eller att den är redo för externa användare. |
 
 **Statusförklaring för avkryssning nedan:** [x] betyder att den **identifierbara kod- eller redaktionsuppgiften** har implementerats och automatiskt testats. Om en äldre rad samtidigt innehåller bredare krav (t.ex. verkliga användartester, klinisk validering, full datalivscykel) gäller de fortfarande som **separata oavslutade** arbetsuppgifter i den nya kön. [ ] betyder återstår eller delvis färdigt. Ändra inte befintliga användarsvar för testning. Publicerad webbadress är tekniskt publik trots att den används internt.

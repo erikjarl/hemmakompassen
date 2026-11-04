@@ -1,4 +1,4 @@
-# Hemmakompassen – automatiska tester (status 1 november 2026)
+# Hemmakompassen – automatiska tester (status 4 november 2026)
 
 Detta är **testmiljön för kod och UI**, inte bevis för att verkliga familjeflöden fungerar. Se [aktuell utvecklingskö](../docs/CURRENT_TASKS.md) och [ROADMAP](../ROADMAP.md).
 
