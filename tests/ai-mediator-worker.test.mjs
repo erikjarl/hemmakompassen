@@ -6,7 +6,7 @@ const ORIGIN = 'https://erikjarl.github.io';
 const USER_A = '11111111-1111-4111-8111-111111111111';
 const USER_B = '22222222-2222-4222-8222-222222222222';
 
-function harness({ noQuota = false, modelFails = false, authFails = false } = {}) {
+function harness({ noQuota = false, modelFails = false, authFails = false, verifiedRole = null } = {}) {
   const seen = { auth: [], model: [] };
   const usage = new Map();
   const env = {
@@ -40,6 +40,9 @@ function harness({ noQuota = false, modelFails = false, authFails = false } = {}
     fetchAuth: async (url, options) => {
       seen.auth.push({ url, options });
       if (authFails) return new Response('', { status: 500 });
+      if(url.endsWith('/rest/v1/rpc/my_family_members')&&verifiedRole){
+        return Response.json([{user_id:USER_A,role:verifiedRole},{user_id:USER_B,role:verifiedRole==='parent'?'teen':'parent'}]);
+      }
       const bearer = options.headers.Authorization;
       const id = bearer === 'Bearer valid-a' ? USER_A : bearer === 'Bearer valid-b' ? USER_B : null;
       return id ? Response.json({ id }) : new Response('', { status: 401 });
@@ -225,4 +228,22 @@ test('malformed context choice is rejected before quota or project reads',async(
   }
   assert.equal(x.seen.model.length,0);
   assert.equal(x.seen.auth.length,6,'each request verifies user identity before parsing');
+});
+
+test('verified parent may receive the MI URL, while teen and context-opt-out cannot',async()=>{
+  const url='https://erikjarl.github.io/hemmakompassen/#mi-foralder';
+  const nvc='https://erikjarl.github.io/hemmakompassen/#nvc';
+  const parent=harness({verifiedRole:'parent'});
+  assert.equal((await parent.handler(req({message:'Hur kan jag lyssna bättre?'}),parent.env)).status,200);
+  const parentPrompt=parent.seen.model[0].args.messages[0].content;
+  assert.ok(parentPrompt.includes(url));
+  assert.ok(parentPrompt.includes(nvc));
+  const teen=harness({verifiedRole:'teen'});
+  assert.equal((await teen.handler(req({message:'Hur kan jag bli lyssnad på?'}),teen.env)).status,200);
+  assert.ok(!teen.seen.model[0].args.messages[0].content.includes(url));
+  assert.ok(teen.seen.model[0].args.messages[0].content.includes(nvc));
+  const optedOut=harness({verifiedRole:'parent'});
+  assert.equal((await optedOut.handler(req({message:'Hur kan jag prata?',extra:{useProjectContext:false}}),optedOut.env)).status,200);
+  assert.ok(!optedOut.seen.model[0].args.messages[0].content.includes(url));
+  assert.ok(optedOut.seen.model[0].args.messages[0].content.includes(nvc));
 });

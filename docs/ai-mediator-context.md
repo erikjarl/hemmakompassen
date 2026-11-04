@@ -37,3 +37,11 @@ Detta är inte en kliniskt validerad tjänst. Tidigare fiktiva riskfall visade b
 - [x] Worker uppladdad med index.mjs, history.mjs, context.mjs och catalog.mjs utan ändrade eller betalda tjänster.
 - [ ] Testa med de två faktiska kontona och ändra/revokera delning i två webbläsarsessioner. Kontrollera att översikten och AI-svaret ändras.
 - [ ] Klinisk och dataskyddsmässig granskning före externa riktiga användare.
+
+## KOM-02 – avsiktlig navigation till Kommunikationsråd (PR #105)
+
+AI:n får känna till offentligt redaktionellt material utan att läsa fler användaruppgifter: `https://erikjarl.github.io/hemmakompassen/#kommunikation` och `https://erikjarl.github.io/hemmakompassen/#nvc`. Adressen `#mi-foralder` läggs bara in i systemprompten när servern verifierat rollen som förälder. Vid avstängd projektkontext används inte roll-RPC; då får modellen endast de två gemensamma länkarna.
+
+UI:n länkifierar bara exakt godkända Pages-adresser i AI-genererade chattmeddelanden, inte fri HTML, andra domäner, användartext eller säkerhetsmeddelanden. Varken en länk eller ett lokalt NVC-utkast delar/sparar partnerdata. Föreslagna råd är inte terapi eller säker medling i hotfulla situationer.
+
+**Driftsättningskrav:** uppdatering av Worker i GitHub når inte aktiv Cloudflare-version förrän ett nytt Workers-versionspaket laddats upp och distribuerats med alla tidigare bindningar bevarade. Enbart grön CI/Pages räcker inte. Riktigt tvåkontotest med aktiva rollbehörigheter är ännu inte verifierat.

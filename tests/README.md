@@ -35,3 +35,5 @@ Testerna ska **aldrig** skriva i produktionsdatabasen eller ändra verkliga anv�
 Playwright lägger skärmbilder och `visual-audit.json` i `artifacts/` och laddar upp dem som GitHub Actions-artifact. **Grön CI betyder inte automatiskt godkänd visuell design eller säker extern lansering.** Kontrollera det faktiska utfallet och bilderna, notera exakt commit, testmiljö och vad som inte har kontrollerats.
 
 Den tidigare noteringen om att sista matchningsmigrationen ”inte är installerad” var en äldre status före den dokumenterade 30 oktober-installationen. Utgå från nya, explicit verifierade statusuppgifter i ROADMAP och [CURRENT_TASKS.md](../docs/CURRENT_TASKS.md), och kontrollera riktiga databasen innan nya påståenden om livefunktioner.
+
+- KOM-02 (PR #105): verifierad/okänd familjeroll, MI-länk enbart till förälder, AI-chattsvar med endast tre tillåtna klickbara lokala URL:er, skydd mot HTML-injektion och mobilnavigation från sex andra moduler. Endast syntetiska tester – inte riktiga testkonto-/Worker-samtal.
