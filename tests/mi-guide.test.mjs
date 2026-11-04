@@ -14,17 +14,20 @@ test('MI editorial support states its limits, respects teenager autonomy, and us
   assert.match(html,/Forskning om MI i vård kan inte automatiskt överföras/);
   assert.match(html,/Schyssta listan/);
   assert.match(html,/Förstod jag rätt/);
-  assert.equal(MI_PARENT_SOURCES.length,3);
+  assert.match(html,/Fråga om lov innan du berättar/);
+  assert.match(html,/Utforska ambivalens utan att argumentera/);
+  assert.match(html,/du måste kunna acceptera att svaret blir nej/);
+  assert.equal(MI_PARENT_SOURCES.length,4);
   assert.ok(MI_PARENT_SOURCES.every(x=>x.url.startsWith('https://')&&html.includes(x.url)));
   assert.ok(!html.includes('onclick='));
 });
 
 test('MI gets a distinct route gated by parent role and correct navigation highlighting',()=>{
-  assert.match(live,/\['insikter','mi-foralder'\]\.includes\(h\)/);
+  assert.match(live,/\['insikter','mi-foralder','nvc'\]\.includes\(h\)/);
   assert.match(live,/key==='mi-foralder'\)return viewerRole\(\)==='parent'\?renderParentMiGuide\(\)/);
   assert.match(live,/if\(key==='kommunikation'\)return/);
-  assert.match(live,/viewerRole\(\)==='parent'\?card/);
-  assert.match(live,/route==='mi-foralder'&&key==='kommunikation'/);
+  assert.match(live,/if\(key==='kommunikation'\)return renderCommunicationToolkit\(viewerRole\(\)\)/);
+  assert.match(live,/\['mi-foralder','nvc'\]\.includes\(route\)&&key==='kommunikation'/);
   assert.match(live,/viewerRole\(\)==='parent'\?'<p><a href="#mi-foralder"/);
   assert.match(build,/communication\/mi-guide\.js/);
 });

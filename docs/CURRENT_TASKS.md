@@ -1,5 +1,13 @@
 # Hemmakompassen — aktuell utvecklingskö
 
+## 4 november 2026 – KOM-01: utökad kommunikationsverktygslåda (PR #104)
+
+- [x] **KOM-01A – kod på utvecklingsgrenen:** Kommunikationsråd har fått en rollanpassad startsida med tydliga ingångar: MI för förälder, NVC för båda samt sex praktiska övningar (spegling, paus med återkomst, reparation, gemensam problemlösning, kravlös kontakt och svåra samtal). Förälderns redan befintliga MI-guide kompletteras med övningar i att fråga om lov och utforska ambivalens, med uttrycklig gräns mot övertalning och förälders fortsatt vuxenansvar.
+- [x] **KOM-01B – privat NVC-övning implementerad:** separat sida med observation, känsla, behov, konkret önskemål och lokal formulering i webbläsaren. Utkast läggs enbart med `textContent`, kan nollställas och skickas inte till Supabase, AI eller partner. Ingen migration, inga nya delningsflaggor eller ändrade användarsvar.
+- [x] **KOM-01C – automatiska tester i PR #104:** Node-kontrakt för rollvyer, metodkällor, NVC-validering och injektionssäker text; syntetisk Playwright-Chromium i 390px för förälder/tonåring, NVC-formulering, reset, synlig navigation och MI-spärr. Anpassad CI-kommandorad och statisk build.
+- [ ] **KOM-01D – kvar:** kontrollera slutlig PR-CI, merge till `main` och Pages-release; därefter manuell granskning av begriplighet, tillgänglighet, metodbegrepp, 320px, fysisk iOS Safari och två autentiserade roller före extern pilot. Metoderna i sidan är redaktionella verktyg och **inte** en kliniskt utvärderad familjebehandling.
+
+
 ## 3 november 2026 – UX-01C: tangentbordsfokus, mobilmeny och säkra piltangenter (PR #103)
 
 - [x] **UX-01C – implementerat på utvecklingsgrenen:** en tangentbordssynlig länk ”Hoppa till huvudinnehållet” i den inloggade appen flyttar fokus till `#live-app` utan att ändra SPA-routens hash. Vid riktigt sidbyte flyttas fokus till nytt huvudinnehåll. Identiska bakgrundsuppdateringar bygger inte längre om redan fokuserade menylänkar; en meny som måste uppdateras återställer länken och horisontell skroll.

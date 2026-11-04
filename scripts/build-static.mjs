@@ -8,7 +8,7 @@ await mkdir(out, { recursive: true });
 await mkdir(join(out, 'vendor'), { recursive: true });
 await mkdir(join(out, 'personality'), { recursive: true });
 await mkdir(join(out, 'communication'), { recursive: true });
-const assets = ['index.html', 'app.js', 'styles.css', 'live-app.css', 'favicon.svg', 'landscape.svg', 'backend-config.js', 'konto.html', 'konto.js', 'vendor/qrcode.js', 'home.js', 'live-app.js', 'ai-mediator-ui.js', 'ai-result-ui.js', 'card-catalog.js', 'personality/ipip50-v1.js', 'personality/ipip50-scoring.js', 'personality/ipip50-storage.js', 'personality/ipip50-ui.js', 'personality/ipip50-family-insights.js', 'personality/ipip50-family-copy.js', 'personality/ipip50-reference.js', 'communication/mi-guide.js'];
+const assets = ['index.html', 'app.js', 'styles.css', 'live-app.css', 'favicon.svg', 'landscape.svg', 'backend-config.js', 'konto.html', 'konto.js', 'vendor/qrcode.js', 'home.js', 'live-app.js', 'ai-mediator-ui.js', 'ai-result-ui.js', 'card-catalog.js', 'personality/ipip50-v1.js', 'personality/ipip50-scoring.js', 'personality/ipip50-storage.js', 'personality/ipip50-ui.js', 'personality/ipip50-family-insights.js', 'personality/ipip50-family-copy.js', 'personality/ipip50-reference.js', 'communication/mi-guide.js', 'communication/toolkit.js'];
 for (const file of assets) await copyFile(join(root, file), join(out, file));
 await writeFile(join(out, '_headers'), [
   '/*',

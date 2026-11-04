@@ -1,8 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261103-keyboard-nav1';
-import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261103-keyboard-nav1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261103-keyboard-nav1';
-import {renderParentMiGuide} from './communication/mi-guide.js?v=20261103-keyboard-nav1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261104-communication1';
+import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261104-communication1';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261104-communication1';
+import {renderParentMiGuide} from './communication/mi-guide.js?v=20261104-communication1';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence} from './communication/toolkit.js?v=20261104-communication1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -758,7 +759,7 @@ function nextVisibleAfter(index){return visibleGeneralIndices().find(i=>i>index)
 function advanceSwipe(direction){if(activeThemeDeck){advanceThemeSwipe(direction);return;}if(swipeBusy||importanceSaving.size||page()!=='swipe'||!user||swipeIndex>=STATEMENTS.length||!visibleGeneralIndices().includes(swipeIndex))return;const el=$('swipe-card');if(!el)return;const index=swipeIndex,viewer=user.id,session=sharedSession;swipeBusy=true;const reduce=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;if(!reduce){el.style.transform='translateX('+(direction==='yes'?'120vw':'-120vw')+') rotate('+(direction==='yes'?18:-18)+'deg)';el.style.opacity='0';}setTimeout(()=>saveSwipeAnswer(direction,index,viewer,session),reduce?0:220);}
 function setupSwipeGesture(){const el=$('swipe-card');if(!el)return;let start=null;const reset=()=>{start=null;el.style.transform='';el.classList.remove('swipe-dragging','swipe-preview-yes','swipe-preview-no');};el.addEventListener('pointerdown',e=>{if(e.target.closest?.('[data-importance-control]')||(e.button!==undefined&&e.button!==0))return;start={id:e.pointerId,x:e.clientX,y:e.clientY,dragging:false};});el.addEventListener('pointermove',e=>{if(!start||start.id!==e.pointerId||swipeBusy)return;const dx=e.clientX-start.x,dy=e.clientY-start.y;if(!start.dragging&&Math.abs(dy)>Math.abs(dx)&&Math.abs(dy)>12){start=null;return;}if(Math.abs(dx)>10&&Math.abs(dx)>Math.abs(dy)){start.dragging=true;el.setPointerCapture?.(e.pointerId);}if(!start.dragging)return;el.classList.add('swipe-dragging');el.classList.toggle('swipe-preview-yes',dx>35);el.classList.toggle('swipe-preview-no',dx< -35);el.style.transform='translateX('+dx+'px) rotate('+Math.max(-13,Math.min(13,dx/18))+'deg)';});el.addEventListener('pointerup',e=>{if(!start||start.id!==e.pointerId)return;const dx=e.clientX-start.x,dragged=start.dragging;reset();if(dragged&&Math.abs(dx)>=85)advanceSwipe(dx>0?'yes':'no');});el.addEventListener('pointercancel',reset);}
 
-function page(){const h=decodeURIComponent(location.hash.slice(1));return ['insikter','mi-foralder'].includes(h)?h:nav.some(n=>n[0]===h)?h:'hem';}
+function page(){const h=decodeURIComponent(location.hash.slice(1));return ['insikter','mi-foralder','nvc'].includes(h)?h:nav.some(n=>n[0]===h)?h:'hem';}
 // On mobile, the scroll container is .live-main rather than window.
 function scrollLiveMainTop(){const main=document.querySelector('.live-main');if(main)main.scrollTop=0;window.scrollTo(0,0);}
 let previousMenuRoute=null;
@@ -773,7 +774,7 @@ function menu(){
     const descriptor=key==='inkorg'?' olästa meddelanden':' obesvarade regelförslag';
     const aria=count?' aria-label="'+label+', '+count+descriptor+'"':'';
     const badge=count?'<span class="live-nav-count" aria-hidden="true">'+(count>9?'9+':count)+'</span>':'';
-    const active=route===key||(route==='mi-foralder'&&key==='kommunikation')||(route==='insikter'&&key==='swipe');
+    const active=route===key||(['mi-foralder','nvc'].includes(route)&&key==='kommunikation')||(route==='insikter'&&key==='swipe');
     return '<a href="#'+key+'"'+(active?' aria-current="page"':'')+aria+'>'+label+badge+'</a>';
   };
   const html=nav.map(navItem).join('');
@@ -806,7 +807,7 @@ const HOME_MODULE_INTROS=Object.freeze({
   inkorg:'Läs privata meddelanden och svara på förfrågningar om gemensamma regler.',
   swipe:'Svara privat på frågor och hitta möjliga samtal eller aktiviteter där ni båda har valt ja.',
   personlighet:'Utforska fem personlighetsdimensioner med 50 frågor och jämför profiler först efter bådas samtycke.',
-  kommunikation:'Pröva öppna frågor, lyssnande och samtalsstöd. Föräldrar har också en MI-inspirerad guide.',
+  kommunikation:'Öva på NVC, lyssnande, pauser och reparation efter gräl. Föräldrar får även en MI-inspirerad guide.',
   regler:'Föreslå överenskommelser och ändringar. En regel gäller gemensamt först när båda har godkänt samma text.',
   medlare:'Utforska fiktiva samtal med privat AI-stöd i testversion. Inte terapi eller akut hjälp.'
 });
@@ -1189,9 +1190,8 @@ if(key==='regler')return schysstaView();
 if(key==='inkorg')return inboxView();
 if(key==='medlare')return mediatorExperience.render();
 if(key==='mi-foralder')return viewerRole()==='parent'?renderParentMiGuide():'<h1>Samtalsstöd för föräldrar</h1>'+card('<p>Den här guiden är skriven för föräldrar. Du kan läsa de gemensamma råden i stället.</p><a href="#kommunikation">Till Kommunikationsråd</a>');
-if(key==='kommunikation')return '<h1>Kommunikationsråd</h1><p>Konkreta samtalsöppningar som ni kan pröva utan att någon måste hålla med.</p>'
-  +(viewerRole()==='parent'?card('<h2>För dig som förälder</h2><p>Öva på att förstå tonåringens perspektiv innan du ger råd eller föreslår regler. En MI-inspirerad guide med exempel och källor.</p><a class="live-button" href="#mi-foralder">Lyssna innan du föreslår</a>'):'')
-  +COMMUNICATION_GUIDES.map(([title,intro,tips])=>card('<h2>'+esc(title)+'</h2><p>'+esc(intro)+'</p><ul>'+tips.map(t=>'<li>'+esc(t)+'</li>').join('')+'</ul>')).join('');
+if(key==='kommunikation')return renderCommunicationToolkit(viewerRole());
+if(key==='nvc')return renderNvcExercise(viewerRole());
 return '<h1>'+label+'</h1>'+card('<h2>Funktionen är under utveckling</h2><p>Du är inloggad som '+esc(profile?.display_name||user.email)+'. Vi bygger nu den riktiga kopplingen till Supabase så att dina svar och den andra familjemedlemmens uppgifter hålls åtskilda.</p><p>Här visas inga påhittade demodata och inga svar lagras lokalt som om de vore delade med familjen.</p><a class="live-button" href="#hem">Till startsidan</a>');
 }
 function autoAnalyze(){
@@ -1259,6 +1259,7 @@ if(user&&members.length===2){
 }
 }
 document.addEventListener('click',e=>{
+if(page()==='nvc'&&e.target.closest('[data-comm-reset]')){const form=$('comm-nvc-form');form?.reset();const output=$('comm-nvc-output');if(output)output.textContent='Din formulering visas här när du är redo.';$('comm-observation')?.focus();return;}
 if(e.target.closest('#live-skip-to-main')){e.preventDefault();$('live-app')?.focus({preventScroll:true});return;}
 const aiRetry=e.target.closest('[data-ai-analysis-retry]');
 if(aiRetry&&aiResultEnabled&&user){
@@ -1354,7 +1355,7 @@ document.addEventListener('keydown',e=>{
     e.preventDefault();advanceSwipe(e.key==='ArrowRight'?'yes':'no');
   }
 });
-document.addEventListener('submit',async e=>{if(e.target.id==='mediator-form'){e.preventDefault();await mediatorExperience.submit();return;}if(e.target.id==='family-chat-form'){e.preventDefault();await sendFamilyChatMessage();return;}if(e.target.id==='schyssta-manual-form'){e.preventDefault();await submitManualSchysstaRule();return;}if(e.target.id!=='live-login')return;e.preventDefault();const b=e.target.querySelector('button');b.disabled=true;const feedback=$('login-feedback');feedback.textContent='Loggar in…';const email=$('live-email').value.trim();try{const {error}=await db.auth.signInWithPassword({email,password:$('live-password').value});if(error)throw error;$('live-password') && ($('live-password').value='');await refresh();}catch(err){feedback.textContent='Kunde inte logga in. Kontrollera e-post och lösenord, eller välj ”Glömt lösenord eller saknar lösenord?”.';}finally{b.disabled=false;}});
+document.addEventListener('submit',async e=>{if(e.target.id==='comm-nvc-form'){e.preventDefault();if(page()!=='nvc'||!user)return;const values=Object.fromEntries(new FormData(e.target));const sentence=buildNvcSentence(values);const output=$('comm-nvc-output');if(output){output.textContent=sentence||'Fyll i alla fyra steg innan du skapar en formulering.';output.focus();}return;}if(e.target.id==='mediator-form'){e.preventDefault();await mediatorExperience.submit();return;}if(e.target.id==='family-chat-form'){e.preventDefault();await sendFamilyChatMessage();return;}if(e.target.id==='schyssta-manual-form'){e.preventDefault();await submitManualSchysstaRule();return;}if(e.target.id!=='live-login')return;e.preventDefault();const b=e.target.querySelector('button');b.disabled=true;const feedback=$('login-feedback');feedback.textContent='Loggar in…';const email=$('live-email').value.trim();try{const {error}=await db.auth.signInWithPassword({email,password:$('live-password').value});if(error)throw error;$('live-password') && ($('live-password').value='');await refresh();}catch(err){feedback.textContent='Kunde inte logga in. Kontrollera e-post och lösenord, eller välj ”Glömt lösenord eller saknar lösenord?”.';}finally{b.disabled=false;}});
 window.addEventListener('hashchange',()=>{
   if(page()!=='insikter'){insightsRows=[];sharedUnderstandingRows=[];insightsError='';insightsLoading=false;insightsRequest++;}
   if(page()!=='regler'&&page()!=='inkorg'){schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];schysstaNotifications=[];schysstaReplacementLinks=[];schysstaHistory=[];schysstaError='';schysstaLoading=false;schysstaRequest++;}
