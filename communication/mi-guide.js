@@ -2,6 +2,7 @@
 // The exercises adapt MI-informed skills for everyday parenting; they are not MI treatment.
 export const MI_PARENT_SOURCES=Object.freeze([
   {title:'Socialstyrelsen – MI (Motiverande samtal)',url:'https://socialstyrelsen.se/kunskapsstod-och-regler/omraden/evidensbaserad-praktik/metodguiden/mi-motiverande-samtal/'},
+  {title:'MINT – Understanding Motivational Interviewing',url:'https://motivationalinterviewing.org/understanding-motivational-interviewing'},
   {title:'Folkhälsomyndigheten – Kommunikation och MI',url:'https://www.folkhalsomyndigheten.se/motiverande-samtal-om-sexuell-halsa/introduktion-till-mi/kommunikation/'},
   {title:'Kunskapsguiden – Samtal med barn',url:'https://kunskapsguiden.se/omraden-och-teman/barn-och-unga/samtal-med-barn/hantering-av-samtal-samtalstekniker-och-samtalsmetoder/'}
 ]);
@@ -21,6 +22,10 @@ export function renderParentMiGuide(){
     '<li><strong>Bekräfta en ansträngning:</strong> ”Du försöker förklara fast vi är oense.” Bekräfta att personen försöker, utan att behöva hålla med om sakfrågan.</li>'+
     '<li><strong>Sammanfatta:</strong> ”Du vill kunna prata med vänner sent, och jag oroar mig för sömnen. Har jag uppfattat det rätt?”</li>'+
     '</ol></section>'+
+    '<section class="live-panel"><h2>Två korta MI-inspirerade övningar</h2>'+ 
+    '<h3>Fråga om lov innan du berättar vad du tänker</h3><p>”Jag har en tanke om det där. Vill du höra den, eller ska jag lyssna lite till?” Om tonåringen säger nej: lyssna eller välj en annan tid. Om du behöver sätta en gräns av omsorgsskäl ska du säga att beslutet är ditt vuxenansvar, inte låtsas att det är ett frivilligt samtycke.</p>'+ 
+    '<h3>Utforska ambivalens utan att argumentera</h3><p>”Vad tycker du fungerar med situationen som den är? Och finns det något som du själv skulle vilja ändra?” Återge båda sidorna utan att bara förstärka det som passar ditt förslag. Du kan fråga om tonåringen har en egen idé, men du måste kunna acceptera att svaret blir nej.</p>'+ 
+    '<p class="live-muted">MI utvecklades i professionella hjälpsamtal. Det här är frivilliga vardagsövningar, inte en metod för att få tonåringen att lyda eller ett påstående om klinisk effekt i familjer.</p></section>'+
     '<section class="live-panel"><h2>Exempel: konflikt om mobilen</h2>'+
     '<p><strong>Tonåring:</strong> ”Du fattar ingenting! Jag vill bestämma själv.”</p>'+
     '<p><strong>Förälder:</strong> ”Du vill att jag ska lita på dig och att du får mer frihet. Är det så du menar?”</p>'+
