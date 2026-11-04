@@ -7,8 +7,19 @@ export const COMMUNICATION_SOURCES=[
  {title:'American Academy of Pediatrics – Communicating with teens',url:'https://www.healthychildren.org/English/family-life/family-dynamics/communication-discipline/Pages/How-to-Communicate-with-a-Teenager.aspx'}
 ];
 const e=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const COMM_SKILL_IDS={
+ 'Spegla innan du svarar':'lyssna',
+ 'Pausa och återkom':'pausa',
+ 'Reparera efter ett gräl':'reparera',
+ 'Hitta en gemensam lösning':'losning',
+ 'Fem minuter kontakt':'kontakt',
+ 'Ta upp något känsligt':'svaart',
+ 'Bekräfta utan att hålla med':'validera',
+ 'Be om något konkret':'onskemal',
+ 'Sätt en gräns med respekt':'grans'
+};
 function exercise(title,purpose,steps,example){
- return '<details class="comm-exercise"><summary><strong>'+e(title)+'</strong><span>'+e(purpose)+'</span></summary><div class="comm-exercise-content"><ol>'+steps.map(s=>'<li>'+e(s)+'</li>').join('')+'</ol><p class="comm-example"><strong>Exempel:</strong> '+e(example)+'</p></div></details>';
+ return '<details class="comm-exercise" data-comm-skill="'+e(COMM_SKILL_IDS[title])+'"><summary><strong>'+e(title)+'</strong><span>'+e(purpose)+'</span></summary><div class="comm-exercise-content"><ol>'+steps.map(s=>'<li>'+e(s)+'</li>').join('')+'</ol><p class="comm-example"><strong>Exempel:</strong> '+e(example)+'</p></div></details>';
 }
 export function renderCommunicationToolkit(role='teen'){
  const parent=role==='parent';
@@ -42,12 +53,39 @@ export function renderCommunicationToolkit(role='teen'){
    'Fråga först om det passar eller när den andra hellre vill prata.',
    'Säg konkret vad saken gäller, utan att förklara vad den andra ”egentligen” vill.',
    'Håll er till en fråga i taget.'
-  ],'”Jag har tänkt på hur våra morgnar blir. Skulle vi kunna prata om det i kväll?”')
+  ],'”Jag har tänkt på hur våra morgnar blir. Skulle vi kunna prata om det i kväll?”'),
+  exercise('Bekräfta utan att hålla med','När den andra känner sig missförstådd',[
+   'Beskriv försiktigt vad du hör att den andra känner eller behöver, utan att sätta etikett på personen.',
+   'Fråga om din tolkning stämmer och lyssna på rättelsen.',
+   'Skilj på att förstå en upplevelse och att hålla med om slutsatsen. Ditt perspektiv får finnas kvar.'
+  ],'”Jag hör att du blev besviken när jag sa nej. Har jag förstått? Vi kan prata om det, även om mitt beslut står kvar.”'),
+  exercise('Be om något konkret','När kritik blir till låsning',[
+   'Beskriv en specifik situation utan att säga ”alltid” eller ”aldrig”.',
+   'Säg vad du själv behöver och be om en liten, genomförbar handling.',
+   'Ge plats för ett nej eller ett annat förslag. Förälderns nödvändiga omsorgsbeslut är inte en låtsasförhandling.'
+  ],parent?'”När vi pratar över varandra blir jag stressad. Kan vi prova att låta varandra tala klart?”':'”När jag blir avbruten tappar jag tråden. Skulle du kunna låta mig prata färdigt?”'),
+  exercise('Sätt en gräns med respekt','När ett nej behöver bli tydligt',parent?[
+   'Lyssna på hur tonåringen ser på saken och skilj på önskemål och omsorgsansvar.',
+   'Säg tydligt vilket beslut du som vuxen behöver ta och varför, utan hot eller skuld.',
+   'Låt tonåringen ha inflytande över sådant som faktiskt kan diskuteras och följ upp hur det fungerade.'
+  ]:[
+   'Säg kort vad du inte vill eller orkar just nu. Du behöver inte bevisa att din känsla är rätt.',
+   'Föreslå en annan tid eller ett alternativ om du vill – ett nej får också vara ett nej.',
+   'Om någon hotar eller inte respekterar din trygghet: sök hjälp hos en trygg vuxen. Du ska inte behöva lösa det genom bättre formuleringar.'
+  ],parent?'”Jag förstår att du vill fortsätta spela. Jag ansvarar för att du får sova. Vi stänger nu, och du får föreslå hur vi gör imorgon.”':'”Jag vill inte prata om det just nu. Jag kan prata imorgon, men jag behöver en paus ikväll.”')
+ ];
+ const situations=[
+  ['Vi avbryter varandra','lyssna','Öva på att återge innan ni svarar'],
+  ['Vi är för upprörda','pausa','Pausa och bestäm när ni återkommer'],
+  ['Någon blev sårad','reparera','Ta ansvar utan att kräva förlåtelse'],
+  ['Vi kör fast i en regel','losning','Skilj på behov och vuxenansvar'],
+  ['Jag känner mig missförstådd','validera','Bekräfta utan att hålla med'],
+  [parent?'Jag behöver sätta en gräns':'Jag vill säga nej','grans','Var tydlig utan hot eller skuld']
  ];
  return '<div class="comm-toolkit"><header class="comm-hero"><p class="comm-kicker">Förstå först, lös sedan</p><h1>Verktyg för bättre samtal</h1><p>Välj ett verktyg utifrån vad som händer mellan er. Ni kan lyssna och ta varandras perspektiv utan att hålla med.</p></header>'+
   '<div class="comm-feature-grid"><section class="live-panel comm-feature"><p class="comm-kicker">För båda</p><h2>Nonviolent Communication (NVC)</h2><p>Observation, känsla, behov och önskemål. Träna på ett tydligt jag-budskap utan anklagelser.</p><a class="live-button" href="#nvc">Bygg ett jag-budskap</a></section>'+
   (parent?'<section class="live-panel comm-feature"><p class="comm-kicker">För föräldern</p><h2>Motiverande samtal (MI)</h2><p>Öppna frågor, reflektioner, bekräftelse och sammanfattning. Lyssna utan att försöka styra fram ett visst svar.</p><a class="live-button" href="#mi-foralder">Öppna MI-övningarna</a></section>':'<section class="live-panel comm-feature"><p class="comm-kicker">För tonåringen</p><h2>Din röst är viktig</h2><p>Du får be om att bli lyssnad på, föreslå en annan tid eller tacka nej. Det är inte ditt ansvar att lösa alla konflikter.</p><a href="#nvc">Träna på att uttrycka dig</a></section>')+
-  '</div><section class="comm-section"><h2>När samtalet fastnar</h2><p class="live-muted">Öppna en övning och prova en enda sak. Exemplen är förslag, inte repliker någon måste säga.</p><div class="comm-exercises">'+exercises.join('')+'</div></section>'+
+  '</div><section class="live-panel comm-situations" aria-labelledby="comm-situations-title"><h2 id="comm-situations-title">Vad händer just nu?</h2><p>Välj en situation. Den passande övningen öppnas direkt här på sidan. Inga svar skickas eller sparas.</p><div class="comm-situation-grid">'+situations.map(([title,skill,desc])=>'<button type="button" class="comm-situation" data-comm-open="'+e(skill)+'"><strong>'+e(title)+'</strong><span>'+e(desc)+'</span></button>').join('')+'</div></section><section class="comm-section"><h2>När samtalet fastnar</h2><p class="live-muted">Öppna en övning och prova en enda sak. Exemplen är förslag, inte repliker någon måste säga.</p><div class="comm-exercises">'+exercises.join('')+'</div></section>'+
   '<section class="live-panel"><h2>Från samtal till en idé</h2><p>Vill ni testa en ny rutin? Skriv ett frivilligt förslag i <a href="#regler">Schyssta listan</a>. Ingen regel är gemensam förrän båda uttryckligen sagt ja. Hitta gemensamma intressen i <a href="#swipe">Gillaswajpen</a>.</p>'+
   '<p>Föräldern har fortfarande ansvar för säkerhet, omsorg och rimliga gränser. Om någon är rädd eller hotad: prioritera trygghet och stöd, inte samtalsteknik.</p></section>'+
   '<section class="live-panel comm-sources"><h2>Källor och begränsningar</h2><p>Övningarna utgår från beskrivna samtalsfärdigheter och är redaktionellt anpassade för vardagen. De är inte en prövad familjebehandling. NVC är en kommunikationsmodell – inte en metod vars effekter här är kliniskt validerade.</p><ul>'+COMMUNICATION_SOURCES.map(s=>'<li><a href="'+e(s.url)+'" target="_blank" rel="noopener noreferrer">'+e(s.title)+'</a></li>').join('')+'</ul></section></div>';

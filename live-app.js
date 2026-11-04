@@ -1274,7 +1274,18 @@ if(user&&members.length===2){
 }
 }
 document.addEventListener('click',e=>{
-if(page()==='nvc'&&e.target.closest('[data-comm-reset]')){const form=$('comm-nvc-form');form?.reset();const output=$('comm-nvc-output');if(output)output.textContent='Din formulering visas här när du är redo.';$('comm-observation')?.focus();return;}
+if(page()==='kommunikation'){
+   const choice=e.target.closest('[data-comm-open]');
+   if(choice){
+     const skill=choice.dataset.commOpen;
+     if(['lyssna','pausa','reparera','losning','validera','grans'].includes(skill)){
+       const detail=document.querySelector('.comm-exercise[data-comm-skill="'+skill+'"]');
+       if(detail){detail.open=true;detail.querySelector('summary')?.focus({preventScroll:true});detail.scrollIntoView({block:'nearest',behavior:'auto'});}
+     }
+     return;
+   }
+ }
+ if(page()==='nvc'&&e.target.closest('[data-comm-reset]')){const form=$('comm-nvc-form');form?.reset();const output=$('comm-nvc-output');if(output)output.textContent='Din formulering visas här när du är redo.';$('comm-observation')?.focus();return;}
 if(e.target.closest('#live-skip-to-main')){e.preventDefault();$('live-app')?.focus({preventScroll:true});return;}
 const aiRetry=e.target.closest('[data-ai-analysis-retry]');
 if(aiRetry&&aiResultEnabled&&user){
