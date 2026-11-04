@@ -140,7 +140,10 @@ test('assistant deep links are clickable but messages from user and safety stay 
  assert.equal(await x.ui.submit(),true);
  const markup=x.ui.render();
  assert.match(markup,/<a href="#nvc">https:\/\/erikjarl\.github\.io\/hemmakompassen\/#nvc<\/a>/);
- assert.equal((markup.match(/<a href="#nvc">/g)||[]).length,1,'only the AI reply contains a clickable link');
+ const assistant=markup.match(/<li class="mediator-message mediator-message-assistant">([\s\S]*?)<\/li>/)?.[1]||'';
+ const user=markup.match(/<li class="mediator-message mediator-message-user">([\s\S]*?)<\/li>/)?.[1]||'';
+ assert.equal((assistant.match(/<a href="#nvc">/g)||[]).length,1,'assistant reply has one clickable link');
+ assert.equal((user.match(/<a href="#nvc">/g)||[]).length,0,'user messages are never linkified');
  assert.ok(markup.includes('&lt;script&gt;alert(1)&lt;/script&gt;'));
  assert.doesNotMatch(markup,/<script\b/);
 });
