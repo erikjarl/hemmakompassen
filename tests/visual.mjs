@@ -102,6 +102,7 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
           ['general:general-10',{deck_id:'general',card_id:'general-10',importance:0}]
         ]:[]);
         const understandingShares=new Set(window.__HK_TEST_PAIRED__?['general-02']:[]);
+        const priorityShares=new Set();
         window.__HK_TEST_SET_SHARED_B__=ids=>{understandingShares.clear();for(const id of ids)understandingShares.add(id);};
         let schysstaSuggestions=[
           {card_id:'regler-01',body:'Vi knackar innan vi går in i varandras rum.'},
@@ -141,6 +142,7 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
               select(){return {async eq(){return {data:[...importance.values()],error:null}}}},
               async upsert(row,options){importance.set(row.deck_id+':'+row.card_id,row);window.__HK_SAVED_IMPORTANCE__={row,options};return {error:null}}
             };
+            if(table==='swipe_priority_shares')return {select(){return {async eq(){return {data:window.__HK_TEST_ROLE__==='teen'?[...priorityShares].map(key=>{const [deck_id,card_id]=key.split(':');return {deck_id,card_id};}):[],error:null}}}}};
             if(table==='understanding_card_shares')return {select(){return {async eq(){return {data:window.__HK_TEST_ROLE__==='teen'?[...understandingShares].map(card_id=>({deck_id:'general',card_id})):[],error:null}}}}};
             throw new Error('Unexpected table '+table);
           },
@@ -168,7 +170,13 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
               if(window.__HK_PRIORITY_RPC_UNAVAILABLE__)return {data:null,error:{message:'synthetic unavailable'}};
               if(!window.__HK_TEST_PAIRED__)return {data:[],error:null};
               if(args.p_deck_id==='samtal')return {data:[{deck_id:'samtal',card_id:'samtal-01'},{deck_id:'samtal',card_id:'samtal-02'},{deck_id:'aktiviteter',card_id:'aktiviteter-01'}],error:null};
-              return {data:[{deck_id:'general',card_id:'general-10'},{deck_id:'general',card_id:'general-02'},{deck_id:'general',card_id:'general-03'},{deck_id:'general',card_id:'general-99'}],error:null};
+              return {data:[{deck_id:'general',card_id:'general-10'},...[...priorityShares].map(key=>{const [deck_id,card_id]=key.split(':');return {deck_id,card_id};}),{deck_id:'general',card_id:'general-02'},{deck_id:'general',card_id:'general-03'},{deck_id:'general',card_id:'general-99'}],error:null};
+            }
+            if(name==='set_swipe_priority_share'){
+              window.__HK_PRIORITY_SHARE__={name,args};
+              const key=args.p_deck_id+':'+args.p_card_id;
+              if(args.p_share)priorityShares.add(key);else priorityShares.delete(key);
+              return {data:null,error:null};
             }
             if(name==='shared_general_deck_complete'){
               window.__HK_UNLOCK_RPC_CALLS__=(window.__HK_UNLOCK_RPC_CALLS__||0)+1;
@@ -825,6 +833,29 @@ try{
   await teenPriority.page.locator('.swipe-private-priority').scrollIntoViewIfNeeded();
   await capture(teenPriority.page,'mobile-teen-private-priority-preview.png');
   await teenPriority.context.close();
+
+  const teenPriorityConsent=await freshContext(
+    {viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},
+    {authenticated:true,paired:true,role:'teen',privateImportance:true,priorityFeature:true}
+  );
+  await teenPriorityConsent.page.goto(base+'#swipe',{waitUntil:'load'});
+  const sharePriority=teenPriorityConsent.page.locator('[data-priority-share][data-card-id="general-01"]');
+  await sharePriority.waitFor();
+  assert.equal(await sharePriority.getAttribute('aria-pressed'),'false','Private +1 starts unshared without explicit consent');
+  assert.match(await teenPriorityConsent.page.locator('.swipe-private-priority').innerText(),/privat tills du själv väljer/i,'Teen sees informed privacy copy before consent');
+  await sharePriority.click();
+  await teenPriorityConsent.page.waitForFunction(()=>window.__HK_PRIORITY_SHARE__?.args?.p_share===true);
+  await teenPriorityConsent.page.waitForFunction(()=>document.querySelector('[data-priority-share][data-card-id="general-01"]')?.getAttribute('aria-pressed')==='true');
+  assert.match(await sharePriority.innerText(),/Återkalla delning/,'Active consent offers immediate revocation');
+  assert.match(await teenPriorityConsent.page.locator('.swipe-results').innerText(),/Delat som gemensamt fokus/,'Successful consent is acknowledged');
+  await checkOverflow(teenPriorityConsent.page,'Teen A priority consent 390px');
+  await teenPriorityConsent.page.locator('.swipe-private-priority').scrollIntoViewIfNeeded();
+  await capture(teenPriorityConsent.page,'mobile-teen-priority-consent.png');
+  await sharePriority.click();
+  await teenPriorityConsent.page.waitForFunction(()=>window.__HK_PRIORITY_SHARE__?.args?.p_share===false);
+  await teenPriorityConsent.page.waitForFunction(()=>document.querySelector('[data-priority-share][data-card-id="general-01"]')?.getAttribute('aria-pressed')==='false');
+  assert.match(await teenPriorityConsent.page.locator('.swipe-results').innerText(),/Delningen är återkallad/,'Revocation updates the UI immediately');
+  await teenPriorityConsent.context.close();
 
   const parentPriority=await freshContext(
     {viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},

@@ -58,6 +58,8 @@ function renderSharedResult(rows,role='parent',priorityRows=[],adviceByKey={'gen
     importanceAvailable:options.importanceAvailable!==false,
     sharedPrioritiesEnabled:options.sharedPrioritiesEnabled===true,
     swipeImportance:new Map(Object.entries(options.importance||{})),
+    priorityShares:new Set(options.priorityShares||[]),priorityShareSaving:new Set(),
+    prioritySharesAvailable:options.prioritySharesAvailable!==false,priorityShareError:'',
     importanceKey:(deckId,cardId)=>deckId+String.fromCharCode(0)+cardId,
     aiResults:{panel:()=>'<div data-testid="ai-reflection">AI-genererat svar</div>'},
     swipeAiSignature:()=> 'verified-A-YES-signature',
@@ -198,9 +200,20 @@ assert.match(script,/for\(const \{groups\} of byDeck.values\(\)\)/,
   const noData=renderSharedResult(matching,'teen',[],{}, {importance:own,importanceAvailable:false});
   assert.doesNotMatch(noData,/swipe-private-priority/,'Unavailable own importance is not presented as a known result');
   const sharedMode=renderSharedResult(matching,'teen',[],{}, {importance:own,sharedPrioritiesEnabled:true});
-  assert.doesNotMatch(sharedMode,/swipe-private-priority/,'Preview does not duplicate a future separately authorised priority view');
+  assert.match(sharedMode,/Dela som gemensamt fokus/,'Teen receives a separate informed consent control for each eligible A match');
+  assert.match(sharedMode,/Din markering är privat tills du själv väljer/,'Consent is explained before sharing');
+  assert.doesNotMatch(sharedMode,/general-03|HEMLIGT NEJ-SVAR/,'NO and nonmatched cards never receive a priority consent control');
+  const parentSharedMode=renderSharedResult(matching,'parent',[],{}, {importance:own,sharedPrioritiesEnabled:true});
+  assert.doesNotMatch(parentSharedMode,/data-priority-share|privata viktighetsskattningar/,'Parent never receives the teen self-only consent surface');
 }
 console.log('PASS: private teen priorities show only own importance among verified A matches');
+
+assert.match(script,/db\.from\('swipe_priority_shares'\)\.select\('deck_id,card_id'\)\.eq\('user_id',viewer\)/,
+  'Loads priority consent only through the signed-in user self-only table');
+assert.match(script,/db\.rpc\('set_swipe_priority_share',\{p_deck_id:deckId,p_card_id:cardId,p_share:share\}\)/,
+  'Writes and revokes consent only through the narrow role-checked RPC');
+assert.match(script,/swipeImportance\.get\(key\)===1[\s\S]*sharedMatches\.some\(row=>row\.deck_id===deckId&&row\.card_id===cardId&&row\.answer===true\)/,
+  'Client refuses a share unless the current user has +1 and the server aggregate confirms A JA+JA');
 
 console.log('PASS: compact factual icon overview is compatible with AI and excludes unshared answers');
 
