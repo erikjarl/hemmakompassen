@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261105-ai-skill-links1';
-import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261105-ai-skill-links1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261105-ai-skill-links1';
-import {renderParentMiGuide} from './communication/mi-guide.js?v=20261105-ai-skill-links1';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261105-ai-skill-links1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261105-priority-consent2';
+import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261105-priority-consent2';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261105-priority-consent2';
+import {renderParentMiGuide} from './communication/mi-guide.js?v=20261105-priority-consent2';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261105-priority-consent2';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -178,6 +178,9 @@ const swipeImportance=new Map();
 const importancePending=new Map();
 const importanceSaving=new Set();
 let importanceAvailable=false,importanceLoadError='';
+const priorityShares=new Set();
+const priorityShareSaving=new Set();
+let prioritySharesAvailable=false,priorityShareError='';
 let activeThemeDeck=null,themeCategory='all',themeIndex=0,themeReview=false,themeSaveError='';
 let swipeSkippedReview=false;
 const themeCardId=(deck,index)=>deck.cardIds[index];
@@ -248,6 +251,7 @@ async function saveImportance(deckId,cardId,value,viewer,session){
       break;
     }
     swipeImportance.set(key,next.value);
+    if(next.value!==1&&priorityShares.delete(key)&&sharedPrioritiesEnabled)await fetchSwipeMatches(next.deckId,{quiet:true});
     if(status)status.textContent='Viktighet sparad privat.';
   }
   importanceSaving.delete(key);
@@ -351,18 +355,49 @@ function sharedPrioritySummary(items,deckId='general'){
 // Personal preview only. Shared priority data is not exposed while the
 // consent-verified shared-priority feature is disabled in the test release.
 function privateTeenPrioritySummary(matchedById,deckId){
-  if(sharedPrioritiesEnabled||viewerRole()!=='teen'||!importanceAvailable)return '';
+  if(viewerRole()!=='teen'||!importanceAvailable)return '';
   const selected=[...matchedById.values()]
     .filter(item=>swipeImportance.get(importanceKey(deckId,item.card.id))===1)
     .sort((a,b)=>a.card.id.localeCompare(b.card.id));
   if(!selected.length)return '';
-  const entries=selected.map(item=>'<li><p>'+esc(item.statement)+'</p></li>').join('');
+  const entries=selected.map(item=>{
+    const key=importanceKey(deckId,item.card.id),shared=priorityShares.has(key),saving=priorityShareSaving.has(key);
+    return '<li><p>'+esc(item.statement)+'</p>'+(sharedPrioritiesEnabled
+      ?'<button type="button" class="swipe-priority-share" data-priority-share data-deck-id="'+esc(deckId)+'" data-card-id="'+esc(item.card.id)+'" aria-pressed="'+shared+'" '+(!prioritySharesAvailable||saving?'disabled':'')+'>'+(saving?'Sparar…':shared?'Återkalla delning':'Dela som gemensamt fokus')+'</button>'
+      :'')+'</li>';
+  }).join('');
+  const consentIntro=sharedPrioritiesEnabled
+    ?'<p>Din markering är privat tills du själv väljer <strong>Dela som gemensamt fokus</strong>. Delningen gäller bara det här kortet, där ni båda redan svarat ja, och du kan återkalla den när som helst.</p>'
+    :'<p>Här ser du sådant som ni båda svarat ja till och som du själv markerat som mycket viktigt.</p>';
+  const consentStatus=sharedPrioritiesEnabled
+    ?'<p class="swipe-priority-share-status" role="status">'+esc(priorityShareError||(prioritySharesAvailable?'Du bestämmer separat för varje kort. Föräldern ser aldrig din privata nivå, bara aktivt delade fokus.':'Delningsstatus kan inte hämtas säkert just nu. Inget kan delas.'))+'</p>'
+    :'';
   return '<aside class="swipe-priority-summary swipe-private-priority" aria-label="Dina privata prioriteringar">'+
-    '<span class="swipe-summary-label">ENDAST FÖR DIG · INTE DELAT</span>'+
+    '<span class="swipe-summary-label">'+(sharedPrioritiesEnabled?'DIN PRIVATA ÖVERSIKT · DELNING PER KORT':'ENDAST FÖR DIG · INTE DELAT')+'</span>'+
     '<h3>Mina viktigaste gemensamma ja-svar</h3>'+
-    '<p>Här ser du sådant som ni båda svarat ja till och som du själv markerat som mycket viktigt.</p>'+
+    consentIntro+
     '<ul class="swipe-match-list">'+entries+'</ul>'+
+    consentStatus+
     '<p class="live-muted">Den här listan visas bara för dig. Föräldern ser inte dina privata viktighetsskattningar här. AI-medlaren kan använda dina egna skattningar när projektkontexten är påslagen.</p></aside>';
+}
+
+async function setPriorityShare(deckId,cardId,share,viewer,session){
+  const key=importanceKey(deckId,cardId);
+  const eligible=sharedPrioritiesEnabled&&prioritySharesAvailable&&viewerRole()==='teen'&&members.length===2&&
+    swipeImportance.get(key)===1&&sharedDeckId===deckId&&sharedMatches.some(row=>row.deck_id===deckId&&row.card_id===cardId&&row.answer===true)&&
+    sharedDeck(deckId)?.cards.some(card=>card.id===cardId&&card.type==='match');
+  if(!eligible||user?.id!==viewer||sharedSession!==session||priorityShareSaving.has(key))return;
+  priorityShareSaving.add(key);priorityShareError='';render();
+  let error;
+  try{({error}=await db.rpc('set_swipe_priority_share',{p_deck_id:deckId,p_card_id:cardId,p_share:share}));}
+  catch(e){error=e;}
+  if(user?.id!==viewer||sharedSession!==session)return;
+  priorityShareSaving.delete(key);
+  if(error){priorityShareError='Delningen kunde inte sparas. Inget ändrades; försök igen.';render();return;}
+  if(share)priorityShares.add(key);else priorityShares.delete(key);
+  priorityShareError=share?'Delat som gemensamt fokus. Du kan återkalla när som helst.':'Delningen är återkallad och tas bort från det gemensamma fokuset.';
+  await fetchSwipeMatches(deckId,{quiet:true});
+  if(page()==='swipe')render();
 }
 
 function swipeResults(deckId='general'){
@@ -1255,20 +1290,21 @@ let authResult;
 try{authResult=await db.auth.getUser();}
 catch(e){if(generation!==refreshGeneration)return;throw e;}
 if(generation!==refreshGeneration)return;
-const {data:{user:u},error}=authResult;if(error&&error.name!=='AuthSessionMissingError')throw error;user=u;profile=null;members=[];mediatorExperience.reset(u?.id??null);aiResults.reset(u?.id??null);personalityExperience.reset(u?.id??null);swipeAnswers.clear();swipeImportance.clear();importancePending.clear();importanceSaving.clear();importanceAvailable=false;importanceLoadError='';skippedUnderstanding.clear();understandingShares.clear();understandingShareSaving.clear();understandingShareError='';for(const answers of themeAnswers.values())answers.clear();activeThemeDeck=null;themeCategory='all';themeIndex=0;themeReview=false;themeSaveError='';swipeBusy=false;swipeLoadError='';swipeSaveError='';swipeReview=false;swipeSkippedReview=false;swipeIndex=0;sharedMatches=[];sharedPriorities=[];sharedDeckId='general';sharedError='';sharedLoading=false;sharedSession++;sharedRequest++;insightsRows=[];sharedUnderstandingRows=[];insightsLoading=false;insightsError='';insightsRequest++;themesUnlocked=false;themesLoading=false;themesError='';themesRequest++;
+const {data:{user:u},error}=authResult;if(error&&error.name!=='AuthSessionMissingError')throw error;user=u;profile=null;members=[];mediatorExperience.reset(u?.id??null);aiResults.reset(u?.id??null);personalityExperience.reset(u?.id??null);swipeAnswers.clear();swipeImportance.clear();importancePending.clear();importanceSaving.clear();importanceAvailable=false;importanceLoadError='';priorityShares.clear();priorityShareSaving.clear();prioritySharesAvailable=false;priorityShareError='';skippedUnderstanding.clear();understandingShares.clear();understandingShareSaving.clear();understandingShareError='';for(const answers of themeAnswers.values())answers.clear();activeThemeDeck=null;themeCategory='all';themeIndex=0;themeReview=false;themeSaveError='';swipeBusy=false;swipeLoadError='';swipeSaveError='';swipeReview=false;swipeSkippedReview=false;swipeIndex=0;sharedMatches=[];sharedPriorities=[];sharedDeckId='general';sharedError='';sharedLoading=false;sharedSession++;sharedRequest++;insightsRows=[];sharedUnderstandingRows=[];insightsLoading=false;insightsError='';insightsRequest++;themesUnlocked=false;themesLoading=false;themesError='';themesRequest++;
 if(typeof schysstaRequest!=='undefined'){schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];schysstaNotifications=[];schysstaReplacementLinks=[];schysstaHistory=[];schysstaEndTarget=null;schysstaLoading=false;schysstaError='';schysstaRequest++;schysstaSaving.clear();schysstaPausedIds.clear();clearFamilyChat();schysstaDraft='';schysstaDraftOpen=false;schysstaDraftKey=null;schysstaEditTarget=null;schysstaSubmitting=false;schysstaMessage='';schysstaCopyMessage='';schysstaFocusId='';schysstaSearch='';schysstaFilterStatus='all';}
 if(user){const viewer=user.id;
 let loaded;
-try{loaded=await Promise.all([db.from('profiles').select('display_name').eq('user_id',viewer).maybeSingle(),db.rpc('my_family_members'),db.from('swipe_answers').select('deck_id,card_id,answer').eq('user_id',viewer),db.from('swipe_skips').select('deck_id,card_id').eq('user_id',viewer),db.from('swipe_importance').select('deck_id,card_id,importance').eq('user_id',viewer),sharedUnderstandingEnabled?db.from('understanding_card_shares').select('deck_id,card_id').eq('user_id',viewer):Promise.resolve({data:[],error:null})]);}
+try{loaded=await Promise.all([db.from('profiles').select('display_name').eq('user_id',viewer).maybeSingle(),db.rpc('my_family_members'),db.from('swipe_answers').select('deck_id,card_id,answer').eq('user_id',viewer),db.from('swipe_skips').select('deck_id,card_id').eq('user_id',viewer),db.from('swipe_importance').select('deck_id,card_id,importance').eq('user_id',viewer),sharedUnderstandingEnabled?db.from('understanding_card_shares').select('deck_id,card_id').eq('user_id',viewer):Promise.resolve({data:[],error:null}),sharedPrioritiesEnabled?db.from('swipe_priority_shares').select('deck_id,card_id').eq('user_id',viewer):Promise.resolve({data:[],error:null})]);}
 catch(e){if(generation!==refreshGeneration)return;throw e;}
 if(generation!==refreshGeneration||user?.id!==viewer)return;
-const [p,m,s,k,i,b]=loaded;if(p.error)throw p.error;if(m.error)throw m.error;profile=p.data;members=m.data||[];if(s.error||k.error)swipeLoadError='Kontrollera anslutningen och försök igen.';else for(const answer of s.data||[])if(answer.deck_id==='general'&&typeof answer.answer==='boolean'&&STATEMENTS.some((_,index)=>swipeCardId(index)===answer.card_id))swipeAnswers.set(answer.card_id,answer.answer);
+const [p,m,s,k,i,b,ps]=loaded;if(p.error)throw p.error;if(m.error)throw m.error;profile=p.data;members=m.data||[];if(s.error||k.error)swipeLoadError='Kontrollera anslutningen och försök igen.';else for(const answer of s.data||[])if(answer.deck_id==='general'&&typeof answer.answer==='boolean'&&STATEMENTS.some((_,index)=>swipeCardId(index)===answer.card_id))swipeAnswers.set(answer.card_id,answer.answer);
 if(!s.error)for(const answer of s.data||[]){
   if(typeof answer.answer!=='boolean')continue;
   const deck=THEME_DECKS.find(d=>d.id===answer.deck_id);
   if(deck&&deck.cards.some((_,index)=>themeCardId(deck,index)===answer.card_id))themeAnswers.get(deck.id).set(answer.card_id,answer.answer);
 }if(!k.error)for(const skipped of k.data||[])if(skipped.deck_id==='general'&&GENERAL_CARDS.some(card=>card.id===skipped.card_id&&card.type==='understanding'))skippedUnderstanding.add(skipped.card_id);
 if(i.error)importanceLoadError='Den säkra lagringen är inte aktiverad.';else{importanceAvailable=true;for(const row of i.data||[])if([-1,0,1].includes(row.importance)&&validImportanceCard(row.deck_id,row.card_id))swipeImportance.set(importanceKey(row.deck_id,row.card_id),row.importance);}
+if(sharedPrioritiesEnabled){if(ps.error)priorityShareError='Delningsstatus kunde inte hämtas säkert. Inget kan delas.';else if(viewerRole()==='teen'){prioritySharesAvailable=true;for(const row of ps.data||[])if(validImportanceCard(row.deck_id,row.card_id))priorityShares.add(importanceKey(row.deck_id,row.card_id));}}
 if(sharedUnderstandingEnabled){if(b.error)understandingShareError='Delningsstatus kunde inte hämtas.';else if(viewerRole()==='teen')for(const row of b.data||[])if(row.deck_id==='general'&&GENERAL_CARDS.some(card=>card.id===row.card_id&&card.type==='understanding'))understandingShares.add(row.card_id);}
 swipeIndex=nextUnanswered();swipeSkippedReview=false;}
 if(generation!==refreshGeneration)return;
@@ -1351,6 +1387,8 @@ if(pause&&SCHYSSTA_UUID.test(pause.dataset.schysstaPause)){
 const schysstaDecision=e.target.closest('[data-schyssta-decision]');if(schysstaDecision)void decideSchysstaRule(schysstaDecision.dataset.schysstaDecision,schysstaDecision.dataset.approved==='true');
 const understandingShare=e.target.closest('[data-understanding-share]');
 if(understandingShare&&user&&viewerRole()==='teen')void setUnderstandingShare(understandingShare.dataset.understandingShare,understandingShare.getAttribute('aria-pressed')!=='true',user.id,sharedSession);
+const priorityShare=e.target.closest('[data-priority-share]');
+if(priorityShare&&user&&viewerRole()==='teen')void setPriorityShare(priorityShare.dataset.deckId,priorityShare.dataset.cardId,priorityShare.getAttribute('aria-pressed')!=='true',user.id,sharedSession);
 const insightOpen=e.target.closest('[data-insight-open]');
 if(insightOpen&&sharedInsightsEnabled&&themeAccessAllowed()){
   const id=insightOpen.dataset.insightOpen;

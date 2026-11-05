@@ -2,6 +2,15 @@
 
 **Gällande Jobb hk-fullmakt (5 november 2026):** se [AGENTS.md](../AGENTS.md). Commit, push, PR, merge, publicering och motsvarande projektändringar i GitHub, Supabase och Cloudflare är uttryckligen godkända. Detta ersätter äldre krav på separat merge-/publiceringsgodkännande.
 
+## 5 november 2026 – SW-03B: säker integration av tonåringens prioritetssamtycke
+
+- [x] **Rensat gammal konflikt:** en ren integrationsgren (`feat/priority-consent-rebased-20261105`) utgår från aktuell `main`, med PR #107:s samtyckeslogik och automatiska tester men utan att ersätta nyare kommunikationskod. Den ursprungliga PR #107 ersätts av PR #111 efter verifierad merge; äldre utvecklingsgrenar skrivs inte över.
+- [x] **Backend installerad redan 5 november:** migration `20261105161257` finns i verkliga Supabase och motsvaras nu av Git-filen `supabase/migrations/20261105161257_explicit_swipe_priority_sharing.sql`. Den installerade migreringen körs inte på nytt i verkliga databasen.
+- [x] **Skyddad funktion bakom avstängd flagga:** enbart tonåringen får välja att dela redan serververifierat gemensamt A-JA med egen `+1`; historiska nivåer blir aldrig automatiskt delade. Delning kan återkallas per kort, och privat nivå syns inte för föräldern. Kodens text klargör att själva översikten är privat medan enskilda kort kan delas.
+- [x] **Automatisk verifiering av senaste integrationskod:** pgTAP (25/25 prioritetsskyddskontroller samt övriga DB-kontrakt) [#42108437034](https://github.com/erikjarl/hemmakompassen/actions/runs/42108437034) och Node/Playwright/visuell UI [#42108437007](https://github.com/erikjarl/hemmakompassen/actions/runs/42108437007) är godkända på commit `90662d347721877c369c4d8fb8c9f330ca134d9e`. En tidigare pgTAP-syntaxbugg med 23 felaktiga citat har rättats och fått eget regressionstest.
+- [x] **Verklig Supabase read-only-kontroll:** 0 befintliga aktiva samtycken, 4 återkallelsetriggers, RLS på, inget direkt `INSERT` för `authenticated` och ingen extern `EXECUTE` på interna eligibility-RPC:n. Ett syntetiskt oparat användar-ID såg inga delade prioriteringar. Ingen data skrevs.
+- [ ] **Kvar före aktivering:** två verkligt autentiserade testkonton måste visa korrekt aktivt samtycke, återkallelse, familjeisolering, inaktiverade och gamla familjepar samt att AI inte tolkar privat nivå som delad. iOS Safari/VoiceOver och riskgranskning återstår. `enableSharedPriorities:false` kvarstår.
+
 ## 5 november 2026 – KOM-05A/B: direkta länkar till samtalsövningar
 
 - [x] **Implementerat på `feat/communication-deep-links-20261105`:** nio fasta övningsadresser (`#kommunikation/<övning>`) öppnar rätt övning; sex moduler har relevanta direktlänkar. Mobilmenyn behåller Kommunikationsråd som aktiv flik. Enbart fasta redaktionella ID:n används, inga användarsvar i adressen och ingen ny databasåtkomst.
