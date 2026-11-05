@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createAiMediatorExperience } from '../ai-mediator-ui.js';
+import { createAiMediatorExperience, renderMediatorInternalLinks } from '../ai-mediator-ui.js';
 
 const user1='11111111-1111-4111-8111-111111111111';
 const user2='22222222-2222-4222-8222-222222222222';
@@ -146,4 +146,24 @@ test('assistant deep links are clickable but messages from user and safety stay 
  assert.equal((user.match(/<a href="#nvc">/g)||[]).length,0,'user messages are never linkified');
  assert.ok(markup.includes('&lt;script&gt;alert(1)&lt;/script&gt;'));
  assert.doesNotMatch(markup,/<script\b/);
+});
+
+
+test('KOM-05C: all nine editorial deep links are clickable; unknown routes never are',()=>{
+ const origin='https://erikjarl.github.io/hemmakompassen/#';
+ for(const id of ['lyssna','pausa','reparera','losning','kontakt','svaart','validera','onskemal','grans']){
+  const url=origin+'kommunikation/'+id;
+  const html=renderMediatorInternalLinks('Prova '+url,h,()=> 'teen');
+  assert.ok(html.includes('<a href="#kommunikation/'+id+'">'+url+'</a>'),id);
+ }
+ for(const suffix of ['unknown','lyssnaX','lyssna/extra','%6cyssna','lyssna%2Fextra','lyssna<script>']){
+  const html=renderMediatorInternalLinks(origin+'kommunikation/'+suffix,h,()=> 'teen');
+  assert.equal(html.includes('<a '),false,'not an approved route: '+suffix);
+  assert.equal(html.includes('<script>'),false);
+ }
+ const mi=origin+'mi-foralder';
+ assert.equal(renderMediatorInternalLinks(mi,h,()=> 'teen').includes('<a '),false);
+ assert.equal(renderMediatorInternalLinks(mi,h,()=> null).includes('<a '),false);
+ assert.ok(renderMediatorInternalLinks(mi,h,()=> 'parent').includes('<a href="#mi-foralder">'));
+ assert.equal(renderMediatorInternalLinks('https://evil.example/#kommunikation/lyssna',h,()=> 'parent').includes('<a '),false);
 });
