@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 
-const migration=readFileSync(new URL('../supabase/migrations/20261104150000_explicit_swipe_priority_sharing.sql',import.meta.url),'utf8');
+const migration=readFileSync(new URL('../supabase/migrations/20261105161257_explicit_swipe_priority_sharing.sql',import.meta.url),'utf8');
 const workflow=readFileSync(new URL('../.github/workflows/shared-swipe-db-tests.yml',import.meta.url),'utf8');
 const config=readFileSync(new URL('../backend-config.js',import.meta.url),'utf8');
 
@@ -26,7 +26,7 @@ test('consent can be revoked and invalidates on private or pairing changes',()=>
 });
 
 test('database CI applies the consent migration while public activation stays off',()=>{
-  assert.match(workflow,/20261104150000_explicit_swipe_priority_sharing\.sql/);
+  assert.match(workflow,/20261105161257_explicit_swipe_priority_sharing\.sql/);
   assert.match(workflow,/Assert 25 explicit shared priority pgTAP results/);
   assert.match(config,/enableSharedPriorities\s*:\s*false/);
 });

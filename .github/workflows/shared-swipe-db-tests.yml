@@ -12,7 +12,7 @@ on:
       - "supabase/migrations/20261026130000_shared_swipe_general_a_only.sql"
       - "supabase/migrations/20261027140902_private_swipe_importance.sql"
       - "supabase/migrations/20261027195833_shared_swipe_priorities.sql"
-      - "supabase/migrations/20261104150000_explicit_swipe_priority_sharing.sql"
+      - "supabase/migrations/20261105161257_explicit_swipe_priority_sharing.sql"
       - "supabase/migrations/20261028180000_shared_understanding_cards.sql"
       - "supabase/migrations/20261030090000_shared_swipe_all_a_only.sql"
       - "supabase/migrations/20261103110500_revoke_understanding_trigger_rpc_execute.sql"
@@ -110,7 +110,7 @@ jobs:
         run: |
           docker exec -i "${{ job.services.postgres.id }}" \
             psql -U postgres -d postgres -v ON_ERROR_STOP=1 -X -q \
-            < supabase/migrations/20261104150000_explicit_swipe_priority_sharing.sql
+            < supabase/migrations/20261105161257_explicit_swipe_priority_sharing.sql
       - name: Apply separate teen-authorised B-sharing RPC
         run: |
           docker exec -i "${{ job.services.postgres.id }}" \
