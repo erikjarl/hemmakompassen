@@ -68,14 +68,28 @@ async function capture(page,name){
   });
   await page.waitForFunction(()=>!document.querySelector("#toast")?.classList.contains("show"),null,{timeout:8000});
   const overlays=await page.evaluate(()=>{
-    const skip=document.querySelector(".skip-link");
+    const skip=document.querySelector(".live-skip-link, .skip-link");
     const toast=document.querySelector("#toast");
     const box=skip?.getBoundingClientRect();
-    return {skipVisible:!!box&&box.bottom>0,toastVisible:!!toast?.classList.contains("show"),scrollY:window.scrollY};
+    const main=document.querySelector('.live-main');
+    const nav=document.querySelector('#live-mobile-nav');
+    const mainBox=main?.getBoundingClientRect();
+    const navBox=nav?.getBoundingClientRect();
+    const navVisible=!!navBox&&navBox.height>0;
+    return {
+      skipVisible:!!box&&box.bottom>0,
+      toastVisible:!!toast?.classList.contains("show"),
+      scrollY:window.scrollY,
+      contentScrollTop:main?.scrollTop??0,
+      contentScrollHeight:main?.scrollHeight??0,
+      contentViewportHeight:main?.clientHeight??0,
+      mobileNavOverlapsContent:navVisible&&!!mainBox&&mainBox.bottom>navBox.top+1
+    };
   });
   assert.ok(!overlays.skipVisible,name+": unfocused skip-link appears onscreen");
   assert.ok(!overlays.toastVisible,name+": transient toast remains visible");
-  assert.ok(overlays.scrollY<=1,name+": screenshot is not at top of page");
+  assert.ok(overlays.scrollY<=1,name+": document is not at top of page");
+  assert.ok(!overlays.mobileNavOverlapsContent,name+": mobile navigation overlaps the content scroller");
   await page.screenshot({path:path.join(output,name),fullPage:true,animations:"disabled"});
   captureRecords.push({file:name,viewport:page.viewportSize(),...overlays});
 }

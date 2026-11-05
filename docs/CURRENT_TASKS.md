@@ -1,5 +1,15 @@
 # Hemmakompassen — aktuell utvecklingskö
 
+## 5 november 2026 – återupptaget utvecklingspass och testtäckning
+
+- [x] **CI-testupptäckt:** UI-workflow kör nu samtliga `tests/*.test.cjs` och `tests/*.test.mjs`. Tidigare saknades `communication-situations.test.mjs` i den explicita listan. Lokalt passerade **204/204** Node-tester och statiskt bygge.
+- [x] **Visuell testkod:** varje skärmbild registrerar nu innehållsytans faktiska skrollposition/höjd och kontrollerar att mobilmenyn inte överlappar innehållsytan. Även appens `.live-skip-link` kontrolleras. En skrollad innehållsyta ska inte felaktigt rapporteras som sidans överkant bara för att `window.scrollY=0`.
+- [ ] **Browserverifiering:** lokal Chromium-start nekades av miljön (`socket() failed: Operation not permitted`); nya bildkontroller måste verifieras i GitHub Actions. Ingen ny visuell godkännandebedömning påstås.
+- [x] **Verklig migrationsavstämning:** Supabase innehåller grundmigrationen `shared_swipe_priorities` som version `20261104200640`. Slut-SHA `f63344e` i PR #107 har godkända UI- och PostgreSQL-körningar `41877174412` respektive `41877174215`.
+- [ ] **SW-03B installation kvar:** granskad `explicit_swipe_priority_sharing` försöktes installeras genom Supabase-anslutningen, men dess bekräftelse löpte ut. Efterkontroll visar att `public.swipe_priority_shares` fortfarande saknas. Befintligt användargodkännande gäller; inget nytt produktbeslut behövs, men anslutningens bekräftelse behöver slutföras när installationen försöks igen. Inga befintliga användarsvar ändrades. `enableSharedPriorities:false` kvarstår.
+- [ ] **INT-01/02/03/04:** verkliga signerade tvåkontosessioner återstår. SQL-rollsimulering och CI ersätter inte dessa.
+
+
 ## 4 november 2026 – KOM-03: situationsstyrt kommunikationsstöd (PR #106 – mergad och publicerad)
 
 - [x] **KOM-03A – mergad till main:** sex situationsval öppnar direkt rätt befintlig eller ny samtalsövning. Tangentbordsfokus flyttas till öppnad övning. Ingen ny hash-route, familjedata, databasförändring eller lagring.
