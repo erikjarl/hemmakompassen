@@ -2,6 +2,13 @@
 
 **Gällande Jobb hk-fullmakt (5 november 2026):** se [AGENTS.md](AGENTS.md). Commit, push, PR, merge, publicering och motsvarande projektändringar i GitHub, Supabase och Cloudflare är uttryckligen godkända. Detta ersätter äldre krav på separat merge-/publiceringsgodkännande.
 
+## 5 november 2026 – SW-03B: säker integration av tonåringens prioritetssamtycke
+
+- [x] **Rensat gammal konflikt:** en ren integrationsgren (`feat/priority-consent-rebased-20261105`) utgår från aktuell `main`, med PR #107:s samtyckeslogik och automatiska tester men utan att ersätta nyare kommunikationskod. Den ursprungliga PR #107 kvarstår som ett äldre utkast tills den nya integreringen är verifierad.
+- [x] **Backend installerad redan 5 november:** migration `20261105161257` finns i verkliga Supabase. Kodfilen återförs till Git och CI-testerna utökas till 25 pgTAP-prov; den installerade migreringen körs inte på nytt i verkliga databasen.
+- [x] **Skyddad funktion bakom avstängd flagga:** enbart tonåringen får välja att dela redan serververifierat gemensamt A-JA med egen `+1`; historiska nivåer blir aldrig automatiskt delade. Delning kan återkallas per kort, och privat nivå syns inte för föräldern. Kodens text klargör att själva översikten är privat medan enskilda kort kan delas.
+- [ ] **Kvar före aktivering:** CI med Playwright/pgTAP, autentiserade tvåkontotester av samtycke, återkallelse och familjeisolering samt riskgranskning. `enableSharedPriorities:false` kvarstår och inga testkontosvar skrivs om.
+
 ## 5 november 2026 – KOM-05A/B: direkta länkar till samtalsövningar
 
 - [x] **Implementerat på `feat/communication-deep-links-20261105`:** nio fasta övningsadresser (`#kommunikation/<övning>`) öppnar rätt övning; sex moduler har relevanta direktlänkar. Mobilmenyn behåller Kommunikationsråd som aktiv flik. Enbart fasta redaktionella ID:n används, inga användarsvar i adressen och ingen ny databasåtkomst.
