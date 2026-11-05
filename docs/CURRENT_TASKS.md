@@ -7,8 +7,9 @@
 - [x] **Implementerat på `feat/communication-deep-links-20261105`:** nio fasta övningsadresser (`#kommunikation/<övning>`) öppnar rätt övning; sex moduler har relevanta direktlänkar. Mobilmenyn behåller Kommunikationsråd som aktiv flik. Enbart fasta redaktionella ID:n används, inga användarsvar i adressen och ingen ny databasåtkomst.
 - [x] **Robust routing och tangentbord:** felkodade hashvärden kraschar inte sidvisningen; okända övningar visar översikten. Direktnavigering flyttar fokus till övningen medan omritning inte aktivt flyttar fokus. Situationernas befintliga knappar använder samma kontrollerade öppningsfunktion.
 - [x] **Lokala kontroller:** 205 Node-tester och statiskt bygge godkända. UI-workflow upptäcker nu samtliga `*.test.cjs` och `*.test.mjs`, inklusive situations- och direktlänkstester.
-- [ ] **Browser/release:** Playwright-fall tillagda för modullänk, bakåt/framåt, omladdning och okända/felkodade adresser. Lokal Chromium-start nekas av miljön (`socket() failed: Operation not permitted`); körning i GitHub Actions och visuell granskning återstår före release. Push av den separata utvecklingsgrenen stoppades två gånger av automatisk godkännandegranskning, även efter kontroll av tidigare Jobb hk-fullmakt. Ingen ny PR, GitHub Actions-körning, merge eller publicering har skapats i detta pass; Erik gav därefter uttryckligt push-/merge-/publiceringsgodkännande den 5 november; releasearbetet återupptas.
-- [ ] **KOM-05C:** lägg till de verifierade övningsadresserna i AI-medlarens tillåtna svarslänkar och Worker-prompt, med roll-/riskkontroller och separat driftsättning. AI:ns befintliga generella länkar är oförändrade.
+- [x] **Browser/release PR #108 (5 nov):** Playwright/Node-test i PR #108 godkänd ([körning #42100188721](https://github.com/erikjarl/hemmakompassen/actions/runs/42100188721)). PR #108 mergad `d868341c89aab4600d6f503513989135226614c1`; main UI/Playwright [#42101828490](https://github.com/erikjarl/hemmakompassen/actions/runs/42101828490) och Pages [#42101827112](https://github.com/erikjarl/hemmakompassen/actions/runs/42101827112) godkända. Autentiserad tvåkontokontroll och iOS Safari återstår.
+- [x] **KOM-05C – kod på branch, inte släppt:** AI-medlarens Worker-prompt beskriver de nio fasta övningslänkarna; klienten gör bara exakt tillåtna URL:er klickbara och spärrar fortsatt föräldrarnas MI-länk för tonåring/okänd roll. Node-regressioner tillagda för okända/felkodade länkar, båda rollerna och kontext av. Ändringen ligger i `feat/ai-communication-skill-links-20261105` och inväntar CI, merge, Pages och separat Cloudflare Worker-deploy.
+- [ ] **KOM-05C release/QA:** verifiera CI samt korrekt driftversion och bindningar i Cloudflare; testa autentiserade roller, länkar och risksvar i riktig browser/Worker. Utan verifiering ska kod som bara finns på branchen inte kallas publicerad.
 - [ ] Verkliga tvåkontotester och fysisk iOS/VoiceOver återstår som tidigare. Detta pass ändrar inga befintliga användarsvar eller delningsflaggor.
 
 
@@ -49,7 +50,7 @@
 - [ ] **UX-01C verklig QA återstår:** två riktiga autentiserade testkonton, fysisk iOS Safari med VoiceOver, skärmläsare, 320/390 px och stora tecken är **inte** verifierade genom syntetiskt Chromium. Fortsätt UX-01 före extern pilot.
 
 
-**Granskad:** onsdag 4 november 2026, efter mergade och publicerade PR #90–#106, samt separat verifierad Supabase-migration #95.  
+**Granskad:** torsdag 5 november 2026, efter mergad och publicerad PR #108 och read-only kontroll av Supabase-migrationen för explicit prioritetsdelning. PR #107 är fortsatt utkast.  
 **Källa:** kod på `main` inklusive PR #90–#106, `backend-config.js`, kontrollerade GitHub Actions/UI/Pages-körningar, Supabase-migrationer och read-only SQL efter installation. Detta är **inte** ett påstående om genomförda verkliga tvåkontotester.  
 **Syfte:** En enda kort, uppdaterad handlingslista för manuellt och schemalagt utvecklingsarbete. `ROADMAP.md` bevarar detaljerna och äldre beslut.
 
