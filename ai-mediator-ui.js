@@ -3,9 +3,9 @@
 // A strict allowlist: only known local communication routes become clickable.
 export function renderMediatorInternalLinks(text,escapeHtml,getViewerRole=()=>null) {
   const source=String(text??'');
-  const re=/(https:\/\/erikjarl\.github\.io\/hemmakompassen\/#(?:kommunikation|nvc|mi-foralder))(?![A-Za-z0-9_-])/g;
+  const re=/(https:\/\/erikjarl\.github\.io\/hemmakompassen\/#(?:kommunikation(?:\/(?:lyssna|pausa|reparera|losning|kontakt|svaart|validera|onskemal|grans))?|nvc|mi-foralder))(?![A-Za-z0-9_/%<>-])/g;
   return source.split(re).map(piece=>{
-    const match=/^https:\/\/erikjarl\.github\.io\/hemmakompassen\/#(kommunikation|nvc|mi-foralder)$/.exec(piece);
+    const match=/^https:\/\/erikjarl\.github\.io\/hemmakompassen\/#(kommunikation(?:\/(?:lyssna|pausa|reparera|losning|kontakt|svaart|validera|onskemal|grans))?|nvc|mi-foralder)$/.exec(piece);
     if(!match||match[1]==='mi-foralder'&&getViewerRole()!=='parent')return escapeHtml(piece);
     return '<a href="#'+match[1]+'">'+escapeHtml(piece)+'</a>';
   }).join('');

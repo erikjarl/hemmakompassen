@@ -247,3 +247,20 @@ test('verified parent may receive the MI URL, while teen and context-opt-out can
   assert.ok(!optedOut.seen.model[0].args.messages[0].content.includes(url));
   assert.ok(optedOut.seen.model[0].args.messages[0].content.includes(nvc));
 });
+
+
+test('KOM-05C: role prompts mention only verified exercise routes',async()=>{
+ const ids=['lyssna','pausa','reparera','losning','kontakt','svaart','validera','onskemal','grans'];
+ for(const role of ['teen','parent']){
+  const x=harness({verifiedRole:role});
+  const result=await x.handler(req({message:'Hur kan vi prata bättre?'}),x.env);
+  assert.equal(result.status,200);
+  const prompt=x.seen.model[0].args.messages[0].content;
+  for(const id of ids) assert.ok(prompt.includes('https://erikjarl.github.io/hemmakompassen/#kommunikation/'+id),id);
+  assert.equal(prompt.includes('https://erikjarl.github.io/hemmakompassen/#mi-foralder'),role==='parent');
+  assert.match(prompt,/hot|våld/i);
+ }
+ const optedOut=harness({verifiedRole:'teen'});
+ assert.equal((await optedOut.handler(req({message:'Hur pratar jag bättre?',extra:{useProjectContext:false}}),optedOut.env)).status,200);
+ assert.equal(optedOut.seen.auth.length,1);
+});
