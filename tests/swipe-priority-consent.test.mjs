@@ -38,3 +38,13 @@ test('priority pgTAP queries use valid double-dollar SQL quoting',()=>{
   assert.doesNotMatch(sql,/(^|[^$])\$(?:select|values)\b/m,'single-dollar delimiters are not valid');
   assert.match(sql,/select plan\(25\)/,'all 25 pgTAP assertions are planned');
 });
+
+test('UI CI fails fast on Node contracts before installing a browser',()=>{
+  const ui=readFileSync(new URL('../.github/workflows/ui-tests.yml',import.meta.url),'utf8');
+  const node=ui.indexOf('name: Functional and backend contract tests');
+  const build=ui.indexOf('name: Verify static build');
+  const playwright=ui.indexOf('name: Install Playwright');
+  const chromium=ui.indexOf('name: Install Chromium');
+  assert.ok(node>=0&&node<build&&build<playwright&&playwright<chromium,
+    'Contract and build failures must be reported before costly browser installation');
+});
