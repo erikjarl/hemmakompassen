@@ -30,3 +30,11 @@ test('database CI applies the consent migration while public activation stays of
   assert.match(workflow,/Assert 25 explicit shared priority pgTAP results/);
   assert.match(config,/enableSharedPriorities\s*:\s*false/);
 });
+
+test('priority pgTAP queries use valid double-dollar SQL quoting',()=>{
+  const sql=readFileSync(new URL('../supabase/tests/shared_swipe_priorities.sql',import.meta.url),'utf8');
+  const quoted=[...sql.matchAll(/\$\$(?:select|values)[^\n$]*\$\$/g)];
+  assert.equal(quoted.length,23,'all 23 SQL text arguments should be dollar-quoted');
+  assert.doesNotMatch(sql,/(^|[^$])\$(?:select|values)\b/m,'single-dollar delimiters are not valid');
+  assert.match(sql,/select plan\(25\)/,'all 25 pgTAP assertions are planned');
+});
