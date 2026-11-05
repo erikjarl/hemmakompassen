@@ -31,8 +31,8 @@ test('interaktionen kräver knapptryck, övningsmål och fokus; ingen familjelag
  const app=read('live-app.js'),css=read('live-app.css'),source=read('communication/toolkit.js');
  assert.match(app,/page\(\)==='kommunikation'/);
  assert.match(app,/choice\.dataset\.commOpen/);
- assert.match(app,/detail\.open=true/);
- assert.match(app,/querySelector\('summary'\)\?\.focus/);
+ assert.match(source,/detail\.open=true/);
+ assert.match(source,/querySelector\('summary'\)\?\.focus/);
  assert.match(css,/comm-situation:focus-visible/);
  assert.match(css,/comm-situation-grid/);
  assert.doesNotMatch(source,/\bfetch\s*\(|localStorage|sessionStorage|supabase|indexedDB|navigator\.sendBeacon|\bWebSocket\b/i);

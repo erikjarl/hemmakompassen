@@ -1,5 +1,17 @@
 # Hemmakompassen — aktuell utvecklingskö
 
+**Gällande Jobb hk-fullmakt (5 november 2026):** se [AGENTS.md](../AGENTS.md). Commit, push, PR, merge, publicering och motsvarande projektändringar i GitHub, Supabase och Cloudflare är uttryckligen godkända. Detta ersätter äldre krav på separat merge-/publiceringsgodkännande.
+
+## 5 november 2026 – KOM-05A/B: direkta länkar till samtalsövningar
+
+- [x] **Implementerat på `feat/communication-deep-links-20261105`:** nio fasta övningsadresser (`#kommunikation/<övning>`) öppnar rätt övning; sex moduler har relevanta direktlänkar. Mobilmenyn behåller Kommunikationsråd som aktiv flik. Enbart fasta redaktionella ID:n används, inga användarsvar i adressen och ingen ny databasåtkomst.
+- [x] **Robust routing och tangentbord:** felkodade hashvärden kraschar inte sidvisningen; okända övningar visar översikten. Direktnavigering flyttar fokus till övningen medan omritning inte aktivt flyttar fokus. Situationernas befintliga knappar använder samma kontrollerade öppningsfunktion.
+- [x] **Lokala kontroller:** 205 Node-tester och statiskt bygge godkända. UI-workflow upptäcker nu samtliga `*.test.cjs` och `*.test.mjs`, inklusive situations- och direktlänkstester.
+- [ ] **Browser/release:** Playwright-fall tillagda för modullänk, bakåt/framåt, omladdning och okända/felkodade adresser. Lokal Chromium-start nekas av miljön (`socket() failed: Operation not permitted`); körning i GitHub Actions och visuell granskning återstår före release. Push av den separata utvecklingsgrenen stoppades två gånger av automatisk godkännandegranskning, även efter kontroll av tidigare Jobb hk-fullmakt. Ingen ny PR, GitHub Actions-körning, merge eller publicering har skapats i detta pass; Erik gav därefter uttryckligt push-/merge-/publiceringsgodkännande den 5 november; releasearbetet återupptas.
+- [ ] **KOM-05C:** lägg till de verifierade övningsadresserna i AI-medlarens tillåtna svarslänkar och Worker-prompt, med roll-/riskkontroller och separat driftsättning. AI:ns befintliga generella länkar är oförändrade.
+- [ ] Verkliga tvåkontotester och fysisk iOS/VoiceOver återstår som tidigare. Detta pass ändrar inga befintliga användarsvar eller delningsflaggor.
+
+
 ## 4 november 2026 – KOM-03: situationsstyrt kommunikationsstöd (PR #106 – mergad och publicerad)
 
 - [x] **KOM-03A – mergad till main:** sex situationsval öppnar direkt rätt befintlig eller ny samtalsövning. Tangentbordsfokus flyttas till öppnad övning. Ingen ny hash-route, familjedata, databasförändring eller lagring.
