@@ -121,6 +121,7 @@ const deferred=()=>{let resolve,reject;const promise=new Promise((ok,no)=>{resol
   let authCalls=0;
   const state={
     refreshGeneration:0,user:null,profile:null,members:[],
+    openCommunicationSkill:()=>false,communicationSkillFromHash:()=>null,location:{hash:''},$:()=>null,
     personalityExperience:{reset(){},load:async()=>{}},
     // The refresh function now also resets the private AI-chat lifecycle.
     mediatorExperience:{reset(){},loadList:async()=>{}},

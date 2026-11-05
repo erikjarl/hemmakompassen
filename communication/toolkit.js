@@ -18,6 +18,19 @@ const COMM_SKILL_IDS={
  'Be om något konkret':'onskemal',
  'Sätt en gräns med respekt':'grans'
 };
+// Only fixed editorial exercise IDs may enter a route or a selector.
+export function communicationSkillFromHash(hash=''){
+ const match=/^#kommunikation\/([a-z]+)$/.exec(hash);
+ return match&&Object.values(COMM_SKILL_IDS).includes(match[1])?match[1]:null;
+}
+export function openCommunicationSkill(root,skill,{focus=false}={}){
+ if(!Object.values(COMM_SKILL_IDS).includes(skill))return false;
+ const detail=root.querySelector('.comm-exercise[data-comm-skill="'+skill+'"]');
+ if(!detail)return false;
+ detail.open=true;
+ if(focus){detail.querySelector('summary')?.focus({preventScroll:true});detail.scrollIntoView({block:'nearest',behavior:'auto'});}
+ return true;
+}
 function exercise(title,purpose,steps,example){
  return '<details class="comm-exercise" data-comm-skill="'+e(COMM_SKILL_IDS[title])+'"><summary><strong>'+e(title)+'</strong><span>'+e(purpose)+'</span></summary><div class="comm-exercise-content"><ol>'+steps.map(s=>'<li>'+e(s)+'</li>').join('')+'</ol><p class="comm-example"><strong>Exempel:</strong> '+e(example)+'</p></div></details>';
 }

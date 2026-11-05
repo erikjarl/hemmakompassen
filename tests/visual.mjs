@@ -316,7 +316,7 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
 try{
   await fs.mkdir(output,{recursive:true});
   await waitForServer();
-  browser=await chromium.launch({headless:true});
+  browser=await chromium.launch({headless:true,...(process.env.CHROMIUM_PATH?{executablePath:process.env.CHROMIUM_PATH}:{})});
   const login=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true});
   await login.page.locator("#live-login").waitFor();
   assert.match(await login.page.locator("#live-app").innerText(),/Logga in/i,"First visit must show real sign-in");
@@ -363,6 +363,25 @@ try{
   await m.page.getByRole('heading',{name:'Nonviolent Communication',exact:true}).waitFor();
   assert.equal(await m.page.locator('#live-mobile-nav a[href="#kommunikation"]').getAttribute('aria-current'),'page',
     'Cross-module NVC links select the communication tab');
+  await m.page.goto(base+'#regler',{waitUntil:'load'});
+  await m.page.locator('.comm-crosslink a[href="#kommunikation/losning"]').click();
+  await m.page.waitForFunction(()=>document.activeElement?.closest('.comm-exercise')?.dataset.commSkill==='losning');
+  assert.equal(await m.page.locator('[data-comm-skill="losning"]').evaluate(el=>el.open),true);
+  assert.equal(await m.page.locator('#live-mobile-nav a[href="#kommunikation"]').getAttribute('aria-current'),'page');
+  await capture(m.page,'mobile-communication-direct-solution.png');
+  await m.page.goBack();
+  await m.page.locator('.comm-crosslink a[href="#kommunikation/losning"]').waitFor();
+  await m.page.goForward();
+  await m.page.waitForFunction(()=>document.activeElement?.closest('.comm-exercise')?.dataset.commSkill==='losning');
+  await m.page.reload({waitUntil:'load'});
+  await m.page.locator('[data-comm-skill="losning"][open]').waitFor();
+  for(const hash of ['#kommunikation/unknown','#kommunikation/%22%3E%3Cscript%3E']){
+    await m.page.goto(base+hash,{waitUntil:'load'});
+    await m.page.getByRole('heading',{name:'Verktyg för bättre samtal'}).waitFor();
+    assert.equal(await m.page.locator('.comm-exercise[open]').count(),0);
+  }
+  await m.page.goto(base+'#%E0%A4%A',{waitUntil:'load'});
+  await m.page.locator('.home-module-grid, .home-modules, #live-app h1').first().waitFor();
   await m.page.goto(base+'#kommunikation',{waitUntil:'load'});
   await m.page.getByRole('heading',{name:'Verktyg för bättre samtal'}).waitFor();
   assert.equal(await m.page.locator('.comm-exercise').count(),9,'Nine shared communication techniques are available');

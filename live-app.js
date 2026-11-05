@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261104-communication3';
-import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261104-communication3';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261104-communication3';
-import {renderParentMiGuide} from './communication/mi-guide.js?v=20261104-communication3';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence} from './communication/toolkit.js?v=20261104-communication3';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261105-communication-links1';
+import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261105-communication-links1';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261105-communication-links1';
+import {renderParentMiGuide} from './communication/mi-guide.js?v=20261105-communication-links1';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261105-communication-links1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -759,7 +759,7 @@ function nextVisibleAfter(index){return visibleGeneralIndices().find(i=>i>index)
 function advanceSwipe(direction){if(activeThemeDeck){advanceThemeSwipe(direction);return;}if(swipeBusy||importanceSaving.size||page()!=='swipe'||!user||swipeIndex>=STATEMENTS.length||!visibleGeneralIndices().includes(swipeIndex))return;const el=$('swipe-card');if(!el)return;const index=swipeIndex,viewer=user.id,session=sharedSession;swipeBusy=true;const reduce=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;if(!reduce){el.style.transform='translateX('+(direction==='yes'?'120vw':'-120vw')+') rotate('+(direction==='yes'?18:-18)+'deg)';el.style.opacity='0';}setTimeout(()=>saveSwipeAnswer(direction,index,viewer,session),reduce?0:220);}
 function setupSwipeGesture(){const el=$('swipe-card');if(!el)return;let start=null;const reset=()=>{start=null;el.style.transform='';el.classList.remove('swipe-dragging','swipe-preview-yes','swipe-preview-no');};el.addEventListener('pointerdown',e=>{if(e.target.closest?.('[data-importance-control]')||(e.button!==undefined&&e.button!==0))return;start={id:e.pointerId,x:e.clientX,y:e.clientY,dragging:false};});el.addEventListener('pointermove',e=>{if(!start||start.id!==e.pointerId||swipeBusy)return;const dx=e.clientX-start.x,dy=e.clientY-start.y;if(!start.dragging&&Math.abs(dy)>Math.abs(dx)&&Math.abs(dy)>12){start=null;return;}if(Math.abs(dx)>10&&Math.abs(dx)>Math.abs(dy)){start.dragging=true;el.setPointerCapture?.(e.pointerId);}if(!start.dragging)return;el.classList.add('swipe-dragging');el.classList.toggle('swipe-preview-yes',dx>35);el.classList.toggle('swipe-preview-no',dx< -35);el.style.transform='translateX('+dx+'px) rotate('+Math.max(-13,Math.min(13,dx/18))+'deg)';});el.addEventListener('pointerup',e=>{if(!start||start.id!==e.pointerId)return;const dx=e.clientX-start.x,dragged=start.dragging;reset();if(dragged&&Math.abs(dx)>=85)advanceSwipe(dx>0?'yes':'no');});el.addEventListener('pointercancel',reset);}
 
-function page(){const h=decodeURIComponent(location.hash.slice(1));return ['insikter','mi-foralder','nvc'].includes(h)?h:nav.some(n=>n[0]===h)?h:'hem';}
+function page(){if(location.hash.startsWith('#kommunikation/'))return 'kommunikation';let h;try{h=decodeURIComponent(location.hash.slice(1));}catch{return 'hem';}return ['insikter','mi-foralder','nvc'].includes(h)?h:nav.some(n=>n[0]===h)?h:'hem';}
 // On mobile, the scroll container is .live-main rather than window.
 function scrollLiveMainTop(){const main=document.querySelector('.live-main');if(main)main.scrollTop=0;window.scrollTo(0,0);}
 let previousMenuRoute=null;
@@ -809,12 +809,21 @@ const COMMUNICATION_BRIDGES=Object.freeze({
   regler:'Innan ni diskuterar eller omprövar en regel: prova ett gemensamt problemlösningssamtal.',
   inkorg:'Vill du skriva ett känsligt meddelande? Du kan öva på ett jag-budskap först. Ingenting skickas automatiskt.',
   personlighet:'Självskattningar förklarar inte varför ni reagerar olika. Verktygen kan hjälpa er prata om era perspektiv utan etiketter.',
-  medlare:'Vill du prova ett av förslagen i en övning utan AI? Börja med NVC eller någon av de sex samtalsövningarna.'
+  medlare:'Vill du prova ett av förslagen i en övning utan AI? Börja med NVC eller någon av samtalsövningarna.'
+});
+const COMMUNICATION_TARGETS=Object.freeze({
+ swipe:['lyssna','Öva på att lyssna'],
+ insikter:['kontakt','Börja med fem minuter kontakt'],
+ regler:['losning','Hitta en gemensam lösning'],
+ inkorg:['svaart','Förbered ett känsligt samtal'],
+ personlighet:['validera','Bekräfta varandras perspektiv'],
+ medlare:['pausa','Öva på paus och återkomst']
 });
 function communicationBridge(key){
   const text=COMMUNICATION_BRIDGES[key];
   if(!text)return '';
-  return '<aside class="comm-crosslink" aria-label="Relaterat samtalsstöd"><strong>Prata vidare tillsammans</strong><p>'+text+'</p><div class="comm-crosslink-links"><a href="#kommunikation">Alla kommunikationsverktyg</a><a href="#nvc">Bygg ett jag-budskap (NVC)</a>'
+  const [skill,label]=COMMUNICATION_TARGETS[key];
+  return '<aside class="comm-crosslink" aria-label="Relaterat samtalsstöd"><strong>Prata vidare tillsammans</strong><p>'+text+'</p><div class="comm-crosslink-links"><a href="#kommunikation/'+skill+'">'+label+'</a><a href="#kommunikation">Alla kommunikationsverktyg</a><a href="#nvc">Bygg ett jag-budskap (NVC)</a>'
     +(viewerRole()==='parent'?'<a href="#mi-foralder">MI för föräldrar</a>':'')+'</div></aside>';
 }
 
@@ -1234,6 +1243,7 @@ function render(){
     const main=document.querySelector('.live-main');
     if(main)main.scrollTop=Math.min(mainScroll,Math.max(0,main.scrollHeight-main.clientHeight));
   }
+  if(user&&page()==='kommunikation')openCommunicationSkill($('live-app'),communicationSkillFromHash(location.hash));
   if(page()==='regler'&&user)applySchysstaFilters();
   setupSwipeGesture();$('sidebar-account').textContent=user?'Inloggad: '+(profile?.display_name||user.email):'Inte inloggad';
   $('account-link').textContent=user?'Ditt konto →':'Logga in →';
@@ -1263,6 +1273,7 @@ if(sharedUnderstandingEnabled){if(b.error)understandingShareError='Delningsstatu
 swipeIndex=nextUnanswered();swipeSkippedReview=false;}
 if(generation!==refreshGeneration)return;
 render();
+if(user)openCommunicationSkill($('live-app'),communicationSkillFromHash(location.hash),{focus:true});
 if(user)void personalityExperience.load(user.id);
 if(user&&page()==='medlare')void mediatorExperience.loadList();
 if(user&&members.length===2){void fetchSwipeMatches('general');void fetchThemeUnlock();}
@@ -1278,10 +1289,7 @@ if(page()==='kommunikation'){
    const choice=e.target.closest('[data-comm-open]');
    if(choice){
      const skill=choice.dataset.commOpen;
-     if(['lyssna','pausa','reparera','losning','validera','grans'].includes(skill)){
-       const detail=document.querySelector('.comm-exercise[data-comm-skill="'+skill+'"]');
-       if(detail){detail.open=true;detail.querySelector('summary')?.focus({preventScroll:true});detail.scrollIntoView({block:'nearest',behavior:'auto'});}
-     }
+     openCommunicationSkill($('live-app'),skill,{focus:true});
      return;
    }
  }
@@ -1385,7 +1393,8 @@ document.addEventListener('submit',async e=>{if(e.target.id==='comm-nvc-form'){e
 window.addEventListener('hashchange',()=>{
   if(page()!=='insikter'){insightsRows=[];sharedUnderstandingRows=[];insightsError='';insightsLoading=false;insightsRequest++;}
   if(page()!=='regler'&&page()!=='inkorg'){schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];schysstaNotifications=[];schysstaReplacementLinks=[];schysstaHistory=[];schysstaError='';schysstaLoading=false;schysstaRequest++;}
-  render();scrollLiveMainTop();$('live-app')?.focus({preventScroll:true});
+  render();scrollLiveMainTop();
+  if(!user||!openCommunicationSkill($('live-app'),communicationSkillFromHash(location.hash),{focus:true}))$('live-app')?.focus({preventScroll:true});
   if(page()==='insikter')void fetchInsights();
   if(page()==='personlighet')void personalityExperience.refreshShared();
   if(page()==='medlare')void mediatorExperience.loadList();
