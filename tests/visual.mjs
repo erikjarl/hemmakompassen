@@ -156,7 +156,9 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
               select(){return {async eq(){return {data:[...importance.values()],error:null}}}},
               async upsert(row,options){importance.set(row.deck_id+':'+row.card_id,row);window.__HK_SAVED_IMPORTANCE__={row,options};return {error:null}}
             };
-            if(table==='swipe_priority_shares')return {select(){return {async eq(){return {data:window.__HK_TEST_ROLE__==='teen'?[...priorityShares].map(key=>{const [deck_id,card_id]=key.split(':');return {deck_id,card_id};}):[],error:null}}}}};
+            if(table==='swipe_priority_shares')return {select(){return {async eq(){return window.__HK_PRIORITY_READ_FAIL__
+              ?{data:null,error:{message:'Synthetic consent read failed'}}
+              :{data:window.__HK_TEST_ROLE__==='teen'?[...priorityShares].map(key=>{const [deck_id,card_id]=key.split(':');return {deck_id,card_id};}):[],error:null};}}}};
             if(table==='understanding_card_shares')return {select(){return {async eq(){return {data:window.__HK_TEST_ROLE__==='teen'?[...understandingShares].map(card_id=>({deck_id:'general',card_id})):[],error:null}}}}};
             throw new Error('Unexpected table '+table);
           },
@@ -188,8 +190,10 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
             }
             if(name==='set_swipe_priority_share'){
               window.__HK_PRIORITY_SHARE__={name,args};
+              if(window.__HK_PRIORITY_RPC_FAIL_NO_WRITE__)return {data:null,error:{message:'Synthetic write rejected'}};
               const key=args.p_deck_id+':'+args.p_card_id;
               if(args.p_share)priorityShares.add(key);else priorityShares.delete(key);
+              if(window.__HK_PRIORITY_RPC_FAIL_AFTER_WRITE__)return {data:null,error:{message:'Synthetic acknowledgement lost'}};
               return {data:null,error:null};
             }
             if(name==='shared_general_deck_complete'){
@@ -888,17 +892,37 @@ try{
   await teenPriorityConsent.page.waitForFunction(()=>window.__HK_PRIORITY_SHARE__?.args?.p_share===false);
   await teenPriorityConsent.page.waitForFunction(()=>document.querySelector('[data-priority-share][data-card-id="general-01"]')?.getAttribute('aria-pressed')==='false');
   assert.match(await teenPriorityConsent.page.locator('.swipe-results').innerText(),/Delningen är återkallad/,'Revocation updates the UI immediately');
+  // The network can lose the acknowledgement *after* a successful server write.
+  await teenPriorityConsent.page.evaluate(()=>window.__HK_PRIORITY_RPC_FAIL_AFTER_WRITE__=true);
+  await sharePriority.click();
+  await teenPriorityConsent.page.waitForFunction(()=>document.querySelector('.swipe-priority-share-status')?.textContent.includes('trots ett kommunikationsfel'));
+  assert.equal(await sharePriority.getAttribute('aria-pressed'),'true','An acknowledged-by-read share stays visible despite an RPC error');
+  assert.equal(await sharePriority.evaluate(el=>el===document.activeElement),true,'Consent retains keyboard focus through rerenders');
+  await teenPriorityConsent.page.evaluate(()=>{window.__HK_PRIORITY_RPC_FAIL_AFTER_WRITE__=false;window.__HK_PRIORITY_RPC_FAIL_NO_WRITE__=true;});
+  await sharePriority.click();
+  await teenPriorityConsent.page.waitForFunction(()=>document.querySelector('.swipe-priority-share-status')?.textContent.includes('fortfarande delat'));
+  assert.equal(await sharePriority.getAttribute('aria-pressed'),'true','A failed revocation never claims the share was removed');
+  await teenPriorityConsent.page.evaluate(()=>{window.__HK_PRIORITY_RPC_FAIL_NO_WRITE__=false;window.__HK_PRIORITY_READ_FAIL__=true;});
+  await sharePriority.click();
+  await teenPriorityConsent.page.locator('[data-priority-retry]').waitFor();
+  assert.equal(await sharePriority.getAttribute('aria-disabled'),'true','Unknown status disables consent actions');
+  assert.match(await teenPriorityConsent.page.locator('.swipe-priority-share-status').innerText(),/går inte att veta/);
+  await teenPriorityConsent.page.evaluate(()=>window.__HK_PRIORITY_READ_FAIL__=false);
+  await teenPriorityConsent.page.locator('[data-priority-retry]').click();
+  await teenPriorityConsent.page.waitForFunction(()=>document.querySelector('[data-priority-share][data-card-id="general-01"]')?.getAttribute('aria-pressed')==='false');
+  assert.equal(await sharePriority.getAttribute('aria-disabled'),'false','A fresh server read restores verified controls');
   await teenPriorityConsent.context.close();
 
   const parentPriority=await freshContext(
     {viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},
-    {authenticated:true,paired:true,role:'parent',privateImportance:true,priorityFeature:false}
+    {authenticated:true,paired:true,role:'parent',privateImportance:true,priorityFeature:true}
   );
   await parentPriority.page.goto(base+'#swipe',{waitUntil:'load'});
   await parentPriority.page.locator('.swipe-results .swipe-match-list li').first().waitFor();
   assert.equal(await parentPriority.page.locator('.swipe-private-priority').count(),0,
-    'Private teen priorities never appear in parent results');
-  assert.equal(await parentPriority.page.evaluate(()=>window.__HK_PRIORITY_RPC_CALLS__||0),0);
+    'Private teen priorities never appear in parent results even when staging flag is on');
+  assert.equal(await parentPriority.page.locator('[data-priority-share]').count(),0,'Parent never receives teen-only consent controls');
+  assert.ok(await parentPriority.page.evaluate(()=>window.__HK_PRIORITY_RPC_CALLS__||0)>0,'Parent reads only the server-verified shared priority RPC');
   await parentPriority.context.close();
 
   const teenInsights=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,paired:true,role:'teen',unlocked:true,preansweredGeneral:true});
