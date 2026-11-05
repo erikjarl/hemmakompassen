@@ -8,21 +8,21 @@ permissions:
   contents: read
 jobs:
   visual:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Install Playwright
-        run: npm install --no-save playwright@latest
-      - name: Install Chromium
-        run: npx playwright install --with-deps chromium
       - name: Functional and backend contract tests
         run: node --test tests/*.test.cjs tests/*.test.mjs
       - name: Verify static build and versioned IPIP modules
         run: npm run build && test -s dist/personality/ipip50-v1.js && test -s dist/personality/ipip50-scoring.js && test -s dist/personality/ipip50-storage.js && test -s dist/personality/ipip50-reference.js && test -s dist/communication/mi-guide.js
+      - name: Install Playwright
+        run: npm install --no-save playwright@latest
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
       - name: Browser tests and screenshots
         run: node tests/visual.mjs
       - name: Save screenshots

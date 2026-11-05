@@ -118,7 +118,7 @@ test('Schyssta search only filters an authorized, already validated snapshot',()
   assert.match(app,/item\.querySelector\('p'\)\?\.textContent/);
   assert.match(app,/data-schyssta-filter-group="approved"/);
   assert.match(app,/data-schyssta-filter-group="ongoing"/);
-  assert.match(app,/function render\(\)\s*\{[\s\S]{0,1000}applySchysstaFilters\(\)/);
+  assert.match(app,/function render\(\)\s*\{[\s\S]*?if\(page\(\)==='regler'&&user\)applySchysstaFilters\(\)/,'Schyssta filtering remains attached to render despite additional accessibility logic');
   assert.match(app,/schysstaFilterStatus=\['all','approved','ongoing'\]/);
   assert.match(app,/schysstaSearch='';schysstaFilterStatus='all'/);
   assert.match(app,/item\.status==='rejected'/);

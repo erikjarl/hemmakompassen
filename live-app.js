@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261105-priority-consent2';
-import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261105-priority-consent2';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261105-priority-consent2';
-import {renderParentMiGuide} from './communication/mi-guide.js?v=20261105-priority-consent2';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261105-priority-consent2';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261105-priority-confirm3';
+import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261105-priority-confirm3';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261105-priority-confirm3';
+import {renderParentMiGuide} from './communication/mi-guide.js?v=20261105-priority-confirm3';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261105-priority-confirm3';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -363,14 +363,18 @@ function privateTeenPrioritySummary(matchedById,deckId){
   const entries=selected.map(item=>{
     const key=importanceKey(deckId,item.card.id),shared=priorityShares.has(key),saving=priorityShareSaving.has(key);
     return '<li><p>'+esc(item.statement)+'</p>'+(sharedPrioritiesEnabled
-      ?'<button type="button" class="swipe-priority-share" data-priority-share data-deck-id="'+esc(deckId)+'" data-card-id="'+esc(item.card.id)+'" aria-pressed="'+shared+'" '+(!prioritySharesAvailable||saving?'disabled':'')+'>'+(saving?'Sparar…':shared?'Återkalla delning':'Dela som gemensamt fokus')+'</button>'
+      ?'<button type="button" class="swipe-priority-share" data-priority-share data-deck-id="'+esc(deckId)+'" data-card-id="'+esc(item.card.id)+'" aria-pressed="'+shared+'" '+('aria-disabled="'+(!prioritySharesAvailable||saving)+'"')+'>'+(saving?'Sparar…':shared?'Återkalla delning':'Dela som gemensamt fokus')+'</button>'
       :'')+'</li>';
   }).join('');
   const consentIntro=sharedPrioritiesEnabled
     ?'<p>Din markering är privat tills du själv väljer <strong>Dela som gemensamt fokus</strong>. Delningen gäller bara det här kortet, där ni båda redan svarat ja, och du kan återkalla den när som helst.</p>'
     :'<p>Här ser du sådant som ni båda svarat ja till och som du själv markerat som mycket viktigt.</p>';
   const consentStatus=sharedPrioritiesEnabled
-    ?'<p class="swipe-priority-share-status" role="status">'+esc(priorityShareError||(prioritySharesAvailable?'Du bestämmer separat för varje kort. Föräldern ser aldrig din privata nivå, bara aktivt delade fokus.':'Delningsstatus kan inte hämtas säkert just nu. Inget kan delas.'))+'</p>'
+    ?'<p class="swipe-priority-share-status" role="'+(prioritySharesAvailable?'status':'alert')+'">'+
+      esc(priorityShareError||(prioritySharesAvailable
+        ?'Du bestämmer separat för varje kort. Föräldern ser aldrig din privata nivå, bara aktivt delade fokus.'
+        :'Delningens aktuella status går inte att kontrollera. Det är möjligt att ett kort fortfarande är delat.'))+'</p>'+
+      (!prioritySharesAvailable?'<button type="button" class="live-button" data-priority-retry>Kontrollera delningen igen</button>':'')
     :'';
   return '<aside class="swipe-priority-summary swipe-private-priority" aria-label="Dina privata prioriteringar">'+
     '<span class="swipe-summary-label">'+(sharedPrioritiesEnabled?'DIN PRIVATA ÖVERSIKT · DELNING PER KORT':'ENDAST FÖR DIG · INTE DELAT')+'</span>'+
@@ -379,6 +383,25 @@ function privateTeenPrioritySummary(matchedById,deckId){
     '<ul class="swipe-match-list">'+entries+'</ul>'+
     consentStatus+
     '<p class="live-muted">Den här listan visas bara för dig. Föräldern ser inte dina privata viktighetsskattningar här. AI-medlaren kan använda dina egna skattningar när projektkontexten är påslagen.</p></aside>';
+}
+
+// An RPC response can be lost after the server has saved or revoked a share.
+// Read the RLS-protected consent row again instead of guessing the outcome.
+async function verifyPriorityShares(viewer,session){
+  let result;
+  try{result=await db.from('swipe_priority_shares').select('deck_id,card_id').eq('user_id',viewer);}
+  catch(e){result={error:e};}
+  if(user?.id!==viewer||sharedSession!==session)return false;
+  priorityShares.clear();
+  if(result?.error||!Array.isArray(result?.data)){
+    prioritySharesAvailable=false;
+    return false;
+  }
+  for(const row of result.data){
+    if(validImportanceCard(row?.deck_id,row?.card_id))priorityShares.add(importanceKey(row.deck_id,row.card_id));
+  }
+  prioritySharesAvailable=viewerRole()==='teen'&&members.length===2;
+  return prioritySharesAvailable;
 }
 
 async function setPriorityShare(deckId,cardId,share,viewer,session){
@@ -392,10 +415,28 @@ async function setPriorityShare(deckId,cardId,share,viewer,session){
   try{({error}=await db.rpc('set_swipe_priority_share',{p_deck_id:deckId,p_card_id:cardId,p_share:share}));}
   catch(e){error=e;}
   if(user?.id!==viewer||sharedSession!==session)return;
+  const verified=await verifyPriorityShares(viewer,session);
+  if(user?.id!==viewer||sharedSession!==session)return;
   priorityShareSaving.delete(key);
-  if(error){priorityShareError='Delningen kunde inte sparas. Inget ändrades; försök igen.';render();return;}
-  if(share)priorityShares.add(key);else priorityShares.delete(key);
-  priorityShareError=share?'Delat som gemensamt fokus. Du kan återkalla när som helst.':'Delningen är återkallad och tas bort från det gemensamma fokuset.';
+  if(!verified){
+    priorityShareError='Serverns delningsstatus kunde inte kontrolleras. Det går inte att veta om kortet fortfarande är delat. Kontrollera igen innan du litar på en återkallelse.';
+    render();
+    return;
+  }
+  const isShared=priorityShares.has(key);
+  if(isShared!==share){
+    priorityShareError=share
+      ?'Servern bekräftar inte någon delning av kortet. Försök igen.'
+      :'Kortet är fortfarande delat enligt servern. Återkallelsen har inte bekräftats. Försök igen.';
+  }else if(error){
+    priorityShareError=share
+      ?'Servern bekräftar att kortet är delat trots ett kommunikationsfel. Du kan återkalla delningen.'
+      :'Servern bekräftar att delningen är återkallad trots ett kommunikationsfel.';
+  }else{
+    priorityShareError=share
+      ?'Delat som gemensamt fokus. Du kan återkalla när som helst.'
+      :'Delningen är återkallad och tas bort från det gemensamma fokuset.';
+  }
   await fetchSwipeMatches(deckId,{quiet:true});
   if(page()==='swipe')render();
 }
@@ -1272,11 +1313,18 @@ function render(){
   // Inbox can rerender after a remote message or an explicit read action.
   // Preserve the mobile main scroller instead of jumping to the heading.
   // Hash navigation explicitly calls scrollLiveMainTop() after its render.
-  const mainScroll=page()==='inkorg'?document.querySelector('.live-main')?.scrollTop:null;
+  const focusedPriority=page()==='swipe'?document.activeElement?.closest?.('[data-priority-share]'):null;
+  const priorityFocus=focusedPriority?{deck:focusedPriority.dataset.deckId,card:focusedPriority.dataset.cardId}:null;
+  const mainScroll=(page()==='inkorg'||priorityFocus)?document.querySelector('.live-main')?.scrollTop:null;
   menu();$('live-app').innerHTML=user?(page()==='hem'?home():section(page())):login();
   if(mainScroll!=null){
     const main=document.querySelector('.live-main');
     if(main)main.scrollTop=Math.min(mainScroll,Math.max(0,main.scrollHeight-main.clientHeight));
+  }
+  if(priorityFocus&&page()==='swipe'){
+    const replacement=[...document.querySelectorAll('[data-priority-share]')]
+      .find(button=>button.dataset.deckId===priorityFocus.deck&&button.dataset.cardId===priorityFocus.card);
+    replacement?.focus({preventScroll:true});
   }
   if(user&&page()==='kommunikation')openCommunicationSkill($('live-app'),communicationSkillFromHash(location.hash));
   if(page()==='regler'&&user)applySchysstaFilters();
@@ -1389,6 +1437,7 @@ const understandingShare=e.target.closest('[data-understanding-share]');
 if(understandingShare&&user&&viewerRole()==='teen')void setUnderstandingShare(understandingShare.dataset.understandingShare,understandingShare.getAttribute('aria-pressed')!=='true',user.id,sharedSession);
 const priorityShare=e.target.closest('[data-priority-share]');
 if(priorityShare&&user&&viewerRole()==='teen')void setPriorityShare(priorityShare.dataset.deckId,priorityShare.dataset.cardId,priorityShare.getAttribute('aria-pressed')!=='true',user.id,sharedSession);
+if(e.target.closest('[data-priority-retry]')&&user&&viewerRole()==='teen')void refresh().catch(showError);
 const insightOpen=e.target.closest('[data-insight-open]');
 if(insightOpen&&sharedInsightsEnabled&&themeAccessAllowed()){
   const id=insightOpen.dataset.insightOpen;

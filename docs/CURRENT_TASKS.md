@@ -2,6 +2,13 @@
 
 **Gällande Jobb hk-fullmakt (5 november 2026):** se [AGENTS.md](../AGENTS.md). Commit, push, PR, merge, publicering och motsvarande projektändringar i GitHub, Supabase och Cloudflare är uttryckligen godkända. Detta ersätter äldre krav på separat merge-/publiceringsgodkännande.
 
+## 5 november 2026 – SW-03C: verifiera samtyckesstatus vid nätverksfel
+
+- [x] **Ändring på utvecklingsgren:** läs tillbaka den egna RLS-skyddade samtyckesraden efter delning/återkallelse. Ett förlorat RPC-svar betyder inte nödvändigtvis att servern avbröt åtgärden. Sidan får därför inte hävda att ingenting ändrats utan att kontrollera.
+- [x] **Okänd status hanteras öppet:** vid misslyckad kontroll rensas osäker lokal status, knapparna spärras och användaren får ett tydligt meddelande och en möjlighet att ladda om status. Tangentbordsfokus och mobilskroll bevaras vid vanlig samtyckesuppdatering.
+- [ ] **Verifiering och release:** syntetiska Playwright-test med förlorad kvittens efter sparning, misslyckad återkallelse, osäker läsning, förnyad kontroll och föräldervy med funktionsflagga aktiv. Markera först efter godkänd CI och verklig merge.
+- [ ] **Verklig QA:** signerade tvåkontotester i iOS/desktop, familjeisolering, återkallelse och säkerhetsgranskning återstår före aktivering. `enableSharedPriorities:false` ändras inte.
+
 ## 5 november 2026 – SW-03B: säker integration av tonåringens prioritetssamtycke
 
 - [x] **Rensat gammal konflikt:** en ren integrationsgren (`feat/priority-consent-rebased-20261105`) utgår från aktuell `main`, med PR #107:s samtyckeslogik och automatiska tester men utan att ersätta nyare kommunikationskod. Den ursprungliga PR #107 ersätts av PR #111 efter verifierad merge; äldre utvecklingsgrenar skrivs inte över.
@@ -60,15 +67,15 @@
 - [ ] **UX-01C verklig QA återstår:** två riktiga autentiserade testkonton, fysisk iOS Safari med VoiceOver, skärmläsare, 320/390 px och stora tecken är **inte** verifierade genom syntetiskt Chromium. Fortsätt UX-01 före extern pilot.
 
 
-**Granskad:** torsdag 5 november 2026 efter verifierade PR #108–#109, aktiv Worker-version 12 och read-only granskning av prioritetsdelningens Supabase-migration. PR #107 är utkast och `enableSharedPriorities:false` kvarstår.
-**Källa:** kod på `main` inklusive PR #90–#106, `backend-config.js`, kontrollerade GitHub Actions/UI/Pages-körningar, Supabase-migrationer och read-only SQL efter installation. Detta är **inte** ett påstående om genomförda verkliga tvåkontotester.  
+**Granskad:** torsdag 5 november 2026 efter verifierade PR #108–#109, aktiv Worker-version 12 och read-only granskning av prioritetsdelningens Supabase-migration. PR #111 är mergad, PR #107 stängd och `enableSharedPriorities:false` kvarstår.
+**Källa:** kod på `main` inklusive PR #90–#111, `backend-config.js`, kontrollerade GitHub Actions/UI/Pages-körningar, Supabase-migrationer och read-only SQL efter installation. Detta är **inte** ett påstående om genomförda verkliga tvåkontotester.  
 **Syfte:** En enda kort, uppdaterad handlingslista för manuellt och schemalagt utvecklingsarbete. `ROADMAP.md` bevarar detaljerna och äldre beslut.
 
 ## 3 november 2026 – SW-03A: egen viktigast-översikt och fortsatt privat prioritering
 
 - [x] **SW-03A mergad och publicerad PR #100:** tonåringen har en egen, tydligt privat lista över redan serververifierade gemensamma A JA+JA där hen själv valt Mycket viktigt. Förälderns vy visar inte listan; B, NEJ och neutrala nivåer filtreras. Texten informerar om att AI-medlaren kan använda egna prioriteringar när projektkontext är på. PR-UI #41680382345, main UI #41680605178 och Pages #41680603854 **godkända**; merge `3e96a5ea8ea96b4082a982f120c522fe50a729a5`. Ingen databasändring eller förändring av sparade svar.
 - [x] **Regressionstester verifierade:** syntetisk selektering av egna viktiga A JA+JA, föräldervy utan privata markeringar, fel i lagringshämtning, kontroll av AI-information samt framtida shared-mode utan dubbletter. Godkända i PR #100 UI-CI #41680382345.
-- [ ] **SW-03B – SQL installerad, aktivering blockerad av verkliga samtyckestester:** migrationshistorik i Supabase visar `20261105161257` (`explicit_swipe_priority_sharing`); read-only SQL 5 nov verifierade att `swipe_priority_shares` har RLS och själv-SELECT, inte direkt INSERT för `authenticated`, och att interna `eligible_swipe_priorities(text)` saknar `EXECUTE` för klientrollerna. PR #107 är fortfarande **utkast**; tekniskt installerad migration betyder inte att gränssnittet och faktisk parvis återkallelse har sluttestats. Tidigare privata `+1` får aldrig automatiskt delas. `enableSharedPriorities:false` lämnas orörd tills autentiserat tvåkontotest och samtyckesgranskning är genomförda.
+- [ ] **SW-03B – SQL installerad, aktivering blockerad av verkliga samtyckestester:** migrationshistorik i Supabase visar `20261105161257` (`explicit_swipe_priority_sharing`); read-only SQL 5 nov verifierade att `swipe_priority_shares` har RLS och själv-SELECT, inte direkt INSERT för `authenticated`, och att interna `eligible_swipe_priorities(text)` saknar `EXECUTE` för klientrollerna. PR #107 är stängd och ersatt av mergad PR #111; tekniskt installerad migration betyder inte att gränssnittet och faktisk parvis återkallelse har sluttestats. Tidigare privata `+1` får aldrig automatiskt delas. `enableSharedPriorities:false` lämnas orörd tills autentiserat tvåkontotest och samtyckesgranskning är genomförda.
 
 - [x] **SW-03A mobilbrowser-QA mergad och publicerad (PR #101):** syntetisk Chromium/Playwright-kontroll med tonårings- och föräldervy, endast serververifierade A JA+JA och tonåringens egen prioritet, skydd mot B/NEJ/neutrala värden samt avstängd prioritets-RPC. Ny 390 px-mobilbild `mobile-teen-private-priority-preview.png` har öppnats och granskats utan uppenbar klippning i själva listan. PR UI **#41680969356**, main UI **#41681186915** och Pages **#41681184672** godkända; merge `18c4bde1daed599ae456ec33270f831f1f729ad1`. Autentiserade tvåkontotester är fortfarande öppna.
 - [ ] **SW-03A verklig QA återstår:** autentiserade tvåkontosessioner, iOS Safari och framtida uttryckligt prioritetssamtycke.
