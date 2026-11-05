@@ -45,6 +45,7 @@ test('UI CI fails fast on Node contracts before installing a browser',()=>{
   const build=ui.indexOf('name: Verify static build');
   const playwright=ui.indexOf('name: Install Playwright');
   const chromium=ui.indexOf('name: Install Chromium');
+  assert.match(ui,/runs-on: ubuntu-24\.04/,'Stable supported browser CI runner is pinned');
   assert.ok(node>=0&&node<build&&build<playwright&&playwright<chromium,
     'Contract and build failures must be reported before costly browser installation');
 });
