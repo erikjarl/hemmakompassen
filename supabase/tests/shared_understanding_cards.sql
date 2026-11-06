@@ -2,7 +2,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path=public,extensions;
-select plan(28);
+select plan(31);
 select has_function('public','shared_understanding_cards',array[]::text[],'shared B RPC exists');
 select has_function('public','set_understanding_card_share',array['text','boolean'],'explicit consent RPC exists');
 select has_trigger('public','family_members','revoke_understanding_shares_after_family_change','family changes revoke B consent');
@@ -33,7 +33,13 @@ select set_config('request.jwt.claims','{"sub":"31000000-0000-0000-0000-00000000
 select is_empty($$select * from public.shared_understanding_cards()$$,'historical private YES is not shared');
 select throws_ok($$select public.set_understanding_card_share('general-02',true)$$,'42501','card is not eligible for sharing','parent cannot create teen consent');
 select set_config('request.jwt.claims','{"sub":"31000000-0000-0000-0000-000000000002"}',true);
-select lives_ok($$select public.set_understanding_card_share('general-02',true)$$,'teen can actively share own eligible YES');
+select throws_ok($select public.set_understanding_card_share('general-02',null)$,
+  '22023','explicit share choice required','NULL is never a sharing choice');
+select is_empty($select * from public.understanding_card_shares$,
+  'NULL consent does not create a B share');
+select throws_ok($select public.set_understanding_card_share(null,true)$,
+  '22023','invalid understanding card','NULL card ID must be rejected');
+select lives_ok($select public.set_understanding_card_share('general-02',true)$,'teen can actively share own eligible YES');
 select is((select count(*) from public.understanding_card_shares where deck_id='general' and card_id='general-02'),1::bigint,'teen sees own consent only');
 select set_config('request.jwt.claims','{"sub":"31000000-0000-0000-0000-000000000001"}',true);
 select is((select deck_id||'/'||card_id from public.shared_understanding_cards()),'general/general-02','parent receives explicitly shared B YES');
