@@ -1,3 +1,4 @@
+import {renderCommunicationSafety} from './toolkit.js';
 // Editorial, parent-only conversational support. No family data is read or stored.
 // The exercises adapt MI-informed skills for everyday parenting; they are not MI treatment.
 export const MI_PARENT_SOURCES=Object.freeze([
@@ -16,6 +17,7 @@ export function renderParentMiGuide(){
     '<section class="live-panel"><h2>Vad är målet?</h2>'+
     '<p>Försök förstå tonåringens perspektiv innan du berättar vad du själv tänker. Det handlar inte om att få ett ja, vinna en diskussion eller övertyga med smarta frågor. Tonåringen har rätt att tycka annorlunda.</p>'+
     '<p>Detta är vardagliga samtalsförslag inspirerade av motiverande samtal (MI) – <strong>inte</strong> en prövad föräldrametod eller behandling. Forskning om MI i vård kan inte automatiskt överföras till relationen hemma.</p></section>'+
+    renderCommunicationSafety('parent')+
     '<section class="live-panel"><h2>Fyra sätt att lyssna</h2><ol>'+
     '<li><strong>Fråga öppet:</strong> ”Hur ser du på det?” eller ”Vad blir svårt med den här regeln?” Ställ hellre en fråga och ge tid än många i följd.</li>'+
     '<li><strong>Återspegla utan att rätta:</strong> ”Det känns som att jag bestämmer allt” kan mötas med ”Du vill få mer att säga till om.” Kontrollera: ”Förstod jag rätt?”</li>'+
