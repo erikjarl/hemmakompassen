@@ -112,5 +112,4 @@ test('a reply from a previous signed-in session cannot change the new account',a
 test('the inbox composer is locked while pending, not merely its send button',()=>{
   assert.match(source,/id="family-chat-body"[^\n]*?familyChatSending\?' disabled'/,
     'Do not allow edits to a draft that is awaiting an ambiguous send response');
-  assert.match(source,/familyChatSending\?' disabled':' '/.replace(' ','')) === undefined;
 });
