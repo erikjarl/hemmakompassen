@@ -35,7 +35,7 @@ function exercise(title,purpose,steps,example){
  return '<details class="comm-exercise" data-comm-skill="'+e(COMM_SKILL_IDS[title])+'"><summary><strong>'+e(title)+'</strong><span>'+e(purpose)+'</span></summary><div class="comm-exercise-content"><ol>'+steps.map(s=>'<li>'+e(s)+'</li>').join('')+'</ol><p class="comm-example"><strong>Exempel:</strong> '+e(example)+'</p></div></details>';
 }
 // Trygghetsinformation är statisk, rollanpassad och helt frikopplad från svar, AI och lagring.
-function renderCommunicationSafety(role='teen'){
+export function renderCommunicationSafety(role='teen'){
  const parent=role==='parent';
  const support=parent
   ? '<p><strong>För dig som vuxen:</strong> Barnet ska inte behöva ta ansvar för hot eller våld. Om du själv hotar, skrämmer eller skadar någon: ta ansvar och sök hjälp, exempelvis via socialtjänsten eller vården. Du kan ringa <a href="tel:1177">1177</a> för vårdråd eller <a href="tel:0771505050">Bris vuxentelefon 0771-50 50 50</a> för frågor om barn.</p>'
