@@ -719,8 +719,10 @@ async function prepareActivityMessage(cardId){
     activityInviteBusy=false;return;
   }
   activityInviteBusy=false;
-  const stillMatched=!response?.error&&Array.isArray(response.data)&&
-    safeInsightMatches('aktiviteter',response.data).some(row=>row.answer===true&&row.card_id===cardId);
+  let stillMatched=false;
+  try{stillMatched=!response?.error&&Array.isArray(response.data)&&
+    safeInsightMatches('aktiviteter',response.data).some(row=>row.answer===true&&row.card_id===cardId);}
+  catch{stillMatched=false;}
   if(!stillMatched){
     activityInviteError='Kunde inte bekräfta att aktiviteten fortfarande är gemensam. Uppdatera insikterna och försök igen.';
     render();return;
