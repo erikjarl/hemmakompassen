@@ -2,6 +2,13 @@
 
 **Gällande Jobb hk-fullmakt (5 november 2026):** se [AGENTS.md](AGENTS.md). Commit, push, PR, merge, publicering och motsvarande projektändringar i GitHub, Supabase och Cloudflare är uttryckligen godkända. Detta ersätter äldre krav på separat merge-/publiceringsgodkännande.
 
+## 6 november 2026 – NOT-01D: direkt aktivitetsinbjudan från kortleksresultat (PR #119)
+
+- [x] **Genomfört i kod och publicerat:** kortlekens redan serververifierade A JA+JA-resultat för `aktiviteter` har fått knappen **Föreslå tid i inkorgen**. UI återanvänder samma säkra, kontrollerande serveranrop och privata, **oskickade** chattutkast som PR #118. Ingen automatisk notifiering, AI-analys eller dataändring vid knapptryck; användaren måste själv välja Skicka. Gamla B, NEJ, ensidiga svar eller privata nivåskattningar används inte.
+- [x] **Verifierad release:** [PR #119](https://github.com/erikjarl/hemmakompassen/pull/119) mergad som `0659cd1e88ddce76780aa42c65a046070c016530`. [PR UI #42194588575](https://github.com/erikjarl/hemmakompassen/actions/runs/42194588575), [main UI #42194755918](https://github.com/erikjarl/hemmakompassen/actions/runs/42194755918) och [Pages #42194755952](https://github.com/erikjarl/hemmakompassen/actions/runs/42194755952) godkända. Chromium/Playwright har syntetiskt provat både insiktsvägen och direktvägen, inklusive att inget skickas automatiskt. Ingen Supabase/Worker-ändring och inga befintliga användarsvar ändrade. Fysisk iOS och autentiserade parsessioner återstår.
+- [ ] **NOT-01B automatiska notiser:** nytt avgränsat [ärende #120](https://github.com/erikjarl/hemmakompassen/issues/120) specificerar behörighet, RLS, av-/omparning, deduplicering och spärr mot privat JA/NEJ. Skilj tydligt detta framtida backendflöde från frivilliga privata chattmeddelanden i #118–#119.
+- [ ] **Verkliga tester:** två signerade konton, mobil iOS Safari och VoiceOver, återkallelse och konto/familjebyte under pågående serverkontroll.
+
 ## 6 november 2026 – NOT-01C: frivillig aktivitetsinbjudan (PR #118)
 
 - [x] **Implementerad och tekniskt publicerad:** på sidan Gemensamma insikter får varje faktiskt serververifierad A JA+JA-aktivitet en knapp **Föreslå tid i inkorgen**. Klienten hämtar matchningen från servern en gång till innan ett meddelandeutkast skapas och kräver sedan att användaren själv trycker Skicka. Föräldern och tonåringen kan avstå. Inga gamla privata B/NEJ/ensidiga svar eller gamla meddelandeutkast får användas. Kod i `live-app.js`, cache-version i `index.html` och `personality/ipip50-ui.js`, nya Node-tester samt ett syntetiskt mobilbrowserprov med oskickat utkast.
