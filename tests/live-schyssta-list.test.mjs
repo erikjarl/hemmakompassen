@@ -169,7 +169,8 @@ test('Inbox has pair-private messages independent of rule decisions',()=>{
   assert.match(app,/id="family-chat-form"/);
   assert.match(app,/data-family-chat-more/);
   assert.match(app,/data-family-chat-refresh/);
-  assert.match(app,/familyChatDraft='';familyChatRequestKey=null/);
+  assert.match(app,/if\(familyChatDraft\.trim\(\)===body\)familyChatDraft='';/);
+  assert.match(app,/if\(familyChatRequestKey===token\)familyChatRequestKey=null;/);
   assert.match(app,/esc\(m\.body\)/);
   assert.match(app,/!Number\.isNaN\(Date\.parse\(m\.created_at\)\)/);
   assert.doesNotMatch(app,/familyChatMessages[^\n]*\.innerHTML/);
