@@ -2,6 +2,13 @@
 
 **Gällande Jobb hk-fullmakt (5 november 2026):** se [AGENTS.md](../AGENTS.md). Commit, push, PR, merge, publicering och motsvarande projektändringar i GitHub, Supabase och Cloudflare är uttryckligen godkända. Detta ersätter äldre krav på separat merge-/publiceringsgodkännande.
 
+## 6 november 2026 – NOT-01D: aktivitetsinbjudan direkt från kortlekens resultat (PR #119)
+
+- [x] **Kod och mobilt flöde färdiga:** resultatet för `Aktiviteter tillsammans` visar samma **Föreslå tid i inkorgen**-knapp för redan serververifierade A JA+JA-kort. Klicket använder den gemensamma funktionen från #118, men accepterar nu även den aktiva aktivitetskortlekens säkert filtrerade `sharedMatches`. Vid klick kontrolleras den valda aktiviteten igen via autentiserad Supabase-RPC innan ett utkast skapas. Inget skickas förrän användaren separat trycker Skicka. B/NEJ/ensidiga eller felaktiga kort saknar knapp.
+- [x] **Test och release 6 november:** [PR #119](https://github.com/erikjarl/hemmakompassen/pull/119) mergad som `0659cd1e88ddce76780aa42c65a046070c016530`. Slutlig [PR UI #42194588575](https://github.com/erikjarl/hemmakompassen/actions/runs/42194588575), [main UI #42194755918](https://github.com/erikjarl/hemmakompassen/actions/runs/42194755918) samt [Pages #42194755952](https://github.com/erikjarl/hemmakompassen/actions/runs/42194755952) godkända. Node, bygge och Chromium/Playwright kontrollerar båda vägarna med syntetisk backend, inklusive att Skicka inte sker vid knapptryck. Ingen Supabase-migration, Worker-förändring eller ändring av befintliga svar.
+- [ ] **Verklig QA återstår:** autentiserad förälder och tonåring, Safari/iOS/VoiceOver, återkallelse mellan öppna sessioner, kontobyte och utkastfokus med fysisk mobil.
+- [ ] **Automatiska notiser är ännu inte implementerade:** definierat i [NOT-01B #120](https://github.com/erikjarl/hemmakompassen/issues/120) med backend/RLS, deduplicering, integritetskrav och testkriterier. Manuella chattutkast i #118–#119 är en separat funktion.
+
 ## 6 november 2026 – NOT-01C: frivillig aktivitetsinbjudan från Gillaswajpen (PR #118)
 
 - [x] **Kod och UI publicerade:** en serververifierad A JA+JA-match i kortleken `aktiviteter` visar knappen **Föreslå tid i inkorgen** på sidan Gemensamma insikter. Ett nytt autentiserat `shared_swipe_matches('aktiviteter')`-anrop bekräftar samma kort direkt vid klick. Därefter skapas bara ett redigerbart lokalt meddelandeutkast. Ingen chatt-RPC, AI-analys, regelröst eller notifiering sker automatiskt; en separat Skicka-knapp krävs. Ett befintligt privat meddelandeutkast skrivs inte över.
