@@ -1,4 +1,4 @@
-# Hemmakompassen – automatiska tester (status 4 november 2026)
+# Hemmakompassen – automatiska tester (status 6 november 2026)
 
 Detta är **testmiljön för kod och UI**, inte bevis för att verkliga familjeflöden fungerar. Se [aktuell utvecklingskö](../docs/CURRENT_TASKS.md) och [ROADMAP](../ROADMAP.md).
 
@@ -10,20 +10,20 @@ Detta är **testmiljön för kod och UI**, inte bevis för att verkliga familjef
 Kör lokalt från projektroten:
 
 ```bash
-node --test tests/*.test.mjs
+node --test tests/*.test.cjs tests/*.test.mjs
 npm run build
 npm install --no-save playwright
 npx playwright install chromium
 node tests/visual.mjs
 ```
 
-**Observera:** vissa andra automatiska tester använder `.cjs` och ingår i GitHub-arbetsflödets explicita testkommando; den lokala genvägen ovan täcker inte nödvändigtvis varje test. Följ arbetsflödets kommandorad för exakt full svit.
+**Observera:** kommandot ovan inkluderar både `.cjs`- och `.mjs`-kontraktstester och motsvarar GitHub Actions före webbläsarstegen.
 
 ## Vad testerna täcker
 
 - Gillaswajpen: enskilda svar och status, tillåtna A JA+JA, skydd mot otillåtna/okända svar, familjeisolering och överhoppning.
 - Schyssta listan: föreslagna/antagna/avslutade regler, dubbelgodkännande, ändringar, omparning och behöriga regelnotiser.
-- Inkorg: syntetiska privata meddelanden i båda riktningar, read/unread, läskvittenser, sessionsbyte och avvisning av felaktig data.
+- Inkorg: syntetiska privata meddelanden i båda riktningar, read/unread, läskvittenser, sessionsbyte och avvisning av felaktig data. Sändningsanrop tidsbegränsas, oförändrat återförsök använder samma idempotensnyckel och ett nytt utkast ska inte raderas av ett äldre serversvar.
 - IPIP-50: 50 frågor, poängberäkning, referensbeskrivning, positionsgeometri för P50/P75, privat sparning, samtyckesstyrd tvåprofilvisning, rollanpassade reflektioner och giltiga hänvisningar till befintliga kortlekar.
 - Kommunikationsråd: rollstyrd MI-ingång, sex gemensamma samtalsövningar och lokal NVC-byggare med XSS-säkert textinnehåll, rensning och inga serverskrivningar.
 - Playwright: mobil 320/390 px samt desktop i Chromium med mockad Supabase-klient; exempel på vyer och bilder för personlighet med en eller två profiler.
