@@ -163,15 +163,26 @@ async function sendFamilyChatMessage(){
   if(!familyChatRequestKey)familyChatRequestKey=crypto.randomUUID();
   const viewer=user.id,session=sharedSession,token=familyChatRequestKey;
   familyChatSending=true;familyChatStatus='Skickar meddelandet…';render();
-  let result;
-  try{result=await db.rpc('send_family_message',{p_body:body,p_request_key:token});}catch(e){result={error:e};}
+  let result,timer;
+  try{
+    result=await Promise.race([
+      db.rpc('send_family_message',{p_body:body,p_request_key:token}),
+      new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('Message send timed out')),15000);})
+    ]);
+  }catch(e){result={error:e};}
+  finally{clearTimeout(timer);}
   if(viewer!==user?.id||session!==sharedSession)return;
   familyChatSending=false;
   if(result?.error||!SCHYSSTA_UUID.test(result?.data)){
-    familyChatStatus='Meddelandet kunde inte skickas. Försök igen – inget nytt meddelande skapas vid ett identiskt återförsök.';
+    // A lost response does not prove that the server failed to send the message.
+    // Reuse the request key with the unchanged draft for a duplicate-safe retry.
+    familyChatStatus='Vi kunde inte bekräfta om meddelandet skickades. Försök igen med samma text – ett återförsök med samma text skapar ingen dubblett.';
     render();return;
   }
-  familyChatDraft='';familyChatRequestKey=null;familyChatStatus='Meddelandet har skickats.';
+  // Never discard text typed or prepared after this request started.
+  if(familyChatDraft.trim()===body)familyChatDraft='';
+  if(familyChatRequestKey===token)familyChatRequestKey=null;
+  familyChatStatus='Meddelandet har skickats.';
   await fetchFamilyChat();
 }
 // A local, session-only pause never records a NO vote or changes shared data.
@@ -1181,7 +1192,7 @@ function inboxView(){
       +messageList+'</div>')
     +'<form id="family-chat-form" class="family-chat-form">'
     +'<label for="family-chat-body">Skriv till '+otherName+'</label>'
-    +'<textarea id="family-chat-body" rows="3" maxlength="1500" required placeholder="Skriv ett meddelande…" aria-describedby="family-chat-help">'+esc(familyChatDraft)+'</textarea>'
+    +'<textarea id="family-chat-body" rows="3" maxlength="1500" required placeholder="Skriv ett meddelande…" aria-describedby="family-chat-help"'+(familyChatSending?' disabled':'')+'>'+esc(familyChatDraft)+'</textarea>'
     +'<p id="family-chat-help" class="live-muted">Skickas bara när du väljer Skicka. Ctrl/⌘ + Enter fungerar också.</p>'
     +'<div class="family-chat-compose-actions"><button type="submit" class="live-button"'+(familyChatSending?' disabled':'')+'>'+(familyChatSending?'Skickar…':'Skicka meddelande')+'</button>'
     +'<button type="button" class="schyssta-secondary" data-family-chat-refresh>Uppdatera konversationen</button></div></form>'

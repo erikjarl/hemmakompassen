@@ -2,6 +2,14 @@
 
 **Gällande Jobb hk-fullmakt (5 november 2026):** se [AGENTS.md](AGENTS.md). Commit, push, PR, merge, publicering och motsvarande projektändringar i GitHub, Supabase och Cloudflare är uttryckligen godkända. Detta ersätter äldre krav på separat merge-/publiceringsgodkännande.
 
+
+## 6 november 2026 – INT-03E: sändning av privata meddelanden med säkra återförsök
+
+- [x] **Utvecklingsgren och PR #123:** 15-sekunders timeout, status för utebliven bekräftelse, återanvänd idempotensnyckel för oförändrade återförsök, låst skrivfält under sändning och skydd mot att gammal RPC raderar nytt utkast.
+- [x] **Automatiska testfall skrivna:** ny Node-svit för timeout, kontobyte, dubbelklick, förlorat svar, utkast och säker upprepning. Äldre kontraktstest har justerats för villkorad utkastrensning.
+- [ ] **CI och publicering:** PR [#123](https://github.com/erikjarl/hemmakompassen/pull/123) måste kontrolleras efter senaste commit; en tidigare CI visade ett föråldrat testantagande som korrigerats. Ingen publicering av denna PR ännu verifierad.
+- [ ] **INT-03 större kvarstående arbete:** verkliga tvåkontosessioner, avparning mitt under nätverksanrop, mobil webbläsare och fysisk skärmläsargranskning. Ingen databas- eller Worker-ändring i denna PR.
+
 ## 6 november 2026 – SEC-02D: uttryckligt B-samtycke kräver sant/falskt
 
 - [x] **Påvisad och rättad backendbrist:** den tidigare funktionen `public.set_understanding_card_share(text,boolean)` behandlade `p_share=NULL` som att den skulle fortsätta mot delningskod (eftersom `IF p_share IS FALSE` inte fångar NULL). Den kräver nu ett explicit sant/falskt värde, avvisar även `p_card_id=NULL` och förnyar aktuell `family_id` vid konflikt. Ett saknat val kan därmed inte utlösa delning av ett B-förståelsekort.

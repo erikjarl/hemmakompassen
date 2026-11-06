@@ -2,6 +2,14 @@
 
 **Gällande Jobb hk-fullmakt (5 november 2026):** se [AGENTS.md](../AGENTS.md). Commit, push, PR, merge, publicering och motsvarande projektändringar i GitHub, Supabase och Cloudflare är uttryckligen godkända. Detta ersätter äldre krav på separat merge-/publiceringsgodkännande.
 
+
+## 6 november 2026 – INT-03E: trygg sändning av privata meddelanden (PR #123)
+
+- [x] **Kod på utvecklingsgren:** meddelandeanrop får 15 sekunders tidsgräns. Uteblivet svar presenteras som okänd bekräftelse, inte som säkert misslyckande. Samma text får samma idempotensnyckel vid återförsök; inkorgens skrivfält låses under sändning och ett senare utkast raderas inte av ett gammalt lyckat svar.
+- [x] **Regressionstester skrivna:** sex nya testfall i `tests/family-chat-send-retry.test.mjs` för bekräftad sändning, förlorat svar, timeout, dubbelanrop, nytt utkast och tidigare session. Befintligt inkorgskontrakt uppdaterat till att verifiera villkorad utkastrensning.
+- [ ] **Release:** [PR #123](https://github.com/erikjarl/hemmakompassen/pull/123) kräver godkänd Node/bygg/Playwright-CI och kontroll av Pages efter merge. En första CI-körning identifierade ett föråldrat testantagande; testet justerades på grenen. Status för ny CI måste verifieras separat.
+- [ ] **Kvarstående verifiering:** två verkligt autentiserade konton, mobil Safari/VoiceOver samt fel under avparning och parallella sessioner. Ingen befintlig chattdata, delningsflagga, Worker eller Supabase-schema ändrades.
+
 ## 6 november 2026 – SEC-02D: uttryckligt B-samtycke kräver sant/falskt
 
 - [x] **Påvisad och rättad backendbrist:** den tidigare funktionen `public.set_understanding_card_share(text,boolean)` behandlade `p_share=NULL` som att den skulle fortsätta mot delningskod (eftersom `IF p_share IS FALSE` inte fångar NULL). Den kräver nu ett explicit sant/falskt värde, avvisar även `p_card_id=NULL` och förnyar aktuell `family_id` vid konflikt. Ett saknat val kan därmed inte utlösa delning av ett B-förståelsekort.
