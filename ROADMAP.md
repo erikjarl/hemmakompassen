@@ -7,7 +7,8 @@
 
 - [x] **Kod och testspecifikation i PR:** [PR #125](https://github.com/erikjarl/hemmakompassen/pull/125) gör reflektionerna mer handlingsbara utan att hävda individualiserad rekommendation: personlighetsresultat länkar till validering och NVC; swajpmatchning länkar till gemensam problemlösning och frivillig kort kontakt. Alla hänvisningar går till befintliga routade övningar. Vid hot/rädsla/kontroll rekommenderas trygghet och stöd före samtalsteknik.
 - [x] **Nya kontraktstester skrivna:** `tests/ai-result-exercise-links.test.mjs` kontrollerar olika länkar per resultattyp, att ingen länk visas vid saknat/återställt resultat samt säkerhetsformulering. Webbmodulernas cache-version har synkats.
-- [ ] **Verifiering och release:** PR-UI, AI-backendtest, merge till main och senaste Pages-körning måste rapportera `success` innan funktionen markeras tekniskt publicerad. Ingen databas- eller Worker-ändring och ingen ändring av befintliga svar.
+- [x] **Verifierad PR och Pages-release 6 november:** [PR #125](https://github.com/erikjarl/hemmakompassen/pull/125) mergad som `72da3bc495fa42d594c0b17665a93a453a9c54d5`. [PR AI #42284731655](https://github.com/erikjarl/hemmakompassen/actions/runs/42284731655), [PR UI #42284731688](https://github.com/erikjarl/hemmakompassen/actions/runs/42284731688) och [main Pages #42284916661](https://github.com/erikjarl/hemmakompassen/actions/runs/42284916661) rapporterar `success`. Ingen databas- eller Worker-ändring och inga befintliga familjesvar ändrade.
+- [ ] **Kvar att verifiera:** main-UI [#42284917612](https://github.com/erikjarl/hemmakompassen/actions/runs/42284917612) hade ännu inte avslutats vid senaste kontroll, och fysisk iOS Safari/VoiceOver med båda riktiga rollerna återstår. Publiceringsjobbet är inte en oberoende kontroll av serverat cache-innehåll.
 
 ## 6 november 2026 – NOT-01B: backendinventering inför automatiska aktivitetsaviseringar
 
@@ -20,7 +21,7 @@
 - [x] **Automatiska testfall skrivna:** ny Node-svit för timeout, kontobyte, dubbelklick, förlorat svar, utkast och säker upprepning. Äldre kontraktstest har justerats för villkorad utkastrensning.
 - [x] **PR #123 – verifierad kod och publicering:** [PR #123](https://github.com/erikjarl/hemmakompassen/pull/123) mergad som `dbcf85959bd3a761cd46d57adf9ab20b03f41ffc`. [PR UI #42259609770](https://github.com/erikjarl/hemmakompassen/actions/runs/42259609770), [main Pages #42259821222](https://github.com/erikjarl/hemmakompassen/actions/runs/42259821222) godkända.
 - [x] **Cache-uppdatering:** [PR #124](https://github.com/erikjarl/hemmakompassen/pull/124) mergad som `935f49b0311e0f619ce7557aef311111d17c62e5`, samordnar cache-version i startsida, live-app och IPIP-moduler. [PR UI #42260127881](https://github.com/erikjarl/hemmakompassen/actions/runs/42260127881) och [main UI #42260309583](https://github.com/erikjarl/hemmakompassen/actions/runs/42260309583) godkända.
-- [ ] **Senaste Pages-publicering:** [#42260308560](https://github.com/erikjarl/hemmakompassen/actions/runs/42260308560) fortfarande under körning vid senaste kontroll. Färdigmarkera först efter `success`.
+- [x] **Pages efter cache-uppdatering:** [#42260308560](https://github.com/erikjarl/hemmakompassen/actions/runs/42260308560) avbröts, men senare [#42260861796](https://github.com/erikjarl/hemmakompassen/actions/runs/42260861796) på `b65f17f4` och [#42284916661](https://github.com/erikjarl/hemmakompassen/actions/runs/42284916661) efter #125 avslutades med `success`.
 - [ ] **INT-03 större kvarstående arbete:** verkliga tvåkontosessioner, avparning mitt under nätverksanrop, mobil webbläsare och fysisk skärmläsargranskning. Ingen databas- eller Worker-ändring i denna PR.
 
 ## 6 november 2026 – SEC-02D: uttryckligt B-samtycke kräver sant/falskt
