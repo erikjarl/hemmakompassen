@@ -599,6 +599,8 @@
 .comm-safety{margin:0!important;border-color:#826747;background:#292a39}
 .comm-safety summary{display:grid;gap:5px;cursor:pointer;line-height:1.5}
 .comm-safety summary strong{color:#ffe0aa;font-size:1.1rem}
+.comm-safety summary::after{content:'Visa stöd och kontaktvägar';font-size:.85rem;color:#f5d297;font-weight:700}
+.comm-safety[open] summary::after{content:'Dölj stöd och kontaktvägar'}
 .comm-safety summary span{color:#e0d9d0}
 .comm-safety summary:focus-visible{outline:3px solid #f5b657;outline-offset:4px;border-radius:6px}
 .comm-safety-body{padding-top:13px;border-top:1px solid #6c5947;margin-top:13px;line-height:1.65}
