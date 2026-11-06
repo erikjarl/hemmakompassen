@@ -103,7 +103,10 @@ export function createAiResultExperience({db,config,fetchImpl=fetch,onRender=()=
       '<span class="swipe-summary-label">AI-GENERERAD REFLEKTION · INTERN TESTVERSION</span>'+
       '<h3>'+escape(title)+'</h3>'+
       '<p class="live-muted">Genereras automatiskt från serverkontrollerade resultat. En AI kan ha fel och tolkningen är inte en diagnos eller en bedömning av relationens orsaker.</p>'+
-      body+(status==='ready'?'<p class="ai-result-resources">Vill du pröva ett konkret samtalsverktyg? <a href="#kommunikation">Läs Kommunikationsråd</a> eller <a href="#nvc">bygg ett jag-budskap med NVC</a>. Dessa länkar utgår inte från en bedömning av era svar.</p>':'')+(status==='error'||status==='ready'
+      body+(status==='ready'?'<p class="ai-result-resources">Vill du prova ett frivilligt samtalsverktyg? '+(kind==='personality'
+        ?'<a href="#kommunikation/validera">Bekräfta utan att hålla med</a> eller <a href="#nvc">bygg ett jag-budskap med NVC</a>'
+        :'<a href="#kommunikation/losning">Hitta en gemensam lösning</a> eller <a href="#kommunikation/kontakt">prova fem minuter kontakt</a>')+
+        '. Övningarna är allmänna förslag, inte en slutsats om era resultat. Om det finns hot, rädsla eller kontroll ska trygghet och stöd gå före samtalsövningar.</p>':'')+(status==='error'||status==='ready'
         ?'<button type="button" class="mediator-clear" data-ai-analysis-retry="'+escape(kind+':'+scope)+'">Generera ny reflektion</button>'
         :'')+'</section>';
   }
