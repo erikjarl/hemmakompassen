@@ -107,3 +107,34 @@ test('UI creates action only from the A-card activity group and never creates au
   assert.match(code,/if\(inviteActivity&&page\(\)==='insikter'/);
   assert.match(code,/För aktiviteter kan du öppna ett frivilligt meddelandeutkast/);
 });
+
+test('actual insights view renders activity CTA only for verified activity matches',()=>{
+  const view=code.match(/function insightsView\(\)\{[\s\S]*?(?=\nasync function fetchInsights\()/)?.[0];
+  assert.ok(view,'real insights rendering code must be present');
+  const state={
+    user:{id:'viewer'},
+    members:[{user_id:'viewer',role:'teen'},{user_id:'other',role:'parent'}],
+    sharedInsightsEnabled:true,insightsLoading:false,insightsError:'',
+    activityInviteBusy:false,activityInviteError:'',
+    insightsRows:[{deck_id:'aktiviteter',card_id:'aktiviteter-09',answer:true}],
+    sharedUnderstandingRows:[],aiResultEnabled:false,
+    sharedDeck:id=>id==='aktiviteter'?{
+      id,title:'Aktiviteter tillsammans',
+      cards:[{id:'aktiviteter-09',type:'match',category:'Mat och fika',teenText:'Fika på ett kafé'},
+      {id:'aktiviteter-10',type:'match',category:'Mat och fika',teenText:'Baka tillsammans'}]
+    }:null,
+    viewerRole:()=> 'teen',cardTextForRole:card=>card.teenText,
+    esc:value=>String(value??'').replace(/[&<>"']/g,match=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[match])),
+    card:html=>'<section>'+html+'</section>',sharedFactOverview:()=>'',understandingInsights:()=>''
+  };
+  vm.runInNewContext(view+'\nthis.renderInsights=insightsView;',state);
+  assert.match(state.renderInsights(),/data-insight-activity="aktiviteter-09"/);
+  assert.match(state.renderInsights(),/Föreslå tid i inkorgen/);
+  assert.doesNotMatch(state.renderInsights(),/data-insight-activity="aktiviteter-10"/);
+  state.insightsRows=[{deck_id:'aktiviteter',card_id:'aktiviteter-09',answer:false}];
+  assert.doesNotMatch(state.renderInsights(),/data-insight-activity=/);
+  state.insightsRows=[];
+  assert.doesNotMatch(state.renderInsights(),/data-insight-activity=/);
+  state.insightsError='Serverfel';
+  assert.doesNotMatch(state.renderInsights(),/data-insight-activity=/);
+});
