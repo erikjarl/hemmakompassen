@@ -9,15 +9,15 @@ const action=source.match(/async function markAllFamilyChatRead\(\)\{[\s\S]*?(?=
 assert.ok(loader&&action,'Production inbox loader and read action remain present');
 
 function harness(result={data:1,error:null}){
-  let remote=result,called=0;
+  let remote=result,called=0,unreadRefreshes=0;
   const state={
     user:{id:'teen'},members:[{role:'parent'},{role:'teen'}],sharedSession:7,
     familyChatReadBusy:false,familyChatLoading:false,familyChatUnreadError:false,
     familyChatUnread:2,familyChatStatus:'',familyChatCountRequest:3,
-    render:()=>{},db:{rpc:async name=>{assert.equal(name,'mark_family_messages_read');called++;return remote;}}
+    render:()=>{},fetchFamilyChatUnread:async()=>{unreadRefreshes++;},db:{rpc:async name=>{assert.equal(name,'mark_family_messages_read');called++;return remote;}}
   };
   vm.runInNewContext(action+'\nthis.markRead=markAllFamilyChatRead;',state);
-  return {state,setRemote:v=>remote=v,calls:()=>called};
+  return {state,setRemote:v=>remote=v,calls:()=>called,refreshes:()=>unreadRefreshes};
 }
 
 test('loading inbox cannot claim a receipt; only explicit read button does',()=>{
@@ -39,6 +39,7 @@ test('server failure preserves unread messages and exposes an honest retry',asyn
   assert.equal(h.state.familyChatUnread,0);
   assert.equal(h.state.familyChatCountRequest,4,'Previous unread count queries are invalidated');
   assert.equal(h.calls(),2);
+  assert.equal(h.refreshes(),1,'Successful read receipt triggers authoritative count refresh');
 });
 
 test('a count that cannot be trusted must prevent read mutation',async()=>{
