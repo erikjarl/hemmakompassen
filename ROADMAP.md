@@ -1,6 +1,17 @@
-# Hemmakompassen — utvecklingsplan (senast avstämd 2026-11-05)
+# Hemmakompassen — utvecklingsplan (senast avstämd 2026-11-06)
 
 **Gällande Jobb hk-fullmakt (5 november 2026):** se [AGENTS.md](AGENTS.md). Commit, push, PR, merge, publicering och motsvarande projektändringar i GitHub, Supabase och Cloudflare är uttryckligen godkända. Detta ersätter äldre krav på separat merge-/publiceringsgodkännande.
+
+## 6 november 2026 – KOM-04A: trygghetsstöd i Kommunikationsråd och NVC
+
+- [x] **Förändring i PR [#116](https://github.com/erikjarl/hemmakompassen/pull/116):** statisk, rollanpassad och kollapsbar information när någon upplever hot, kontroll eller rädsla. Finns både på kommunikationssidan och i NVC-byggaren. Gemensamt: akut hjälp 112, 1177 och lokal hjälp utan att först behöva bedöma om något är våld. Tonåring: Bris 116 111 upp till 18 år och trygg vuxen; förälder: ansvar för egna hot och Bris vuxentelefon. Uppgifterna skickas inte till andra familjemedlemmen, AI eller Supabase.
+- [x] **Kod-/testtäckning inlagd:** fyra nya Node-test kontrollerar roller, säkerhetsinnehåll, hänvisningar, fokus och frånvaro av nätverks-/lagringsanrop. Mobilstöd genom befintlig paneldesign och nya CSS-fokusstilar. Källor kontrollerade mot [Bris](https://www.bris.se/om-bris/press-och-opinion/hanvisa-till-bris/hanvisa-till-bris/), [1177](https://www.1177.se/liv--halsa/vald-overgrepp-och-sexuella-trakasserier/att-bli-utsatt-for-vald-i-nara-relationer/), [Polisen](https://polisen.se/utsatt-for-brott/polisanmalan/hat-hot-och-vald/vald-i-nara-relationer/vald-i-ungas-relationer/) och [Socialstyrelsen](https://www.socialstyrelsen.se/stod-i-livet/valdsutovare/).
+- [ ] **Leverans och kvalitet:** registrera faktisk grön PR-CI/merge/Main-Pages innan teknisk release markeras klar. Därefter fysisk iOS Safari/VoiceOver, verkliga rollkonton och mänsklig metodgranskning (KOM-04B). Ingen klinisk effekt eller familjesäkerhet är därmed påvisad.
+
+## 6 november 2026 – SEC-02: skrivskyddad privilegieinventering
+
+- [x] **Observerade metadata i verkliga Supabase (ingen dataändring):** security linter 8 RLS-tabeller utan policies och 28 signerade-användare-anropbara SECURITY DEFINER-funktioner. Samtliga 28 har låst tom `search_path`, `auth.uid`-referens och saknar direkt `anon`-EXECUTE. Funktionen kan ändå innehålla behörighetsmisstag; metadata uppfyller inte fullständig säkerhetsgranskning.
+- [ ] **Kvar:** funktionsvis granskning av auth, par-ID, parametrar och datamängder, verkliga tvåkontotester och riskbedömning av varje exponerad endpoint. Ändra inte RPC-only-tabellers policyer utan först verifierat behov.
 
 ## 5 november 2026 – SW-03C: verifiera samtyckesstatus vid nätverksfel
 
