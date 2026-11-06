@@ -827,6 +827,37 @@ try{
   await capture(paired.page,'mobile-shared-insights.png');
   await paired.page.locator('.live-main').evaluate(el=>{el.scrollTop=el.scrollHeight;});
   await capture(paired.page,'mobile-shared-insights-bottom.png');
+
+  // NOT-01C: a server-verified mutual activity can be suggested through the
+  // existing private inbox, but no message is sent without a separate action.
+  await paired.page.evaluate(()=>{
+    window.__HK_TEST_SHARED_MATCHES__=[
+      {deck_id:'aktiviteter',card_id:'aktiviteter-01',answer:true},
+      {deck_id:'aktiviteter',card_id:'aktiviteter-02',answer:false},
+      {deck_id:'general',card_id:'general-02',answer:true}
+    ];
+  });
+  await paired.page.locator('#insights-retry').click();
+  await paired.page.locator('[data-insight-activity="aktiviteter-01"]').waitFor();
+  assert.equal(await paired.page.locator('[data-insight-activity]').count(),1,
+    'Only the server-verified mutual YES activity gets an invitation action');
+  const sentBefore=await paired.page.evaluate(()=>window.__HK_CHAT_SEND__||null);
+  await paired.page.locator('[data-insight-activity="aktiviteter-01"]').click();
+  await paired.page.locator('#family-chat-body').waitFor();
+  assert.match(await paired.page.locator('#family-chat-body').inputValue(),
+    /Laga mat tillsammans.*bestämmer en dag/s,'Activity invitation is an editable inbox draft');
+  assert.deepEqual(await paired.page.evaluate(()=>window.__HK_CHAT_SEND__||null),sentBefore,
+    'Clicking the activity must not call the send message RPC');
+  assert.match(await paired.page.locator('#family-chat-help').innerText(),
+    /Skickas bara när du väljer Skicka/);
+  await checkOverflow(paired.page,'Mobile voluntary activity invitation draft');
+  await capture(paired.page,'mobile-activity-invite-draft.png');
+  await paired.page.locator('#family-chat-body').fill('');
+  await paired.page.evaluate(()=>{delete window.__HK_TEST_SHARED_MATCHES__;location.hash='insikter';});
+  await paired.page.locator('.insights-deck').first().waitFor();
+  assert.equal(await paired.page.locator('.insights-deck').count(),2,
+    'Returning to normal server matches restores the same permitted cross-deck insights');
+
   // Cross-tab consent change: the same viewer's current shared RPC must
   // replace the old B-only message, while keeping mutual A results intact.
   const beforeRevoke=await paired.page.locator('.insights-deck .swipe-match-list li').count();

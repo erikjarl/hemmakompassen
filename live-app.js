@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261105-priority-confirm3';
-import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261105-priority-confirm3';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261105-priority-confirm3';
-import {renderParentMiGuide} from './communication/mi-guide.js?v=20261105-priority-confirm3';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261105-priority-confirm3';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261106-activity-invite1';
+import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261106-activity-invite1';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261106-activity-invite1';
+import {renderParentMiGuide} from './communication/mi-guide.js?v=20261106-activity-invite1';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261106-activity-invite1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -48,6 +48,7 @@ let swipeIndex=0,swipeBusy=false,swipeReview=false,swipeLoadError='',swipeSaveEr
 let sharedMatches=[],sharedPriorities=[],sharedDeckId='general',sharedError='',sharedLoading=false,sharedSession=0,sharedRequest=0;
 let sharedPollPending=false;
 let insightsRows=[],insightsLoading=false,insightsError='',insightsRequest=0;
+let activityInviteBusy=false,activityInviteError='';
 let sharedUnderstandingRows=[],understandingShareError='';
 let schysstaSuggestions=[],schysstaRules=[],schysstaManualRules=[],schysstaNotifications=[],schysstaReplacementLinks=[],schysstaHistory=[],schysstaEndTarget=null,schysstaLoading=false,schysstaError='',schysstaRequest=0;
 let schysstaDraft='',schysstaDraftOpen=false,schysstaDraftKey=null,schysstaEditTarget=null,schysstaSubmitting=false,schysstaMessage='',schysstaCopyMessage='',schysstaFocusId='',schysstaSearch='',schysstaFilterStatus='all';
@@ -619,7 +620,15 @@ function insightsView(){
     '<section class="live-panel insights-deck"><h3>'+esc(deck.title)+'</h3>'+
     [...groups.entries()].map(([category,texts])=>
       '<div class="swipe-match-theme"><h4>'+esc(category)+'</h4><ul class="swipe-match-list">'+
-      texts.map(t=>'<li><p>'+esc(t)+'</p></li>').join('')+'</ul></div>'
+      texts.map(t=>{
+        const activity=deck.id==='aktiviteter'?deck.cards.find(card=>
+          card.type==='match'&&cardTextForRole(card,viewerRole())===t&&
+          insightsRows.some(row=>row.answer===true&&row.deck_id==='aktiviteter'&&row.card_id===card.id)
+        ):null;
+        return '<li><p>'+esc(t)+'</p>'+(activity?
+          '<button type="button" class="schyssta-secondary" data-insight-activity="'+esc(activity.id)+'"'+
+          (activityInviteBusy?' disabled':'')+'>Föreslå tid i inkorgen</button>':'')+'</li>';
+      }).join('')+'</ul></div>'
     ).join('')+
     '<button type="button" class="live-button" data-insight-open="'+esc(deck.id)+'">Öppna '+esc(deck.title)+'</button></section>'
   ).join('');
@@ -633,7 +642,8 @@ function insightsView(){
   }
   const empty='<p class="live-muted">Inga gemensamma ja-svar att visa ännu. Ett kort syns först när ni båda har svarat ja.</p>';
   return title+'<section class="live-panel" aria-labelledby="insights-a-heading"><h2 id="insights-a-heading">Möjligt att utforska</h2>'+
-    '<p class="live-muted">Endast serververifierade JA+JA på A-kort. Det här är möjligheter, inte färdiga överenskommelser.</p>'+
+    '<p class="live-muted">Endast serververifierade JA+JA på A-kort. Det här är möjligheter, inte färdiga överenskommelser. För aktiviteter kan du öppna ett frivilligt meddelandeutkast, utan att något skickas automatiskt.</p>'+ 
+    (activityInviteError?'<p role="alert">'+esc(activityInviteError)+'</p>':'')+
     (sections?sharedFactOverview(overviewGroups,'Gemensamt i alla kortlekar'): '')+(sections||empty)+
     (aiResultEnabled&&insightsAiSignature()?aiResults.panel('swipe','all',insightsAiSignature()):'')+'</section>'+
     '<section class="live-panel" aria-labelledby="insights-b-heading"><h2 id="insights-b-heading">'+
@@ -683,6 +693,51 @@ async function fetchInsights({quiet=false}={}){
       if(!quiet||previousSnapshot!==JSON.stringify([insightsRows,sharedUnderstandingRows,insightsError]))render();
     }
   }
+}
+
+
+async function prepareActivityMessage(cardId){
+  // A verified activity match is the only source. B, NO and unilateral answers
+  // never become a message draft. Recheck the server before showing a draft.
+  if(activityInviteBusy||!sharedInsightsEnabled||!user||members.length!==2||
+     !members.some(m=>m.user_id===user.id)||!members.some(m=>m.role==='parent')||
+     !members.some(m=>m.role==='teen')||page()!=='insikter'||
+     insightsLoading||insightsError||
+     !insightsRows.some(row=>row.answer===true&&row.deck_id==='aktiviteter'&&row.card_id===cardId))return;
+  const card=sharedDeck('aktiviteter')?.cards.find(item=>item.id===cardId&&item.type==='match');
+  if(!card)return;
+  if(familyChatDraft.trim()){
+    activityInviteError='Du har redan ett meddelandeutkast. Öppna Inkorgen och ta hand om det först.';
+    render();return;
+  }
+  const viewer=user.id,session=sharedSession;
+  activityInviteBusy=true;activityInviteError='';render();
+  let response;
+  try{response=await db.rpc('shared_swipe_matches',{p_deck_id:'aktiviteter'});}
+  catch(error){response={error};}
+  if(user?.id!==viewer||sharedSession!==session||page()!=='insikter'){
+    activityInviteBusy=false;return;
+  }
+  activityInviteBusy=false;
+  let stillMatched=false;
+  try{stillMatched=!response?.error&&Array.isArray(response.data)&&
+    safeInsightMatches('aktiviteter',response.data).some(row=>row.answer===true&&row.card_id===cardId);}
+  catch{stillMatched=false;}
+  if(!stillMatched){
+    activityInviteError='Kunde inte bekräfta att aktiviteten fortfarande är gemensam. Uppdatera insikterna och försök igen.';
+    render();return;
+  }
+  if(familyChatDraft.trim()){
+    activityInviteError='Du har redan ett meddelandeutkast. Öppna Inkorgen och ta hand om det först.';
+    render();return;
+  }
+  const title=String(card.teenText).replace(/\s+/g,' ').trim().slice(0,240);
+  familyChatDraft='Hej! Vi har båda valt ja till aktiviteten ”'+title+'”. Vill du att vi bestämmer en dag då vi kan göra det tillsammans?';
+  familyChatRequestKey=null;
+  familyChatStatus='Detta är bara ett utkast. Läs igenom och välj själv om du vill skicka.';
+  activityInviteError='';
+  location.hash='inkorg';
+  requestAnimationFrame(()=>document.getElementById('family-chat-body')?.focus({preventScroll:true}));
 }
 
 async function setUnderstandingShare(cardId,share,viewer,session){
@@ -1390,6 +1445,8 @@ if(aiRetry&&aiResultEnabled&&user){
 if(e.target.closest('#mediator-clear')){mediatorExperience.clear();return;}if(e.target.closest('#mediator-new')){void mediatorExperience.createChat();return;}if(e.target.closest('#mediator-refresh-context')){void mediatorExperience.loadContextStatus();return;}if(e.target.closest('#mediator-delete')){if(window.confirm('Vill du radera hela detta privata samtal permanent?'))void mediatorExperience.deleteChat();return;}const mediatorOpen=e.target.closest('[data-mediator-open]');if(mediatorOpen){void mediatorExperience.openChat(mediatorOpen.dataset.mediatorOpen);return;}if(e.target.closest('[data-pf-action]')){void personalityExperience.handleClick(e.target,{isPaired:members.length===2&&members.some(m=>m.role==='parent')&&members.some(m=>m.role==='teen')});return;}const b=e.target.closest('[data-swipe]');if(b)advanceSwipe(b.dataset.swipe);if(e.target.closest('#swipe-restart')){swipeSkippedReview=false;swipeReview=true;swipeIndex=visibleGeneralIndices()[0]??STATEMENTS.length;render();}
 if(e.target.closest('#swipe-review-skipped')&&viewerRole()==='teen'&&!swipeBusy){swipeSkippedReview=true;swipeReview=false;swipeIndex=nextSkippedAfter(-1);render();}if(e.target.closest('#swipe-skip')&&viewerRole()==='teen'&&GENERAL_CARDS[swipeIndex]?.type==='understanding'&&!swipeBusy)void skipUnderstandingCard(swipeIndex,user.id,sharedSession);if(e.target.closest('#swipe-reload'))refresh().catch(showError);const refreshMatches=e.target.closest('[data-refresh-matches]');if(refreshMatches&&!sharedLoading)void fetchSwipeMatches(refreshMatches.dataset.refreshMatches);if(e.target.closest('#retry-theme-unlock')&&!themesLoading)void fetchThemeUnlock();
 if(e.target.closest('#insights-retry')&&!insightsLoading)void fetchInsights();
+const inviteActivity=e.target.closest('[data-insight-activity]');
+if(inviteActivity&&page()==='insikter'&&!activityInviteBusy)void prepareActivityMessage(inviteActivity.dataset.insightActivity);
 if(e.target.closest('#home-refresh-notices')&&user&&members.length===2){if(schysstaListEnabled&&!schysstaLoading)void fetchSchysstaList();void fetchFamilyChatUnread();}
 if(e.target.closest('[data-family-chat-refresh]'))void fetchFamilyChat();
 if(e.target.closest('[data-family-chat-mark-all-read]'))void markAllFamilyChatRead();
@@ -1478,7 +1535,7 @@ document.addEventListener('keydown',e=>{
 });
 document.addEventListener('submit',async e=>{if(e.target.id==='comm-nvc-form'){e.preventDefault();if(page()!=='nvc'||!user)return;const values=Object.fromEntries(new FormData(e.target));const sentence=buildNvcSentence(values);const output=$('comm-nvc-output');if(output){output.textContent=sentence||'Fyll i alla fyra steg innan du skapar en formulering.';output.focus();}return;}if(e.target.id==='mediator-form'){e.preventDefault();await mediatorExperience.submit();return;}if(e.target.id==='family-chat-form'){e.preventDefault();await sendFamilyChatMessage();return;}if(e.target.id==='schyssta-manual-form'){e.preventDefault();await submitManualSchysstaRule();return;}if(e.target.id!=='live-login')return;e.preventDefault();const b=e.target.querySelector('button');b.disabled=true;const feedback=$('login-feedback');feedback.textContent='Loggar in…';const email=$('live-email').value.trim();try{const {error}=await db.auth.signInWithPassword({email,password:$('live-password').value});if(error)throw error;$('live-password') && ($('live-password').value='');await refresh();}catch(err){feedback.textContent='Kunde inte logga in. Kontrollera e-post och lösenord, eller välj ”Glömt lösenord eller saknar lösenord?”.';}finally{b.disabled=false;}});
 window.addEventListener('hashchange',()=>{
-  if(page()!=='insikter'){insightsRows=[];sharedUnderstandingRows=[];insightsError='';insightsLoading=false;insightsRequest++;}
+  if(page()!=='insikter'){activityInviteError='';insightsRows=[];sharedUnderstandingRows=[];insightsError='';insightsLoading=false;insightsRequest++;}
   if(page()!=='regler'&&page()!=='inkorg'){schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];schysstaNotifications=[];schysstaReplacementLinks=[];schysstaHistory=[];schysstaError='';schysstaLoading=false;schysstaRequest++;}
   render();scrollLiveMainTop();
   if(!user||!openCommunicationSkill($('live-app'),communicationSkillFromHash(location.hash),{focus:true}))$('live-app')?.focus({preventScroll:true});
