@@ -3,6 +3,17 @@
 **Gällande Jobb hk-fullmakt (5 november 2026):** se [AGENTS.md](AGENTS.md). Commit, push, PR, merge, publicering och motsvarande projektändringar i GitHub, Supabase och Cloudflare är uttryckligen godkända. Detta ersätter äldre krav på separat merge-/publiceringsgodkännande.
 
 
+## 6 november 2026 – KOM-05C: användbara direktlänkar från AI-reflektioner (PR #125)
+
+- [x] **Kod och testspecifikation i PR:** [PR #125](https://github.com/erikjarl/hemmakompassen/pull/125) gör reflektionerna mer handlingsbara utan att hävda individualiserad rekommendation: personlighetsresultat länkar till validering och NVC; swajpmatchning länkar till gemensam problemlösning och frivillig kort kontakt. Alla hänvisningar går till befintliga routade övningar. Vid hot/rädsla/kontroll rekommenderas trygghet och stöd före samtalsteknik.
+- [x] **Nya kontraktstester skrivna:** `tests/ai-result-exercise-links.test.mjs` kontrollerar olika länkar per resultattyp, att ingen länk visas vid saknat/återställt resultat samt säkerhetsformulering. Webbmodulernas cache-version har synkats.
+- [ ] **Verifiering och release:** PR-UI, AI-backendtest, merge till main och senaste Pages-körning måste rapportera `success` innan funktionen markeras tekniskt publicerad. Ingen databas- eller Worker-ändring och ingen ändring av befintliga svar.
+
+## 6 november 2026 – NOT-01B: backendinventering inför automatiska aktivitetsaviseringar
+
+- [x] **Metadata från verksam Supabase läst utan dataändring:** `schyssta_notifications` kräver `agreement_id` och begränsar `kind` till fyra regelhändelser; tabellen passar därför inte direkt för kortmatchningsnotiser. `family_direct_messages`, `family_members` och relevanta delningstabeller har RLS. Befintlig `my_family_unread_message_count()` gäller privata meddelanden. Se [issue #120](https://github.com/erikjarl/hemmakompassen/issues/120) för teknisk inventering och beslut att planera särskild serverstyrd aktivitetshändelsetabell med parningsepok och explicit kontroll av giltigt matchnings-/B-samtycke.
+- [ ] **Ej implementerat:** schema, triggers, mottagar-RPC, UI, negativa pgTAP-scenarier och tvåkontoprov för automatiska aktivitetsaviseringar. Ingen automatisk avisering skickas av PR #118–#119.
+
 ## 6 november 2026 – INT-03E: sändning av privata meddelanden med säkra återförsök
 
 - [x] **Kod och PR #123 mergade:** 15-sekunders timeout, status för utebliven bekräftelse, återanvänd idempotensnyckel för oförändrade återförsök, låst skrivfält under sändning och skydd mot att gammal RPC raderar nytt utkast.
