@@ -2,6 +2,19 @@
 
 **Gällande Jobb hk-fullmakt (5 november 2026):** se [AGENTS.md](../AGENTS.md). Commit, push, PR, merge, publicering och motsvarande projektändringar i GitHub, Supabase och Cloudflare är uttryckligen godkända. Detta ersätter äldre krav på separat merge-/publiceringsgodkännande.
 
+## 6 november 2026 – INT-03D: ärlig oläststatus vid nätverksfel (kod i utvecklingsgren)
+
+- [x] **Avgränsad kodfix:** när den senaste sidan privata meddelanden inte kan hämtas rensas potentiellt föråldrade meddelanden och oläst antal markeras som **okänt**, inte som bekräftat noll. Ett separat lyckat `my_family_unread_message_count`-anrop återställer tillförlitlig status. Ett lyckat användarinitierat **Markera alla som lästa** gör också en ny separat serveravstämning för meddelanden som kan ha kommit under pågående läskvittoanrop. Ingen förändring av serverns read-receipt-beteende, befintliga svar, RLS eller övriga funktionsflaggor.
+- [x] **Regressionstester tillagda:** `tests/family-chat-quiet-refresh.test.mjs` verifierar att ett misslyckat listanrop aldrig ser ut som ett säkert nollvärde; `tests/family-chat-explicit-receipts.test.mjs` verifierar ny räknarkontroll efter lyckad markering. Tester är ännu inte likvärdiga med verifierade två signerade sessioner.
+- [ ] **Release/verifiering:** CI, PR-merge, main och Pages kontrolleras separat. INT-03 med riktiga tvåkonton, historik, avparning, faktisk iOS Safari och radering/retention kvarstår.
+
+## 6 november 2026 – SEC-02C: statisk RPC-delgranskning och negativt SQL-test
+
+- [x] **Ytterligare 15 funktionsdefinitioner lästa direkt i verksam Supabase (read-only):** start av familj/inbjudan, medlemmar, B-svar och B-delning, olästa privata meddelanden, Schyssta listans läsning/beslut/återkallelse/notiser. Funktionskroppar använder enligt granskningen `auth.uid()`, aktivt familjepar eller användar-/mottagarkontroll i relevanta delar. Detta är endast statisk genomgång; flera komplexa skriv-RPC:er och negativa angreppstest saknas. Triggern för B-delningsåterkallelse kontrollerades som aktiv på familjemedlemsändringar.
+- [x] **Nio negativa autentiserad-roll-SQL-värden med okänd identitet:** under `BEGIN READ ONLY`, lokalt `ROLE authenticated` och syntetisk oparad UUID gav medlemmar, manuella regler, kortregler, aviseringar, regelhistorik, ersättningar, förslag, aktivitetsmatcher och olästa meddelanden samtliga **0**. Avslutat med `ROLLBACK`; inga tabellrader ändrades, privata texter lästes inte.
+- [ ] **Kvar:** verkliga signerade sessioner, kontroll av andra familjers data och samtliga privilegierade funktionsargument, race conditions/återkallelse och juridisk/säkerhetsgranskning. Advisor ger fortsatt 8 INFO om RLS utan policy och 28 WARN om autentiserade SECURITY DEFINER – varningar är inte bekräftade sårbarheter. Automatiska negativa SQL-prov styrker endast den simulerade rollen, inte JWT-signatur eller fullständig isolering.
+
+
 ## 6 november 2026 – NOT-01D: aktivitetsinbjudan direkt från kortlekens resultat (PR #119)
 
 - [x] **Kod och mobilt flöde färdiga:** resultatet för `Aktiviteter tillsammans` visar samma **Föreslå tid i inkorgen**-knapp för redan serververifierade A JA+JA-kort. Klicket använder den gemensamma funktionen från #118, men accepterar nu även den aktiva aktivitetskortlekens säkert filtrerade `sharedMatches`. Vid klick kontrolleras den valda aktiviteten igen via autentiserad Supabase-RPC innan ett utkast skapas. Inget skickas förrän användaren separat trycker Skicka. B/NEJ/ensidiga eller felaktiga kort saknar knapp.
