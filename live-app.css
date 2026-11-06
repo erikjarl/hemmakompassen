@@ -596,6 +596,15 @@
 .comm-feature .live-button{margin-top:auto}
 .comm-section>h2{margin:8px 0}
 .comm-exercises{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.comm-safety{margin:0!important;border-color:#826747;background:#292a39}
+.comm-safety summary{display:grid;gap:5px;cursor:pointer;line-height:1.5}
+.comm-safety summary strong{color:#ffe0aa;font-size:1.1rem}
+.comm-safety summary span{color:#e0d9d0}
+.comm-safety summary:focus-visible{outline:3px solid #f5b657;outline-offset:4px;border-radius:6px}
+.comm-safety-body{padding-top:13px;border-top:1px solid #6c5947;margin-top:13px;line-height:1.65}
+.comm-safety-body p{margin:0 0 12px}
+.comm-safety-body a{color:#ffe0aa;text-decoration:underline;text-underline-offset:3px;overflow-wrap:anywhere}
+.comm-safety-body a:focus-visible{outline:3px solid #f5b657;outline-offset:3px}
 .comm-situations{margin:0}
 .comm-situations h2{margin:0 0 8px}
 .comm-situation-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
