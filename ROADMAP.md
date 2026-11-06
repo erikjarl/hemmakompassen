@@ -2,6 +2,11 @@
 
 **Gällande Jobb hk-fullmakt (5 november 2026):** se [AGENTS.md](AGENTS.md). Commit, push, PR, merge, publicering och motsvarande projektändringar i GitHub, Supabase och Cloudflare är uttryckligen godkända. Detta ersätter äldre krav på separat merge-/publiceringsgodkännande.
 
+## 6 november 2026 – KOM-04C: återanvänd trygghetsstöd i MI (PR #117)
+
+- [x] **Klar kod och teknisk release:** `communication/mi-guide.js` importerar nu samma statiska föräldraanpassade trygghetskomponent från `communication/toolkit.js`, så även ett direktbesök på MI-sidan informerar om hot/rädsla, akut hjälp 112, 1177 och Bris vuxentelefon. Den tidigare MI-rollspärren är oförändrad. Befintliga MI-tester har utökats med kontaktvägar och rollkrav. PR [#117](https://github.com/erikjarl/hemmakompassen/pull/117) mergad som `6b071211acf4dae3e926b4788d0ab6ec442e09df`. PR-UI [#42187040272](https://github.com/erikjarl/hemmakompassen/actions/runs/42187040272), main UI [#42187238495](https://github.com/erikjarl/hemmakompassen/actions/runs/42187238495) och Pages [#42187236998](https://github.com/erikjarl/hemmakompassen/actions/runs/42187236998) passerade.
+- [ ] **Kvar:** verifiera i två verkligt inloggade roller, fysisk iOS Safari/VoiceOver, språk och stödvägar. Ingen ändring i databas, AI-Worker eller användarsvar.
+
 ## 6 november 2026 – KOM-04A: trygghetsstöd i Kommunikationsråd och NVC
 
 - [x] **Förändring i PR [#116](https://github.com/erikjarl/hemmakompassen/pull/116):** statisk, rollanpassad och kollapsbar information när någon upplever hot, kontroll eller rädsla. Finns både på kommunikationssidan och i NVC-byggaren. Gemensamt: akut hjälp 112, 1177 och lokal hjälp utan att först behöva bedöma om något är våld. Tonåring: Bris 116 111 upp till 18 år och trygg vuxen; förälder: ansvar för egna hot och Bris vuxentelefon. Uppgifterna skickas inte till andra familjemedlemmen, AI eller Supabase.
@@ -13,6 +18,11 @@
 
 - [x] **Observerade metadata i verkliga Supabase (ingen dataändring):** security linter 8 RLS-tabeller utan policies och 28 signerade-användare-anropbara SECURITY DEFINER-funktioner. Samtliga 28 har låst tom `search_path`, `auth.uid`-referens och saknar direkt `anon`-EXECUTE. Funktionen kan ändå innehålla behörighetsmisstag; metadata uppfyller inte fullständig säkerhetsgranskning.
 - [ ] **Kvar:** funktionsvis granskning av auth, par-ID, parametrar och datamängder, verkliga tvåkontotester och riskbedömning av varje exponerad endpoint. Ändra inte RPC-only-tabellers policyer utan först verifierat behov.
+
+## 6 november 2026 – SEC-02B: fördjupad statisk RPC-granskning
+
+- [x] **Åtta autentiserade SECURITY DEFINER-funktioner granskade direkt i verksam databas (utan skrivning):** familjeinbjudan, läs/markera/skicka meddelanden, säker IPIP-femskaledelning, prioritetssamtycke/läsning och B-kortsdelning. Koden använder identitet och aktiva par-/samtyckesvillkor enligt respektive funktion. Inga uppenbara öppna `anon`-EXECUTE-grants hittades i den separata privilegieinventeringen. Delgranskningen är inte penetrationstest eller formell säkerhetsgaranti.
+- [ ] **Kvar:** samtliga 28 definierade RPC:ers funktionskroppar, autentiserad tvåkontokontroll, negativt åtkomsttest från andra familjer och avparning, plattformskonfiguration och datalivscykel.
 
 ## 5 november 2026 – SW-03C: verifiera samtyckesstatus vid nätverksfel
 
