@@ -105,5 +105,5 @@ test('UI creates action only from the A-card activity group and never creates au
   assert.match(code,/data-insight-activity/);
   assert.match(code,/row\.answer===true&&row\.deck_id==='aktiviteter'&&row\.card_id===card\.id/);
   assert.match(code,/if\(inviteActivity&&page\(\)==='insikter'/);
-  assert.match(code,/Ingen[^]*?frivilligt meddelandeutkast/);
+  assert.match(code,/För aktiviteter kan du öppna ett frivilligt meddelandeutkast/);
 });
