@@ -4,7 +4,7 @@ import vm from 'node:vm';
 import {readFileSync} from 'node:fs';
 
 const code=readFileSync(new URL('../live-app.js',import.meta.url),'utf8');
-const extracted=code.match(/async function prepareActivityMessage\(cardId\)\{[\s\S]*?\n\}(?=\nasync function setUnderstandingShare)/)?.[0];
+const extracted=code.match(/async function prepareActivityMessage\(cardId\)\{[\s\S]*?\n\}\s*(?=async function setUnderstandingShare)/)?.[0];
 assert.ok(extracted,'real activity-to-inbox function must be testable');
 
 function harness({serverRows=[{deck_id:'aktiviteter',card_id:'aktiviteter-01',answer:true}],existingDraft='',currentRows=null}={}){
