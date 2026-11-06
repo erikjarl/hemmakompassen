@@ -2,6 +2,12 @@
 
 **Gällande Jobb hk-fullmakt (5 november 2026):** se [AGENTS.md](../AGENTS.md). Commit, push, PR, merge, publicering och motsvarande projektändringar i GitHub, Supabase och Cloudflare är uttryckligen godkända. Detta ersätter äldre krav på separat merge-/publiceringsgodkännande.
 
+## 6 november 2026 – KOM-04C: trygghetsstöd även i MI-guiden (PR #117)
+
+- [x] **Koden mergad till main:** MI-sidan `#mi-foralder` återanvänder exakt samma statiska trygghetskomponent för föräldrar som Kommunikationsråd och NVC. Ingen ny databasåtkomst eller ändring av familjesvar; befintlig föräldrars-rollspärr för MI-routen kvarstår.
+- [x] **Automatiska tester och release verifierade:** PR #117 mergad som `6b071211acf4dae3e926b4788d0ab6ec442e09df`. PR-UI [#42187040272](https://github.com/erikjarl/hemmakompassen/actions/runs/42187040272), main-UI [#42187238495](https://github.com/erikjarl/hemmakompassen/actions/runs/42187238495) och Pages [#42187236998](https://github.com/erikjarl/hemmakompassen/actions/runs/42187236998) är godkända. MI-test verifierar vuxenansvar, 112, 1177 och Bris vuxentelefon, utan att presentera 116 111 som förälderns telefonnummer. Fysisk iOS/VoiceOver är ännu inte testad.
+- [ ] **Kvar:** manuellt kontrollera navigering och språk med föräldra- och tonårskonto, särskilt att tonåringen inte kommer åt MI-routen, samt läsbarhet och tillgänglighet i riktig mobil.
+
 ## 6 november 2026 – KOM-04A: hjälp när samtal inte är trygga (PR #116)
 
 - [x] **Kod och kontraktstester tillagda på PR #116:** rollanpassad, frivillig trygghetspanel finns både på Kommunikationsråd och i NVC-byggaren; akutnummer 112, 1177, Bris 116 111 för under 18 år och Bris vuxentelefon för föräldrar. Samtalsteknik presenteras uttryckligen som olämplig vid hot, rädsla eller kontroll. All text är statisk och öppning kräver ingen inloggad dataläsning, AI, delning eller lagring.
@@ -13,6 +19,7 @@
 ## 6 november 2026 – SEC-02 read-only avstämning
 
 - [x] **Enbart metadata kontrollerad:** Supabase Security Advisor rapporterar 8 RLS-tabeller utan policy och 28 exponerade SECURITY DEFINER-RPC:er för `authenticated`. Samtliga 28 har vid översiktlig SQL-inspektion `search_path=''`, innehåller referens till `auth.uid` och saknar `anon`-EXECUTE. Detta är **inte** en fullständig granskning av varje funktions behörighetsvillkor.
+- [x] **Fördjupad läsning av åtta autentiserade databasfunktioner:** `my_ipip50_shared_profiles`, `set_swipe_priority_share`, `shared_swipe_priorities`, `shared_understanding_cards`, `accept_family_invite`, `mark_family_messages_read`, `my_family_messages`, `send_family_message`. I nuvarande databasdefinitioner finns kontroller för autentiserat anrop, aktuellt familjepar/medlemskap eller aktiv delning där detta krävs, och meddelande-RPC:erna är bundna till mottagare samt parningens tidsstämpel. Det är en **statisk delgranskning**, inte verifiering mot verklig angriparsession och inte en säkerhetsgaranti.
 - [ ] **Fortsatt säkerhetsarbete:** granska funktionskroppar och argument var för sig, verifiera parning/ägarskap och negativa tester med autentiserade tvåkontosessioner. Lägg inte till generella SELECT-policyer på RPC-only tabeller för att tysta lintervarningar.
 
 ## 5 november 2026 – SW-03C: verifiera samtyckesstatus vid nätverksfel
