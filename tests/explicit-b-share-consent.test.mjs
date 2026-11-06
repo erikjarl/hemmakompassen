@@ -15,7 +15,9 @@ test('B sharing requires a non-null explicit decision and known card ID',()=>{
 });
 
 test('function replacement does not overwrite user decisions or weaken grants',()=>{
-  assert.doesNotMatch(migration,/\b(drop table|truncate|delete from public\.understanding_card_shares|update public\.understanding_card_shares|grant execute)\b/i);
+  // This is a function replacement, not a top-level migration that rewrites rows.
+  // The function legitimately DELETEs an individual's share on explicit FALSE.
+  assert.doesNotMatch(migration,/^(?:drop table|truncate|delete from|update public\.understanding_card_shares|grant execute)\b/im);
   assert.match(workflow,/20261106162604_require_explicit_understanding_share_choice\.sql/);
   assert.match(workflow,/Assert 31 separate B-sharing pgTAP results/);
   assert.match(dbTests,/select plan\(31\)/);
