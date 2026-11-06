@@ -2,6 +2,18 @@
 
 **Gällande Jobb hk-fullmakt (5 november 2026):** se [AGENTS.md](../AGENTS.md). Commit, push, PR, merge, publicering och motsvarande projektändringar i GitHub, Supabase och Cloudflare är uttryckligen godkända. Detta ersätter äldre krav på separat merge-/publiceringsgodkännande.
 
+## 6 november 2026 – KOM-04A: hjälp när samtal inte är trygga (PR #116)
+
+- [x] **Kod och kontraktstester tillagda på PR #116:** rollanpassad, frivillig trygghetspanel finns både på Kommunikationsråd och i NVC-byggaren; akutnummer 112, 1177, Bris 116 111 för under 18 år och Bris vuxentelefon för föräldrar. Samtalsteknik presenteras uttryckligen som olämplig vid hot, rädsla eller kontroll. All text är statisk och öppning kräver ingen inloggad dataläsning, AI, delning eller lagring.
+- [x] **Fyra automatiska tester skapade:** kontroll av båda rollerna och båda vyerna, säkra länkadresser, ansvarsfördelning, tangentbordsfokus och frånvaro av nätverk och lokal lagring.
+- [ ] **Leveransgrind:** verifiera GitHub Actions Node, bygge, Playwright och mobilresultat på PR #116 innan merge och publicering. Uppdatera med faktiska körnings-ID:n; en grön kodtestning ersätter inte manuell prövning.
+- [ ] **KOM-04B metod- och risksäkerhet:** granska språk/hanterbarhet med unga och föräldrar, fysisk iOS Safari/VoiceOver, situationer med pågående våld, källornas aktualitet och hur AI-medlaren bör hänvisa utan att reducera hot till kommunikationsteknik. Inget kliniskt effektanspråk.
+
+## 6 november 2026 – SEC-02 read-only avstämning
+
+- [x] **Enbart metadata kontrollerad:** Supabase Security Advisor rapporterar 8 RLS-tabeller utan policy och 28 exponerade SECURITY DEFINER-RPC:er för `authenticated`. Samtliga 28 har vid översiktlig SQL-inspektion `search_path=''`, innehåller referens till `auth.uid` och saknar `anon`-EXECUTE. Detta är **inte** en fullständig granskning av varje funktions behörighetsvillkor.
+- [ ] **Fortsatt säkerhetsarbete:** granska funktionskroppar och argument var för sig, verifiera parning/ägarskap och negativa tester med autentiserade tvåkontosessioner. Lägg inte till generella SELECT-policyer på RPC-only tabeller för att tysta lintervarningar.
+
 ## 5 november 2026 – SW-03C: verifiera samtyckesstatus vid nätverksfel
 
 - [x] **Mergad och tekniskt publicerad i PR #113 (5 november):** läs tillbaka den egna RLS-skyddade samtyckesraden efter delning/återkallelse. Ett förlorat RPC-svar betyder inte nödvändigtvis att servern avbröt åtgärden. Sidan får därför inte hävda att ingenting ändrats utan att kontrollera.
