@@ -10,6 +10,12 @@ test('MI editorial support states its limits, respects teenager autonomy, and us
   const html=renderParentMiGuide();
   assert.match(html,/inte<\/strong> en prövad föräldrametod/);
   assert.match(html,/Ett nej är inte ett samtycke/);
+  assert.match(html,/<details class="live-panel comm-safety">/,'MI must include safety guidance for unsafe situations');
+  assert.match(html,/href="tel:112"/);
+  assert.match(html,/href="tel:1177"/);
+  assert.match(html,/href="tel:0771505050"/);
+  assert.match(html,/Barnet ska inte behöva ta ansvar/);
+  assert.doesNotMatch(html,/href="tel:116111"/,'parent-only MI must not show child help as though it were adult-specific');
   assert.match(html,/ditt vuxenansvar/);
   assert.match(html,/Forskning om MI i vård kan inte automatiskt överföras/);
   assert.match(html,/Schyssta listan/);
