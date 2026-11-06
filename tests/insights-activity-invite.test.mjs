@@ -7,16 +7,18 @@ const code=readFileSync(new URL('../live-app.js',import.meta.url),'utf8');
 const extracted=code.match(/async function prepareActivityMessage\(cardId\)\{[\s\S]*?\n\}\s*(?=async function setUnderstandingShare)/)?.[0];
 assert.ok(extracted,'real activity-to-inbox function must be testable');
 
-function harness({serverRows=[{deck_id:'aktiviteter',card_id:'aktiviteter-01',answer:true}],existingDraft='',currentRows=null}={}){
+function harness({serverRows=[{deck_id:'aktiviteter',card_id:'aktiviteter-01',answer:true}],existingDraft='',currentRows=null,source='insikter',activeDeck='aktiviteter',deckRows=null}={}){
   let calls=0,resolveRequest=null;
   const state={
-    user:{id:'current'},sharedSession:3,page:()=> 'insikter',
+    user:{id:'current'},sharedSession:3,page:()=> source,
     members:[{user_id:'current',role:'parent'},{user_id:'other',role:'teen'}],
     sharedInsightsEnabled:true,insightsLoading:false,insightsError:'',
+    sharedDeckId:activeDeck,sharedLoading:false,sharedError:'',
+    sharedMatches:deckRows??[{deck_id:'aktiviteter',card_id:'aktiviteter-01',answer:true}],
     insightsRows:currentRows??[{deck_id:'aktiviteter',card_id:'aktiviteter-01',answer:true}],
     activityInviteBusy:false,activityInviteError:'',
     familyChatDraft:existingDraft,familyChatStatus:'',familyChatRequestKey:'old-request',
-    location:{hash:'insikter'},render:()=>{},
+    location:{hash:source},render:()=>{},
     requestAnimationFrame:callback=>callback(),
     document:{getElementById:()=>({focus:()=>{}})},
     sharedDeck:()=>({cards:[{id:'aktiviteter-01',type:'match',teenText:'Laga mat tillsammans'}]}),
@@ -104,7 +106,7 @@ test('UI creates action only from the A-card activity group and never creates au
   assert.match(code,/deck\.id==='aktiviteter'\?deck\.cards\.find/);
   assert.match(code,/data-insight-activity/);
   assert.match(code,/row\.answer===true&&row\.deck_id==='aktiviteter'&&row\.card_id===card\.id/);
-  assert.match(code,/if\(inviteActivity&&page\(\)==='insikter'/);
+  assert.match(code,/if\(inviteActivity&&\['insikter','swipe'\]\.includes\(page\(\)\)/);
   assert.match(code,/För aktiviteter kan du öppna ett frivilligt meddelandeutkast/);
 });
 
@@ -137,4 +139,27 @@ test('actual insights view renders activity CTA only for verified activity match
   assert.doesNotMatch(state.renderInsights(),/data-insight-activity=/);
   state.insightsError='Serverfel';
   assert.doesNotMatch(state.renderInsights(),/data-insight-activity=/);
+});
+
+test('same voluntary draft works from verified active activity-deck results',async()=>{
+  const h=harness({source:'swipe'});
+  await h.state.prepare('aktiviteter-01');
+  assert.equal(h.calls(),1);
+  assert.equal(h.state.location.hash,'inkorg');
+  assert.match(h.state.familyChatDraft,/Laga mat tillsammans/);
+  const otherDeck=harness({source:'swipe',activeDeck:'samtal'});
+  await otherDeck.state.prepare('aktiviteter-01');
+  assert.equal(otherDeck.calls(),0);
+  const privateAnswer=harness({source:'swipe',deckRows:[{deck_id:'aktiviteter',card_id:'aktiviteter-01',answer:false}]});
+  await privateAnswer.state.prepare('aktiviteter-01');
+  assert.equal(privateAnswer.calls(),0);
+});
+
+test('direct activity-deck button uses real A-match cards, never local answers or B',()=>{
+  const block=code.match(/function swipeResults\(deckId='general'\)\{[\s\S]*?(?=\nasync function fetchSwipeMatches)/)?.[0];
+  assert.ok(block);
+  assert.match(block,/matchedCard=deck\.cards\.find\(card=>card\.id===r\.card_id&&card\.type==='match'\)/);
+  assert.match(block,/r\?\.answer!==true/);
+  assert.match(block,/deckId==='aktiviteter'\?/);
+  assert.match(block,/data-insight-activity/);
 });
