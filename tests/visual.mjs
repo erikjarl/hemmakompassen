@@ -853,6 +853,22 @@ try{
   await checkOverflow(paired.page,'Mobile voluntary activity invitation draft');
   await capture(paired.page,'mobile-activity-invite-draft.png');
   await paired.page.locator('#family-chat-body').fill('');
+  // NOT-01D: same verified activity CTA is directly reachable in its own
+  // finished themed-deck results, not only from the all-deck insights screen.
+  await paired.page.evaluate(()=>{location.hash='insikter';});
+  await paired.page.locator('[data-insight-open="aktiviteter"]').waitFor();
+  await paired.page.locator('[data-insight-open="aktiviteter"]').click();
+  await paired.page.locator('.swipe-results [data-insight-activity="aktiviteter-01"]').waitFor();
+  assert.equal(await paired.page.locator('.swipe-results [data-insight-activity]').count(),1,
+    'No NO or B card in the activity deck may create a shared invitation button');
+  await paired.page.locator('.swipe-results [data-insight-activity="aktiviteter-01"]').click();
+  await paired.page.locator('#family-chat-body').waitFor();
+  assert.match(await paired.page.locator('#family-chat-body').inputValue(),
+    /Laga mat tillsammans.*bestämmer en dag/s);
+  assert.deepEqual(await paired.page.evaluate(()=>window.__HK_CHAT_SEND__||null),sentBefore,
+    'The direct deck path must never send an activity invitation automatically');
+  await capture(paired.page,'mobile-activity-invite-from-deck.png');
+  await paired.page.locator('#family-chat-body').fill('');
   await paired.page.evaluate(()=>{delete window.__HK_TEST_SHARED_MATCHES__;location.hash='insikter';});
   await paired.page.locator('.insights-deck').first().waitFor();
   assert.equal(await paired.page.locator('.insights-deck').count(),2,

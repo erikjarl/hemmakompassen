@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261106-activity-invite1';
-import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261106-activity-invite1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261106-activity-invite1';
-import {renderParentMiGuide} from './communication/mi-guide.js?v=20261106-activity-invite1';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261106-activity-invite1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261106-activity-invite2';
+import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261106-activity-invite2';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261106-activity-invite2';
+import {renderParentMiGuide} from './communication/mi-guide.js?v=20261106-activity-invite2';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261106-activity-invite2';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -470,7 +470,10 @@ function swipeResults(deckId='general'){
   if(!groups.size)return title+'<p class="live-muted">Inga gemensamma ja-svar att visa ännu. Här visas bara kort där ni båda har svarat ja.</p>'+button+'</section>';
   const themes=[...groups.entries()].map(([category,items])=>
     '<section class="swipe-match-theme"><h4>'+esc(category)+'</h4><ul class="swipe-match-list">'+
-    items.map(item=>'<li><p>'+esc(item.statement)+'</p></li>').join('')+
+    items.map(item=>'<li><p>'+esc(item.statement)+'</p>'+
+      (deckId==='aktiviteter'?
+        '<button type="button" class="schyssta-secondary" data-insight-activity="'+esc(item.card.id)+'"'+
+        (activityInviteBusy?' disabled':'')+'>Föreslå tid i inkorgen</button>':'')+'</li>').join('')+
     '</ul></section>'
   ).join('');
   const matchedById=new Map([...groups.values()].flat().map(item=>[item.card.id,item]));
@@ -486,6 +489,7 @@ function swipeResults(deckId='general'){
     '<p>Prioriterade, gemensamt bejakade kort:</p><ul>'+
     priorityItems.map(item=>'<li>'+esc(item.statement)+'</li>').join('')+'</ul></aside>':'';
   return title+'<p class="live-muted">Bara kort där ni båda svarat ja visas här. Se dem som möjliga samtalsöppningar, inte som färdiga överenskommelser.</p>'+
+    (deckId==='aktiviteter'&&activityInviteError?'<p role="alert">'+esc(activityInviteError)+'</p>':'')+
     privatePriority+
     (useAi?aiPriority:sharedPrioritySummary(priorityItems,deckId))+
     '<div class="swipe-match-group"><h3>Det ni båda svarat ja till</h3>'+themes+'</div>'+
@@ -699,11 +703,15 @@ async function fetchInsights({quiet=false}={}){
 async function prepareActivityMessage(cardId){
   // A verified activity match is the only source. B, NO and unilateral answers
   // never become a message draft. Recheck the server before showing a draft.
+  const origin=page();
+  const verifiedCurrent=origin==='insikter'
+    ? !insightsLoading&&!insightsError&&insightsRows.some(row=>
+      row.answer===true&&row.deck_id==='aktiviteter'&&row.card_id===cardId)
+    : origin==='swipe'&&sharedDeckId==='aktiviteter'&&!sharedLoading&&!sharedError&&
+      sharedMatches.some(row=>row.answer===true&&row.deck_id==='aktiviteter'&&row.card_id===cardId);
   if(activityInviteBusy||!sharedInsightsEnabled||!user||members.length!==2||
      !members.some(m=>m.user_id===user.id)||!members.some(m=>m.role==='parent')||
-     !members.some(m=>m.role==='teen')||page()!=='insikter'||
-     insightsLoading||insightsError||
-     !insightsRows.some(row=>row.answer===true&&row.deck_id==='aktiviteter'&&row.card_id===cardId))return;
+     !members.some(m=>m.role==='teen')||!verifiedCurrent)return;
   const card=sharedDeck('aktiviteter')?.cards.find(item=>item.id===cardId&&item.type==='match');
   if(!card)return;
   if(familyChatDraft.trim()){
@@ -715,7 +723,7 @@ async function prepareActivityMessage(cardId){
   let response;
   try{response=await db.rpc('shared_swipe_matches',{p_deck_id:'aktiviteter'});}
   catch(error){response={error};}
-  if(user?.id!==viewer||sharedSession!==session||page()!=='insikter'){
+  if(user?.id!==viewer||sharedSession!==session||page()!==origin){
     activityInviteBusy=false;return;
   }
   activityInviteBusy=false;
@@ -1446,7 +1454,7 @@ if(e.target.closest('#mediator-clear')){mediatorExperience.clear();return;}if(e.
 if(e.target.closest('#swipe-review-skipped')&&viewerRole()==='teen'&&!swipeBusy){swipeSkippedReview=true;swipeReview=false;swipeIndex=nextSkippedAfter(-1);render();}if(e.target.closest('#swipe-skip')&&viewerRole()==='teen'&&GENERAL_CARDS[swipeIndex]?.type==='understanding'&&!swipeBusy)void skipUnderstandingCard(swipeIndex,user.id,sharedSession);if(e.target.closest('#swipe-reload'))refresh().catch(showError);const refreshMatches=e.target.closest('[data-refresh-matches]');if(refreshMatches&&!sharedLoading)void fetchSwipeMatches(refreshMatches.dataset.refreshMatches);if(e.target.closest('#retry-theme-unlock')&&!themesLoading)void fetchThemeUnlock();
 if(e.target.closest('#insights-retry')&&!insightsLoading)void fetchInsights();
 const inviteActivity=e.target.closest('[data-insight-activity]');
-if(inviteActivity&&page()==='insikter'&&!activityInviteBusy)void prepareActivityMessage(inviteActivity.dataset.insightActivity);
+if(inviteActivity&&['insikter','swipe'].includes(page())&&!activityInviteBusy)void prepareActivityMessage(inviteActivity.dataset.insightActivity);
 if(e.target.closest('#home-refresh-notices')&&user&&members.length===2){if(schysstaListEnabled&&!schysstaLoading)void fetchSchysstaList();void fetchFamilyChatUnread();}
 if(e.target.closest('[data-family-chat-refresh]'))void fetchFamilyChat();
 if(e.target.closest('[data-family-chat-mark-all-read]'))void markAllFamilyChatRead();
