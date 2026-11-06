@@ -2,6 +2,13 @@
 
 **Gällande Jobb hk-fullmakt (5 november 2026):** se [AGENTS.md](../AGENTS.md). Commit, push, PR, merge, publicering och motsvarande projektändringar i GitHub, Supabase och Cloudflare är uttryckligen godkända. Detta ersätter äldre krav på separat merge-/publiceringsgodkännande.
 
+## 6 november 2026 – NOT-01C: frivillig aktivitetsinbjudan från Gillaswajpen (PR #118)
+
+- [x] **Kod och UI publicerade:** en serververifierad A JA+JA-match i kortleken `aktiviteter` visar knappen **Föreslå tid i inkorgen** på sidan Gemensamma insikter. Ett nytt autentiserat `shared_swipe_matches('aktiviteter')`-anrop bekräftar samma kort direkt vid klick. Därefter skapas bara ett redigerbart lokalt meddelandeutkast. Ingen chatt-RPC, AI-analys, regelröst eller notifiering sker automatiskt; en separat Skicka-knapp krävs. Ett befintligt privat meddelandeutkast skrivs inte över.
+- [x] **Teknisk release verifierad:** [PR #118](https://github.com/erikjarl/hemmakompassen/pull/118) mergad till `main` som `1eebe558fc78389b0c1da14522decdebf76b792c`. Slutlig [PR UI #42193715854](https://github.com/erikjarl/hemmakompassen/actions/runs/42193715854), [main UI #42193881405](https://github.com/erikjarl/hemmakompassen/actions/runs/42193881405) och [GitHub Pages #42193880311](https://github.com/erikjarl/hemmakompassen/actions/runs/42193880311) rapporterar godkänt. Node, statiskt bygge och Playwright/Chromium med faktiskt utkastflöde mot syntetisk server godkända. Cache-version synkad. Ingen Supabase/Cloudflare Worker-mutation eller ändring av befintliga familjesvar.
+- [ ] **Verklig QA:** verifiera med två autentiserade konton, iOS Safari, fokus/synlighet och återkallelse mellan två öppna sessioner. CI med syntetisk backend ersätter inte detta.
+- [ ] **NOT-01 framtida automatisk händelsefunktion:** återstår skilda servergenererade aviseringar för nya gemensamma aktiviteter och resultat, deduplicering och korrekt RLS/behörig mottagare. PR #118 är bara användarinitierade, valfria privata meddelanden, inte automatisk notifiering.
+
 ## 6 november 2026 – KOM-04C: trygghetsstöd även i MI-guiden (PR #117)
 
 - [x] **Koden mergad till main:** MI-sidan `#mi-foralder` återanvänder exakt samma statiska trygghetskomponent för föräldrar som Kommunikationsråd och NVC. Ingen ny databasåtkomst eller ändring av familjesvar; befintlig föräldrars-rollspärr för MI-routen kvarstår.
