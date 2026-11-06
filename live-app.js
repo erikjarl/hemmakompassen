@@ -115,7 +115,12 @@ async function fetchFamilyChat(older=false,{quiet=false}={}){
   if(older)familyChatLoadingOlder=false;else familyChatLoading=false;
   if(result?.error||!validFamilyChatRows(result.data)){
     familyChatError='Kunde inte hämta meddelandena. Kontrollera anslutningen och försök igen.';
-    if(!older){familyChatMessages=[];familyChatHasMore=false;familyChatUnread=0;}
+    if(!older){
+      familyChatMessages=[];familyChatHasMore=false;
+      // Message loading cannot establish a trusted unread count.
+      // Do not present a zero as confirmed until the count RPC succeeds.
+      familyChatUnread=0;familyChatUnreadError=true;
+    }
   }else{
     familyChatMessages=older?[...familyChatMessages,...result.data]:result.data;
     familyChatHasMore=result.data.length===50;
@@ -145,7 +150,11 @@ async function markAllFamilyChatRead(){
   familyChatCountRequest++;
   familyChatUnread=0;familyChatUnreadError=false;
   familyChatStatus='Alla meddelanden har markerats som lästa.';
-  render();return true;
+  render();
+  // Another message may have arrived while the receipt RPC was in flight.
+  // Fetch a fresh authoritative count instead of trusting a stale zero.
+  void fetchFamilyChatUnread();
+  return true;
 }
 async function sendFamilyChatMessage(){
   if(!user||members.length!==2||familyChatSending)return;

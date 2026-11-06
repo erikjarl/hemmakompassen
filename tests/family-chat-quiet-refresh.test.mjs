@@ -49,6 +49,9 @@ test('a changed message is rendered once and a failed RPC clears the old snapsho
   assert.equal(h.counts.render,2,'A failed RPC must show the error rather than stale messages');
   assert.equal(h.state.familyChatMessages.length,0);
   assert.match(h.state.familyChatError,/inte hämta/);
+  assert.equal(h.state.familyChatUnread,0);
+  assert.equal(h.state.familyChatUnreadError,true,
+    'Unread count must be explicitly unknown when message reload fails');
 });
 
 test('quiet checks preserve any existing form status and account boundaries',async()=>{
