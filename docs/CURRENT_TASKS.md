@@ -2,11 +2,20 @@
 
 **Gällande Jobb hk-fullmakt (5 november 2026):** se [AGENTS.md](../AGENTS.md). Commit, push, PR, merge, publicering och motsvarande projektändringar i GitHub, Supabase och Cloudflare är uttryckligen godkända. Detta ersätter äldre krav på separat merge-/publiceringsgodkännande.
 
+## 6 november 2026 – SEC-02D: uttryckligt B-samtycke kräver sant/falskt
+
+- [x] **Påvisad och rättad backendbrist:** den tidigare funktionen `public.set_understanding_card_share(text,boolean)` behandlade `p_share=NULL` som att den skulle fortsätta mot delningskod (eftersom `IF p_share IS FALSE` inte fångar NULL). Den kräver nu ett explicit sant/falskt värde, avvisar även `p_card_id=NULL` och förnyar aktuell `family_id` vid konflikt. Ett saknat val kan därmed inte utlösa delning av ett B-förståelsekort.
+- [x] **Installerat i den faktiska Supabase-databasen 6 november:** migration `20261106162604_require_explicit_understanding_share_choice`, applicerad med `CREATE OR REPLACE FUNCTION`, verifierad med `pg_get_functiondef` (alla tre nya villkor) och aktuella `EXECUTE`-grants (authenticated ja, anon nej). Inga befintliga B-samtycken, svar, familjemedlemmar eller testdata ändrades.
+- [x] **Kontrollkod på GitHub-gren:** exakt versionssatt migrationsfil, tre nya pgTAP-scenarier för NULL, Node-kontraktstest och PostgreSQL-workflow som kör migrationen på en syntetisk databas. CI, PR och Pages kontrolleras separat och verifieringsstatus uppdateras efter körning.
+- [x] **Utökad statisk kontroll:** ytterligare fem funktioners definitioner lästa i verksam Supabase (`propose_manual_schyssta_rule`, `propose_schyssta_change`, `propose_schyssta_rule`, `set_my_ipip50_share`, `shared_swipe_matches`). Därmed har alla 28 auth-exponerade SECURITY DEFINER-funktioner åtminstone lästs, men detta är **inte** en fullständig säkerhetsgranskning eller ett angreppstest.
+- [ ] **Kvar:** riktiga signerade tvåkontosessioner, negativa kontotester från andra familjer, återkallelse/race conditions samt klinisk och juridisk bedömning. Automatiserade pgTAP-prov är syntetiska.
+
+
 ## 6 november 2026 – INT-03D: ärlig oläststatus vid nätverksfel (kod i utvecklingsgren)
 
 - [x] **Avgränsad kodfix:** när den senaste sidan privata meddelanden inte kan hämtas rensas potentiellt föråldrade meddelanden och oläst antal markeras som **okänt**, inte som bekräftat noll. Ett separat lyckat `my_family_unread_message_count`-anrop återställer tillförlitlig status. Ett lyckat användarinitierat **Markera alla som lästa** gör också en ny separat serveravstämning för meddelanden som kan ha kommit under pågående läskvittoanrop. Ingen förändring av serverns read-receipt-beteende, befintliga svar, RLS eller övriga funktionsflaggor.
 - [x] **Regressionstester tillagda:** `tests/family-chat-quiet-refresh.test.mjs` verifierar att ett misslyckat listanrop aldrig ser ut som ett säkert nollvärde; `tests/family-chat-explicit-receipts.test.mjs` verifierar ny räknarkontroll efter lyckad markering. Tester är ännu inte likvärdiga med verifierade två signerade sessioner.
-- [ ] **Release/verifiering:** CI, PR-merge, main och Pages kontrolleras separat. INT-03 med riktiga tvåkonton, historik, avparning, faktisk iOS Safari och radering/retention kvarstår.
+- [ ] **Release/verifiering:** PR #121 mergad som `ce9762809e24717456fb8c8c9c06f23cad51a306`; PR-UI #42251776980 och main UI #42251977521 godkända. Pages #42251976510 var fortfarande under körning vid senaste kontrollen. INT-03 med riktiga tvåkonton, historik, avparning, faktisk iOS Safari och radering/retention kvarstår.
 
 ## 6 november 2026 – SEC-02C: statisk RPC-delgranskning och negativt SQL-test
 

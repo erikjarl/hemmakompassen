@@ -14,6 +14,7 @@ on:
       - "supabase/migrations/20261027195833_shared_swipe_priorities.sql"
       - "supabase/migrations/20261105161257_explicit_swipe_priority_sharing.sql"
       - "supabase/migrations/20261028180000_shared_understanding_cards.sql"
+      - "supabase/migrations/20261106162604_require_explicit_understanding_share_choice.sql"
       - "supabase/migrations/20261030090000_shared_swipe_all_a_only.sql"
       - "supabase/migrations/20261103110500_revoke_understanding_trigger_rpc_execute.sql"
       - "supabase/migrations/20261103121500_revoke_legacy_family_table_grants.sql"
@@ -116,6 +117,11 @@ jobs:
           docker exec -i "${{ job.services.postgres.id }}" \
             psql -U postgres -d postgres -v ON_ERROR_STOP=1 -X -q \
             < supabase/migrations/20261028180000_shared_understanding_cards.sql
+      - name: Require non-null explicit B-sharing choice
+        run: |
+          docker exec -i "${{ job.services.postgres.id }}" \
+            psql -U postgres -d postgres -v ON_ERROR_STOP=1 -X -q \
+            < supabase/migrations/20261106162604_require_explicit_understanding_share_choice.sql
       - name: Apply trigger helper least-privilege revocation
         run: |
           docker exec -i "${{ job.services.postgres.id }}" \
@@ -203,18 +209,18 @@ jobs:
             exit 1
           fi
           test "$(grep -Ec '^ok [0-9]+' /tmp/shared-priority-test.log)" -eq 25
-      - name: Assert 28 separate B-sharing pgTAP results
+      - name: Assert 31 separate B-sharing pgTAP results
         shell: bash
         run: |
           set -euo pipefail
           docker exec -i "${{ job.services.postgres.id }}" \
             psql -U postgres -d postgres -v ON_ERROR_STOP=1 -X -q -A -t \
             < supabase/tests/shared_understanding_cards.sql | tee /tmp/shared-understanding-test.log
-          grep -qx '1..28' /tmp/shared-understanding-test.log
+          grep -qx '1..31' /tmp/shared-understanding-test.log
           if grep -Eq '^(not ok|# Looks like you failed)' /tmp/shared-understanding-test.log; then
             exit 1
           fi
-          test "$(grep -Ec '^ok [0-9]+' /tmp/shared-understanding-test.log)" -eq 28
+          test "$(grep -Ec '^ok [0-9]+' /tmp/shared-understanding-test.log)" -eq 31
       - name: Assert 25 Schyssta listan pgTAP results
         shell: bash
         run: |
