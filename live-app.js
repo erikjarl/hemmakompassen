@@ -181,29 +181,32 @@ function sameInboxPair(previous,current,viewer){
     &&['parent','teen'].every(role=>
       previous.find(m=>m.role===role)?.user_id===current.find(m=>m.role===role)?.user_id);
 }
-let inboxPairCheckBusy=false;
+let inboxPairCheckBusy=false,inboxPairEpoch=null;
 async function recheckInboxPair(){
   if(inboxPairCheckBusy||!user||members.length!==2)return false;
   const viewer=user.id,session=sharedSession,oldMembers=members;
   inboxPairCheckBusy=true;
-  let result;
-  try{result=await db.rpc('my_family_members');}
+  let result,epoch;
+  try{[result,epoch]=await Promise.all([db.rpc('my_family_members'),db.rpc('my_current_inbox_pair_epoch')]);}
   catch(error){result={error};}
   finally{inboxPairCheckBusy=false;}
   if(user?.id!==viewer||sharedSession!==session)return false;
-  if(!result?.error&&sameInboxPair(oldMembers,result.data,viewer))return true;
+  if(!result?.error&&sameInboxPair(oldMembers,result.data,viewer)
+    &&typeof epoch?.data==='string'&&epoch.data.length>0
+    &&!epoch.error&&epoch.data===inboxPairEpoch)return true;
   // Fail closed, including RPC failure. Invalidate in-flight message reads
   // before triggering refresh, so neither previous messages nor old badges
   // can survive a revoked pairing or a failed membership check.
   sharedSession++;
   clearFamilyChat();
+  inboxPairEpoch=null;
   members=[];
   render();
   void refresh().catch(showError);
   return false;
 }
 async function fetchFamilyChatUnread(){
-  if(!user||members.length!==2){familyChatUnread=0;familyChatUnreadError=false;return;}
+  if(!user||members.length!==2||!inboxPairEpoch){familyChatUnread=0;familyChatUnreadError=false;return;}
   const request=++familyChatCountRequest,viewer=user.id,session=sharedSession;
   let result;
   try{result=await db.rpc('my_family_unread_message_count');}catch(e){result={error:e};}
@@ -237,7 +240,7 @@ function mergeFamilyChatPage(previous,latest,{older=false,quiet=false,hasMore=fa
   return {messages:latest,hasMore:latest.length===50};
 }
 async function fetchFamilyChat(older=false,{quiet=false}={}){
-  if(!user||members.length!==2)return;
+  if(!user||members.length!==2||!inboxPairEpoch)return;
   if(older?(!familyChatHasMore||familyChatLoadingOlder||familyChatLoading):(familyChatLoading||familyChatLoadingOlder))return;
   const viewer=user.id,session=sharedSession,request=++familyChatRequest;
   const oldest=older?familyChatMessages[familyChatMessages.length-1]:null;
@@ -288,7 +291,7 @@ async function fetchFamilyChat(older=false,{quiet=false}={}){
   }else if(changed)menu();
 }
 async function markAllFamilyChatRead(){
-  if(!user||members.length!==2||familyChatReadBusy||familyChatLoading||familyChatUnreadError||familyChatUnread<1)return false;
+  if(!user||members.length!==2||!inboxPairEpoch||familyChatReadBusy||familyChatLoading||familyChatUnreadError||familyChatUnread<1)return false;
   const viewer=user.id,session=sharedSession;
   familyChatReadBusy=true;
   familyChatStatus='Markerar alla meddelanden som lästa…';
@@ -312,7 +315,7 @@ async function markAllFamilyChatRead(){
   return true;
 }
 async function sendFamilyChatMessage(){
-  if(!user||members.length!==2||familyChatSending)return;
+  if(!user||members.length!==2||!inboxPairEpoch||familyChatSending)return;
   const body=familyChatDraft.trim();
   if(!body||body.length>1500){familyChatStatus='Skriv ett meddelande med högst 1 500 tecken.';render();return;}
   if(!familyChatRequestKey)familyChatRequestKey=crypto.randomUUID();
@@ -1355,7 +1358,7 @@ async function submitManualSchysstaRule(){
 }
 function inboxView(){
   if(!user)return '<h1>Inkorg</h1>'+card('<p>Logga in för att läsa dina meddelanden.</p>');
-  if(members.length!==2)return '<h1>Inkorg</h1>'+card('<h2>Para ihop era konton</h2><p>Ni behöver vara en förälder och en tonåring i samma familj för att kunna skicka privata meddelanden.</p><a class="live-button" href="./konto.html">Hantera parning</a>');
+  if(members.length!==2||!inboxPairEpoch)return '<h1>Inkorg</h1>'+card('<h2>Para ihop era konton</h2><p>Ni behöver vara en förälder och en tonåring i samma familj för att kunna skicka privata meddelanden.</p><a class="live-button" href="./konto.html">Hantera parning</a>');
   const counterpart=members.find(m=>m.user_id!==user.id);
   const otherName=esc(counterpart?.display_name||(counterpart?.role==='parent'?'Din förälder':'Din tonåring'));
   const messages=familyChatMessages.slice().reverse();
@@ -1629,14 +1632,17 @@ try{authResult=await db.auth.getUser();}
 catch(e){if(generation!==refreshGeneration)return;throw e;}
 if(generation!==refreshGeneration)return;
 const {data:{user:u},error}=authResult;if(error&&error.name!=='AuthSessionMissingError')throw error;user=u;profile=null;members=[];mediatorExperience.reset(u?.id??null);aiResults.reset(u?.id??null);personalityExperience.reset(u?.id??null);swipeAnswers.clear();swipeImportance.clear();importancePending.clear();importanceSaving.clear();importanceAvailable=false;importanceLoadError='';priorityShares.clear();priorityShareSaving.clear();prioritySharesAvailable=false;priorityShareError='';skippedUnderstanding.clear();understandingShares.clear();understandingShareSaving.clear();understandingShareError='';for(const answers of themeAnswers.values())answers.clear();activeThemeDeck=null;themeCategory='all';themeIndex=0;themeReview=false;themeSaveError='';swipeBusy=false;swipeLoadError='';swipeSaveError='';swipeReview=false;swipeSkippedReview=false;swipeIndex=0;sharedMatches=[];sharedPriorities=[];sharedDeckId='general';sharedError='';sharedPriorityError='';sharedLoading=false;sharedSession++;sharedRequest++;insightsRows=[];sharedUnderstandingRows=[];insightsLoading=false;insightsError='';insightsRequest++;themesUnlocked=false;themesLoading=false;themesError='';themesRequest++;
+inboxPairEpoch=null;
 activityNotificationsRequest++;activityNotifications=[];activityNotificationsError='';activityNotificationsLoading=false;activityMarkBusy=null;activityFeedback='';
 if(typeof schysstaRequest!=='undefined'){schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];schysstaNotifications=[];schysstaReplacementLinks=[];schysstaHistory=[];schysstaEndTarget=null;schysstaLoading=false;schysstaError='';schysstaRequest++;schysstaSaving.clear();schysstaPausedIds.clear();clearFamilyChat();schysstaDraft='';schysstaDraftOpen=false;schysstaDraftKey=null;schysstaEditTarget=null;schysstaSubmitting=false;schysstaMessage='';schysstaCopyMessage='';schysstaFocusId='';schysstaSearch='';schysstaFilterStatus='all';}
 if(user){const viewer=user.id;
 let loaded;
-try{loaded=await Promise.all([db.from('profiles').select('display_name').eq('user_id',viewer).maybeSingle(),db.rpc('my_family_members'),db.from('swipe_answers').select('deck_id,card_id,answer').eq('user_id',viewer),db.from('swipe_skips').select('deck_id,card_id').eq('user_id',viewer),db.from('swipe_importance').select('deck_id,card_id,importance').eq('user_id',viewer),sharedUnderstandingEnabled?db.from('understanding_card_shares').select('deck_id,card_id').eq('user_id',viewer):Promise.resolve({data:[],error:null}),sharedPrioritiesEnabled?db.from('swipe_priority_shares').select('deck_id,card_id').eq('user_id',viewer):Promise.resolve({data:[],error:null})]);}
+try{loaded=await Promise.all([db.from('profiles').select('display_name').eq('user_id',viewer).maybeSingle(),db.rpc('my_family_members'),db.from('swipe_answers').select('deck_id,card_id,answer').eq('user_id',viewer),db.from('swipe_skips').select('deck_id,card_id').eq('user_id',viewer),db.from('swipe_importance').select('deck_id,card_id,importance').eq('user_id',viewer),sharedUnderstandingEnabled?db.from('understanding_card_shares').select('deck_id,card_id').eq('user_id',viewer):Promise.resolve({data:[],error:null}),sharedPrioritiesEnabled?db.from('swipe_priority_shares').select('deck_id,card_id').eq('user_id',viewer):Promise.resolve({data:[],error:null}),db.rpc('my_current_inbox_pair_epoch')]);}
 catch(e){if(generation!==refreshGeneration)return;throw e;}
 if(generation!==refreshGeneration||user?.id!==viewer)return;
-const [p,m,s,k,i,b,ps]=loaded;if(p.error)throw p.error;if(m.error)throw m.error;profile=p.data;members=m.data||[];if(s.error||k.error)swipeLoadError='Kontrollera anslutningen och försök igen.';else for(const answer of s.data||[])if(answer.deck_id==='general'&&typeof answer.answer==='boolean'&&STATEMENTS.some((_,index)=>swipeCardId(index)===answer.card_id))swipeAnswers.set(answer.card_id,answer.answer);
+const [p,m,s,k,i,b,ps,inboxEpochResult]=loaded;if(p.error)throw p.error;if(m.error)throw m.error;profile=p.data;members=m.data||[];
+if(members.length===2&&!inboxEpochResult?.error&&typeof inboxEpochResult?.data==='string'&&inboxEpochResult.data)
+  inboxPairEpoch=inboxEpochResult.data;if(s.error||k.error)swipeLoadError='Kontrollera anslutningen och försök igen.';else for(const answer of s.data||[])if(answer.deck_id==='general'&&typeof answer.answer==='boolean'&&STATEMENTS.some((_,index)=>swipeCardId(index)===answer.card_id))swipeAnswers.set(answer.card_id,answer.answer);
 if(!s.error)for(const answer of s.data||[]){
   if(typeof answer.answer!=='boolean')continue;
   const deck=THEME_DECKS.find(d=>d.id===answer.deck_id);
