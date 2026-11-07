@@ -26,7 +26,7 @@ function fakeClient(initial=new Map()){
       throw Error(name);
     }
   };
-  return {db,values,writes,setUser:u=>user=u,setPartner:p=>partner=p,setWriteMode:m=>writeMode=m,setReadFails:v=>readFails=v};
+  return {db,values,writes,setUser:u=>user=u,setPartner:p=>partner=p,setWriteMode:m=>writeMode=m,setReadFails:v=>readFails=v,setShared:v=>shared=v};
 }
 const btn=action=>({closest:selector=>selector==='[data-pf-action]'?{dataset:{pfAction:action}}:null});
 const radio=(id,val)=>({matches:sel=>sel==='input[data-pf-answer]',dataset:{pfAnswer:id},value:String(val)});
@@ -162,6 +162,48 @@ test('failed revoke is not reported successful; uncertain status blocks controls
   mock.setReadFails(false);
   await ui.handleClick(btn('verify-share'),{isPaired:true});
   assert.match(ui.render({isPaired:true}),/data-pf-action="withdraw"/);
+  assert.match(ui.render({isPaired:true}),/Våra profiler/);
+});
+
+test('periodic refresh reconciles own consent changed in a different tab',async()=>{
+  const mock=fakeClient(new Map(itemIds.map(id=>[id,3])));
+  const sums=Object.fromEntries(IPIP50_V1.factors.map(f=>[f.id,30]));
+  mock.setPartner({instrument_id:IPIP50_V1.id,viewer_role:'teen',profiles:[
+    {role:'parent',scores:sums},{role:'teen',scores:sums}
+  ]});
+  const ui=createPersonalityExperience({db:mock.db,onRender:()=>{},isSharingEnabled:true});
+  ui.reset('teen-id');await ui.load('teen-id');
+  mock.setShared(true);
+  await ui.refreshShared();
+  assert.match(ui.render({isPaired:true}),/Våra profiler/,'A second-tab opt-in is reflected after readback');
+  mock.setShared(false);
+  await ui.refreshShared();
+  let html=ui.render({isPaired:true});
+  assert.doesNotMatch(html,/Våra profiler/,'A second-tab revoke hides all partner scores');
+  assert.match(html,/Din inställning:<\/strong> Privat/,'Own consent status is refreshed');
+  mock.setShared(true);
+  await ui.refreshShared();
+  assert.match(ui.render({isPaired:true}),/Våra profiler/,'Comparison can recover from a verified new consent');
+});
+
+test('periodic consent read failure hides comparisons and requires an explicit retry',async()=>{
+  const mock=fakeClient(new Map(itemIds.map(id=>[id,3])));
+  const sums=Object.fromEntries(IPIP50_V1.factors.map(f=>[f.id,30]));
+  mock.setPartner({instrument_id:IPIP50_V1.id,viewer_role:'teen',profiles:[
+    {role:'parent',scores:sums},{role:'teen',scores:sums}
+  ]});
+  const ui=createPersonalityExperience({db:mock.db,onRender:()=>{},isSharingEnabled:true});
+  ui.reset('teen-id');await ui.load('teen-id');
+  await ui.handleClick(btn('share'),{isPaired:true});
+  assert.match(ui.render({isPaired:true}),/Våra profiler/);
+  mock.setReadFails(true);
+  await ui.refreshShared();
+  let html=ui.render({isPaired:true});
+  assert.doesNotMatch(html,/Våra profiler/);
+  assert.match(html,/data-pf-action="verify-share"/);
+  assert.match(html,/kan fortfarande vara delad/);
+  mock.setReadFails(false);
+  await ui.handleClick(btn('verify-share'),{isPaired:true});
   assert.match(ui.render({isPaired:true}),/Våra profiler/);
 });
 
