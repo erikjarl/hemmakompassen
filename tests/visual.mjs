@@ -852,6 +852,21 @@ try{
   assert.doesNotMatch(sharedText,/Jag vill helst prata färdigt innan någon kommer med råd/,"The mutual NO is never displayed");
   assert.doesNotMatch(sharedText,/Det ni båda svarat nej till|Två nej/,"No mutual NO headings or counts");
   assert.ok((await paired.page.evaluate(()=>window.__HK_MATCH_RPC_CALLS__))>0,"Paired account requests the aggregate RPC");
+  // A refresh of shared priorities can fail while ordinary JA+JA matches still
+  // succeed. Do not keep stale priority content from an earlier consent state.
+  await paired.page.evaluate(()=>{window.__HK_PRIORITY_RPC_UNAVAILABLE__=true;});
+  await paired.page.locator('[data-refresh-matches="general"]').click();
+  await paired.page.getByRole('alert').filter({hasText:'Delade prioriteringar kunde inte kontrolleras'}).waitFor();
+  assert.equal(await paired.page.locator('.swipe-priority-theme').count(),0,
+    'Old shared priority content is cleared when the priority RPC fails');
+  assert.match(await paired.page.locator('.swipe-match-group').innerText(),/Jag uppskattar när vi gör saker tillsammans/,
+    'Ordinary server-verified mutual matches remain visible during priority failures');
+  await paired.page.evaluate(()=>{window.__HK_PRIORITY_RPC_UNAVAILABLE__=false;});
+  await paired.page.locator('[data-refresh-matches="general"]').click();
+  await paired.page.locator('.swipe-priority-theme').waitFor();
+  assert.equal(await paired.page.getByRole('alert').filter({hasText:'Delade prioriteringar kunde inte kontrolleras'}).count(),0,
+    'Successful refresh clears the transient priority warning');
+
   // Simulate a second account changing the server's aggregate result while this
   // client's tab remains open. The client must refresh without reading private answers.
   await paired.page.evaluate(()=>{

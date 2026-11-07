@@ -46,7 +46,7 @@ const personalityExperience=createPersonalityExperience({db,isSharingEnabled:per
   useAiAnalysis:aiResultEnabled,analysisPanel:(kind,scope,signature)=>aiResults.panel(kind,scope,signature),
   onRender:()=>{if(user&&page()==='personlighet')render();}});
 let swipeIndex=0,swipeBusy=false,swipeReview=false,swipeLoadError='',swipeSaveError='';
-let sharedMatches=[],sharedPriorities=[],sharedDeckId='general',sharedError='',sharedLoading=false,sharedSession=0,sharedRequest=0;
+let sharedMatches=[],sharedPriorities=[],sharedDeckId='general',sharedError='',sharedPriorityError='',sharedLoading=false,sharedSession=0,sharedRequest=0;
 let sharedPollPending=false;
 let insightsRows=[],insightsLoading=false,insightsError='',insightsRequest=0;
 let activityInviteBusy=false,activityInviteError='';
@@ -600,6 +600,7 @@ function swipeResults(deckId='general'){
     '<p>Prioriterade, gemensamt bejakade kort:</p><ul>'+
     priorityItems.map(item=>'<li>'+esc(item.statement)+'</li>').join('')+'</ul></aside>':'';
   return title+'<p class="live-muted">Bara kort där ni båda svarat ja visas här. Se dem som möjliga samtalsöppningar, inte som färdiga överenskommelser.</p>'+
+    (sharedPrioritiesEnabled&&sharedPriorityError?'<p role="alert">'+esc(sharedPriorityError)+'</p>':'')+
     (deckId==='aktiviteter'&&activityInviteError?'<p role="alert">'+esc(activityInviteError)+'</p>':'')+
     privatePriority+
     (useAi?aiPriority:sharedPrioritySummary(priorityItems,deckId))+
@@ -613,9 +614,9 @@ async function fetchSwipeMatches(deckId='general',{quiet=false}={}){
   if(!deck)return;
   const viewer=user.id,session=sharedSession,request=++sharedRequest;
   const quietRefresh=quiet&&sharedDeckId===deckId&&!sharedLoading&&!sharedError;
-  const previousResults=quietRefresh?JSON.stringify([sharedMatches,sharedPriorities]):null;
+  const previousResults=quietRefresh?JSON.stringify([sharedMatches,sharedPriorities,sharedPriorityError]):null;
   sharedDeckId=deckId;
-  if(!quietRefresh){sharedMatches=[];sharedPriorities=[];sharedLoading=true;sharedError='';
+  if(!quietRefresh){sharedMatches=[];sharedPriorities=[];sharedLoading=true;sharedError='';sharedPriorityError='';
     if(page()==='swipe'&&!swipeBusy)render();}
   try{
     const [matchResult,priorityResult]=await Promise.all([
@@ -633,7 +634,13 @@ async function fetchSwipeMatches(deckId='general',{quiet=false}={}){
       safe.set(r.card_id,{deck_id:deckId,card_id:r.card_id,answer:true});
     }
     sharedMatches=[...safe.values()].sort((a,b)=>a.card_id.localeCompare(b.card_id));
-    if(sharedPrioritiesEnabled&&!priorityResult.error&&Array.isArray(priorityResult.data)){
+    // A failed priority RPC must not leave an earlier consent-derived result
+    // visible after a quiet refresh (e.g. a share was revoked elsewhere).
+    sharedPriorities=[];
+    sharedPriorityError='';
+    if(sharedPrioritiesEnabled&&(priorityResult.error||!Array.isArray(priorityResult.data))){
+      sharedPriorityError='Delade prioriteringar kunde inte kontrolleras. Tidigare prioriterade fokus har dolts tills servern svarar igen.';
+    }else if(sharedPrioritiesEnabled){
       const priorities=new Map();
       for(const row of priorityResult.data){
         if(row?.deck_id!==deckId||!safe.has(row.card_id))continue;
@@ -645,11 +652,12 @@ async function fetchSwipeMatches(deckId='general',{quiet=false}={}){
     if(session!==sharedSession||request!==sharedRequest||user?.id!==viewer||sharedDeckId!==deckId)return;
     sharedMatches=[];
     sharedPriorities=[];
+    sharedPriorityError='';
     sharedError='Gemensamma resultat är inte tillgängliga just nu. Försök igen senare.';
   }finally{
     if(session===sharedSession&&request===sharedRequest&&user?.id===viewer&&sharedDeckId===deckId){
       sharedLoading=false;
-      if(page()==='swipe'&&!swipeBusy&&(!quietRefresh||sharedError||previousResults!==JSON.stringify([sharedMatches,sharedPriorities])))render();
+      if(page()==='swipe'&&!swipeBusy&&(!quietRefresh||sharedError||previousResults!==JSON.stringify([sharedMatches,sharedPriorities,sharedPriorityError])))render();
     }
   }
 }
@@ -1556,7 +1564,7 @@ let authResult;
 try{authResult=await db.auth.getUser();}
 catch(e){if(generation!==refreshGeneration)return;throw e;}
 if(generation!==refreshGeneration)return;
-const {data:{user:u},error}=authResult;if(error&&error.name!=='AuthSessionMissingError')throw error;user=u;profile=null;members=[];mediatorExperience.reset(u?.id??null);aiResults.reset(u?.id??null);personalityExperience.reset(u?.id??null);swipeAnswers.clear();swipeImportance.clear();importancePending.clear();importanceSaving.clear();importanceAvailable=false;importanceLoadError='';priorityShares.clear();priorityShareSaving.clear();prioritySharesAvailable=false;priorityShareError='';skippedUnderstanding.clear();understandingShares.clear();understandingShareSaving.clear();understandingShareError='';for(const answers of themeAnswers.values())answers.clear();activeThemeDeck=null;themeCategory='all';themeIndex=0;themeReview=false;themeSaveError='';swipeBusy=false;swipeLoadError='';swipeSaveError='';swipeReview=false;swipeSkippedReview=false;swipeIndex=0;sharedMatches=[];sharedPriorities=[];sharedDeckId='general';sharedError='';sharedLoading=false;sharedSession++;sharedRequest++;insightsRows=[];sharedUnderstandingRows=[];insightsLoading=false;insightsError='';insightsRequest++;themesUnlocked=false;themesLoading=false;themesError='';themesRequest++;
+const {data:{user:u},error}=authResult;if(error&&error.name!=='AuthSessionMissingError')throw error;user=u;profile=null;members=[];mediatorExperience.reset(u?.id??null);aiResults.reset(u?.id??null);personalityExperience.reset(u?.id??null);swipeAnswers.clear();swipeImportance.clear();importancePending.clear();importanceSaving.clear();importanceAvailable=false;importanceLoadError='';priorityShares.clear();priorityShareSaving.clear();prioritySharesAvailable=false;priorityShareError='';skippedUnderstanding.clear();understandingShares.clear();understandingShareSaving.clear();understandingShareError='';for(const answers of themeAnswers.values())answers.clear();activeThemeDeck=null;themeCategory='all';themeIndex=0;themeReview=false;themeSaveError='';swipeBusy=false;swipeLoadError='';swipeSaveError='';swipeReview=false;swipeSkippedReview=false;swipeIndex=0;sharedMatches=[];sharedPriorities=[];sharedDeckId='general';sharedError='';sharedPriorityError='';sharedLoading=false;sharedSession++;sharedRequest++;insightsRows=[];sharedUnderstandingRows=[];insightsLoading=false;insightsError='';insightsRequest++;themesUnlocked=false;themesLoading=false;themesError='';themesRequest++;
 activityNotificationsRequest++;activityNotifications=[];activityNotificationsError='';activityNotificationsLoading=false;activityMarkBusy=null;activityFeedback='';
 if(typeof schysstaRequest!=='undefined'){schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];schysstaNotifications=[];schysstaReplacementLinks=[];schysstaHistory=[];schysstaEndTarget=null;schysstaLoading=false;schysstaError='';schysstaRequest++;schysstaSaving.clear();schysstaPausedIds.clear();clearFamilyChat();schysstaDraft='';schysstaDraftOpen=false;schysstaDraftKey=null;schysstaEditTarget=null;schysstaSubmitting=false;schysstaMessage='';schysstaCopyMessage='';schysstaFocusId='';schysstaSearch='';schysstaFilterStatus='all';}
 if(user){const viewer=user.id;

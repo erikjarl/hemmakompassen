@@ -46,7 +46,7 @@ const sharedViewFunctions=script.match(/const joinSwedish=[\s\S]*?(?=\nasync fun
 assert.ok(sharedViewFunctions,'Shared result rendering can be tested independently');
 function renderSharedResult(rows,role='parent',priorityRows=[],adviceByKey={'general-01':'Välj en gemensam dag.','general-04':'Lyssna färdigt och välj ett litet nästa steg.'},options={}){
   const state={
-    members:[{role:'parent'},{role:'teen'}],sharedLoading:false,sharedDeckId:'general',sharedError:'',sharedMatches:rows.map(row=>({deck_id:'general',...row})),sharedPriorities:priorityRows.map(row=>({deck_id:'general',...row})),
+    members:[{role:'parent'},{role:'teen'}],sharedLoading:false,sharedDeckId:'general',sharedError:'',sharedPriorityError:options.sharedPriorityError||'',sharedMatches:rows.map(row=>({deck_id:'general',...row})),sharedPriorities:priorityRows.map(row=>({deck_id:'general',...row})),
     GENERAL_CARDS:[
       {id:'general-01',type:'match',category:'Fritid',teenText:'Tonåringens frivilliga aktivitet',parentText:'Förälderns ansvarstagande aktivitet'},
       {id:'general-02',type:'understanding',category:'Känslor',teenText:'HEMLIGT FÖRSTÅELSEKORT'},
@@ -111,6 +111,13 @@ function renderSharedResult(rows,role='parent',priorityRows=[],adviceByKey={'gen
   assert.match(html,/Lyssna färdigt och välj ett litet nästa steg/,'Non-prioritised advice remains in the ordinary summary');
   assert.doesNotMatch(html,/HEMLIGT|unknown/,'B, NO and unknown priority rows cannot leak');
   assert.doesNotMatch(html,/HEMLIGT|unknown/,'B, NO and unknown rows cannot leak through the icon overview');
+  const failedHtml=renderSharedResult([{card_id:'general-01',answer:true}],'parent',[],{},{
+    sharedPrioritiesEnabled:true,
+    sharedPriorityError:'Delade prioriteringar kunde inte kontrolleras.'
+  });
+  assert.match(failedHtml,/role="alert">Delade prioriteringar kunde inte kontrolleras/,
+    'A failed priority read shows a clear privacy warning without inventing a shared focus');
+
 }
 {
   const html=renderSharedResult([{card_id:'general-01',answer:true}],'parent',[
