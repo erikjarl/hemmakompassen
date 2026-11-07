@@ -12,11 +12,13 @@ const anotherTeen={user_id:'new-teen-id',role:'teen',display_name:'Ny person'};
 function harness(remote=[parent,teen],error=null){
   let response={data:remote,error};
   let respond=()=>Promise.resolve(response);
+  let epochResponse={data:'epoch-1',error:null};
   const actions={cleared:0,rendered:0,refreshed:0};
   const context={
     user:{id:parent.user_id},members:[parent,teen],sharedSession:8,
-    inboxPairCheckBusy:false,
-    db:{rpc:name=>{assert.equal(name,'my_family_members');return respond();}},
+    inboxPairCheckBusy:false,inboxPairEpoch:'epoch-1',
+    db:{rpc:name=>{if(name==='my_family_members')return respond();
+      assert.equal(name,'my_current_inbox_pair_epoch');return Promise.resolve(epochResponse);}},
     clearFamilyChat:()=>{actions.cleared++;},
     render:()=>{actions.rendered++;},
     refresh:async()=>{actions.refreshed++;},
@@ -25,7 +27,8 @@ function harness(remote=[parent,teen],error=null){
   vm.runInNewContext(methods+'\nthis.matches=sameInboxPair;this.check=recheckInboxPair;this.isBusy=()=>inboxPairCheckBusy;',context);
   return {context,actions,
     setResponse:(data,err=null)=>{response={data,error:err};},
-    setResponder:next=>{respond=next;}
+    setResponder:next=>{respond=next;},
+    setEpoch:(data,error=null)=>{epochResponse={data,error};}
   };
 }
 const assertSame=(pair,b)=>assert.equal(b.context.matches([parent,teen],pair,parent.user_id),true);
@@ -49,6 +52,12 @@ assert.equal(changed.actions.rendered,1,'UI must hide stale private messages bef
 assert.equal(changed.actions.refreshed,1);
 assert.equal(changed.context.members.length,0);
 assert.equal(changed.context.sharedSession,9,'Invalidate in-flight old-pair responses');
+
+const rePaired=harness();
+rePaired.setEpoch('epoch-2');
+assert.equal(await rePaired.context.check(),false,'Same two IDs with newer joined_at must invalidate the inbox');
+assert.equal(rePaired.actions.cleared,1);
+assert.equal(rePaired.context.inboxPairEpoch,null);
 
 const absent=harness([]);
 await absent.context.check();
