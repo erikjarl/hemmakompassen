@@ -17,8 +17,8 @@ Efter transaktionen verifierades **0 kvarvarande testposter** i `swipe_answers`,
 
 ## Begränsning
 
-Detta är ett **databastriggertest**, inte ett fullständigt överhoppsflöde för en inloggad användare. `authenticated` har ingen direkt `INSERT` eller `UPDATE`-behörighet på `swipe_skips`; därför användes en administrativ insertion bara för att testa hur triggern reagerar. Testet bevisar inte att användargränssnittet faktiskt kan spara överhoppade kort.
+Detta är ett **databastriggertest**, inte ett fullständigt överhoppsflöde för en inloggad användare. `authenticated` har ingen direkt `INSERT` eller `UPDATE`-behörighet på `swipe_skips`; därför användes en administrativ insertion bara för att testa hur triggern reagerar. Koden i `live-app.js` använder dock den existerande autentiserat körbara `set_understanding_card_state(p_card_id, p_answer, p_skipped)` för tonåringens **B-förståelsekort**; installerad RPC är `SECURITY DEFINER` och skriver till `swipe_skips` på serversidan. Att `authenticated` saknar direkt INSERT/UPDATE till tabellen är därför **inte ett konstaterat fel**. **Det här testet använder ett annat, vanligt kort (`aterhamtning-01`) och en administrativ insättning för att testa triggern isolerat.** Det verifierar varken att `set_understanding_card_state` fungerar i praktiken med signerad Auth eller ett end-to-end-flöde i gränssnittet. De befintliga 13 B-korten hos testparets tonåring hade redan svar och ändrades inte för denna granskning.
 
 Identiteterna var simulerade via PostgreSQL `request.jwt.claims`, inte signerade Supabase Auth-tokens. Även tester av omparning, andra aktiva familjer och verkligt UI återstår.
 
-**Beslut:** SW-03 förblir `Pågår`. `enableSharedPriorities:false` ändras inte. Utred separat hur en användare kan skapa en överhoppning och om det finns en avsiktlig serverfunktion för det.
+**Beslut:** SW-03 förblir `Pågår`. `enableSharedPriorities:false` ändras inte. Verifiera separat det befintliga B-kortsflödet via `set_understanding_card_state`, signerad Auth och UI med isolerad data utan att ändra äldre svar.
