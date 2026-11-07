@@ -376,9 +376,10 @@ console.log('PASS: all-deck insights gate, A-only sanitizer, B/NO isolation, ses
   const filtered=renderSharedResult(rows,'parent',[],undefined,{category:'Samtal'});
   assert.match(filtered,/data-shared-match-filter="Samtal"/);
   assert.match(filtered,/aria-pressed="true">Samtal \(1\)/);
-  const visible=filtered.match(/<div class="swipe-match-group">[\s\S]*?<\/div>/)?.[0]||'';
-  assert.match(visible,/Förälderns andra gemensamma kort/);
-  assert.doesNotMatch(visible,/Förälderns ansvarstagande aktivitet|HEMLIGT|unknown/);
+  assert.match(filtered,/<section class="swipe-match-theme"><h4>Samtal<\/h4>/);
+  assert.doesNotMatch(filtered,/<section class="swipe-match-theme"><h4>Fritid<\/h4>/,
+    'Only the selected category contributes visible result rows');
+  assert.doesNotMatch(filtered,/HEMLIGT|unknown/);
   assert.match(filtered,/Förälderns ansvarstagande aktivitet/,
     'Summary remains based on the full verified mutual-YES set, not on the selected presentation filter');
   const invalid=renderSharedResult(rows,'parent',[],undefined,{category:'Känslor'});
