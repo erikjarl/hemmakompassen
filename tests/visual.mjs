@@ -1496,8 +1496,8 @@ try{
   await savedReview.page.locator('.swipe-private-review summary').waitFor();
   await savedReview.page.locator('.swipe-private-review summary').click();
   assert.match(await savedReview.page.locator('.swipe-private-review').innerText(),/Ditt svar: Ja/);
-  assert.equal(await savedReview.page.locator('.swipe-private-review [data-theme-savedReview-index]').count(),1);
-  await savedReview.page.locator('.swipe-private-review [data-theme-savedReview-index="0"]').click();
+  assert.equal(await savedReview.page.locator('.swipe-private-review [data-theme-review-index]').count(),1);
+  await savedReview.page.locator('.swipe-private-review [data-theme-review-index="0"]').click();
   assert.match(await savedReview.page.locator('#swipe-card').innerText(),/Vad som varit roligt den senaste veckan/,
     'A saved theme answer can be opened directly without swiping past 100 cards');
   assert.equal(await savedReview.page.locator('#swipe-card').evaluate(el=>document.activeElement===el),true,
@@ -1505,10 +1505,10 @@ try{
   await savedReview.page.locator('[data-swipe="no"]').click();
   await savedReview.page.locator('.swipe-private-review summary').click();
   assert.match(await savedReview.page.locator('.swipe-private-review').innerText(),/Ditt svar: Nej/,
-    'The savedReview reflects the updated private answer');
-  await checkOverflow(savedReview.page,'Private saved-answer savedReview 390px');
+    'The private review reflects the updated answer');
+  await checkOverflow(savedReview.page,'Private saved-answer review 390px');
   await savedReview.page.locator('.swipe-private-review').scrollIntoViewIfNeeded();
-  await capture(savedReview.page,'mobile-theme-private-answer-savedReview.png');
+  await capture(savedReview.page,'mobile-theme-private-answer-review.png');
 
   await savedReview.context.close();
   const unavailable=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,paired:true,unlockUnavailable:true});
