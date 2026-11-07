@@ -2,7 +2,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path=public,extensions;
-select plan(29);
+select plan(31);
 
 insert into auth.users (id,email) values
  ('57000000-0000-0000-0000-000000000001','activity-parent-a@example.invalid'),
@@ -181,6 +181,7 @@ select throws_ok(
     now(),now(),'57000000-0000-0000-0000-000000000001',
     'mutual_match','aktiviteter',current_date
   )$$,
- '42501',null,'authenticated clients cannot fabricate an activity notification');
+ '42501','permission denied for table activity_notifications',
+ 'authenticated clients cannot fabricate an activity notification');
 select * from finish();
 rollback;
