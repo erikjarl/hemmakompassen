@@ -1,0 +1,49 @@
+name: Verify served GitHub Pages assets
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: verify-pages-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Compare public assets with this main commit
+        env:
+          SITE_URL: https://erikjarl.github.io/hemmakompassen
+        shell: bash
+        run: |
+          set -euo pipefail
+          # GitHub Pages may still be deploying when this push workflow starts.
+          # Compare the delivered bytes, not only the Pages workflow status.
+          for attempt in $(seq 1 30); do
+            all_match=true
+            for file in live-app.js backend-config.js personality/ipip50-ui.js; do
+              remote_file="$(mktemp)"
+              if ! curl --fail --location --silent --show-error --max-time 15 \
+                --header 'Cache-Control: no-cache' \
+                "${SITE_URL}/${file}?verify=${GITHUB_SHA}-${attempt}" -o "${remote_file}"; then
+                all_match=false
+              elif ! cmp -s "${file}" "${remote_file}"; then
+                echo "Attempt ${attempt}: deployed ${file} does not match commit ${GITHUB_SHA}."
+                all_match=false
+              fi
+              rm -f "${remote_file}"
+              if [ "${all_match}" != true ]; then break; fi
+            done
+            if [ "${all_match}" = true ]; then
+              echo "Verified: all three publicly served files match commit ${GITHUB_SHA}."
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "::error::GitHub Pages files did not match this commit within the check window."
+          exit 1
