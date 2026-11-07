@@ -119,9 +119,9 @@ test('private reflection practice is accessible to both roles and never saves te
    assert.match(html,new RegExp('name="'+field+'"[^>]*maxlength="240"[^>]*required'));
   }
   assert.match(html,/data-comm-reflection-reset/);
-  assert.match(html,/href="#kommunikation\\/spegla"/);
+  assert.match(html,/href="#kommunikation\/spegla"/);
   assert.match(html,/Inget sparas eller skickas/);
-  assert.doesNotMatch(html,/onerror=|onclick=|<script\\b/);
+  assert.doesNotMatch(html,/onerror=|onclick=|<script\b/);
  }
  assert.equal(buildReflectionPractice({heard:'bara en fråga'}),null);
  assert.equal(buildReflectionPractice({heard:42,meaning:'inflytande',check:'Vad tycker du?'}),null);
@@ -129,11 +129,11 @@ test('private reflection practice is accessible to both roles and never saves te
  assert.match(preview,/Jag hörde att du sa: att du vill få vara ifred/);
  assert.match(preview,/Jag undrar om det kan vara viktigt för dig att: lugn och privat tid/);
  assert.match(preview,/den andra kan rätta mig, säga nej eller avstå/i);
- assert.equal(buildReflectionPractice({heard:'H',meaning:'M',check:'x'.repeat(400)}).split('Jag skulle kunna fråga: ')[1].split('\\n')[0].length,240);
+ assert.equal(buildReflectionPractice({heard:'H',meaning:'M',check:'x'.repeat(400)}).split('Jag skulle kunna fråga: ')[1].split('\n')[0].length,240);
  const markup=buildReflectionPractice({heard:'<img src=x onerror=alert(1)>',meaning:'trygghet',check:'kan jag fråga?'});
- assert.match(markup,/<img src=x onerror=alert\\(1\\)>/);
- assert.match(app,/output\\.textContent=result/);
- assert.match(app,/if\\(e\\.target\\.id==='comm-reflection-form'\\)/);
+ assert.match(markup,/<img src=x onerror=alert\(1\)>/);
+ assert.match(app,/output\.textContent=result/);
+ assert.match(app,/if\(e\.target\.id==='comm-reflection-form'\)/);
  assert.match(app,/data-comm-reflection-reset/);
 });
 test('reflection deep link is allowlisted and focuses the correct heading',()=>{
