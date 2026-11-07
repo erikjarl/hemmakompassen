@@ -1,5 +1,13 @@
 # Hemmakompassen — aktuell utvecklingskö
 
+## 7 november 2026 – NOT-01B steg 1: separat backend för aktivitetsaviseringar (PR #126)
+
+- [x] **Kod i utvecklingsgren:** [PR #126](https://github.com/erikjarl/hemmakompassen/pull/126) tillför tabellerna `activity_notification_event_keys` och `activity_notifications`, endast tillgängliga via snäva, autentiserade RPC:er. Två servertriggers skapar A-händelser efter ett verkligt JA+JA och B-händelser efter nytt uttryckligt tonårssamtycke; inga historiska privata svar backfylls. Läs-RPC verifierar aktuell parningsepok och fortfarande behörigt delat kort.
+- [x] **Integritet och mängdbegränsning i kod:** per-kort-nycklar för idempotens, högst en digest per mottagare/kortlek/händelsetyp/UTC-dag, omedelbar borttagning av eventnycklar vid ändrat JA eller återkallat B-samtycke, och radering av äldre händelser vid medlemsändringar. Inga korttexter, privata svar eller avsändaridentiteter returneras av notis-RPC:n.
+- [x] **Syntetiska regressionstester skrivna:** 31 pgTAP-assertioner för aktiv parning, JA/JA, ensidiga och avvikande svar, ogiltiga kort, B utan och med samtycke, återkallelse, andra familjer, read-receipt och gruppvisning. DB-workflow har fått nytt migrations- och teststeg.
+- [ ] **Verifiering:** invänta och granska gröna PostgreSQL/pgTAP-körningar för PR #126, separat säkerhetsgranskning och verkligt signerade tvåkontotester före applicering i Supabase. Ingen live-installation eller klient-UI ingår i detta steg.
+- [ ] **Nästa steg:** koppla autentiserad notishämtning och läsmarkering till startsidan, länka till rätt kortlek/inkorg och kontrollera mobil tillgänglighet. Blanda inte denna notisström med Schyssta listans notiser eller privata chattmeddelanden.
+
 **Gällande Jobb hk-fullmakt (5 november 2026):** se [AGENTS.md](../AGENTS.md). Commit, push, PR, merge, publicering och motsvarande projektändringar i GitHub, Supabase och Cloudflare är uttryckligen godkända. Detta ersätter äldre krav på separat merge-/publiceringsgodkännande.
 
 
