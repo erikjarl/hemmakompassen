@@ -90,8 +90,8 @@ BEGIN
  IF state<>'accepted' THEN RAISE EXCEPTION 'FAIL: parent YES did not accept current version'; END IF;
  -- Withdrawing an accepted rule archives it; should no longer be active.
  PERFORM public.withdraw_schyssta_rule(agreement_id);
- SELECT r.status INTO state FROM public.my_manual_schyssta_rules() r WHERE r.agreement_id=agreement_id;
- IF state<>'withdrawn' THEN RAISE EXCEPTION 'FAIL: accepted agreement not withdrawn'; END IF;
+ -- The active read RPC deliberately excludes withdrawn rules; verify below
+ -- through its absence and the dedicated history RPC, then admin status check.
  SELECT count(*) INTO count_rows FROM public.my_manual_schyssta_rules() WHERE agreement_id=agreement_id;
  IF count_rows<>0 THEN RAISE EXCEPTION 'FAIL: withdrawn rule appears active'; END IF;
  SELECT count(*) INTO count_rows FROM public.my_schyssta_rule_history() WHERE agreement_id=agreement_id;
