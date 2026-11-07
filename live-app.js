@@ -182,6 +182,25 @@ async function fetchFamilyChatUnread(){
   if(['hem','regler'].includes(page())||(page()==='inkorg'&&!familyChatDraft.trim()))render();
   else menu();
 }
+// Keep already-read older pages on routine refresh only when the newest
+// server page overlaps this exact conversation. On revocation, re-pairing,
+// empty/error responses or an unrelated page, fail closed to fresh data.
+function mergeFamilyChatPage(previous,latest,{older=false,quiet=false,hasMore=false}={}){
+  if(older){
+    const seen=new Set(previous.map(message=>message.message_id));
+    return {messages:[...previous,...latest.filter(message=>!seen.has(message.message_id))],
+      hasMore:latest.length===50};
+  }
+  if(quiet&&previous.length>50&&latest.length===50){
+    const anchor=previous.findIndex(message=>message.message_id===latest[latest.length-1].message_id);
+    if(anchor>=0){
+      const refreshed=new Set(latest.map(message=>message.message_id));
+      return {messages:[...latest,...previous.slice(anchor+1).filter(message=>!refreshed.has(message.message_id))],
+        hasMore};
+    }
+  }
+  return {messages:latest,hasMore:latest.length===50};
+}
 async function fetchFamilyChat(older=false,{quiet=false}={}){
   if(!user||members.length!==2)return;
   if(older?(!familyChatHasMore||familyChatLoadingOlder||familyChatLoading):(familyChatLoading||familyChatLoadingOlder))return;
@@ -213,15 +232,25 @@ async function fetchFamilyChat(older=false,{quiet=false}={}){
       familyChatUnread=0;familyChatUnreadError=true;
     }
   }else{
-    familyChatMessages=older?[...familyChatMessages,...result.data]:result.data;
-    familyChatHasMore=result.data.length===50;
+    const merged=mergeFamilyChatPage(familyChatMessages,result.data,
+      {older,quiet,hasMore:familyChatHasMore});
+    familyChatMessages=merged.messages;
+    familyChatHasMore=merged.hasMore;
     // Loading a message page must never create a receipt for pages not viewed.
     // Only the deliberate mark-all action below calls the RPC.
     if(!older&&page()==='inkorg')void fetchFamilyChatUnread();
   }
   const changed=!quiet||previous!==JSON.stringify([familyChatMessages,familyChatHasMore,familyChatError]);
-  if(changed&&page()==='inkorg'&&!familyChatDraft.trim())render();
-  else if(changed)menu();
+  if(changed&&page()==='inkorg'&&!familyChatDraft.trim()){
+    // Rerendering the paged conversation must not strand keyboard users.
+    const hadOlderFocus=older&&document.activeElement?.matches?.('[data-family-chat-more]');
+    render();
+    if(hadOlderFocus){
+      const focusTarget=document.querySelector('[data-family-chat-more]')||
+        document.querySelector('.family-chat-history');
+      focusTarget?.focus({preventScroll:true});
+    }
+  }else if(changed)menu();
 }
 async function markAllFamilyChatRead(){
   if(!user||members.length!==2||familyChatReadBusy||familyChatLoading||familyChatUnreadError||familyChatUnread<1)return false;
@@ -1312,8 +1341,8 @@ function inboxView(){
     +(familyChatError?'<p role="alert">'+esc(familyChatError)+'</p>':'')
     +markAllHtml
     +(familyChatLoading?'<p role="status">Hämtar meddelanden…</p>':
-      '<div class="family-chat-history">'
-      +(familyChatHasMore?'<button type="button" class="schyssta-secondary" data-family-chat-more'+(familyChatLoadingOlder?' disabled':'')+'>Visa äldre meddelanden</button>':'')
+      '<div class="family-chat-history" tabindex="-1">'
+      +(familyChatHasMore?'<button type="button" class="schyssta-secondary" data-family-chat-more'+(familyChatLoadingOlder?' disabled':'')+'>'+(familyChatLoadingOlder?'Hämtar äldre meddelanden…':'Visa äldre meddelanden')+'</button>':'')
       +messageList+'</div>')
     +'<form id="family-chat-form" class="family-chat-form">'
     +'<label for="family-chat-body">Skriv till '+otherName+'</label>'
