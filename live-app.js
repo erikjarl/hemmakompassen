@@ -1012,7 +1012,7 @@ function privateThemeAnswerReview(deck){
     return [{index,text:cardTextForRole(model,viewerRole()),category:model?.category||deck.title,answer:answers.get(id)}];
   });
   if(!items.length)return '';
-  return '<section class="live-panel swipe-private-review" aria-labelledby="swipe-private-review-heading">'+
+  return '<section id="swipe-private-review" class="live-panel swipe-private-review" aria-labelledby="swipe-private-review-heading">'+
     '<h2 id="swipe-private-review-heading">Mina sparade svar</h2>'+
     '<p class="live-muted">Bara dina egna svar visas här. Tryck på ett kort för att ändra ditt svar. Ingen delning sker automatiskt.</p>'+
     '<details><summary>Visa mina '+items.length+' besvarade kort</summary>'+
