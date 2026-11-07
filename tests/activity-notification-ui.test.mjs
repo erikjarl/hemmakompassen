@@ -137,6 +137,31 @@ test('late activity read receipt after disabling feature does not refresh',async
  assert.equal(h.activityMarkBusy,null);
  assert.equal(refreshes,0);
 });
+test('pair disappearing mid-fetch clears previously displayed notifications',async()=>{
+ const h=harness();
+ await h.state.fetchActivityNotifications();
+ assert.equal(h.state.activityNotifications.length,1);
+ let finish;
+ h.state.db.rpc=()=>new Promise(resolve=>{finish=resolve;});
+ const pending=h.state.fetchActivityNotifications();
+ h.state.members=[{user_id:'viewer'}];
+ finish({data:[base],error:null});await pending;
+ assert.equal(h.state.activityNotifications.length,0);
+ assert.equal(h.state.activityNotificationsLoading,false);
+ assert.equal(h.state.activityNotificationsError,'');
+});
+test('feature disabling mid-fetch clears previously displayed notifications',async()=>{
+ const h=harness();
+ await h.state.fetchActivityNotifications();
+ assert.equal(h.state.activityNotifications.length,1);
+ let finish;
+ h.state.db.rpc=()=>new Promise(resolve=>{finish=resolve;});
+ const pending=h.state.fetchActivityNotifications();
+ h.state.activityNotificationsEnabled=false;
+ finish({data:[base],error:null});await pending;
+ assert.equal(h.state.activityNotifications.length,0);
+ assert.equal(h.state.activityNotificationsLoading,false);
+});
 test('client only marks notices on a deliberate click and refreshes read status',()=>{
  assert.match(config,/enableActivityNotifications:\s*true/);
  assert.match(source,/data-activity-read=/);
