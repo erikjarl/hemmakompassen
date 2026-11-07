@@ -46,7 +46,7 @@ BEGIN
  BEGIN PERFORM public.set_schyssta_rule_decision(agreement_id,true);
  EXCEPTION WHEN insufficient_privilege THEN denied:=true; END;
  IF NOT denied THEN RAISE EXCEPTION 'FAIL: outsider vote permitted'; END IF;
- SELECT count(*) INTO count_rows FROM public.my_manual_schyssta_rules() WHERE agreement_id=current_setting('audit.test_agreement')::uuid;
+ SELECT count(*) INTO count_rows FROM public.my_manual_schyssta_rules() a WHERE a.agreement_id=current_setting('audit.test_agreement')::uuid;
  IF count_rows<>0 THEN RAISE EXCEPTION 'FAIL: outsider sees private rule'; END IF;
  -- One yes is NOT enough: first teen approval, then parent approval.
  PERFORM set_config('request.jwt.claims',pg_catalog.json_build_object('sub',teen_id,'role','authenticated')::text,true);
@@ -92,9 +92,9 @@ BEGIN
  PERFORM public.withdraw_schyssta_rule(agreement_id);
  -- The active read RPC deliberately excludes withdrawn rules; verify below
  -- through its absence and the dedicated history RPC, then admin status check.
- SELECT count(*) INTO count_rows FROM public.my_manual_schyssta_rules() WHERE agreement_id=current_setting('audit.test_agreement')::uuid;
+ SELECT count(*) INTO count_rows FROM public.my_manual_schyssta_rules() a WHERE a.agreement_id=current_setting('audit.test_agreement')::uuid;
  IF count_rows<>0 THEN RAISE EXCEPTION 'FAIL: withdrawn rule appears active'; END IF;
- SELECT count(*) INTO count_rows FROM public.my_schyssta_rule_history() WHERE agreement_id=current_setting('audit.test_agreement')::uuid;
+ SELECT count(*) INTO count_rows FROM public.my_schyssta_rule_history() a WHERE a.agreement_id=current_setting('audit.test_agreement')::uuid;
  IF count_rows<>1 THEN RAISE EXCEPTION 'FAIL: withdrawn rule absent from history'; END IF;
  -- Attempted second decision on withdrawn agreement must be rejected.
  denied:=false;
