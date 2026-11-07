@@ -12,7 +12,8 @@
 - [x] **Kod i mergad PR #127:** Inkorgen listar neutrala grupperade aktivitetshändelser med frivillig läsmarkering; startsida och navigation inkluderar nya olästa aviseringar. Skydd mot ofullständiga serverresultat, kontobyte, och gamla parningar är implementerat i klienten. Länkar går till Gemensamma insikter; direktrouting till exakt kortlek återstår.
 - [x] **Kontraktstester för UI skrivna:** `tests/activity-notification-ui.test.mjs` kontrollerar svarsschema, obehöriga fält, fel, ändrat konto och explicit läsmarkering.
 - [x] **PR #127 testad och mergad 7 november:** [PR #127](https://github.com/erikjarl/hemmakompassen/pull/127) till `main` som `7de0bf6be780f67856ca8764e171bbc8bb15c1fc`; [UI+mobil Chromium #42355469142](https://github.com/erikjarl/hemmakompassen/actions/runs/42355469142) och [PostgreSQL/pgTAP #42355469112](https://github.com/erikjarl/hemmakompassen/actions/runs/42355469112) båda `success`. Testet verifierar neutral kortavisering och klickstyrd läsmarkering.
-- [ ] **Kvar:** verifiera senaste Pages-jobb efter merge; gör riktiga signerade tvåkontotester, fysisk iOS/VoiceOver samt exakt kortleksdjuplänk.
+- [x] **Pages-publicering efter #127 verifierad:** [Pages #42355591116](https://github.com/erikjarl/hemmakompassen/actions/runs/42355591116) har lyckad build, publicering och statusrapportering på `e135c80b7d34fabcd01a0eb32edcaafee205bb72` (endast senare dokumentationscommit jämfört med #127).
+- [ ] **Kvar:** riktiga signerade tvåkontotester, fysisk iOS/VoiceOver, av-/omparning och exakt kortleksdjuplänk.
 
 **Gällande Jobb hk-fullmakt (5 november 2026):** se [AGENTS.md](../AGENTS.md). Commit, push, PR, merge, publicering och motsvarande projektändringar i GitHub, Supabase och Cloudflare är uttryckligen godkända. Detta ersätter äldre krav på separat merge-/publiceringsgodkännande.
 
