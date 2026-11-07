@@ -3,7 +3,7 @@
 ## 7 november 2026 – REL-01: automatiskt verifiera faktiskt serverade Pages-filer
 
 - [x] **CI-kod i utvecklingsgren:** nytt arbetsflöde `.github/workflows/verify-pages-assets.yml` körs vid varje push till `main` (och manuellt) och jämför faktiskt hämtade bytes för `live-app.js`, `backend-config.js` och `personality/ipip50-ui.js` mot samma Git-commit. Kontrollen försöker på nytt under pågående Pages-publicering och ger fel om serverade filer inte stämmer. Inga privata data, cookies eller inloggningar behövs.
-- [ ] **CI/merge och första verkliga utfall:** en grön PR-UI-körning verifierar inte automatiskt det nya arbetsflödet. Kontrollera särskilt att verifieringsjobbet verkligen startar på `main` och att en verklig HTTP-jämförelse lyckas efter merge.
+- [x] **PR, CI, merge och första verkliga HTTP-jämförelse:** [PR #132](https://github.com/erikjarl/hemmakompassen/pull/132) passerade [PR-UI #42378452527](https://github.com/erikjarl/hemmakompassen/actions/runs/42378452527) och mergades som `b672c2c2866bc0d06e22f9ef483d8b5e91c79b21`. Det nya [publika filverifieringsjobbet #42378521656](https://github.com/erikjarl/hemmakompassen/actions/runs/42378521656) avslutades med `success` på samma commit; [Pages #42378521089](https://github.com/erikjarl/hemmakompassen/actions/runs/42378521089) lyckades också. Verifieringen jämför tre levererade filers bytes, inte autentiserade användarflöden. Arbetsflödet kontrollerar inte att en nylig ändring i andra filer har distribuerats.
 - [ ] **Autentiserat tvåkontotest och iOS:** versionslikhet säger inget om inloggning, samtycke, revokering eller skärmläsare.
 
 ## 7 november 2026 – NOT-01B: rensa gamla notiser om parning upphör under hämtning
