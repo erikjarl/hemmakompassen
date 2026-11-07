@@ -3,13 +3,15 @@
 ## 7 november 2026 – NOT-01B: sent läskvitto efter avparning
 
 - [x] **Kod och syntetiska regressionstester:** sena svar från markering av aktivitetsavisering som läst ignoreras om familjeparningen upphört eller aviseringarna stängts av under anropet. Busy-läget frigörs utan ny RPC-hämtning. Befintliga lagrade svar och databas ändras inte.
-- [ ] **PR-test, merge och publicering:** kontrollera CI och faktisk release före klarmarkering.
+- [x] **PR-test och merge:** [PR #130](https://github.com/erikjarl/hemmakompassen/pull/130) godkänd i [UI/Node/build/Chromium #42376124503](https://github.com/erikjarl/hemmakompassen/actions/runs/42376124503) och mergad i `main` som `bbb46fb119b849c8fdd7a9e1994ba8c5a7cda6c0`.
+- [ ] **Publicering:** separat verifiering av Pages-release och serverad klient återstår.
 - [ ] **Verkliga testkonton och mobil:** två signerade konton, av-/omparning och Safari/VoiceOver kvarstår.
 
 ## 7 november 2026 – NOT-01B: sena svar efter ändrad parningsstatus
 
 - [x] **Kod och två regressionstester:** fetchActivityNotifications avvisar sent RPC-svar när familjeparet har upphört eller aviseringar har stängts av, även utan ändrad sessionsräknare. Ingen SQL, Worker eller användardata ändrad.
-- [ ] **Verifiera PR-CI, merge och Pages** innan klar-markering.
+- [x] **PR-CI och merge:** [PR #129](https://github.com/erikjarl/hemmakompassen/pull/129) godkänd i [UI/Node/build/Chromium #42374994345](https://github.com/erikjarl/hemmakompassen/actions/runs/42374994345) och mergad som `516506cbb06a9e45ac6681bf2c6c540d5451c7cf`.
+- [ ] **Pages-release:** oberoende verifiering av senaste serverade version återstår.
 - [ ] **Riktig tvåkontoverifiering:** avparning under fördröjt serveranrop samt iOS/VoiceOver återstår.
 
 ## 7 november 2026 – NOT-01B: exakta kortlekslänkar från aviseringar (PR #128)
