@@ -933,6 +933,34 @@ try{
   await paired.page.getByRole("heading",{name:"Det ni båda svarat ja till"}).waitFor();
   await paired.page.locator(".swipe-match-group h4").filter({hasText:"Relationer"}).waitFor();
   assert.equal(await paired.page.locator(".swipe-match-list li").count(),2,"Only catalogued mutual YES cards appear; malicious RPC NO, B and unknown cards are discarded");
+  // An editorial category filter must only narrow already-verified JA+JA rows.
+  await paired.page.evaluate(()=>{
+    window.__HK_TEST_SHARED_MATCHES__=[
+      {deck_id:'general',card_id:'general-01',answer:true},
+      {deck_id:'general',card_id:'general-08',answer:true},
+      {deck_id:'general',card_id:'general-02',answer:true}, // teen-only B, never visible here
+      {deck_id:'general',card_id:'general-03',answer:false},
+      {deck_id:'general',card_id:'general-99',answer:true}
+    ];
+  });
+  await paired.page.locator('[data-refresh-matches="general"]').click();
+  await paired.page.waitForFunction(()=>document.querySelectorAll('.swipe-match-group .swipe-match-list li').length===2
+    &&document.querySelectorAll('[data-shared-match-filter]').length===3);
+  await paired.page.locator('[data-shared-match-filter="Fritid"]').click();
+  assert.equal(await paired.page.locator('.swipe-match-group .swipe-match-list li').count(),1,
+    'Only the selected verified category is shown');
+  assert.equal(await paired.page.locator('[data-shared-match-filter="Fritid"]').getAttribute('aria-pressed'),'true');
+  assert.equal(await paired.page.locator('[data-shared-match-filter="Fritid"]').evaluate(el=>document.activeElement===el),true,
+    'Keyboard focus remains on selected filter after rerender');
+  await checkOverflow(paired.page,'Shared-match category filter 390px');
+  await capture(paired.page,'mobile-shared-match-category-filter.png');
+  await paired.page.locator('[data-shared-match-filter="all"]').click();
+  assert.equal(await paired.page.locator('.swipe-match-group .swipe-match-list li').count(),2);
+  await paired.page.evaluate(()=>{delete window.__HK_TEST_SHARED_MATCHES__;});
+  await paired.page.locator('[data-refresh-matches="general"]').click();
+  await paired.page.waitForFunction(()=>document.querySelectorAll('.swipe-match-group .swipe-match-list li').length===2
+    &&document.querySelector('.swipe-match-group')?.textContent.includes('Jag vill bli bättre på att visa uppskattning'));
+
   const sharedText=await paired.page.locator(".swipe-results").innerText();
   assert.match(sharedText,/Jag uppskattar när vi gör saker tillsammans utan mobiltelefoner/,"The mutual YES is displayed");
   assert.match(sharedText,/Jag vill bli bättre på att visa uppskattning och fråga hur den tas emot/,"Parent result and summary use the reviewed parent wording");

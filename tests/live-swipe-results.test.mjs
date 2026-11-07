@@ -46,7 +46,7 @@ const sharedViewFunctions=script.match(/const joinSwedish=[\s\S]*?(?=\nasync fun
 assert.ok(sharedViewFunctions,'Shared result rendering can be tested independently');
 function renderSharedResult(rows,role='parent',priorityRows=[],adviceByKey={'general-01':'Välj en gemensam dag.','general-04':'Lyssna färdigt och välj ett litet nästa steg.'},options={}){
   const state={
-    members:[{role:'parent'},{role:'teen'}],sharedLoading:false,sharedDeckId:'general',sharedError:'',sharedPriorityError:options.sharedPriorityError||'',sharedMatches:rows.map(row=>({deck_id:'general',...row})),sharedPriorities:priorityRows.map(row=>({deck_id:'general',...row})),
+    members:[{role:'parent'},{role:'teen'}],sharedMatchFilter:{deckId:'general',category:options.category||null},sharedLoading:false,sharedDeckId:'general',sharedError:'',sharedPriorityError:options.sharedPriorityError||'',sharedMatches:rows.map(row=>({deck_id:'general',...row})),sharedPriorities:priorityRows.map(row=>({deck_id:'general',...row})),
     GENERAL_CARDS:[
       {id:'general-01',type:'match',category:'Fritid',teenText:'Tonåringens frivilliga aktivitet',parentText:'Förälderns ansvarstagande aktivitet'},
       {id:'general-02',type:'understanding',category:'Känslor',teenText:'HEMLIGT FÖRSTÅELSEKORT'},
@@ -364,3 +364,26 @@ assert.throws(()=>insightState.sanitize('general',null),/Invalid shared results/
 console.log('PASS: real cross-deck icon summary markup respects A-only results, revocation error and AI');
 
 console.log('PASS: all-deck insights gate, A-only sanitizer, B/NO isolation, session and error guards');
+
+{
+  const rows=[
+    {card_id:'general-01',answer:true},
+    {card_id:'general-02',answer:true}, // B: private
+    {card_id:'general-03',answer:false}, // denied
+    {card_id:'general-04',answer:true},
+    {card_id:'unknown',answer:true}
+  ];
+  const filtered=renderSharedResult(rows,'parent',[],undefined,{category:'Samtal'});
+  assert.match(filtered,/data-shared-match-filter="Samtal"/);
+  assert.match(filtered,/aria-pressed="true">Samtal \(1\)/);
+  assert.match(filtered,/<section class="swipe-match-theme"><h4>Samtal<\/h4>/);
+  assert.doesNotMatch(filtered,/<section class="swipe-match-theme"><h4>Fritid<\/h4>/,
+    'Only the selected category contributes visible result rows');
+  assert.doesNotMatch(filtered,/HEMLIGT|unknown/);
+  assert.match(filtered,/Förälderns ansvarstagande aktivitet/,
+    'Summary remains based on the full verified mutual-YES set, not on the selected presentation filter');
+  const invalid=renderSharedResult(rows,'parent',[],undefined,{category:'Känslor'});
+  assert.match(invalid,/aria-pressed="true">Alla \(2\)/,
+    'Category belonging only to a private B card must never become an active filter');
+  assert.doesNotMatch(invalid,/data-shared-match-filter="Känslor"/);
+}

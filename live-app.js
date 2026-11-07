@@ -48,6 +48,8 @@ const personalityExperience=createPersonalityExperience({db,isSharingEnabled:per
 let swipeIndex=0,swipeBusy=false,swipeReview=false,swipeLoadError='',swipeSaveError='';
 let sharedMatches=[],sharedPriorities=[],sharedDeckId='general',sharedError='',sharedPriorityError='',sharedLoading=false,sharedSession=0,sharedRequest=0;
 let sharedPollPending=false;
+// Presentation-only selection. It never changes, fetches, or shares answers.
+let sharedMatchFilter={deckId:null,category:null};
 let insightsRows=[],insightsLoading=false,insightsError='',insightsRequest=0;
 let activityInviteBusy=false,activityInviteError='';
 let sharedUnderstandingRows=[],understandingShareError='';
@@ -646,7 +648,14 @@ function swipeResults(deckId='general'){
     groups.get(category).push({statement,card:matchedCard});
   }
   if(!groups.size)return title+'<p class="live-muted">Inga gemensamma ja-svar att visa ännu. Här visas bara kort där ni båda har svarat ja.</p>'+button+'</section>';
-  const themes=[...groups.entries()].map(([category,items])=>
+  const activeFilter=sharedMatchFilter.deckId===deckId&&groups.has(sharedMatchFilter.category)
+    ?sharedMatchFilter.category:null;
+  const categoryPicker=groups.size>1?'<div class="swipe-match-filter" role="group" aria-label="Filtrera gemensamma träffar efter ämne">'+
+    '<button type="button" class="schyssta-secondary" data-shared-match-filter="all" data-deck-id="'+esc(deckId)+'" aria-pressed="'+(!activeFilter)+'">Alla ('+[...groups.values()].reduce((sum,items)=>sum+items.length,0)+')</button>'+
+    [...groups].map(([category,items])=>'<button type="button" class="schyssta-secondary" data-shared-match-filter="'+esc(category)+'" data-deck-id="'+esc(deckId)+'" aria-pressed="'+(activeFilter===category)+'">'+esc(category)+' ('+items.length+')</button>').join('')+
+    '</div>':'';
+  const visibleGroups=activeFilter?new Map([[activeFilter,groups.get(activeFilter)]]):groups;
+  const themes=[...visibleGroups.entries()].map(([category,items])=>
     '<section class="swipe-match-theme"><h4>'+esc(category)+'</h4><ul class="swipe-match-list">'+
     items.map(item=>'<li><p>'+esc(item.statement)+'</p>'+
       (deckId==='aktiviteter'?
@@ -671,7 +680,7 @@ function swipeResults(deckId='general'){
     (deckId==='aktiviteter'&&activityInviteError?'<p role="alert">'+esc(activityInviteError)+'</p>':'')+
     privatePriority+
     (useAi?aiPriority:sharedPrioritySummary(priorityItems,deckId))+
-    '<div class="swipe-match-group"><h3>Det ni båda svarat ja till</h3>'+themes+'</div>'+
+    '<div class="swipe-match-group"><h3>Det ni båda svarat ja till</h3><p class="live-muted">Filtreringen ändrar bara vad som visas här, inte era svar eller sammanfattningen.</p>'+categoryPicker+themes+'</div>'+
     (useAi?sharedFactOverview(groups)+aiResults.panel('swipe',deckId,sig):sharedSummary(groups,deckId,priorityIds))+
     button+'</section>';
 }
@@ -1687,7 +1696,27 @@ if(aiRetry&&aiResultEnabled&&user){
   return;
 }
 if(e.target.closest('#mediator-clear')){mediatorExperience.clear();return;}if(e.target.closest('#mediator-new')){void mediatorExperience.createChat();return;}if(e.target.closest('#mediator-refresh-context')){void mediatorExperience.loadContextStatus();return;}if(e.target.closest('#mediator-delete')){if(window.confirm('Vill du radera hela detta privata samtal permanent?'))void mediatorExperience.deleteChat();return;}const mediatorOpen=e.target.closest('[data-mediator-open]');if(mediatorOpen){void mediatorExperience.openChat(mediatorOpen.dataset.mediatorOpen);return;}if(e.target.closest('[data-pf-action],[data-ipip-retest]')){void personalityExperience.handleClick(e.target,{isPaired:members.length===2&&members.some(m=>m.role==='parent')&&members.some(m=>m.role==='teen')});return;}const b=e.target.closest('[data-swipe]');if(b)advanceSwipe(b.dataset.swipe);if(e.target.closest('#swipe-restart')){swipeSkippedReview=false;swipeReview=true;swipeIndex=visibleGeneralIndices()[0]??STATEMENTS.length;render();}
-if(e.target.closest('#swipe-review-skipped')&&viewerRole()==='teen'&&!swipeBusy){swipeSkippedReview=true;swipeReview=false;swipeIndex=nextSkippedAfter(-1);render();}if(e.target.closest('#swipe-skip')&&viewerRole()==='teen'&&GENERAL_CARDS[swipeIndex]?.type==='understanding'&&!swipeBusy)void skipUnderstandingCard(swipeIndex,user.id,sharedSession);if(e.target.closest('#swipe-reload'))refresh().catch(showError);const refreshMatches=e.target.closest('[data-refresh-matches]');if(refreshMatches&&!sharedLoading)void fetchSwipeMatches(refreshMatches.dataset.refreshMatches);if(e.target.closest('#retry-theme-unlock')&&!themesLoading)void fetchThemeUnlock();
+if(e.target.closest('#swipe-review-skipped')&&viewerRole()==='teen'&&!swipeBusy){swipeSkippedReview=true;swipeReview=false;swipeIndex=nextSkippedAfter(-1);render();}if(e.target.closest('#swipe-skip')&&viewerRole()==='teen'&&GENERAL_CARDS[swipeIndex]?.type==='understanding'&&!swipeBusy)void skipUnderstandingCard(swipeIndex,user.id,sharedSession);if(e.target.closest('#swipe-reload'))refresh().catch(showError);const filterButton=e.target.closest('[data-shared-match-filter]');
+if(filterButton&&page()==='swipe'&&sharedDeckId===filterButton.dataset.deckId&&!sharedLoading&&!sharedError){
+  // Only categories present in the exact current server-verified result can be selected.
+  const validCategories=new Set();
+  const currentDeck=sharedDeck(sharedDeckId);
+  if(currentDeck)for(const row of sharedMatches){
+    if(row?.answer!==true||row.deck_id!==sharedDeckId)continue;
+    const card=currentDeck.cards.find(c=>c.id===row.card_id&&c.type==='match');
+    if(card)validCategories.add(card.category);
+  }
+  const selected=filterButton.dataset.sharedMatchFilter;
+  if(selected==='all'||validCategories.has(selected)){
+    sharedMatchFilter={deckId:sharedDeckId,category:selected==='all'?null:selected};
+    render();
+    const replacement=[...document.querySelectorAll('[data-shared-match-filter]')]
+      .find(el=>el.dataset.deckId===sharedDeckId&&el.dataset.sharedMatchFilter===selected);
+    replacement?.focus({preventScroll:true});
+  }
+  return;
+}
+const refreshMatches=e.target.closest('[data-refresh-matches]');if(refreshMatches&&!sharedLoading)void fetchSwipeMatches(refreshMatches.dataset.refreshMatches);if(e.target.closest('#retry-theme-unlock')&&!themesLoading)void fetchThemeUnlock();
 if(e.target.closest('#insights-retry')&&!insightsLoading)void fetchInsights();
 const inviteActivity=e.target.closest('[data-insight-activity]');
 if(inviteActivity&&['insikter','swipe'].includes(page())&&!activityInviteBusy)void prepareActivityMessage(inviteActivity.dataset.insightActivity);
