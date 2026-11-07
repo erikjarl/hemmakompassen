@@ -23,3 +23,21 @@ Kontrollerade samtliga sju kortlekar: `general`, `samtal`, `aktiviteter`, `regle
 4. UI-kontroll för både förälder och tonåring.
 
 **Status:** SW-03 förblir Pågår och flaggan `enableSharedPriorities:false` får inte ändras baserat på detta test. Det här är ett negativt RPC-test med simulerade JWT-claims, **inte** verkliga signaturer eller en genomförd fullständig säkerhetsgranskning.
+
+## Kompletterande positivt rollbacktest – 8 november 2026
+
+Efter det läsbaserade testet kördes `supabase/tests/sec02_shared_priorities_positive_rollback.sql` mot den installerade databasen. Testet valde `aterhamtning-01` endast efter kontroll att det parade testparet inte hade några befintliga svar, prioriteringar, delningar eller överhoppningar för detta kort. Alla operationer skedde i en enda transaktion som avslutades med `ROLLBACK`.
+
+**PASS** för följande steg i det faktiskt installerade RPC-flödet:
+- Ett JA från föräldern ensamt gav ingen synlig delad prioritering.
+- JA från båda och tonåringens höga prioritet, **utan** delningssamtycke, gav fortfarande 0 synliga prioriteringar.
+- Tonåringens uttryckliga `set_swipe_priority_share(...,true)` gjorde kortet synligt för båda parade roller.
+- Förälderns `set_swipe_priority_share(...,false)` på det egna kontot tog **inte** bort tonåringens delning. Detta anrop returnerar utan fel men förändrar inte tonåringens samtycke.
+- Tonåringens uttryckliga återkallelse dolde kortet.
+- Efter ny delning dolde en sänkning av tonåringens prioritet till 0 återigen kortet.
+
+Ett tidigare, för snävt testantagande om att förälderns återkallelseanrop måste ge ett fel misslyckades. Det var ett **felaktigt testantagande**, inte belägg för obehörig återkallelse. Det korrigerade testet granskar verklig effekt och passerade.
+
+En separat read-only efterkontroll visade **0 kvarvarande rader** för detta kort och par i `swipe_answers`, `swipe_importance` och `swipe_priority_shares`.
+
+**Kvarstår:** signerade Auth-sessioner, ytterligare en aktiv familj, omparning, ändring från JA till NEJ, samtidighet, fysisk mobil och fullständigt UI. SW-03 förblir **Pågår**; det är inte tillräckligt för att slå på `enableSharedPriorities`.
