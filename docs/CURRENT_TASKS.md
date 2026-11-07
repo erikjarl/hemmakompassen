@@ -1,5 +1,11 @@
 # Hemmakompassen — aktuell utvecklingskö
 
+## 7 november 2026 – NOT-01B: sena svar efter ändrad parningsstatus
+
+- [x] **Kod och två regressionstester:** fetchActivityNotifications avvisar sent RPC-svar när familjeparet har upphört eller aviseringar har stängts av, även utan ändrad sessionsräknare. Ingen SQL, Worker eller användardata ändrad.
+- [ ] **Verifiera PR-CI, merge och Pages** innan klar-markering.
+- [ ] **Riktig tvåkontoverifiering:** avparning under fördröjt serveranrop samt iOS/VoiceOver återstår.
+
 ## 7 november 2026 – NOT-01B: exakta kortlekslänkar från aviseringar (PR #128)
 
 - [x] **Kod och regressionstester i PR #128:** avisering från en servervaliderad A JA+JA-händelse leder till den berörda kortlekens del i Gemensamma insikter; uttryckligt delad B-information leder till förståelsedelen. Endast kända hashmål accepteras. Fokus läggs på verifierat avsnitt först efter ny RPC-läsning. En äldre återkallad delning ger en neutral informationstext, aldrig tidigare svar.
