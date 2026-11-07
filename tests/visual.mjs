@@ -1486,31 +1486,31 @@ try{
   await unlocked.context.close();
   // Separate browser context: this correction scenario must not mutate the
   // saved-answer fixture used by the existing swipe progression tests.
-  const review=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},
+  const savedReview=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},
     {authenticated:true,paired:true,unlocked:true});
-  await review.page.goto(base+'#swipe',{waitUntil:'load'});
-  await review.page.locator('[data-theme-open="samtal"]').click();
-  await review.page.locator('#swipe-card').waitFor();
-  assert.equal(await review.page.locator('.swipe-private-review').count(),0,'An empty personal history is not rendered');
-  await review.page.locator('[data-swipe="yes"]').click();
-  await review.page.locator('.swipe-private-review summary').waitFor();
-  await review.page.locator('.swipe-private-review summary').click();
-  assert.match(await review.page.locator('.swipe-private-review').innerText(),/Ditt svar: Ja/);
-  assert.equal(await review.page.locator('.swipe-private-review [data-theme-review-index]').count(),1);
-  await review.page.locator('.swipe-private-review [data-theme-review-index="0"]').click();
-  assert.match(await review.page.locator('#swipe-card').innerText(),/Vad som varit roligt den senaste veckan/,
+  await savedReview.page.goto(base+'#swipe',{waitUntil:'load'});
+  await savedReview.page.locator('[data-theme-open="samtal"]').click();
+  await savedReview.page.locator('#swipe-card').waitFor();
+  assert.equal(await savedReview.page.locator('.swipe-private-savedReview').count(),0,'An empty personal history is not rendered');
+  await savedReview.page.locator('[data-swipe="yes"]').click();
+  await savedReview.page.locator('.swipe-private-savedReview summary').waitFor();
+  await savedReview.page.locator('.swipe-private-savedReview summary').click();
+  assert.match(await savedReview.page.locator('.swipe-private-savedReview').innerText(),/Ditt svar: Ja/);
+  assert.equal(await savedReview.page.locator('.swipe-private-savedReview [data-theme-savedReview-index]').count(),1);
+  await savedReview.page.locator('.swipe-private-savedReview [data-theme-savedReview-index="0"]').click();
+  assert.match(await savedReview.page.locator('#swipe-card').innerText(),/Vad som varit roligt den senaste veckan/,
     'A saved theme answer can be opened directly without swiping past 100 cards');
-  assert.equal(await review.page.locator('#swipe-card').evaluate(el=>document.activeElement===el),true,
+  assert.equal(await savedReview.page.locator('#swipe-card').evaluate(el=>document.activeElement===el),true,
     'Focus moves to the selected saved card');
-  await review.page.locator('[data-swipe="no"]').click();
-  await review.page.locator('.swipe-private-review summary').click();
-  assert.match(await review.page.locator('.swipe-private-review').innerText(),/Ditt svar: Nej/,
-    'The review reflects the updated private answer');
-  await checkOverflow(review.page,'Private saved-answer review 390px');
-  await review.page.locator('.swipe-private-review').scrollIntoViewIfNeeded();
-  await capture(review.page,'mobile-theme-private-answer-review.png');
+  await savedReview.page.locator('[data-swipe="no"]').click();
+  await savedReview.page.locator('.swipe-private-savedReview summary').click();
+  assert.match(await savedReview.page.locator('.swipe-private-savedReview').innerText(),/Ditt svar: Nej/,
+    'The savedReview reflects the updated private answer');
+  await checkOverflow(savedReview.page,'Private saved-answer savedReview 390px');
+  await savedReview.page.locator('.swipe-private-savedReview').scrollIntoViewIfNeeded();
+  await capture(savedReview.page,'mobile-theme-private-answer-savedReview.png');
 
-  await review.context.close();
+  await savedReview.context.close();
   const unavailable=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,paired:true,unlockUnavailable:true});
   await unavailable.page.goto(base+"#swipe",{waitUntil:"load"});
   await unavailable.page.locator(".swipe-themes details").first().waitFor();
