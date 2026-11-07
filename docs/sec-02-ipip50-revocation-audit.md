@@ -14,18 +14,19 @@ Pröva att **båda parterna** förlorar åtkomst till delade personlighetsresult
 - **Förälderns återkallelse:** `share_enabled=false` sätts tillfälligt i transaktionen. Bådas RPC-resultat måste bli `NULL`.
 - **Tonåringens återkallelse:** Samma test med tonåringens samtycke. Bådas RPC-resultat måste bli `NULL`.
 - **Gammal parnings-/medlemskapsepok:** Tonåringens samtyckesrad får tillfälligt ett `joined_at` som är en dag för gammalt. Bådas RPC-resultat måste bli `NULL`.
+- **Riktig samtyckes-RPC med simulerad identitet:** Både föräldern och tonåringen anropade i turordning `set_my_ipip50_share(false)` och därefter `set_my_ipip50_share(true)` inom rollback-transaktionen. Efter återkallelsen fick **båda** `NULL` från delnings-RPC:n; efter återsamtycket fick båda åter varsin tvåprofilersvy. Även dessa operationer återställdes.
 - **Återställning:** `ROLLBACK TO SAVEPOINT` följer varje scenario och hela transaktionen avslutas med `ROLLBACK`. Därefter kördes separat kontrollfråga i Supabase.
 
 Rapporterat SQL-resultat:
 
 ```text
-PASS: 2 positive profiles (five sums only), 2 revocations each hidden from both, old epoch denied; rollback restores consent
+PASS: 2 positive profiles (five sums only), 2 revocations each hidden from both, old epoch denied; 2 owner RPC revoke/re-consent cycles; rollback restores consent
 ```
 
 Separat efterkontroll visade **100** ursprungliga IPIP-svar, **2** samtyckesrader varav **2** aktiva, **0** privata omtest och **0** omtestsvar. Samma antal fanns vid förkontroll.
 
 ## Avgränsningar
 
-Testet visar serverns svar på en hypotetisk återkallelse, **inte** att själva `set_my_ipip50_share`-RPC:n och webbläsarflödet fungerar korrekt under riktiga inloggningar. Det bekräftar inte signerad JWT, fysisk mobil, omparningsoperationen, caching/annan flik eller realtidsuppdatering i klienten. Tidigare syntetiska tester av klientens återkallelse ligger kvar i PR #142 och #143. Två autentiserade parallella kontosessioner och faktisk Pages/Worker-trafik återstår för full P0.
+Testet visar nu även att `set_my_ipip50_share` kan återkalla och återaktivera delningen med **simulerade identiteter**. Det visar **inte** att inloggnings-/webbläsarflödet fungerar korrekt med riktiga signerade kontosessioner. Det bekräftar inte signerad JWT, fysisk mobil, omparningsoperationen, caching/annan flik eller realtidsuppdatering i klienten. Tidigare syntetiska tester av klientens återkallelse ligger kvar i PR #142 och #143. Två autentiserade parallella kontosessioner och faktisk Pages/Worker-trafik återstår för full P0.
 
 **Ingen databas-migration har körts och ingen bestående ändring av tidigare användaruppgifter har gjorts.**
