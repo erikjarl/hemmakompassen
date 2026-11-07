@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {COMMUNICATION_SOURCES,renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildSolutionPlan,communicationSkillFromHash,openCommunicationSkill} from '../communication/toolkit.js';
+import {COMMUNICATION_SOURCES,renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from '../communication/toolkit.js';
 const app=readFileSync(new URL('../live-app.js',import.meta.url),'utf8');
 const builder=readFileSync(new URL('../scripts/build-static.mjs',import.meta.url),'utf8');
 
@@ -107,4 +107,43 @@ test('private planner deep link is an allowlisted route that focuses its heading
  assert.match(app,/href="#kommunikation\/plan">Förbered en privat samtalsplan/);
  assert.match(app,/communicationSkillFromHash\(location\.hash\)/);
  assert.match(app,/if\(location\.hash\.startsWith\('#kommunikation\/'\)\)return 'kommunikation'/);
+});
+
+test('private reflection practice is accessible to both roles and never saves text',()=>{
+ for(const role of ['teen','parent']){
+  const html=renderCommunicationToolkit(role);
+  assert.match(html,/id="comm-reflection-practice"><h2 tabindex="-1"/);
+  assert.match(html,/id="comm-reflection-form"/);
+  assert.match(html,/id="comm-reflection-output"[^>]*role="status"[^>]*aria-live="polite"/);
+  for(const field of ['heard','meaning','check']){
+   assert.match(html,new RegExp('name="'+field+'"[^>]*maxlength="240"[^>]*required'));
+  }
+  assert.match(html,/data-comm-reflection-reset/);
+  assert.match(html,/href="#kommunikation\/spegla"/);
+  assert.match(html,/Inget sparas eller skickas/);
+  assert.doesNotMatch(html,/onerror=|onclick=|<script\b/);
+ }
+ assert.equal(buildReflectionPractice({heard:'bara en fråga'}),null);
+ assert.equal(buildReflectionPractice({heard:42,meaning:'inflytande',check:'Vad tycker du?'}),null);
+ const preview=buildReflectionPractice({heard:'  att du vill få vara ifred  ',meaning:' lugn och privat tid ',check:' har jag förstått rätt? '});
+ assert.match(preview,/Jag hörde att du sa: att du vill få vara ifred/);
+ assert.match(preview,/Jag undrar om det kan vara viktigt för dig att: lugn och privat tid/);
+ assert.match(preview,/den andra kan rätta mig, säga nej eller avstå/i);
+ assert.equal(buildReflectionPractice({heard:'H',meaning:'M',check:'x'.repeat(400)}).split('Jag skulle kunna fråga: ')[1].split('\n')[0].length,240);
+ const markup=buildReflectionPractice({heard:'<img src=x onerror=alert(1)>',meaning:'trygghet',check:'kan jag fråga?'});
+ assert.match(markup,/<img src=x onerror=alert\(1\)>/);
+ assert.match(app,/output\.textContent=result/);
+ assert.match(app,/if\(e\.target\.id==='comm-reflection-form'\)/);
+ assert.match(app,/data-comm-reflection-reset/);
+});
+test('reflection deep link is allowlisted and focuses the correct heading',()=>{
+ assert.equal(communicationSkillFromHash('#kommunikation/spegla'),'spegla');
+ assert.equal(communicationSkillFromHash('#kommunikation/spegla?x'),null);
+ const actions=[];
+ const heading={focus:opts=>actions.push(['focus',opts.preventScroll])};
+ const panel={querySelector:selector=>selector==='h2'?heading:null,scrollIntoView:opts=>actions.push(['scroll',opts.block])};
+ const root={querySelector:selector=>selector==='#comm-reflection-practice'?panel:null};
+ assert.equal(openCommunicationSkill(root,'spegla',{focus:true}),true);
+ assert.deepEqual(actions,[['focus',true],['scroll','nearest']]);
+ assert.equal(openCommunicationSkill({querySelector:()=>null},'spegla',{focus:true}),false);
 });

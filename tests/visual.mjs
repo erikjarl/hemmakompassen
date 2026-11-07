@@ -826,6 +826,25 @@ try{
   await narrow.page.goto(base+'#kommunikation',{waitUntil:'load'});
   await narrow.page.getByRole('heading',{name:'Verktyg för bättre samtal'}).waitFor();
   await checkOverflow(narrow.page,'Communication toolkit 320px');
+  // Local reflective-listening rehearsal works at 320px; reset clears the draft and restores focus.
+  await narrow.page.locator('#comm-reflection-form textarea[name="heard"]').fill('Jag vill bli lyssnad på');
+  await narrow.page.locator('#comm-reflection-form textarea[name="meaning"]').fill('att få prata klart');
+  await narrow.page.locator('#comm-reflection-form textarea[name="check"]').fill('Stämmer det att du vill ha mer tid?');
+  await narrow.page.locator('#comm-reflection-form button[type="submit"]').click();
+  assert.match(await narrow.page.locator('#comm-reflection-output').innerText(),/Jag hörde att du sa: Jag vill bli lyssnad på/);
+  assert.match(await narrow.page.locator('#comm-reflection-output').innerText(),/Den andra kan rätta mig/);
+  await checkOverflow(narrow.page,'Private reflective listening 320px');
+  await capture(narrow.page,'mobile-320-communication-reflection.png');
+  await narrow.page.goto(base+'#kommunikation/spegla',{waitUntil:'load'});
+  await narrow.page.waitForFunction(()=>document.activeElement?.matches('#comm-reflection-practice h2'));
+  await narrow.page.locator('[data-comm-reflection-reset]').click();
+  assert.equal(await narrow.page.locator('#comm-reflection-form textarea[name="heard"]').inputValue(),'');
+  assert.match(await narrow.page.locator('#comm-reflection-output').innerText(),/Din privata spegling visas här/);
+  await narrow.page.waitForFunction(()=>document.activeElement?.id==='comm-reflection-heard');
+  // No draft is saved or carried along when this local-only module is reopened.
+  await narrow.page.goto(base+'#nvc',{waitUntil:'load'});
+  await narrow.page.goto(base+'#kommunikation',{waitUntil:'load'});
+  assert.equal(await narrow.page.locator('#comm-reflection-form textarea[name="meaning"]').inputValue(),'');
   // The collaborative plan is local-only: it generates a text preview without sending.
   await narrow.page.locator('#comm-solution-form textarea[name="problem"]').fill('Vi avbryter varandra');
   await narrow.page.locator('#comm-solution-form textarea[name="question"]').fill('Hur upplever du våra samtal?');

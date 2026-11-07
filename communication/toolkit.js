@@ -21,9 +21,18 @@ const COMM_SKILL_IDS={
 // Only fixed editorial exercise IDs may enter a route or a selector.
 export function communicationSkillFromHash(hash=''){
  const match=/^#kommunikation\/([a-z]+)$/.exec(hash);
- return match&&(match[1]==='plan'||Object.values(COMM_SKILL_IDS).includes(match[1]))?match[1]:null;
+ return match&&((match[1]==='plan'||match[1]==='spegla')||Object.values(COMM_SKILL_IDS).includes(match[1]))?match[1]:null;
 }
 export function openCommunicationSkill(root,skill,{focus=false}={}){
+ if(skill==='spegla'){
+  const practice=root?.querySelector('#comm-reflection-practice');
+  if(!practice)return false;
+  if(focus){
+    practice.querySelector('h2')?.focus({preventScroll:true});
+    practice.scrollIntoView({block:'nearest',behavior:'auto'});
+  }
+  return true;
+ }
  if(skill==='plan'){
   const planner=root?.querySelector('#comm-solution-planner');
   if(!planner)return false;
@@ -114,10 +123,19 @@ export function renderCommunicationToolkit(role='teen'){
   ['Jag känner mig missförstådd','validera','Bekräfta utan att hålla med'],
   [parent?'Jag behöver sätta en gräns':'Jag vill säga nej','grans','Var tydlig utan hot eller skuld']
  ];
- return '<div class="comm-toolkit"><header class="comm-hero"><p class="comm-kicker">Förstå först, lös sedan</p><h1>Verktyg för bättre samtal</h1><p>Välj ett verktyg utifrån vad som händer mellan er. Ni kan lyssna och ta varandras perspektiv utan att hålla med.</p><p><a href="#kommunikation/plan">Förbered en privat samtalsplan</a></p></header>'+
+ return '<div class="comm-toolkit"><header class="comm-hero"><p class="comm-kicker">Förstå först, lös sedan</p><h1>Verktyg för bättre samtal</h1><p>Välj ett verktyg utifrån vad som händer mellan er. Ni kan lyssna och ta varandras perspektiv utan att hålla med.</p><p><a href="#kommunikation/spegla">Öva på att spegla någon</a> · <a href="#kommunikation/plan">Förbered en privat samtalsplan</a></p></header>'+
   '<div class="comm-feature-grid"><section class="live-panel comm-feature"><p class="comm-kicker">För båda</p><h2>Nonviolent Communication (NVC)</h2><p>Observation, känsla, behov och önskemål. Träna på ett tydligt jag-budskap utan anklagelser.</p><a class="live-button" href="#nvc">Bygg ett jag-budskap</a></section>'+
   (parent?'<section class="live-panel comm-feature"><p class="comm-kicker">För föräldern</p><h2>Motiverande samtal (MI)</h2><p>Öppna frågor, reflektioner, bekräftelse och sammanfattning. Lyssna utan att försöka styra fram ett visst svar.</p><a class="live-button" href="#mi-foralder">Öppna MI-övningarna</a></section>':'<section class="live-panel comm-feature"><p class="comm-kicker">För tonåringen</p><h2>Din röst är viktig</h2><p>Du får be om att bli lyssnad på, föreslå en annan tid eller tacka nej. Det är inte ditt ansvar att lösa alla konflikter.</p><a href="#nvc">Träna på att uttrycka dig</a></section>')+
   '</div>'+renderCommunicationSafety(role)+'<section class="live-panel comm-situations" aria-labelledby="comm-situations-title"><h2 id="comm-situations-title">Vad händer just nu?</h2><p>Välj en situation. Den passande övningen öppnas direkt här på sidan. Inga svar skickas eller sparas.</p><div class="comm-situation-grid">'+situations.map(([title,skill,desc])=>'<button type="button" class="comm-situation" data-comm-open="'+e(skill)+'"><strong>'+e(title)+'</strong><span>'+e(desc)+'</span></button>').join('')+'</div></section><section class="comm-section"><h2>När samtalet fastnar</h2><p class="live-muted">Öppna en övning och prova en enda sak. Exemplen är förslag, inte repliker någon måste säga.</p><div class="comm-exercises">'+exercises.join('')+'</div></section>'+
+  '<section class="live-panel" id="comm-reflection-practice"><h2 tabindex="-1">Öva på att lyssna och spegla</h2><p>Formulera en varsam spegling av något den andra faktiskt sagt. Avstå från att tolka tankar, tillskriva motiv eller kräva ett visst svar. Det är helt okej om den andra inte vill prata.</p>'+
+  '<form id="comm-reflection-form"><div class="comm-fields">'+[
+    ['heard','1. Vad hörde jag personen säga?','Återge kort personens egna ord, utan att fylla i vad du tror att hen menar.'],
+    ['meaning','2. Vad kan vara viktigt för personen?','En försiktig gissning, inte en sanning. Det går också bra att skriva att du är osäker.'],
+    ['check','3. Hur kan jag fråga om jag förstått?','En kort, öppen kontrollfråga som den andra kan säga nej till eller rätta.']
+  ].map(([key,title,hint])=>'<label for="comm-reflection-'+key+'"><strong>'+e(title)+'</strong><span>'+e(hint)+'</span></label><textarea id="comm-reflection-'+key+'" name="'+key+'" rows="2" maxlength="240" required></textarea>').join('')+
+  '</div><div class="comm-actions"><button type="submit" class="live-button">Förhandsgranska min spegling</button><button type="button" class="comm-quiet-button" data-comm-reflection-reset>Töm speglingen</button></div></form>'+
+  '<p id="comm-reflection-output" class="comm-output" tabindex="-1" role="status" aria-live="polite">Din privata spegling visas här.</p>'+
+  '<p class="live-muted">'+(parent?'Du är som vuxen ansvarig för att inte pressa fram svar.':'Du behöver inte bära ansvaret för att lösa en vuxens oro eller konflikt.')+' Inget sparas eller skickas. Vid rädsla, hot eller kontroll ska trygghet gå före samtalsövningar.</p></section>'+
   '<section class="live-panel" id="comm-solution-planner"><h2 tabindex="-1">Förbered ett förslag – utan att bestämma åt den andra</h2><p>Skriv din egen bild, en öppen fråga och ett förslag som ni kan diskutera. Din text <strong>sparas inte</strong>, skickas inte till någon och används inte av AI. Den andra personen har inte godkänt något bara för att du fyller i formuläret.</p>'+
   '<form id="comm-solution-form"><div class="comm-fields">'+[
     ['problem','1. Vad vill jag prata om?','Beskriv en konkret situation, utan att tolka den andras motiv.'],
@@ -130,6 +148,12 @@ export function renderCommunicationToolkit(role='teen'){
   '<section class="live-panel"><h2>Från samtal till en idé</h2><p>Vill ni testa en ny rutin? Skriv ett frivilligt förslag i <a href="#regler">Schyssta listan</a>. Ingen regel är gemensam förrän båda uttryckligen sagt ja. Hitta gemensamma intressen i <a href="#swipe">Gillaswajpen</a>.</p>'+
   '<p>Föräldern har fortfarande ansvar för säkerhet, omsorg och rimliga gränser. Om någon är rädd eller hotad: prioritera trygghet och stöd, inte samtalsteknik.</p></section>'+
   '<section class="live-panel comm-sources"><h2>Källor och begränsningar</h2><p>Övningarna utgår från beskrivna samtalsfärdigheter och är redaktionellt anpassade för vardagen. De är inte en prövad familjebehandling. NVC är en kommunikationsmodell – inte en metod vars effekter här är kliniskt validerade.</p><ul>'+COMMUNICATION_SOURCES.map(s=>'<li><a href="'+e(s.url)+'" target="_blank" rel="noopener noreferrer">'+e(s.title)+'</a></li>').join('')+'</ul></section></div>';
+}
+export function buildReflectionPractice(input={}){
+ const normalize=value=>typeof value==='string'?value.replace(/\s+/g,' ').trim().slice(0,240):'';
+ const [heard,meaning,check]=['heard','meaning','check'].map(key=>normalize(input[key]));
+ if(!heard||!meaning||!check)return null;
+ return 'Jag hörde att du sa: '+heard+'\nJag undrar om det kan vara viktigt för dig att: '+meaning+'\nHar jag förstått rätt? Jag skulle kunna fråga: '+check+'\nDet här är min försiktiga gissning. Den andra kan rätta mig, säga nej eller avstå från samtalet.';
 }
 export function buildSolutionPlan(input={}){
  const normalize=value=>typeof value==='string'?value.replace(/\s+/g,' ').trim().slice(0,240):'';
