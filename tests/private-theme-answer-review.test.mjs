@@ -11,6 +11,7 @@ const catalog=[
 ];
 function render(answers,role='teen'){
  const env={
+  catalog,
   themeAnswers:new Map([['samtal',new Map(answers)]]),
   themeCardId:(deck,i)=>deck.cards[i]?.id,
   themeCardModel:(deck,i)=>deck.cards[i],
