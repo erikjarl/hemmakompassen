@@ -57,6 +57,18 @@ Detta är **den enda prioriterade arbetskön** för nya `Jobb hk`-pass. Tidigare
 - **Backend:** serververifierad A JA+JA och explicit B-samtycke finns dokumenterat som installerade; kontrollera aktuell databas innan nya påståenden.
 - **Intern testmiljö:** inga externa familjeanvändare enligt projektägaren; den publicerade URL:en är ändå internetåtkomlig. Ändra inte sparade svar och håll privat/delad data isär.
 
+## Kortkommando: `Simulera Jobb hk` (endast läsning / dry-run)
+
+När användaren skriver **`Simulera Jobb hk`** ska assistenten **simulera ett ordinarie självständigt `Jobb hk`-pass utan att genomföra förändringar**:
+
+1. Läs denna aktiva roadmap, `AGENTS.md`, relevant kod och aktuell status för `main`, PR, CI samt Supabase/Cloudflare där det går med **endast läsbehörighet**.
+2. Välj högsta realistiskt genomförbara prioritet enligt samma regler som `Jobb hk`. Förklara vilket eller vilka arbetsmoment som skulle väljas, varför, vilka filer eller funktioner som skulle beröras och hur arbetet skulle utföras.
+3. Gör en konkret **förhandsgranskning** av tänkta ändringar, tester, möjliga blockerare och risker, inklusive skillnaden mellan syntetiska tester och riktiga autentiserade tvåkontotester. Om faktisk data saknas, skriv uttryckligen att bedömningen är hypotetisk.
+4. Redovisa förväntade resultat som **prognoser**, aldrig som genomförda eller verifierade resultat. Beskriv hur ett verkligt pass skulle avgöra om commit, PR, merge, publicering eller migration är lämplig.
+5. **Utför inga skrivningar:** inga GitHub-branches, commits, PR:er eller merges; inga publiceringar, migrationer, databasändringar, ändrade inställningar eller ändringar i roadmapen under själva simuleringen. Kör inte heller transaktionsbaserade testskript som tillfälligt skriver till databasen. Endast läsbaserade kontroller är tillåtna.
+
+Avsluta med ett kort beslutsunderlag: **planerat arbete, risker, testplan och det konkreta nästa steget**. Ett senare separat `Jobb hk`-kommando krävs för att faktiskt utföra planen. Detta kommando begränsar inte befogenheterna för ett vanligt `Jobb hk`-pass.
+
 ## Uppdateringsregel för varje `Jobb hk`
 
 1. Läs **denna fil först** och `AGENTS.md`; kontrollera `main`, öppna PR och verifierade blockerare. Läs historisk roadmap enbart för detaljer.
