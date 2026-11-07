@@ -4,7 +4,8 @@
 
 - [x] **I utvecklingsgren:** servervaliderade aktivitetsaviseringar öppnar avsnittet för rätt kortlek i Gemensamma insikter, med egen länk för uttryckligt delade B-förståelsekort. Hashmål vitlistas; en borttagen matchning eller återkallad delning visas inte på nytt. Inga automatiska läskvitton vid navigering.
 - [x] **Testspecifikation i kod:** nya Node-kontrakt för djuplänkar och syntetiskt mobil-Chromiumflöde för faktisk A-matchning följd av återkallelse.
-- [ ] **PR #128 återstår att verifiera och mergea;** fysisk iOS/VoiceOver, två verkliga autentiserade konton och av-/omparningsrace är ännu inte verifierade. Databas och AI Worker är oförändrade.
+- [x] **PR #128 verifierad och mergad:** [UI/bygg/mobil Chromium #42367563196](https://github.com/erikjarl/hemmakompassen/actions/runs/42367563196) `success`; [PR #128](https://github.com/erikjarl/hemmakompassen/pull/128) mergad som `9d7af697529a8ce7ac6af4ffd9ff5fa12543bdee`. Pages efter merge måste fortfarande kontrolleras. Databas och AI Worker är oförändrade.
+- [ ] **Kvar:** fysisk iOS/VoiceOver, två verkligt autentiserade konton och av-/omparningsrace. CI:s syntetiska mobiltest motsvarar inte faktisk privathetsverifiering.
 
 
 ## 7 november 2026 – NOT-01B: första backendsteget för aktivitetsnotiser (PR #126)
@@ -18,7 +19,7 @@
 - [x] **UI-kod i mergad PR #127:** neutrala aviseringar från autentiserad RPC på startsida/Inkorgen, läsmarkering vid explicit klick, hantering av nätverksfel och inloggningsbyte. Ingen implicit notispress eller privat svarstext.
 - [x] **PR #127 verifierad och mergad:** [UI-webbläsartest #42355469142](https://github.com/erikjarl/hemmakompassen/actions/runs/42355469142) samt [pgTAP #42355469112](https://github.com/erikjarl/hemmakompassen/actions/runs/42355469112) gröna på commit `0b935487931b4f2e196bd2099081735d6be5b3ed`, mergad som `7de0bf6be780f67856ca8764e171bbc8bb15c1fc`. UI- och payloadtester omfattar även mobil Chromium och en uttrycklig läsmarkering.
 - [x] **Pages-publicering verifierad efter #127:** [Pages #42355591116](https://github.com/erikjarl/hemmakompassen/actions/runs/42355591116) rapporterar godkänd build och deploy på `e135c80b7d34fabcd01a0eb32edcaafee205bb72` (UI-koden är oförändrad sedan merge).
-- [ ] **Kvar:** verkligt signerad tvåkontoverifiering, avparning/race conditions, exakt kortlekslänk, säkerhets-/metodgranskning och fysisk iOS/VoiceOver. Tidigare #118–#119 fortsätter endast att skapa frivilliga oskickade chattutkast.
+- [ ] **Kvar:** verkligt signerad tvåkontoverifiering, avparning/race conditions, säkerhets-/metodgranskning och fysisk iOS/VoiceOver. Kortleksdjuplänk finns i #128 men är inte testad med riktiga konton. Tidigare #118–#119 fortsätter endast att skapa frivilliga oskickade chattutkast.
 
 **Gällande Jobb hk-fullmakt (5 november 2026):** se [AGENTS.md](AGENTS.md). Commit, push, PR, merge, publicering och motsvarande projektändringar i GitHub, Supabase och Cloudflare är uttryckligen godkända. Detta ersätter äldre krav på separat merge-/publiceringsgodkännande.
 
