@@ -727,6 +727,22 @@ try{
   await narrow.page.getByRole("heading",{name:/Hej[ ,]+Provförälder/}).waitFor();
   await checkMobileNavigation(narrow.page,'320px mobile navigation');
   await checkOverflow(narrow.page,'320px mobile homepage');
+  await narrow.page.locator('#account-link').waitFor();
+  const headerAudit=await narrow.page.evaluate(()=>{
+    const brand=document.querySelector('.live-top .live-brand');
+    const account=document.querySelector('.live-top #account-link');
+    const b=brand?.getBoundingClientRect();
+    const a=account?.getBoundingClientRect();
+    const styles=account?getComputedStyle(account):null;
+    return {brandRight:b?.right,accountLeft:a?.left,
+      singleLine:!!styles&&styles.whiteSpace==='nowrap',
+      visible:!!a&&a.left>=0&&a.right<=document.documentElement.clientWidth};
+  });
+  assert.ok(headerAudit.brandRight+3<=headerAudit.accountLeft,
+    '320px mobile header brand and account link must not overlap');
+  assert.ok(headerAudit.singleLine&&headerAudit.visible,
+    '320px account link must remain one line fully inside the viewport');
+
   await narrow.page.locator('#live-mobile-nav a[href="#kommunikation"]').scrollIntoViewIfNeeded();
   await capture(narrow.page,'mobile-320-navigation.png');
   await narrow.page.goto(base+'#kommunikation',{waitUntil:'load'});
