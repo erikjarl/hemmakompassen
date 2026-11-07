@@ -74,6 +74,25 @@ test('session changes must ignore old RPC response',async()=>{
  finish({data:[base],error:null});await pending;
  assert.equal(h.state.activityNotifications.length,0);
 });
+test('pairing changes while an RPC is in flight must discard its notifications',async()=>{
+ const h=harness();
+ let finish;
+ h.state.db.rpc=()=>new Promise(resolve=>{finish=resolve;});
+ const pending=h.state.fetchActivityNotifications();
+ h.state.members=[{user_id:'viewer'}];
+ // Deliberately do not increment sharedSession: guard the pairing itself.
+ finish({data:[base],error:null});await pending;
+ assert.equal(h.state.activityNotifications.length,0);
+});
+test('disabling notifications during an RPC discards the old response',async()=>{
+ const h=harness();
+ let finish;
+ h.state.db.rpc=()=>new Promise(resolve=>{finish=resolve;});
+ const pending=h.state.fetchActivityNotifications();
+ h.state.activityNotificationsEnabled=false;
+ finish({data:[base],error:null});await pending;
+ assert.equal(h.state.activityNotifications.length,0);
+});
 test('client only marks notices on a deliberate click and refreshes read status',()=>{
  assert.match(config,/enableActivityNotifications:\s*true/);
  assert.match(source,/data-activity-read=/);

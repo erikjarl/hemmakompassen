@@ -93,7 +93,8 @@ async function fetchActivityNotifications({quiet=false}={}){
   if(!quiet&&page()==='inkorg'&&!familyChatDraft.trim())render();
   let result;
   try{result=await db.rpc('my_activity_notifications');}catch(e){result={error:e};}
-  if(request!==activityNotificationsRequest||viewer!==user?.id||session!==sharedSession)return;
+  if(request!==activityNotificationsRequest||viewer!==user?.id||session!==sharedSession
+    ||members.length!==2||!activityNotificationsEnabled)return;
   activityNotificationsLoading=false;
   if(result?.error||!validActivityNotifications(result?.data)){
     activityNotifications=[];activityNotificationsError='Aktivitetsaviseringar kunde inte kontrolleras. Försök igen.';
