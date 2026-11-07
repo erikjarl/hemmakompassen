@@ -4,8 +4,8 @@ import vm from 'node:vm';
 import {readFileSync} from 'node:fs';
 
 const source=readFileSync(new URL('../live-app.js',import.meta.url),'utf8');
-const readFn=source.match(/async function fetchFamilyChat\(older=false,\{quiet=false\}=\{\}\)\{[\s\S]*?(?=\nasync function markAllFamilyChatRead\()/)?.[0];
-const countFn=source.match(/async function fetchFamilyChatUnread\(\)\{[\s\S]*?(?=\nasync function fetchFamilyChat\()/)?.[0];
+const readFn=source.match(/function mergeFamilyChatPage\([\s\S]*?(?=\nasync function markAllFamilyChatRead\()/)?.[0];
+const countFn=source.match(/async function fetchFamilyChatUnread\(\)\{[\s\S]*?(?=\nfunction mergeFamilyChatPage\()/)?.[0];
 assert.ok(readFn&&countFn,'Test the production quiet read and unread count functions');
 
 const message=(id,body)=>({message_id:id,body,sent_by_me:false,created_at:'2026-11-03T11:00:00Z',read_at:null});
