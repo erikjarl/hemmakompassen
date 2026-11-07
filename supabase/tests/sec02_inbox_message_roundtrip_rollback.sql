@@ -40,6 +40,16 @@ BEGIN
  IF n<>0 OR public.my_family_unread_message_count()<>0 THEN
   RAISE EXCEPTION 'FAIL: outside account could access private inbox';
  END IF;
+ -- Invalid messages are rejected: blank body and oversized body.
+ PERFORM set_config('request.jwt.claims',json_build_object('sub',teen_user,'role','authenticated')::text,true);
+ rejected:=false;
+ BEGIN PERFORM public.send_family_message('   ',gen_random_uuid());
+ EXCEPTION WHEN invalid_parameter_value THEN rejected:=true; END;
+ IF NOT rejected THEN RAISE EXCEPTION 'FAIL: whitespace-only body accepted'; END IF;
+ rejected:=false;
+ BEGIN PERFORM public.send_family_message(repeat('X',1501),gen_random_uuid());
+ EXCEPTION WHEN invalid_parameter_value THEN rejected:=true; END;
+ IF NOT rejected THEN RAISE EXCEPTION 'FAIL: oversized body accepted'; END IF;
  -- Teen -> parent. A repeated request must reuse the same message id.
  PERFORM set_config('request.jwt.claims',json_build_object('sub',teen_user,'role','authenticated')::text,true);
  SELECT public.send_family_message('SEC02 temporary teen to parent',request_key) INTO teen_to_parent;
@@ -84,5 +94,5 @@ BEGIN
   RAISE EXCEPTION 'FAIL: teen unread total did not increase by exactly one'; END IF;
 END $test$;
 RESET ROLE;
-SELECT 'PASS: outsider blocked, bidirectional send/receive, retry-key idempotency, parent-only read receipt, teen historical unread untouched; full rollback' AS audit;
+SELECT 'PASS: outsider blocked, malformed messages rejected, bidirectional send/receive, retry-key idempotency, parent-only read receipt, teen historical unread untouched; full rollback' AS audit;
 ROLLBACK;
