@@ -93,8 +93,14 @@ async function fetchActivityNotifications({quiet=false}={}){
   if(!quiet&&page()==='inkorg'&&!familyChatDraft.trim())render();
   let result;
   try{result=await db.rpc('my_activity_notifications');}catch(e){result={error:e};}
-  if(request!==activityNotificationsRequest||viewer!==user?.id||session!==sharedSession
-    ||members.length!==2||!activityNotificationsEnabled)return;
+  if(request!==activityNotificationsRequest||viewer!==user?.id||session!==sharedSession)return;
+  if(members.length!==2||!activityNotificationsEnabled){
+    // The pairing may have disappeared without another refresh invalidating this request.
+    activityNotifications=[];activityNotificationsError='';activityNotificationsLoading=false;
+    if(['hem','inkorg'].includes(page())&&(page()!=='inkorg'||!familyChatDraft.trim()))render();
+    else menu();
+    return;
+  }
   activityNotificationsLoading=false;
   if(result?.error||!validActivityNotifications(result?.data)){
     activityNotifications=[];activityNotificationsError='Aktivitetsaviseringar kunde inte kontrolleras. Försök igen.';
