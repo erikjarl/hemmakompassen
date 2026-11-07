@@ -1000,6 +1000,27 @@ function themeDecksView(){
 }
 
 
+// A private, read-only overview of this account's already saved theme answers.
+// Do not query or expose the other family member's individual responses.
+function privateThemeAnswerReview(deck){
+  const answers=themeAnswers.get(deck.id);
+  if(!answers?.size)return '';
+  const items=deck.cards.flatMap((_,index)=>{
+    const id=themeCardId(deck,index);
+    if(!answers.has(id))return [];
+    const model=themeCardModel(deck,index);
+    return [{index,text:cardTextForRole(model,viewerRole()),category:model?.category||deck.title,answer:answers.get(id)}];
+  });
+  if(!items.length)return '';
+  return '<section class="live-panel swipe-private-review" aria-labelledby="swipe-private-review-heading">'+
+    '<h2 id="swipe-private-review-heading">Mina sparade svar</h2>'+
+    '<p class="live-muted">Bara dina egna svar visas här. Tryck på ett kort för att ändra ditt svar. Ingen delning sker automatiskt.</p>'+
+    '<details><summary>Visa mina '+items.length+' besvarade kort</summary><ul class="swipe-match-list">'+
+    items.map(item=>'<li><p><strong>'+esc(item.category)+'</strong> · '+esc(item.text)+'</p>'+
+      '<p class="live-muted">Ditt svar: '+(item.answer?'Ja':'Nej')+'</p>'+
+      '<button type="button" class="schyssta-secondary" data-theme-review-index="'+item.index+'" data-theme-review-deck="'+esc(deck.id)+'">Ändra detta svar</button></li>').join('')+
+    '</ul></details></section>';
+}
 function themeSwipeView(){
   const deck=THEME_DECKS.find(d=>d.id===activeThemeDeck);
   if(!deck||!themeAccessAllowed()){activeThemeDeck=null;return swipeView();}
@@ -1022,7 +1043,7 @@ function themeSwipeView(){
       :'<div class="swipe-finished"><h2>Alla '+visible.length+' kort i '+esc(categoryLabel)+' är sparade</h2><p>Du kan gå igenom urvalet igen och ändra dina egna svar.</p>'+
        '<button type="button" class="live-button" id="theme-restart">Gå igenom igen</button></div>')+
     '<p id="swipe-save-status" class="swipe-disclaimer" role="status">'+
-    esc(themeSaveError||'Ditt svar sparas privat i ditt konto. Gemensamt visas bara kort där ni båda svarat ja.')+'</p></div>'+swipeResults(deck.id)+insightsEntry()+'</div>';
+    esc(themeSaveError||'Ditt svar sparas privat i ditt konto. Gemensamt visas bara kort där ni båda svarat ja.')+'</p></div>'+privateThemeAnswerReview(deck)+swipeResults(deck.id)+insightsEntry()+'</div>';
 }
 async function saveThemeAnswer(direction,index,deckId,viewer,session){
   const deck=THEME_DECKS.find(d=>d.id===deckId);
@@ -1785,6 +1806,23 @@ if(open&&themeAccessAllowed()){
   if(deck){activeThemeDeck=deck.id;themeCategory='all';themeIndex=nextThemeUnanswered(deck);themeReview=false;themeSaveError='';void fetchSwipeMatches(deck.id);render();scrollLiveMainTop();}
 }
 if(e.target.closest('#theme-back')){activeThemeDeck=null;themeCategory='all';themeReview=false;void fetchSwipeMatches('general');render();scrollLiveMainTop();}
+const reviewButton=e.target.closest('[data-theme-review-index]');
+if(reviewButton&&page()==='swipe'&&themeAccessAllowed()&&!swipeBusy&&!importanceSaving.size){
+  const deck=THEME_DECKS.find(d=>d.id===activeThemeDeck);
+  const index=Number(reviewButton.dataset.themeReviewIndex);
+  if(deck&&reviewButton.dataset.themeReviewDeck===deck.id&&Number.isSafeInteger(index)
+     &&index>=0&&index<deck.cards.length&&themeAnswers.get(deck.id).has(themeCardId(deck,index))){
+    const category=themeCardModel(deck,index)?.category;
+    themeCategory=category&&themeCategories(deck).includes(category)?category:'all';
+    themeReview=true;
+    themeIndex=index;
+    themeSaveError='';
+    render();
+    scrollLiveMainTop();
+    $('swipe-card')?.focus({preventScroll:true});
+  }
+  return;
+}
 if(e.target.closest('#theme-restart')&&themeAccessAllowed()){const deck=THEME_DECKS.find(d=>d.id===activeThemeDeck);if(deck){themeReview=true;themeIndex=themeVisibleIndices(deck)[0]??deck.cards.length;themeSaveError='';render();}}
 });
 document.addEventListener('input',e=>{if(e.target.matches?.('#mediator-input')){mediatorExperience.input(e.target.value);const count=document.getElementById('mediator-char-count');if(count)count.textContent=e.target.value.length+' / 2000 tecken';const send=document.querySelector('#mediator-form button[type="submit"]');if(send)send.disabled=!e.target.value.trim();return;}if(e.target.matches?.('#family-chat-body')){familyChatDraft=e.target.value;familyChatRequestKey=null;familyChatStatus='';return;}if(e.target.matches?.('#schyssta-search')){schysstaSearch=e.target.value.slice(0,100);applySchysstaFilters();return;}if(e.target.matches?.('#schyssta-body')){schysstaDraft=e.target.value;schysstaDraftKey=null;schysstaMessage='';const preview=document.getElementById('schyssta-preview-text');if(preview)preview.textContent=schysstaDraft.trim()||'Skriv en regel ovan för att förhandsgranska texten.';const count=document.getElementById('schyssta-length');if(count)count.textContent=schysstaDraft.length+' av 500 tecken';return;}if(!e.target.matches?.('[data-importance]'))return;e.target.setAttribute('aria-valuetext',importanceValueText(Number(e.target.value)));});
