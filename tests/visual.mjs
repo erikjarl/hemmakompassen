@@ -1456,25 +1456,6 @@ try{
   await unlocked.page.locator("#swipe-card").scrollIntoViewIfNeeded();
   await capture(unlocked.page,"mobile-theme-card.png");
   assert.match(await unlocked.page.locator("#swipe-card").innerText(),/Vad som varit roligt den senaste veckan/);
-  assert.equal(await unlocked.page.locator('.swipe-private-review').count(),0,'An empty personal history is not rendered');
-  await unlocked.page.locator('[data-swipe="yes"]').click();
-  await unlocked.page.locator('.swipe-private-review summary').waitFor();
-  await unlocked.page.locator('.swipe-private-review summary').click();
-  assert.match(await unlocked.page.locator('.swipe-private-review').innerText(),/Ditt svar: Ja/);
-  assert.equal(await unlocked.page.locator('.swipe-private-review [data-theme-review-index]').count(),1);
-  await unlocked.page.locator('.swipe-private-review [data-theme-review-index="0"]').click();
-  assert.match(await unlocked.page.locator('#swipe-card').innerText(),/Vad som varit roligt den senaste veckan/,
-    'A saved theme answer can be opened directly without swiping past 100 cards');
-  assert.equal(await unlocked.page.locator('#swipe-card').evaluate(el=>document.activeElement===el),true,
-    'Focus moves to the selected saved card');
-  await unlocked.page.locator('[data-swipe="no"]').click();
-  await unlocked.page.locator('.swipe-private-review summary').click();
-  assert.match(await unlocked.page.locator('.swipe-private-review').innerText(),/Ditt svar: Nej/,
-    'The review reflects the updated private answer');
-  await checkOverflow(unlocked.page,'Private saved-answer review 390px');
-  await unlocked.page.locator('.swipe-private-review').scrollIntoViewIfNeeded();
-  await capture(unlocked.page,'mobile-theme-private-answer-review.png');
-
   await unlocked.page.getByRole('heading',{name:'Era gemensamma svar · Samtalsämnen'}).waitFor();
   const themeSharedText=await unlocked.page.locator('.swipe-results').innerText();
   assert.match(themeSharedText,/Vad som varit roligt den senaste veckan/,'Mutual theme YES is displayed inside its deck');
@@ -1503,6 +1484,33 @@ try{
   assert.match(await unlocked.page.locator("#swipe-card").getAttribute("aria-label"),/Temakort 1 av 104/,"Another deck starts independently");
   await unlocked.page.locator("#theme-back").click();
   await unlocked.context.close();
+  // Separate browser context: this correction scenario must not mutate the
+  // saved-answer fixture used by the existing swipe progression tests.
+  const review=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},
+    {authenticated:true,paired:true,unlocked:true});
+  await review.page.goto(base+'#swipe',{waitUntil:'load'});
+  await review.page.locator('[data-theme-open="samtal"]').click();
+  await review.page.locator('#swipe-card').waitFor();
+  assert.equal(await review.page.locator('.swipe-private-review').count(),0,'An empty personal history is not rendered');
+  await review.page.locator('[data-swipe="yes"]').click();
+  await review.page.locator('.swipe-private-review summary').waitFor();
+  await review.page.locator('.swipe-private-review summary').click();
+  assert.match(await review.page.locator('.swipe-private-review').innerText(),/Ditt svar: Ja/);
+  assert.equal(await review.page.locator('.swipe-private-review [data-theme-review-index]').count(),1);
+  await review.page.locator('.swipe-private-review [data-theme-review-index="0"]').click();
+  assert.match(await review.page.locator('#swipe-card').innerText(),/Vad som varit roligt den senaste veckan/,
+    'A saved theme answer can be opened directly without swiping past 100 cards');
+  assert.equal(await review.page.locator('#swipe-card').evaluate(el=>document.activeElement===el),true,
+    'Focus moves to the selected saved card');
+  await review.page.locator('[data-swipe="no"]').click();
+  await review.page.locator('.swipe-private-review summary').click();
+  assert.match(await review.page.locator('.swipe-private-review').innerText(),/Ditt svar: Nej/,
+    'The review reflects the updated private answer');
+  await checkOverflow(review.page,'Private saved-answer review 390px');
+  await review.page.locator('.swipe-private-review').scrollIntoViewIfNeeded();
+  await capture(review.page,'mobile-theme-private-answer-review.png');
+
+  await review.context.close();
   const unavailable=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,paired:true,unlockUnavailable:true});
   await unavailable.page.goto(base+"#swipe",{waitUntil:"load"});
   await unavailable.page.locator(".swipe-themes details").first().waitFor();
