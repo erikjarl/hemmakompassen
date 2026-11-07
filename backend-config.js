@@ -18,6 +18,8 @@ window.HEMMAKOMPASSEN_BACKEND = Object.freeze({
   // Internal online test site only (no external users): enable Schyssta RPCs.
   // Keep authenticated pair authorization and versioned dual consent in backend.
   enableSchysstaList: true,
+  // Internal online testing: server-generated, consent-filtered activity digests.
+  enableActivityNotifications: true,
   // IPIP-50: all individual item answers stay self-only. Shared FIVE scores
   // require exact current pair + both opt-ins in verified server-side RPCs.
   enablePersonalitySharing: true,

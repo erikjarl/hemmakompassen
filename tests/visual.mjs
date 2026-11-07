@@ -93,12 +93,12 @@ async function capture(page,name){
   await page.screenshot({path:path.join(output,name),fullPage:true,animations:"disabled"});
   captureRecords.push({file:name,viewport:page.viewportSize(),...overlays});
 }
-async function freshContext(options,{authenticated=false,paired=false,role="parent",unlocked=false,unlockUnavailable=false,priorityUnavailable=false,priorityFeature=true,privateImportance=false,preansweredGeneral=false,preansweredSkipped=false,emptySchyssta=false,homeUnreadFailure=false,personalityComplete=false,personalitySharing=false,personalityPartnerShared=false,aiMediator=false,aiAnalyses=false}={}){
+async function freshContext(options,{authenticated=false,paired=false,role="parent",unlocked=false,unlockUnavailable=false,priorityUnavailable=false,priorityFeature=true,privateImportance=false,preansweredGeneral=false,preansweredSkipped=false,emptySchyssta=false,homeUnreadFailure=false,personalityComplete=false,personalitySharing=false,personalityPartnerShared=false,aiMediator=false,aiAnalyses=false,activityNotifications=false}={}){
   const context=await browser.newContext({...options,locale:"sv-SE",reducedMotion:"reduce"});
   await context.addInitScript(value=>{window.__HK_TEST_USER__=value.user;window.__HK_TEST_PAIRED__=value.paired;window.__HK_TEST_ROLE__=value.role;window.__HK_TEST_UNLOCKED__=value.unlocked;window.__HK_UNLOCK_RPC_UNAVAILABLE__=value.unlockUnavailable;window.__HK_PRIORITY_RPC_UNAVAILABLE__=value.priorityUnavailable;window.__HK_PRIORITISED_TEEN__=value.privateImportance;window.__HK_PREANSWERED_GENERAL__=value.preansweredGeneral;window.__HK_PREANSWERED_SKIPPED__=value.preansweredSkipped;window.__HK_SCHYSSTA_EMPTY__=value.emptySchyssta;window.__HK_HOME_UNREAD_FAILURE__=value.homeUnreadFailure;window.__HK_TEST_PERSONALITY_DONE__=value.personalityComplete;window.__HK_TEST_PERSONALITY_PARTNER_SHARED__=value.personalityPartnerShared;},{personalityPartnerShared,personalityComplete,emptySchyssta,homeUnreadFailure,preansweredGeneral,preansweredSkipped,user:authenticated?{id:role==="teen"?"10000000-0000-0000-0000-000000000002":"10000000-0000-0000-0000-000000000001",email:"synthetic@example.invalid"}:null,paired,role,unlocked,unlockUnavailable,priorityUnavailable,privateImportance});
   await context.route(base+"backend-config.js*",route=>route.fulfill({
     contentType:"application/javascript",
-    body:"window.HEMMAKOMPASSEN_BACKEND=Object.freeze({supabaseUrl:'https://synthetic.invalid',supabasePublishableKey:'synthetic',enableSharedPriorities:"+String(priorityFeature)+",enableSharedPolling:true,enableSharedInsights:true,enableSharedUnderstanding:true,enableSchysstaList:true,enablePersonalitySharing:"+String(personalitySharing)+",enableAiMediator:"+String(aiMediator||aiAnalyses)+",enableAiHistory:"+String(aiMediator||aiAnalyses)+",enableAiResultAnalyses:"+String(aiAnalyses)+",aiMediatorUrl:'https://hemmakompassen-ai-medlare.erikbertiljarl.workers.dev/api/ai/mediate'});"
+    body:"window.HEMMAKOMPASSEN_BACKEND=Object.freeze({supabaseUrl:'https://synthetic.invalid',supabasePublishableKey:'synthetic',enableSharedPriorities:"+String(priorityFeature)+",enableSharedPolling:true,enableSharedInsights:true,enableSharedUnderstanding:true,enableSchysstaList:true,enableActivityNotifications:"+String(activityNotifications)+",enablePersonalitySharing:"+String(personalitySharing)+",enableAiMediator:"+String(aiMediator||aiAnalyses)+",enableAiHistory:"+String(aiMediator||aiAnalyses)+",enableAiResultAnalyses:"+String(aiAnalyses)+",aiMediatorUrl:'https://hemmakompassen-ai-medlare.erikbertiljarl.workers.dev/api/ai/mediate'});"
   }));
   await context.route("https://esm.sh/**",route=>route.fulfill({
     contentType:"application/javascript",
@@ -127,6 +127,8 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
         let schysstaHistory=[];
         let chatMessages=window.__HK_TEST_PAIRED__?[{message_id:'71000000-0000-4000-8000-000000000001',body:'Hej, ska vi prata senare?',sent_by_me:false,created_at:'2026-11-01T10:00:00Z',read_at:null}]:[];
         const chatTokens=new Map();
+        let activityNotices=[{notification_id:'57000000-0000-4000-8000-000000000001',
+          event_kind:'mutual_match',deck_id:'aktiviteter',read_at:null,updated_at:'2026-11-07T09:00:00Z'}];
         let schysstaNotifications=[{notification_id:'40000000-0000-4000-8000-000000000001',agreement_id:'30000000-0000-4000-8000-000000000001',kind:'rule_proposed',body:'Vi pratar om hur vi delar på sysslorna.',read_at:null,created_at:'2026-10-30T12:00:01Z'}];
         let schysstaManualRules=[{agreement_id:'30000000-0000-4000-8000-000000000001',body:'Vi pratar om hur vi delar på sysslorna.',status:'proposed',agreement_version:1,proposed_by_me:false,own_decision:null,parent_decision:null,teen_decision:null,created_at:'2026-10-30T12:00:00Z'}];
         schysstaManualRules.push({agreement_id:'30000000-0000-4000-8000-000000000003',body:'Vi frågar innan vi lånar saker.',status:'accepted',agreement_version:1,proposed_by_me:false,own_decision:true,parent_decision:true,teen_decision:true,created_at:'2026-10-30T12:00:00Z'});
@@ -171,6 +173,13 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
             }
             if(window.__HK_HOME_UNREAD_FAILURE__===true&&['my_family_unread_message_count','my_schyssta_notifications'].includes(name))return {data:null,error:{message:'Synthetic notification source unavailable'}};
             if(window.__HK_SCHYSSTA_EMPTY__===true&&['shared_schyssta_rule_suggestions','my_schyssta_rules','my_manual_schyssta_rules','my_schyssta_notifications','my_schyssta_replacement_links','my_schyssta_rule_history'].includes(name))return {data:[],error:null};
+            if(name==='my_activity_notifications')return {data:window.__HK_TEST_PAIRED__?activityNotices:[],error:null};
+            if(name==='mark_activity_notification_read'){
+              window.__HK_ACTIVITY_MARK_COUNT__=(window.__HK_ACTIVITY_MARK_COUNT__||0)+1;
+              activityNotices=activityNotices.map(n=>n.notification_id===args.p_notification_id
+                ?{...n,read_at:'2026-11-07T09:01:00Z'}:n);
+              return {data:null,error:null};
+            }
             if(name==='my_family_members')return {data:current()?(window.__HK_TEST_PAIRED__?[{user_id:'10000000-0000-0000-0000-000000000001',role:'parent',display_name:'Provförälder'},{user_id:'10000000-0000-0000-0000-000000000002',role:'teen',display_name:'Provtonåring'}]:[{user_id:current().id,role:window.__HK_TEST_ROLE__,display_name:window.__HK_TEST_ROLE__==='teen'?'Provtonåring':'Provförälder'}]):[],error:null};
              if(name==='shared_swipe_matches'){
                window.__HK_MATCH_RPC_CALLS__=(window.__HK_MATCH_RPC_CALLS__||0)+1;
@@ -349,6 +358,28 @@ try{
   await checkOverflow(login.page,"Mobile sign-in");
   await capture(login.page,"mobile-login.png");
   await login.context.close();
+  const activity=await freshContext(
+    {viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},
+    {authenticated:true,paired:true,activityNotifications:true}
+  );
+  await activity.page.waitForFunction(()=>document.querySelector('#live-app')?.textContent.includes(
+    '1 nya gemensamma kort- eller aktivitetsaviseringar'));
+  assert.equal(await activity.page.evaluate(()=>window.__HK_ACTIVITY_MARK_COUNT__||0),0,
+    'A fresh activity event is not automatically marked as read on the homepage');
+  await activity.page.goto(base+'#inkorg',{waitUntil:'load'});
+  await activity.page.locator('[data-activity-read]').waitFor();
+  assert.match(await activity.page.locator('#live-app').innerText(),/Nytt gemensamt JA · Aktiviteter/,
+    'Activity inbox shows an allowed deck but no private answer text');
+  assert.equal(await activity.page.evaluate(()=>window.__HK_ACTIVITY_MARK_COUNT__||0),0,
+    'Opening the inbox does not generate a read receipt');
+  await activity.page.locator('[data-activity-read]').click();
+  await activity.page.waitForFunction(()=>document.querySelector('[data-activity-read]')===null);
+  assert.equal(await activity.page.evaluate(()=>window.__HK_ACTIVITY_MARK_COUNT__||0),1,
+    'Explicit click marks one activity digest read via the RPC');
+  assert.equal(await activity.page.locator('[data-activity-read]').count(),0,
+    'Activity notification is visibly read after explicit server roundtrip');
+  await checkOverflow(activity.page,'Activity inbox mobile');
+  await activity.context.close();
   const m=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true});
   await m.page.getByRole("heading",{name:/Hej[ ,]+Provförälder/}).waitFor();
   assert.match(await m.page.locator("#live-app").innerText(),/Din familj/i);
