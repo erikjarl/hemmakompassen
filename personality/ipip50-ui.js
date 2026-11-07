@@ -1,8 +1,9 @@
 import {IPIP50_V1} from './ipip50-v1.js';
+import {createPrivateIpipRetests} from './ipip50-retest.js?v=20261107-private-retest1';
 import {scoreIPIP50} from './ipip50-scoring.js';
-import {buildIPIP50FamilyInsights} from './ipip50-family-insights.js?v=20261107-ipip-consent-sync2';
-import {richFamilyReflection} from './ipip50-family-copy.js?v=20261107-ipip-consent-sync2';
-import {IPIP50_REFERENCE,IPIP50_PERCENTILE_BANDS,approximateReferencePercentile,referenceLimits,describeReferenceProfile,formatSv} from './ipip50-reference.js?v=20261107-ipip-consent-sync2';
+import {buildIPIP50FamilyInsights} from './ipip50-family-insights.js?v=20261107-private-retest1';
+import {richFamilyReflection} from './ipip50-family-copy.js?v=20261107-private-retest1';
+import {IPIP50_REFERENCE,IPIP50_PERCENTILE_BANDS,approximateReferencePercentile,referenceLimits,describeReferenceProfile,formatSv} from './ipip50-reference.js?v=20261107-private-retest1';
 import {loadMyIPIP50Answers,saveMyIPIP50Answer} from './ipip50-storage.js';
 
 const esc=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -225,13 +226,16 @@ function familyReflectionPanel(parentProfile,teenProfile,viewerRole){
 
 function statusPanel(message){return '<section class="live-panel"><p class="pf-status" role="status">'+esc(message)+'</p></section>';}
 
-export function createPersonalityExperience({db,onRender,isSharingEnabled=false,useAiAnalysis=false,analysisPanel=()=>'',saveExport=downloadOwnIPIP50Export}){
+export function createPersonalityExperience({db,onRender,isSharingEnabled=false,useAiAnalysis=false,analysisPanel=()=>'',saveExport=downloadOwnIPIP50Export,isRetestEnabled=false}){
   let viewer=null,sequence=0,consentRequest=0,answers={},loading=false,loaded=false,loadError='',saving=false,saveError='';
   let active=false,index=0,selectedAnswer=null,shareEnabled=false,shareVerified=false,shareBusy=false,shareError='',paired=null,partnerError='',exportFeedback='';
   const repaint=()=>onRender();
+  const retests=isRetestEnabled?createPrivateIpipRetests({db,onRender:repaint,
+    renderOwnScores:profile=>percentileChart(profile)+table(profile)+referenceCaveat()}):null;
   function reset(userId=null){
     viewer=userId;sequence++;consentRequest++;answers={};loading=false;loaded=false;loadError='';saving=false;
     saveError='';active=false;index=0;selectedAnswer=null;shareEnabled=false;shareVerified=false;shareBusy=false;shareError='';paired=null;partnerError='';exportFeedback='';
+    retests?.reset(userId);
   }
   async function fetchPaired(userId,token){
     if(!isSharingEnabled)return;
@@ -287,6 +291,7 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false,
     answers=loadedAnswers.answers;shareEnabled=!!consent;shareVerified=true;index=FIRST_UNANSWERED(answers);
     loaded=true;loading=false;
     if(isSharingEnabled&&shareEnabled&&loadedAnswers.status.complete)await fetchPaired(userId,token);
+    if(token===sequence&&viewer===userId&&retests)await retests.load(userId);
     if(token===sequence&&viewer===userId)repaint();
   }
   function getAiSnapshot(){
@@ -358,9 +363,10 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false,
     return heading+'<section class="live-panel pf-results"><h2>Din profil</h2><p>Dina fem skalor visar uppskattad placering jämfört med en amerikansk vuxenreferens, inte svenska normer.</p>'+
       percentileChart(own)+table(own)+(useAiAnalysis?analysisPanel('personality','own',getAiSnapshot()):referenceFeedback(own))+referenceCaveat()+
       '<p class="live-muted">Skalorna bygger på dina svar (10–50). Högt eller lågt är inte i sig bättre eller sämre. Den svenska översättningen behöver prövas vetenskapligt.</p>'+
-      '<button type="button" data-pf-action="review">Granska eller ändra mina svar</button>'+exportControls+'</section>'+sharing+comparison;
+      '<button type="button" data-pf-action="review">Granska eller ändra mina svar</button>'+exportControls+'</section>'+sharing+comparison+(retests?retests.render():'');
   }
   async function handleClick(element,{isPaired=false}={}){
+    if(retests&&await retests.handleClick(element))return true;
     const btn=element?.closest?.('[data-pf-action]');
     if(!btn||!viewer||saving||shareBusy)return false;
     if(btn.dataset.pfAction==='reload'){await load(viewer);return true;}
@@ -427,6 +433,7 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false,
     return true;
   }
   async function handleChange(target){
+    if(retests&&await retests.handleChange(target))return true;
     if(!target?.matches?.('input[data-pf-answer]')||!active||saving||!viewer||!loaded)return false;
     const item=ITEMS[index],value=Number(target.value);
     if(target.dataset.pfAnswer!==item.id||!Number.isInteger(value)||value<1||value>5)return false;

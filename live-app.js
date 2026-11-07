@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261107-ipip-consent-sync2';
-import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261107-ipip-consent-sync2';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261107-ipip-consent-sync2';
-import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-ipip-consent-sync2';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261107-ipip-consent-sync2';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261107-private-retest1';
+import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261107-private-retest1';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261107-private-retest1';
+import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-private-retest1';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261107-private-retest1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -42,7 +42,7 @@ const THEME_DECKS=THEME_DECK_MODELS.map(deck=>({...deck,cards:deck.cards.map(car
 let user=null,profile=null,members=[],refreshGeneration=0;
 const mediatorExperience=createAiMediatorExperience({db,config:c,escapeHtml:esc,getViewerRole:()=>viewerRole(),onRender:()=>{if(user&&page()==='medlare')render();}});
 const aiResults=createAiResultExperience({db,config:c,onRender:()=>{if(user&&['personlighet','swipe','insikter'].includes(page()))render();}});
-const personalityExperience=createPersonalityExperience({db,isSharingEnabled:personalitySharingEnabled,
+const personalityExperience=createPersonalityExperience({db,isSharingEnabled:personalitySharingEnabled,isRetestEnabled:c.enablePrivateRetests===true,
   useAiAnalysis:aiResultEnabled,analysisPanel:(kind,scope,signature)=>aiResults.panel(kind,scope,signature),
   onRender:()=>{if(user&&page()==='personlighet')render();}});
 let swipeIndex=0,swipeBusy=false,swipeReview=false,swipeLoadError='',swipeSaveError='';
@@ -1614,7 +1614,7 @@ if(aiRetry&&aiResultEnabled&&user){
   if(signature)void aiResults.ensure(kind,scope,signature,{force:true});
   return;
 }
-if(e.target.closest('#mediator-clear')){mediatorExperience.clear();return;}if(e.target.closest('#mediator-new')){void mediatorExperience.createChat();return;}if(e.target.closest('#mediator-refresh-context')){void mediatorExperience.loadContextStatus();return;}if(e.target.closest('#mediator-delete')){if(window.confirm('Vill du radera hela detta privata samtal permanent?'))void mediatorExperience.deleteChat();return;}const mediatorOpen=e.target.closest('[data-mediator-open]');if(mediatorOpen){void mediatorExperience.openChat(mediatorOpen.dataset.mediatorOpen);return;}if(e.target.closest('[data-pf-action]')){void personalityExperience.handleClick(e.target,{isPaired:members.length===2&&members.some(m=>m.role==='parent')&&members.some(m=>m.role==='teen')});return;}const b=e.target.closest('[data-swipe]');if(b)advanceSwipe(b.dataset.swipe);if(e.target.closest('#swipe-restart')){swipeSkippedReview=false;swipeReview=true;swipeIndex=visibleGeneralIndices()[0]??STATEMENTS.length;render();}
+if(e.target.closest('#mediator-clear')){mediatorExperience.clear();return;}if(e.target.closest('#mediator-new')){void mediatorExperience.createChat();return;}if(e.target.closest('#mediator-refresh-context')){void mediatorExperience.loadContextStatus();return;}if(e.target.closest('#mediator-delete')){if(window.confirm('Vill du radera hela detta privata samtal permanent?'))void mediatorExperience.deleteChat();return;}const mediatorOpen=e.target.closest('[data-mediator-open]');if(mediatorOpen){void mediatorExperience.openChat(mediatorOpen.dataset.mediatorOpen);return;}if(e.target.closest('[data-pf-action],[data-ipip-retest]')){void personalityExperience.handleClick(e.target,{isPaired:members.length===2&&members.some(m=>m.role==='parent')&&members.some(m=>m.role==='teen')});return;}const b=e.target.closest('[data-swipe]');if(b)advanceSwipe(b.dataset.swipe);if(e.target.closest('#swipe-restart')){swipeSkippedReview=false;swipeReview=true;swipeIndex=visibleGeneralIndices()[0]??STATEMENTS.length;render();}
 if(e.target.closest('#swipe-review-skipped')&&viewerRole()==='teen'&&!swipeBusy){swipeSkippedReview=true;swipeReview=false;swipeIndex=nextSkippedAfter(-1);render();}if(e.target.closest('#swipe-skip')&&viewerRole()==='teen'&&GENERAL_CARDS[swipeIndex]?.type==='understanding'&&!swipeBusy)void skipUnderstandingCard(swipeIndex,user.id,sharedSession);if(e.target.closest('#swipe-reload'))refresh().catch(showError);const refreshMatches=e.target.closest('[data-refresh-matches]');if(refreshMatches&&!sharedLoading)void fetchSwipeMatches(refreshMatches.dataset.refreshMatches);if(e.target.closest('#retry-theme-unlock')&&!themesLoading)void fetchThemeUnlock();
 if(e.target.closest('#insights-retry')&&!insightsLoading)void fetchInsights();
 const inviteActivity=e.target.closest('[data-insight-activity]');
@@ -1688,7 +1688,7 @@ if(e.target.closest('#theme-restart')&&themeAccessAllowed()){const deck=THEME_DE
 document.addEventListener('input',e=>{if(e.target.matches?.('#mediator-input')){mediatorExperience.input(e.target.value);const count=document.getElementById('mediator-char-count');if(count)count.textContent=e.target.value.length+' / 2000 tecken';const send=document.querySelector('#mediator-form button[type="submit"]');if(send)send.disabled=!e.target.value.trim();return;}if(e.target.matches?.('#family-chat-body')){familyChatDraft=e.target.value;familyChatRequestKey=null;familyChatStatus='';return;}if(e.target.matches?.('#schyssta-search')){schysstaSearch=e.target.value.slice(0,100);applySchysstaFilters();return;}if(e.target.matches?.('#schyssta-body')){schysstaDraft=e.target.value;schysstaDraftKey=null;schysstaMessage='';const preview=document.getElementById('schyssta-preview-text');if(preview)preview.textContent=schysstaDraft.trim()||'Skriv en regel ovan för att förhandsgranska texten.';const count=document.getElementById('schyssta-length');if(count)count.textContent=schysstaDraft.length+' av 500 tecken';return;}if(!e.target.matches?.('[data-importance]'))return;e.target.setAttribute('aria-valuetext',importanceValueText(Number(e.target.value)));});
 document.addEventListener('change',e=>{
   if(e.target.matches?.('#mediator-use-context')){mediatorExperience.setProjectContext(e.target.checked);return;}
-  if(e.target.matches?.('input[data-pf-answer]')){void personalityExperience.handleChange(e.target);return;}
+  if(e.target.matches?.('input[data-pf-answer],input[data-ipip-retest-answer]')){void personalityExperience.handleChange(e.target);return;}
   if(e.target.matches?.('#schyssta-status-filter')){schysstaFilterStatus=['all','approved','ongoing'].includes(e.target.value)?e.target.value:'all';applySchysstaFilters();return;}
   if(e.target.matches?.('#theme-category')&&activeThemeDeck&&themeAccessAllowed()){
     const deck=THEME_DECKS.find(d=>d.id===activeThemeDeck),category=e.target.value;

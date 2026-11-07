@@ -93,12 +93,12 @@ async function capture(page,name){
   await page.screenshot({path:path.join(output,name),fullPage:true,animations:"disabled"});
   captureRecords.push({file:name,viewport:page.viewportSize(),...overlays});
 }
-async function freshContext(options,{authenticated=false,paired=false,role="parent",unlocked=false,unlockUnavailable=false,priorityUnavailable=false,priorityFeature=true,privateImportance=false,preansweredGeneral=false,preansweredSkipped=false,emptySchyssta=false,homeUnreadFailure=false,personalityComplete=false,personalitySharing=false,personalityPartnerShared=false,aiMediator=false,aiAnalyses=false,activityNotifications=false}={}){
+async function freshContext(options,{authenticated=false,paired=false,role="parent",unlocked=false,unlockUnavailable=false,priorityUnavailable=false,priorityFeature=true,privateImportance=false,preansweredGeneral=false,preansweredSkipped=false,emptySchyssta=false,homeUnreadFailure=false,personalityComplete=false,personalitySharing=false,personalityPartnerShared=false,privateRetests=false,aiMediator=false,aiAnalyses=false,activityNotifications=false}={}){
   const context=await browser.newContext({...options,locale:"sv-SE",reducedMotion:"reduce"});
   await context.addInitScript(value=>{window.__HK_TEST_USER__=value.user;window.__HK_TEST_PAIRED__=value.paired;window.__HK_TEST_ROLE__=value.role;window.__HK_TEST_UNLOCKED__=value.unlocked;window.__HK_UNLOCK_RPC_UNAVAILABLE__=value.unlockUnavailable;window.__HK_PRIORITY_RPC_UNAVAILABLE__=value.priorityUnavailable;window.__HK_PRIORITISED_TEEN__=value.privateImportance;window.__HK_PREANSWERED_GENERAL__=value.preansweredGeneral;window.__HK_PREANSWERED_SKIPPED__=value.preansweredSkipped;window.__HK_SCHYSSTA_EMPTY__=value.emptySchyssta;window.__HK_HOME_UNREAD_FAILURE__=value.homeUnreadFailure;window.__HK_TEST_PERSONALITY_DONE__=value.personalityComplete;window.__HK_TEST_PERSONALITY_PARTNER_SHARED__=value.personalityPartnerShared;},{personalityPartnerShared,personalityComplete,emptySchyssta,homeUnreadFailure,preansweredGeneral,preansweredSkipped,user:authenticated?{id:role==="teen"?"10000000-0000-0000-0000-000000000002":"10000000-0000-0000-0000-000000000001",email:"synthetic@example.invalid"}:null,paired,role,unlocked,unlockUnavailable,priorityUnavailable,privateImportance});
   await context.route(base+"backend-config.js*",route=>route.fulfill({
     contentType:"application/javascript",
-    body:"window.HEMMAKOMPASSEN_BACKEND=Object.freeze({supabaseUrl:'https://synthetic.invalid',supabasePublishableKey:'synthetic',enableSharedPriorities:"+String(priorityFeature)+",enableSharedPolling:true,enableSharedInsights:true,enableSharedUnderstanding:true,enableSchysstaList:true,enableActivityNotifications:"+String(activityNotifications)+",enablePersonalitySharing:"+String(personalitySharing)+",enableAiMediator:"+String(aiMediator||aiAnalyses)+",enableAiHistory:"+String(aiMediator||aiAnalyses)+",enableAiResultAnalyses:"+String(aiAnalyses)+",aiMediatorUrl:'https://hemmakompassen-ai-medlare.erikbertiljarl.workers.dev/api/ai/mediate'});"
+    body:"window.HEMMAKOMPASSEN_BACKEND=Object.freeze({supabaseUrl:'https://synthetic.invalid',supabasePublishableKey:'synthetic',enableSharedPriorities:"+String(priorityFeature)+",enableSharedPolling:true,enableSharedInsights:true,enableSharedUnderstanding:true,enableSchysstaList:true,enableActivityNotifications:"+String(activityNotifications)+",enablePersonalitySharing:"+String(personalitySharing)+",enablePrivateRetests:"+String(privateRetests)+",enableAiMediator:"+String(aiMediator||aiAnalyses)+",enableAiHistory:"+String(aiMediator||aiAnalyses)+",enableAiResultAnalyses:"+String(aiAnalyses)+",aiMediatorUrl:'https://hemmakompassen-ai-medlare.erikbertiljarl.workers.dev/api/ai/mediate'});"
   }));
   await context.route("https://esm.sh/**",route=>route.fulfill({
     contentType:"application/javascript",
@@ -108,6 +108,8 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
         const answers=new Map(window.__HK_PREANSWERED_GENERAL__?Array.from({length:34},(_,i)=>{const id='general-'+String(i+1).padStart(2,'0');return [id,{deck_id:'general',card_id:id,answer:true}]}):window.__HK_TEST_PAIRED__?[['general-01',{deck_id:'general',card_id:'general-01',answer:true}],['general-02',{deck_id:'general',card_id:'general-02',answer:false}]]:[]);
         const personalityAnswers=new Map(window.__HK_TEST_PERSONALITY_DONE__?Array.from({length:50},(_,i)=>['ipip50-'+String(i+1).padStart(3,'0'),3]):[]);
         let personalityConsent=false;
+        const retestAttempts=[];
+        const retestAnswers=[];
         const skips=new Map();
         if(window.__HK_PREANSWERED_SKIPPED__){answers.delete('general-02');skips.set('general-02',{deck_id:'general',card_id:'general-02'});}
         const importance=new Map(window.__HK_PRIORITISED_TEEN__?[
@@ -141,6 +143,46 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
             async signInWithPassword(){return {error:null}}
           },
           from(table){
+            if(table==='personality_test_attempts'||table==='personality_attempt_answers'){
+              const list=table==='personality_test_attempts'?retestAttempts:retestAnswers;
+              function chain(operation='read',payload=null){
+                const filters={};
+                const run=()=>{
+                  if(operation==='insert'){
+                    const row={id:'90000000-0000-4000-8000-000000000001',...payload,
+                      created_at:'2026-11-07T10:00:00Z',completed_at:null};
+                    list.push(row);return {data:{...row},error:null};
+                  }
+                  if(operation==='update'){
+                    const row=list.find(a=>Object.entries(filters).every(([k,v])=>a[k]===v));
+                    if(!row)return {data:null,error:{message:'missing row'}};
+                    if(retestAnswers.length!==50)return {data:null,error:{message:'incomplete'}};
+                    Object.assign(row,payload);return {data:{...row},error:null};
+                  }
+                  return {data:list.filter(a=>Object.entries(filters).every(([k,v])=>a[k]===v))
+                    .map(a=>({...a})),error:null};
+                };
+                const q={
+                  select(){return q;},
+                  eq(k,v){filters[k]=v;return q;},
+                  order(){return Promise.resolve(run());},
+                  single(){return Promise.resolve(run());},
+                  then(resolve,reject){return Promise.resolve(run()).then(resolve,reject);}
+                };
+                return q;
+              }
+              return {
+                select(){return chain();},
+                insert(row){return chain('insert',row);},
+                update(row){return chain('update',row);},
+                async upsert(row){
+                  const found=retestAnswers.find(a=>a.attempt_id===row.attempt_id&&a.question_id===row.question_id);
+                  if(found)found.answer_value=row.answer_value;else retestAnswers.push({...row});
+                  window.__HK_PRIVATE_RETEST_ANSWERS__=retestAnswers.length;
+                  return {error:null};
+                }
+              };
+            }
             if(table==='personality_share_preferences')return {
               select(){return {eq(){return {eq(){return {async maybeSingle(){return {data:personalityConsent?{share_enabled:true}:null,error:null};}}}}}};}
             };
@@ -712,6 +754,27 @@ try{
   assert.equal(await consentPair.page.locator('.pf-family-reflections').count(),0,'Withdrawal hides the entire narrative');
   assert.equal(await consentPair.page.evaluate(()=>window.__HK_PERSONALITY_SHARE__),false);
   await consentPair.context.close();
+  const retestScreen=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},
+    {authenticated:true,personalityComplete:true,privateRetests:true});
+  await retestScreen.page.goto(base+'#personlighet',{waitUntil:'load'});
+  await retestScreen.page.getByRole('heading',{name:'Gör testet igen – helt privat'}).waitFor();
+  assert.match(await retestScreen.page.locator('.pf-retest').innerText(),/de delas inte med din familjemedlem eller AI-medlaren/);
+  await retestScreen.page.getByRole('button',{name:'Starta en ny privat testomgång'}).click();
+  await retestScreen.page.locator('input[data-ipip-retest-answer="ipip50-001"][value="4"]').focus();
+  await retestScreen.page.keyboard.press('Space');
+  await retestScreen.page.waitForTimeout(350);
+  const retestCheck=await retestScreen.page.evaluate(()=>({
+    saved:window.__HK_PRIVATE_RETEST_ANSWERS__??null,
+    text:document.querySelector('.pf-retest')?.textContent?.slice(0,450)??null
+  }));
+  assert.equal(retestCheck.saved,1,'Private answer must be saved: '+JSON.stringify(retestCheck));
+  await retestScreen.page.getByText('Fråga 2 av 50').waitFor();
+  assert.equal(await retestScreen.page.getByRole('heading',{name:'Våra profiler'}).count(),0,
+    'Private retest does not share scores or create partner comparison');
+  await checkOverflow(retestScreen.page,'Private IPIP retest 390px');
+  await retestScreen.page.locator('.pf-retest').scrollIntoViewIfNeeded();
+  await capture(retestScreen.page,'mobile-ipip-private-retest.png');
+  await retestScreen.context.close();
   const teenReflection=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},
     {authenticated:true,paired:true,role:'teen',personalityComplete:true,personalitySharing:true,personalityPartnerShared:true});
   await teenReflection.page.goto(base+'#personlighet',{waitUntil:'load'});
