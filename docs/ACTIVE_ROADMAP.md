@@ -21,7 +21,7 @@ Detta är **den enda prioriterade arbetskön** för nya `Jobb hk`-pass. Tidigare
 | **INT-02 – Schyssta listan** | Förälder↔tonåring: eget förslag, två separata ja, inkorg, ändring, avslag/Inte nu, återkallelse, versioner, historik, parbyte, isolering | **Implementerad men ej verifierad** | Två inloggade roller och negativa testfall; kontrollera förslagets versionsbundna samtycke |
 | **INT-03 – Inkorgen och notiser** | Verkliga privata meddelanden i båda riktningar, kvitton, paginering, fel, avparning, kontobyte, notifieringars återkallelse samt ingen läcka mellan familjer | **Implementerad men ej verifierad** | Tester med två riktiga konton; planera retention/radering som separat DATA-01 |
 | **INT-04 – IPIP-50** | Egen fullständig testomgång, återupptagning, dubbelsamtycke, enbart delade fem skalor, återkallelse, omparning, stabil graf | **Implementerad men ej verifierad** | Två autentiserade sessioner; ändra inte äldre enkätsvar |
-| **SEC-02 – Supabase/Worker** | Granska exponerade RPC/SECURITY DEFINER, RLS, JWT-behörighet, negativt test mot annan familj och upphävt samtycke | **Pågår** | Utför stegvisa read-only inspektioner och relevanta negativa tester; ändra aldrig breda policies bara för att tysta lintervarningar |
+| **SEC-02 – Supabase/Worker** | Granska exponerade RPC/SECURITY DEFINER, RLS, JWT-behörighet, negativt test mot annan familj och upphävt samtycke | **Pågår** | 7/11: live read-only katalogprov 0 saknade RLS, 0 anon-körbara privilegierade publika RPC, 0 policyfria SELECT-grants; två syntetiska okända identiteter fick 0 rader i åtta ägarstyrda tabeller. Se `docs/sec-02-live-readonly-audit.md`. Återstår: granska kroppar i 30 autentiserat anropbara SECURITY DEFINER-funktioner samt riktiga tvåkontotester/återkallelse; ändra aldrig breda policies bara för att tysta lintervarningar. |
 
 **Regel:** Om tvåkontotestet faktiskt är blockerat av saknad behörig inloggningssession eller miljö, dokumentera exakt hindret och gå omedelbart till nästa självständigt genomförbara punkt (P1), inte ytterligare enbart liten notisfix utan prioriteringsskäl.
 
@@ -48,6 +48,7 @@ Detta är **den enda prioriterade arbetskön** för nya `Jobb hk`-pass. Tidigare
 
 ## Senast verifierad teknisk baslinje
 
+- **7 november 2026, SEC-02:** Read-only körning mot faktisk Supabase: 3 katalogkontroller = 0 anmärkningar; 2 syntetiska ej registrerade identiteter = 0 läsbara poster i 8 RLS-skyddade tabeller och 7 delade RPC. Detta bevisar INTE verklig tvåkontoflöde eller att samtliga RPC-kroppar är säkra.
 - **7 november 2026, PR #133:** förbättrat skydd mot gammalt notissvar vid byte till nytt familjepar; Node/Chromium godkända ([PR](https://github.com/erikjarl/hemmakompassen/pull/133)). Rapporterad senaste Pages-/filkontroll och UI-körning efter merge godkänd för `9c88e31`.
 - **PR #132:** automatiskt HTTP/byte-prov för tre serverade GitHub Pages-filer fungerar ([PR](https://github.com/erikjarl/hemmakompassen/pull/132)); detta är inte ett tvåkontotest.
 - **Backend:** serververifierad A JA+JA och explicit B-samtycke finns dokumenterat som installerade; kontrollera aktuell databas innan nya påståenden.
