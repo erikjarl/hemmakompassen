@@ -29,6 +29,18 @@ BEGIN
  PERFORM public.set_schyssta_rule_decision(original,true);
  SELECT a.status INTO status_value FROM public.my_manual_schyssta_rules() a WHERE a.agreement_id=original;
  IF status_value IS DISTINCT FROM 'accepted' THEN RAISE EXCEPTION 'Original did not reach accepted'; END IF;
+ -- A nonmember cannot submit a replacement for a family's accepted rule.
+ PERFORM set_config('request.jwt.claims',json_build_object('sub',outsider_user,'role','authenticated')::text,true);
+ rejected:=false;
+ BEGIN PERFORM public.propose_schyssta_change(original,'SEC02 outsider should not edit family wording',gen_random_uuid());
+ EXCEPTION WHEN insufficient_privilege THEN rejected:=true; END;
+ IF NOT rejected THEN RAISE EXCEPTION 'Outsider could propose an edit'; END IF;
+ -- Even a legitimate member cannot create a no-op replacement.
+ PERFORM set_config('request.jwt.claims',json_build_object('sub',teen_user,'role','authenticated')::text,true);
+ rejected:=false;
+ BEGIN PERFORM public.propose_schyssta_change(original,'SEC02 temporary original house rule',gen_random_uuid());
+ EXCEPTION WHEN invalid_parameter_value THEN rejected:=true; END;
+ IF NOT rejected THEN RAISE EXCEPTION 'Identical wording allowed as change'; END IF;
  -- A pending replacement is NOT accepted; original must remain accepted.
  SELECT public.propose_schyssta_change(original,'SEC02 revised house rule requires separate consent',req_key) INTO replacement;
  SELECT public.propose_schyssta_change(original,'SEC02 revised house rule requires separate consent',req_key) INTO duplicate;
@@ -91,5 +103,5 @@ BEGIN
  IF status_value IS DISTINCT FROM 'accepted' THEN RAISE EXCEPTION 'Rejected change retired original'; END IF;
 END $test$;
 RESET ROLE;
-SELECT 'PASS: real replacement RPC, idempotency, one-vote pending, two-vote replacement retirement, outsider denial, rejection preserves old; ROLLBACK' AS audit;
+SELECT 'PASS: real replacement RPC, idempotency, one-vote pending, two-vote replacement retirement, outsider denied edit/vote, unchanged wording denied, rejection preserves old; ROLLBACK' AS audit;
 ROLLBACK;
