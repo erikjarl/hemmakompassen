@@ -760,7 +760,8 @@ try{
   await retestScreen.page.getByRole('heading',{name:'Gör testet igen – helt privat'}).waitFor();
   assert.match(await retestScreen.page.locator('.pf-retest').innerText(),/de delas inte med din familjemedlem eller AI-medlaren/);
   await retestScreen.page.getByRole('button',{name:'Starta en ny privat testomgång'}).click();
-  await retestScreen.page.getByRole('radio',{name:/Stämmer ganska bra/}).check();
+  await retestScreen.page.locator('input[data-ipip-retest-answer="ipip50-001"][value="4"]').focus();
+  await retestScreen.page.keyboard.press('Space');
   await retestScreen.page.waitForTimeout(350);
   const retestCheck=await retestScreen.page.evaluate(()=>({
     saved:window.__HK_PRIVATE_RETEST_ANSWERS__??null,
