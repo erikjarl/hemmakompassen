@@ -93,6 +93,50 @@ test('disabling notifications during an RPC discards the old response',async()=>
  finish({data:[base],error:null});await pending;
  assert.equal(h.state.activityNotifications.length,0);
 });
+test('late activity read receipt after unpairing does not refresh or retain a busy state',async()=>{
+ const live=readFileSync(new URL('../live-app.js',import.meta.url),'utf8');
+ const reader=live.match(/async function markActivityNotificationRead\(notificationId\)\{[\s\S]*?\n\}(?=\nconst familyChatTimestamp)/)?.[0];
+ assert.ok(reader,'reader function present');
+ let finish,refreshes=0;
+ const h={
+  user:{id:'viewer'},members:[{user_id:'viewer'},{user_id:'other'}],
+  sharedSession:1,activityNotificationsEnabled:true,activityMarkBusy:null,
+  activityFeedback:'',activityNotifications:[base],activityNotificationsError:'',
+  SCHYSSTA_UUID:/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
+  familyChatDraft:'',page:()=> 'hem',render:()=>{},menu:()=>{},
+  db:{rpc:()=>new Promise(resolve=>{finish=resolve;})},
+  fetchActivityNotifications:async()=>{refreshes++;}
+ };
+ vm.runInNewContext(reader+'\nthis.markActivityNotificationRead=markActivityNotificationRead;',h);
+ const pending=h.markActivityNotificationRead(id1);
+ assert.equal(h.activityMarkBusy,id1);
+ h.members=[{user_id:'viewer'}];
+ finish({data:true,error:null});await pending;
+ assert.equal(h.activityMarkBusy,null);
+ assert.equal(refreshes,0);
+ assert.equal(h.activityNotifications[0].read_at,null);
+});
+test('late activity read receipt after disabling feature does not refresh',async()=>{
+ const live=readFileSync(new URL('../live-app.js',import.meta.url),'utf8');
+ const reader=live.match(/async function markActivityNotificationRead\(notificationId\)\{[\s\S]*?\n\}(?=\nconst familyChatTimestamp)/)?.[0];
+ assert.ok(reader);
+ let finish,refreshes=0;
+ const h={
+  user:{id:'viewer'},members:[{user_id:'viewer'},{user_id:'other'}],
+  sharedSession:1,activityNotificationsEnabled:true,activityMarkBusy:null,
+  activityFeedback:'',activityNotifications:[base],activityNotificationsError:'',
+  SCHYSSTA_UUID:/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
+  familyChatDraft:'',page:()=> 'hem',render:()=>{},menu:()=>{},
+  db:{rpc:()=>new Promise(resolve=>{finish=resolve;})},
+  fetchActivityNotifications:async()=>{refreshes++;}
+ };
+ vm.runInNewContext(reader+'\nthis.markActivityNotificationRead=markActivityNotificationRead;',h);
+ const pending=h.markActivityNotificationRead(id1);
+ h.activityNotificationsEnabled=false;
+ finish({data:true,error:null});await pending;
+ assert.equal(h.activityMarkBusy,null);
+ assert.equal(refreshes,0);
+});
 test('client only marks notices on a deliberate click and refreshes read status',()=>{
  assert.match(config,/enableActivityNotifications:\s*true/);
  assert.match(source,/data-activity-read=/);
