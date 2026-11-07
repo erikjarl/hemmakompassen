@@ -126,7 +126,7 @@ export function buildSolutionPlan(input={}){
  const normalize=value=>typeof value==='string'?value.replace(/\s+/g,' ').trim().slice(0,240):'';
  const [problem,question,experiment,followup]=['problem','question','experiment','followup'].map(key=>normalize(input[key]));
  if(!problem||!question||!experiment||!followup)return null;
- return 'Jag vill prata om: '+problem+'\\nJag vill förstå: '+question+'\\nMitt förslag att diskutera: '+experiment+'\\nFörslag på uppföljning: '+followup+'\\nDetta är bara mitt utkast. Den andra får säga nej eller föreslå något annat.';
+ return 'Jag vill prata om: '+problem+'\nJag vill förstå: '+question+'\nMitt förslag att diskutera: '+experiment+'\nFörslag på uppföljning: '+followup+'\nDetta är bara mitt utkast. Den andra får säga nej eller föreslå något annat.';
 }
 export function buildNvcSentence(input={}){
  const trim=s=>typeof s==='string'?s.replace(/\s+/g,' ').trim().replace(/[.!?;,:]+$/u,'').slice(0,240):'';
