@@ -362,7 +362,8 @@ try{
     {viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},
     {authenticated:true,paired:true,activityNotifications:true}
   );
-  await activity.page.waitForFunction(()=>document.querySelector('#live-mobile-nav a[href="#inkorg"] .live-nav-count')?.textContent==='3');
+  await activity.page.waitForFunction(()=>document.querySelector('#live-app')?.textContent.includes(
+    '1 nya gemensamma kort- eller aktivitetsaviseringar'));
   assert.equal(await activity.page.evaluate(()=>window.__HK_ACTIVITY_MARK_COUNT__||0),0,
     'A fresh activity event is not automatically marked as read on the homepage');
   await activity.page.goto(base+'#inkorg',{waitUntil:'load'});
@@ -375,7 +376,8 @@ try{
   await activity.page.waitForFunction(()=>document.querySelector('[data-activity-read]')===null);
   assert.equal(await activity.page.evaluate(()=>window.__HK_ACTIVITY_MARK_COUNT__||0),1,
     'Explicit click marks one activity digest read via the RPC');
-  await activity.page.waitForFunction(()=>document.querySelector('#live-mobile-nav a[href="#inkorg"] .live-nav-count')?.textContent==='2');
+  assert.equal(await activity.page.locator('[data-activity-read]').count(),0,
+    'Activity notification is visibly read after explicit server roundtrip');
   await checkOverflow(activity.page,'Activity inbox mobile');
   await activity.context.close();
   const m=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true});
