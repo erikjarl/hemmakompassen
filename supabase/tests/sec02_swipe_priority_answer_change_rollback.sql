@@ -59,7 +59,23 @@ BEGIN
  SELECT count(*) INTO n FROM public.shared_swipe_priorities('aterhamtning')
  WHERE card_id='aterhamtning-01';
  IF n<>1 THEN RAISE EXCEPTION 'Parent cannot see renewed consent'; END IF;
- RAISE NOTICE 'PASS: YES to NO revokes share; YES alone stays private; new consent visible to both';
+ -- Parent's private answer changing to NO must revoke shared visibility for both.
+ UPDATE public.swipe_answers SET answer=false
+ WHERE user_id=p AND deck_id='aterhamtning' AND card_id='aterhamtning-01';
+ SELECT count(*) INTO n FROM public.shared_swipe_priorities('aterhamtning')
+ WHERE card_id='aterhamtning-01';
+ IF n<>0 THEN RAISE EXCEPTION 'Parent NO did not hide priority'; END IF;
+ UPDATE public.swipe_answers SET answer=true
+ WHERE user_id=p AND deck_id='aterhamtning' AND card_id='aterhamtning-01';
+ SELECT count(*) INTO n FROM public.shared_swipe_priorities('aterhamtning')
+ WHERE card_id='aterhamtning-01';
+ IF n<>0 THEN RAISE EXCEPTION 'Parent YES resurrected old consent'; END IF;
+ PERFORM set_config('request.jwt.claims',json_build_object('sub',t,'role','authenticated')::text,true);
+ PERFORM public.set_swipe_priority_share('aterhamtning','aterhamtning-01',true);
+ SELECT count(*) INTO n FROM public.shared_swipe_priorities('aterhamtning')
+ WHERE card_id='aterhamtning-01';
+ IF n<>1 THEN RAISE EXCEPTION 'Explicit reconsent after parent answer failed'; END IF;
+ RAISE NOTICE 'PASS: teen and parent answer NO each revoke share; YES alone stays private; explicit consent restores';
 END $audit$;
 RESET ROLE;
 SELECT 'PASS: priority answer-change revocation with synthetic claims and rollback' AS audit_result;
