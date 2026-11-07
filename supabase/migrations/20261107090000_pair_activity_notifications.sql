@@ -103,9 +103,9 @@ begin
         when 'aterhamtning' then 8 when 'forandring' then 8
         else 0 end;
       if not exists (
-        select 1 from pg_catalog.generate_series(1,v_deck_max) as i
+        select 1 from pg_catalog.generate_series(1,v_deck_max) as allowed(number)
         where p_card_id=p_deck_id||'-'||
-          case when i<10 then '0' else '' end||i::text
+          case when allowed.number<10 then '0' else '' end||allowed.number::text
       ) then return; end if;
     end if;
     if (select count(*)
@@ -164,9 +164,21 @@ create or replace function private.on_activity_swipe_answer()
 returns trigger language plpgsql security definer set search_path='' as $$
 declare v_recipient uuid;
 begin
-  if new.answer is not true or new.user_id is distinct from (select auth.uid()) then
+  if tg_op='DELETE' then
+    delete from public.activity_notification_event_keys e
+      where e.event_kind='mutual_match' and e.deck_id=old.deck_id
+        and e.card_id=old.card_id
+        and (e.parent_id=old.user_id or e.teen_id=old.user_id);
     return null;
   end if;
+  if new.answer is not true then
+    delete from public.activity_notification_event_keys e
+      where e.event_kind='mutual_match' and e.deck_id=new.deck_id
+        and e.card_id=new.card_id
+        and (e.parent_id=new.user_id or e.teen_id=new.user_id);
+    return null;
+  end if;
+  if new.user_id is distinct from (select auth.uid()) then return null; end if;
   if tg_op='UPDATE' and old.answer is not distinct from new.answer then
     return null;
   end if;
@@ -185,7 +197,7 @@ end
 $$;
 
 create trigger activity_notification_swipe_yes
-  after insert or update of answer on public.swipe_answers
+  after insert or update of answer or delete on public.swipe_answers
   for each row execute function private.on_activity_swipe_answer();
 
 create or replace function private.on_activity_understanding_share()
@@ -211,6 +223,22 @@ $$;
 create trigger activity_notification_explicit_b_share
   after insert on public.understanding_card_shares
   for each row execute function private.on_activity_understanding_share();
+
+-- Revoke a notification's eligibility when the underlying explicit choice is
+-- withdrawn. A new share can then create a genuinely new event.
+create or replace function private.on_activity_understanding_revoke()
+returns trigger language plpgsql security definer set search_path='' as $
+begin
+  delete from public.activity_notification_event_keys e
+  where e.event_kind='teen_shared_understanding'
+    and e.teen_id=old.user_id and e.deck_id=old.deck_id
+    and e.card_id=old.card_id;
+  return null;
+end
+$;
+create trigger activity_notification_b_unshare
+  after delete on public.understanding_card_shares
+  for each row execute function private.on_activity_understanding_revoke();
 
 -- Remove stale epochs when members leave, join, switch families or their join epoch changes.
 create or replace function private.clear_activity_notifications_on_pair_change()
@@ -298,6 +326,7 @@ revoke all on function private.record_activity_notification(text,text,text,uuid,
   from public,anon,authenticated;
 revoke all on function private.on_activity_swipe_answer() from public,anon,authenticated;
 revoke all on function private.on_activity_understanding_share() from public,anon,authenticated;
+revoke all on function private.on_activity_understanding_revoke() from public,anon,authenticated;
 revoke all on function private.clear_activity_notifications_on_pair_change()
   from public,anon,authenticated;
 revoke all on function public.my_activity_notifications() from public,anon;
