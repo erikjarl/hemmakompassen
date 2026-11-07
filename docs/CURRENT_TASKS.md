@@ -1,5 +1,11 @@
 # Hemmakompassen — aktuell utvecklingskö
 
+## 7 november 2026 – NOT-01B: sent läskvitto efter avparning
+
+- [x] **Kod och syntetiska regressionstester:** sena svar från markering av aktivitetsavisering som läst ignoreras om familjeparningen upphört eller aviseringarna stängts av under anropet. Busy-läget frigörs utan ny RPC-hämtning. Befintliga lagrade svar och databas ändras inte.
+- [ ] **PR-test, merge och publicering:** kontrollera CI och faktisk release före klarmarkering.
+- [ ] **Verkliga testkonton och mobil:** två signerade konton, av-/omparning och Safari/VoiceOver kvarstår.
+
 ## 7 november 2026 – NOT-01B: sena svar efter ändrad parningsstatus
 
 - [x] **Kod och två regressionstester:** fetchActivityNotifications avvisar sent RPC-svar när familjeparet har upphört eller aviseringar har stängts av, även utan ändrad sessionsräknare. Ingen SQL, Worker eller användardata ändrad.
