@@ -13,7 +13,7 @@ const make=(count,prefix='old')=>Array.from({length:count},(_,i)=>({
   body:`message ${i}`,created_at:'2026-11-07T12:00:00Z',
   sent_by_me:false,read_at:null
 }));
-const ids=messages=>messages.map(message=>message.message_id);
+const ids=messages=>Array.from(messages,message=>message.message_id);
 
 const previous=make(55);
 // One new message arrives, while all 55 already-loaded old messages remain.
