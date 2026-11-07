@@ -1,5 +1,11 @@
 # Hemmakompassen — aktuell utvecklingskö
 
+## 7 november 2026 – REL-01: automatiskt verifiera faktiskt serverade Pages-filer
+
+- [x] **CI-kod i utvecklingsgren:** nytt arbetsflöde `.github/workflows/verify-pages-assets.yml` körs vid varje push till `main` (och manuellt) och jämför faktiskt hämtade bytes för `live-app.js`, `backend-config.js` och `personality/ipip50-ui.js` mot samma Git-commit. Kontrollen försöker på nytt under pågående Pages-publicering och ger fel om serverade filer inte stämmer. Inga privata data, cookies eller inloggningar behövs.
+- [ ] **CI/merge och första verkliga utfall:** en grön PR-UI-körning verifierar inte automatiskt det nya arbetsflödet. Kontrollera särskilt att verifieringsjobbet verkligen startar på `main` och att en verklig HTTP-jämförelse lyckas efter merge.
+- [ ] **Autentiserat tvåkontotest och iOS:** versionslikhet säger inget om inloggning, samtycke, revokering eller skärmläsare.
+
 ## 7 november 2026 – NOT-01B: rensa gamla notiser om parning upphör under hämtning
 
 - [x] **Kod och syntetiska regressionstester:** om parningen upphör medan notis-RPC pågår rensas även redan visade aviseringar, inte bara det sena svaret. Detsamma gäller om funktionen inaktiverats. Ett svar från annan session får fortfarande inte skriva över aktuell status. Ingen SQL, Worker eller familjedata ändrad.
