@@ -69,7 +69,7 @@ export function createPrivateIpipRetests({
     const result=await db.from('personality_attempt_answers')
       .select('question_id,answer_value')
       .eq('user_id',id).eq('attempt_id',attemptId);
-    if(result.error)throw result.error;
+    if(result.error||!Array.isArray(result.data))throw result.error||Error('Invalid answer response');
     return fromRows(result.data);
   }
 
@@ -107,6 +107,7 @@ export function createPrivateIpipRetests({
     if(error)return introduction+'<p role="alert">'+esc(error)+'</p><button type="button" data-ipip-retest="reload">Försök igen</button></section>';
     const completed=attempts.filter(a=>a.completed_at!==null);
     let html=introduction;
+    html+='<p><button type="button" data-ipip-retest="refresh"'+(busy?' disabled':'')+'>Uppdatera mina omtest</button></p>';
     if(status)html+='<p role="status">'+esc(status)+'</p>';
     if(draftId){
       const count=Object.keys(answers).length;
@@ -154,6 +155,12 @@ export function createPrivateIpipRetests({
     const action=button.dataset.ipipRetest;
     if(action==='reload'){await load(userId);return true;}
     if(loading||busy||error)return true;
+    if(action==='refresh'){
+      const id=userId;
+      await load(id);
+      if(userId===id&&!error){status='Dina omtest har uppdaterats från servern.';repaint();}
+      return true;
+    }
     if(action==='resume'){surveyOpen=true;status='';repaint();return true;}
     if(action==='overview'){surveyOpen=false;status='Omgången är sparad och kan fortsättas senare.';repaint();return true;}
     if(action==='prev'||action==='next'){
@@ -212,7 +219,9 @@ export function createPrivateIpipRetests({
       const id=userId,token=generation;
       busy=true;status='Hämtar dina privata svar för export…';repaint();
       try{
-        const saved=attemptId===draftId?{...answers}:await readAnswers(id,attemptId);
+        // Export only a confirmed server snapshot, never a stale local draft.
+        // Another tab may have changed or deleted its answers after our load.
+        const saved=await readAnswers(id,attemptId);
         if(!isCurrent(id,token))return true;
         const data=buildPrivateIpipRetestExport(saved,{
           startedAt:attempt.created_at,completedAt:attempt.completed_at
