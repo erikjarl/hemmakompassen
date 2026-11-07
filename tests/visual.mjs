@@ -1491,23 +1491,23 @@ try{
   await savedReview.page.goto(base+'#swipe',{waitUntil:'load'});
   await savedReview.page.locator('[data-theme-open="samtal"]').click();
   await savedReview.page.locator('#swipe-card').waitFor();
-  assert.equal(await savedReview.page.locator('.swipe-private-savedReview').count(),0,'An empty personal history is not rendered');
+  assert.equal(await savedReview.page.locator('.swipe-private-review').count(),0,'An empty personal history is not rendered');
   await savedReview.page.locator('[data-swipe="yes"]').click();
-  await savedReview.page.locator('.swipe-private-savedReview summary').waitFor();
-  await savedReview.page.locator('.swipe-private-savedReview summary').click();
-  assert.match(await savedReview.page.locator('.swipe-private-savedReview').innerText(),/Ditt svar: Ja/);
-  assert.equal(await savedReview.page.locator('.swipe-private-savedReview [data-theme-savedReview-index]').count(),1);
-  await savedReview.page.locator('.swipe-private-savedReview [data-theme-savedReview-index="0"]').click();
+  await savedReview.page.locator('.swipe-private-review summary').waitFor();
+  await savedReview.page.locator('.swipe-private-review summary').click();
+  assert.match(await savedReview.page.locator('.swipe-private-review').innerText(),/Ditt svar: Ja/);
+  assert.equal(await savedReview.page.locator('.swipe-private-review [data-theme-savedReview-index]').count(),1);
+  await savedReview.page.locator('.swipe-private-review [data-theme-savedReview-index="0"]').click();
   assert.match(await savedReview.page.locator('#swipe-card').innerText(),/Vad som varit roligt den senaste veckan/,
     'A saved theme answer can be opened directly without swiping past 100 cards');
   assert.equal(await savedReview.page.locator('#swipe-card').evaluate(el=>document.activeElement===el),true,
     'Focus moves to the selected saved card');
   await savedReview.page.locator('[data-swipe="no"]').click();
-  await savedReview.page.locator('.swipe-private-savedReview summary').click();
-  assert.match(await savedReview.page.locator('.swipe-private-savedReview').innerText(),/Ditt svar: Nej/,
+  await savedReview.page.locator('.swipe-private-review summary').click();
+  assert.match(await savedReview.page.locator('.swipe-private-review').innerText(),/Ditt svar: Nej/,
     'The savedReview reflects the updated private answer');
   await checkOverflow(savedReview.page,'Private saved-answer savedReview 390px');
-  await savedReview.page.locator('.swipe-private-savedReview').scrollIntoViewIfNeeded();
+  await savedReview.page.locator('.swipe-private-review').scrollIntoViewIfNeeded();
   await capture(savedReview.page,'mobile-theme-private-answer-savedReview.png');
 
   await savedReview.context.close();
