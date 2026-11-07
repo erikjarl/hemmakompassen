@@ -98,6 +98,45 @@ BEGIN
 END $test$;
 RESET ROLE;
 ROLLBACK TO SAVEPOINT before_share;
+
+-- Separate, reversible lifecycle checks. Only within this transaction do we
+-- temporarily switch the teenager's already-saved answer to NO or skipped.
+-- Savepoints restore the previous answer and explicitly granted share.
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claims',pg_catalog.json_build_object(
+ 'sub',current_setting('audit.teen'),'role','authenticated')::text,true);
+SELECT public.set_understanding_card_share('general-03',true);
+SAVEPOINT before_answer_state;
+SELECT public.set_understanding_card_state('general-03',false,false);
+DO $test$
+DECLARE caller text; n integer;
+BEGIN
+ FOREACH caller IN ARRAY array[current_setting('audit.parent'),current_setting('audit.teen')] LOOP
+  PERFORM set_config('request.jwt.claims',
+    pg_catalog.json_build_object('sub',caller,'role','authenticated')::text,true);
+  SELECT count(*) INTO n FROM public.shared_understanding_cards()
+    WHERE card_id='general-03';
+  IF n<>0 THEN RAISE EXCEPTION 'FAIL: changing shared answer to NO leaked B card'; END IF;
+ END LOOP;
+END $test$;
+ROLLBACK TO SAVEPOINT before_answer_state;
+SELECT set_config('request.jwt.claims',pg_catalog.json_build_object(
+ 'sub',current_setting('audit.teen'),'role','authenticated')::text,true);
+SELECT public.set_understanding_card_state('general-03',NULL,true);
+DO $test$
+DECLARE caller text; n integer;
+BEGIN
+ FOREACH caller IN ARRAY array[current_setting('audit.parent'),current_setting('audit.teen')] LOOP
+  PERFORM set_config('request.jwt.claims',
+    pg_catalog.json_build_object('sub',caller,'role','authenticated')::text,true);
+  SELECT count(*) INTO n FROM public.shared_understanding_cards()
+    WHERE card_id='general-03';
+  IF n<>0 THEN RAISE EXCEPTION 'FAIL: skipped shared answer leaked B card'; END IF;
+ END LOOP;
+END $test$;
+ROLLBACK TO SAVEPOINT before_answer_state;
+RESET ROLE;
+ROLLBACK TO SAVEPOINT before_share;
 DO $test$
 BEGIN
  IF (SELECT count(*)::text FROM public.swipe_answers) <> current_setting('audit.answers_before')
@@ -105,5 +144,5 @@ BEGIN
  OR (SELECT count(*)::text FROM public.understanding_card_shares) <> current_setting('audit.shares_before')
  THEN RAISE EXCEPTION 'FAIL: test left modified application counts'; END IF;
 END $test$;
-SELECT 'PASS: B sharing requires teen true answer and explicit opt-in; paired see, outsider denied, parent cannot revoke, teen revocation hides; rollback' AS audit;
+SELECT 'PASS: B sharing requires teen true answer and explicit opt-in; paired see, outsider denied, parent cannot revoke, teen revocation hides; false and skip hide; rollback' AS audit;
 ROLLBACK;
