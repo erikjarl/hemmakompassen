@@ -31,7 +31,7 @@ BEGIN
  SELECT public.propose_manual_schyssta_rule('SEC02 transaction-only shared test rule',retry_key) INTO agreement_id;
  IF agreement_id IS NULL THEN RAISE EXCEPTION 'FAIL: proposal returned null'; END IF;
  PERFORM set_config('audit.test_agreement',agreement_id::text,true);
- SELECT status,agreement_version INTO state,version FROM public.agreements WHERE id=agreement_id;
+ SELECT r.status,r.agreement_version INTO state,version FROM public.my_manual_schyssta_rules() r WHERE r.agreement_id=agreement_id;
  IF state<>'proposed' OR version<>1 THEN RAISE EXCEPTION 'FAIL: new proposal state % %',state,version; END IF;
  SELECT public.propose_manual_schyssta_rule('SEC02 transaction-only shared test rule',retry_key) INTO same_id;
  IF same_id<>agreement_id THEN RAISE EXCEPTION 'FAIL: identical retry produced second rule'; END IF;
@@ -51,17 +51,26 @@ BEGIN
  -- One yes is NOT enough: first teen approval, then parent approval.
  PERFORM set_config('request.jwt.claims',pg_catalog.json_build_object('sub',teen_id,'role','authenticated')::text,true);
  PERFORM public.set_schyssta_rule_decision(agreement_id,true);
- SELECT status INTO state FROM public.agreements WHERE id=agreement_id;
+ SELECT r.status INTO state FROM public.my_manual_schyssta_rules() r WHERE r.agreement_id=agreement_id;
  IF state<>'proposed' THEN RAISE EXCEPTION 'FAIL: one approval accepted rule'; END IF;
  PERFORM set_config('request.jwt.claims',pg_catalog.json_build_object('sub',parent_id,'role','authenticated')::text,true);
  PERFORM public.set_schyssta_rule_decision(agreement_id,true);
- SELECT status INTO state FROM public.agreements WHERE id=agreement_id;
+ SELECT r.status INTO state FROM public.my_manual_schyssta_rules() r WHERE r.agreement_id=agreement_id;
  IF state<>'accepted' THEN RAISE EXCEPTION 'FAIL: two explicit approvals not accepted'; END IF;
- -- Version change only on this disposable agreement; old yes/yes must not count.
- RESET ROLE;
- UPDATE public.agreements SET agreement_version=2,status='proposed'
-  WHERE id=agreement_id;
- SET LOCAL ROLE authenticated;
+
+END $audit$;
+RESET ROLE;
+-- Admin-only edit to the newly inserted, disposable test agreement.
+UPDATE public.agreements SET agreement_version=2,status='proposed'
+ WHERE id=current_setting('audit.test_agreement')::uuid;
+SET LOCAL ROLE authenticated;
+DO $audit$
+DECLARE parent_id text:=current_setting('audit.parent');
+ teen_id text:=current_setting('audit.teen');
+ outsider_id text:=current_setting('audit.outsider');
+ agreement_id uuid:=current_setting('audit.test_agreement')::uuid;
+ state text; count_rows integer; denied boolean; role_user text;
+BEGIN
  FOREACH role_user IN ARRAY array[parent_id,teen_id] LOOP
   PERFORM set_config('request.jwt.claims',pg_catalog.json_build_object('sub',role_user,'role','authenticated')::text,true);
   SELECT status INTO state FROM public.my_manual_schyssta_rules() r WHERE r.agreement_id=agreement_id;
@@ -69,19 +78,19 @@ BEGIN
  END LOOP;
  PERFORM set_config('request.jwt.claims',pg_catalog.json_build_object('sub',teen_id,'role','authenticated')::text,true);
  PERFORM public.set_schyssta_rule_decision(agreement_id,true);
- SELECT status INTO state FROM public.agreements WHERE id=agreement_id;
+ SELECT r.status INTO state FROM public.my_manual_schyssta_rules() r WHERE r.agreement_id=agreement_id;
  IF state<>'proposed' THEN RAISE EXCEPTION 'FAIL: one current-version yes accepted'; END IF;
  PERFORM set_config('request.jwt.claims',pg_catalog.json_build_object('sub',parent_id,'role','authenticated')::text,true);
  PERFORM public.set_schyssta_rule_decision(agreement_id,false);
- SELECT status INTO state FROM public.agreements WHERE id=agreement_id;
+ SELECT r.status INTO state FROM public.my_manual_schyssta_rules() r WHERE r.agreement_id=agreement_id;
  IF state<>'rejected' THEN RAISE EXCEPTION 'FAIL: explicit NO not rejected'; END IF;
  -- Replace parent's NO with YES; all votes are now for version 2.
  PERFORM public.set_schyssta_rule_decision(agreement_id,true);
- SELECT status INTO state FROM public.agreements WHERE id=agreement_id;
+ SELECT r.status INTO state FROM public.my_manual_schyssta_rules() r WHERE r.agreement_id=agreement_id;
  IF state<>'accepted' THEN RAISE EXCEPTION 'FAIL: parent YES did not accept current version'; END IF;
  -- Withdrawing an accepted rule archives it; should no longer be active.
  PERFORM public.withdraw_schyssta_rule(agreement_id);
- SELECT status INTO state FROM public.agreements WHERE id=agreement_id;
+ SELECT r.status INTO state FROM public.my_manual_schyssta_rules() r WHERE r.agreement_id=agreement_id;
  IF state<>'withdrawn' THEN RAISE EXCEPTION 'FAIL: accepted agreement not withdrawn'; END IF;
  SELECT count(*) INTO count_rows FROM public.my_manual_schyssta_rules() WHERE agreement_id=agreement_id;
  IF count_rows<>0 THEN RAISE EXCEPTION 'FAIL: withdrawn rule appears active'; END IF;
@@ -92,15 +101,14 @@ BEGIN
  BEGIN PERFORM public.set_schyssta_rule_decision(agreement_id,true);
  EXCEPTION WHEN insufficient_privilege THEN denied:=true; END;
  IF NOT denied THEN RAISE EXCEPTION 'FAIL: withdrawn rule accepts a new vote'; END IF;
- SELECT count(*) INTO votes FROM public.agreement_approvals
- WHERE agreement_id=agreement_id AND agreement_version=2;
- IF votes<>2 THEN RAISE EXCEPTION 'FAIL: expected only 2 current-version votes'; END IF;
 END $audit$;
 RESET ROLE;
 DO $audit$
 BEGIN
  IF (SELECT count(*) FROM public.agreements)<=(current_setting('audit.agreements_before'))::integer THEN
   RAISE EXCEPTION 'FAIL: disposable proposal missing before rollback'; END IF;
+ IF (SELECT count(*) FROM public.agreement_approvals WHERE agreement_id=current_setting('audit.test_agreement')::uuid AND agreement_version=2)<>2 THEN RAISE EXCEPTION 'FAIL: expected 2 current-version votes'; END IF;
+ IF (SELECT status FROM public.agreements WHERE id=current_setting('audit.test_agreement')::uuid)<>'withdrawn' THEN RAISE EXCEPTION 'FAIL: direct admin check not withdrawn'; END IF;
  IF (SELECT count(*) FROM public.schyssta_notifications)<(current_setting('audit.notifications_before'))::integer THEN
   RAISE EXCEPTION 'FAIL: notification count decreased'; END IF;
 END $audit$;
