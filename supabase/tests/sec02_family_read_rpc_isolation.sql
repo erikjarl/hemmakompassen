@@ -42,23 +42,29 @@ DECLARE
     'my_family_unread_message_count'
   ];
 BEGIN
-  FOREACH label IN ARRAY array['paired_parent','paired_teen','outsider_a','outsider_b'] LOOP
-    user_identifier:=current_setting('sec02.'||label,true);
-    IF user_identifier IS NULL OR user_identifier='' THEN
-      RAISE EXCEPTION 'Missing test identity %',label;
+  FOREACH label IN ARRAY array['paired_parent','paired_teen','outsider_a','outsider_b','no_subject'] LOOP
+    IF label='no_subject' THEN
+      -- Even an authenticated Postgres role cannot read private family rows
+      -- without a subject; this remains a claim simulation, not signed JWT.
+      PERFORM set_config('request.jwt.claims','{"role":"authenticated"}',true);
+    ELSE
+      user_identifier:=current_setting('sec02.'||label,true);
+      IF user_identifier IS NULL OR user_identifier='' THEN
+        RAISE EXCEPTION 'Missing test identity %',label;
+      END IF;
+      PERFORM set_config('request.jwt.claims',
+        pg_catalog.json_build_object('sub',user_identifier,'role','authenticated')::text,true);
     END IF;
-    PERFORM set_config('request.jwt.claims',
-      pg_catalog.json_build_object('sub',user_identifier,'role','authenticated')::text,true);
     FOREACH rpc IN ARRAY rpc_names LOOP
       -- my_family_unread_message_count returns one scalar even for nonmembers.
       IF rpc='my_family_unread_message_count' THEN
         EXECUTE 'SELECT public.my_family_unread_message_count()' INTO rows_returned;
-        IF label LIKE 'outsider_%' AND rows_returned<>0 THEN
+        IF (label LIKE 'outsider_%' OR label='no_subject') AND rows_returned<>0 THEN
           RAISE EXCEPTION 'FAIL outsider unread count: %',label;
         END IF;
       ELSE
         EXECUTE pg_catalog.format('SELECT count(*) FROM public.%I()',rpc) INTO rows_returned;
-        IF label LIKE 'outsider_%' AND rows_returned<>0 THEN
+        IF (label LIKE 'outsider_%' OR label='no_subject') AND rows_returned<>0 THEN
           RAISE EXCEPTION 'FAIL outsider read %: % rows',rpc,rows_returned;
         END IF;
         IF rpc='my_family_members' AND label LIKE 'paired_%'
@@ -70,5 +76,5 @@ BEGIN
   END LOOP;
 END $audit$;
 RESET ROLE;
-SELECT 'PASS: 2 paired identities and 2 outside identities; 7 read RPCs; no writes' AS audit;
+SELECT 'PASS: 2 paired, 2 outside, missing-subject; 7 read RPCs; no writes' AS audit;
 ROLLBACK;
