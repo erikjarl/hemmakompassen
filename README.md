@@ -2,7 +2,8 @@
 
 **Aktuell status: intern testversion, 4 november 2026.** Hemmakompassen är en responsiv webbapp för förälder och tonåring med fokus på dialog, ömsesidig förståelse och gemensamma överenskommelser. GitHub Pages är tillgänglig på internet, men projektet är ännu inte granskat eller lanserat för externa verkliga familjer.
 
-- **Vad som gjordes under helgen / återstående arbete:** [Aktuell utvecklingskö](docs/CURRENT_TASKS.md).
+- **Enda aktuella prioriterade arbetskön:** [Aktiv roadmap](docs/ACTIVE_ROADMAP.md).
+- **Historiska leveranser och verifieringslogg:** [Tidigare utvecklingskö](docs/CURRENT_TASKS.md).
 - **Hela produktvisionen och historiken:** [ROADMAP.md](ROADMAP.md).
 - **Metod för IPIP-50 och dess begränsningar:** [docs/ipip50-sv-method.md](docs/ipip50-sv-method.md).
 
