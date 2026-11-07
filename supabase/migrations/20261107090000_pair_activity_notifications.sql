@@ -108,6 +108,13 @@ begin
           case when allowed.number<10 then '0' else '' end||allowed.number::text
       ) then return; end if;
     end if;
+    -- Concurrent YES submissions may both miss the other's uncommitted row.
+    -- Serialize matching checks per family and card; the VOLATILE SELECT
+    -- below obtains a fresh snapshot after any competing writer commits.
+    perform pg_catalog.pg_advisory_xact_lock(
+      pg_catalog.hashtext(v_family::text),
+      pg_catalog.hashtext(p_deck_id||':'||p_card_id)
+    );
     if (select count(*)
         from public.swipe_answers a
         where a.user_id in (v_parent,v_teen) and a.deck_id=p_deck_id
