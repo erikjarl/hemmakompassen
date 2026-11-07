@@ -80,9 +80,14 @@ function validActivityNotifications(rows){
     &&typeof row.updated_at==='string'&&!Number.isNaN(Date.parse(row.updated_at)))
     &&new Set(rows.map(row=>row.notification_id)).size===rows.length;
 }
+// Snapshot actual pair identity, not just its member count. A replacement pair
+// must never inherit an in-flight response from the previous pair.
+const activityPairSignature=()=>JSON.stringify(members.map(member=>[
+  member.user_id,member.role,member.family_id??null,member.joined_at??null
+]).sort((a,b)=>String(a[0]).localeCompare(String(b[0]))));
 const activityUnreadCount=()=>activityNotifications.filter(n=>n.read_at===null).length;
 async function fetchActivityNotifications({quiet=false}={}){
-  const request=++activityNotificationsRequest,viewer=user?.id,session=sharedSession;
+  const request=++activityNotificationsRequest,viewer=user?.id,session=sharedSession,pair=activityPairSignature();
   if(!activityNotificationsEnabled||!viewer||members.length!==2){
     activityNotifications=[];activityNotificationsError='';activityNotificationsLoading=false;
     if(['hem','inkorg'].includes(page())&&!familyChatDraft.trim())render();
@@ -94,6 +99,12 @@ async function fetchActivityNotifications({quiet=false}={}){
   let result;
   try{result=await db.rpc('my_activity_notifications');}catch(e){result={error:e};}
   if(request!==activityNotificationsRequest||viewer!==user?.id||session!==sharedSession)return;
+  if(pair!==activityPairSignature()){
+    activityNotifications=[];activityNotificationsError='';activityNotificationsLoading=false;
+    if(['hem','inkorg'].includes(page())&&(page()!=='inkorg'||!familyChatDraft.trim()))render();
+    else menu();
+    return;
+  }
   if(members.length!==2||!activityNotificationsEnabled){
     // The pairing may have disappeared without another refresh invalidating this request.
     activityNotifications=[];activityNotificationsError='';activityNotificationsLoading=false;
@@ -115,14 +126,16 @@ async function markActivityNotificationRead(notificationId){
   if(!activityNotificationsEnabled||!user||members.length!==2||activityMarkBusy
     ||!SCHYSSTA_UUID.test(notificationId)
     ||!activityNotifications.some(n=>n.notification_id===notificationId&&n.read_at===null))return;
-  const viewer=user.id,session=sharedSession;
+  const viewer=user.id,session=sharedSession,pair=activityPairSignature();
   activityMarkBusy=notificationId;activityFeedback='';
   if(page()==='inkorg'&&!familyChatDraft.trim())render();
   let result;
   try{result=await db.rpc('mark_activity_notification_read',{p_notification_id:notificationId});}
   catch(e){result={error:e};}
   if(viewer!==user?.id||session!==sharedSession)return;
-  if(members.length!==2||!activityNotificationsEnabled){activityMarkBusy=null;return;}
+  if(members.length!==2||!activityNotificationsEnabled||pair!==activityPairSignature()){
+    activityMarkBusy=null;return;
+  }
   activityMarkBusy=null;
   if(result?.error){
     activityFeedback='Det gick inte att bekräfta läsmarkeringen. Uppdatera aviseringarna.';
