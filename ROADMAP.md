@@ -1,4 +1,7 @@
-# Hemmakompassen — utvecklingsplan (senast avstämd 2026-11-07)
+# Hemmakompassen — utvecklingsplan och historik (senast avstämd 2026-11-07)
+
+> **ARKIV / HISTORIK:** Detta dokument innehåller äldre beslut, genomförda leveranser och ursprungliga krav. Öppna checkboxar här är inte en tillförlitlig aktuell arbetskö och kan vara historiskt överspelade. Den **enda prioriterade och uppdaterade arbetskön** är [docs/ACTIVE_ROADMAP.md](docs/ACTIVE_ROADMAP.md). Använd den för alla nya `Jobb hk`-pass. Äldre uppgifter förs dit endast efter kontroll av faktisk kod och verifiering.
+
 
 ## 7 november 2026 – NOT-01B: exakta djuplänkar från Inkorg (PR #128)
 
