@@ -1456,6 +1456,25 @@ try{
   await unlocked.page.locator("#swipe-card").scrollIntoViewIfNeeded();
   await capture(unlocked.page,"mobile-theme-card.png");
   assert.match(await unlocked.page.locator("#swipe-card").innerText(),/Vad som varit roligt den senaste veckan/);
+  assert.equal(await unlocked.page.locator('.swipe-private-review').count(),0,'An empty personal history is not rendered');
+  await unlocked.page.locator('[data-swipe="yes"]').click();
+  await unlocked.page.locator('.swipe-private-review summary').waitFor();
+  await unlocked.page.locator('.swipe-private-review summary').click();
+  assert.match(await unlocked.page.locator('.swipe-private-review').innerText(),/Ditt svar: Ja/);
+  assert.equal(await unlocked.page.locator('.swipe-private-review [data-theme-review-index]').count(),1);
+  await unlocked.page.locator('.swipe-private-review [data-theme-review-index="0"]').click();
+  assert.match(await unlocked.page.locator('#swipe-card').innerText(),/Vad som varit roligt den senaste veckan/,
+    'A saved theme answer can be opened directly without swiping past 100 cards');
+  assert.equal(await unlocked.page.locator('#swipe-card').evaluate(el=>document.activeElement===el),true,
+    'Focus moves to the selected saved card');
+  await unlocked.page.locator('[data-swipe="no"]').click();
+  await unlocked.page.locator('.swipe-private-review summary').click();
+  assert.match(await unlocked.page.locator('.swipe-private-review').innerText(),/Ditt svar: Nej/,
+    'The review reflects the updated private answer');
+  await checkOverflow(unlocked.page,'Private saved-answer review 390px');
+  await unlocked.page.locator('.swipe-private-review').scrollIntoViewIfNeeded();
+  await capture(unlocked.page,'mobile-theme-private-answer-review.png');
+
   await unlocked.page.getByRole('heading',{name:'Era gemensamma svar · Samtalsämnen'}).waitFor();
   const themeSharedText=await unlocked.page.locator('.swipe-results').innerText();
   assert.match(themeSharedText,/Vad som varit roligt den senaste veckan/,'Mutual theme YES is displayed inside its deck');
