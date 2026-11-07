@@ -48,6 +48,9 @@ Detta är **den enda prioriterade arbetskön** för nya `Jobb hk`-pass. Tidigare
 
 ## Senast verifierad teknisk baslinje
 
+- **7 november 2026, [PR #135](https://github.com/erikjarl/hemmakompassen/pull/135):** SEC-02 läsbaserat test mot ansluten Supabase och återanvändbar audit-SQL. Tre katalogräknare = 0, åtta ägartabeller + sju delade RPC:er gav 0 rader för två syntetiska oregistrerade identiteter; verkligt autentiserad familjeisolering och full RPC-kroppsgranskning saknas. [UI-CI före merge](https://github.com/erikjarl/hemmakompassen/actions/runs/42382785263), [merge](https://github.com/erikjarl/hemmakompassen/commit/53a0635549b811136082e0539524a849f20d0d88).
+- **7 november 2026, [PR #136](https://github.com/erikjarl/hemmakompassen/pull/136):** UX-01 visuell 320px-granskning fann tredelad kontolänk; CSS och Chromium-assertion åtgärdar överlapp och radbrytning. [Grön UI-CI före merge](https://github.com/erikjarl/hemmakompassen/actions/runs/42383131236), [merge](https://github.com/erikjarl/hemmakompassen/commit/75ebbb6304d48be8a65c151e3d27516858ff3916). Fysisk iOS/VoiceOver kvarstår.
+
 - **7 november 2026, SEC-02:** Read-only körning mot faktisk Supabase: 3 katalogkontroller = 0 anmärkningar; 2 syntetiska ej registrerade identiteter = 0 läsbara poster i 8 RLS-skyddade tabeller och 7 delade RPC. Detta bevisar INTE verklig tvåkontoflöde eller att samtliga RPC-kroppar är säkra.
 - **7 november 2026, PR #133:** förbättrat skydd mot gammalt notissvar vid byte till nytt familjepar; Node/Chromium godkända ([PR](https://github.com/erikjarl/hemmakompassen/pull/133)). Rapporterad senaste Pages-/filkontroll och UI-körning efter merge godkänd för `9c88e31`.
 - **PR #132:** automatiskt HTTP/byte-prov för tre serverade GitHub Pages-filer fungerar ([PR](https://github.com/erikjarl/hemmakompassen/pull/132)); detta är inte ett tvåkontotest.
