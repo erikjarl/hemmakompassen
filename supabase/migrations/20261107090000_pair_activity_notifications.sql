@@ -1,5 +1,5 @@
 -- NOT-01B phase 1: server-authored, pair-epoch-bound activity digests.
--- This migration is intentionally NOT applied to the live Supabase project.
+-- Installed in the Hemmakompassen test Supabase project as 20261107081525_pair_activity_notifications on 2026-11-07.
 -- No backfill: old private choices must never create notifications retroactively.
 create table public.activity_notification_event_keys (
   id uuid primary key default pg_catalog.gen_random_uuid(),
