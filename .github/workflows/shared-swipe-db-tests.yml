@@ -24,6 +24,7 @@ on:
       - "supabase/migrations/20261101130000_schyssta_replacements.sql"
       - "supabase/migrations/20261101133000_schyssta_rule_archive.sql"
       - "supabase/migrations/20261101150000_family_direct_messages.sql"
+      - "supabase/migrations/20261107090000_pair_activity_notifications.sql"
       - "supabase/tests/shared_swipe_matches.sql"
       - "supabase/tests/swipe_importance.sql"
       - "supabase/tests/shared_swipe_priorities.sql"
@@ -34,6 +35,7 @@ on:
       - "supabase/tests/schyssta_replacements.sql"
       - "supabase/tests/schyssta_archive.sql"
       - "supabase/tests/family_direct_messages.sql"
+      - "supabase/tests/activity_notifications.sql"
       - "supabase/tests/fixtures/shared_swipe_contract_schema.sql"
   workflow_dispatch:
 
@@ -173,6 +175,11 @@ jobs:
           docker exec -i "${{ job.services.postgres.id }}" \
             psql -U postgres -d postgres -v ON_ERROR_STOP=1 -X -q \
             < supabase/migrations/20261101150000_family_direct_messages.sql
+      - name: Apply safe activity notification digest backend
+        run: |
+          docker exec -i "${{ job.services.postgres.id }}" \
+            psql -U postgres -d postgres -v ON_ERROR_STOP=1 -X -q \
+            < supabase/migrations/20261107090000_pair_activity_notifications.sql
       - name: Assert 52 real pgTAP test results
         shell: bash
         run: |
@@ -298,6 +305,19 @@ jobs:
             exit 1
           fi
           test "$(grep -Ec '^ok [0-9]+' /tmp/family-direct-messages.log)" -eq 24
+
+      - name: Assert 31 synthetic activity notification pgTAP results
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker exec -i "${{ job.services.postgres.id }}" \
+            psql -U postgres -d postgres -v ON_ERROR_STOP=1 -X -q -A -t \
+            < supabase/tests/activity_notifications.sql | tee /tmp/activity-notifications-test.log
+          grep -qx '1..31' /tmp/activity-notifications-test.log
+          if grep -Eq '^(not ok|# Looks like you failed)' /tmp/activity-notifications-test.log; then
+            exit 1
+          fi
+          test "$(grep -Ec '^ok [0-9]+' /tmp/activity-notifications-test.log)" -eq 31
 
       - name: Verify legacy family tables and retired RPC lose direct API privileges
         shell: bash
