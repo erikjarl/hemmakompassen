@@ -769,6 +769,11 @@ try{
   }));
   assert.equal(retestCheck.saved,1,'Private answer must be saved: '+JSON.stringify(retestCheck));
   await retestScreen.page.getByText('Fråga 2 av 50').waitFor();
+  await retestScreen.page.getByRole('button',{name:'Uppdatera mina omtest'}).click();
+  await retestScreen.page.getByText('Dina omtest har uppdaterats från servern.').waitFor();
+  await retestScreen.page.getByRole('button',{name:'Fortsätt privat omtest'}).click();
+  await retestScreen.page.getByText('Fråga 2 av 50').waitFor();
+
   const downloadPromise=retestScreen.page.waitForEvent('download');
   await retestScreen.page.getByRole('button',{name:'Exportera min påbörjade omgång (JSON)'}).click();
   const privateFile=await downloadPromise;

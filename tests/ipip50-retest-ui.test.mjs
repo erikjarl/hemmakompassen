@@ -4,7 +4,7 @@ import {createPrivateIpipRetests,buildPrivateIpipRetestExport} from '../personal
 
 function makeBackend(){
   const attempts=[],answers=[],calls=[];
-  let owner='private-user',failNextAnswer=false,failDelete=false;
+  let owner='private-user',failNextAnswer=false,failDelete=false,failNextAnswerRead=false;
   const db={
     from(table){
       assert.ok(['personality_test_attempts','personality_attempt_answers'].includes(table),
@@ -42,6 +42,10 @@ function makeBackend(){
             row.completed_at=payload.completed_at;calls.push('complete');
             return {data:{...row},error:null};
           }
+          if(op==='read'&&table==='personality_attempt_answers'&&failNextAnswerRead){
+            failNextAnswerRead=false;
+            return {data:null,error:{message:'offline read'}};
+          }
           const rows=(table==='personality_test_attempts'?attempts:answers)
             .filter(a=>Object.entries(filters).every(([key,value])=>a[key]===value));
           return {data:rows.map(row=>({...row})),error:null};
@@ -65,7 +69,7 @@ function makeBackend(){
     }
   };
   return {db,attempts,answers,calls,setOwner:v=>owner=v,failNext:()=>failNextAnswer=true,
-    setDeleteFailure:v=>failDelete=v};
+    setDeleteFailure:v=>failDelete=v,failAnswerRead:()=>failNextAnswerRead=true};
 }
 const button=(action,attemptId)=>({closest:sel=>sel==='[data-ipip-retest]'?{dataset:{ipipRetest:action,attemptId}}:null});
 const radio=(item,value)=>({matches:sel=>sel==='input[data-ipip-retest-answer]',dataset:{ipipRetestAnswer:item},value:String(value)});
@@ -216,4 +220,55 @@ test('two simulated tabs race for a retest; second tab resumes the existing draf
   assert.match(second.render(),/Fortsätt privat omtest/);
   await second.handleClick(button('resume'));
   assert.match(second.render(),/Fråga 2 av 50/);
+});
+
+test('draft export reads updated server values rather than an older tab-local copy',async()=>{
+  const b=makeBackend(),downloads=[];
+  const first=createPrivateIpipRetests({db:b.db,saveExport:(_,data)=>downloads.push(data)});
+  first.reset('private-user');await first.load('private-user');
+  await first.handleClick(button('new'));
+  await first.handleChange(radio('ipip50-001',2));
+  assert.equal(b.answers[0].answer_value,2);
+  // A second tab saved a new answer after the first tab's last render.
+  b.answers[0].answer_value=5;
+  b.answers.push({attempt_id:'attempt-1',user_id:'private-user',question_id:'ipip50-002',answer_value:4});
+  await first.handleClick(button('export','attempt-1'));
+  assert.equal(downloads.length,1);
+  assert.equal(downloads[0].answered_count,2);
+  assert.deepEqual(downloads[0].responses.map(r=>r.value),[5,4]);
+  assert.doesNotMatch(JSON.stringify(downloads[0]),/private-user|attempt-1/);
+  // Until manual refresh, the local progress may be old; export must not be.
+  assert.match(first.render(),/1 av 50 svar/);
+  await first.handleClick(button('refresh'));
+  assert.match(first.render(),/2 av 50 svar/);
+  assert.match(first.render(),/Dina omtest har uppdaterats från servern/);
+});
+
+test('server read failure never downloads a stale or partial draft snapshot',async()=>{
+  const b=makeBackend(),downloads=[];
+  const ui=createPrivateIpipRetests({db:b.db,saveExport:(_,payload)=>downloads.push(payload)});
+  ui.reset('private-user');await ui.load('private-user');
+  await ui.handleClick(button('new'));
+  await ui.handleChange(radio('ipip50-001',3));
+  b.failAnswerRead();
+  await ui.handleClick(button('export','attempt-1'));
+  assert.equal(downloads.length,0,'Export requires successful server read');
+  assert.match(ui.render(),/Det gick inte att exportera omtestet/);
+  assert.equal(b.answers.length,1,'Server-side answers are preserved');
+  await ui.handleClick(button('export','attempt-1'));
+  assert.equal(downloads.length,1);
+});
+
+test('manual refresh does not show a deleted draft as an active test',async()=>{
+  const b=makeBackend(),ui=createPrivateIpipRetests({db:b.db});
+  ui.reset('private-user');await ui.load('private-user');
+  await ui.handleClick(button('new'));
+  await ui.handleChange(radio('ipip50-001',3));
+  // Other tab has confirmed deletion via server; this tab is stale.
+  b.attempts.splice(0,1);
+  b.answers.splice(0,b.answers.length);
+  await ui.handleClick(button('refresh'));
+  assert.match(ui.render(),/Starta en ny privat testomgång/);
+  assert.doesNotMatch(ui.render(),/Fortsätt privat omtest/);
+  assert.equal(b.attempts.length,0);
 });
