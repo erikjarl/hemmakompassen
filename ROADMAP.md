@@ -1,4 +1,4 @@
-# Hemmakompassen — utvecklingsplan (senast avstämd 2026-11-06)
+# Hemmakompassen — utvecklingsplan (senast avstämd 2026-11-07)
 
 ## 7 november 2026 – NOT-01B: första backendsteget för aktivitetsnotiser (PR #126)
 
@@ -8,8 +8,9 @@
 - [x] **CI verifierat:** [PostgreSQL/pgTAP #42354500380](https://github.com/erikjarl/hemmakompassen/actions/runs/42354500380) och [UI/bygg #42354500438](https://github.com/erikjarl/hemmakompassen/actions/runs/42354500438) `success` på commit `0b4217f65e9b4ed87f6a444054ea7c46039981cf`. 31 nya syntetiska pgTAP-kontroller körda; inga verkliga användarsvar ingår.
 - [x] **Installation och efterkontroll i verkliga Supabase (7 november):** `20261107081525_pair_activity_notifications` installerad; fyra triggers aktiva, två RLS-tabeller utan direkt klientläsning eller -skrivning, avgränsade publika RPC-rättigheter och 0 historiska rader vid efterkontroll. Detta testar inte riktiga signerade sessioner.
 - [x] **PR #126 mergad och CI/Pages godkända:** commit `c25c752499feaa8629c5a9564ed3dffe55269072`, [main Pages #42354637272](https://github.com/erikjarl/hemmakompassen/actions/runs/42354637272) samt [UI #42354638116](https://github.com/erikjarl/hemmakompassen/actions/runs/42354638116).
-- [x] **UI-kod i PR #127:** neutrala aviseringar från autentiserad RPC på startsida/Inkorgen, läsmarkering vid explicit klick, hantering av nätverksfel och inloggningsbyte. Ingen implicit notispress eller privat svarstext.
-- [ ] **Kvar:** verkligt signerad tvåkontoverifiering, avparning/race conditions, UI-CI för #127, exakt kortlekslänk, säkerhets-/metodgranskning och fysisk iOS/VoiceOver. Tidigare #118–#119 fortsätter endast att skapa frivilliga oskickade chattutkast.
+- [x] **UI-kod i mergad PR #127:** neutrala aviseringar från autentiserad RPC på startsida/Inkorgen, läsmarkering vid explicit klick, hantering av nätverksfel och inloggningsbyte. Ingen implicit notispress eller privat svarstext.
+- [x] **PR #127 verifierad och mergad:** [UI-webbläsartest #42355469142](https://github.com/erikjarl/hemmakompassen/actions/runs/42355469142) samt [pgTAP #42355469112](https://github.com/erikjarl/hemmakompassen/actions/runs/42355469112) gröna på commit `0b935487931b4f2e196bd2099081735d6be5b3ed`, mergad som `7de0bf6be780f67856ca8764e171bbc8bb15c1fc`. UI- och payloadtester omfattar även mobil Chromium och en uttrycklig läsmarkering.
+- [ ] **Kvar:** sista Pages-verifiering efter merge, verkligt signerad tvåkontoverifiering, avparning/race conditions, exakt kortlekslänk, säkerhets-/metodgranskning och fysisk iOS/VoiceOver. Tidigare #118–#119 fortsätter endast att skapa frivilliga oskickade chattutkast.
 
 **Gällande Jobb hk-fullmakt (5 november 2026):** se [AGENTS.md](AGENTS.md). Commit, push, PR, merge, publicering och motsvarande projektändringar i GitHub, Supabase och Cloudflare är uttryckligen godkända. Detta ersätter äldre krav på separat merge-/publiceringsgodkännande.
 
