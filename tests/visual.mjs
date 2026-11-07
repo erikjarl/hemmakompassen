@@ -1503,7 +1503,6 @@ try{
   assert.equal(await savedReview.page.locator('.swipe-private-review [data-private-theme-answer]:visible').count(),1,
     'Private search finds its saved card text');
   await privateAnswerSearch.fill('inget-kort-har-detta-ord');
-  console.log('PRIVATE_REVIEW_DIAG',JSON.stringify(await savedReview.page.evaluate(()=>({search:document.querySelector('#private-theme-review-search')?.value,count:document.querySelector('#private-theme-review-count')?.textContent,rows:[...document.querySelectorAll('.swipe-private-review [data-private-theme-answer]')].map(el=>({hidden:el.hidden,display:el.style.display,computed:getComputedStyle(el).display,statement:el.querySelector('[data-private-theme-statement]')?.textContent}))}))));
   assert.equal(await savedReview.page.locator('.swipe-private-review [data-private-theme-answer]:visible').count(),0,
     'Unknown search cannot create new private results');
   await savedReview.page.locator('#private-theme-review-empty:visible').waitFor();
