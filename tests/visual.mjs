@@ -826,6 +826,19 @@ try{
   await narrow.page.goto(base+'#kommunikation',{waitUntil:'load'});
   await narrow.page.getByRole('heading',{name:'Verktyg för bättre samtal'}).waitFor();
   await checkOverflow(narrow.page,'Communication toolkit 320px');
+  // The collaborative plan is local-only: it generates a text preview without sending.
+  await narrow.page.locator('#comm-solution-form textarea[name="problem"]').fill('Vi avbryter varandra');
+  await narrow.page.locator('#comm-solution-form textarea[name="question"]').fill('Hur upplever du våra samtal?');
+  await narrow.page.locator('#comm-solution-form textarea[name="experiment"]').fill('Lyssna färdigt fem minuter');
+  await narrow.page.locator('#comm-solution-form textarea[name="followup"]').fill('Efter helgen');
+  await narrow.page.locator('#comm-solution-form button[type="submit"]').click();
+  await narrow.page.locator('#comm-solution-output').getByText(/Jag vill prata om: Vi avbryter varandra/).waitFor();
+  assert.match(await narrow.page.locator('#comm-solution-output').innerText(),/Den andra får säga nej/);
+  await checkOverflow(narrow.page,'Private solution planner 320px');
+  await capture(narrow.page,'mobile-320-communication-plan.png');
+  await narrow.page.locator('[data-comm-solution-reset]').click();
+  assert.equal(await narrow.page.locator('#comm-solution-form textarea[name="problem"]').inputValue(),'');
+  assert.match(await narrow.page.locator('#comm-solution-output').innerText(),/Din privata samtalsplan visas här/);
   await capture(narrow.page,'mobile-320-communication.png');
   await narrow.page.goto(base+'#nvc',{waitUntil:'load'});
   await narrow.page.getByRole('heading',{name:'Nonviolent Communication',exact:true}).waitFor();
