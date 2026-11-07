@@ -1,5 +1,12 @@
 # Hemmakompassen — aktuell utvecklingskö
 
+## 7 november 2026 – NOT-01B: exakta kortlekslänkar från aviseringar (PR #128)
+
+- [x] **Kod och regressionstester i PR #128:** avisering från en servervaliderad A JA+JA-händelse leder till den berörda kortlekens del i Gemensamma insikter; uttryckligt delad B-information leder till förståelsedelen. Endast kända hashmål accepteras. Fokus läggs på verifierat avsnitt först efter ny RPC-läsning. En äldre återkallad delning ger en neutral informationstext, aldrig tidigare svar.
+- [x] **Testkod tillagd:** Node-kontraktstest av hashvitlista, kontrollerad aviseringstyp och fokuskrav; syntetiskt mobil Chromium-test för länkat A-kort och återkallelse. Inget nätverksanrop eller automatisk läsmarkering görs av länken.
+- [ ] **CI/release:** PR #128 behöver godkänd UI/bygg/test och merge innan funktionen kan räknas som publicerad. Riktiga signerade tvåkonton, iOS Safari/VoiceOver och aktivt av-/omparningstest kvarstår. Ingen Supabase-migration eller ändring av gamla svar.
+
+
 ## 7 november 2026 – NOT-01B steg 1: separat backend för aktivitetsaviseringar (PR #126)
 
 - [x] **Kod i utvecklingsgren:** [PR #126](https://github.com/erikjarl/hemmakompassen/pull/126) tillför tabellerna `activity_notification_event_keys` och `activity_notifications`, endast tillgängliga via snäva, autentiserade RPC:er. Två servertriggers skapar A-händelser efter ett verkligt JA+JA och B-händelser efter nytt uttryckligt tonårssamtycke; inga historiska privata svar backfylls. Läs-RPC verifierar aktuell parningsepok och fortfarande behörigt delat kort.

@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261107-activity-inbox1';
-import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261107-activity-inbox1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261107-activity-inbox1';
-import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-activity-inbox1';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261107-activity-inbox1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261107-activity-deeplink1';
+import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261107-activity-deeplink1';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261107-activity-deeplink1';
+import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-activity-deeplink1';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261107-activity-deeplink1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -711,7 +711,7 @@ function insightsView(){
     group.get(matched.category).push(cardTextForRole(matched,viewerRole()));
   }
   const sections=[...byDeck.values()].map(({deck,groups})=>
-    '<section class="live-panel insights-deck"><h3>'+esc(deck.title)+'</h3>'+
+    '<section id="insights-deck-'+esc(deck.id)+'" tabindex="-1" class="live-panel insights-deck"><h3>'+esc(deck.title)+'</h3>'+
     [...groups.entries()].map(([category,texts])=>
       '<div class="swipe-match-theme"><h4>'+esc(category)+'</h4><ul class="swipe-match-list">'+
       texts.map(t=>{
@@ -735,12 +735,16 @@ function insightsView(){
     }
   }
   const empty='<p class="live-muted">Inga gemensamma ja-svar att visa ännu. Ett kort syns först när ni båda har svarat ja.</p>';
-  return title+'<section class="live-panel" aria-labelledby="insights-a-heading"><h2 id="insights-a-heading">Möjligt att utforska</h2>'+
+  const requested=insightTargetFromHash(location.hash);
+  const stillShared=requested==='forstaelse'?sharedUnderstandingRows.length>0:byDeck.has(requested);
+  const missingTargetNotice=requested&&!stillShared
+    ?'<p id="insights-target-unavailable" tabindex="-1" role="status">Den här insikten är inte längre tillgänglig eller delad. Du kan se andra gemensamma insikter nedan.</p>':'';
+  return title+missingTargetNotice+'<section class="live-panel" aria-labelledby="insights-a-heading"><h2 id="insights-a-heading">Möjligt att utforska</h2>'+
     '<p class="live-muted">Endast serververifierade JA+JA på A-kort. Det här är möjligheter, inte färdiga överenskommelser. För aktiviteter kan du öppna ett frivilligt meddelandeutkast, utan att något skickas automatiskt.</p>'+ 
     (activityInviteError?'<p role="alert">'+esc(activityInviteError)+'</p>':'')+
     (sections?sharedFactOverview(overviewGroups,'Gemensamt i alla kortlekar'): '')+(sections||empty)+
     (aiResultEnabled&&insightsAiSignature()?aiResults.panel('swipe','all',insightsAiSignature()):'')+'</section>'+
-    '<section class="live-panel" aria-labelledby="insights-b-heading"><h2 id="insights-b-heading">'+
+    '<section id="insights-understanding" tabindex="-1" class="live-panel" aria-labelledby="insights-b-heading"><h2 id="insights-b-heading">'+
     (viewerRole()==='parent'?'Så här funkar min tonåring':'Så här funkar jag')+
     '</h2>'+understandingInsights()+'</section>'+
     '<button type="button" class="live-button" id="insights-retry">Uppdatera gemensamma insikter</button></div>';
@@ -785,6 +789,8 @@ async function fetchInsights({quiet=false}={}){
       // Same data: avoid unnecessary rerenders, scroll jumps and AI requests.
       // Changed/revoked sharing creates a different analysis signature.
       if(!quiet||previousSnapshot!==JSON.stringify([insightsRows,sharedUnderstandingRows,insightsError]))render();
+      // Focus once on an intentional deep-link load; quiet consent refreshes never steal focus.
+      if(!quiet&&!insightsError)focusInsightTarget();
     }
   }
 }
@@ -988,7 +994,22 @@ function nextVisibleAfter(index){return visibleGeneralIndices().find(i=>i>index)
 function advanceSwipe(direction){if(activeThemeDeck){advanceThemeSwipe(direction);return;}if(swipeBusy||importanceSaving.size||page()!=='swipe'||!user||swipeIndex>=STATEMENTS.length||!visibleGeneralIndices().includes(swipeIndex))return;const el=$('swipe-card');if(!el)return;const index=swipeIndex,viewer=user.id,session=sharedSession;swipeBusy=true;const reduce=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;if(!reduce){el.style.transform='translateX('+(direction==='yes'?'120vw':'-120vw')+') rotate('+(direction==='yes'?18:-18)+'deg)';el.style.opacity='0';}setTimeout(()=>saveSwipeAnswer(direction,index,viewer,session),reduce?0:220);}
 function setupSwipeGesture(){const el=$('swipe-card');if(!el)return;let start=null;const reset=()=>{start=null;el.style.transform='';el.classList.remove('swipe-dragging','swipe-preview-yes','swipe-preview-no');};el.addEventListener('pointerdown',e=>{if(e.target.closest?.('[data-importance-control]')||(e.button!==undefined&&e.button!==0))return;start={id:e.pointerId,x:e.clientX,y:e.clientY,dragging:false};});el.addEventListener('pointermove',e=>{if(!start||start.id!==e.pointerId||swipeBusy)return;const dx=e.clientX-start.x,dy=e.clientY-start.y;if(!start.dragging&&Math.abs(dy)>Math.abs(dx)&&Math.abs(dy)>12){start=null;return;}if(Math.abs(dx)>10&&Math.abs(dx)>Math.abs(dy)){start.dragging=true;el.setPointerCapture?.(e.pointerId);}if(!start.dragging)return;el.classList.add('swipe-dragging');el.classList.toggle('swipe-preview-yes',dx>35);el.classList.toggle('swipe-preview-no',dx< -35);el.style.transform='translateX('+dx+'px) rotate('+Math.max(-13,Math.min(13,dx/18))+'deg)';});el.addEventListener('pointerup',e=>{if(!start||start.id!==e.pointerId)return;const dx=e.clientX-start.x,dragged=start.dragging;reset();if(dragged&&Math.abs(dx)>=85)advanceSwipe(dx>0?'yes':'no');});el.addEventListener('pointercancel',reset);}
 
-function page(){if(location.hash.startsWith('#kommunikation/'))return 'kommunikation';let h;try{h=decodeURIComponent(location.hash.slice(1));}catch{return 'hem';}return ['insikter','mi-foralder','nvc'].includes(h)?h:nav.some(n=>n[0]===h)?h:'hem';}
+function insightTargetFromHash(hash){
+  const found=/^#insikter\/([a-z-]+)$/.exec(hash);
+  return found&&(found[1]==='forstaelse'||INSIGHT_DECK_IDS.includes(found[1]))?found[1]:null;
+}
+function focusInsightTarget(){
+  const target=insightTargetFromHash(location.hash);
+  if(!target||page()!=='insikter'||insightsLoading||insightsError)return false;
+  // Only server-verified, currently shared sections are focus targets.
+  const element=$(target==='forstaelse'?'insights-understanding':'insights-deck-'+target)
+    ||$('insights-target-unavailable');
+  if(!element)return false;
+  element.focus({preventScroll:true});
+  element.scrollIntoView({block:'start'});
+  return true;
+}
+function page(){if(insightTargetFromHash(location.hash))return 'insikter';if(location.hash.startsWith('#kommunikation/'))return 'kommunikation';let h;try{h=decodeURIComponent(location.hash.slice(1));}catch{return 'hem';}return ['insikter','mi-foralder','nvc'].includes(h)?h:nav.some(n=>n[0]===h)?h:'hem';}
 // On mobile, the scroll container is .live-main rather than window.
 function scrollLiveMainTop(){const main=document.querySelector('.live-main');if(main)main.scrollTop=0;window.scrollTo(0,0);}
 let previousMenuRoute=null;
@@ -1303,7 +1324,7 @@ function inboxView(){
             ?'Nytt gemensamt JA · '+esc(ACTIVITY_DECK_LABELS[n.deck_id])
             :'Ett förståelsekort har delats frivilligt')+'</strong>'+(n.read_at===null?' · Oläst':'')+'</p>'
           +'<p class="live-muted"><time datetime="'+esc(n.updated_at)+'">'+esc(familyChatTimestamp(n.updated_at))+'</time></p>'
-          +'<div class="schyssta-actions"><a class="live-button" href="#insikter">Visa gemensamma insikter</a>'
+          +'<div class="schyssta-actions"><a class="live-button" href="#insikter/'+esc(n.event_kind==='teen_shared_understanding'?'forstaelse':n.deck_id)+'">Visa '+(n.event_kind==='teen_shared_understanding'?'delad förståelse':'kortlekens insikter')+'</a>'
           +(n.read_at===null?'<button type="button" class="schyssta-secondary" data-activity-read="'
             +esc(n.notification_id)+'"'+(activityMarkBusy?' disabled':'')+'>Markera som läst</button>':'')
           +'</div></li>').join('')+'</ul>'

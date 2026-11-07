@@ -379,6 +379,23 @@ try{
   assert.equal(await activity.page.locator('[data-activity-read]').count(),0,
     'Activity notification is visibly read after explicit server roundtrip');
   await checkOverflow(activity.page,'Activity inbox mobile');
+  // The notification must open its exact, freshly verified deck, not private answers.
+  await activity.page.evaluate(()=>{window.__HK_TEST_SHARED_MATCHES__=[
+    {deck_id:'aktiviteter',card_id:'aktiviteter-01',answer:true}
+  ];});
+  await activity.page.locator('a[href="#insikter/aktiviteter"]').click();
+  await activity.page.locator('#insights-deck-aktiviteter').waitFor();
+  await activity.page.waitForFunction(()=>document.activeElement?.id==='insights-deck-aktiviteter');
+  assert.equal(await activity.page.evaluate(()=>window.__HK_ACTIVITY_MARK_COUNT__||0),1,
+    'Opening the deck does not mark any additional notification read');
+  // A withdrawn match is never resurrected by an old inbox link.
+  await activity.page.evaluate(()=>{window.__HK_TEST_SHARED_MATCHES__=[];});
+  await activity.page.goto(base+'#inkorg',{waitUntil:'load'});
+  await activity.page.locator('a[href="#insikter/aktiviteter"]').click();
+  await activity.page.locator('#insights-target-unavailable').waitFor();
+  await activity.page.waitForFunction(()=>document.activeElement?.id==='insights-target-unavailable');
+  assert.doesNotMatch(await activity.page.locator('#live-app').innerText(),/aktiviteter-01/,
+    'Revoked card IDs are not shown as insight content');
   await activity.context.close();
   const m=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true});
   await m.page.getByRole("heading",{name:/Hej[ ,]+Provförälder/}).waitFor();

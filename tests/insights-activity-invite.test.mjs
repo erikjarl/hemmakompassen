@@ -117,6 +117,7 @@ test('actual insights view renders activity CTA only for verified activity match
     user:{id:'viewer'},
     members:[{user_id:'viewer',role:'teen'},{user_id:'other',role:'parent'}],
     sharedInsightsEnabled:true,insightsLoading:false,insightsError:'',
+    insightTargetFromHash:()=>null,location:{hash:'#insikter'},
     activityInviteBusy:false,activityInviteError:'',
     insightsRows:[{deck_id:'aktiviteter',card_id:'aktiviteter-09',answer:true}],
     sharedUnderstandingRows:[],aiResultEnabled:false,
