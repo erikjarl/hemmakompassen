@@ -143,29 +143,46 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
             async signInWithPassword(){return {error:null}}
           },
           from(table){
-            if(table==='personality_test_attempts')return {
-              select(){return {eq(){return {async order(){return {data:retestAttempts.map(a=>({...a})),error:null};}}}};},
-              insert(row){return {select(){return {async single(){
-                const a={id:'90000000-0000-4000-8000-000000000001',...row,created_at:'2026-11-07T10:00:00Z',completed_at:null};
-                retestAttempts.push(a);return {data:{...a},error:null};
-              }}}};},
-              update(data){return {eq(){return {eq(){return {select(){return {async single(){
-                const a=retestAttempts[0];
-                if(retestAnswers.length!==50)return {data:null,error:{message:'incomplete'}};
-                a.completed_at=data.completed_at;return {data:{...a},error:null};
-              }}}}}}};}
-            };
-            if(table==='personality_attempt_answers')return {
-              select(){return {eq(){return {async eq(){
-                return {data:retestAnswers.map(a=>({...a})),error:null};
-              }}}};},
-              async upsert(row){
-                const found=retestAnswers.find(a=>a.question_id===row.question_id&&a.attempt_id===row.attempt_id);
-                if(found)found.answer_value=row.answer_value;else retestAnswers.push({...row});
-                window.__HK_PRIVATE_RETEST_ANSWERS__=retestAnswers.length;
-                return {error:null};
+            if(table==='personality_test_attempts'||table==='personality_attempt_answers'){
+              const list=table==='personality_test_attempts'?retestAttempts:retestAnswers;
+              function chain(operation='read',payload=null){
+                const filters={};
+                const run=()=>{
+                  if(operation==='insert'){
+                    const row={id:'90000000-0000-4000-8000-000000000001',...payload,
+                      created_at:'2026-11-07T10:00:00Z',completed_at:null};
+                    list.push(row);return {data:{...row},error:null};
+                  }
+                  if(operation==='update'){
+                    const row=list.find(a=>Object.entries(filters).every(([k,v])=>a[k]===v));
+                    if(!row)return {data:null,error:{message:'missing row'}};
+                    if(retestAnswers.length!==50)return {data:null,error:{message:'incomplete'}};
+                    Object.assign(row,payload);return {data:{...row},error:null};
+                  }
+                  return {data:list.filter(a=>Object.entries(filters).every(([k,v])=>a[k]===v))
+                    .map(a=>({...a})),error:null};
+                };
+                const q={
+                  select(){return q;},
+                  eq(k,v){filters[k]=v;return q;},
+                  order(){return Promise.resolve(run());},
+                  single(){return Promise.resolve(run());},
+                  then(resolve,reject){return Promise.resolve(run()).then(resolve,reject);}
+                };
+                return q;
               }
-            };
+              return {
+                select(){return chain();},
+                insert(row){return chain('insert',row);},
+                update(row){return chain('update',row);},
+                async upsert(row){
+                  const found=retestAnswers.find(a=>a.attempt_id===row.attempt_id&&a.question_id===row.question_id);
+                  if(found)found.answer_value=row.answer_value;else retestAnswers.push({...row});
+                  window.__HK_PRIVATE_RETEST_ANSWERS__=retestAnswers.length;
+                  return {error:null};
+                }
+              };
+            }
             if(table==='personality_share_preferences')return {
               select(){return {eq(){return {eq(){return {async maybeSingle(){return {data:personalityConsent?{share_enabled:true}:null,error:null};}}}}}};}
             };
