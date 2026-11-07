@@ -1,5 +1,12 @@
 # Hemmakompassen — utvecklingsplan (senast avstämd 2026-11-07)
 
+## 7 november 2026 – NOT-01B: exakta djuplänkar från Inkorg (PR #128)
+
+- [x] **I utvecklingsgren:** servervaliderade aktivitetsaviseringar öppnar avsnittet för rätt kortlek i Gemensamma insikter, med egen länk för uttryckligt delade B-förståelsekort. Hashmål vitlistas; en borttagen matchning eller återkallad delning visas inte på nytt. Inga automatiska läskvitton vid navigering.
+- [x] **Testspecifikation i kod:** nya Node-kontrakt för djuplänkar och syntetiskt mobil-Chromiumflöde för faktisk A-matchning följd av återkallelse.
+- [ ] **PR #128 återstår att verifiera och mergea;** fysisk iOS/VoiceOver, två verkliga autentiserade konton och av-/omparningsrace är ännu inte verifierade. Databas och AI Worker är oförändrade.
+
+
 ## 7 november 2026 – NOT-01B: första backendsteget för aktivitetsnotiser (PR #126)
 
 - [x] **Implementerat i GitHub-gren:** separat RPC-only-tabell och unik eventnyckel per aktiv parningsepok/kort/mottagare; ett dagligt samlat aviseringstillfälle per kortlek och händelsetyp. Endast en serververifierad A JA+JA-match eller ett uttryckligt delat B-kort kan ge händelse. Ingen retroaktiv notifiering av historiska svar.
