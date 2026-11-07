@@ -2,7 +2,7 @@
 
 ## Kortkommando: Jobb hk
 
-När Erik skriver `Jobb hk` ska ett sammanhängande, självständigt utvecklingspass för `erikjarl/hemmakompassen` genomföras. Läs först `docs/CURRENT_TASKS.md` och relevanta delar av `ROADMAP.md`, granska aktuell kod och PR-status, prioritera nästa arbete, genomför konkreta ändringar, testa och uppdatera listorna med verifierad status. Fortsätt med oberoende uppgifter vid hinder.
+När Erik skriver `Jobb hk` ska ett sammanhängande, självständigt utvecklingspass för `erikjarl/hemmakompassen` genomföras. Läs **alltid först `docs/ACTIVE_ROADMAP.md`** (enda prioriterade arbetskön), sedan aktuell kod, GitHub-PR/CI, Supabase-/Cloudflare-status vid behov. Använd `ROADMAP.md` och `docs/CURRENT_TASKS.md` enbart som historik/tekniskt underlag. Välj högsta genomförbara uppgift, utför flera konkreta ändringar i ett sammanhängande pass, testa, dokumentera verifieringsnivå och uppdatera den aktiva roadmapen. Fortsätt med självständigt P1-arbete om P0-inloggningar är blockerade.
 
 ## Uttrycklig fullmakt, uppdaterad 5 november 2026
 

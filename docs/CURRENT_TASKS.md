@@ -1,4 +1,7 @@
-# Hemmakompassen — aktuell utvecklingskö
+# Hemmakompassen — historisk utvecklings- och verifieringslogg
+
+> **ARKIV / HISTORIK:** Här finns äldre körningar, kvarstående QA-anteckningar och ibland föråldrade öppna checkboxar. För nästa prioriterade arbete och status gäller ENDAST [ACTIVE_ROADMAP.md](ACTIVE_ROADMAP.md). Ändra inte båda dokumenten som parallella checklistor.
+
 
 ## 7 november 2026 – NOT-01B: skydda mot byte till ny tvåpersonersparning
 
