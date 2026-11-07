@@ -123,7 +123,7 @@ export function renderCommunicationToolkit(role='teen'){
   '<section class="live-panel comm-sources"><h2>Källor och begränsningar</h2><p>Övningarna utgår från beskrivna samtalsfärdigheter och är redaktionellt anpassade för vardagen. De är inte en prövad familjebehandling. NVC är en kommunikationsmodell – inte en metod vars effekter här är kliniskt validerade.</p><ul>'+COMMUNICATION_SOURCES.map(s=>'<li><a href="'+e(s.url)+'" target="_blank" rel="noopener noreferrer">'+e(s.title)+'</a></li>').join('')+'</ul></section></div>';
 }
 export function buildSolutionPlan(input={}){
- const normalize=value=>typeof value==='string'?value.replace(/\\s+/g,' ').trim().slice(0,240):'';
+ const normalize=value=>typeof value==='string'?value.replace(/\s+/g,' ').trim().slice(0,240):'';
  const [problem,question,experiment,followup]=['problem','question','experiment','followup'].map(key=>normalize(input[key]));
  if(!problem||!question||!experiment||!followup)return null;
  return 'Jag vill prata om: '+problem+'\\nJag vill förstå: '+question+'\\nMitt förslag att diskutera: '+experiment+'\\nFörslag på uppföljning: '+followup+'\\nDetta är bara mitt utkast. Den andra får säga nej eller föreslå något annat.';
