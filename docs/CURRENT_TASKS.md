@@ -1,5 +1,12 @@
 # Hemmakompassen — aktuell utvecklingskö
 
+## 7 november 2026 – NOT-01B: skydda mot byte till ny tvåpersonersparning
+
+- [x] **Kod i utvecklingsgren:** hämtning av aktivitetsaviseringar och explicit läskvitto knyts till medlemsidentiteter, roll och tillgängliga familj-/anslutningsepoker i stället för enbart antal medlemmar och sessionsräknare. Sena svar från en tidigare tvåpersonersparning ignoreras och tidigare notiser rensas; ändrad ordningsföljd för samma två medlemmar tillåts.
+- [x] **Fyra isolerade regressionstester i kod:** nytt par med samma antal, oförändrat par med annan medlemsordning, ändrad anslutningstid samt läskvitto från tidigare par. Testerna använder syntetiska RPC-svar, inte två verkliga JWT-sessioner.
+- [ ] **PR-CI, merge och Pages-version:** markera endast efter faktiska godkända körningar.
+- [ ] **Kvarstående realistisk testning:** autentiserad förälder/tonåring, ny parning och återkallad behörighet i faktisk Supabase, fysisk Safari/VoiceOver och juridisk granskning.
+
 ## 7 november 2026 – REL-01: automatiskt verifiera faktiskt serverade Pages-filer
 
 - [x] **CI-kod i utvecklingsgren:** nytt arbetsflöde `.github/workflows/verify-pages-assets.yml` körs vid varje push till `main` (och manuellt) och jämför faktiskt hämtade bytes för `live-app.js`, `backend-config.js` och `personality/ipip50-ui.js` mot samma Git-commit. Kontrollen försöker på nytt under pågående Pages-publicering och ger fel om serverade filer inte stämmer. Inga privata data, cookies eller inloggningar behövs.
