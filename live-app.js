@@ -115,7 +115,8 @@ async function markActivityNotificationRead(notificationId){
   let result;
   try{result=await db.rpc('mark_activity_notification_read',{p_notification_id:notificationId});}
   catch(e){result={error:e};}
-  if(viewer!==user?.id||session!==sharedSession)return;
+  if(viewer!==user?.id||session!==sharedSession
+    ||members.length!==2||!activityNotificationsEnabled)return;
   activityMarkBusy=null;
   if(result?.error){
     activityFeedback='Det gick inte att bekräfta läsmarkeringen. Uppdatera aviseringarna.';
