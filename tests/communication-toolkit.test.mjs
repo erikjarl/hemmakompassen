@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {COMMUNICATION_SOURCES,renderCommunicationToolkit,renderNvcExercise,buildNvcSentence} from '../communication/toolkit.js';
+import {COMMUNICATION_SOURCES,renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildSolutionPlan} from '../communication/toolkit.js';
 const app=readFileSync(new URL('../live-app.js',import.meta.url),'utf8');
 const builder=readFileSync(new URL('../scripts/build-static.mjs',import.meta.url),'utf8');
 
@@ -60,4 +60,32 @@ test('communication content uses its own module, is available on the public buil
   assert.equal(COMMUNICATION_SOURCES.length,5);
   assert.ok(COMMUNICATION_SOURCES.every(s=>s.url.startsWith('https://')&&s.title.length>3));
   assert.match(renderCommunicationToolkit('parent'),/inte en prövad familjebehandling/);
+});
+
+test('private solution planner is available to both roles with no storage or implied consent',()=>{
+ for(const role of ['parent','teen']){
+  const html=renderCommunicationToolkit(role);
+  assert.match(html,/id="comm-solution-form"/);
+  assert.match(html,/id="comm-solution-output"[^>]*role="status"[^>]*aria-live="polite"/);
+  for(const key of ['problem','question','experiment','followup'])assert.match(html,new RegExp('name="'+key+'"[^>]*maxlength="240"[^>]*required'));
+  assert.match(html,/data-comm-solution-reset/);
+  assert.match(html,/sparas inte/);
+  assert.match(html,/Den andra personen har inte godkänt något/);
+  assert.doesNotMatch(html,/onclick=|onerror=|<script\b/i);
+ }
+ const values={problem:'  vi bråkar om tvätt  ',question:' Vad tycker du? ',experiment:'Pröva en veckoplan',followup:'Nästa söndag'};
+ const preview=buildSolutionPlan(values);
+ assert.match(preview,/Jag vill prata om: vi bråkar om tvätt/);
+ assert.match(preview,/Jag vill förstå: Vad tycker du\?/);
+ assert.match(preview,/Mitt förslag att diskutera: Pröva en veckoplan/);
+ assert.match(preview,/Den andra får säga nej/);
+ assert.equal(buildSolutionPlan({problem:'A'}),null);
+ assert.equal(buildSolutionPlan({...values,question:7}),null);
+ assert.equal(buildSolutionPlan({...values,problem:' '.repeat(4)}),null);
+ assert.equal(buildSolutionPlan({...values,question:'x'.repeat(400)}).split('Jag vill förstå: ')[1].split('\n')[0].length,240);
+ const malicious=buildSolutionPlan({...values,problem:'<img src=x onerror=alert(1)>'});
+ assert.match(malicious,/<img src=x onerror=alert\(1\)>/,'Generator emits plain text, not HTML');
+ assert.match(app,/output\.textContent=plan/,'Preview uses textContent and cannot inject HTML');
+ assert.match(app,/if\(e\.target\.id==='comm-solution-form'\)/);
+ assert.match(app,/data-comm-solution-reset/);
 });
