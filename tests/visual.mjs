@@ -1497,6 +1497,23 @@ try{
   await savedReview.page.locator('.swipe-private-review summary').click();
   assert.match(await savedReview.page.locator('.swipe-private-review').innerText(),/Ditt svar: Ja/);
   assert.equal(await savedReview.page.locator('.swipe-private-review [data-theme-review-index]').count(),1);
+  const privateAnswerSearch=savedReview.page.locator('#private-theme-review-search');
+  const privateAnswerFilter=savedReview.page.locator('#private-theme-review-answer');
+  await privateAnswerSearch.fill('veckan');
+  assert.equal(await savedReview.page.locator('.swipe-private-review [data-private-theme-answer]:visible').count(),1,
+    'Private search finds its saved card text');
+  await privateAnswerSearch.fill('inget-kort-har-detta-ord');
+  assert.equal(await savedReview.page.locator('.swipe-private-review [data-private-theme-answer]:visible').count(),0,
+    'Unknown search cannot create new private results');
+  await savedReview.page.locator('#private-theme-review-empty:visible').waitFor();
+  assert.match(await savedReview.page.locator('#private-theme-review-count').innerText(),/Visar 0 av 1/);
+  await privateAnswerSearch.fill('');
+  await privateAnswerFilter.selectOption('no');
+  assert.equal(await savedReview.page.locator('.swipe-private-review [data-private-theme-answer]:visible').count(),0,
+    'No-only filter hides the current yes answer');
+  await privateAnswerFilter.selectOption('yes');
+  assert.equal(await savedReview.page.locator('.swipe-private-review [data-private-theme-answer]:visible').count(),1);
+  await privateAnswerFilter.selectOption('all');
   await savedReview.page.locator('.swipe-private-review [data-theme-review-index="0"]').click();
   assert.match(await savedReview.page.locator('#swipe-card').innerText(),/Vad som varit roligt den senaste veckan/,
     'A saved theme answer can be opened directly without swiping past 100 cards');
@@ -1506,6 +1523,9 @@ try{
   await savedReview.page.locator('.swipe-private-review summary').click();
   assert.match(await savedReview.page.locator('.swipe-private-review').innerText(),/Ditt svar: Nej/,
     'The private review reflects the updated answer');
+  await savedReview.page.locator('#private-theme-review-answer').selectOption('no');
+  assert.equal(await savedReview.page.locator('.swipe-private-review [data-private-theme-answer]:visible').count(),1,
+    'After correction, the saved NO is found by the private filter');
   await checkOverflow(savedReview.page,'Private saved-answer review 390px');
   await savedReview.page.locator('.swipe-private-review').scrollIntoViewIfNeeded();
   await capture(savedReview.page,'mobile-theme-private-answer-review.png');

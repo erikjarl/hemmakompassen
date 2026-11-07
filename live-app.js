@@ -1012,14 +1012,43 @@ function privateThemeAnswerReview(deck){
     return [{index,text:cardTextForRole(model,viewerRole()),category:model?.category||deck.title,answer:answers.get(id)}];
   });
   if(!items.length)return '';
-  return '<section class="live-panel swipe-private-review" aria-labelledby="swipe-private-review-heading">'+
+  return '<section id="swipe-private-review" class="live-panel swipe-private-review" aria-labelledby="swipe-private-review-heading">'+
     '<h2 id="swipe-private-review-heading">Mina sparade svar</h2>'+
     '<p class="live-muted">Bara dina egna svar visas här. Tryck på ett kort för att ändra ditt svar. Ingen delning sker automatiskt.</p>'+
-    '<details><summary>Visa mina '+items.length+' besvarade kort</summary><ul class="swipe-match-list">'+
-    items.map(item=>'<li><p><strong>'+esc(item.category)+'</strong> · '+esc(item.text)+'</p>'+
+    '<details><summary>Visa mina '+items.length+' besvarade kort</summary>'+
+    '<div class="comm-fields"><label for="private-theme-review-search">Sök bland mina svar</label>'+
+    '<input type="search" id="private-theme-review-search" maxlength="120" autocomplete="off" placeholder="Sök kort eller ämne">'+
+    '<label for="private-theme-review-answer">Visa svar</label><select id="private-theme-review-answer">'+
+    '<option value="all">Alla svar</option><option value="yes">Bara ja</option><option value="no">Bara nej</option></select></div>'+
+    '<p id="private-theme-review-count" class="live-muted" role="status" aria-live="polite">Visar '+items.length+' av '+items.length+' sparade svar.</p>'+
+    '<p id="private-theme-review-empty" class="live-muted" hidden>Inga sparade svar matchar sökningen. Ändra sökord eller filter.</p>'+
+    '<ul class="swipe-match-list">'+
+    items.map(item=>'<li data-private-theme-answer="'+(item.answer?'yes':'no')+'"><p data-private-theme-statement><strong>'+esc(item.category)+'</strong> · '+esc(item.text)+'</p>'+
       '<p class="live-muted">Ditt svar: '+(item.answer?'Ja':'Nej')+'</p>'+
       '<button type="button" class="schyssta-secondary" data-theme-review-index="'+item.index+'" data-theme-review-deck="'+esc(deck.id)+'">Ändra detta svar</button></li>').join('')+
     '</ul></details></section>';
+}
+// Search only text already loaded for the current viewer. No RPC or family data access.
+function filterPrivateThemeReview(){
+  const root=$('swipe-private-review');
+  if(!root)return;
+  const search=String($('private-theme-review-search')?.value||'').trim().toLocaleLowerCase('sv');
+  const value=$('private-theme-review-answer')?.value;
+  const answer=value==='yes'||value==='no'?value:'all';
+  const rows=[...root.querySelectorAll('[data-private-theme-answer]')];
+  let visible=0;
+  for(const row of rows){
+    const text=(row.querySelector('[data-private-theme-statement]')?.textContent||'').toLocaleLowerCase('sv');
+    const show=(answer==='all'||row.dataset.privateThemeAnswer===answer)&&text.includes(search);
+    row.hidden=!show;
+    // Author CSS may set display on list items and override the hidden UA rule.
+    row.style.display=show?'':'none';
+    if(show)visible++;
+  }
+  const status=$('private-theme-review-count');
+  if(status)status.textContent='Visar '+visible+' av '+rows.length+' sparade svar.';
+  const empty=$('private-theme-review-empty');
+  if(empty)empty.hidden=visible!==0;
 }
 function themeSwipeView(){
   const deck=THEME_DECKS.find(d=>d.id===activeThemeDeck);
@@ -1825,8 +1854,8 @@ if(reviewButton&&page()==='swipe'&&themeAccessAllowed()&&!swipeBusy&&!importance
 }
 if(e.target.closest('#theme-restart')&&themeAccessAllowed()){const deck=THEME_DECKS.find(d=>d.id===activeThemeDeck);if(deck){themeReview=true;themeIndex=themeVisibleIndices(deck)[0]??deck.cards.length;themeSaveError='';render();}}
 });
-document.addEventListener('input',e=>{if(e.target.matches?.('#mediator-input')){mediatorExperience.input(e.target.value);const count=document.getElementById('mediator-char-count');if(count)count.textContent=e.target.value.length+' / 2000 tecken';const send=document.querySelector('#mediator-form button[type="submit"]');if(send)send.disabled=!e.target.value.trim();return;}if(e.target.matches?.('#family-chat-body')){familyChatDraft=e.target.value;familyChatRequestKey=null;familyChatStatus='';return;}if(e.target.matches?.('#schyssta-search')){schysstaSearch=e.target.value.slice(0,100);applySchysstaFilters();return;}if(e.target.matches?.('#schyssta-body')){schysstaDraft=e.target.value;schysstaDraftKey=null;schysstaMessage='';const preview=document.getElementById('schyssta-preview-text');if(preview)preview.textContent=schysstaDraft.trim()||'Skriv en regel ovan för att förhandsgranska texten.';const count=document.getElementById('schyssta-length');if(count)count.textContent=schysstaDraft.length+' av 500 tecken';return;}if(!e.target.matches?.('[data-importance]'))return;e.target.setAttribute('aria-valuetext',importanceValueText(Number(e.target.value)));});
-document.addEventListener('change',e=>{
+document.addEventListener('input',e=>{if(e.target.matches?.('#private-theme-review-search')){filterPrivateThemeReview();return;}if(e.target.matches?.('#mediator-input')){mediatorExperience.input(e.target.value);const count=document.getElementById('mediator-char-count');if(count)count.textContent=e.target.value.length+' / 2000 tecken';const send=document.querySelector('#mediator-form button[type="submit"]');if(send)send.disabled=!e.target.value.trim();return;}if(e.target.matches?.('#family-chat-body')){familyChatDraft=e.target.value;familyChatRequestKey=null;familyChatStatus='';return;}if(e.target.matches?.('#schyssta-search')){schysstaSearch=e.target.value.slice(0,100);applySchysstaFilters();return;}if(e.target.matches?.('#schyssta-body')){schysstaDraft=e.target.value;schysstaDraftKey=null;schysstaMessage='';const preview=document.getElementById('schyssta-preview-text');if(preview)preview.textContent=schysstaDraft.trim()||'Skriv en regel ovan för att förhandsgranska texten.';const count=document.getElementById('schyssta-length');if(count)count.textContent=schysstaDraft.length+' av 500 tecken';return;}if(!e.target.matches?.('[data-importance]'))return;e.target.setAttribute('aria-valuetext',importanceValueText(Number(e.target.value)));});
+document.addEventListener('change',e=>{if(e.target.matches?.('#private-theme-review-answer')){filterPrivateThemeReview();return;}
   if(e.target.matches?.('#mediator-use-context')){mediatorExperience.setProjectContext(e.target.checked);return;}
   if(e.target.matches?.('input[data-pf-answer],input[data-ipip-retest-answer]')){void personalityExperience.handleChange(e.target);return;}
   if(e.target.matches?.('#schyssta-status-filter')){schysstaFilterStatus=['all','approved','ongoing'].includes(e.target.value)?e.target.value:'all';applySchysstaFilters();return;}
