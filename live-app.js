@@ -206,7 +206,7 @@ async function recheckInboxPair(){
   return false;
 }
 async function fetchFamilyChatUnread(){
-  if(!user||members.length!==2||!inboxPairEpoch){familyChatUnread=0;familyChatUnreadError=false;return;}
+  if(!user||members.length!==2||!inboxPairEpoch){familyChatUnread=0;familyChatUnreadError=!!user&&members.length===2&&!inboxPairEpoch;return;}
   const request=++familyChatCountRequest,viewer=user.id,session=sharedSession;
   let result;
   try{result=await db.rpc('my_family_unread_message_count');}catch(e){result={error:e};}
@@ -1358,7 +1358,8 @@ async function submitManualSchysstaRule(){
 }
 function inboxView(){
   if(!user)return '<h1>Inkorg</h1>'+card('<p>Logga in för att läsa dina meddelanden.</p>');
-  if(members.length!==2||!inboxPairEpoch)return '<h1>Inkorg</h1>'+card('<h2>Para ihop era konton</h2><p>Ni behöver vara en förälder och en tonåring i samma familj för att kunna skicka privata meddelanden.</p><a class="live-button" href="./konto.html">Hantera parning</a>');
+  if(members.length===2&&!inboxPairEpoch)return '<h1>Inkorg</h1>'+card('<h2>Familjekopplingen kunde inte kontrolleras</h2><p>Privata meddelanden visas inte förrän aktuell parning har verifierats.</p><button type="button" class="live-button" id="inbox-retry-pair">Kontrollera igen</button>');
+  if(members.length!==2)return '<h1>Inkorg</h1>'+card('<h2>Para ihop era konton</h2><p>Ni behöver vara en förälder och en tonåring i samma familj för att kunna skicka privata meddelanden.</p><a class="live-button" href="./konto.html">Hantera parning</a>');
   const counterpart=members.find(m=>m.user_id!==user.id);
   const otherName=esc(counterpart?.display_name||(counterpart?.role==='parent'?'Din förälder':'Din tonåring'));
   const messages=familyChatMessages.slice().reverse();
@@ -1690,6 +1691,7 @@ if(e.target.closest('#insights-retry')&&!insightsLoading)void fetchInsights();
 const inviteActivity=e.target.closest('[data-insight-activity]');
 if(inviteActivity&&['insikter','swipe'].includes(page())&&!activityInviteBusy)void prepareActivityMessage(inviteActivity.dataset.insightActivity);
 if(e.target.closest('#home-refresh-notices')&&user&&members.length===2){if(schysstaListEnabled&&!schysstaLoading)void fetchSchysstaList();void fetchFamilyChatUnread();void fetchActivityNotifications();}
+if(e.target.closest('#inbox-retry-pair'))void refresh().catch(showError);
 if(e.target.closest('[data-family-chat-refresh]'))void fetchFamilyChat();
 if(e.target.closest('[data-family-chat-mark-all-read]'))void markAllFamilyChatRead();
 if(e.target.closest('[data-family-chat-more]'))void fetchFamilyChat(true);
