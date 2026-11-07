@@ -1,5 +1,13 @@
 # Hemmakompassen — utvecklingsplan (senast avstämd 2026-11-06)
 
+## 7 november 2026 – NOT-01B: första backendsteget för aktivitetsnotiser (PR #126)
+
+- [x] **Implementerat i GitHub-gren:** separat RPC-only-tabell och unik eventnyckel per aktiv parningsepok/kort/mottagare; ett dagligt samlat aviseringstillfälle per kortlek och händelsetyp. Endast en serververifierad A JA+JA-match eller ett uttryckligt delat B-kort kan ge händelse. Ingen retroaktiv notifiering av historiska svar.
+- [x] **Kontroller i läsningen:** den aktiva förälder–tonåringparningens medlemmar och `joined_at` måste fortfarande stämma, och underliggande gemensamma A-svar eller B-samtycken måste fortfarande vara giltiga. Svar som ändras, B-delning som återkallas och ändrade familjemedlemmar gör händelser otillgängliga. Notis-RPC exponerar ingen privat svarstext.
+- [x] **Kod för negativa tester:** 31 syntetiska pgTAP-kontroller och nytt migrationssteg i PostgreSQL-workflow, i [PR #126](https://github.com/erikjarl/hemmakompassen/pull/126).
+- [x] **CI verifierat:** [PostgreSQL/pgTAP #42354500380](https://github.com/erikjarl/hemmakompassen/actions/runs/42354500380) och [UI/bygg #42354500438](https://github.com/erikjarl/hemmakompassen/actions/runs/42354500438) `success` på commit `0b4217f65e9b4ed87f6a444054ea7c46039981cf`. 31 nya syntetiska pgTAP-kontroller körda; inga verkliga användarsvar ingår.
+- [ ] **Ännu inte installerat eller aktiverat:** säkerhetsbedömning i verksam databas, installation av migration, tvåkontotest, startsidans notis-UI och fysisk iOS/VoiceOver. Tidigare #118–#119 fortsätter endast att skapa frivilliga oskickade chattutkast.
+
 **Gällande Jobb hk-fullmakt (5 november 2026):** se [AGENTS.md](AGENTS.md). Commit, push, PR, merge, publicering och motsvarande projektändringar i GitHub, Supabase och Cloudflare är uttryckligen godkända. Detta ersätter äldre krav på separat merge-/publiceringsgodkännande.
 
 
