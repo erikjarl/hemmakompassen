@@ -1,8 +1,8 @@
 import {IPIP50_V1} from './ipip50-v1.js';
 import {scoreIPIP50} from './ipip50-scoring.js';
-import {buildIPIP50FamilyInsights} from './ipip50-family-insights.js?v=20261107-ipip-consent-readback1';
-import {richFamilyReflection} from './ipip50-family-copy.js?v=20261107-ipip-consent-readback1';
-import {IPIP50_REFERENCE,IPIP50_PERCENTILE_BANDS,approximateReferencePercentile,referenceLimits,describeReferenceProfile,formatSv} from './ipip50-reference.js?v=20261107-ipip-consent-readback1';
+import {buildIPIP50FamilyInsights} from './ipip50-family-insights.js?v=20261107-ipip-consent-sync2';
+import {richFamilyReflection} from './ipip50-family-copy.js?v=20261107-ipip-consent-sync2';
+import {IPIP50_REFERENCE,IPIP50_PERCENTILE_BANDS,approximateReferencePercentile,referenceLimits,describeReferenceProfile,formatSv} from './ipip50-reference.js?v=20261107-ipip-consent-sync2';
 import {loadMyIPIP50Answers,saveMyIPIP50Answer} from './ipip50-storage.js';
 
 const esc=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -226,11 +226,11 @@ function familyReflectionPanel(parentProfile,teenProfile,viewerRole){
 function statusPanel(message){return '<section class="live-panel"><p class="pf-status" role="status">'+esc(message)+'</p></section>';}
 
 export function createPersonalityExperience({db,onRender,isSharingEnabled=false,useAiAnalysis=false,analysisPanel=()=>'',saveExport=downloadOwnIPIP50Export}){
-  let viewer=null,sequence=0,answers={},loading=false,loaded=false,loadError='',saving=false,saveError='';
+  let viewer=null,sequence=0,consentRequest=0,answers={},loading=false,loaded=false,loadError='',saving=false,saveError='';
   let active=false,index=0,selectedAnswer=null,shareEnabled=false,shareVerified=false,shareBusy=false,shareError='',paired=null,partnerError='',exportFeedback='';
   const repaint=()=>onRender();
   function reset(userId=null){
-    viewer=userId;sequence++;answers={};loading=false;loaded=false;loadError='';saving=false;
+    viewer=userId;sequence++;consentRequest++;answers={};loading=false;loaded=false;loadError='';saving=false;
     saveError='';active=false;index=0;selectedAnswer=null;shareEnabled=false;shareVerified=false;shareBusy=false;shareError='';paired=null;partnerError='';exportFeedback='';
   }
   async function fetchPaired(userId,token){
@@ -242,14 +242,33 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false,
     else{partnerError='';paired=validatedPartnerPayload(result?.data);}
   }
   async function refreshShared(){
-    if(!viewer||!loaded||!isSharingEnabled||!shareEnabled||active||saving||shareBusy)return;
-    const id=viewer,token=sequence,before=JSON.stringify(paired);
-    await fetchPaired(id,token);
-    if(id===viewer&&token===sequence&&before!==JSON.stringify(paired))repaint();
+    if(!viewer||!loaded||!isSharingEnabled||active||saving||shareBusy)return;
+    const id=viewer,token=sequence,request=++consentRequest;
+    const before=JSON.stringify([shareEnabled,shareVerified,paired,shareError,partnerError]);
+    let status;
+    try{
+      status=await db.from('personality_share_preferences').select('share_enabled')
+        .eq('user_id',id).eq('instrument_id',IPIP50_V1.id).maybeSingle();
+    }catch(e){status={error:e};}
+    if(id!==viewer||token!==sequence||request!==consentRequest||shareBusy||saving)return;
+    if(status?.error){
+      // The last known consent state is not sufficient to display a shared profile.
+      shareVerified=false;shareEnabled=false;paired=null;
+      shareError='Delningsstatus kunde inte kontrolleras. Din profil kan fortfarande vara delad. Kontrollera delningen igen.';
+      partnerError='';
+    }else{
+      shareVerified=true;shareError='';
+      shareEnabled=status?.data?.share_enabled===true;
+      if(!shareEnabled){paired=null;partnerError='';}
+      else await fetchPaired(id,token);
+    }
+    if(id===viewer&&token===sequence&&request===consentRequest&&
+      before!==JSON.stringify([shareEnabled,shareVerified,paired,shareError,partnerError]))repaint();
   }
   async function load(userId){
     if(!userId)return;
     const token=++sequence;
+    consentRequest++;
     viewer=userId;loading=true;loaded=false;loadError='';saveError='';partnerError='';paired=null;repaint();
     let loadedAnswers,consent;
     try{
@@ -366,6 +385,7 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false,
     else if((action==='verify-share'||['share','withdraw'].includes(action))&&isSharingEnabled&&isPaired){
       if(action!=='verify-share'&&!shareVerified)return true;
       const id=viewer,token=sequence,desired=action==='share';
+      consentRequest++;
       shareBusy=true;shareError='';repaint();
       let writeError=null;
       if(action!=='verify-share'){
