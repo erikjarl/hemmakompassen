@@ -18,6 +18,8 @@ function makeBackend(){
         };
         function run(){
           if(op==='new'){
+            if(attempts.some(a=>a.user_id===payload.user_id&&a.completed_at===null))
+              return {data:null,error:{code:'23505',message:'one open attempt per owner'}};
             const row={id:'attempt-'+(attempts.length+1),user_id:payload.user_id,
               instrument_id:payload.instrument_id,created_at:'2026-11-07T10:00:00Z',completed_at:null};
             attempts.push(row);calls.push('new');return {data:{...row},error:null};
@@ -193,4 +195,25 @@ test('export helper discards unknown questions and out-of-range answers',()=>{
  assert.equal(result.responses.length,1);
  assert.deepEqual(result.responses.map(a=>a.item_id),['ipip50-001']);
  assert.equal(result.instrument_id,'ipip50-sv-v1');
+});
+
+test('two simulated tabs race for a retest; second tab resumes the existing draft',async()=>{
+  const b=makeBackend();
+  const first=createPrivateIpipRetests({db:b.db});
+  const second=createPrivateIpipRetests({db:b.db});
+  first.reset('private-user');
+  second.reset('private-user');
+  await first.load('private-user');
+  await second.load('private-user');
+  await first.handleClick(button('new'));
+  assert.equal(b.attempts.length,1);
+  await first.handleChange(radio('ipip50-001',4));
+  await second.handleClick(button('new'));
+  assert.equal(b.attempts.length,1,'Database rejects second open attempt');
+  assert.equal(b.answers.length,1,'Already saved answers remain intact');
+  assert.match(second.render(),/Det finns redan en påbörjad omgång från en annan flik/);
+  assert.match(second.render(),/1 av 50 svar/);
+  assert.match(second.render(),/Fortsätt privat omtest/);
+  await second.handleClick(button('resume'));
+  assert.match(second.render(),/Fråga 2 av 50/);
 });
