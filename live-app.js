@@ -167,6 +167,41 @@ function clearFamilyChat(){
   familyChatHasMore=false;familyChatError='';familyChatStatus='';familyChatDraft='';
   familyChatRequestKey=null;familyChatSending=false;
 }
+// Recheck family membership on the server before background inbox reads.
+// Membership can change in another tab without an Auth event in this one.
+// Display names are deliberately ignored: only the two exact role/user IDs
+// determine whether the locally displayed private conversation is current.
+function sameInboxPair(previous,current,viewer){
+  const valid=rows=>Array.isArray(rows)&&rows.length===2
+    &&rows.some(m=>m?.role==='parent'&&typeof m.user_id==='string')
+    &&rows.some(m=>m?.role==='teen'&&typeof m.user_id==='string')
+    &&rows.some(m=>m?.user_id===viewer)
+    &&new Set(rows.map(m=>m.user_id)).size===2;
+  return valid(previous)&&valid(current)
+    &&['parent','teen'].every(role=>
+      previous.find(m=>m.role===role)?.user_id===current.find(m=>m.role===role)?.user_id);
+}
+let inboxPairCheckBusy=false;
+async function recheckInboxPair(){
+  if(inboxPairCheckBusy||!user||members.length!==2)return false;
+  const viewer=user.id,session=sharedSession,oldMembers=members;
+  inboxPairCheckBusy=true;
+  let result;
+  try{result=await db.rpc('my_family_members');}
+  catch(error){result={error};}
+  finally{inboxPairCheckBusy=false;}
+  if(user?.id!==viewer||sharedSession!==session)return false;
+  if(!result?.error&&sameInboxPair(oldMembers,result.data,viewer))return true;
+  // Fail closed, including RPC failure. Invalidate in-flight message reads
+  // before triggering refresh, so neither previous messages nor old badges
+  // can survive a revoked pairing or a failed membership check.
+  sharedSession++;
+  clearFamilyChat();
+  members=[];
+  render();
+  void refresh().catch(showError);
+  return false;
+}
 async function fetchFamilyChatUnread(){
   if(!user||members.length!==2){familyChatUnread=0;familyChatUnreadError=false;return;}
   const request=++familyChatCountRequest,viewer=user.id,session=sharedSession;
@@ -1769,12 +1804,20 @@ window.addEventListener('online',()=>{
   if(schysstaListEnabled&&user&&members.length===2&&!schysstaDraftOpen&&!schysstaLoading
      &&schysstaError&&['hem','inkorg','regler'].includes(page()))void fetchSchysstaList();
 });
-window.addEventListener('focus',()=>{void pollSharedMatches();if(page()==='insikter'&&user&&members.length===2)void fetchInsights({quiet:true});});
+window.addEventListener('focus',()=>{
+  void pollSharedMatches();
+  if(page()==='insikter'&&user&&members.length===2)void fetchInsights({quiet:true});
+  if(page()==='inkorg'&&user&&members.length===2)void recheckInboxPair();
+});
 // Light polling while the tab is visible. Never rerender the message composer mid-draft.
 window.setInterval(()=>{
   if(document.hidden||!user||members.length!==2)return;
-  if(page()==='inkorg'&&!familyChatDraft.trim()&&!familyChatSending&&!familyChatLoading&&!familyChatLoadingOlder)void fetchFamilyChat(false,{quiet:true});
-  else if(page()==='hem')void fetchFamilyChatUnread();
+  if(page()==='inkorg'){
+    void recheckInboxPair().then(valid=>{
+      if(valid&&!familyChatDraft.trim()&&!familyChatSending&&!familyChatLoading&&!familyChatLoadingOlder)
+        void fetchFamilyChat(false,{quiet:true});
+    });
+  }else if(page()==='hem')void fetchFamilyChatUnread();
 },15000);
 window.setInterval(()=>void pollSharedMatches(),SHARED_POLL_INTERVAL_MS);
 window.setInterval(()=>{if(!document.hidden&&page()==='insikter'&&user&&members.length===2)void fetchInsights({quiet:true});},INSIGHTS_CONSENT_REFRESH_MS);
