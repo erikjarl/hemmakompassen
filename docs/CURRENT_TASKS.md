@@ -4,7 +4,8 @@
 
 - [x] **Kod i utvecklingsgren:** hämtning av aktivitetsaviseringar och explicit läskvitto knyts till medlemsidentiteter, roll och tillgängliga familj-/anslutningsepoker i stället för enbart antal medlemmar och sessionsräknare. Sena svar från en tidigare tvåpersonersparning ignoreras och tidigare notiser rensas; ändrad ordningsföljd för samma två medlemmar tillåts.
 - [x] **Fyra isolerade regressionstester i kod:** nytt par med samma antal, oförändrat par med annan medlemsordning, ändrad anslutningstid samt läskvitto från tidigare par. Testerna använder syntetiska RPC-svar, inte två verkliga JWT-sessioner.
-- [ ] **PR-CI, merge och Pages-version:** markera endast efter faktiska godkända körningar.
+- [x] **PR-CI och merge:** [PR #133](https://github.com/erikjarl/hemmakompassen/pull/133) passerade [Node/bygge/Chromium #42379625064](https://github.com/erikjarl/hemmakompassen/actions/runs/42379625064) och mergades som `2e6de829d2aae11cab13d855059f898f407e1e88`.
+- [ ] **Pages-version:** kontrollera senaste körning för publicering och faktiskt serverade filer separat.
 - [ ] **Kvarstående realistisk testning:** autentiserad förälder/tonåring, ny parning och återkallad behörighet i faktisk Supabase, fysisk Safari/VoiceOver och juridisk granskning.
 
 ## 7 november 2026 – REL-01: automatiskt verifiera faktiskt serverade Pages-filer
