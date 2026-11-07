@@ -22,7 +22,7 @@ function harness(remote=[parent,teen],error=null){
     refresh:async()=>{actions.refreshed++;},
     showError:err=>{throw err;}
   };
-  vm.runInNewContext(methods+'\nthis.matches=sameInboxPair;this.check=recheckInboxPair;',context);
+  vm.runInNewContext(methods+'\nthis.matches=sameInboxPair;this.check=recheckInboxPair;this.isBusy=()=>inboxPairCheckBusy;',context);
   return {context,actions,
     setResponse:(data,err=null)=>{response={data,error:err};},
     setResponder:next=>{respond=next;}
@@ -63,7 +63,7 @@ let resolve;
 deferred.setResponder(()=>new Promise(r=>{resolve=r;}));
 const pending=deferred.context.check();
 await Promise.resolve();
-assert.equal(deferred.context.inboxPairCheckBusy,true);
+assert.equal(deferred.context.isBusy(),true);
 assert.equal(await deferred.context.check(),false,'Do not start overlapping verification');
 resolve({data:[parent,anotherTeen],error:null});
 await pending;
