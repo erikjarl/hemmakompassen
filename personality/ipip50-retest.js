@@ -19,12 +19,44 @@ const fromRows=rows=>{
   return answers;
 };
 
-export function createPrivateIpipRetests({db,onRender=()=>{},renderOwnScores=()=>''}){
+// A downloaded file contains only this viewer's answers: no account IDs,
+ // pair information, AI context or database attempt identifiers.
+export function buildPrivateIpipRetestExport(answers,{startedAt=null,completedAt=null,exportedAt=new Date().toISOString()}={}){
+  const responses=IPIP50_V1.items.flatMap(item=>{
+    const value=answers?.[item.id];
+    return Number.isInteger(value)&&value>=1&&value<=5
+      ?[{item_id:item.id,statement_sv:item.sv,value}]:[];
+  });
+  return {
+    format:'hemmakompassen-own-ipip50-retest-v1',
+    instrument_id:IPIP50_V1.id,
+    instrument_version:IPIP50_V1.version,
+    language:'sv-SE',
+    exported_at:exportedAt,
+    started_at:startedAt,
+    completed_at:completedAt,
+    answered_count:responses.length,
+    complete:responses.length===IPIP50_V1.items.length,
+    note:'Privat omtestning. Preliminär svensk översättning, inte ett diagnostiskt test.',
+    responses
+  };
+}
+function downloadPrivateRetest(filename,data){
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const link=document.createElement('a');
+  link.href=url;link.download=filename;link.hidden=true;
+  document.body.appendChild(link);link.click();link.remove();
+  window.setTimeout(()=>URL.revokeObjectURL(url),30000);
+}
+export function createPrivateIpipRetests({
+  db,onRender=()=>{},renderOwnScores=()=>'',saveExport=downloadPrivateRetest,
+  confirmDelete=message=>window.confirm(message)
+}){
   let userId=null,generation=0,loading=false,error='',busy=false;
   let attempts=[],draftId=null,answers={},questionIndex=0,surveyOpen=false;
   let historyId=null,historyAnswers=null,status='';
   const repaint=()=>onRender();
-  const current=()=>attempts.find(a=>a.id===draftId)||null;
   const isCurrent=(id,token)=>userId===id&&generation===token;
 
   function reset(id=null){
@@ -99,10 +131,14 @@ export function createPrivateIpipRetests({db,onRender=()=>{},renderOwnScores=()=
     }else{
       html+='<button type="button" class="live-button" data-ipip-retest="new"'+(busy?' disabled':'')+'>Starta en ny privat testomgång</button>';
     }
+    if(draftId)html+='<p><button type="button" data-ipip-retest="export" data-attempt-id="'+esc(draftId)+'"'+(busy?' disabled':'')+'>Exportera min påbörjade omgång (JSON)</button> '+
+      '<button type="button" data-ipip-retest="delete" data-attempt-id="'+esc(draftId)+'"'+(busy?' disabled':'')+'>Radera påbörjad omgång</button></p>';
     html+='<h3>Min omtestningshistorik</h3>';
     if(!completed.length)html+='<p>Inga avslutade omtest ännu.</p>';
     else html+='<ul>'+completed.map(a=>'<li>'+esc(fmtDate(a.completed_at))+
-      ' <button type="button" data-ipip-retest="view" data-attempt-id="'+esc(a.id)+'"'+(busy?' disabled':'')+'>Visa mitt resultat</button></li>').join('')+'</ul>';
+      ' <button type="button" data-ipip-retest="view" data-attempt-id="'+esc(a.id)+'"'+(busy?' disabled':'')+'>Visa mitt resultat</button> '+
+      '<button type="button" data-ipip-retest="export" data-attempt-id="'+esc(a.id)+'"'+(busy?' disabled':'')+'>Exportera omgången (JSON)</button> '+
+      '<button type="button" data-ipip-retest="delete" data-attempt-id="'+esc(a.id)+'"'+(busy?' disabled':'')+'>Radera omgången</button></li>').join('')+'</ul>';
     if(historyId&&historyAnswers){
       const scored=scoreIPIP50(historyAnswers);
       if(scored.complete)html+='<div class="pf-retest-history"><h3>Mitt privata omtest · '+esc(fmtDate(completed.find(a=>a.id===historyId)?.completed_at))+'</h3>'+
@@ -152,6 +188,53 @@ export function createPrivateIpipRetests({db,onRender=()=>{},renderOwnScores=()=
         draftId=null;surveyOpen=false;historyId=attemptId;historyAnswers={...answers};answers={};
         status='Den privata omgången har avslutats och sparats.';
       }catch(e){if(isCurrent(id,token))status='Det gick inte att bekräfta avslutningen. Kontrollera din omgång innan du försöker igen.';}
+      if(isCurrent(id,token)){busy=false;repaint();}
+      return true;
+    }
+    if(action==='export'){
+      const attemptId=button.dataset.attemptId;
+      const attempt=attempts.find(a=>a.id===attemptId);
+      if(!attempt)return true;
+      const id=userId,token=generation;
+      busy=true;status='Hämtar dina privata svar för export…';repaint();
+      try{
+        const saved=attemptId===draftId?{...answers}:await readAnswers(id,attemptId);
+        if(!isCurrent(id,token))return true;
+        const data=buildPrivateIpipRetestExport(saved,{
+          startedAt:attempt.created_at,completedAt:attempt.completed_at
+        });
+        if(!data.responses.length)throw Error('Nothing to export');
+        const filename='hemmakompassen-ipip50-omtest-'+data.exported_at.slice(0,10)+'.json';
+        saveExport(filename,data);
+        status='Exporten har öppnats. Kontrollera att JSON-filen sparats på din enhet.';
+      }catch(e){
+        if(isCurrent(id,token))status='Det gick inte att exportera omtestet. Försök igen.';
+      }
+      if(isCurrent(id,token)){busy=false;repaint();}
+      return true;
+    }
+    if(action==='delete'){
+      const attemptId=button.dataset.attemptId;
+      const attempt=attempts.find(a=>a.id===attemptId);
+      if(!attempt)return true;
+      const message='Vill du permanent radera den här privata IPIP-testomgången och alla dess sparade svar? Detta går inte att ångra. Din ursprungliga profil och andra omtest påverkas inte.';
+      if(!confirmDelete(message))return true;
+      const id=userId,token=generation;
+      busy=true;status='Raderar den valda privata omgången…';repaint();
+      try{
+        const result=await db.from('personality_test_attempts').delete()
+          .eq('user_id',id).eq('id',attemptId)
+          .select('id').single();
+        if(result.error||result.data?.id!==attemptId)
+          throw result.error||Error('Delete was not confirmed');
+        if(!isCurrent(id,token))return true;
+        attempts=attempts.filter(a=>a.id!==attemptId);
+        if(draftId===attemptId){draftId=null;answers={};surveyOpen=false;questionIndex=0;}
+        if(historyId===attemptId){historyId=null;historyAnswers=null;}
+        status='Den privata omgången och dess svar har raderats.';
+      }catch(e){
+        if(isCurrent(id,token))status='Radering kunde inte bekräftas. Ladda om historiken innan du försöker igen.';
+      }
       if(isCurrent(id,token)){busy=false;repaint();}
       return true;
     }
