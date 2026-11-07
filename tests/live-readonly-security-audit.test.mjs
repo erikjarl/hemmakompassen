@@ -25,4 +25,8 @@ test('SEC-02 fake JWT subjects check private/owner-only data without creating an
   for(const name of ['profiles','personality_answers','private_ai_chats','private_ai_messages','private_ai_memories','swipe_answers','swipe_importance','swipe_skips'])
     assert.match(file,new RegExp('FROM public\\.'+name+'\\b','i'));
   assert.doesNotMatch(executable,/\bINSERT\s+INTO\s+auth\.users\b/i);
+  const rpcChecks=['my_family_members','shared_swipe_matches','shared_understanding_cards',
+    'shared_swipe_priorities','my_family_messages','my_schyssta_rules','my_activity_notifications'];
+  for(const rpc of rpcChecks)
+    assert.equal(file.split('FROM public.'+rpc+'(').length-1,2,rpc+' must be checked as both synthetic identities');
 });

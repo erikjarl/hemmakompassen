@@ -48,7 +48,7 @@ Detta är **den enda prioriterade arbetskön** för nya `Jobb hk`-pass. Tidigare
 
 ## Senast verifierad teknisk baslinje
 
-- **7 november 2026, SEC-02:** Read-only körning mot faktisk Supabase: 3 katalogkontroller = 0 anmärkningar; 2 syntetiska ej registrerade identiteter = 0 läsbara poster i 8 RLS-skyddade tabeller. Detta bevisar INTE verklig tvåkontoflöde eller att samtliga RPC-kroppar är säkra.
+- **7 november 2026, SEC-02:** Read-only körning mot faktisk Supabase: 3 katalogkontroller = 0 anmärkningar; 2 syntetiska ej registrerade identiteter = 0 läsbara poster i 8 RLS-skyddade tabeller och 7 delade RPC. Detta bevisar INTE verklig tvåkontoflöde eller att samtliga RPC-kroppar är säkra.
 - **7 november 2026, PR #133:** förbättrat skydd mot gammalt notissvar vid byte till nytt familjepar; Node/Chromium godkända ([PR](https://github.com/erikjarl/hemmakompassen/pull/133)). Rapporterad senaste Pages-/filkontroll och UI-körning efter merge godkänd för `9c88e31`.
 - **PR #132:** automatiskt HTTP/byte-prov för tre serverade GitHub Pages-filer fungerar ([PR](https://github.com/erikjarl/hemmakompassen/pull/132)); detta är inte ett tvåkontotest.
 - **Backend:** serververifierad A JA+JA och explicit B-samtycke finns dokumenterat som installerade; kontrollera aktuell databas innan nya påståenden.

@@ -44,6 +44,15 @@ SELECT 'synthetic_unknown_user_a' AS test,
   (SELECT count(*) FROM public.swipe_importance) AS swipe_importance_visible,
   (SELECT count(*) FROM public.swipe_skips) AS swipe_skips_visible;
 
+SELECT 'synthetic_unknown_user_a' AS rpc_test,
+  (SELECT count(*) FROM public.my_family_members()) AS family_members_visible,
+  (SELECT count(*) FROM public.shared_swipe_matches('general')) AS matches_visible,
+  (SELECT count(*) FROM public.shared_understanding_cards()) AS understanding_visible,
+  (SELECT count(*) FROM public.shared_swipe_priorities('general')) AS priorities_visible,
+  (SELECT count(*) FROM public.my_family_messages(NULL,NULL)) AS messages_visible,
+  (SELECT count(*) FROM public.my_schyssta_rules()) AS agreements_visible,
+  (SELECT count(*) FROM public.my_activity_notifications()) AS activity_notifications_visible;
+
 SELECT set_config('request.jwt.claims',
   '{"sub":"d0000000-aaaa-4aaa-8aaa-000000000002","role":"authenticated"}',true);
 SELECT 'synthetic_unknown_user_b' AS test,
@@ -55,4 +64,12 @@ SELECT 'synthetic_unknown_user_b' AS test,
   (SELECT count(*) FROM public.swipe_answers) AS swipe_answers_visible,
   (SELECT count(*) FROM public.swipe_importance) AS swipe_importance_visible,
   (SELECT count(*) FROM public.swipe_skips) AS swipe_skips_visible;
+SELECT 'synthetic_unknown_user_b' AS rpc_test,
+  (SELECT count(*) FROM public.my_family_members()) AS family_members_visible,
+  (SELECT count(*) FROM public.shared_swipe_matches('general')) AS matches_visible,
+  (SELECT count(*) FROM public.shared_understanding_cards()) AS understanding_visible,
+  (SELECT count(*) FROM public.shared_swipe_priorities('general')) AS priorities_visible,
+  (SELECT count(*) FROM public.my_family_messages(NULL,NULL)) AS messages_visible,
+  (SELECT count(*) FROM public.my_schyssta_rules()) AS agreements_visible,
+  (SELECT count(*) FROM public.my_activity_notifications()) AS activity_notifications_visible;
 ROLLBACK;
