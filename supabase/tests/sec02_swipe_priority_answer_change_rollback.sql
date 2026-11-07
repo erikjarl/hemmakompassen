@@ -20,6 +20,11 @@ BEGIN
  IF n<>0 THEN RAISE EXCEPTION 'Existing saved data on fixture card; abort'; END IF;
  PERFORM set_config('sec02.parent',p::text,true);
  PERFORM set_config('sec02.teen',t::text,true);
+ PERFORM set_config('sec02.outsider',(SELECT u.id::text FROM auth.users u
+   WHERE NOT EXISTS (SELECT 1 FROM public.family_members m WHERE m.user_id=u.id)
+   ORDER BY u.created_at,u.id LIMIT 1),true);
+ IF coalesce(current_setting('sec02.outsider',true),'')='' THEN
+   RAISE EXCEPTION 'Required outsider account absent'; END IF;
 END $pre$;
 SET LOCAL ROLE authenticated;
 DO $audit$
@@ -38,6 +43,12 @@ BEGIN
  SELECT count(*) INTO n FROM public.shared_swipe_priorities('aterhamtning')
  WHERE card_id='aterhamtning-01';
  IF n<>1 THEN RAISE EXCEPTION 'Initial explicitly shared fixture not visible'; END IF;
+ PERFORM set_config('request.jwt.claims',json_build_object(
+   'sub',current_setting('sec02.outsider'),'role','authenticated')::text,true);
+ SELECT count(*) INTO n FROM public.shared_swipe_priorities('aterhamtning')
+ WHERE card_id='aterhamtning-01';
+ IF n<>0 THEN RAISE EXCEPTION 'Outsider saw shared priority'; END IF;
+ PERFORM set_config('request.jwt.claims',json_build_object('sub',t,'role','authenticated')::text,true);
  UPDATE public.swipe_answers SET answer=false
  WHERE user_id=t AND deck_id='aterhamtning' AND card_id='aterhamtning-01';
  SELECT count(*) INTO n FROM public.shared_swipe_priorities('aterhamtning')
