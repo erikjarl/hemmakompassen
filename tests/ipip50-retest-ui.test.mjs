@@ -1,10 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createPrivateIpipRetests} from '../personality/ipip50-retest.js';
+import {createPrivateIpipRetests,buildPrivateIpipRetestExport} from '../personality/ipip50-retest.js';
 
 function makeBackend(){
   const attempts=[],answers=[],calls=[];
-  let owner='private-user',failNextAnswer=false;
+  let owner='private-user',failNextAnswer=false,failDelete=false;
   const db={
     from(table){
       assert.ok(['personality_test_attempts','personality_attempt_answers'].includes(table),
@@ -21,6 +21,16 @@ function makeBackend(){
             const row={id:'attempt-'+(attempts.length+1),user_id:payload.user_id,
               instrument_id:payload.instrument_id,created_at:'2026-11-07T10:00:00Z',completed_at:null};
             attempts.push(row);calls.push('new');return {data:{...row},error:null};
+          }
+          if(op==='delete'){
+            if(failDelete)return {data:null,error:{message:'delete unavailable'}};
+            const index=attempts.findIndex(a=>a.id===filters.id&&a.user_id===filters.user_id);
+            if(index===-1)return {data:null,error:{message:'not found'}};
+            const [deleted]=attempts.splice(index,1);
+            for(let i=answers.length-1;i>=0;i--){
+              if(answers[i].attempt_id===deleted.id)answers.splice(i,1);
+            }
+            calls.push('delete');return {data:{id:deleted.id},error:null};
           }
           if(op==='update'){
             const row=attempts.find(a=>a.id===filters.id&&a.user_id===filters.user_id);
@@ -40,6 +50,7 @@ function makeBackend(){
         select(){return query();},
         insert(row){assert.equal(row.user_id,owner);return query('new',row);},
         update(row){return query('update',row);},
+        delete(){return query('delete');}, 
         async upsert(row){
           assert.equal(row.user_id,owner);
           if(failNextAnswer){failNextAnswer=false;return {error:{message:'temporary offline'}};}
@@ -51,7 +62,8 @@ function makeBackend(){
       };
     }
   };
-  return {db,attempts,answers,calls,setOwner:v=>owner=v,failNext:()=>failNextAnswer=true};
+  return {db,attempts,answers,calls,setOwner:v=>owner=v,failNext:()=>failNextAnswer=true,
+    setDeleteFailure:v=>failDelete=v};
 }
 const button=(action,attemptId)=>({closest:sel=>sel==='[data-ipip-retest]'?{dataset:{ipipRetest:action,attemptId}}:null});
 const radio=(item,value)=>({matches:sel=>sel==='input[data-ipip-retest-answer]',dataset:{ipipRetestAnswer:item},value:String(value)});
@@ -106,4 +118,79 @@ test('retest UI never initiates another owner or a second snapshot while a draft
   assert.equal(b.attempts.length,1);
   assert.doesNotMatch(ui.render(),/Avsluta omgången/);
   assert.equal(b.answers.length,0);
+});
+
+test('export contains only the active viewer’s saved retest answers and no identity fields',async()=>{
+  const b=makeBackend(),downloads=[],ui=createPrivateIpipRetests({
+    db:b.db,saveExport:(filename,data)=>downloads.push({filename,data})
+  });
+  ui.reset('private-user');await ui.load('private-user');
+  await ui.handleClick(button('new'));
+  await ui.handleChange(radio('ipip50-001',4));
+  await ui.handleClick(button('export','attempt-1'));
+  assert.equal(downloads.length,1);
+  const payload=downloads[0].data;
+  assert.equal(payload.answered_count,1);
+  assert.equal(payload.complete,false);
+  assert.equal(payload.responses[0].value,4);
+  assert.match(downloads[0].filename,/^hemmakompassen-ipip50-omtest-\d{4}-\d{2}-\d{2}\.json$/);
+  assert.equal(Object.hasOwn(payload,'user_id'),false);
+  assert.equal(Object.hasOwn(payload,'attempt_id'),false);
+  assert.equal(Object.hasOwn(payload,'partner'),false);
+  assert.doesNotMatch(JSON.stringify(payload),/private-user|family_id|parent-id|access_token/);
+  assert.equal(b.calls.filter(x=>x==='delete').length,0);
+  assert.equal(b.attempts.length,1);
+});
+test('historic export is read-only and includes all fifty answers',async()=>{
+  const b=makeBackend(),downloads=[],ui=createPrivateIpipRetests({
+    db:b.db,saveExport:(filename,data)=>downloads.push(data)
+  });
+  ui.reset('private-user');await ui.load('private-user');
+  await ui.handleClick(button('new'));
+  for(let i=1;i<=50;i++)await ui.handleChange(radio('ipip50-'+String(i).padStart(3,'0'),3));
+  await ui.handleClick(button('complete'));
+  await ui.handleClick(button('export','attempt-1'));
+  assert.equal(downloads.length,1);
+  assert.equal(downloads[0].answered_count,50);
+  assert.equal(downloads[0].complete,true);
+  assert.ok(downloads[0].completed_at);
+  assert.equal(b.attempts.length,1);
+  assert.equal(b.answers.length,50);
+});
+test('delete requires explicit confirmation and removes only chosen retest and its child responses',async()=>{
+  const b=makeBackend();let accept=false,confirmCount=0;
+  const ui=createPrivateIpipRetests({db:b.db,confirmDelete:()=>{
+    confirmCount++;return accept;
+  }});
+  ui.reset('private-user');await ui.load('private-user');
+  await ui.handleClick(button('new'));
+  await ui.handleChange(radio('ipip50-001',4));
+  await ui.handleClick(button('delete','attempt-1'));
+  assert.equal(confirmCount,1);
+  assert.equal(b.attempts.length,1);
+  assert.equal(b.answers.length,1);
+  accept=true;
+  await ui.handleClick(button('delete','attempt-1'));
+  assert.equal(b.attempts.length,0);
+  assert.equal(b.answers.length,0);
+  assert.match(ui.render(),/har raderats/);
+  assert.match(ui.render(),/Starta en ny privat testomgång/);
+});
+test('failed deletion retains local draft until server verifies removal',async()=>{
+  const b=makeBackend(),ui=createPrivateIpipRetests({db:b.db,confirmDelete:()=>true});
+  ui.reset('private-user');await ui.load('private-user');
+  await ui.handleClick(button('new'));
+  b.setDeleteFailure(true);
+  await ui.handleClick(button('delete','attempt-1'));
+  assert.equal(b.attempts.length,1);
+  assert.match(ui.render(),/Radering kunde inte bekräftas/);
+  assert.match(ui.render(),/Fortsätt privat omtest|Spara och pausa/);
+});
+test('export helper discards unknown questions and out-of-range answers',()=>{
+ const result=buildPrivateIpipRetestExport({
+   'ipip50-001':5,'ipip50-002':0,'ipip50-003':6,'other':4
+ },{startedAt:'2026-11-07T00:00:00Z',completedAt:null,exportedAt:'2026-11-07T12:00:00Z'});
+ assert.equal(result.responses.length,1);
+ assert.deepEqual(result.responses.map(a=>a.item_id),['ipip50-001']);
+ assert.equal(result.instrument_id,'ipip50-sv-v1');
 });
