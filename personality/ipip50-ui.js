@@ -1,8 +1,8 @@
 import {IPIP50_V1} from './ipip50-v1.js';
 import {scoreIPIP50} from './ipip50-scoring.js';
-import {buildIPIP50FamilyInsights} from './ipip50-family-insights.js?v=20261107-activity-deeplink1';
-import {richFamilyReflection} from './ipip50-family-copy.js?v=20261107-activity-deeplink1';
-import {IPIP50_REFERENCE,IPIP50_PERCENTILE_BANDS,approximateReferencePercentile,referenceLimits,describeReferenceProfile,formatSv} from './ipip50-reference.js?v=20261107-activity-deeplink1';
+import {buildIPIP50FamilyInsights} from './ipip50-family-insights.js?v=20261107-ipip-consent-readback1';
+import {richFamilyReflection} from './ipip50-family-copy.js?v=20261107-ipip-consent-readback1';
+import {IPIP50_REFERENCE,IPIP50_PERCENTILE_BANDS,approximateReferencePercentile,referenceLimits,describeReferenceProfile,formatSv} from './ipip50-reference.js?v=20261107-ipip-consent-readback1';
 import {loadMyIPIP50Answers,saveMyIPIP50Answer} from './ipip50-storage.js';
 
 const esc=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -227,11 +227,11 @@ function statusPanel(message){return '<section class="live-panel"><p class="pf-s
 
 export function createPersonalityExperience({db,onRender,isSharingEnabled=false,useAiAnalysis=false,analysisPanel=()=>'',saveExport=downloadOwnIPIP50Export}){
   let viewer=null,sequence=0,answers={},loading=false,loaded=false,loadError='',saving=false,saveError='';
-  let active=false,index=0,selectedAnswer=null,shareEnabled=false,shareBusy=false,shareError='',paired=null,partnerError='',exportFeedback='';
+  let active=false,index=0,selectedAnswer=null,shareEnabled=false,shareVerified=false,shareBusy=false,shareError='',paired=null,partnerError='',exportFeedback='';
   const repaint=()=>onRender();
   function reset(userId=null){
     viewer=userId;sequence++;answers={};loading=false;loaded=false;loadError='';saving=false;
-    saveError='';active=false;index=0;selectedAnswer=null;shareEnabled=false;shareBusy=false;shareError='';paired=null;partnerError='';exportFeedback='';
+    saveError='';active=false;index=0;selectedAnswer=null;shareEnabled=false;shareVerified=false;shareBusy=false;shareError='';paired=null;partnerError='';exportFeedback='';
   }
   async function fetchPaired(userId,token){
     if(!isSharingEnabled)return;
@@ -265,7 +265,7 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false,
       loading=false;loadError='Kunde inte hämta dina privata svar. Försök igen.';repaint();return;
     }
     if(token!==sequence||viewer!==userId)return;
-    answers=loadedAnswers.answers;shareEnabled=!!consent;index=FIRST_UNANSWERED(answers);
+    answers=loadedAnswers.answers;shareEnabled=!!consent;shareVerified=true;index=FIRST_UNANSWERED(answers);
     loaded=true;loading=false;
     if(isSharingEnabled&&shareEnabled&&loadedAnswers.status.complete)await fetchPaired(userId,token);
     if(token===sequence&&viewer===userId)repaint();
@@ -316,8 +316,9 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false,
     }
     const sharing=isSharingEnabled?'<section class="live-panel pf-sharing"><h2>Frivillig delning</h2><p>Det är bara de fem summerade skalpoängen som kan delas, aldrig enskilda svar. Den andra får inte se din profil förrän ni båda aktivt har valt delning och fortfarande är parade.</p>'+
       (!isPaired?'<p>Para ihop två konton innan ni kan dela profiler.</p>':
+        (!shareVerified?'<p role="alert">Delningens aktuella status är okänd. Din profil kan fortfarande vara delad. Kontrollera med servern innan du fortsätter.</p><button type="button" class="live-button" data-pf-action="verify-share"'+(shareBusy?' disabled':'')+'>Kontrollera delningen igen</button>':
         '<p><strong>Din inställning:</strong> '+(shareEnabled?'Delning aktiverad':'Privat')+'</p>'+
-        '<button type="button" class="live-button" data-pf-action="'+(shareEnabled?'withdraw':'share')+'"'+(shareBusy?' disabled':'')+'>'+(shareBusy?'Sparar…':shareEnabled?'Sluta dela min profil':'Jag vill dela mina fem skalpoäng')+'</button>')+
+        '<button type="button" class="live-button" data-pf-action="'+(shareEnabled?'withdraw':'share')+'"'+(shareBusy?' disabled':'')+'>'+(shareBusy?'Sparar…':shareEnabled?'Sluta dela min profil':'Jag vill dela mina fem skalpoäng')+'</button>'))+
       (shareError?'<p role="alert">'+esc(shareError)+'</p>':'')+
       (partnerError?'<p role="alert">'+esc(partnerError)+'</p>':'')+
       (shareEnabled&&!paired?'<p>En gemensam jämförelse visas först när båda har färdiga profiler och har valt att dela dem.</p>':'')+
@@ -362,14 +363,45 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false,
     else if(action==='overview'||action==='result'){selectedAnswer=null;active=false;repaint();}
     else if(action==='reload'){await load(viewer);}
     else if(action==='refresh-share'){const tok=sequence,id=viewer;await fetchPaired(id,tok);if(tok===sequence)repaint();}
-    else if(['share','withdraw'].includes(action)&&isSharingEnabled&&isPaired){
-      const id=viewer,token=sequence;shareBusy=true;shareError='';repaint();
-      let r;
-      try{r=await db.rpc('set_my_ipip50_share',{p_share:action==='share'});}catch(e){r={error:e};}
+    else if((action==='verify-share'||['share','withdraw'].includes(action))&&isSharingEnabled&&isPaired){
+      if(action!=='verify-share'&&!shareVerified)return true;
+      const id=viewer,token=sequence,desired=action==='share';
+      shareBusy=true;shareError='';repaint();
+      let writeError=null;
+      if(action!=='verify-share'){
+        try{const r=await db.rpc('set_my_ipip50_share',{p_share:desired});writeError=r?.error||null;}
+        catch(e){writeError=e;}
+      }
       if(token!==sequence||viewer!==id)return true;
-      shareBusy=false;
-      if(r?.error){shareError='Kunde inte ändra delningen. Försök igen.';}
-      else{shareEnabled=action==='share';paired=null;if(shareEnabled)await fetchPaired(id,token);}
+      // A lost RPC response does not establish whether the user's consent changed.
+      // Read the actual self-owned consent row again before showing a result.
+      let verification;
+      try{
+        verification=await db.from('personality_share_preferences').select('share_enabled')
+          .eq('user_id',id).eq('instrument_id',IPIP50_V1.id).maybeSingle();
+      }catch(e){verification={error:e};}
+      if(token!==sequence||viewer!==id)return true;
+      shareBusy=false;paired=null;
+      if(verification?.error){
+        shareVerified=false;shareEnabled=false;
+        shareError='Servern kunde inte bekräfta delningsstatus. Din profil kan fortfarande vara delad. Kontrollera delningen igen.';
+      }else{
+        shareVerified=true;shareEnabled=verification?.data?.share_enabled===true;
+        if(action==='verify-share'){
+          shareError='Delningsstatus kontrollerad mot servern.';
+        }else if(shareEnabled!==desired){
+          shareError=desired
+            ?'Servern bekräftar inte delning. Försök igen.'
+            :'Servern visar att delningen fortfarande är aktiv. Återkallelsen är inte bekräftad.';
+        }else if(writeError){
+          shareError=desired
+            ?'Servern bekräftar delning trots ett kommunikationsfel.'
+            :'Servern bekräftar att delningen är återkallad trots ett kommunikationsfel.';
+        }else{
+          shareError=desired?'Delningen är bekräftad av servern.':'Delningen är återkallad och bekräftad av servern.';
+        }
+        if(shareEnabled)await fetchPaired(id,token);
+      }
       if(token===sequence&&viewer===id)repaint();
     }else return false;
     return true;
