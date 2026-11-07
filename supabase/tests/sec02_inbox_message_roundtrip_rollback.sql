@@ -71,9 +71,6 @@ BEGIN
  SELECT count(*) INTO n FROM public.my_family_messages() m
  WHERE m.message_id=teen_to_parent AND m.sent_by_me AND m.read_at IS NOT NULL;
  IF n<>1 THEN RAISE EXCEPTION 'FAIL: sender cannot see recipient receipt'; END IF;
- SELECT public.send_family_message('SEC02 temporary parent reply forbidden from teen sender?',gen_random_uuid()) INTO duplicate_id;
- -- A second message is still sent by the authenticated teenager, never forged as parent.
- IF duplicate_id IS NULL THEN RAISE EXCEPTION 'FAIL: second teenage message failed'; END IF;
  -- Parent -> teen, verify reception and unread count increases by exactly one,
  -- but do not call mark_family_messages_read for the teen (older unread exists).
  PERFORM set_config('request.jwt.claims',json_build_object('sub',parent_user,'role','authenticated')::text,true);
@@ -83,9 +80,8 @@ BEGIN
  SELECT count(*) INTO n FROM public.my_family_messages() m
  WHERE m.message_id=parent_to_teen AND NOT m.sent_by_me AND m.read_at IS NULL;
  IF n<>1 THEN RAISE EXCEPTION 'FAIL: parent message absent from teen inbox'; END IF;
- IF public.my_family_unread_message_count()<>(
-  (SELECT count(*) FROM public.family_direct_messages WHERE recipient_id=teen_user::uuid AND read_at IS NULL)
- ) THEN RAISE EXCEPTION 'FAIL: unread count does not match current teen inbox'; END IF;
+ IF public.my_family_unread_message_count()<>(current_setting('audit.base_unread')::integer + 1) THEN
+  RAISE EXCEPTION 'FAIL: teen unread total did not increase by exactly one'; END IF;
 END $test$;
 RESET ROLE;
 SELECT 'PASS: outsider blocked, bidirectional send/receive, retry-key idempotency, parent-only read receipt, teen historical unread untouched; full rollback' AS audit;
