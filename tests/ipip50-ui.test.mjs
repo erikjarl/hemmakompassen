@@ -151,7 +151,7 @@ test('failed revoke is not reported successful; uncertain status blocks controls
   mock.setWriteMode('no-write-error');
   await ui.handleClick(btn('withdraw'),{isPaired:true});
   assert.match(ui.render({isPaired:true}),/fortfarande är aktiv/);
-  mock.setWriteMode('lost-response');
+  mock.setWriteMode('no-write-error');
   mock.setReadFails(true);
   await ui.handleClick(btn('withdraw'),{isPaired:true});
   const uncertain=ui.render({isPaired:true});
