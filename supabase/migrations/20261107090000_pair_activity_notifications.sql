@@ -234,7 +234,7 @@ create trigger activity_notification_explicit_b_share
 -- Revoke a notification's eligibility when the underlying explicit choice is
 -- withdrawn. A new share can then create a genuinely new event.
 create or replace function private.on_activity_understanding_revoke()
-returns trigger language plpgsql security definer set search_path='' as $
+returns trigger language plpgsql security definer set search_path='' as $$
 begin
   delete from public.activity_notification_event_keys e
   where e.event_kind='teen_shared_understanding'
@@ -242,7 +242,7 @@ begin
     and e.card_id=old.card_id;
   return null;
 end
-$;
+$$;
 create trigger activity_notification_b_unshare
   after delete on public.understanding_card_shares
   for each row execute function private.on_activity_understanding_revoke();
