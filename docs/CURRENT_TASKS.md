@@ -4,7 +4,7 @@
 
 - [x] **Kod och syntetiska regressionstester:** om parningen upphör medan notis-RPC pågår rensas även redan visade aviseringar, inte bara det sena svaret. Detsamma gäller om funktionen inaktiverats. Ett svar från annan session får fortfarande inte skriva över aktuell status. Ingen SQL, Worker eller familjedata ändrad.
 - [x] **PR-CI och merge:** [PR #131](https://github.com/erikjarl/hemmakompassen/pull/131) passerade [Node/bygge/Chromium #42377244037](https://github.com/erikjarl/hemmakompassen/actions/runs/42377244037) och mergades till `main` som `5d3c289bdbdc2788c9e7dd22840f8e2d64052904`.
-- [ ] **Pages-release:** kontrollera senaste publiceringsjobbet separat.
+- [x] **Pages-release:** [GitHub Pages #42377362369](https://github.com/erikjarl/hemmakompassen/actions/runs/42377362369) rapporterar `success` för commit `15af090e8d8ebe68cbef001e7367c26848db7f7a` efter PR #131:s merge och dokumentationsuppdatering. Oberoende kontroll av faktiskt serverad JavaScript och inloggade tvåkonton återstår.
 - [ ] **Verkligt tvåkontotest och fysisk iOS/VoiceOver** kvarstår.
 
 ## 7 november 2026 – NOT-01B: sent läskvitto efter avparning
