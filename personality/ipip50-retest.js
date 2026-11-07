@@ -170,7 +170,21 @@ export function createPrivateIpipRetests({
         if(!isCurrent(id,token))return true;
         attempts=[result.data,...attempts];draftId=result.data.id;answers={};
         questionIndex=0;surveyOpen=true;status='';
-      }catch(e){if(isCurrent(id,token))status='Omgången kunde inte startas. Inga gamla svar har ändrats.';}
+      }catch(e){
+        if(!isCurrent(id,token))return true;
+        if(e?.code==='23505'){
+          // Another tab already created this owner's draft. The database is
+          // authoritative; reconcile rather than opening a second test.
+          busy=false;
+          await load(id);
+          if(userId===id&&draftId&&!error){
+            status='Det finns redan en påbörjad omgång från en annan flik. Fortsätt den i stället.';
+            repaint();
+          }
+          return true;
+        }
+        status='Omgången kunde inte startas. Inga gamla svar har ändrats.';
+      }
       if(isCurrent(id,token)){busy=false;repaint();}
       return true;
     }
