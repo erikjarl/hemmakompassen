@@ -9,7 +9,9 @@
 - [x] **PR #126 mergad och publicerad 7 november:** squash-commit `c25c752499feaa8629c5a9564ed3dffe55269072`; [Pages #42354637272](https://github.com/erikjarl/hemmakompassen/actions/runs/42354637272) och [main UI #42354638116](https://github.com/erikjarl/hemmakompassen/actions/runs/42354638116) rapporterar `success`.
 - [x] **Supabase installerad, schema efterkontrollerat:** verklig migration `20261107081525_pair_activity_notifications` lyckades. Två tabeller med RLS, ingen direkt klient-SELECT/INSERT, två publika autentiserade RPC:er och fyra aktiva triggers verifierades. Båda tabellerna innehöll **0 historiska rader** och en syntetisk autentiserad roll utan JWT såg 0 aviseringar. Detta är en metadata-/begränsad säkerhetskontroll, inte två inloggade sessioner.
 - [ ] **Verklig funktions- och säkerhetskontroll:** två autentiserade roller, av-/omparning, samtidiga uppdateringar, faktisk Safari/VoiceOver och negativt korsfamiljetest återstår.
-- [ ] **Nästa steg:** koppla autentiserad notishämtning och läsmarkering till startsidan, länka till rätt kortlek/inkorg och kontrollera mobil tillgänglighet. Blanda inte denna notisström med Schyssta listans notiser eller privata chattmeddelanden.
+- [x] **Kod i PR #127:** Inkorgen listar neutrala grupperade aktivitetshändelser med frivillig läsmarkering; startsida och navigation inkluderar nya olästa aviseringar. Skydd mot ofullständiga serverresultat, kontobyte, och gamla parningar är implementerat i klienten. Länkar går till Gemensamma insikter; direktrouting till exakt kortlek återstår.
+- [x] **Kontraktstester för UI skrivna:** `tests/activity-notification-ui.test.mjs` kontrollerar svarsschema, obehöriga fält, fel, ändrat konto och explicit läsmarkering.
+- [ ] **PR #127 release och realt test återstår:** invänta CI, merge och Pages; genomför sedan riktiga signerade tvåkontotester i fysisk mobil.
 
 **Gällande Jobb hk-fullmakt (5 november 2026):** se [AGENTS.md](../AGENTS.md). Commit, push, PR, merge, publicering och motsvarande projektändringar i GitHub, Supabase och Cloudflare är uttryckligen godkända. Detta ersätter äldre krav på separat merge-/publiceringsgodkännande.
 
