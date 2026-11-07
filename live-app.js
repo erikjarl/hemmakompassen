@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261106-ai-exercises1';
-import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261106-ai-exercises1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261106-ai-exercises1';
-import {renderParentMiGuide} from './communication/mi-guide.js?v=20261106-ai-exercises1';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261106-ai-exercises1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261107-activity-inbox1';
+import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261107-activity-inbox1';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261107-activity-inbox1';
+import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-activity-inbox1';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261107-activity-inbox1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -15,6 +15,7 @@ const sharedPollingEnabled=c.enableSharedPolling===true;
 const sharedInsightsEnabled=c.enableSharedInsights===true;
 const sharedUnderstandingEnabled=c.enableSharedUnderstanding===true;
 const schysstaListEnabled=c.enableSchysstaList===true;
+const activityNotificationsEnabled=c.enableActivityNotifications===true;
 const personalitySharingEnabled=c.enablePersonalitySharing===true;
 const aiResultEnabled=c.enableAiResultAnalyses===true;
 const db=createClient(c.supabaseUrl,c.supabasePublishableKey,{auth:{flowType:'pkce',detectSessionInUrl:true}});
@@ -53,11 +54,80 @@ let sharedUnderstandingRows=[],understandingShareError='';
 let schysstaSuggestions=[],schysstaRules=[],schysstaManualRules=[],schysstaNotifications=[],schysstaReplacementLinks=[],schysstaHistory=[],schysstaEndTarget=null,schysstaLoading=false,schysstaError='',schysstaRequest=0;
 let schysstaDraft='',schysstaDraftOpen=false,schysstaDraftKey=null,schysstaEditTarget=null,schysstaSubmitting=false,schysstaMessage='',schysstaCopyMessage='',schysstaFocusId='',schysstaSearch='',schysstaFilterStatus='all';
 const schysstaSaving=new Set();
+let activityNotifications=[],activityNotificationsError='',activityNotificationsLoading=false,
+  activityNotificationsRequest=0,activityMarkBusy=null,activityFeedback='';
+const ACTIVITY_DECK_LABELS=Object.freeze({
+  general:'Allmänna frågor',samtal:'Samtalsämnen',aktiviteter:'Aktiviteter',
+  regler:'Regler',uppskattning:'Uppskattning',aterhamtning:'Återhämtning',
+  forandring:'Förändring'
+});
 // Independent of agreement notifications: a current family's private 1:1 conversation.
 let familyChatMessages=[],familyChatUnread=0,familyChatLoading=false,familyChatLoadingOlder=false,
   familyChatHasMore=false,familyChatError='',familyChatStatus='',familyChatDraft='',
   familyChatRequestKey=null,familyChatSending=false,familyChatRequest=0,familyChatCountRequest=0,
   familyChatUnreadError=false,familyChatReadBusy=false;
+function validActivityNotifications(rows){
+  if(!Array.isArray(rows)||rows.length>30)return false;
+  const allowed=['notification_id','event_kind','deck_id','read_at','updated_at'];
+  return rows.every(row=>row&&typeof row==='object'&&!Array.isArray(row)
+    &&Object.keys(row).length===allowed.length
+    &&Object.keys(row).every(k=>allowed.includes(k))
+    &&SCHYSSTA_UUID.test(row.notification_id)
+    &&['mutual_match','teen_shared_understanding'].includes(row.event_kind)
+    &&Object.hasOwn(ACTIVITY_DECK_LABELS,row.deck_id)
+    &&(row.event_kind!=='teen_shared_understanding'||row.deck_id==='general')
+    &&(row.read_at===null||(typeof row.read_at==='string'&&!Number.isNaN(Date.parse(row.read_at))))
+    &&typeof row.updated_at==='string'&&!Number.isNaN(Date.parse(row.updated_at)))
+    &&new Set(rows.map(row=>row.notification_id)).size===rows.length;
+}
+const activityUnreadCount=()=>activityNotifications.filter(n=>n.read_at===null).length;
+async function fetchActivityNotifications({quiet=false}={}){
+  const request=++activityNotificationsRequest,viewer=user?.id,session=sharedSession;
+  if(!activityNotificationsEnabled||!viewer||members.length!==2){
+    activityNotifications=[];activityNotificationsError='';activityNotificationsLoading=false;
+    if(['hem','inkorg'].includes(page())&&!familyChatDraft.trim())render();
+    return;
+  }
+  const previous=JSON.stringify([activityNotifications,activityNotificationsError]);
+  activityNotificationsLoading=true;
+  if(!quiet&&page()==='inkorg'&&!familyChatDraft.trim())render();
+  let result;
+  try{result=await db.rpc('my_activity_notifications');}catch(e){result={error:e};}
+  if(request!==activityNotificationsRequest||viewer!==user?.id||session!==sharedSession)return;
+  activityNotificationsLoading=false;
+  if(result?.error||!validActivityNotifications(result?.data)){
+    activityNotifications=[];activityNotificationsError='Aktivitetsaviseringar kunde inte kontrolleras. Försök igen.';
+  }else{
+    activityNotifications=result.data;activityNotificationsError='';activityFeedback='';
+  }
+  if(previous===JSON.stringify([activityNotifications,activityNotificationsError]))return;
+  if(['hem','inkorg'].includes(page())&&(page()!=='inkorg'||!familyChatDraft.trim()))render();
+  else menu();
+}
+async function markActivityNotificationRead(notificationId){
+  if(!activityNotificationsEnabled||!user||members.length!==2||activityMarkBusy
+    ||!SCHYSSTA_UUID.test(notificationId)
+    ||!activityNotifications.some(n=>n.notification_id===notificationId&&n.read_at===null))return;
+  const viewer=user.id,session=sharedSession;
+  activityMarkBusy=notificationId;activityFeedback='';
+  if(page()==='inkorg'&&!familyChatDraft.trim())render();
+  let result;
+  try{result=await db.rpc('mark_activity_notification_read',{p_notification_id:notificationId});}
+  catch(e){result={error:e};}
+  if(viewer!==user?.id||session!==sharedSession)return;
+  activityMarkBusy=null;
+  if(result?.error){
+    activityFeedback='Det gick inte att bekräfta läsmarkeringen. Uppdatera aviseringarna.';
+    // An unconfirmed write must never be treated as a confirmed unread count.
+    activityNotificationsError=activityFeedback;
+    activityNotifications=[];
+    if(page()==='inkorg'&&!familyChatDraft.trim())render();
+    else menu();
+    return;
+  }
+  // Recheck server state, rather than optimistically removing the unread badge.
+  await fetchActivityNotifications();
+}
 const familyChatTimestamp=timestamp=>new Intl.DateTimeFormat('sv-SE',{dateStyle:'medium',timeStyle:'short'}).format(new Date(timestamp));
 function validFamilyChatRows(rows){
   return Array.isArray(rows)&&rows.length<=50
@@ -929,8 +999,8 @@ function menu(){
   const unread=schysstaListEnabled&&user&&members.length===2&&!schysstaError?schysstaUnreadCount():0;
   const pending=schysstaListEnabled&&user&&members.length===2&&!schysstaError?schysstaNeedsAnswer().length:0;
   const navItem=([key,label])=>{
-    const count=key==='inkorg'?(unread+familyChatUnread):key==='regler'?pending:0;
-    const descriptor=key==='inkorg'?' olästa meddelanden':' obesvarade regelförslag';
+    const count=key==='inkorg'?(unread+familyChatUnread+activityUnreadCount()):key==='regler'?pending:0;
+    const descriptor=key==='inkorg'?' olästa meddelanden och aviseringar':' obesvarade regelförslag';
     const aria=count?' aria-label="'+label+', '+count+descriptor+'"':'';
     const badge=count?'<span class="live-nav-count" aria-hidden="true">'+(count>9?'9+':count)+'</span>':'';
     const active=route===key||(['mi-foralder','nvc'].includes(route)&&key==='kommunikation')||(route==='insikter'&&key==='swipe');
@@ -1003,12 +1073,17 @@ const roster=members.length?members.map(m=>(m.role==='teen'?'Tonåring':'Föräl
 const unread=schysstaListEnabled?schysstaUnreadCount():0;
 const needs=schysstaListEnabled?schysstaNeedsAnswer().length:0;
 const pendingBanner=needs?card('<h2>Behöver ditt svar · '+needs+' förslag</h2><p>Den andra personen väntar på ditt beslut. Du kan också välja att svara senare.</p><a class="live-button" href="#regler">Ta ställning i Schyssta listan</a>'):'';
-const totalUnread=unread+familyChatUnread;
-const incompleteNoticeCheck=members.length===2&&(!!schysstaError||familyChatUnreadError);
-const noticeWarning=incompleteNoticeCheck?card('<h2>Alla aviseringar kunde inte kontrolleras</h2><p role="alert">Någon av kontrollerna för meddelanden eller regelförslag misslyckades. Noll betyder därför inte säkert att inkorgen är tom.</p><button type="button" class="live-button" id="home-refresh-notices">Försök kontrollera igen</button>'):'';
-const inboxBanner=totalUnread?card('<h2>Inkorgen · '+(incompleteNoticeCheck?'minst ':'')+totalUnread+' olästa</h2><p>'+(
-  familyChatUnread?('Du har '+familyChatUnread+' olästa privata meddelanden'+(unread?' och '+unread+' nya regelhändelser':'')+'.')
-    :'Du har fått nya meddelanden om era överenskommelser.')+'</p><a class="live-button" href="#inkorg">Visa inkorgen</a>'):'';
+const activityUnread=activityNotificationsEnabled?activityUnreadCount():0;
+const totalUnread=unread+familyChatUnread+activityUnread;
+const incompleteNoticeCheck=members.length===2&&(!!schysstaError||familyChatUnreadError
+  ||(activityNotificationsEnabled&&!!activityNotificationsError));
+const noticeWarning=incompleteNoticeCheck?card('<h2>Alla aviseringar kunde inte kontrolleras</h2><p role="alert">Någon av kontrollerna för meddelanden, regelförslag eller aktivitetsaviseringar misslyckades. Noll betyder därför inte säkert att inkorgen är tom.</p><button type="button" class="live-button" id="home-refresh-notices">Försök kontrollera igen</button>'):'';
+const inboxBanner=totalUnread?card('<h2>Inkorgen · '+(incompleteNoticeCheck?'minst ':'')+totalUnread+' olästa</h2><p>'
+  +[familyChatUnread?familyChatUnread+' privata meddelanden':'',
+    unread?unread+' regelhändelser':'',
+    activityUnread?activityUnread+' nya gemensamma kort- eller aktivitetsaviseringar':''
+   ].filter(Boolean).join(' · ')
+  +'</p><a class="live-button" href="#inkorg">Visa inkorgen</a>'):'';
 return '<section class="home-hero"><div class="home-hero-inner"><span class="home-kicker">✦ '+(members.length>1?'ERT GEMENSAMMA RUM':'VÄNTAR PÅ DIN MOTPART')+'</span><h1>Hej '+esc(name)+'.<em>Välkommen till ert rum.</em></h1><p>'+(members.length>1?'Ett rum för att förstå varandra bättre, ett steg i taget.':'Medan du väntar kan du utforska Gillaswajpen och börja hitta nya samtalsämnen.')+'</p><a class="home-hero-link" href="#swipe">Utforska Gillaswajpen <span aria-hidden="true">→</span></a></div><div class="home-orbit" aria-hidden="true"><span></span></div></section>'+noticeWarning+pendingBanner+inboxBanner+card('<h2>Din familj</h2><p>'+roster+'</p><p class="live-muted">'+(members.length===1?'Den andra familjemedlemmen har ännu inte anslutit.':'Familjemedlemskap hämtat från Supabase.')+'</p><a class="live-button" href="./konto.html">Hantera familj och inbjudningar</a>')+'<h2>Utforska Hemmakompassen</h2><div class="live-cards">'+nav.slice(1,7).map(([key,label])=>card('<h3>'+esc(label)+'</h3><p class="live-muted">'+esc(members.length!==2&&['inkorg','regler'].includes(key)?'Koppla ihop era konton för att använda funktionen.':HOME_MODULE_INTROS[key])+'</p><a href="#'+key+'">Öppna →</a>')).join('')+'</div>';
 }
 const SCHYSSTA_UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -1215,8 +1290,26 @@ function inboxView(){
         :'<p class="live-muted">Inga regelförslag väntar på ditt svar.</p>')
       +'<h3>Händelser från Schyssta listan'+(schysstaUnreadCount()?' · '+schysstaUnreadCount()+' olästa':'')+'</h3>'
       +noticeHtml+'<p><a href="#regler">Öppna Schyssta listan</a></p>');
-  return '<h1>Inkorg</h1><p>Här kan ni skriva privata meddelanden till varandra och hantera gemensamma regelförfrågningar.</p>'
-    +chat+rules;
+  const activityPanel=!activityNotificationsEnabled?''
+    :card('<h2>Gemensamma kort och aktiviteter'
+      +(activityUnreadCount()?' · '+activityUnreadCount()+' olästa':'')+'</h2>'
+      +'<p class="live-muted">En avisering visar bara att ett nytt gemensamt kort eller en frivilligt delad förståelse har blivit tillgänglig. Inga privata svar visas här.</p>'
+      +(activityNotificationsError?'<p role="alert">'+esc(activityNotificationsError)+'</p>'
+        +'<button type="button" class="schyssta-secondary" data-activity-refresh>Försök igen</button>':'')
+      +(activityNotificationsLoading&&!activityNotifications.length?'<p role="status">Hämtar aviseringar…</p>':'')
+      +(activityNotifications.length?'<ul class="schyssta-list">'
+        +activityNotifications.map(n=>'<li class="'+(n.read_at===null?'schyssta-unread':'')+'">'
+          +'<p><strong>'+(n.event_kind==='mutual_match'
+            ?'Nytt gemensamt JA · '+esc(ACTIVITY_DECK_LABELS[n.deck_id])
+            :'Ett förståelsekort har delats frivilligt')+'</strong>'+(n.read_at===null?' · Oläst':'')+'</p>'
+          +'<p class="live-muted"><time datetime="'+esc(n.updated_at)+'">'+esc(familyChatTimestamp(n.updated_at))+'</time></p>'
+          +'<div class="schyssta-actions"><a class="live-button" href="#insikter">Visa gemensamma insikter</a>'
+          +(n.read_at===null?'<button type="button" class="schyssta-secondary" data-activity-read="'
+            +esc(n.notification_id)+'"'+(activityMarkBusy?' disabled':'')+'>Markera som läst</button>':'')
+          +'</div></li>').join('')+'</ul>'
+        :(!activityNotificationsLoading&&!activityNotificationsError?'<p class="live-muted">Inga nya aviseringar just nu.</p>':'')));
+  return '<h1>Inkorg</h1><p>Här kan ni skriva privata meddelanden, se frivilligt delade gemensamma kort och hantera regelförfrågningar.</p>'
+    +activityPanel+chat+rules;
 }
 async function fetchSchysstaList(){
   const request=++schysstaRequest,viewer=user?.id,session=sharedSession;
@@ -1422,6 +1515,7 @@ try{authResult=await db.auth.getUser();}
 catch(e){if(generation!==refreshGeneration)return;throw e;}
 if(generation!==refreshGeneration)return;
 const {data:{user:u},error}=authResult;if(error&&error.name!=='AuthSessionMissingError')throw error;user=u;profile=null;members=[];mediatorExperience.reset(u?.id??null);aiResults.reset(u?.id??null);personalityExperience.reset(u?.id??null);swipeAnswers.clear();swipeImportance.clear();importancePending.clear();importanceSaving.clear();importanceAvailable=false;importanceLoadError='';priorityShares.clear();priorityShareSaving.clear();prioritySharesAvailable=false;priorityShareError='';skippedUnderstanding.clear();understandingShares.clear();understandingShareSaving.clear();understandingShareError='';for(const answers of themeAnswers.values())answers.clear();activeThemeDeck=null;themeCategory='all';themeIndex=0;themeReview=false;themeSaveError='';swipeBusy=false;swipeLoadError='';swipeSaveError='';swipeReview=false;swipeSkippedReview=false;swipeIndex=0;sharedMatches=[];sharedPriorities=[];sharedDeckId='general';sharedError='';sharedLoading=false;sharedSession++;sharedRequest++;insightsRows=[];sharedUnderstandingRows=[];insightsLoading=false;insightsError='';insightsRequest++;themesUnlocked=false;themesLoading=false;themesError='';themesRequest++;
+activityNotificationsRequest++;activityNotifications=[];activityNotificationsError='';activityNotificationsLoading=false;activityMarkBusy=null;activityFeedback='';
 if(typeof schysstaRequest!=='undefined'){schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];schysstaNotifications=[];schysstaReplacementLinks=[];schysstaHistory=[];schysstaEndTarget=null;schysstaLoading=false;schysstaError='';schysstaRequest++;schysstaSaving.clear();schysstaPausedIds.clear();clearFamilyChat();schysstaDraft='';schysstaDraftOpen=false;schysstaDraftKey=null;schysstaEditTarget=null;schysstaSubmitting=false;schysstaMessage='';schysstaCopyMessage='';schysstaFocusId='';schysstaSearch='';schysstaFilterStatus='all';}
 if(user){const viewer=user.id;
 let loaded;
@@ -1443,7 +1537,7 @@ render();
 if(user)openCommunicationSkill($('live-app'),communicationSkillFromHash(location.hash),{focus:true});
 if(user)void personalityExperience.load(user.id);
 if(user&&page()==='medlare')void mediatorExperience.loadList();
-if(user&&members.length===2){void fetchSwipeMatches('general');void fetchThemeUnlock();}
+if(user&&members.length===2){void fetchSwipeMatches('general');void fetchThemeUnlock();void fetchActivityNotifications();}
 if(page()==='insikter')void fetchInsights();
 if(typeof fetchSchysstaList==='function'&&schysstaListEnabled&&['regler','inkorg','hem'].includes(page()))void fetchSchysstaList();
 if(user&&members.length===2){
@@ -1475,7 +1569,7 @@ if(e.target.closest('#swipe-review-skipped')&&viewerRole()==='teen'&&!swipeBusy)
 if(e.target.closest('#insights-retry')&&!insightsLoading)void fetchInsights();
 const inviteActivity=e.target.closest('[data-insight-activity]');
 if(inviteActivity&&['insikter','swipe'].includes(page())&&!activityInviteBusy)void prepareActivityMessage(inviteActivity.dataset.insightActivity);
-if(e.target.closest('#home-refresh-notices')&&user&&members.length===2){if(schysstaListEnabled&&!schysstaLoading)void fetchSchysstaList();void fetchFamilyChatUnread();}
+if(e.target.closest('#home-refresh-notices')&&user&&members.length===2){if(schysstaListEnabled&&!schysstaLoading)void fetchSchysstaList();void fetchFamilyChatUnread();void fetchActivityNotifications();}
 if(e.target.closest('[data-family-chat-refresh]'))void fetchFamilyChat();
 if(e.target.closest('[data-family-chat-mark-all-read]'))void markAllFamilyChatRead();
 if(e.target.closest('[data-family-chat-more]'))void fetchFamilyChat(true);
@@ -1490,6 +1584,10 @@ if(openRule&&SCHYSSTA_UUID.test(openRule.dataset.schysstaOpen)){
   location.hash='regler';
   if(page()==='regler')void fetchSchysstaList();
 }
+const activityRefresh=e.target.closest('[data-activity-refresh]');
+if(activityRefresh&&user&&members.length===2)void fetchActivityNotifications();
+const activityRead=e.target.closest('[data-activity-read]');
+if(activityRead)void markActivityNotificationRead(activityRead.dataset.activityRead);
 const readNotice=e.target.closest('[data-schyssta-read]');if(readNotice)void markSchysstaRead(readNotice.dataset.schysstaRead);
 const endRule=e.target.closest('[data-schyssta-end]');if(endRule&&SCHYSSTA_UUID.test(endRule.dataset.schysstaEnd)){schysstaEndTarget=endRule.dataset.schysstaEnd;render();}
 if(e.target.closest('#schyssta-end-cancel')){schysstaEndTarget=null;render();}
@@ -1573,6 +1671,7 @@ window.addEventListener('hashchange',()=>{
   if(['regler','inkorg','hem'].includes(page()))void fetchSchysstaList();
   if(page()==='inkorg')void fetchFamilyChat();
   else if(page()==='hem')void fetchFamilyChatUnread();
+  if(['hem','inkorg'].includes(page())&&user&&members.length===2)void fetchActivityNotifications();
   if(page()==='swipe')void pollSharedMatches();
 });
 document.addEventListener('visibilitychange',()=>{
@@ -1583,6 +1682,8 @@ document.addEventListener('visibilitychange',()=>{
   // Refresh the family's inbox after returning to the tab, without overwriting a draft.
   if(schysstaListEnabled&&user&&members.length===2&&!schysstaLoading&&!schysstaDraftOpen
     &&['hem','inkorg','regler'].includes(page()))void fetchSchysstaList();
+  if(activityNotificationsEnabled&&user&&members.length===2&&['hem','inkorg'].includes(page()))
+    void fetchActivityNotifications({quiet:true});
 });
 window.addEventListener('online',()=>{
   if(page()==='insikter'&&user&&members.length===2)void fetchInsights({quiet:true});
