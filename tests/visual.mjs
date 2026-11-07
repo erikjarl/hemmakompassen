@@ -958,7 +958,8 @@ try{
   assert.equal(await paired.page.locator('.swipe-match-group .swipe-match-list li').count(),2);
   await paired.page.evaluate(()=>{delete window.__HK_TEST_SHARED_MATCHES__;});
   await paired.page.locator('[data-refresh-matches="general"]').click();
-  await paired.page.waitForFunction(()=>document.querySelectorAll('.swipe-match-group .swipe-match-list li').length===2);
+  await paired.page.waitForFunction(()=>document.querySelectorAll('.swipe-match-group .swipe-match-list li').length===2
+    &&document.querySelector('.swipe-match-group')?.textContent.includes('Jag vill bli bättre på att visa uppskattning'));
 
   const sharedText=await paired.page.locator(".swipe-results").innerText();
   assert.match(sharedText,/Jag uppskattar när vi gör saker tillsammans utan mobiltelefoner/,"The mutual YES is displayed");
