@@ -6,7 +6,7 @@ import {readFileSync} from 'node:fs';
 const source=readFileSync(new URL('../live-app.js',import.meta.url),'utf8');
 const config=readFileSync(new URL('../backend-config.js',import.meta.url),'utf8');
 const validators=source.match(/function validActivityNotifications\(rows\)\{[\s\S]*?\n\}(?=\n\/\/ Snapshot actual pair identity)/)?.[0];
-const pairHelper=source.match(/const activityPairSignature=\(\)=>JSON.stringify\([\s\S]*?\n\}\)\);/)?.[0];
+const pairHelper=source.slice(source.indexOf('const activityPairSignature='),source.indexOf('\nconst activityUnreadCount='));
 assert.ok(pairHelper,'activity pair identity snapshot available');
 const fetcher=source.match(/async function fetchActivityNotifications\(\{quiet=false\}=\{\}\)\{[\s\S]*?\n\}(?=\nasync function markActivityNotificationRead)/)?.[0];
 assert.ok(validators,'activity RPC rows validated independently');
@@ -207,7 +207,7 @@ test('same-sized replacement pair ignores an old activity read receipt',async()=
   db:{rpc:()=>new Promise(resolve=>{finish=resolve;})},
   fetchActivityNotifications:async()=>{refreshes++;}
  };
- vm.runInNewContext(pairHelper+'\\n'+reader+'\\nthis.markActivityNotificationRead=markActivityNotificationRead;',h);
+ vm.runInNewContext(pairHelper+'\n'+reader+'\nthis.markActivityNotificationRead=markActivityNotificationRead;',h);
  const pending=h.markActivityNotificationRead(id1);
  h.members=[{user_id:'viewer'},{user_id:'replacement'}];
  finish({data:true,error:null});await pending;
