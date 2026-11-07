@@ -179,8 +179,8 @@ begin
     return null;
   end if;
   if new.user_id is distinct from (select auth.uid()) then return null; end if;
-  if tg_op='UPDATE' and old.answer is not distinct from new.answer then
-    return null;
+  if tg_op='UPDATE' then
+    if old.answer is not distinct from new.answer then return null; end if;
   end if;
   select m.user_id into v_recipient
   from public.family_members me
@@ -264,7 +264,7 @@ create trigger clear_activity_notifications_after_membership
 create or replace function public.my_activity_notifications()
 returns table (
   notification_id uuid,event_kind text,deck_id text,
-  read_at timestamptz,created_at timestamptz
+  read_at timestamptz,updated_at timestamptz
 )
 language sql stable security definer set search_path='' as $$
   select n.id,n.event_kind,n.deck_id,n.read_at,n.updated_at
