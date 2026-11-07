@@ -222,6 +222,7 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
                 ?{...n,read_at:'2026-11-07T09:01:00Z'}:n);
               return {data:null,error:null};
             }
+            if(name==='my_current_inbox_pair_epoch')return {data:window.__HK_TEST_PAIRED__?'test-family:parent:teen:parent-joined:teen-joined':null,error:null};
             if(name==='my_family_members')return {data:current()?(window.__HK_TEST_PAIRED__?[{user_id:'10000000-0000-0000-0000-000000000001',role:'parent',display_name:'Provförälder'},{user_id:'10000000-0000-0000-0000-000000000002',role:'teen',display_name:'Provtonåring'}]:[{user_id:current().id,role:window.__HK_TEST_ROLE__,display_name:window.__HK_TEST_ROLE__==='teen'?'Provtonåring':'Provförälder'}]):[],error:null};
              if(name==='shared_swipe_matches'){
                window.__HK_MATCH_RPC_CALLS__=(window.__HK_MATCH_RPC_CALLS__||0)+1;
