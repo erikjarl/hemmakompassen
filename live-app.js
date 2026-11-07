@@ -1169,7 +1169,7 @@ function communicationBridge(key){
   const text=COMMUNICATION_BRIDGES[key];
   if(!text)return '';
   const [skill,label]=COMMUNICATION_TARGETS[key];
-  return '<aside class="comm-crosslink" aria-label="Relaterat samtalsstöd"><strong>Prata vidare tillsammans</strong><p>'+text+'</p><div class="comm-crosslink-links"><a href="#kommunikation/'+skill+'">'+label+'</a><a href="#kommunikation">Alla kommunikationsverktyg</a><a href="#nvc">Bygg ett jag-budskap (NVC)</a>'
+  return '<aside class="comm-crosslink" aria-label="Relaterat samtalsstöd"><strong>Prata vidare tillsammans</strong><p>'+text+'</p><div class="comm-crosslink-links"><a href="#kommunikation/'+skill+'">'+label+'</a><a href="#kommunikation">Alla kommunikationsverktyg</a><a href="#kommunikation/plan">Förbered en privat samtalsplan</a><a href="#nvc">Bygg ett jag-budskap (NVC)</a>'
     +(viewerRole()==='parent'?'<a href="#mi-foralder">MI för föräldrar</a>':'')+'</div></aside>';
 }
 
@@ -1177,7 +1177,7 @@ const HOME_MODULE_INTROS=Object.freeze({
   inkorg:'Läs privata meddelanden och svara på förfrågningar om gemensamma regler.',
   swipe:'Svara privat på frågor och hitta möjliga samtal eller aktiviteter där ni båda har valt ja.',
   personlighet:'Utforska fem personlighetsdimensioner med 50 frågor och jämför profiler först efter bådas samtycke.',
-  kommunikation:'Öva på NVC, lyssnande, pauser och reparation efter gräl. Föräldrar får även en MI-inspirerad guide.',
+  kommunikation:'Öva på NVC, lyssnande, pauser och reparation efter gräl. Förbered en privat samtalsplan. Föräldrar får även en MI-inspirerad guide.',
   regler:'Föreslå överenskommelser och ändringar. En regel gäller gemensamt först när båda har godkänt samma text.',
   medlare:'Utforska fiktiva samtal med privat AI-stöd i testversion. Inte terapi eller akut hjälp.'
 });

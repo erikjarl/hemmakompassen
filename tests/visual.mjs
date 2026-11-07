@@ -836,6 +836,11 @@ try{
   assert.match(await narrow.page.locator('#comm-solution-output').innerText(),/Den andra får säga nej/);
   await checkOverflow(narrow.page,'Private solution planner 320px');
   await capture(narrow.page,'mobile-320-communication-plan.png');
+  await narrow.page.goto(base+'#kommunikation/plan',{waitUntil:'load'});
+  await narrow.page.locator('#comm-solution-planner h2').waitFor();
+  await narrow.page.waitForFunction(()=>document.activeElement?.matches('#comm-solution-planner h2'));
+  await checkOverflow(narrow.page,'Deep-linked private planner 320px');
+
   await narrow.page.locator('[data-comm-solution-reset]').click();
   assert.equal(await narrow.page.locator('#comm-solution-form textarea[name="problem"]').inputValue(),'');
   assert.match(await narrow.page.locator('#comm-solution-output').innerText(),/Din privata samtalsplan visas här/);

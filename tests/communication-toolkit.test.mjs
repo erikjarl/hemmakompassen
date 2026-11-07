@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {COMMUNICATION_SOURCES,renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildSolutionPlan} from '../communication/toolkit.js';
+import {COMMUNICATION_SOURCES,renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildSolutionPlan,communicationSkillFromHash,openCommunicationSkill} from '../communication/toolkit.js';
 const app=readFileSync(new URL('../live-app.js',import.meta.url),'utf8');
 const builder=readFileSync(new URL('../scripts/build-static.mjs',import.meta.url),'utf8');
 
@@ -88,4 +88,23 @@ test('private solution planner is available to both roles with no storage or imp
  assert.match(app,/output\.textContent=plan/,'Preview uses textContent and cannot inject HTML');
  assert.match(app,/if\(e\.target\.id==='comm-solution-form'\)/);
  assert.match(app,/data-comm-solution-reset/);
+});
+
+test('private planner deep link is an allowlisted route that focuses its heading',()=>{
+ assert.equal(communicationSkillFromHash('#kommunikation/plan'),'plan');
+ assert.equal(communicationSkillFromHash('#kommunikation/unknown'),null);
+ assert.equal(communicationSkillFromHash('#kommunikation/plan?unsafe'),null);
+ const actions=[];
+ const heading={focus:opts=>actions.push(['focus',opts.preventScroll])};
+ const planner={querySelector:selector=>selector==='h2'?heading:null,scrollIntoView:opts=>actions.push(['scroll',opts.block])};
+ const root={querySelector:selector=>selector==='#comm-solution-planner'?planner:null};
+ assert.equal(openCommunicationSkill(root,'plan',{focus:true}),true);
+ assert.deepEqual(actions,[['focus',true],['scroll','nearest']]);
+ assert.equal(openCommunicationSkill({querySelector:()=>null},'plan',{focus:true}),false);
+ const html=renderCommunicationToolkit('parent');
+ assert.match(html,/id="comm-solution-planner"><h2 tabindex="-1"/);
+ assert.match(html,/href="#kommunikation\/plan"/);
+ assert.match(app,/href="#kommunikation\/plan">Förbered en privat samtalsplan/);
+ assert.match(app,/communicationSkillFromHash\(location\.hash\)/);
+ assert.match(app,/if\(location\.hash\.startsWith\('#kommunikation\/'\)\)return 'kommunikation'/);
 });
