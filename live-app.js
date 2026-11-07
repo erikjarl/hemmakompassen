@@ -1041,6 +1041,8 @@ function filterPrivateThemeReview(){
     const text=(row.querySelector('[data-private-theme-statement]')?.textContent||'').toLocaleLowerCase('sv');
     const show=(answer==='all'||row.dataset.privateThemeAnswer===answer)&&text.includes(search);
     row.hidden=!show;
+    // Author CSS may set display on list items and override the hidden UA rule.
+    row.style.display=show?'':'none';
     if(show)visible++;
   }
   const status=$('private-theme-review-count');
