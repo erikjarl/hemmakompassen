@@ -24,7 +24,7 @@ function harness(remote=[parent,teen],error=null){
     refresh:async()=>{actions.refreshed++;},
     showError:err=>{throw err;}
   };
-  vm.runInNewContext(methods+'\nthis.matches=sameInboxPair;this.check=recheckInboxPair;this.isBusy=()=>inboxPairCheckBusy;',context);
+  vm.runInNewContext(methods.replace('let inboxPairCheckBusy=false,inboxPairEpoch=null;',"let inboxPairCheckBusy=false,inboxPairEpoch='epoch-1';")+'\nthis.matches=sameInboxPair;this.check=recheckInboxPair;this.isBusy=()=>inboxPairCheckBusy;this.getEpoch=()=>inboxPairEpoch;',context);
   return {context,actions,
     setResponse:(data,err=null)=>{response={data,error:err};},
     setResponder:next=>{respond=next;},
@@ -57,7 +57,7 @@ const rePaired=harness();
 rePaired.setEpoch('epoch-2');
 assert.equal(await rePaired.context.check(),false,'Same two IDs with newer joined_at must invalidate the inbox');
 assert.equal(rePaired.actions.cleared,1);
-assert.equal(rePaired.context.inboxPairEpoch,null);
+assert.equal(rePaired.context.getEpoch(),null);
 
 const absent=harness([]);
 await absent.context.check();
