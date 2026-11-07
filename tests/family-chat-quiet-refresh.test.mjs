@@ -15,7 +15,7 @@ function harness(){
   let remote=[sample],failed=false;
   const counts={render:0,menu:0,read:0,unread:0};
   const state={
-    user:{id:'current'},members:[{},{}],sharedSession:5, familyChatRequest:0,
+    user:{id:'current'},members:[{},{}],sharedSession:5, familyChatRequest:0,inboxPairEpoch:'epoch-1',
     familyChatMessages:[sample],familyChatHasMore:false,familyChatError:'',
     familyChatStatus:'',familyChatDraft:'',familyChatLoading:false,familyChatLoadingOlder:false,
     familyChatUnread:1,familyChatUnreadError:false,familyChatCountRequest:0,
