@@ -761,7 +761,12 @@ try{
   assert.match(await retestScreen.page.locator('.pf-retest').innerText(),/de delas inte med din familjemedlem eller AI-medlaren/);
   await retestScreen.page.getByRole('button',{name:'Starta en ny privat testomgång'}).click();
   await retestScreen.page.getByRole('radio',{name:/Stämmer ganska bra/}).check();
-  await retestScreen.page.waitForFunction(()=>window.__HK_PRIVATE_RETEST_ANSWERS__===1);
+  await retestScreen.page.waitForTimeout(350);
+  const retestCheck=await retestScreen.page.evaluate(()=>({
+    saved:window.__HK_PRIVATE_RETEST_ANSWERS__??null,
+    text:document.querySelector('.pf-retest')?.textContent?.slice(0,450)??null
+  }));
+  assert.equal(retestCheck.saved,1,'Private answer must be saved: '+JSON.stringify(retestCheck));
   await retestScreen.page.getByText('Fråga 2 av 50').waitFor();
   assert.equal(await retestScreen.page.getByRole('heading',{name:'Våra profiler'}).count(),0,
     'Private retest does not share scores or create partner comparison');
