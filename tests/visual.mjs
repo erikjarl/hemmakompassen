@@ -1497,23 +1497,23 @@ try{
   await savedReview.page.locator('.swipe-private-review summary').click();
   assert.match(await savedReview.page.locator('.swipe-private-review').innerText(),/Ditt svar: Ja/);
   assert.equal(await savedReview.page.locator('.swipe-private-review [data-theme-review-index]').count(),1);
-  const search=savedReview.page.locator('#private-theme-review-search');
-  const filter=savedReview.page.locator('#private-theme-review-answer');
-  await search.fill('veckan');
+  const privateAnswerSearch=savedReview.page.locator('#private-theme-review-search');
+  const privateAnswerFilter=savedReview.page.locator('#private-theme-review-answer');
+  await privateAnswerSearch.fill('veckan');
   assert.equal(await savedReview.page.locator('.swipe-private-review [data-private-theme-answer]:visible').count(),1,
     'Private search finds its saved card text');
-  await search.fill('inget-kort-har-detta-ord');
+  await privateAnswerSearch.fill('inget-kort-har-detta-ord');
   assert.equal(await savedReview.page.locator('.swipe-private-review [data-private-theme-answer]:visible').count(),0,
     'Unknown search cannot create new private results');
   await savedReview.page.locator('#private-theme-review-empty:visible').waitFor();
   assert.match(await savedReview.page.locator('#private-theme-review-count').innerText(),/Visar 0 av 1/);
-  await search.fill('');
-  await filter.selectOption('no');
+  await privateAnswerSearch.fill('');
+  await privateAnswerFilter.selectOption('no');
   assert.equal(await savedReview.page.locator('.swipe-private-review [data-private-theme-answer]:visible').count(),0,
     'No-only filter hides the current yes answer');
-  await filter.selectOption('yes');
+  await privateAnswerFilter.selectOption('yes');
   assert.equal(await savedReview.page.locator('.swipe-private-review [data-private-theme-answer]:visible').count(),1);
-  await filter.selectOption('all');
+  await privateAnswerFilter.selectOption('all');
   await savedReview.page.locator('.swipe-private-review [data-theme-review-index="0"]').click();
   assert.match(await savedReview.page.locator('#swipe-card').innerText(),/Vad som varit roligt den senaste veckan/,
     'A saved theme answer can be opened directly without swiping past 100 cards');
