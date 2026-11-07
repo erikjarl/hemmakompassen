@@ -769,6 +769,15 @@ try{
   }));
   assert.equal(retestCheck.saved,1,'Private answer must be saved: '+JSON.stringify(retestCheck));
   await retestScreen.page.getByText('Fråga 2 av 50').waitFor();
+  const downloadPromise=retestScreen.page.waitForEvent('download');
+  await retestScreen.page.getByRole('button',{name:'Exportera min påbörjade omgång (JSON)'}).click();
+  const privateFile=await downloadPromise;
+  assert.match(privateFile.suggestedFilename(),/^hemmakompassen-ipip50-omtest-.*\.json$/);
+  retestScreen.page.once('dialog',dialog=>dialog.dismiss());
+  await retestScreen.page.getByRole('button',{name:'Radera påbörjad omgång'}).click();
+  await retestScreen.page.getByText('Fråga 2 av 50').waitFor();
+  assert.equal(await retestScreen.page.getByRole('button',{name:'Radera påbörjad omgång'}).count(),1,
+    'Dismissing the deletion confirmation retains the private draft');
   assert.equal(await retestScreen.page.getByRole('heading',{name:'Våra profiler'}).count(),0,
     'Private retest does not share scores or create partner comparison');
   await checkOverflow(retestScreen.page,'Private IPIP retest 390px');
