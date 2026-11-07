@@ -29,6 +29,10 @@ assert.match(html,/Ditt svar: Ja/);
 assert.match(html,/Ditt svar: Nej/);
 assert.match(html,/id="private-theme-review-search"/);
 assert.match(html,/id="private-theme-review-answer"/);
+assert.match(html,/id="private-theme-review-reset"/);
+assert.match(source,/if\(e\.target\.closest\('#private-theme-review-reset'\)\)/);
+assert.match(source,/filterPrivateThemeReview\(\);\s*search\?\.focus\(\)/,
+  'Reset updates the visible rows and restores focus');
 assert.match(html,/option value="yes">Bara ja/);
 assert.match(html,/option value="no">Bara nej/);
 assert.match(html,/id="private-theme-review-count"[^>]*aria-live="polite"/);

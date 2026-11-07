@@ -1507,6 +1507,14 @@ try{
     'Unknown search cannot create new private results');
   await savedReview.page.locator('#private-theme-review-empty:visible').waitFor();
   assert.match(await savedReview.page.locator('#private-theme-review-count').innerText(),/Visar 0 av 1/);
+  await privateAnswerFilter.selectOption('no');
+  await savedReview.page.getByRole('button',{name:'Rensa sökning och filter'}).click();
+  assert.equal(await privateAnswerSearch.inputValue(),'','Reset clears private text search');
+  assert.equal(await privateAnswerFilter.inputValue(),'all','Reset restores all-answer filter');
+  assert.equal(await savedReview.page.locator('.swipe-private-review [data-private-theme-answer]:visible').count(),1,
+    'Reset reveals own saved answers without changing the stored answer');
+  assert.equal(await privateAnswerSearch.evaluate(el=>document.activeElement===el),true,
+    'Reset returns keyboard focus to private search');
   await privateAnswerSearch.fill('');
   await privateAnswerFilter.selectOption('no');
   assert.equal(await savedReview.page.locator('.swipe-private-review [data-private-theme-answer]:visible').count(),0,

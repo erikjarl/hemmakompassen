@@ -1019,7 +1019,8 @@ function privateThemeAnswerReview(deck){
     '<div class="comm-fields"><label for="private-theme-review-search">Sök bland mina svar</label>'+
     '<input type="search" id="private-theme-review-search" maxlength="120" autocomplete="off" placeholder="Sök kort eller ämne">'+
     '<label for="private-theme-review-answer">Visa svar</label><select id="private-theme-review-answer">'+
-    '<option value="all">Alla svar</option><option value="yes">Bara ja</option><option value="no">Bara nej</option></select></div>'+
+    '<option value="all">Alla svar</option><option value="yes">Bara ja</option><option value="no">Bara nej</option></select>'+
+    '<button type="button" id="private-theme-review-reset" class="schyssta-secondary">Rensa sökning och filter</button></div>'+
     '<p id="private-theme-review-count" class="live-muted" role="status" aria-live="polite">Visar '+items.length+' av '+items.length+' sparade svar.</p>'+
     '<p id="private-theme-review-empty" class="live-muted" hidden>Inga sparade svar matchar sökningen. Ändra sökord eller filter.</p>'+
     '<ul class="swipe-match-list">'+
@@ -1734,7 +1735,17 @@ if(page()==='kommunikation'){
      return;
    }
  }
- if(page()==='kommunikation'&&e.target.closest('[data-comm-solution-reset]')){const form=$('comm-solution-form');form?.reset();const output=$('comm-solution-output');if(output)output.textContent='Din privata samtalsplan visas här.';$('comm-solution-problem')?.focus();return;}
+ if(e.target.closest('#private-theme-review-reset')){
+  const root=$('swipe-private-review');
+  if(!root)return;
+  const search=$('private-theme-review-search'),answer=$('private-theme-review-answer');
+  if(search)search.value='';
+  if(answer)answer.value='all';
+  filterPrivateThemeReview();
+  search?.focus();
+  return;
+}
+if(page()==='kommunikation'&&e.target.closest('[data-comm-solution-reset]')){const form=$('comm-solution-form');form?.reset();const output=$('comm-solution-output');if(output)output.textContent='Din privata samtalsplan visas här.';$('comm-solution-problem')?.focus();return;}
 if(page()==='nvc'&&e.target.closest('[data-comm-reset]')){const form=$('comm-nvc-form');form?.reset();const output=$('comm-nvc-output');if(output)output.textContent='Din formulering visas här när du är redo.';$('comm-observation')?.focus();return;}
 if(e.target.closest('#live-skip-to-main')){e.preventDefault();$('live-app')?.focus({preventScroll:true});return;}
 const aiRetry=e.target.closest('[data-ai-analysis-retry]');
