@@ -7,7 +7,7 @@ import {createPersonalityExperience,buildOwnIPIP50Export} from '../personality/i
 const itemIds=IPIP50_V1.items.map(item=>item.id);
 function fakeClient(initial=new Map()){
   const values=new Map(initial),writes=[];
-  let user={id:'teen-id'},shared=false,partner=null;
+  let user={id:'teen-id'},shared=false,partner=null,writeMode='ok',readFails=false;
   const db={
     auth:{async getUser(){return {data:{user},error:null};}},
     from(name){
@@ -16,17 +16,17 @@ function fakeClient(initial=new Map()){
         async upsert(row,options){assert.equal(row.user_id,user.id);writes.push({row,options});values.set(row.question_id,row.answer.value);return {error:null};}
       };
       if(name==='personality_share_preferences')return {
-        select(){return {eq(){return {eq(){return {async maybeSingle(){return {data:shared?{share_enabled:true}:null,error:null};}}}}}};}
+        select(){return {eq(){return {eq(){return {async maybeSingle(){return readFails?{data:null,error:{message:'read failed'}}:{data:shared?{share_enabled:true}:null,error:null};}}}}}};}
       };
       throw Error('Unexpected table '+name);
     },
     async rpc(name,args){
-      if(name==='set_my_ipip50_share'){shared=args.p_share;return {data:shared,error:null};}
+      if(name==='set_my_ipip50_share'){if(writeMode==='no-write-error')return {data:null,error:{message:'rejected'}};shared=args.p_share;return writeMode==='lost-response'?{data:null,error:{message:'response lost'}}:{data:shared,error:null};}
       if(name==='my_ipip50_shared_profiles')return {data:partner,error:null};
       throw Error(name);
     }
   };
-  return {db,values,writes,setUser:u=>user=u,setPartner:p=>partner=p};
+  return {db,values,writes,setUser:u=>user=u,setPartner:p=>partner=p,setWriteMode:m=>writeMode=m,setReadFails:v=>readFails=v};
 }
 const btn=action=>({closest:selector=>selector==='[data-pf-action]'?{dataset:{pfAction:action}}:null});
 const radio=(id,val)=>({matches:sel=>sel==='input[data-pf-answer]',dataset:{pfAnswer:id},value:String(val)});
@@ -119,6 +119,50 @@ test('two consents allow summary comparison and consent withdrawal hides it',asy
   html=ui.render({isPaired:true,viewerRole:'teen'});
   assert.doesNotMatch(html,/Våra profiler/);
   assert.doesNotMatch(html,/Att förstå era likheter och olikheter/);
+});
+
+test('lost response after consent withdrawal is reconciled against server state',async()=>{
+  const mock=fakeClient(new Map(itemIds.map(id=>[id,3])));
+  const sums=Object.fromEntries(IPIP50_V1.factors.map(f=>[f.id,30]));
+  mock.setPartner({instrument_id:IPIP50_V1.id,viewer_role:'teen',profiles:[
+    {role:'parent',scores:sums},{role:'teen',scores:sums}
+  ]});
+  const ui=createPersonalityExperience({db:mock.db,onRender:()=>{},isSharingEnabled:true});
+  ui.reset('teen-id');await ui.load('teen-id');
+  await ui.handleClick(btn('share'),{isPaired:true});
+  assert.match(ui.render({isPaired:true}),/Våra profiler/);
+  mock.setWriteMode('lost-response');
+  await ui.handleClick(btn('withdraw'),{isPaired:true});
+  const html=ui.render({isPaired:true});
+  assert.doesNotMatch(html,/Våra profiler/);
+  assert.match(html,/återkallad trots ett kommunikationsfel/);
+  assert.match(html,/Jag vill dela mina fem skalpoäng/);
+});
+
+test('failed revoke is not reported successful; uncertain status blocks controls until rechecked',async()=>{
+  const mock=fakeClient(new Map(itemIds.map(id=>[id,3])));
+  const sums=Object.fromEntries(IPIP50_V1.factors.map(f=>[f.id,30]));
+  mock.setPartner({instrument_id:IPIP50_V1.id,viewer_role:'teen',profiles:[
+    {role:'parent',scores:sums},{role:'teen',scores:sums}
+  ]});
+  const ui=createPersonalityExperience({db:mock.db,onRender:()=>{},isSharingEnabled:true});
+  ui.reset('teen-id');await ui.load('teen-id');
+  await ui.handleClick(btn('share'),{isPaired:true});
+  mock.setWriteMode('no-write-error');
+  await ui.handleClick(btn('withdraw'),{isPaired:true});
+  assert.match(ui.render({isPaired:true}),/fortfarande är aktiv/);
+  mock.setWriteMode('lost-response');
+  mock.setReadFails(true);
+  await ui.handleClick(btn('withdraw'),{isPaired:true});
+  const uncertain=ui.render({isPaired:true});
+  assert.doesNotMatch(uncertain,/Våra profiler/);
+  assert.match(uncertain,/data-pf-action="verify-share"/);
+  assert.doesNotMatch(uncertain,/data-pf-action="withdraw"/);
+  assert.match(uncertain,/kan fortfarande vara delad/);
+  mock.setReadFails(false);
+  await ui.handleClick(btn('verify-share'),{isPaired:true});
+  assert.match(ui.render({isPaired:true}),/data-pf-action="withdraw"/);
+  assert.match(ui.render({isPaired:true}),/Våra profiler/);
 });
 
 test('malformed RPC payload is always rejected',async()=>{
