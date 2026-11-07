@@ -242,7 +242,7 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false,
     else{partnerError='';paired=validatedPartnerPayload(result?.data);}
   }
   async function refreshShared(){
-    if(!viewer||!loaded||!isSharingEnabled||!shareEnabled||active||saving||shareBusy)return;
+    if(!viewer||!loaded||!isSharingEnabled||active||saving||shareBusy)return;
     const id=viewer,token=sequence,request=++consentRequest;
     const before=JSON.stringify([shareEnabled,shareVerified,paired,shareError,partnerError]);
     let status;
