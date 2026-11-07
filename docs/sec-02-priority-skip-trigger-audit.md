@@ -21,4 +21,7 @@ Detta är ett **databastriggertest**, inte ett fullständigt överhoppsflöde f�
 
 Identiteterna var simulerade via PostgreSQL `request.jwt.claims`, inte signerade Supabase Auth-tokens. Även tester av omparning, andra aktiva familjer och verkligt UI återstår.
 
+
+Ytterligare en negativ kontroll kördes i en **read-only** transaktion: när ett befintligt föräldrakonto simulerades med rollen `authenticated` avvisade `set_understanding_card_state('general-02',null,true)` med behörighetsfel. **PASS**; reproducerbar [SQL](../supabase/tests/sec02_understanding_skip_parent_denied_readonly.sql). Detta testar inte tonåringens positiva skrivväg eller signerad Auth.
+
 **Beslut:** SW-03 förblir `Pågår`. `enableSharedPriorities:false` ändras inte. Verifiera separat det befintliga B-kortsflödet via `set_understanding_card_state`, signerad Auth och UI med isolerad data utan att ändra äldre svar.
