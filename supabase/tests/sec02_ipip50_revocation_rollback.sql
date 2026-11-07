@@ -138,6 +138,48 @@ END $audit$;
 RESET ROLE;
 ROLLBACK TO SAVEPOINT before_revocation;
 
+-- Exercise the real consent-change RPC, not just a simulated direct UPDATE.
+-- False deletes the caller's own consent row, true recreates current-epoch
+-- consent after validating all 50 previously saved items.
+SET LOCAL ROLE authenticated;
+DO $audit$
+DECLARE role_label text; caller text; viewer text; consent_result boolean; payload jsonb;
+BEGIN
+ FOREACH role_label IN ARRAY array['parent_id','teen_id'] LOOP
+   caller:=current_setting('sec02.'||role_label);
+   PERFORM set_config('request.jwt.claims',
+     pg_catalog.json_build_object('sub',caller,'role','authenticated')::text,true);
+   SELECT public.set_my_ipip50_share(false) INTO consent_result;
+   IF consent_result IS DISTINCT FROM FALSE THEN
+     RAISE EXCEPTION 'FAIL: % revoke RPC returned unexpected value',role_label;
+   END IF;
+   FOREACH viewer IN ARRAY array[current_setting('sec02.parent_id'),current_setting('sec02.teen_id')] LOOP
+     PERFORM set_config('request.jwt.claims',
+       pg_catalog.json_build_object('sub',viewer,'role','authenticated')::text,true);
+     SELECT public.my_ipip50_shared_profiles() INTO payload;
+     IF payload IS NOT NULL THEN
+       RAISE EXCEPTION 'FAIL: shared data still visible after % RPC revoke',role_label;
+     END IF;
+   END LOOP;
+   PERFORM set_config('request.jwt.claims',
+     pg_catalog.json_build_object('sub',caller,'role','authenticated')::text,true);
+   SELECT public.set_my_ipip50_share(true) INTO consent_result;
+   IF consent_result IS DISTINCT FROM TRUE THEN
+     RAISE EXCEPTION 'FAIL: % re-consent RPC did not succeed',role_label;
+   END IF;
+   FOREACH viewer IN ARRAY array[current_setting('sec02.parent_id'),current_setting('sec02.teen_id')] LOOP
+     PERFORM set_config('request.jwt.claims',
+       pg_catalog.json_build_object('sub',viewer,'role','authenticated')::text,true);
+     SELECT public.my_ipip50_shared_profiles() INTO payload;
+     IF payload IS NULL OR pg_catalog.jsonb_array_length(payload->'profiles')<>2 THEN
+       RAISE EXCEPTION 'FAIL: shared data not restored after % RPC re-consent',role_label;
+     END IF;
+   END LOOP;
+ END LOOP;
+END $audit$;
+RESET ROLE;
+ROLLBACK TO SAVEPOINT before_revocation;
+
 -- The nested rollbacks restore original consent in the *current transaction*.
 DO $audit$
 DECLARE n integer;
@@ -152,5 +194,5 @@ BEGIN
     RAISE EXCEPTION 'Existing item-answer count changed';
  END IF;
 END $audit$;
-SELECT 'PASS: 2 positive profiles (five sums only), 2 revocations each hidden from both, old epoch denied; rollback restores consent' AS audit;
+SELECT 'PASS: 2 positive profiles (five sums only), 2 revocations each hidden from both, old epoch denied; 2 owner RPC revoke/re-consent cycles; rollback restores consent' AS audit;
 ROLLBACK;
