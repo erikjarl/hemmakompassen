@@ -62,6 +62,7 @@ declare
   v_parent_joined timestamptz;
   v_teen_joined timestamptz;
   v_event_id uuid;
+  v_deck_max integer;
   v_day date := (pg_catalog.now() at time zone 'UTC')::date;
 begin
   if (select auth.uid()) is null or p_actor is distinct from (select auth.uid())
@@ -85,15 +86,51 @@ begin
     if p_deck_id is null or not (p_deck_id = any(array[
       'general','samtal','aktiviteter','regler','uppskattning','aterhamtning','forandring'
     ]::text[])) then return; end if;
-    if not exists (
-      select 1 from public.shared_swipe_matches(p_deck_id) s
-      where s.deck_id=p_deck_id and s.card_id=p_card_id and s.answer is true
-    ) then return; end if;
+    -- Check the actual base rows in this VOLATILE trigger. The existing
+    -- STABLE shared_swipe_matches RPC does not see changes made by the
+    -- statement that is currently firing this AFTER ROW trigger.
+    if p_deck_id='general' then
+      if p_card_id is null or not (p_card_id=any(array[
+        'general-01','general-08','general-10','general-11','general-13',
+        'general-16','general-17','general-20','general-21','general-22',
+        'general-23','general-24','general-25','general-26','general-28',
+        'general-29','general-30','general-31','general-32','general-33','general-34'
+      ]::text[])) then return; end if;
+    else
+      v_deck_max:=case p_deck_id
+        when 'samtal' then 104 when 'aktiviteter' then 104
+        when 'regler' then 12 when 'uppskattning' then 8
+        when 'aterhamtning' then 8 when 'forandring' then 8
+        else 0 end;
+      if not exists (
+        select 1 from pg_catalog.generate_series(1,v_deck_max) as i
+        where p_card_id=p_deck_id||'-'||
+          case when i<10 then '0' else '' end||i::text
+      ) then return; end if;
+    end if;
+    if (select count(*)
+        from public.swipe_answers a
+        where a.user_id in (v_parent,v_teen) and a.deck_id=p_deck_id
+          and a.card_id=p_card_id and a.answer is true)<>2 then return; end if;
   elsif p_kind='teen_shared_understanding' then
     if p_actor<>v_teen or p_recipient<>v_parent or p_deck_id<>'general' then return; end if;
+    if p_card_id is null or not (p_card_id=any(array[
+      'general-02','general-03','general-04','general-05','general-06',
+      'general-07','general-09','general-12','general-14','general-15',
+      'general-18','general-19','general-27'
+    ]::text[])) then return; end if;
     if not exists (
-      select 1 from public.shared_understanding_cards() s
-      where s.deck_id=p_deck_id and s.card_id=p_card_id
+      select 1 from public.understanding_card_shares s
+      join public.swipe_answers a on a.user_id=s.user_id
+        and a.deck_id=s.deck_id and a.card_id=s.card_id
+        and a.answer is true
+      where s.user_id=v_teen and s.family_id=v_family
+        and s.deck_id=p_deck_id and s.card_id=p_card_id
+        and not exists (
+          select 1 from public.swipe_skips skipped
+          where skipped.user_id=s.user_id and skipped.deck_id=s.deck_id
+            and skipped.card_id=s.card_id
+        )
     ) then return; end if;
   else
     return;
