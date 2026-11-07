@@ -614,7 +614,7 @@ async function fetchSwipeMatches(deckId='general',{quiet=false}={}){
   if(!deck)return;
   const viewer=user.id,session=sharedSession,request=++sharedRequest;
   const quietRefresh=quiet&&sharedDeckId===deckId&&!sharedLoading&&!sharedError;
-  const previousResults=quietRefresh?JSON.stringify([sharedMatches,sharedPriorities]):null;
+  const previousResults=quietRefresh?JSON.stringify([sharedMatches,sharedPriorities,sharedPriorityError]):null;
   sharedDeckId=deckId;
   if(!quietRefresh){sharedMatches=[];sharedPriorities=[];sharedLoading=true;sharedError='';sharedPriorityError='';
     if(page()==='swipe'&&!swipeBusy)render();}
@@ -657,7 +657,7 @@ async function fetchSwipeMatches(deckId='general',{quiet=false}={}){
   }finally{
     if(session===sharedSession&&request===sharedRequest&&user?.id===viewer&&sharedDeckId===deckId){
       sharedLoading=false;
-      if(page()==='swipe'&&!swipeBusy&&(!quietRefresh||sharedError||previousResults!==JSON.stringify([sharedMatches,sharedPriorities])))render();
+      if(page()==='swipe'&&!swipeBusy&&(!quietRefresh||sharedError||previousResults!==JSON.stringify([sharedMatches,sharedPriorities,sharedPriorityError])))render();
     }
   }
 }
