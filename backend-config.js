@@ -23,6 +23,8 @@ window.HEMMAKOMPASSEN_BACKEND = Object.freeze({
   // IPIP-50: all individual item answers stay self-only. Shared FIVE scores
   // require exact current pair + both opt-ins in verified server-side RPCs.
   enablePersonalitySharing: true,
+  // New self-only IPIP retests use separate owner-RLS tables, never partner/AI sharing.
+  enablePrivateRetests: true,
   // Internal AI mediator: owner-scoped D1 history, not a clinical service.
   enableAiMediator: true,
   enableAiHistory: true,
