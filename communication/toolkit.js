@@ -21,9 +21,18 @@ const COMM_SKILL_IDS={
 // Only fixed editorial exercise IDs may enter a route or a selector.
 export function communicationSkillFromHash(hash=''){
  const match=/^#kommunikation\/([a-z]+)$/.exec(hash);
- return match&&Object.values(COMM_SKILL_IDS).includes(match[1])?match[1]:null;
+ return match&&(match[1]==='plan'||Object.values(COMM_SKILL_IDS).includes(match[1]))?match[1]:null;
 }
 export function openCommunicationSkill(root,skill,{focus=false}={}){
+ if(skill==='plan'){
+  const planner=root?.querySelector('#comm-solution-planner');
+  if(!planner)return false;
+  if(focus){
+    planner.querySelector('h2')?.focus({preventScroll:true});
+    planner.scrollIntoView({block:'nearest',behavior:'auto'});
+  }
+  return true;
+ }
  if(!Object.values(COMM_SKILL_IDS).includes(skill))return false;
  const detail=root.querySelector('.comm-exercise[data-comm-skill="'+skill+'"]');
  if(!detail)return false;
@@ -109,7 +118,7 @@ export function renderCommunicationToolkit(role='teen'){
   '<div class="comm-feature-grid"><section class="live-panel comm-feature"><p class="comm-kicker">För båda</p><h2>Nonviolent Communication (NVC)</h2><p>Observation, känsla, behov och önskemål. Träna på ett tydligt jag-budskap utan anklagelser.</p><a class="live-button" href="#nvc">Bygg ett jag-budskap</a></section>'+
   (parent?'<section class="live-panel comm-feature"><p class="comm-kicker">För föräldern</p><h2>Motiverande samtal (MI)</h2><p>Öppna frågor, reflektioner, bekräftelse och sammanfattning. Lyssna utan att försöka styra fram ett visst svar.</p><a class="live-button" href="#mi-foralder">Öppna MI-övningarna</a></section>':'<section class="live-panel comm-feature"><p class="comm-kicker">För tonåringen</p><h2>Din röst är viktig</h2><p>Du får be om att bli lyssnad på, föreslå en annan tid eller tacka nej. Det är inte ditt ansvar att lösa alla konflikter.</p><a href="#nvc">Träna på att uttrycka dig</a></section>')+
   '</div>'+renderCommunicationSafety(role)+'<section class="live-panel comm-situations" aria-labelledby="comm-situations-title"><h2 id="comm-situations-title">Vad händer just nu?</h2><p>Välj en situation. Den passande övningen öppnas direkt här på sidan. Inga svar skickas eller sparas.</p><div class="comm-situation-grid">'+situations.map(([title,skill,desc])=>'<button type="button" class="comm-situation" data-comm-open="'+e(skill)+'"><strong>'+e(title)+'</strong><span>'+e(desc)+'</span></button>').join('')+'</div></section><section class="comm-section"><h2>När samtalet fastnar</h2><p class="live-muted">Öppna en övning och prova en enda sak. Exemplen är förslag, inte repliker någon måste säga.</p><div class="comm-exercises">'+exercises.join('')+'</div></section>'+
-  '<section class="live-panel" id="comm-solution-planner"><h2>Förbered ett förslag – utan att bestämma åt den andra</h2><p>Skriv din egen bild, en öppen fråga och ett förslag som ni kan diskutera. Din text <strong>sparas inte</strong>, skickas inte till någon och används inte av AI. Den andra personen har inte godkänt något bara för att du fyller i formuläret.</p>'+
+  '<section class="live-panel" id="comm-solution-planner"><h2 tabindex="-1">Förbered ett förslag – utan att bestämma åt den andra</h2><p>Skriv din egen bild, en öppen fråga och ett förslag som ni kan diskutera. Din text <strong>sparas inte</strong>, skickas inte till någon och används inte av AI. Den andra personen har inte godkänt något bara för att du fyller i formuläret.</p>'+
   '<form id="comm-solution-form"><div class="comm-fields">'+[
     ['problem','1. Vad vill jag prata om?','Beskriv en konkret situation, utan att tolka den andras motiv.'],
     ['question','2. Vad vill jag förstå?','Formulera en öppen fråga om den andras perspektiv.'],
