@@ -13,7 +13,7 @@ function harness(){
   let rpc=async()=>({data:messageId,error:null});
   let renders=0,refreshes=0,ids=0;
   const state={
-    user:{id:'teen'},members:[{role:'parent'},{role:'teen'}],sharedSession:10,
+    user:{id:'teen'},members:[{role:'parent'},{role:'teen'}],inboxPairEpoch:'epoch-1',sharedSession:10,
     familyChatSending:false,familyChatDraft:'Hej!',familyChatRequestKey:null,
     familyChatStatus:'',SCHYSSTA_UUID:/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
     crypto:{randomUUID:()=>{ids++;return '81000000-0000-4000-8000-'+String(ids).padStart(12,'0');}},

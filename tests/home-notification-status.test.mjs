@@ -10,7 +10,7 @@ assert.ok(fn,'Unread-count fetch is directly testable');
 function harness(initial){
   let response=initial,renderCount=0;
   const state={
-    user:{id:'viewer'},members:[{user_id:'viewer'},{user_id:'other'}],sharedSession:3,
+    user:{id:'viewer'},members:[{user_id:'viewer'},{user_id:'other'}],sharedSession:3,inboxPairEpoch:'epoch-1',
     familyChatUnread:4,familyChatUnreadError:false,familyChatCountRequest:0,
     db:{rpc:async()=>response},page:()=>'hem',render:()=>renderCount++,menu:()=>{}
   };
