@@ -447,13 +447,27 @@ function explainImportancePendingSwipe(){
  const status=$('swipe-save-status');
  if(status)status.textContent=IMPORTANCE_WAIT_MESSAGE;
 }
+// A network error may hide an ACK for a successfully committed private rating.
+// Read back only this user's own rating before telling them it was not saved.
+async function reconcileOwnImportanceValue(row){
+  try{
+    const {data,error}=await db.from('swipe_importance')
+      .select('deck_id,card_id,importance')
+      .eq('user_id',row.user_id).eq('deck_id',row.deck_id).eq('card_id',row.card_id)
+      .maybeSingle();
+    if(error||data===undefined)return 'unknown';
+    if(data===null)return 'different';
+    if(!data||data.deck_id!==row.deck_id||data.card_id!==row.card_id||![-1,0,1].includes(data.importance))return 'unknown';
+    return data.importance===row.importance?'confirmed':'different';
+  }catch{return 'unknown';}
+}
 async function saveImportance(deckId,cardId,value,viewer,session){
   if(!importanceAvailable||user?.id!==viewer||sharedSession!==session||!validImportanceCard(deckId,cardId)||![-1,0,1].includes(value))return;
   const key=importanceKey(deckId,cardId);
   importancePending.set(key,{deckId,cardId,value,viewer,session});
   if(importanceSaving.has(key))return;
   importanceSaving.add(key);
-  let saveFailed=false;
+  let saveFailure='';
   while(importancePending.has(key)){
     const next=importancePending.get(key);importancePending.delete(key);
     if(user?.id!==next.viewer||sharedSession!==next.session)break;
@@ -463,27 +477,39 @@ async function saveImportance(deckId,cardId,value,viewer,session){
     try{({error}=await db.from('swipe_importance').upsert(row,{onConflict:'user_id,deck_id,card_id'}));}
     catch(e){error=e;}
     if(user?.id!==next.viewer||sharedSession!==next.session)break;
-    if(error){
-      saveFailed=true;
-      importancePending.delete(key);
+    const reconciliation=error?await reconcileOwnImportanceValue(row):'confirmed';
+    if(user?.id!==next.viewer||sharedSession!==next.session)break;
+    if(reconciliation!=='confirmed'){
+      // If the user adjusted the slider again while the write was in flight,
+      // save the newer choice rather than discarding that pending intention.
+      if(importancePending.has(key))continue;
+      saveFailure=reconciliation;
       const input=document.querySelector('[data-importance]');
-      if(input&&input.dataset.deckId===next.deckId&&input.dataset.cardId===next.cardId){const saved=swipeImportance.get(key)??0;input.value=String(saved);input.setAttribute('aria-valuetext',importanceValueText(saved));}
-      if(status)status.textContent='Viktigheten kunde inte sparas. Kortet ligger kvar så att du kan försöka igen.';
+      if(input&&input.dataset.deckId===next.deckId&&input.dataset.cardId===next.cardId){
+        const saved=swipeImportance.get(key)??0;
+        input.value=String(saved);input.setAttribute('aria-valuetext',importanceValueText(saved));
+      }
+      if(status)status.textContent=reconciliation==='unknown'
+        ?'Det går inte att kontrollera om viktigheten sparades. Reglaget visar senast bekräftat värde. Uppdatera sidan för att kontrollera servervärdet, eller välj igen.'
+        :'Viktigheten kunde inte bekräftas som sparad. Kortet ligger kvar så att du kan försöka igen.';
       break;
     }
+    saveFailure='';
     swipeImportance.set(key,next.value);
     if(next.value!==1&&priorityShares.delete(key)&&sharedPrioritiesEnabled)await fetchSwipeMatches(next.deckId,{quiet:true});
-    if(status)status.textContent='Viktighet sparad privat.';
+    if(status&&!importancePending.has(key))status.textContent='Viktighet sparad privat.';
   }
   importanceSaving.delete(key);
-  // A swipe click deliberately paused for this pending save. Restore a useful
-  // completion/failure message when the LAST outstanding importance write ends.
+  // A swipe click deliberately paused for this pending save. Restore useful
+  // feedback only when the last outstanding importance write ends.
   if(user?.id===viewer&&sharedSession===session&&importanceSaving.size===0){
     const swipeStatus=$('swipe-save-status');
     if(swipeStatus?.textContent===IMPORTANCE_WAIT_MESSAGE)
-      swipeStatus.textContent=saveFailed
-        ?'Viktigheten kunde inte sparas. Du kan justera reglaget och försöka igen, eller välja Ja/Nej.'
-        :'Viktigheten är sparad. Nu kan du välja Ja eller Nej.';
+      swipeStatus.textContent=saveFailure==='unknown'
+        ?'Det går inte att kontrollera om viktigheten sparades. Uppdatera sidan eller välj ett nytt värde innan du fortsätter.'
+        :saveFailure
+          ?'Viktigheten kunde inte bekräftas som sparad. Justera reglaget och försök igen, eller välj Ja/Nej.'
+          :'Viktigheten är sparad. Nu kan du välja Ja eller Nej.';
   }
 }
 
