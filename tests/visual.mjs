@@ -945,8 +945,230 @@ async function verifyCommunicationForms(){
   console.log('FUN-06: '+records.length+' communication form/role cases passed in synthetic Chromium.');
 }
 
-async function freshContext(options,{authenticated=false,paired=false,role="parent",unlocked=false,unlockUnavailable=false,priorityUnavailable=false,priorityFeature=true,privateImportance=false,importanceReadFailure=false,preansweredGeneral=false,preansweredSkipped=false,emptySchyssta=false,homeUnreadFailure=false,personalityComplete=false,personalitySharing=false,personalityPartnerShared=false,privateRetests=false,aiMediator=false,aiAnalyses=false,activityNotifications=false}={}){
+// FUN-03: both browser roles share one SYNTHETIC in-memory pair fixture.
+// This exercises the real DOM and frontend workflow across two independent
+// Chromium contexts. No Supabase credentials, production replies or live users.
+function makeTwoRoleFamilyFixture(){
+  const messages=[],tokens=new Map(),rules=[],notices=[],calls=[];
+  let failedSendAcknowledgement=false;
+  const other=role=>role==='parent'?'teen':'parent';
+  const ok=data=>({data,error:null});
+  const createdAt=n=>'2026-11-01T12:'+String(Math.floor(n/50)).padStart(2,'0')+':'+String(n%50).padStart(2,'0')+'Z';
+  function rpc(role,name,args={}){
+    calls.push({role,name,args});
+    if(name==='my_family_messages'){
+      let visible=messages.map(m=>({
+        message_id:m.id,body:m.body,sent_by_me:m.sender===role,
+        created_at:m.created_at,read_at:m.read_at
+      })).sort((a,b)=>b.created_at.localeCompare(a.created_at)||b.message_id.localeCompare(a.message_id));
+      if(args?.p_before_created_at&&args?.p_before_id)
+        visible=visible.filter(m=>m.created_at<args.p_before_created_at||
+          (m.created_at===args.p_before_created_at&&m.message_id<args.p_before_id));
+      return ok(visible.slice(0,50));
+    }
+    if(name==='my_family_unread_message_count')
+      return ok(messages.filter(m=>m.sender!==role&&m.read_at===null).length);
+    if(name==='send_family_message'){
+      const body=String(args.p_body||''),token=String(args.p_request_key||'');
+      if(!body.trim()||!token)return {data:null,error:{message:'invalid synthetic message'}};
+      const key=role+':'+token,existing=tokens.get(key);
+      if(existing)return ok(existing.id===undefined?null:existing.id);
+      const seq=messages.length+1;
+      const row={id:'71000000-0000-4000-8000-'+String(200+seq).padStart(12,'0'),
+        body,sender:role,created_at:createdAt(seq),read_at:null};
+      tokens.set(key,row);messages.push(row);
+      if(failedSendAcknowledgement){
+        failedSendAcknowledgement=false;
+        return {data:null,error:{message:'synthetic response lost after write'}};
+      }
+      return ok(row.id);
+    }
+    if(name==='mark_family_messages_read'){
+      const rows=messages.filter(m=>m.sender!==role&&m.read_at===null);
+      for(const m of rows)m.read_at='2026-11-01T13:00:00Z';
+      return ok(rows.length);
+    }
+    if(name==='shared_schyssta_rule_suggestions'||name==='my_schyssta_rules'||
+       name==='my_schyssta_replacement_links'||name==='my_schyssta_rule_history')return ok([]);
+    if(name==='my_manual_schyssta_rules'){
+      return ok(rules.map(r=>({
+        agreement_id:r.id,body:r.body,status:r.status,agreement_version:1,
+        proposed_by_me:r.proposer===role,own_decision:r.decisions[role],
+        parent_decision:r.decisions.parent,teen_decision:r.decisions.teen,
+        created_at:r.created_at
+      })));
+    }
+    if(name==='my_schyssta_notifications')
+      return ok(notices.filter(n=>n.recipient===role).map(({recipient,...n})=>({...n})));
+    if(name==='propose_manual_schyssta_rule'){
+      if(!String(args.p_body||'').trim()||!args.p_request_key)
+        return {data:null,error:{message:'invalid proposal'}};
+      const existing=rules.find(r=>r.proposer===role&&r.token===args.p_request_key);
+      if(existing)return ok(existing.id);
+      const seq=rules.length+1,id='30000000-0000-4000-8000-'+String(200+seq).padStart(12,'0'),
+        created_at=createdAt(seq+10);
+      rules.push({id,body:args.p_body,proposer:role,token:args.p_request_key,
+        status:'proposed',created_at,decisions:{parent:null,teen:null}});
+      notices.push({notification_id:'40000000-0000-4000-8000-'+String(200+seq).padStart(12,'0'),
+        agreement_id:id,kind:'rule_proposed',body:args.p_body,
+        read_at:null,created_at,recipient:other(role)});
+      return ok(id);
+    }
+    if(name==='set_schyssta_rule_decision'){
+      const row=rules.find(r=>r.id===args.p_agreement_id);
+      if(!row)return {data:null,error:{message:'missing synthetic rule'}};
+      row.decisions[role]=args.p_approved===true;
+      row.status=row.decisions.parent===true&&row.decisions.teen===true?'accepted'
+        :row.decisions.parent===false||row.decisions.teen===false?'rejected':'proposed';
+      return ok(null);
+    }
+    if(name==='mark_schyssta_notification_read'){
+      const notice=notices.find(n=>n.recipient===role&&n.notification_id===args.p_notification_id);
+      if(!notice)return {data:null,error:{message:'unknown synthetic notice'}};
+      notice.read_at='2026-11-01T13:01:00Z';return ok(null);
+    }
+    throw new Error('Unexpected linked pair RPC: '+name);
+  }
+  return {rpc,messages,rules,notices,calls,
+    loseNextSendAcknowledgement(){failedSendAcknowledgement=true;}};
+}
+const FUN03_LINKED_RPCS=Object.freeze([
+  'my_family_messages','my_family_unread_message_count','send_family_message','mark_family_messages_read',
+  'shared_schyssta_rule_suggestions','my_schyssta_rules','my_manual_schyssta_rules',
+  'my_schyssta_notifications','my_schyssta_replacement_links','my_schyssta_rule_history',
+  'propose_manual_schyssta_rule','set_schyssta_rule_decision','mark_schyssta_notification_read'
+]);
+
+async function verifyPairedTwoRoleExchange(){
+  const fixture=makeTwoRoleFamilyFixture();
+  const options={viewport:{width:390,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true};
+  const parent=await freshContext(options,{authenticated:true,paired:true,role:'parent',pairFixture:fixture});
+  const teen=await freshContext({...options,viewport:{width:320,height:700}},
+    {authenticated:true,paired:true,role:'teen',pairFixture:fixture});
+  const record=[];
+  try{
+    await Promise.all([
+      parent.page.goto(base+'#inkorg',{waitUntil:'load'}),
+      teen.page.goto(base+'#inkorg',{waitUntil:'load'})
+    ]);
+    await Promise.all([
+      parent.page.locator('#family-chat-body').waitFor(),
+      teen.page.locator('#family-chat-body').waitFor()
+    ]);
+    assert.equal(await teen.page.locator('.family-chat-bubble').count(),0,
+      'FUN-03: synthetic shared pair begins without an invented conversation');
+    assert.equal(await parent.page.locator('.family-chat-bubble').count(),0);
+
+    // Server saved the first send but lost its acknowledgement. Retrying with
+    // the same composer text and idempotency key must not duplicate messages.
+    fixture.loseNextSendAcknowledgement();
+    await parent.page.locator('#family-chat-body').fill('Kan vi bestämma tid för en promenad?');
+    await parent.page.getByRole('button',{name:'Skicka meddelande'}).click();
+    await parent.page.getByText(/Vi kunde inte bekräfta om meddelandet skickades/).waitFor();
+    assert.equal(fixture.messages.length,1,'Unacknowledged write exists exactly once in shared fixture');
+    assert.equal(await parent.page.locator('#family-chat-body').inputValue(),
+      'Kan vi bestämma tid för en promenad?','Uncertain send retains editable draft');
+    await parent.page.getByRole('button',{name:'Skicka meddelande'}).click();
+    await parent.page.locator('.family-chat-mine').filter({hasText:'Kan vi bestämma tid för en promenad?'}).waitFor();
+    assert.equal(fixture.messages.length,1,'Retry reuses idempotency key and never duplicates message');
+    record.push({case:'lost-acknowledgement-retry',passed:true});
+
+    await teen.page.locator('[data-family-chat-refresh]').click();
+    await teen.page.locator('.family-chat-theirs').filter({hasText:'Kan vi bestämma tid för en promenad?'}).waitFor();
+    assert.equal(await teen.page.locator('.family-chat-mine').count(),0);
+    assert.equal(await teen.page.locator('[data-family-chat-mark-all-read]').count(),1,
+      'Teen must explicitly mark received message as read');
+    assert.equal(fixture.messages[0].read_at,null,'Viewing does not mark read');
+    await teen.page.locator('[data-family-chat-mark-all-read]').click();
+    await teen.page.getByText('Alla meddelanden har markerats som lästa.').waitFor();
+    assert.ok(fixture.messages[0].read_at,'A deliberate teen action marks the shared fixture message read');
+    await parent.page.locator('[data-family-chat-refresh]').click();
+    await parent.page.locator('.family-chat-mine .family-chat-receipt').getByText('Läst').waitFor();
+    record.push({case:'parent-send-teen-receive-read-parent-receipt',passed:true});
+
+    await teen.page.locator('#family-chat-body').fill('Ja, jag vill gärna gå en sväng.');
+    await teen.page.locator('#family-chat-form button[type="submit"]').click();
+    await teen.page.locator('.family-chat-mine').filter({hasText:'Ja, jag vill gärna gå en sväng.'}).waitFor();
+    await parent.page.locator('[data-family-chat-refresh]').click();
+    await parent.page.locator('.family-chat-theirs').filter({hasText:'Ja, jag vill gärna gå en sväng.'}).waitFor();
+    assert.equal(fixture.messages.length,2,'Both directions share the same synthetic conversation');
+    record.push({case:'teen-reply-parent-receive',passed:true});
+
+    await parent.page.goto(base+'#regler',{waitUntil:'load'});
+    await parent.page.locator('[data-schyssta-start]').waitFor();
+    await parent.page.locator('[data-schyssta-start]').click();
+    await parent.page.locator('#schyssta-body').fill('Vi frågar om någon vill följa med på promenad.');
+    await parent.page.getByRole('button',{name:'Skicka regelförslag'}).click();
+    await parent.page.locator('.schyssta-list li').filter({hasText:'Vi frågar om någon vill följa med på promenad.'}).waitFor();
+    assert.equal(fixture.rules.length,1);
+    assert.equal(fixture.rules[0].status,'proposed');
+    assert.deepEqual(fixture.rules[0].decisions,{parent:null,teen:null},
+      'Submitting a manual proposal does not silently approve it for either member');
+
+    // Navigating to the SAME inbox URL is not a data refresh; the existing
+    // teen tab must deliberately reload to fetch the new cross-role event.
+    await teen.page.reload({waitUntil:'load'});
+    try{
+      await teen.page.getByText('Nytt regelförslag').waitFor({timeout:10000});
+    }catch(error){
+      const visible=await teen.page.locator('#live-app').innerText().catch(()=>'(no app)');
+      throw new Error('FUN-03 linked notice missing: '+JSON.stringify({
+        notices:fixture.notices,teenCalls:fixture.calls.filter(x=>x.role==='teen').slice(-25),
+        visible:visible.slice(0,3500)
+      }));
+    }
+    assert.equal(fixture.notices[0].read_at,null,'Opening inbox does not silently mark rule notice read');
+    await teen.page.locator('[data-schyssta-read]').click();
+    await teen.page.waitForFunction(()=>!document.querySelector('[data-schyssta-read]'));
+    assert.ok(fixture.notices[0].read_at,'Teen explicitly reads their own notification');
+    await teen.page.locator('[data-schyssta-open]').first().click();
+    await teen.page.getByRole('heading',{name:'Schyssta listan'}).waitFor();
+    const incoming=teen.page.locator('#schyssta-rule-'+fixture.rules[0].id);
+    await incoming.waitFor();
+    assert.match(await incoming.innerText(),/Ditt val: inte lämnat/);
+    record.push({case:'parent-propose-teen-notified-open-without-auto-approval',passed:true});
+
+    await incoming.locator('[data-schyssta-pause]').click();
+    assert.deepEqual(fixture.rules[0].decisions,{parent:null,teen:null},
+      'Not now is a local postponement and does not send a decision');
+    await teen.page.locator('[data-schyssta-resume]').click();
+    await incoming.getByRole('button',{name:'Jag godkänner'}).click();
+    await teen.page.waitForFunction(()=>document.querySelector('.schyssta-view')?.textContent?.includes('Ditt val: ja'));
+    assert.equal(fixture.rules[0].status,'proposed','Teen approval alone cannot mark a shared rule accepted');
+    assert.deepEqual(fixture.rules[0].decisions,{parent:null,teen:true});
+    await parent.page.goto(base+'#hem',{waitUntil:'load'});
+    await parent.page.goto(base+'#regler',{waitUntil:'load'});
+    const outgoing=parent.page.locator('#schyssta-rule-'+fixture.rules[0].id);
+    await outgoing.waitFor();
+    assert.match(await outgoing.innerText(),/Ditt val: inte lämnat/,
+      'Parent sees their original proposal still awaiting their own explicit vote');
+    await outgoing.getByRole('button',{name:'Jag godkänner'}).click();
+    await parent.page.waitForFunction(()=>document.querySelector('.schyssta-view')?.textContent?.includes('Godkänd av båda'));
+    assert.equal(fixture.rules[0].status,'accepted');
+    await teen.page.goto(base+'#hem',{waitUntil:'load'});
+    await teen.page.goto(base+'#regler',{waitUntil:'load'});
+    await teen.page.locator('#schyssta-rule-'+fixture.rules[0].id).waitFor();
+    assert.match(await teen.page.locator('#schyssta-rule-'+fixture.rules[0].id).innerText(),/Godkänd av båda/);
+    assert.equal(await teen.page.locator('.schyssta-quick-counts').count(),1);
+    record.push({case:'not-now-resume-teen-approve-parent-approve-both-see-accepted',passed:true});
+    await checkOverflow(parent.page,'FUN-03 linked parent 390px');
+    await checkOverflow(teen.page,'FUN-03 linked teen 320px');
+  }finally{
+    await Promise.all([parent.context.close(),teen.context.close()]);
+  }
+  await fs.writeFile(path.join(output,'fun-03-linked-two-role-synthetic.json'),
+    JSON.stringify({
+      method:'Two separate Chromium contexts with one synchronous shared in-memory pair RPC fixture',
+      evidence:'Real browser clicks, independent role-specific UI reads/writes and server-like fixture reconciliation',
+      limitations:'Auth, server permissions, Supabase/Worker persistence and physical mobile are entirely mocked.',
+      scenarios:record,messages:fixture.messages.length,rules:fixture.rules.length
+    },null,2)+'\n');
+  console.log('FUN-03 linked two-role journey: '+record.length+' browser scenarios passed.');
+}
+async function freshContext(options,{authenticated=false,paired=false,role="parent",unlocked=false,unlockUnavailable=false,priorityUnavailable=false,priorityFeature=true,privateImportance=false,importanceReadFailure=false,preansweredGeneral=false,preansweredSkipped=false,emptySchyssta=false,homeUnreadFailure=false,personalityComplete=false,personalitySharing=false,personalityPartnerShared=false,privateRetests=false,aiMediator=false,aiAnalyses=false,activityNotifications=false,pairFixture=null}={}){
+  if(pairFixture && typeof pairFixture.rpc!=='function')throw new Error('Invalid linked fixture');
   const context=await browser.newContext({...options,locale:"sv-SE",reducedMotion:"reduce"});
+  if(pairFixture)await context.exposeBinding('__HK_TEST_PAIR_RPC__',(_source,name,args)=>pairFixture.rpc(role,name,args));
   await context.addInitScript(value=>{window.__HK_TEST_USER__=value.user;window.__HK_TEST_PAIRED__=value.paired;window.__HK_TEST_ROLE__=value.role;window.__HK_TEST_UNLOCKED__=value.unlocked;window.__HK_UNLOCK_RPC_UNAVAILABLE__=value.unlockUnavailable;window.__HK_PRIORITY_RPC_UNAVAILABLE__=value.priorityUnavailable;window.__HK_PRIORITISED_TEEN__=value.privateImportance;window.__HK_IMPORTANCE_READ_FAIL__=value.importanceReadFailure;window.__HK_PREANSWERED_GENERAL__=value.preansweredGeneral;window.__HK_PREANSWERED_SKIPPED__=value.preansweredSkipped;window.__HK_SCHYSSTA_EMPTY__=value.emptySchyssta;window.__HK_HOME_UNREAD_FAILURE__=value.homeUnreadFailure;window.__HK_TEST_PERSONALITY_DONE__=value.personalityComplete;window.__HK_TEST_PERSONALITY_PARTNER_SHARED__=value.personalityPartnerShared;},{personalityPartnerShared,personalityComplete,emptySchyssta,homeUnreadFailure,preansweredGeneral,preansweredSkipped,user:authenticated?{id:role==="teen"?"10000000-0000-0000-0000-000000000002":"10000000-0000-0000-0000-000000000001",email:"synthetic@example.invalid"}:null,paired,role,unlocked,unlockUnavailable,priorityUnavailable,privateImportance,importanceReadFailure});
   await context.route(base+"backend-config.js*",route=>route.fulfill({
     contentType:"application/javascript",
@@ -1059,6 +1281,7 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
             throw new Error('Unexpected table '+table);
           },
           async rpc(name,args){
+            if(typeof window.__HK_TEST_PAIR_RPC__==='function'&&['my_family_messages','my_family_unread_message_count','send_family_message','mark_family_messages_read','shared_schyssta_rule_suggestions','my_schyssta_rules','my_manual_schyssta_rules','my_schyssta_notifications','my_schyssta_replacement_links','my_schyssta_rule_history','propose_manual_schyssta_rule','set_schyssta_rule_decision','mark_schyssta_notification_read'].includes(name))return window.__HK_TEST_PAIR_RPC__(name,args);
             if(name==='set_my_ipip50_share'){personalityConsent=args.p_share===true;window.__HK_PERSONALITY_SHARE__=personalityConsent;return {data:personalityConsent,error:null};}
             if(name==='my_ipip50_shared_profiles'){
               const scores={extraversion:30,agreeableness:30,conscientiousness:30,emotional_stability:30,intellect_imagination:30};
@@ -2820,6 +3043,7 @@ try{
   await verifyFullPersonalitySurvey();
   await verifyFullPrivateRetest();
   await verifyCommunicationForms();
+  await verifyPairedTwoRoleExchange();
   assert.deepEqual(errors,[],"Browser errors: "+errors.join("; "));
   await fs.writeFile(path.join(output,"visual-audit.json"),JSON.stringify({
     purpose:"Playwright responsive visual review",
