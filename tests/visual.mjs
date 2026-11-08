@@ -1740,6 +1740,11 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
     `
   }));
   const mediatorCalls=[];
+  // This fixture is deliberately isolated per browser context: two roles are
+  // separate synthetic sessions, never real Supabase users or saved messages.
+  const mediatorFixture={
+    chats:[], messages:new Map(), nextChat:0, failNextOpen:false, failNextSend:false
+  };
   if(aiMediator){
     await context.route('https://hemmakompassen-ai-medlare.erikbertiljarl.workers.dev/api/ai/**',async route=>{
       const req=route.request(),method=req.method(),pathname=new URL(req.url()).pathname;
@@ -1748,15 +1753,51 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
       let result,status=200;
       if(pathname==='/api/ai/context'&&method==='GET'){
         result={sections:['Gillaswajpen – egna svar'],unavailableCount:0};
-      } else if(pathname==='/api/ai/chats'&&method==='GET'){
-        result={chats:[]};
-      } else if(pathname==='/api/ai/chats'&&method==='POST'){
+      }else if(pathname==='/api/ai/chats'&&method==='GET'){
+        result={chats:mediatorFixture.chats.map(chat=>({...chat}))};
+      }else if(pathname==='/api/ai/chats'&&method==='POST'){
         status=201;
-        result={chat:{id:'00000000-0000-4000-8000-000000000001',title:'Nytt samtal'}};
-      } else if(pathname==='/api/ai/mediate'&&method==='POST'){
-        result={reply:'Vi kan utforska detta steg för steg.',chatId:body?.chatId,
-          ephemeral:false,remainingToday:9};
-      } else {
+        const id='00000000-0000-4000-8000-'+String(++mediatorFixture.nextChat).padStart(12,'0');
+        const chat={id,title:'Nytt samtal'};
+        mediatorFixture.chats.unshift(chat);
+        mediatorFixture.messages.set(id,[]);
+        result={chat};
+      }else if(pathname.startsWith('/api/ai/chats/')&&method==='GET'){
+        const id=pathname.slice('/api/ai/chats/'.length);
+        if(mediatorFixture.failNextOpen){
+          mediatorFixture.failNextOpen=false;status=503;
+          result={error:'Tillfälligt fel vid läsning av samtalet.'};
+        }else if(!mediatorFixture.messages.has(id)){
+          status=404;result={error:'Samtalet finns inte.'};
+        }else{
+          result={chat:mediatorFixture.chats.find(chat=>chat.id===id),
+            messages:mediatorFixture.messages.get(id).map(message=>({...message}))};
+        }
+      }else if(pathname.startsWith('/api/ai/chats/')&&method==='DELETE'){
+        const id=pathname.slice('/api/ai/chats/'.length);
+        if(!mediatorFixture.messages.has(id)){
+          status=404;result={error:'Samtalet finns inte.'};
+        }else{
+          mediatorFixture.chats=mediatorFixture.chats.filter(chat=>chat.id!==id);
+          mediatorFixture.messages.delete(id);
+          result={deleted:true};
+        }
+      }else if(pathname==='/api/ai/mediate'&&method==='POST'){
+        if(mediatorFixture.failNextSend){
+          mediatorFixture.failNextSend=false;status=503;
+          result={error:'Tillfälligt fel vid svar.'};
+        }else if(!mediatorFixture.messages.has(body?.chatId)){
+          status=404;result={error:'Okänt samtal.'};
+        }else{
+          const reply='Vi kan utforska detta steg för steg.';
+          mediatorFixture.messages.get(body.chatId).push(
+            {role:'user',body:body.message},{role:'assistant',body:reply}
+          );
+          const chat=mediatorFixture.chats.find(item=>item.id===body.chatId);
+          if(chat?.title==='Nytt samtal')chat.title=body.message.slice(0,70);
+          result={reply,chatId:body.chatId,ephemeral:false,remainingToday:9};
+        }
+      }else{
         status=404;result={error:'Unexpected synthetic AI endpoint'};
       }
       await route.fulfill({status,contentType:'application/json',body:JSON.stringify(result)});
@@ -1777,7 +1818,7 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
   page.on("pageerror",e=>errors.push(e.message));
   // Ignore external font/network warnings; JavaScript exceptions are checked via pageerror.
   await page.goto(base+"#hem",{waitUntil:"load"});
-  return {context,page,mediatorCalls,aiRequests};
+  return {context,page,mediatorCalls,mediatorFixture,aiRequests};
 }
 try{
   await fs.mkdir(output,{recursive:true});
