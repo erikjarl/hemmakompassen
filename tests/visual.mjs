@@ -613,9 +613,16 @@ try{
   const mobileMain=await m.page.locator('.live-main').boundingBox();
   assert.ok(mobileNav&&mobileMain,'Mobile navigation and content region must be measurable');
   assert.ok(mobileMain.y+mobileMain.height<=mobileNav.y+1,'Mobile navigation must occupy its own layout row, never overlay the scrollable content region');
+  await m.page.waitForFunction(()=>{
+    const bar=document.querySelector('#live-mobile-nav');
+    const active=bar?.querySelector('a[aria-current="page"]');
+    if(!active)return false;
+    const n=bar.getBoundingClientRect(),a=active.getBoundingClientRect();
+    return a.left>=n.left-2&&a.right<=n.right+2;
+  },null,{timeout:3000});
   const activeNav=await m.page.locator('#live-mobile-nav a[aria-current="page"]').boundingBox();
   assert.ok(activeNav.x>=mobileNav.x-2&&activeNav.x+activeNav.width<=mobileNav.x+mobileNav.width+2,
-    'Active mobile tab must be scrolled into view');
+    'Active mobile tab must be scrolled into view after layout');
   await m.page.locator('#live-mobile-nav a[href="#installningar"]').scrollIntoViewIfNeeded();
   const lastBox=await m.page.locator('#live-mobile-nav a[href="#installningar"]').boundingBox();
   assert.ok(lastBox.x>=mobileNav.x-2&&lastBox.x+lastBox.width<=mobileNav.x+mobileNav.width+2,
