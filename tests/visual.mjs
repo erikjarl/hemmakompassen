@@ -567,7 +567,6 @@ async function verifyImportancePendingAnswerFeedback(){
      el.dispatchEvent(new Event('change',{bubbles:true}));
     });
     await page.waitForFunction(()=>typeof window.__HK_TEST_RELEASE_IMPORTANCE__==='function');
-    await page.locator('#swipe-card').getByRole('button',{name:'Ja'}).count(); // Buttons can also sit outside the card.
     await page.locator('.swipe-actions [data-swipe="yes"]').click();
     assert.equal(await page.locator('#swipe-card').getAttribute('aria-label'),cardBefore,
      'A card remains while its importance rating is being saved');
@@ -578,8 +577,8 @@ async function verifyImportancePendingAnswerFeedback(){
     await page.locator('#swipe-save-status').getByText(/Viktigheten är sparad/).waitFor();
     assert.equal(await page.locator('#swipe-card').getAttribute('aria-label'),cardBefore);
     await page.locator('.swipe-actions [data-swipe="yes"]').click();
-    if(deck==='general')await page.locator('#swipe-card').waitFor();
-    else await page.locator('#swipe-card[aria-label^="Temakort 2 av 8"]').waitFor();
+    await page.waitForFunction(previous=>document.querySelector('#swipe-card')?.getAttribute('aria-label')!==previous,cardBefore);
+    if(deck==='forandring')assert.match(await page.locator('#swipe-card').getAttribute('aria-label'),/^Temakort 2 av 8/);
     assert.equal((await page.evaluate(()=>window.__HK_SAVED_SWIPE__))?.row.deck_id,deck,
      'Retry of the intended answer saves to the intended deck');
     records.push({role,deck,blockedClickExplained:true,lateSaveRecovery:true});
