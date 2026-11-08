@@ -1116,7 +1116,11 @@ function filterPrivateThemeReview(){
 }
 // Export from the signed-in viewer's own loaded state only: never partner answers or aggregates.
 function privateSwipeExportRows(){
- if(!user||swipeLoadError||!['parent','teen'].includes(viewerRole())||swipeBusy||importanceSaving.size)return null;
+ // A missing importance read must not silently produce an apparently complete export.
+ // Wait for in-flight writes so the file reflects confirmed private state.
+ if(!user||swipeLoadError||!importanceAvailable||importanceLoadError
+   ||!['parent','teen'].includes(viewerRole())||swipeBusy
+   ||importancePending.size||importanceSaving.size)return null;
  const role=viewerRole(),rows=[];
  const decks=[{id:'general',title:'Allmänna kortleken',cards:GENERAL_CARDS},...THEME_DECK_MODELS];
  for(const deck of decks){
@@ -1151,7 +1155,9 @@ function privateSwipeExportText(rows){
 }
 function downloadPrivateSwipeAnswers(){
  const rows=privateSwipeExportRows(),status=$('swipe-export-status');
- if(!rows){if(status)status.textContent='Dina privata svar kan inte exporteras just nu. Försök uppdatera sidan.';return;}
+ if(!rows){if(status)status.textContent=importanceSaving.size||importancePending.size||swipeBusy
+  ?'Vänta tills dina senaste svar och viktighetsskattningar har sparats innan du laddar ner filen.'
+  :'Alla dina privata svar och viktighetsskattningar kunde inte hämtas. Uppdatera sidan och försök igen.';return;}
  if(!rows.length){if(status)status.textContent='Du har ännu inga sparade svar eller viktighetsskattningar att exportera.';return;}
  try{
   const blob=new Blob(['\uFEFF',privateSwipeExportText(rows)],{type:'text/plain;charset=utf-8'});
