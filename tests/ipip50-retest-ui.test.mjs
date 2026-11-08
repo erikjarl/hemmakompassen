@@ -4,7 +4,7 @@ import {createPrivateIpipRetests,buildPrivateIpipRetestExport} from '../personal
 
 function makeBackend(){
   const attempts=[],answers=[],calls=[];
-  let owner='private-user',failNextAnswer=false,failDelete=false,failNextAnswerRead=false,failNextAttemptsRead=false,nextAnswerMode=null,writeAttempts=0;
+  let owner='private-user',failNextAnswer=false,failDelete=false,failNextAnswerRead=false,failNextAttemptsRead=false,nextAnswerMode=null,writeAttempts=0,nextNewMode=null,nextCompleteMode=null,newAttempts=0,completionAttempts=0;
   const db={
     from(table){
       assert.ok(['personality_test_attempts','personality_attempt_answers'].includes(table),
@@ -14,15 +14,23 @@ function makeBackend(){
         const q={
           select(){return q;},eq(k,v){filters[k]=v;return q;},
           order(){return Promise.resolve(run());},single(){return Promise.resolve(run());},
+          maybeSingle(){const result=run();return Promise.resolve(result.error?result:{...result,data:Array.isArray(result.data)?result.data[0]||null:result.data});},
           then(ok,bad){return Promise.resolve(run()).then(ok,bad);}
         };
         function run(){
           if(op==='new'){
+            newAttempts++;
+            const mode=nextNewMode;nextNewMode=null;
+            if(mode==='reject')return {data:null,error:{message:'creation rejected'}};
             if(attempts.some(a=>a.user_id===payload.user_id&&a.completed_at===null))
               return {data:null,error:{code:'23505',message:'one open attempt per owner'}};
             const row={id:'attempt-'+(attempts.length+1),user_id:payload.user_id,
               instrument_id:payload.instrument_id,created_at:'2026-11-07T10:00:00Z',completed_at:null};
-            attempts.push(row);calls.push('new');return {data:{...row},error:null};
+            attempts.push(row);calls.push('new');
+            if(mode==='throw-after')throw Error('creation ACK lost after commit');
+            if(mode==='lost-ack')return {data:null,error:{message:'creation ACK lost'}};
+            if(mode==='missing-ack')return {data:null,error:null};
+            return {data:{...row},error:null};
           }
           if(op==='delete'){
             if(failDelete)return {data:null,error:{message:'delete unavailable'}};
@@ -35,11 +43,17 @@ function makeBackend(){
             calls.push('delete');return {data:{id:deleted.id},error:null};
           }
           if(op==='update'){
+            completionAttempts++;
+            const mode=nextCompleteMode;nextCompleteMode=null;
+            if(mode==='reject')return {data:null,error:{message:'completion rejected'}};
             const row=attempts.find(a=>a.id===filters.id&&a.user_id===filters.user_id);
             if(!row)return {data:null,error:{message:'not found'}};
             const items=answers.filter(a=>a.attempt_id===row.id&&a.user_id===row.user_id);
             if(row.completed_at||items.length!==50)return {data:null,error:{message:'incomplete'}};
             row.completed_at=payload.completed_at;calls.push('complete');
+            if(mode==='lost-ack')return {data:null,error:{message:'completion ACK lost'}};
+            if(mode==='throw-after')throw Error('completion transport closed after commit');
+            if(mode==='missing-ack')return {data:null,error:null};
             return {data:{...row},error:null};
           }
           if(op==='read'&&table==='personality_test_attempts'&&failNextAttemptsRead){
@@ -81,6 +95,8 @@ function makeBackend(){
   return {db,attempts,answers,calls,setOwner:v=>owner=v,failNext:()=>failNextAnswer=true,
     setDeleteFailure:v=>failDelete=v,failAnswerRead:()=>failNextAnswerRead=true,
     nextAnswer:v=>nextAnswerMode=v,writeAttempts:()=>writeAttempts,
+    nextNew:v=>nextNewMode=v,nextComplete:v=>nextCompleteMode=v,
+    newAttempts:()=>newAttempts,completionAttempts:()=>completionAttempts,
     failAttemptsRead:()=>failNextAttemptsRead=true};
 }
 const button=(action,attemptId)=>({closest:sel=>sel==='[data-ipip-retest]'?{dataset:{ipipRetest:action,attemptId}}:null});
