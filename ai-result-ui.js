@@ -15,7 +15,9 @@ const ANALYSIS_ROUTE_LABELS=Object.freeze({
   '#kommunikation/grans':'Sätt en gräns med respekt'
 });
 export function renderAiAnalysisReply(value){
-  return escape(value).replace(/#kommunikation\/[a-z]+/g,route=>{
+  return escape(value)// Match an entire route token: never turn the valid prefix of an invalid
+  // model-produced path (e.g. #kommunikation/losning-extra) into a misleading link.
+  .replace(/#kommunikation\/[a-z]+(?![\p{L}\p{N}_\/?#&=%-])/gu,route=>{
     const label=ANALYSIS_ROUTE_LABELS[route];
     return label?'<a href="'+route+'">'+escape(label)+'</a>':route;
   }).replace(/\n/g,'<br>');
