@@ -18,7 +18,7 @@ function harness({serverRows=[{deck_id:'aktiviteter',card_id:'aktiviteter-01',an
     insightsRows:currentRows??[{deck_id:'aktiviteter',card_id:'aktiviteter-01',answer:true}],
     activityInviteBusy:false,activityInviteError:'',
     familyChatDraft:existingDraft,familyChatStatus:'',familyChatRequestKey:'old-request',
-    location:{hash:source},render:()=>{},
+    location:{hash:source},render:()=>{},recheckInboxPair:async()=>true,
     requestAnimationFrame:callback=>callback(),
     document:{getElementById:()=>({focus:()=>{}})},
     sharedDeck:()=>({cards:[{id:'aktiviteter-01',type:'match',teenText:'Laga mat tillsammans'}]}),
@@ -94,6 +94,7 @@ test('account change while authorization request is pending cannot create stale 
   const h=harness();
   const finish=h.delay();
   const task=h.state.prepare('aktiviteter-01');
+  await Promise.resolve(); // Complete the new pair-epoch preflight before RPC is pending.
   h.state.user={id:'another'};
   finish({data:[{deck_id:'aktiviteter',card_id:'aktiviteter-01',answer:true}],error:null});
   await task;
