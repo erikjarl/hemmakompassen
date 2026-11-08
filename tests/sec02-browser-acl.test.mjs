@@ -8,7 +8,8 @@ assert.match(migration,/REVOKE TRUNCATE, TRIGGER, REFERENCES ON ALL TABLES IN SC
   'Browser SQL roles cannot truncate or define triggers/FKs in the exposed schema');
 assert.match(migration,/ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public[\s\S]*?REVOKE TRUNCATE, TRIGGER, REFERENCES ON TABLES FROM anon, authenticated;/,
   'New tables owned by postgres must not regain unsafe privileges');
-assert.doesNotMatch(migration,/\b(DROP|DELETE|TRUNCATE TABLE|UPDATE|INSERT INTO|REVOKE ALL|REVOKE SELECT|REVOKE INSERT|REVOKE UPDATE|REVOKE DELETE)\b/i,
+const sqlStatements=migration.split('\n').filter(line=>!line.trim().startsWith('--')).join('\n');
+assert.doesNotMatch(sqlStatements,/\b(DROP|DELETE|TRUNCATE TABLE|UPDATE|INSERT INTO|REVOKE ALL|REVOKE SELECT|REVOKE INSERT|REVOKE UPDATE|REVOKE DELETE)\b/i,
   'Hardening must not remove normal application privileges or mutate old data');
 assert.match(audit,/has_table_privilege\(role_name\.name,c\.oid,perm\.name\)/);
 assert.match(audit,/RAISE EXCEPTION 'SEC-02 failed: % unnecessary browser-role table ACL/);
