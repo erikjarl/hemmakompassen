@@ -2199,6 +2199,10 @@ window.addEventListener('focus',()=>{
   void pollSharedMatches();
   if(page()==='insikter'&&user&&members.length===2)void fetchInsights({quiet:true});
   if(page()==='inkorg'&&user&&members.length===2)void recheckInboxPair();
+  // The home inbox badge also belongs to one exact pairing epoch. Do not
+  // refresh private unread state against stale local membership after re-pair.
+  if(page()==='hem'&&user&&members.length===2)
+    void recheckInboxPair().then(valid=>{if(valid)void fetchFamilyChatUnread();});
 });
 // Light polling while the tab is visible. Never rerender the message composer mid-draft.
 window.setInterval(()=>{
@@ -2208,7 +2212,9 @@ window.setInterval(()=>{
       if(valid&&!familyChatDraft.trim()&&!familyChatSending&&!familyChatLoading&&!familyChatLoadingOlder)
         void fetchFamilyChat(false,{quiet:true});
     });
-  }else if(page()==='hem')void fetchFamilyChatUnread();
+  }else if(page()==='hem'){
+    void recheckInboxPair().then(valid=>{if(valid)void fetchFamilyChatUnread();});
+  }
 },15000);
 window.setInterval(()=>void pollSharedMatches(),SHARED_POLL_INTERVAL_MS);
 window.setInterval(()=>{if(!document.hidden&&page()==='insikter'&&user&&members.length===2)void fetchInsights({quiet:true});},INSIGHTS_CONSENT_REFRESH_MS);
