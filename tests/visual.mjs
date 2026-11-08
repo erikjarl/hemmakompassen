@@ -861,6 +861,90 @@ async function verifyFullPrivateRetest(){
   console.log('FUN-04 private retest: '+records.length+' full synthetic browser journeys passed.');
 }
 
+
+// FUN-06: interact with all three practical communication forms and their
+// native validation, generated texts, reset buttons, keyboard focus and
+// route-local draft lifetime in both role-specific synthetic browser sessions.
+async function verifyCommunicationForms(){
+  const records=[];
+  for(const role of ['parent','teen']){
+    const width=role==='parent'?390:320;
+    const {page,context}=await freshContext(
+      {viewport:{width,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true},
+      {authenticated:true,paired:false,role}
+    );
+    try{
+      await page.goto(base+'#kommunikation',{waitUntil:'load'});
+      await page.locator('#comm-reflection-form').waitFor();
+      assert.equal(await page.locator('#comm-reflection-form').evaluate(form=>form.checkValidity()),false,
+        'FUN-06 reflection requires its three fields');
+      await page.locator('#comm-reflection-heard').fill('Jag vill få prata klart');
+      await page.locator('#comm-reflection-meaning').fill('bli lyssnad på');
+      await page.locator('#comm-reflection-check').fill('Har jag förstått dig rätt');
+      await page.locator('#comm-reflection-form button[type="submit"]').click();
+      const reflection=await page.locator('#comm-reflection-output').innerText();
+      assert.match(reflection,/Jag hörde att du sa: Jag vill få prata klart/);
+      assert.match(reflection,/Jag undrar om det kan vara viktigt för dig att: bli lyssnad på/);
+      assert.match(reflection,/Har jag förstått rätt/);
+      await page.locator('[data-comm-reflection-reset]').click();
+      assert.equal(await page.locator('#comm-reflection-heard').inputValue(),'');
+      assert.match(await page.locator('#comm-reflection-output').innerText(),/Din privata spegling visas här/);
+      assert.equal(await page.locator('#comm-reflection-heard').evaluate(el=>document.activeElement===el),true,
+        'FUN-06 reset returns focus to reflection editor');
+      records.push({role,form:'reflection',validates:true,preview:true,resetAndFocus:true});
+
+      assert.equal(await page.locator('#comm-solution-form').evaluate(form=>form.checkValidity()),false,
+        'FUN-06 solution planner requires all four fields');
+      await page.locator('#comm-solution-problem').fill('Vi vill planera en gemensam utflykt');
+      await page.locator('#comm-solution-question').fill('Vad skulle passa dig bäst');
+      await page.locator('#comm-solution-experiment').fill('Vi provar en kort promenad');
+      await page.locator('#comm-solution-followup').fill('Vi stämmer av på söndag');
+      await page.locator('#comm-solution-form button[type="submit"]').click();
+      const plan=await page.locator('#comm-solution-output').innerText();
+      assert.match(plan,/Jag vill prata om: Vi vill planera en gemensam utflykt/);
+      assert.match(plan,/Mitt förslag att diskutera: Vi provar en kort promenad/);
+      assert.match(plan,/Detta är bara mitt utkast/);
+      await page.locator('[data-comm-solution-reset]').click();
+      assert.equal(await page.locator('#comm-solution-problem').inputValue(),'');
+      assert.match(await page.locator('#comm-solution-output').innerText(),/Din privata samtalsplan visas här/);
+      assert.equal(await page.locator('#comm-solution-problem').evaluate(el=>document.activeElement===el),true);
+      records.push({role,form:'solution',validates:true,preview:true,resetAndFocus:true});
+
+      await page.goto(base+'#nvc',{waitUntil:'load'});
+      await page.locator('#comm-nvc-form').waitFor();
+      assert.equal(await page.locator('#comm-nvc-form').evaluate(form=>form.checkValidity()),false,
+        'FUN-06 NVC sentence requires four parts');
+      await page.locator('#comm-observation').fill('vi börjar prata samtidigt');
+      await page.locator('#comm-feeling').fill('mig stressad');
+      await page.locator('#comm-need').fill('lugn och tydlighet');
+      await page.locator('#comm-request').fill('prata senare ikväll');
+      await page.locator('#comm-nvc-form button[type="submit"]').click();
+      const sentence=await page.locator('#comm-nvc-output').innerText();
+      assert.match(sentence,/När vi börjar prata samtidigt känner jag mig stressad/);
+      assert.match(sentence,/Jag behöver lugn och tydlighet/);
+      assert.match(sentence,/Skulle du vilja prata senare ikväll/);
+      await page.locator('[data-comm-reset]').click();
+      assert.equal(await page.locator('#comm-observation').inputValue(),'');
+      assert.match(await page.locator('#comm-nvc-output').innerText(),/Din formulering visas här när du är redo/);
+      assert.equal(await page.locator('#comm-observation').evaluate(el=>document.activeElement===el),true);
+      await page.locator('#comm-observation').fill('ett privat utkast');
+      await page.goto(base+'#kommunikation',{waitUntil:'load'});
+      await page.goto(base+'#nvc',{waitUntil:'load'});
+      assert.equal(await page.locator('#comm-observation').inputValue(),'',
+        'FUN-06 local-only NVC text must not silently survive navigation');
+      await checkOverflow(page,'FUN-06 communication forms '+role+' '+width+'px');
+      records.push({role,form:'nvc',validates:true,preview:true,resetAndFocus:true,draftNotPersisted:true});
+    }finally{
+      await context.close();
+    }
+  }
+  await fs.writeFile(path.join(output,'fun-06-communication-forms-synthetic.json'),
+    JSON.stringify({method:'Real Chromium form fill, submit, reset, focus and route change in two mock roles',
+      limitations:'No live Auth, backend, real device or human assessment of advice quality.',
+      records},null,2)+'\n');
+  console.log('FUN-06: '+records.length+' communication form/role cases passed in synthetic Chromium.');
+}
+
 async function freshContext(options,{authenticated=false,paired=false,role="parent",unlocked=false,unlockUnavailable=false,priorityUnavailable=false,priorityFeature=true,privateImportance=false,importanceReadFailure=false,preansweredGeneral=false,preansweredSkipped=false,emptySchyssta=false,homeUnreadFailure=false,personalityComplete=false,personalitySharing=false,personalityPartnerShared=false,privateRetests=false,aiMediator=false,aiAnalyses=false,activityNotifications=false}={}){
   const context=await browser.newContext({...options,locale:"sv-SE",reducedMotion:"reduce"});
   await context.addInitScript(value=>{window.__HK_TEST_USER__=value.user;window.__HK_TEST_PAIRED__=value.paired;window.__HK_TEST_ROLE__=value.role;window.__HK_TEST_UNLOCKED__=value.unlocked;window.__HK_UNLOCK_RPC_UNAVAILABLE__=value.unlockUnavailable;window.__HK_PRIORITY_RPC_UNAVAILABLE__=value.priorityUnavailable;window.__HK_PRIORITISED_TEEN__=value.privateImportance;window.__HK_IMPORTANCE_READ_FAIL__=value.importanceReadFailure;window.__HK_PREANSWERED_GENERAL__=value.preansweredGeneral;window.__HK_PREANSWERED_SKIPPED__=value.preansweredSkipped;window.__HK_SCHYSSTA_EMPTY__=value.emptySchyssta;window.__HK_HOME_UNREAD_FAILURE__=value.homeUnreadFailure;window.__HK_TEST_PERSONALITY_DONE__=value.personalityComplete;window.__HK_TEST_PERSONALITY_PARTNER_SHARED__=value.personalityPartnerShared;},{personalityPartnerShared,personalityComplete,emptySchyssta,homeUnreadFailure,preansweredGeneral,preansweredSkipped,user:authenticated?{id:role==="teen"?"10000000-0000-0000-0000-000000000002":"10000000-0000-0000-0000-000000000001",email:"synthetic@example.invalid"}:null,paired,role,unlocked,unlockUnavailable,priorityUnavailable,privateImportance,importanceReadFailure});
@@ -2735,6 +2819,7 @@ try{
   await verifyInsightsTwoRolesAndStates();
   await verifyFullPersonalitySurvey();
   await verifyFullPrivateRetest();
+  await verifyCommunicationForms();
   assert.deepEqual(errors,[],"Browser errors: "+errors.join("; "));
   await fs.writeFile(path.join(output,"visual-audit.json"),JSON.stringify({
     purpose:"Playwright responsive visual review",
