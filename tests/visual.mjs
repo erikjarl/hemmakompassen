@@ -1127,11 +1127,11 @@ try{
   await pendingConsistency.page.goto(base+'#regler',{waitUntil:'load'});
   await pendingConsistency.page.locator('#schyssta-rule-30000000-0000-4000-8000-000000000001').waitFor();
   const rulePendingTitle=await pendingConsistency.page.getByRole('heading',{name:/^Behöver ditt svar/}).innerText();
-  const rulePendingCount=Number(rulePendingTitle.match(/\\((\\d+)\\)/)?.[1]||0);
+  const rulePendingCount=Number(rulePendingTitle.match(/\((\d+)\)/)?.[1]||0);
   await pendingConsistency.page.goto(base+'#hem',{waitUntil:'load'});
   await pendingConsistency.page.waitForFunction(()=>!document.querySelector('#live-app')?.textContent?.includes('Kontrollerar väntande regelförslag'));
   const homePendingTitle=await pendingConsistency.page.getByRole('heading',{name:/^Behöver ditt svar/}).allTextContents();
-  const homePendingCount=Number(homePendingTitle[0]?.match(/(\\d+) förslag/)?.[1]||0);
+  const homePendingCount=Number(homePendingTitle[0]?.match(/(\d+) förslag/)?.[1]||0);
   assert.equal(homePendingCount,rulePendingCount,
     'NOT-02: home and Schyssta show identical pending decisions for one unchanged paired account');
   const navBadge=await pendingConsistency.page.locator('#live-mobile-nav a[href="#regler"] .live-nav-count').textContent();
