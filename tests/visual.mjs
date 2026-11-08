@@ -1208,7 +1208,7 @@ async function verifyLinkedInboxOlderPages(){
 
     fixture.failNextOlderPage();
     await teen.page.locator('[data-family-chat-more]').click();
-    await teen.page.locator('.family-chat [role="alert"]').getByText(/Kunde inte hämta meddelandena/).waitFor();
+    await teen.page.getByRole('alert').filter({hasText:'Kunde inte hämta meddelandena'}).waitFor();
     assert.equal(await teen.page.locator('.family-chat-bubble').count(),50,
       'FUN-03: a failed older-page read retains previously verified messages');
     assert.equal(await teen.page.locator('[data-family-chat-more]').count(),1,
