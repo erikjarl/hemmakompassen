@@ -26,40 +26,42 @@ async function checkMobileNavigation(page,label){
   const result=await page.evaluate(async()=>{
     const nav=document.querySelector('#live-mobile-nav');
     if(!(nav instanceof HTMLElement))throw new Error('Mobile navigation is missing');
-    const links=[...nav.querySelectorAll('a')];
+    const details=nav.querySelector('details.live-mobile-more');
+    const summary=details?.querySelector('summary');
+    const primary=[...nav.querySelectorAll(':scope > a')];
+    const secondary=[...details?.querySelectorAll('a')||[]];
     const failures=[];
-    const positions=[];
-    for(const link of links){
-      link.scrollIntoView({block:'nearest',inline:'center'});
-      await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+    if(primary.length!==3||secondary.length!==5||!summary)failures.push('Missing primary or More destinations');
+    if(nav.scrollWidth>nav.clientWidth+2)failures.push('Horizontal scrolling remains');
+    for(const element of [...primary,summary].filter(Boolean)){
       const navBox=nav.getBoundingClientRect();
-      const linkBox=link.getBoundingClientRect();
-      const range=document.createRange();
-      range.selectNodeContents(link);
-      const textBox=range.getBoundingClientRect();
-      const style=getComputedStyle(link);
-      const labelText=link.textContent.trim();
-      positions.push({label:labelText,left:linkBox.left,right:linkBox.right,textHeight:textBox.height});
-      if(linkBox.left<navBox.left-1||linkBox.right>navBox.right+1)failures.push(labelText+' is clipped');
-      if(textBox.left<linkBox.left-1||textBox.right>linkBox.right+1)failures.push(labelText+' text exceeds its item');
-      if(textBox.height>Number.parseFloat(style.lineHeight)*2+1)failures.push(labelText+' exceeds two text rows');
+      const box=element.getBoundingClientRect();
+      if(box.left<navBox.left-1||box.right>navBox.right+1)failures.push(element.textContent+' clipped');
     }
-    links[3]?.focus();
+    details.open=true;
+    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+    for(const link of secondary){
+      const box=link.getBoundingClientRect();
+      const drawer=details.querySelector('.live-mobile-more-links').getBoundingClientRect();
+      if(box.left<drawer.left-1||box.right>drawer.right+1)failures.push(link.textContent+' drawer overflow');
+    }
+    details.open=false;
+    summary.focus();
     await new Promise(resolve=>requestAnimationFrame(resolve));
-    const focusStyle=links[3]?getComputedStyle(links[3]):null;
+    const focusStyle=getComputedStyle(summary);
     return {
-      count:links.length,
-      scrollable:nav.scrollWidth>nav.clientWidth,
-      focusVisible:!!focusStyle&&focusStyle.outlineStyle!=='none'&&Number.parseFloat(focusStyle.outlineWidth)>=2,
-      failures,
-      positions
+      count:primary.length+secondary.length,
+      noHorizontalScroll:nav.scrollWidth<=nav.clientWidth+2,
+      focusVisible:focusStyle.outlineStyle!=='none'&&Number.parseFloat(focusStyle.outlineWidth)>=2,
+      failures
     };
   });
-  assert.equal(result.count,8,label+': all navigation items render');
-  assert.ok(result.scrollable,label+': navigation remains horizontally scrollable');
-  assert.ok(result.focusVisible,label+': keyboard focus is visible');
-  assert.deepEqual(result.failures,[],label+': '+JSON.stringify(result.positions));
+  assert.equal(result.count,8,label+': all destinations present');
+  assert.ok(result.noHorizontalScroll,label+': all navigation uses fixed grid and More');
+  assert.ok(result.focusVisible,label+': keyboard focus on More is visible');
+  assert.deepEqual(result.failures,[],label+': mobile navigation and drawer boundaries');
 }
+
 async function capture(page,name){
   // Standardize screenshots, and fail if transient UI obscures the layout.
   await page.evaluate(()=>{
@@ -457,14 +459,17 @@ try{
   await m.page.keyboard.press('Enter');
   assert.equal(await m.page.evaluate(()=>document.activeElement?.id),'live-app','Skip link focuses the main landmark');
   assert.equal(new URL(m.page.url()).hash,skipHash,'Skip link must not change the SPA route');
-  await m.page.locator('#live-mobile-nav a[href="#installningar"]').focus();
+  await m.page.locator('#live-mobile-nav summary').focus();
+  await m.page.keyboard.press('Enter');
+  assert.equal(await m.page.locator('#live-mobile-nav details').evaluate(el=>el.open),true,
+    'More opens by keyboard and exposes the secondary destinations');
+  const settingsLink=m.page.locator('#live-mobile-nav a[href="#installningar"]');
+  await settingsLink.focus();
   await m.page.keyboard.press('Enter');
   await m.page.getByRole('heading',{name:'Inställningar'}).waitFor();
   assert.equal(await m.page.evaluate(()=>document.activeElement?.id),'live-app','Route changes move focus to new content');
-  const settingsNav=await m.page.locator('#live-mobile-nav').boundingBox();
-  const settingsTab=await m.page.locator('#live-mobile-nav a[href="#installningar"]').boundingBox();
-  assert.ok(settingsNav&&settingsTab&&settingsTab.x>=settingsNav.x-2&&settingsTab.x+settingsTab.width<=settingsNav.x+settingsNav.width+2,
-    'Last mobile tab is revealed automatically when activated via keyboard');
+  assert.equal(await m.page.locator('#live-mobile-nav details').evaluate(el=>el.open),false,
+    'More closes after selecting a destination');
   await m.page.goto(base+'#insikter',{waitUntil:'load'});
   assert.equal(await m.page.locator('#live-mobile-nav a[href="#swipe"]').getAttribute('aria-current'),'page',
     'The insights subpage keeps Gillaswajpen marked as the active primary tab');
@@ -569,7 +574,7 @@ try{
   assert.equal(await m.page.evaluate(()=>window.__HK_UNLOCK_RPC_CALLS__||0),0,'Unpaired member must not request theme unlock status');
   assert.match(await m.page.locator("#swipe-card").getAttribute("aria-label"),/Kort 1 av 21/);
   // ArrowRight on a focused navigation link must NOT save a private swipe answer.
-  await m.page.locator('#live-mobile-nav a[href="#personlighet"]').focus();
+  await m.page.locator('#live-mobile-nav summary').focus();
   await m.page.keyboard.press('ArrowRight');
   await m.page.waitForTimeout(300);
   assert.match(await m.page.locator('#swipe-card').getAttribute('aria-label'),/Kort 1 av 21/,
@@ -607,11 +612,14 @@ try{
   assert.ok(mobileMain.y+mobileMain.height<=mobileNav.y+1,'Mobile navigation must occupy its own layout row, never overlay the scrollable content region');
   const activeNav=await m.page.locator('#live-mobile-nav a[aria-current="page"]').boundingBox();
   assert.ok(activeNav.x>=mobileNav.x&&activeNav.x+activeNav.width<=mobileNav.x+mobileNav.width,'Active mobile navigation label must be fully visible');
-  const lastNavLink=m.page.locator('#live-mobile-nav a').last();
-  await lastNavLink.scrollIntoViewIfNeeded();
-  const lastNavBox=await lastNavLink.boundingBox();
-  assert.ok(lastNavBox.x>=mobileNav.x&&lastNavBox.x+lastNavBox.width<=mobileNav.x+mobileNav.width,'The last mobile navigation label must be fully reachable without clipping');
-  await m.page.locator('#live-mobile-nav a[aria-current="page"]').scrollIntoViewIfNeeded();
+  const moreSummary=m.page.locator('#live-mobile-nav summary');
+  const moreBox=await moreSummary.boundingBox();
+  assert.ok(moreBox&&moreBox.x>=mobileNav.x&&moreBox.x+moreBox.width<=mobileNav.x+mobileNav.width,
+    'More remains fully visible in the four-column mobile navigation');
+  await moreSummary.click();
+  assert.equal(await m.page.locator('#live-mobile-nav a[href="#installningar"]').isVisible(),true,
+    'Last secondary destination is reachable through More without horizontal scrolling');
+  await moreSummary.click();
   // Simulate a phone tap on both ends. It must change the value, not swipe the card.
   await importance.scrollIntoViewIfNeeded();
   const tapBox=await importance.boundingBox();
@@ -943,7 +951,9 @@ try{
   assert.ok(headerAudit.singleLine&&headerAudit.visible,
     '320px account link must remain one line fully inside the viewport');
 
-  await narrow.page.locator('#live-mobile-nav a[href="#kommunikation"]').scrollIntoViewIfNeeded();
+  await narrow.page.locator('#live-mobile-nav summary').click();
+  assert.equal(await narrow.page.locator('#live-mobile-nav a[href="#kommunikation"]').isVisible(),true,
+    'Communication guidance is accessible in More at 320px');
   await capture(narrow.page,'mobile-320-navigation.png');
   await narrow.page.goto(base+'#kommunikation',{waitUntil:'load'});
   await narrow.page.getByRole('heading',{name:'Verktyg för bättre samtal'}).waitFor();
@@ -1354,6 +1364,7 @@ try{
   await checkOverflow(paired.page,"Mobile matched swipes");
   await paired.page.locator('.swipe-results').scrollIntoViewIfNeeded();
   await capture(paired.page,"mobile-shared-swipes.png");
+  await paired.page.locator('#live-mobile-nav summary').click();
   await paired.page.locator('#live-mobile-nav a[href="#regler"]').click();
   // The initial synthetic server response deliberately includes a known card
   // with forged text and a completely unknown card. Never display even its
@@ -1412,7 +1423,11 @@ try{
   assert.equal(await paired.page.getByRole('button',{name:'Uppdatera listan'}).count(),1,
     'A paired test user can explicitly reload the list');
   assert.equal(await paired.page.locator('#live-mobile-nav a[href="#inkorg"] .live-nav-count').innerText(),'2','Inbox counts both one private chat message and one rule event');
-  assert.equal(await paired.page.locator('#live-mobile-nav a[href="#regler"] .live-nav-count').innerText(),'2','Rule tab shows only requests awaiting the current viewer');
+  await paired.page.waitForFunction(()=>document.querySelector('#live-mobile-nav a[href="#regler"] .live-nav-count')?.textContent==='2',
+    null,{timeout:8000});
+  assert.equal(await paired.page.locator('#live-mobile-nav a[href="#regler"] .live-nav-count').textContent(),'2','Rule tab shows only requests awaiting the current viewer');
+  assert.equal(await paired.page.locator('#live-mobile-nav summary .live-nav-count').innerText(),'2',
+    'More mirrors the pending-rule badge while the secondary menu is closed');
   assert.match(await paired.page.locator('#live-mobile-nav a[href="#regler"]').getAttribute('aria-label'),/2 obesvarade regelförslag/,'Navigation text announces the meaning of the count');
   // Search and status filters never hide incoming requests requiring the user's answer.
   const search=paired.page.locator('#schyssta-search');
@@ -1436,13 +1451,13 @@ try{
   await paired.page.locator('[data-schyssta-pause="30000000-0000-4000-8000-000000000001"]').click();
   assert.equal(await paired.page.locator('#schyssta-rule-30000000-0000-4000-8000-000000000001').isVisible(),true,
     'Paused request remains accessible under ongoing proposals');
-  assert.equal(await paired.page.locator('#live-mobile-nav a[href="#regler"] .live-nav-count').innerText(),'1',
+  assert.equal(await paired.page.locator('#live-mobile-nav a[href="#regler"] .live-nav-count').textContent(),'1',
     'Pausing a request decreases only the local pending-action count');
   assert.equal(await paired.page.evaluate(()=>window.__HK_SCHYSSTA_DECISION__?.args?.p_agreement_id==='30000000-0000-4000-8000-000000000001'),false,
     'Pausing does not send any approval or rejection decision');
   assert.match(await paired.page.locator('.schyssta-view').innerText(),/Inget beslut har sparats/);
   await paired.page.locator('[data-schyssta-resume="30000000-0000-4000-8000-000000000001"]').click();
-  assert.equal(await paired.page.locator('#live-mobile-nav a[href="#regler"] .live-nav-count').innerText(),'2',
+  assert.equal(await paired.page.locator('#live-mobile-nav a[href="#regler"] .live-nav-count').textContent(),'2',
     'A deferred proposal can be returned to the actionable list without any backend change');
   await paired.page.getByRole('button',{name:'+ Föreslå en regel'}).click();
   const prompts=paired.page.locator('.schyssta-tips');
