@@ -96,6 +96,119 @@ async function capture(page,name){
   await page.screenshot({path:path.join(output,name),fullPage:true,animations:"disabled"});
   captureRecords.push({file:name,viewport:page.viewportSize(),...overlays});
 }
+// FUN-00: this is a SYNTHETIC UI inventory, not a claim that each control works
+// with real Auth, a live database, or a physical device. Real actions are tested
+// separately; every discovered control retains its untested status in the report.
+const FUNCTION_AUDIT_ROUTES=Object.freeze([
+  'hem','inkorg','swipe','insikter','personlighet','kommunikation',
+  'nvc','mi-foralder','regler','medlare','installningar'
+]);
+const FUNCTION_AUDIT_PRIMARY=Object.freeze([
+  'hem','inkorg','swipe','personlighet','kommunikation','regler','medlare','installningar'
+]);
+async function captureFunctionalInventory(){
+  const entries=[],navigation=[];
+  const cases=[
+    {name:'parent-mobile-320',role:'parent',width:320,height:720,paired:true},
+    {name:'teen-mobile-390',role:'teen',width:390,height:844,paired:true},
+    {name:'parent-desktop-1440',role:'parent',width:1440,height:900,paired:true},
+    {name:'parent-unpaired-390',role:'parent',width:390,height:844,paired:false}
+  ];
+  for(const item of cases){
+    const {context,page}=await freshContext(
+      {viewport:{width:item.width,height:item.height},deviceScaleFactor:1,
+        isMobile:item.width<500,hasTouch:item.width<500},
+      {authenticated:true,paired:item.paired,role:item.role,aiMediator:true,
+        personalityComplete:true,personalitySharing:true,privateRetests:true,aiAnalyses:true}
+    );
+    // Change only this synthetic browser's allowlisted mock, not live user data.
+    await context.addInitScript(()=>{window.__HK_SCHYSSTA_CLEAN_RPC__=true;});
+    for(const route of FUNCTION_AUDIT_ROUTES){
+      await page.goto(base+'#'+route,{waitUntil:'load'});
+      await page.waitForFunction(()=>!!document.querySelector('#live-app')?.textContent?.trim());
+      // Give the local asynchronous fixtures time to settle before the sample.
+      await page.waitForTimeout(180);
+      const result=await page.evaluate(({route})=>{
+        const root=document.querySelector('#live-app');
+        const controls=[...root.querySelectorAll('a[href],button,input,select,textarea,summary')];
+        const visible=el=>{
+          const s=getComputedStyle(el);
+          return !!el.getClientRects().length&&s.display!=='none'&&s.visibility!=='hidden';
+        };
+        const fields=controls.filter(visible).map(el=>{
+          const attrs={};
+          for(const {name,value} of el.attributes){
+            if(name.startsWith('data-')&&(name.includes('action')||name.includes('schyssta')||
+              name.includes('swipe')||name.includes('pf-')||name.includes('mediator')||
+              name.includes('chat')||name.includes('insights')||name.includes('theme')))
+              attrs[name]=value.slice(0,80);
+          }
+          const text=(el.getAttribute('aria-label')||el.textContent||
+            el.getAttribute('placeholder')||'').replace(/\s+/g,' ').trim().slice(0,100);
+          return {tag:el.tagName.toLowerCase(),id:el.id||null,
+            label:text||null,href:el.getAttribute('href')||null,
+            type:el.getAttribute('type')||null,disabled:el.disabled===true,
+            form:el.closest('form')?.id||null,data:attrs};
+        });
+        const active=[...document.querySelectorAll(
+          '#live-mobile-nav a[aria-current="page"],#live-desktop-nav a[aria-current="page"]'
+        )].map(x=>x.getAttribute('href'));
+        const expected=['insikter'].includes(route)?'#swipe':
+          ['nvc','mi-foralder'].includes(route)?'#kommunikation':'#'+route;
+        const h1=root.querySelector('h1')?.textContent?.trim()||null;
+        return {route,expectedActive:expected,active:[...new Set(active)],heading:h1,
+          controls:fields,formIds:[...root.querySelectorAll('form[id]')].map(el=>el.id),
+          pageWidth:document.documentElement.scrollWidth,
+          viewportWidth:document.documentElement.clientWidth,
+          controlCount:fields.length};
+      },{route});
+      assert.ok(result.heading,'FUN-00 '+item.name+' '+route+' has a page heading');
+      assert.ok(result.controlCount>0,'FUN-00 '+item.name+' '+route+' exposes an action/link');
+      assert.deepEqual(result.active,[result.expectedActive],
+        'FUN-01 '+item.name+' '+route+' shows the right active primary navigation');
+      assert.ok(result.pageWidth<=result.viewportWidth+2,
+        'FUN-01 '+item.name+' '+route+' has no document overflow');
+      if(item.role==='teen'&&route==='mi-foralder'){
+        assert.match(await page.locator('#live-app').innerText(),/skriven för föräldrar/,
+          'FUN-06: teenager sees role-gated explanatory alternative');
+        assert.equal(await page.locator('.mi-parent-guide').count(),0,
+          'FUN-06: teen cannot see parent-only MI guide');
+      }
+      entries.push({scenario:item.name,role:item.role,paired:item.paired,
+        viewportWidth:item.width,environment:'local mocked Chromium',
+        evidence:'tests/visual.mjs captureFunctionalInventory',...result,
+        controlsStatus:'discovered-not-individually-tested'});
+    }
+    const nav=item.width<500?'#live-mobile-nav':'#live-desktop-nav';
+    await page.goto(base+'#hem',{waitUntil:'load'});
+    await page.waitForFunction(()=>document.querySelector('#live-app h1'));
+    for(const route of FUNCTION_AUDIT_PRIMARY){
+      const link=page.locator(nav+' a[href="#'+route+'"]');
+      await link.click();
+      await page.waitForFunction(expected=>location.hash==='#'+expected,route);
+      await page.waitForFunction(expected=>
+        !!document.querySelector('#live-app')?.textContent?.trim()&&
+        !!document.querySelector('#live-desktop-nav a[href="#'+expected+'"][aria-current="page"]'),
+      route);
+      navigation.push({scenario:item.name,route,method:'actual synthetic browser click',
+        result:'pass'});
+    }
+    await context.close();
+  }
+  // No private names, messages, or real credentials are collected: all data is mocked.
+  const outputPath=path.join(output,'functional-controls-synthetic.json');
+  await fs.writeFile(outputPath,JSON.stringify({
+    inventory:'FUN-00',commit:process.env.GITHUB_SHA||'local',
+    generatedAt:new Date().toISOString(),
+    method:'Chromium route render + DOM enumeration + primary tab click',
+    caveat:'SYNTHETIC ONLY. A control listed here is discovered, not functionally verified. Real sign-in, API, two-person consent, and mobile Safari remain UNTESTED.',
+    navigation,entries
+  },null,2)+'\n');
+  console.log('FUN-00 synthetic inventory: '+entries.length+' route/role/viewport snapshots, '+
+    entries.reduce((n,row)=>n+row.controlCount,0)+' visible control occurrences, '+
+    navigation.length+' primary navigation clicks.');
+}
+
 async function freshContext(options,{authenticated=false,paired=false,role="parent",unlocked=false,unlockUnavailable=false,priorityUnavailable=false,priorityFeature=true,privateImportance=false,importanceReadFailure=false,preansweredGeneral=false,preansweredSkipped=false,emptySchyssta=false,homeUnreadFailure=false,personalityComplete=false,personalitySharing=false,personalityPartnerShared=false,privateRetests=false,aiMediator=false,aiAnalyses=false,activityNotifications=false}={}){
   const context=await browser.newContext({...options,locale:"sv-SE",reducedMotion:"reduce"});
   await context.addInitScript(value=>{window.__HK_TEST_USER__=value.user;window.__HK_TEST_PAIRED__=value.paired;window.__HK_TEST_ROLE__=value.role;window.__HK_TEST_UNLOCKED__=value.unlocked;window.__HK_UNLOCK_RPC_UNAVAILABLE__=value.unlockUnavailable;window.__HK_PRIORITY_RPC_UNAVAILABLE__=value.priorityUnavailable;window.__HK_PRIORITISED_TEEN__=value.privateImportance;window.__HK_IMPORTANCE_READ_FAIL__=value.importanceReadFailure;window.__HK_PREANSWERED_GENERAL__=value.preansweredGeneral;window.__HK_PREANSWERED_SKIPPED__=value.preansweredSkipped;window.__HK_SCHYSSTA_EMPTY__=value.emptySchyssta;window.__HK_HOME_UNREAD_FAILURE__=value.homeUnreadFailure;window.__HK_TEST_PERSONALITY_DONE__=value.personalityComplete;window.__HK_TEST_PERSONALITY_PARTNER_SHARED__=value.personalityPartnerShared;},{personalityPartnerShared,personalityComplete,emptySchyssta,homeUnreadFailure,preansweredGeneral,preansweredSkipped,user:authenticated?{id:role==="teen"?"10000000-0000-0000-0000-000000000002":"10000000-0000-0000-0000-000000000001",email:"synthetic@example.invalid"}:null,paired,role,unlocked,unlockUnavailable,priorityUnavailable,privateImportance,importanceReadFailure});
@@ -1963,6 +2076,7 @@ try{
   await checkOverflow(d.page,"Desktop homepage");
   await capture(d.page,"desktop-home.png");
   await d.context.close();
+  await captureFunctionalInventory();
   assert.deepEqual(errors,[],"Browser errors: "+errors.join("; "));
   await fs.writeFile(path.join(output,"visual-audit.json"),JSON.stringify({
     purpose:"Playwright responsive visual review",

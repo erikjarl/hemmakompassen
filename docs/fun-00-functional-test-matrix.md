@@ -1,0 +1,78 @@
+# FUN-00 – spårbar funktionsinventering och testmatris
+
+Datum: 2026-11-08. Kodbas: erikjarl/hemmakompassen. Utgångscommit före detta arbete: 731f0e6c8230b89dde6e41fbd1c84d5cf0742f6b.
+
+## Verifieringsnivå och avgränsning
+
+- Syntetisk CI: automatiska Node-/Chromiumtester med simulerade konton, nätverk och serverdata. Grön baslinje före detta arbete: [UI #42481509234](https://github.com/erikjarl/hemmakompassen/actions/runs/42481509234), [Pages #42481508967](https://github.com/erikjarl/hemmakompassen/actions/runs/42481508967) och [publicerade tillgångar #42481509211](https://github.com/erikjarl/hemmakompassen/actions/runs/42481509211). Det är inte verkliga användarsessioner.
+- Kodkontrakt: existerande kod och tester stödjer utformningen. Denna klassificering är inte ett bevis på att en användare lyckas.
+- Ej testat i verklig session: saknar faktisk end-to-end-verifiering med inloggning, server och mänsklig interaktion.
+- Två verkligt inloggade konton: Ej verifierat. Befintliga testkontons sparade uppgifter ändras inte i inventeringen.
+- Fysisk iPhone/VoiceOver: Ej verifierat. Chromium kan inte ersätta Safari- och skärmläsartest.
+- Publicerad Pages: befintligt tillgångstest verifierar filer; detta bevisar inte att samtliga autentiserade flöden fungerar.
+
+**Statusdisciplin:** en kontroll som bara upptäckts i DOM är inte godkänd funktion. Den nya filen artifacts/functional-controls-synthetic.json genereras av tests/visual.mjs och registrerar synliga knappar, länkar och formulär från 11 rutter i fyra syntetiska scenarier: förälder 320px parad, tonåring 390px parad, förälder 1440px parad och förälder 390px oparad. För var och en sparas namn, route, synligt tillstånd, formulärkoppling och tekniska data-attribut. Rapporten omfattar inte kontosidans verkliga inloggningsflöde. Dubbletter i flera scenarier är avsiktliga. Spara rapporten som CI-artefakt; ingen personlig information används.
+
+## Matris över nuvarande användarflöden
+
+| ID | Roll / förutsättning | Steg / kontroll | Förväntat beteende | Observerat / känt utfall | Bevis | Miljö / nivå | Status / fel-ID |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| FUN-01.01 | Utloggad, mobil | Öppna startsidan, fält för e-post och lösenord | Visa inloggningsformulär och återhämtningslänkar | Form och länkar kontrollerade i syntetiskt UI | tests/visual.mjs; tests/password-auth.test.mjs | Syntetisk CI | Delvis / – |
+| FUN-01.02 | Utloggad | Öppna konto.html, fyll i `email-form` och logga in | Verifierad session öppnar eget konto | Form existerar i kod; verklig inloggning ej kontrollerad | konto.html; tests/password-auth.test.mjs | Kodkontrakt | Ej verifierat / – |
+| FUN-01.03 | Ny användare | Öppna `signup-form`, kontrollera lösenord och skapa konto | Registrering med begriplig felhantering | Form existerar; verklig e-postbekräftelse saknas | konto.html; konto.js | Kodkontrakt | Ej verifierat / – |
+| FUN-01.04 | Utloggad | Begär återställning med `reset-form` | Mejlflöde ska återställa åtkomst utan läckage | Fält/åtgärd inventerade; mejl ej skickat | konto.html; konto.js | Kodkontrakt | Ej verifierat / – |
+| FUN-01.05 | Inloggad | Byt lösenord via `password-form` | Lösenordsbyte bekräftas och ny inloggning fungerar | Form finns; live-Auth ej provad | konto.html; konto.js | Kodkontrakt | Ej verifierat / – |
+| FUN-01.06 | Inloggad | Ändra namn med `name-form` | Profilnamn uppdateras över vyer | Form finns; verklig session ej provad | konto.html; konto.js | Kodkontrakt | Ej verifierat / – |
+| FUN-01.07 | Oparad förälder/tonåring | Välj roll och tryck Skapa familj | Familjeval är rollstyrt och frivilligt | Kontroller i `create-family` finns; live-parning ej provad | konto.html; tests/family-pairing.test.cjs | Kodkontrakt | Ej verifierat / – |
+| FUN-01.08 | Förälder/tonåring | Skapa inbjudan med `make-invite` och verifiera `invite-qr` | QR-kod och inbjudningslänk pekar på rätt flöde | DOM finns; avläsning i verklig telefon ej kontrollerad | konto.html; tests/family-pairing.test.cjs | Kodkontrakt | Ej verifierat / – |
+| FUN-01.09 | Andra kontot | Mata kod i `accept-form` och para ihop | Båda konton ska visa rätt parning | Form finns; två verkliga konton ej körda | konto.html; konto.js | Kodkontrakt | Ej verifierat / – |
+| FUN-01.10 | Inloggad | Logga ut och återvänd till startsida | Privat innehåll ska försvinna från skärmen | Knappen `logout` finns; verklig utloggning ej provad | konto.html; tests/family-pairing.test.cjs | Kodkontrakt | Ej verifierat / – |
+| FUN-01.11 | Förälder, tonåring; 320/390/1440 px | Klicka samtliga 8 huvudflikar med rätt roll | Rätt hash, vy och aktiv navigationsflik för varje klick | Tidigare 390px-sveptest grönt; ny 4-scenariokörning tillagd | tests/visual.mjs; artifacts/functional-controls-synthetic.json | Syntetisk CI | Test utökat / – |
+| FUN-01.12 | Förälder/tonåring | Öppna insikter, MI, NVC och direkta övningsankare | Subvyer ska behålla rätt markerad huvudflik och fokus | Kod har route/fokuslogik; syntetiska övningstester finns | tests/visual.mjs; tests/communication-deep-links.test.mjs | Syntetisk CI | Delvis / – |
+| FUN-01.13 | 390px och verklig iPhone | Stryk i sidled i nederkantsmenyn, större text/landskap/VoiceOver | Alla åtta moduler nås utan överlappning eller osynliga kontroller | Chromium-test finns; verklig iOS saknas | tests/visual.mjs; tests/mobile-more-navigation.test.mjs | Syntetisk CI | Delvis / – |
+| FUN-02.01 | Förälder/tonåring | Tryck JA/NEJ på kort och återuppta halvfärdig lek | Exakt eget svar, korrekt nästa kort och fortsättningsläge | Automatiska testfall för svar/återupptagning finns | tests/visual.mjs; tests/live-swipe-session.test.mjs | Syntetisk CI | Delvis / – |
+| FUN-02.02 | Tonåring | Läs/avstå/dela förståelsekort och återkalla | Privata B-svar blir delade endast efter uttryckligt val | Kontraktstester finns; två verkliga konton återstår | tests/live-understanding-sharing.test.mjs | Kodkontrakt | Delvis / – |
+| FUN-02.03 | Båda roller | Spela och återuppta sex temakortlekar | Alla kort nås utan att svar går förlorade | Enskilda tema-/återhämtningsfall testade; varje kort ej provat | tests/visual.mjs; tests/private-theme-answer-review.test.mjs | Syntetisk CI | Delvis / – |
+| FUN-02.04 | Inloggad | Sök egna besvarade kort, ändra svar och återgå | Filtrering och rättning får inte skriva ovidkommande svar | Syntetisk browser-check för temakort finns | tests/visual.mjs; tests/private-general-answer-review.test.mjs | Syntetisk CI | Delvis / – |
+| FUN-02.05 | Parade roller | Visa JA+JA, filter, delade insikter och tomt matchningsläge | Inga ensidiga JA eller privata NEJ i gemensam vy | Kod-/Chromiumkontrakt finns; signerade roller saknas | tests/live-swipe-results.test.mjs; tests/visual.mjs | Syntetisk CI | Delvis / – |
+| FUN-02.06 | Parade roller | Ändra/dela/återkalla privat prioritet | Synlighet följer aktuellt frivilligt delningsval | Syntetiska kontrakt finns; verkligt tvåkontotest saknas | tests/swipe-priority-consent.test.mjs | Kodkontrakt | Delvis / – |
+| FUN-02.07 | Parade roller | Klicka insikts-/aktivitetslänk från notis | Endast aktuell verifierad matchning öppnas | Syntetisk Chromium-regression finns | tests/visual.mjs; tests/activity-notification-deeplinks.test.mjs | Syntetisk CI | Delvis / – |
+| FUN-02.08 | AI-testkonto | Läs Gillaswajpens AI-text och klicka föreslagna övningar | 2–3 konkreta förslag, inga frågor i förslagsdelen | Prompt-/fallback-tester finns; faktiskt modellutfall ej provat | tests/ai-result-analysis.test.mjs; tests/ai-result-exercise-links.test.mjs | Kodkontrakt | Ej verifierat i modell / – |
+| FUN-03.01 | Parade roller | Skapa eget förslag och skicka, kontrollera utkast | Oskrivet beslut förblir utkast; serverbekräftelse behövs | Syntetiskt Schyssta-formulär testat | tests/visual.mjs; tests/live-schyssta-list.test.mjs | Syntetisk CI | Delvis / – |
+| FUN-03.02 | Parade roller | Godkänn, avböj, välj Inte nu och ångra | Status och väntande antal ska uppdateras korrekt | Syntetiska klick/status/regressionsfall finns | tests/visual.mjs; tests/live-schyssta-list.test.mjs | Syntetisk CI | Delvis / – |
+| FUN-03.03 | Parade roller | Föreslå ändring, avsluta regel och öppna historik | Tidigare text gäller tills båda godkänt ändring | Kod- och automatiserade tester finns; två verkliga konton saknas | tests/live-schyssta-list.test.mjs; tests/visual.mjs | Kodkontrakt | Delvis / – |
+| FUN-03.04 | Parade roller | Kopiera/ladda ned gemensamt godkända regler | Endast godkända överenskommelser i export | Syntetisk nedladdning och textinnehåll testat | tests/visual.mjs; tests/schyssta-approved-text-export.test.mjs | Syntetisk CI | Delvis / – |
+| FUN-03.05 | Parade roller | Skriv, skicka, ta emot, bläddra och läsmarkera privata meddelanden | Rätt mottagare och kvittenser utan dubbelpublicering | Syntetiska tester finns; verklig tvåvägschatt saknas | tests/family-chat-send-retry.test.mjs; tests/visual.mjs | Syntetisk CI | Delvis / – |
+| FUN-03.06 | Parade roller | Öppna notis, läsmarkera, följ länk | Rätt resurssida utan automatisk läskvittens | Syntetiskt webbläsarflöde finns | tests/visual.mjs; tests/activity-notification-ui.test.mjs | Syntetisk CI | Delvis / – |
+| FUN-03.07 | Parade roller/okänd parning | Visa uppdaterad Schyssta-lista, fel och tomläge | Ingen missvisande väntande siffra vid läsfel | Syntetisk fail-closed-testning finns | tests/visual.mjs; tests/schyssta-active-pair-preflight.test.mjs | Syntetisk CI | Delvis / – |
+| FUN-04.01 | Båda roller | Besvara 50 IPIP-uppgifter och slutför | Alla svar sparas med rätt faktorpoäng | Node-/UI-testkod finns; komplett verkligt test saknas | tests/ipip50-ui.test.mjs; tests/ipip50.test.mjs | Kodkontrakt | Delvis / – |
+| FUN-04.02 | Båda roller | Avbryt och återuppta pågående formulär | Tidigare svar finns kvar i samma session | Kontraktstester finns; verklig auth ej provad | tests/ipip50-ui.test.mjs | Kodkontrakt | Delvis / – |
+| FUN-04.03 | Resultatvy | Läs fem staplar, referenszon och percentilförklaring | Tydlig osäkerhet; inga diagnostiska påståenden | Befintliga Node-/Chromiumtester finns | tests/ipip50-reference.test.mjs; tests/visual.mjs | Syntetisk CI | Delvis / – |
+| FUN-04.04 | Parade roller | Dela bådas fem skalor och återkalla | Jämförelse bara med aktivt tvåsidigt samtycke | Kontraktstester finns; signerad delning återstår | tests/ipip50-family-insights.test.mjs; tests/visual.mjs | Kodkontrakt | Delvis / – |
+| FUN-04.05 | Inloggad | Skapa/pausa/slutför privat omtest, öppna historik | Varje omtest separat och privat | Syntetisk UI- och Node-testning finns | tests/ipip50-retest-ui.test.mjs | Kodkontrakt | Delvis / – |
+| FUN-04.06 | Inloggad | Exportera/radera egna svar och testa återhämtning | Export korrekt och radering bekräftad | Kod-/unit-tester finns; verklig radering ej provad | tests/ipip50-ui.test.mjs; tests/ipip50-retest-ui.test.mjs | Kodkontrakt | Delvis / – |
+| FUN-05.01 | AI-testkonto | Öppna AI-medlare, skicka nytt meddelande | Svar visas i rätt samtal, med fel och kvot hanterade | Syntetiskt Worker-anrop via browser finns | tests/visual.mjs; tests/ai-mediator-ui.test.mjs | Syntetisk CI | Delvis / – |
+| FUN-05.02 | AI-testkonto | Växla projektkontext av/på och skicka nytt meddelande | Valet följer respektive API-begäran | Syntetiskt positivt/negativt anrop kontrollerat | tests/visual.mjs; tests/ai-mediator-context.test.mjs | Syntetisk CI | Delvis / – |
+| FUN-05.03 | AI-testkonto | Byt mellan privata sparade samtal och prova hämtfel | Ingen föregående konversation syns under ny rubrik | Node-regression finns; autentiserat verkligt byte saknas | tests/ai-mediator-history-switch.test.mjs | Kodkontrakt | Delvis / – |
+| FUN-05.04 | AI-testkonto | Läs profil- och swipeanalys; prova övningslänk | AI-text och avsnittet Förslag visar handlingssteg | Syntetisk Worker och UI provat; verklig modell ej granskad | tests/visual.mjs; tests/ai-result-analysis.test.mjs | Syntetisk CI | Delvis / – |
+| FUN-05.05 | AI-testkonto, båda roller | Läs faktiskt Worker-svar och bedöm konkretion, tolkning och länkar | Råd ska vara rollanpassade och sakligt försiktiga | Inga signerade live-modelsvar insamlade i detta pass | docs/ai-reflections-two-account-qa.md | Ej testat i verklig session | Ej verifierat / – |
+| FUN-06.01 | Båda roller | Öppna varje av nio kommunikationsövningar via djuplänk | Rätt övning öppnas och kan få tangentbordsfokus | Kontrakt/Chromium-deeplink-tester finns | tests/communication-deep-links.test.mjs; tests/visual.mjs | Syntetisk CI | Delvis / – |
+| FUN-06.02 | Båda roller | Fyll i NVC och generera, kopiera/rensa text | Egen text visas utan automatiskt nätverksskick | Node-/UI-kontroller finns; all kopieringsinteraktion ej prövad | tests/communication-toolkit.test.mjs; tests/visual.mjs | Kodkontrakt | Delvis / – |
+| FUN-06.03 | Förälder respektive tonåring | Öppna MI-länk och pröva begränsad tonårsvy | Endast förälder ser MI-guide; tonåring får saklig hänvisning | Kod- och nytt roll-/routetest finns | tests/mi-guide.test.mjs; tests/visual.mjs | Syntetisk CI | Delvis / – |
+| FUN-06.04 | Båda roller | Skapa privat spegling/samtalsplan och rensa | Lokalt utkast, tydliga fel/tomlägen | Enhetstester finns, full verklig mobilinteraktion ej granskad | tests/communication-toolkit.test.mjs | Kodkontrakt | Delvis / – |
+| FUN-06.05 | Båda roller | Följ korslänk från varje huvudmodul till NVC/övning | Rätt route/fokus utan att ändra svar | Syntetiska korslänkstester finns | tests/communication-crosslinks.test.mjs; tests/visual.mjs | Syntetisk CI | Delvis / – |
+
+## Öppet åtgärds- och testarbete
+
+1. Gå igenom genererad controls-rapport i CI och lägg till förväntat resultat, faktisk handling och utfall för varje control-id/namn. Inventeringen är bara startpunkten; inte en täckningsgaranti.
+2. Genomför två faktiskt autentiserade användarsessioner för FUN-01–05 utan att skriva över historiska svar. Dokumentera exakta roller, teststeg, tidsstämpel, utfall och skärmbilder med borttagna privata uppgifter.
+3. Prova varje temakortlek hela vägen genom första användning, delvis färdiga kort och färdig lek. Den befintliga syntetiska testen täcker inte automatiskt varje enskild kombination.
+4. Testa Safari på riktig iPhone, VoiceOver, tangentbord och zoom. Notera specifikt den horisontella navigeringen och formulärens fokus.
+5. Testa verkligt AI-svar från allowlistad Worker med båda rollerna, separata referensfall och rubricerat Förslag. Kontrollera att råden är konkreta och inte överdriver personlighetstolkning.
+6. Vid reproducerat användarfel: skapa FUN-XX-incident med exakta steg, förväntat/faktiskt utfall, reproducerbarhet, skärmbild/logg och föreslagen minsta ändring.
+
+## Testuppföljning
+
+Den genererade funktionslistan ligger i GitHub Actions-körningens artifacts/functional-controls-synthetic.json. Den är en maskinell upptäcktslista, inte ett kliniskt eller funktionellt godkännande. Markera inget flöde som fullständigt verifierat förrän tillämpliga faktiska tester utförts.
+
+Detta arbete ändrar inga migrationsfiler, RLS-regler, autentiseringsmekanismer eller verkliga användarsvar.
