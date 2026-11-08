@@ -23,6 +23,7 @@ function fixture({mode='ok',stored=null,readFailure=false,malformed=null}={}){
           assert.equal(row.question_id,QUESTION);
           if(writeMode==='reject')return {error:{message:'database refused'}};
           answers.set(row.question_id,row.answer.value);
+          if(writeMode==='no-response')return undefined;
           if(writeMode==='throw-after')throw Error('socket closed after commit');
           if(writeMode==='lost-ack')return {error:{message:'response lost'}};
           return {error:null};
@@ -76,6 +77,12 @@ test('a thrown acknowledgement error after commit can also be confirmed',async()
   assert.equal(result.saved,true);
   assert.equal(x.readbacks(),1);
   assert.equal(x.answers.get(QUESTION),5);
+});
+test('a missing write response is reconciled rather than silently accepted',async()=>{
+  const x=fixture({mode:'no-response'});
+  const saved=await saveMyIPIP50Answer(x.db,QUESTION,4);
+  assert.equal(saved.saved,true);
+  assert.equal(x.readbacks(),1,'A missing receipt must be read back from the same account');
 });
 test('a rejected write with no saved answer must not be reported as success',async()=>{
   const x=fixture({mode:'reject'});
