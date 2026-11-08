@@ -61,7 +61,7 @@ assert.match(source,/if\(returnToReview\)reopenGeneralReview\(\);else render\(\)
  'Successful answer or skip returns to the private review');
 assert.match(source,/if\(e\.target\.closest\('#swipe-general-review-back'\)/,
  'Canceling a private edit is allowed without saving');
-assert.match(source,/generalReviewEdit=null;user=u/,
+assert.match(source,/generalReviewEdit=null;themeReviewEdit=null;user=u/,
  'Refresh clears ephemeral editing state across accounts');
 
 console.log('PASS private general review: owner-only, role-safe, escaped, filtered and directly editable');
