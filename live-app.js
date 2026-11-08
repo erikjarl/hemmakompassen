@@ -686,6 +686,38 @@ function swipeResults(deckId='general'){
     (useAi?sharedFactOverview(groups)+aiResults.panel('swipe',deckId,sig):sharedSummary(groups,deckId,priorityIds))+
     button+'</section>';
 }
+// A shared-match refresh must not collapse a user's expanded private answer list.
+// Only restores local presentation for the same signed-in account and pairing session.
+function renderKeepingGeneralReview(){
+ const owner=user?.id,session=sharedSession;
+ const root=page()==='swipe'&&!activeThemeDeck?$('swipe-general-review'):null;
+ const expanded=root?.querySelector('details')?.open===true;
+ const active=document.activeElement;
+ const focusIndex=expanded?active?.closest?.('[data-general-review-index]')?.dataset.generalReviewIndex:null;
+ const focusId=expanded&&active?.id?.startsWith('swipe-general-review-')?active.id:null;
+ const state=expanded?{
+  search:String($('swipe-general-review-search')?.value||'').slice(0,120),
+  filter:$('swipe-general-review-answer')?.value||'all',
+  focusIndex,focusId
+ }:null;
+ render();
+ if(!state||owner!==user?.id||session!==sharedSession||page()!=='swipe'||activeThemeDeck)return;
+ const replacement=$('swipe-general-review');
+ if(!replacement)return;
+ const details=replacement.querySelector('details');
+ if(details)details.open=true;
+ const search=$('swipe-general-review-search'),answer=$('swipe-general-review-answer');
+ if(search)search.value=state.search;
+ if(answer)answer.value=['yes','no','skipped'].includes(state.filter)?state.filter:'all';
+ filterPrivateGeneralReview();
+ if(focusIndex){
+  const selected=[...replacement.querySelectorAll('[data-general-review-index]')].find(b=>
+    b.dataset.generalReviewIndex===focusIndex&&!b.closest('[data-general-review-kind]')?.hidden);
+  (selected||search)?.focus({preventScroll:true});
+ }else if(focusId){
+  document.getElementById(focusId)?.focus({preventScroll:true});
+ }
+}
 async function fetchSwipeMatches(deckId='general',{quiet=false}={}){
   if(!user||members.length!==2)return;
   const deck=sharedDeck(deckId);
@@ -695,7 +727,7 @@ async function fetchSwipeMatches(deckId='general',{quiet=false}={}){
   const previousResults=quietRefresh?JSON.stringify([sharedMatches,sharedPriorities,sharedPriorityError]):null;
   sharedDeckId=deckId;
   if(!quietRefresh){sharedMatches=[];sharedPriorities=[];sharedLoading=true;sharedError='';sharedPriorityError='';
-    if(page()==='swipe'&&!swipeBusy)render();}
+    if(page()==='swipe'&&!swipeBusy)renderKeepingGeneralReview();}
   try{
     const [matchResult,priorityResult]=await Promise.all([
       db.rpc('shared_swipe_matches',{p_deck_id:deckId}),
@@ -735,7 +767,7 @@ async function fetchSwipeMatches(deckId='general',{quiet=false}={}){
   }finally{
     if(session===sharedSession&&request===sharedRequest&&user?.id===viewer&&sharedDeckId===deckId){
       sharedLoading=false;
-      if(page()==='swipe'&&!swipeBusy&&(!quietRefresh||sharedError||previousResults!==JSON.stringify([sharedMatches,sharedPriorities,sharedPriorityError])))render();
+      if(page()==='swipe'&&!swipeBusy&&(!quietRefresh||sharedError||previousResults!==JSON.stringify([sharedMatches,sharedPriorities,sharedPriorityError])))renderKeepingGeneralReview();
     }
   }
 }
