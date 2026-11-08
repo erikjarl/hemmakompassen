@@ -215,18 +215,41 @@ export function createPrivateIpipRetests({
     if(action==='complete'&&draftId&&Object.keys(answers).length===50){
       const id=userId,token=generation,attemptId=draftId;
       busy=true;status='Avslutar omgången…';repaint();
+      let completedAt=null,ackMissing=false;
       try{
         const result=await db.from('personality_test_attempts')
           .update({completed_at:new Date().toISOString()})
           .eq('user_id',id).eq('id',attemptId)
           .select('id,completed_at').single();
-        if(result.error||!result.data?.completed_at)throw result.error||Error('Completion unconfirmed');
+        if(result?.error||result?.data?.id!==attemptId||
+          !Number.isFinite(Date.parse(String(result?.data?.completed_at||''))))
+          throw result?.error||Error('Completion unconfirmed');
+        completedAt=result.data.completed_at;
+      }catch{
+        ackMissing=true;
+        // The UPDATE may have committed despite a lost HTTP response. Check
+        // only this signed-in viewer's exact attempt before declaring failure.
         if(!isCurrent(id,token))return true;
-        attempts=attempts.map(a=>a.id===attemptId?{...a,completed_at:result.data.completed_at}:a);
+        try{
+          const r=await db.from('personality_test_attempts')
+            .select('id,completed_at').eq('user_id',id).eq('id',attemptId).maybeSingle();
+          if(!r?.error&&r?.data?.id===attemptId&&
+            Number.isFinite(Date.parse(String(r.data.completed_at||''))))
+            completedAt=r.data.completed_at;
+        }catch{/* Keep the outcome unknown rather than inventing a failure. */}
+      }
+      if(!isCurrent(id,token)||draftId!==attemptId)return true;
+      if(completedAt){
+        attempts=attempts.map(a=>a.id===attemptId?{...a,completed_at:completedAt}:a);
         draftId=null;surveyOpen=false;historyId=attemptId;historyAnswers={...answers};answers={};
-        status='Den privata omgången har avslutats och sparats.';
-      }catch(e){if(isCurrent(id,token))status='Det gick inte att bekräfta avslutningen. Kontrollera din omgång innan du försöker igen.';}
-      if(isCurrent(id,token)){busy=false;repaint();}
+        status=ackMissing
+          ?'Servern bekräftar att omgången avslutades trots ett kommunikationsfel.'
+          :'Den privata omgången har avslutats och sparats.';
+      }else{
+        lifecycleNeedsCheck=true;
+        status='Det går inte att bekräfta om omgången avslutades. Kontrollera omtestets status mot servern innan du försöker igen.';
+      }
+      busy=false;repaint();
       return true;
     }
     if(action==='export'){
