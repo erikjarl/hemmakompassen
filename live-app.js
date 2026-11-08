@@ -294,6 +294,10 @@ async function fetchFamilyChat(older=false,{quiet=false}={}){
 }
 async function markAllFamilyChatRead(){
   if(!user||members.length!==2||!inboxPairEpoch||familyChatReadBusy||familyChatLoading||familyChatUnreadError||familyChatUnread<1)return false;
+  // Active user actions must revalidate the same pair epoch, not rely only on
+  // focus/polling checks. On unpair/re-pair, recheckInboxPair clears old text.
+  if(!await recheckInboxPair())return false;
+  if(!user||members.length!==2||!inboxPairEpoch||familyChatReadBusy||familyChatUnreadError||familyChatUnread<1)return false;
   const viewer=user.id,session=sharedSession;
   familyChatReadBusy=true;
   familyChatStatus='Markerar alla meddelanden som lästa…';
@@ -320,6 +324,10 @@ async function sendFamilyChatMessage(){
   if(!user||members.length!==2||!inboxPairEpoch||familyChatSending)return;
   const body=familyChatDraft.trim();
   if(!body||body.length>1500){familyChatStatus='Skriv ett meddelande med högst 1 500 tecken.';render();return;}
+  // Recheck immediately before sending so a re-pair in another tab invalidates
+  // the previous private conversation and unsent draft before any write RPC.
+  if(!await recheckInboxPair())return;
+  if(!user||members.length!==2||!inboxPairEpoch||familyChatSending||familyChatDraft.trim()!==body)return;
   if(!familyChatRequestKey)familyChatRequestKey=crypto.randomUUID();
   const viewer=user.id,session=sharedSession,token=familyChatRequestKey;
   familyChatSending=true;familyChatStatus='Skickar meddelandet…';render();
@@ -2041,9 +2049,9 @@ const inviteActivity=e.target.closest('[data-insight-activity]');
 if(inviteActivity&&['insikter','swipe'].includes(page())&&!activityInviteBusy)void prepareActivityMessage(inviteActivity.dataset.insightActivity);
 if(e.target.closest('#home-refresh-notices')&&user&&members.length===2){if(schysstaListEnabled&&!schysstaLoading)void fetchSchysstaList();void fetchFamilyChatUnread();void fetchActivityNotifications();}
 if(e.target.closest('#inbox-retry-pair'))void refresh().catch(showError);
-if(e.target.closest('[data-family-chat-refresh]'))void fetchFamilyChat();
+if(e.target.closest('[data-family-chat-refresh]'))void recheckInboxPair().then(valid=>{if(valid)void fetchFamilyChat();});
 if(e.target.closest('[data-family-chat-mark-all-read]'))void markAllFamilyChatRead();
-if(e.target.closest('[data-family-chat-more]'))void fetchFamilyChat(true);
+if(e.target.closest('[data-family-chat-more]'))void recheckInboxPair().then(valid=>{if(valid)void fetchFamilyChat(true);});
 if(e.target.closest('#schyssta-retry')&&!schysstaLoading)void fetchSchysstaList();
 if(e.target.closest('[data-schyssta-refresh]')&&!schysstaLoading)void fetchSchysstaList();
 if(e.target.closest('[data-schyssta-copy]'))void copySchysstaAgreements();
