@@ -263,3 +263,41 @@ test('AI-UX-05 preserves two valid action items but rejects additional unsafe li
  const corrected=enforceActionableAnalysis(injected,'swipe');
  assert.doesNotMatch(corrected,/evil\.example/);
 });
+
+
+test('AI-UX-05 rejects unsupported route suffixes instead of keeping unclickable recommendations',()=>{
+  const invalid=[
+    '#kommunikation/kontakt2',
+    '#kommunikation/kontakt_more',
+    '#kommunikation/kontakt-extra',
+    '#kommunikation/kontakt/extra',
+    '#kommunikation/kontakt%20',
+    '#kommunikation/kontaktå',
+    '#kommunikation/kontakt!',
+    '#kommunikation/kontakt #nvc',
+    '#kommunikation/kontakt https://example.com'
+  ];
+  for(const kind of ['swipe','personality']){
+    for(const route of invalid){
+      const answer='Reflektion:\nTestar länkarna.\n\nFörslag:\n'+
+        '1. Välj ett gemensamt tillfälle och föreslå ett litet steg tillsammans. '+route+'\n'+
+        '2. Skriv en konkret frivillig aktivitet ni kan prova och planera in. #kommunikation/lyssna';
+      const corrected=enforceActionableAnalysis(answer,kind);
+      assert.ok(!corrected.includes(route),'invalid route was preserved: '+route);
+      assert.match(corrected,/Förslag:\n1\. /);
+      assert.doesNotMatch(corrected.split('Förslag:')[1],/\?/);
+      assert.equal((corrected.match(/#kommunikation\//g)||[]).length,2);
+    }
+  }
+});
+
+test('AI-UX-05 accepts two distinct complete clickable routes, but no extra hash route',()=>{
+  const original='Reflektion:\nEtt försiktigt exempel.\n\nFörslag:\n'+
+    '1. Välj ett konkret exempel och lyssna färdigt innan ni svarar. #kommunikation/lyssna\n'+
+    '2. Prova en liten frivillig aktivitet tillsammans den här veckan. #kommunikation/kontakt';
+  assert.equal(enforceActionableAnalysis(original,'swipe'),original);
+  const withExtra=original.replace('lyssna färdigt','lyssna #nvc färdigt');
+  const corrected=enforceActionableAnalysis(withExtra,'swipe');
+  assert.doesNotMatch(corrected,/#nvc/);
+  assert.notEqual(corrected,withExtra);
+});

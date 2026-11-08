@@ -92,7 +92,9 @@ export async function loadResultAnalysisInput(env,jwt,userId,role,kind,scope,fet
 
 // Only existing, role-neutral, read-only exercises are allowed in AI suggestions.
 const EXERCISE_IDS=['lyssna','pausa','reparera','losning','kontakt','svaart','validera','onskemal','grans'];
-const ROUTE_RE=new RegExp('#kommunikation/(?:'+EXERCISE_IDS.join('|')+')(?![a-z/-])');
+// Require an exact, supported exercise route at the END of each action item.
+// A valid prefix of #kommunikation/kontakt2 or /kontakt-extra is not a link.
+const ROUTE_END_RE=new RegExp('(?:^|\\s)#kommunikation/(?:'+EXERCISE_IDS.join('|')+')$');
 const FALLBACK_SUGGESTIONS={
   personality:[
     '1. Välj en av dina fem skalor och skriv ned ett vardagsexempel som du känner igen. Prova att återge upplevelsen utan värdering: #kommunikation/validera',
@@ -112,10 +114,12 @@ export function enforceActionableAnalysis(reply,kind){
   const reflection=(heading?text.slice(0,heading.index):text).trim().slice(0,7000);
   const tail=heading?text.slice(heading.index+heading[0].length).trim():'';
   const lines=tail.split('\n').map(line=>line.trim()).filter(Boolean);
-  const usable=lines.length>=2&&lines.length<=3&&lines.every((line,i)=>
-    line.startsWith((i+1)+'. ')&&line.length>=40&&line.length<=650&&
-    !line.includes('?')&&ROUTE_RE.test(line)&&
-    !/(?:https?:\/\/|#[a-z]+(?:\/|$))/i.test(line.replace(ROUTE_RE,'')));
+  const usable=lines.length>=2&&lines.length<=3&&lines.every((line,i)=>{
+    const route=ROUTE_END_RE.exec(line);
+    return line.startsWith((i+1)+'. ')&&line.length>=40&&line.length<=650&&
+      !line.includes('?')&&route!==null&&
+      !/(?:https?:\/\/|#\S+)/i.test(line.slice(0,route.index));
+  });
   const suggestions=usable?lines:FALLBACK_SUGGESTIONS[kind]||FALLBACK_SUGGESTIONS.personality;
   return (reflection?reflection+'\n\n':'')+'Förslag:\n'+suggestions.join('\n');
 }
