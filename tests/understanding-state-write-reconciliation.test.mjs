@@ -77,7 +77,7 @@ test('unknown status explains uncertainty for an answer and a skip',()=>{
  const h=harness();
  assert.match(h.state.message('unknown','answer'),/går inte att kontrollera om ditt svar sparades/i);
  assert.match(h.state.message('unknown','skip'),/går inte att kontrollera om din överhoppning sparades/i);
- assert.match(h.state.message('different','answer'),/kunde inte bekräftas som sparad/i);
+ assert.match(h.state.message('different','answer'),/kunde inte bekräftas som sparat/i);
  assert.match(h.state.message('different','skip'),/kunde inte bekräftas som sparad/i);
 });
 test('both B answer and B skip use the production readback after write errors',()=>{
