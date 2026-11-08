@@ -1453,9 +1453,11 @@ function menu(){
       // Defer until layout, without scrolling the document or content pane.
       requestAnimationFrame(()=>{
         if(page()!==route)return;
-        const left=current.offsetLeft,right=left+current.offsetWidth;
-        if(left<mobile.scrollLeft)mobile.scrollLeft=left-8;
-        else if(right>mobile.scrollLeft+mobile.clientWidth)mobile.scrollLeft=right-mobile.clientWidth+8;
+        // Use viewport-relative rectangles; offsetLeft may be relative to a
+        // distant offsetParent, which misaligns the active tab on mobile.
+        const navBox=mobile.getBoundingClientRect(),tabBox=current.getBoundingClientRect();
+        if(tabBox.left<navBox.left+4)mobile.scrollLeft-=navBox.left+4-tabBox.left;
+        else if(tabBox.right>navBox.right-4)mobile.scrollLeft+=tabBox.right-navBox.right+4;
       });
     }
   }
