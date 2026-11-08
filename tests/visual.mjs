@@ -1118,26 +1118,6 @@ try{
   await checkOverflow(skipAgain.page,'Mobile skipped-card revisit');
   await capture(skipAgain.page,'mobile-teen-skipped-revisit.png');
   await skipAgain.context.close();
-  // NOT-02: use one unchanged synthetic paired account to compare server-backed
-  // pending rule counts across both routes. Do not mutate any rule decisions.
-  const pendingConsistency=await freshContext(
-    {viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},
-    {authenticated:true,paired:true}
-  );
-  await pendingConsistency.page.goto(base+'#regler',{waitUntil:'load'});
-  await pendingConsistency.page.locator('#schyssta-rule-30000000-0000-4000-8000-000000000001').waitFor();
-  const rulePendingTitle=await pendingConsistency.page.getByRole('heading',{name:/^Behöver ditt svar/}).innerText();
-  const rulePendingCount=Number(rulePendingTitle.match(/\((\d+)\)/)?.[1]||0);
-  await pendingConsistency.page.goto(base+'#hem',{waitUntil:'load'});
-  await pendingConsistency.page.waitForFunction(()=>!document.querySelector('#live-app')?.textContent?.includes('Kontrollerar väntande regelförslag'));
-  const homePendingTitle=await pendingConsistency.page.getByRole('heading',{name:/^Behöver ditt svar/}).allTextContents();
-  const homePendingCount=Number(homePendingTitle[0]?.match(/(\d+) förslag/)?.[1]||0);
-  assert.equal(homePendingCount,rulePendingCount,
-    'NOT-02: home and Schyssta show identical pending decisions for one unchanged paired account');
-  const navBadge=await pendingConsistency.page.locator('#live-mobile-nav a[href="#regler"] .live-nav-count').textContent();
-  assert.equal(Number(navBadge),rulePendingCount,
-    'NOT-02: rule badge agrees with both pending headings');
-  await pendingConsistency.context.close();
   const paired=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,paired:true});
   await paired.page.goto(base+"#swipe",{waitUntil:"load"});
   await paired.page.getByRole("heading",{name:"Era gemensamma svar"}).waitFor();
@@ -1619,6 +1599,18 @@ try{
 
   await paired.page.getByRole('button',{name:'Se och svara i Schyssta listan'}).first().click();
   await paired.page.getByRole('heading',{name:'Schyssta listan'}).waitFor();
+  await paired.page.locator('#schyssta-rule-30000000-0000-4000-8000-000000000001').waitFor();
+  const loadedRuleHeading=await paired.page.getByRole('heading',{name:/^Behöver ditt svar/}).innerText();
+  const loadedRuleCount=Number(loadedRuleHeading.match(/\((\d+)\)/)?.[1]||0);
+  await paired.page.goto(base+'#hem',{waitUntil:'load'});
+  await paired.page.getByRole('heading',{name:/^Hej /}).waitFor();
+  await paired.page.waitForFunction(()=>!document.querySelector('#live-app')?.textContent?.includes('Kontrollerar väntande regelförslag'));
+  const loadedHomeHeadings=await paired.page.getByRole('heading',{name:/^Behöver ditt svar/}).allTextContents();
+  const loadedHomeCount=Number(loadedHomeHeadings[0]?.match(/(\d+) förslag/)?.[1]||0);
+  assert.equal(loadedHomeCount,loadedRuleCount,'NOT-02: home and Schyssta rule view have the same pending count');
+  const loadedNavCount=await paired.page.locator('#live-mobile-nav a[href="#regler"] .live-nav-count').textContent();
+  assert.equal(Number(loadedNavCount),loadedRuleCount,'NOT-02: mobile rule badge agrees with both views');
+  await paired.page.goto(base+'#regler',{waitUntil:'load'});
   await paired.page.locator('#schyssta-rule-30000000-0000-4000-8000-000000000001').waitFor();
   await checkOverflow(paired.page,'Mobile Schyssta listan');
   const schysstaOrder=await paired.page.locator('.schyssta-view').evaluate(root=>{
