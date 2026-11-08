@@ -106,6 +106,146 @@ const FUNCTION_AUDIT_ROUTES=Object.freeze([
 const FUNCTION_AUDIT_PRIMARY=Object.freeze([
   'hem','inkorg','swipe','personlighet','kommunikation','regler','medlare','installningar'
 ]);
+// FUN-01: exercise the actual account page's DOM handlers with an in-memory
+// Supabase stand-in. This never signs in, writes to Supabase, or sends mail.
+async function testAccountBrowserJourney(){
+  const steps=[];
+  const context=await browser.newContext({viewport:{width:390,height:844},
+    locale:'sv-SE',reducedMotion:'reduce',deviceScaleFactor:2,isMobile:true,hasTouch:true});
+  await context.route(base+'backend-config.js*',route=>route.fulfill({
+    contentType:'application/javascript',
+    body:"window.HEMMAKOMPASSEN_BACKEND={supabaseUrl:'https://synthetic.invalid',supabasePublishableKey:'synthetic'};"
+  }));
+  const accountMock=[
+    'export function createClient(){',
+    '  const state={user:null,members:[],name:""};',
+    '  const calls=window.__HK_ACCOUNT_CALLS__=[];',
+    '  const record=name=>calls.push(name);',
+    '  const auth={',
+    '    async getUser(){return {data:{user:state.user},error:null};},',
+    '    async signInWithPassword(){record("login");state.user={id:"synthetic-parent",email:"test@example.invalid"};return {error:null};},',
+    '    async signUp(){record("signup");return {data:{session:null},error:null};},',
+    '    async resetPasswordForEmail(){record("reset");return {error:null};},',
+    '    async updateUser(){record("password-update");return {error:null};},',
+    '    async signOut(){record("logout");state.user=null;return {error:null};},',
+    '    onAuthStateChange(){return {data:{subscription:{unsubscribe(){}}}};}',
+    '  };',
+    '  const from=()=>({',
+    '    select:()=>({eq:()=>({maybeSingle:async()=>({data:{display_name:state.name},error:null})})}),',
+    '    upsert:async row=>{record("name-update");state.name=row.display_name;return {error:null};}',
+    '  });',
+    '  const rpc=async name=>{record(name);',
+    '    if(name==="my_family_members")return {data:state.members,error:null};',
+    '    if(name==="start_family"){state.members=[{user_id:"synthetic-parent",role:"parent",display_name:"Provförälder"}];return {data:null,error:null};}',
+    '    if(name==="create_family_invite")return {data:"2030-01-01T12:00:00Z",error:null};',
+    '    if(name==="accept_family_invite"){state.members.push({user_id:"synthetic-teen",role:"teen",display_name:"Provtonåring"});return {data:null,error:null};}',
+    '    throw Error("Unmocked account RPC "+name);',
+    '  };',
+    '  return {auth,from,rpc};',
+    '}'
+  ].join('\n');
+  await context.route('https://esm.sh/**',route=>route.fulfill({
+    contentType:'application/javascript',body:accountMock
+  }));
+  const page=await context.newPage();
+  page.on('pageerror',e=>errors.push(e.message));
+  const invitation='A'.repeat(36);
+  await page.goto(base+'konto.html#invite='+invitation,{waitUntil:'load'});
+  await page.locator('#logged-out:not(.hidden)').waitFor();
+  await page.locator('#invite-notice:not(.hidden)').waitFor();
+  assert.match(await page.locator('#invite-notice').innerText(),/Familjeinbjudan hittad/);
+  assert.equal((await page.locator('#status').innerText()).trim(),'','The invitation is not a transient form result');
+  assert.equal(await page.locator('#logged-in:not(.hidden)').count(),0);
+  await checkOverflow(page,'FUN-01 account logged out');
+  steps.push('account logged-out invitation banner');
+  await capture(page,'mobile-account-invite-loggedout.png');
+
+  await page.locator('#register summary').click();
+  await page.locator('#signup-email').fill('test@example.invalid');
+  await page.locator('#signup-password').fill('abcdefghijklmnop');
+  await page.locator('#signup-confirm').fill('otherlongpassword');
+  await page.locator('#signup-form').evaluate(el=>el.requestSubmit());
+  await page.waitForFunction(()=>document.querySelector('#status')?.textContent?.includes('Lösenorden stämmer inte'));
+  assert.equal((await page.evaluate(()=>window.__HK_ACCOUNT_CALLS__)).filter(x=>x==='signup').length,0,
+    'FUN-01 mismatch must not call registration API');
+  steps.push('invalid signup rejected before API');
+  await page.locator('#signup-confirm').fill('abcdefghijklmnop');
+  await page.locator('#signup-form').evaluate(el=>el.requestSubmit());
+  await page.waitForFunction(()=>(window.__HK_ACCOUNT_CALLS__||[]).includes('signup'));
+  await page.waitForFunction(()=>!document.querySelector('#signup-form button')?.disabled);
+  assert.match(await page.locator('#status').innerText(),/Kontrollera din e-post för att bekräfta kontot/,
+    'FUN-01: signup feedback must remain visible even when invite URL is present');
+  assert.equal(await page.locator('#invite-notice:not(.hidden)').count(),1,'Invite notice remains accessible after signup');
+  steps.push('signup confirmation survives account refresh');
+
+  await page.locator('#reset summary').click();
+  await page.locator('#reset-email').fill('test@example.invalid');
+  await page.locator('#reset-form').evaluate(el=>el.requestSubmit());
+  await page.waitForFunction(()=>(window.__HK_ACCOUNT_CALLS__||[]).includes('reset'));
+  await page.waitForFunction(()=>!document.querySelector('#reset-form button')?.disabled);
+  assert.match(await page.locator('#status').innerText(),/Om adressen har ett konto får du ett mejl/,
+    'FUN-01: password-reset confirmation must survive invite refresh');
+  assert.equal(await page.locator('#invite-notice:not(.hidden)').count(),1,'Invite notice remains accessible after password reset');
+  steps.push('password reset confirmation survives refresh');
+
+  await page.locator('#email').fill('test@example.invalid');
+  await page.locator('#password').fill('synthetic-password');
+  await page.locator('#email-form').evaluate(el=>el.requestSubmit());
+  await page.locator('#logged-in:not(.hidden)').waitFor();
+  await page.locator('#unpaired:not(.hidden)').waitFor();
+  assert.equal(await page.locator('#invite-code').inputValue(),invitation,
+    'FUN-01: invitation token is preserved across login');
+  assert.equal(new URL(page.url()).pathname.endsWith('/konto.html'),true);
+  steps.push('login preserves invitation code in account UI');
+
+  await page.locator('#role').selectOption('parent');
+  await page.locator('#create-family').click();
+  await page.locator('#waiting:not(.hidden)').waitFor();
+  steps.push('parent starts family');
+  await page.locator('#make-invite').click();
+  await page.locator('#invite-qr:not(.hidden)').waitFor();
+  const href=await page.locator('#invite-link').getAttribute('href');
+  const code=new URL(href).hash.match(/^#invite=([A-F0-9]{36})$/)?.[1];
+  assert.ok(code,'FUN-01 QR link must contain a 36-digit hex invitation fragment');
+  assert.match(await page.locator('#invite-qr-image').getAttribute('src'),/^data:image\/svg\+xml/,
+    'FUN-01 QR is displayed as a local SVG, not remote tracking');
+  assert.match(await page.locator('#new-invite').innerText(),new RegExp(code));
+  steps.push('QR code and invite link refer to same generated token');
+
+  await page.locator('#invite-code').fill(code);
+  await page.locator('#accept-form').evaluate(el=>el.requestSubmit());
+  await page.locator('#family:not(.hidden)').waitFor();
+  assert.equal(await page.locator('#waiting:not(.hidden)').count(),0);
+  assert.equal(new URL(page.url()).hash,'','FUN-01 consumed invitation hash is removed');
+  assert.match(await page.locator('#members').innerText(),/Förälder.*Tonåring/);
+  steps.push('in-memory invite acceptance displays both family roles');
+
+  await page.locator('#display-name').fill('Nytt syntetiskt namn');
+  await page.locator('#name-form').evaluate(el=>el.requestSubmit());
+  await page.waitForFunction(()=>(window.__HK_ACCOUNT_CALLS__||[]).includes('name-update'));
+  steps.push('name update call');
+  await page.locator('#new-password').fill('abcdefghijklmno');
+  await page.locator('#confirm-password').fill('abcdefghijklmno');
+  await page.locator('#password-form').evaluate(el=>el.requestSubmit());
+  await page.waitForFunction(()=>(window.__HK_ACCOUNT_CALLS__||[]).includes('password-update'));
+  steps.push('password update call');
+  await checkOverflow(page,'FUN-01 account paired');
+  await capture(page,'mobile-account-invite-paired.png');
+
+  await page.locator('#logout').click();
+  await page.locator('#logged-out:not(.hidden)').waitFor();
+  assert.equal(await page.locator('#logged-in:not(.hidden)').count(),0);
+  steps.push('logout hides signed-in account controls');
+
+  await fs.writeFile(path.join(output,'account-functional-synthetic.json'),
+    JSON.stringify({inventory:'FUN-01',commit:process.env.GITHUB_SHA||'local',
+      evidence:'Actual browser account handlers with an in-memory API stand-in',
+      limitations:'No real authentication, email, external QR scan, or Supabase write',
+      passedSyntheticSteps:steps},null,2)+'\n');
+  await context.close();
+  console.log('FUN-01 account page: '+steps.length+' synthetic browser checkpoints passed.');
+}
+
 async function captureFunctionalInventory(){
   const entries=[],navigation=[];
   const cases=[
@@ -2077,6 +2217,7 @@ try{
   await capture(d.page,"desktop-home.png");
   await d.context.close();
   await captureFunctionalInventory();
+  await testAccountBrowserJourney();
   assert.deepEqual(errors,[],"Browser errors: "+errors.join("; "));
   await fs.writeFile(path.join(output,"visual-audit.json"),JSON.stringify({
     purpose:"Playwright responsive visual review",

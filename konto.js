@@ -27,9 +27,11 @@ async function refresh() {
   const {data:{user},error}=await client.auth.getUser();
   if(error && error.name!=='AuthSessionMissingError') status(error.message);
   show('logged-in',!!user);show('logged-out',!user);
+  // A persistent invitation notice is separate from one-off form feedback.
+  // Refresh after registration/reset must never overwrite an important status.
+  show('invite-notice', !user && !!scannedInviteCode);
   if(!user){
     show('invite-qr', false);
-    if(scannedInviteCode) status('Familjeinbjudan hittad. Logga in på ditt eget konto för att använda den.');
     return;
   }
   $('account').textContent='Inloggad: '+user.email;
