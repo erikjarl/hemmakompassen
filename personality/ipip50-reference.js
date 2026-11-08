@@ -69,3 +69,21 @@ export function approximateReferencePercentile(factorId,score){
     :'mycket över genomsnittet';
   return {...r,percentile,category};
 }
+
+/**
+ * Presentation-only description. Estimated percentiles are modeled from
+ * US adult mean/SD; these are not observed Swedish or adolescent norms.
+ * Keep distinct the estimated rank and the broad ±1 SD interval.
+ */
+export function describeModeledPercentile(estimate){
+  if(!estimate||!Number.isFinite(estimate.z)||!Number.isFinite(estimate.percentile))
+    throw new RangeError('Ogiltig modellberäknad percentil');
+  const p=Math.round(estimate.percentile);
+  const rank=p===50?'ungefär vid mitten av den modellerade vuxenfördelningen':
+    p<50?'lägre än ungefär '+(100-p)+' % i den modellerade vuxenfördelningen':
+      'högre än ungefär '+p+' % i den modellerade vuxenfördelningen';
+  const interval=Math.abs(estimate.z)<=1?'inom ±1 SD från vuxenmedelvärdet':
+    Math.abs(estimate.z)<=2?'mellan 1 och 2 SD från vuxenmedelvärdet':
+      'mer än 2 SD från vuxenmedelvärdet';
+  return 'P≈'+p+' · '+rank+'; '+interval;
+}
