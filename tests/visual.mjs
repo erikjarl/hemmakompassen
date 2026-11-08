@@ -693,6 +693,94 @@ async function verifyInsightsTwoRolesAndStates(){
   console.log('FUN-02 insights: '+records.length+' synthetic role/state cases passed.');
 }
 
+
+// FUN-04: complete the actual IPIP-50 survey UI for both mocked roles;
+// pause, navigate away, resume, revise a saved answer, finish, export and
+// reopen. All answers are stored only in the in-memory Chromium stand-in.
+async function verifyFullPersonalitySurvey(){
+  const records=[];
+  for(const role of ['parent','teen']){
+    const width=role==='parent'?390:320;
+    const {page,context}=await freshContext(
+      {viewport:{width,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true},
+      {authenticated:true,paired:false,role}
+    );
+    try{
+      await page.goto(base+'#personlighet',{waitUntil:'load'});
+      await page.getByRole('button',{name:'Börja testet'}).waitFor();
+      await page.getByRole('button',{name:'Börja testet'}).click();
+      await page.getByText('Fråga 1 av 50').waitFor();
+      await page.locator('input[data-pf-answer="ipip50-001"][value="4"]').check();
+      await page.getByText('Fråga 2 av 50').waitFor();
+      const initial=await page.evaluate(()=>window.__HK_PERSONALITY_SAVE__);
+      assert.equal(initial.row.question_id,'ipip50-001','FUN-04: first stable item ID is saved');
+      assert.equal(initial.row.answer.value,4,'FUN-04: first answer is persisted privately in the mock');
+      await page.getByRole('button',{name:'Spara och avsluta för nu'}).click();
+      assert.match(await page.locator('.pf-overview').innerText(),/1 av 50/);
+      // Navigation away and back should not reset the current private account
+      // or restart the form from the beginning.
+      await page.evaluate(()=>{location.hash='hem';});
+      await page.getByRole('heading',{name:/Hej[ ,]+Prov/}).waitFor();
+      await page.evaluate(()=>{location.hash='personlighet';});
+      await page.getByRole('button',{name:'Fortsätt testet'}).waitFor();
+      await page.getByRole('button',{name:'Fortsätt testet'}).click();
+      await page.getByText('Fråga 2 av 50').waitFor();
+      await page.getByRole('button',{name:'Föregående'}).click();
+      await page.getByText('Fråga 1 av 50').waitFor();
+      assert.equal(await page.locator('input[data-pf-answer="ipip50-001"][value="4"]').isChecked(),true,
+        'FUN-04: resuming and returning to question one recovers the saved answer');
+      await page.locator('input[data-pf-answer="ipip50-001"][value="2"]').check();
+      await page.getByText('Fråga 2 av 50').waitFor();
+      const revised=await page.evaluate(()=>window.__HK_PERSONALITY_SAVE__);
+      assert.equal(revised.row.question_id,'ipip50-001');
+      assert.equal(revised.row.answer.value,2,'FUN-04: revising the first saved answer works');
+
+      for(let n=2;n<=50;n++){
+        const id='ipip50-'+String(n).padStart(3,'0');
+        await page.getByText('Fråga '+n+' av 50').waitFor();
+        await page.locator('input[data-pf-answer="'+id+'"][value="4"]').check();
+        if([2,25,49,50].includes(n)){
+          const saved=await page.evaluate(()=>window.__HK_PERSONALITY_SAVE__);
+          assert.equal(saved.row.question_id,id,'FUN-04: persisted stable item '+n);
+          assert.equal(saved.row.answer.value,4,'FUN-04: persisted choice on item '+n);
+        }
+      }
+      await page.getByRole('heading',{name:'Din profil'}).waitFor();
+      assert.equal(await page.locator('.pf-scale-row').count(),5,
+        'FUN-04: five scales are shown after the 50th answer');
+      assert.equal(await page.locator('.pf-table tbody tr').count(),5);
+      assert.equal(await page.locator('input[data-pf-answer]').count(),0,
+        'FUN-04: final question exits survey mode');
+      const download=page.waitForEvent('download');
+      await page.getByRole('button',{name:'Exportera mina egna svar (JSON)'}).click();
+      const exportFile=await download;
+      const payload=JSON.parse(await fs.readFile(await exportFile.path(),'utf8'));
+      assert.equal(payload.answered_count,50,'FUN-04: export includes all 50 answers');
+      assert.equal(payload.responses.length,50);
+      assert.equal(Object.hasOwn(payload,'partner'),false,
+        'FUN-04: export does not silently include another person');
+      await page.getByRole('button',{name:'Granska eller ändra mina svar'}).click();
+      await page.getByText('Fråga 1 av 50').waitFor();
+      assert.equal(await page.locator('input[data-pf-answer="ipip50-001"][value="2"]').isChecked(),true,
+        'FUN-04: review mode displays the revised answer, not the original choice');
+      await page.getByRole('button',{name:'Spara och avsluta för nu'}).click();
+      await page.getByRole('heading',{name:'Din profil'}).waitFor();
+      await checkOverflow(page,'FUN-04 '+role+' complete profile '+width+'px');
+      await capture(page,'fun-04-ipip50-complete-'+role+'.png');
+      records.push({role,viewport:width,answered:50,paused:true,resumedAfterNavigation:true,
+        firstAnswerRevised:true,profileVisible:true,exportedItems:50,reviewed:true,
+        environment:'synthetic Chromium',liveAuth:false});
+    }finally{
+      await context.close();
+    }
+  }
+  await fs.writeFile(path.join(output,'fun-04-ipip50-complete-synthetic.json'),
+    JSON.stringify({method:'Actual UI selection and save for all 50 IPIP items per mocked role',
+      limitations:'Auth and database are mocked; no two real users, physical mobile or real Supabase writes.',
+      records},null,2)+'\n');
+  console.log('FUN-04 IPIP-50: '+records.length+' complete synthetic role journeys passed.');
+}
+
 async function freshContext(options,{authenticated=false,paired=false,role="parent",unlocked=false,unlockUnavailable=false,priorityUnavailable=false,priorityFeature=true,privateImportance=false,importanceReadFailure=false,preansweredGeneral=false,preansweredSkipped=false,emptySchyssta=false,homeUnreadFailure=false,personalityComplete=false,personalitySharing=false,personalityPartnerShared=false,privateRetests=false,aiMediator=false,aiAnalyses=false,activityNotifications=false}={}){
   const context=await browser.newContext({...options,locale:"sv-SE",reducedMotion:"reduce"});
   await context.addInitScript(value=>{window.__HK_TEST_USER__=value.user;window.__HK_TEST_PAIRED__=value.paired;window.__HK_TEST_ROLE__=value.role;window.__HK_TEST_UNLOCKED__=value.unlocked;window.__HK_UNLOCK_RPC_UNAVAILABLE__=value.unlockUnavailable;window.__HK_PRIORITY_RPC_UNAVAILABLE__=value.priorityUnavailable;window.__HK_PRIORITISED_TEEN__=value.privateImportance;window.__HK_IMPORTANCE_READ_FAIL__=value.importanceReadFailure;window.__HK_PREANSWERED_GENERAL__=value.preansweredGeneral;window.__HK_PREANSWERED_SKIPPED__=value.preansweredSkipped;window.__HK_SCHYSSTA_EMPTY__=value.emptySchyssta;window.__HK_HOME_UNREAD_FAILURE__=value.homeUnreadFailure;window.__HK_TEST_PERSONALITY_DONE__=value.personalityComplete;window.__HK_TEST_PERSONALITY_PARTNER_SHARED__=value.personalityPartnerShared;},{personalityPartnerShared,personalityComplete,emptySchyssta,homeUnreadFailure,preansweredGeneral,preansweredSkipped,user:authenticated?{id:role==="teen"?"10000000-0000-0000-0000-000000000002":"10000000-0000-0000-0000-000000000001",email:"synthetic@example.invalid"}:null,paired,role,unlocked,unlockUnavailable,priorityUnavailable,privateImportance,importanceReadFailure});
@@ -2565,6 +2653,7 @@ try{
   await verifyBrowserHistory();
   await verifyAllThemeDeckJourneys();
   await verifyInsightsTwoRolesAndStates();
+  await verifyFullPersonalitySurvey();
   assert.deepEqual(errors,[],"Browser errors: "+errors.join("; "));
   await fs.writeFile(path.join(output,"visual-audit.json"),JSON.stringify({
     purpose:"Playwright responsive visual review",
