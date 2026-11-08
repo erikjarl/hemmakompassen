@@ -52,7 +52,7 @@ let sharedPollPending=false;
 let sharedMatchFilter={deckId:null,category:null};
 let insightsRows=[],insightsLoading=false,insightsError='',insightsRequest=0;
 let activityInviteBusy=false,activityInviteError='';
-let sharedUnderstandingRows=[],understandingShareError='';
+let sharedUnderstandingRows=[],understandingShareError='',understandingSharesAvailable=false,understandingShareChecking=false;
 let schysstaSuggestions=[],schysstaRules=[],schysstaManualRules=[],schysstaNotifications=[],schysstaReplacementLinks=[],schysstaHistory=[],schysstaEndTarget=null,schysstaLoading=false,schysstaError='',schysstaRequest=0;
 let schysstaDraft='',schysstaDraftOpen=false,schysstaDraftKey=null,schysstaEditTarget=null,schysstaSubmitting=false,schysstaMessage='',schysstaCopyMessage='',schysstaCopyFallback=false,schysstaFocusId='',schysstaSearch='',schysstaFilterStatus='all';
 const schysstaSaving=new Set();
@@ -869,12 +869,14 @@ function understandingInsights(){
   const eligible=GENERAL_CARDS.filter(card=>card.type==='understanding'&&swipeAnswers.get(card.id)===true);
   const controls=eligible.length
     ?'<ul class="swipe-match-list understanding-share-list">'+eligible.map(card=>{
-      const active=understandingShares.has(card.id),saving=understandingShareSaving.has(card.id);
+      const active=understandingShares.has(card.id),saving=understandingShareSaving.has(card.id)||understandingShareChecking||!understandingSharesAvailable;
       return '<li><p>'+esc(card.teenText)+'</p><button type="button" class="live-button" data-understanding-share="'+esc(card.id)+'" aria-pressed="'+active+'"'+(saving?' disabled':'')+'>'+(active?'Återkalla delning':'Dela med min förälder')+'</button></li>';
     }).join('')+'</ul>'
     :'<p class="live-muted">Svara ja på ett förståelsekort för att kunna välja delning här.</p>';
   const error=understandingShareError?'<p role="alert">'+esc(understandingShareError)+'</p>':'';
-  return sharedList+'<div class="understanding-consent"><h3>Du bestämmer vad som delas</h3><p>Varje knapp gäller bara det angivna budskapet. Ett delat förståelsekort blir aldrig en A-matchning eller en överenskommelse. Du kan återkalla delningen när som helst.</p>'+error+controls+'</div>';
+  const retry=!understandingSharesAvailable
+    ?'<button type="button" class="schyssta-secondary" data-understanding-retry'+(understandingShareChecking?' disabled':'')+'>Kontrollera delningen igen</button>':'';
+  return sharedList+'<div class="understanding-consent"><h3>Du bestämmer vad som delas</h3><p>Varje knapp gäller bara det angivna budskapet. Ett delat förståelsekort blir aldrig en A-matchning eller en överenskommelse. Du kan återkalla delningen när som helst.</p>'+error+retry+controls+'</div>';
 }
 function insightsEntry(){
   return sharedInsightsEnabled?'<p class="insights-entry"><a class="live-button" href="#insikter">Gemensamma insikter från alla kortlekar →</a></p>':'';
@@ -1048,19 +1050,65 @@ async function prepareActivityMessage(cardId){
   requestAnimationFrame(()=>document.getElementById('family-chat-body')?.focus({preventScroll:true}));
 }
 
+// Read back the CURRENT consent state after a write, including a lost RPC
+// acknowledgement. Never guess whether sharing was saved or revoked.
+async function verifyUnderstandingShares(viewer,session){
+  let result;
+  try{result=await db.from('understanding_card_shares').select('deck_id,card_id').eq('user_id',viewer);}
+  catch(e){result={error:e};}
+  if(user?.id!==viewer||sharedSession!==session)return false;
+  understandingShares.clear();
+  if(result?.error||!Array.isArray(result?.data)){
+    understandingSharesAvailable=false;
+    // Shared B and AI panels must not display a stale snapshot when the
+    // server cannot confirm an attempted consent change.
+    sharedUnderstandingRows=[];
+    aiResults?.invalidate?.('swipe','all');
+    return false;
+  }
+  for(const row of result.data){
+    if(row?.deck_id==='general'&&GENERAL_CARDS.some(card=>card.id===row.card_id&&card.type==='understanding'))
+      understandingShares.add(row.card_id);
+  }
+  understandingSharesAvailable=viewerRole()==='teen'&&members.length===2;
+  return understandingSharesAvailable;
+}
+async function retryUnderstandingShares(viewer,session){
+  if(!sharedUnderstandingEnabled||!user||user.id!==viewer||sharedSession!==session||viewerRole()!=='teen'||
+     members.length!==2||understandingShareChecking||understandingShareSaving.size)return;
+  understandingShareChecking=true;render();
+  const verified=await verifyUnderstandingShares(viewer,session);
+  if(user?.id!==viewer||sharedSession!==session)return;
+  understandingShareChecking=false;
+  understandingShareError=verified?'':'Delningens aktuella status kunde inte hämtas. Försök igen innan du delar eller återkallar.';
+  if(verified&&page()==='insikter')await fetchInsights();
+  else if(page()==='insikter')render();
+}
 async function setUnderstandingShare(cardId,share,viewer,session){
   const card=GENERAL_CARDS.find(candidate=>candidate.id===cardId&&candidate.type==='understanding');
-  if(!sharedUnderstandingEnabled||!card||viewerRole()!=='teen'||user?.id!==viewer||sharedSession!==session||members.length!==2||understandingShareSaving.has(cardId))return;
+  if(!sharedUnderstandingEnabled||!understandingSharesAvailable||understandingShareChecking||!card||viewerRole()!=='teen'||user?.id!==viewer||sharedSession!==session||members.length!==2||understandingShareSaving.has(cardId))return;
   if(share&&swipeAnswers.get(cardId)!==true)return;
   understandingShareSaving.add(cardId);understandingShareError='';render();
   let error;
   try{({error}=await db.rpc('set_understanding_card_share',{p_card_id:cardId,p_share:share}));}
   catch(e){error=e;}
   if(user?.id!==viewer||sharedSession!==session)return;
+  // A successful RPC result does not prove the browser has the current
+  // consent snapshot; a failed result may mean only the acknowledgement was lost.
+  const verified=await verifyUnderstandingShares(viewer,session);
+  if(user?.id!==viewer||sharedSession!==session)return;
   understandingShareSaving.delete(cardId);
-  if(error){understandingShareError='Delningen kunde inte ändras. Ditt privata svar är oförändrat.';render();return;}
-  if(share)understandingShares.add(cardId);else understandingShares.delete(cardId);
-  await fetchInsights();
+  if(!verified){
+    understandingShareError='Servern kunde inte bekräfta delningens aktuella status. Det går inte att veta om ditt val sparades eller återkallades. Kontrollera igen.';
+    if(page()==='insikter')render();
+    return;
+  }
+  if(understandingShares.has(cardId)!==share){
+    understandingShareError='Ändringen kunde inte bekräftas. Knappen visar nu det val som faktiskt är sparat på servern.';
+  }else{
+    understandingShareError='';
+  }
+  if(page()==='insikter')await fetchInsights();
 }
 
 // Only poll the authenticated, server-verified shared RPC for the currently visible deck.
@@ -2054,7 +2102,7 @@ let authResult;
 try{authResult=await db.auth.getUser();}
 catch(e){if(generation!==refreshGeneration)return;throw e;}
 if(generation!==refreshGeneration)return;
-const {data:{user:u},error}=authResult;if(error&&error.name!=='AuthSessionMissingError')throw error;generalReviewEdit=null;themeReviewEdit=null;user=u;profile=null;members=[];mediatorExperience.reset(u?.id??null);aiResults.reset(u?.id??null);personalityExperience.reset(u?.id??null);swipeAnswers.clear();swipeImportance.clear();importancePending.clear();importanceSaving.clear();importanceAvailable=false;importanceLoadError='';priorityShares.clear();priorityShareSaving.clear();prioritySharesAvailable=false;priorityShareError='';skippedUnderstanding.clear();understandingShares.clear();understandingShareSaving.clear();understandingShareError='';for(const answers of themeAnswers.values())answers.clear();activeThemeDeck=null;themeCategory='all';themeIndex=0;themeReview=false;themeSaveError='';swipeBusy=false;swipeLoadError='';swipeSaveError='';swipeReview=false;swipeSkippedReview=false;swipeIndex=0;sharedMatches=[];sharedPriorities=[];sharedDeckId='general';sharedError='';sharedPriorityError='';sharedLoading=false;sharedSession++;sharedRequest++;insightsRows=[];sharedUnderstandingRows=[];insightsLoading=false;insightsError='';insightsRequest++;themesUnlocked=false;themesLoading=false;themesError='';themesRequest++;
+const {data:{user:u},error}=authResult;if(error&&error.name!=='AuthSessionMissingError')throw error;generalReviewEdit=null;themeReviewEdit=null;user=u;profile=null;members=[];mediatorExperience.reset(u?.id??null);aiResults.reset(u?.id??null);personalityExperience.reset(u?.id??null);swipeAnswers.clear();swipeImportance.clear();importancePending.clear();importanceSaving.clear();importanceAvailable=false;importanceLoadError='';priorityShares.clear();priorityShareSaving.clear();prioritySharesAvailable=false;priorityShareError='';skippedUnderstanding.clear();understandingShares.clear();understandingShareSaving.clear();understandingShareError='';understandingSharesAvailable=false;understandingShareChecking=false;for(const answers of themeAnswers.values())answers.clear();activeThemeDeck=null;themeCategory='all';themeIndex=0;themeReview=false;themeSaveError='';swipeBusy=false;swipeLoadError='';swipeSaveError='';swipeReview=false;swipeSkippedReview=false;swipeIndex=0;sharedMatches=[];sharedPriorities=[];sharedDeckId='general';sharedError='';sharedPriorityError='';sharedLoading=false;sharedSession++;sharedRequest++;insightsRows=[];sharedUnderstandingRows=[];insightsLoading=false;insightsError='';insightsRequest++;themesUnlocked=false;themesLoading=false;themesError='';themesRequest++;
 inboxPairEpoch=null;
 activityNotificationsRequest++;activityNotifications=[];activityNotificationsError='';activityNotificationsLoading=false;activityMarkBusy=null;activityFeedback='';
 if(typeof schysstaRequest!=='undefined'){schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];schysstaNotifications=[];schysstaReplacementLinks=[];schysstaHistory=[];schysstaEndTarget=null;schysstaLoading=false;schysstaError='';schysstaRequest++;schysstaSaving.clear();schysstaPausedIds.clear();clearFamilyChat();schysstaDraft='';schysstaDraftOpen=false;schysstaDraftKey=null;schysstaEditTarget=null;schysstaSubmitting=false;schysstaMessage='';schysstaCopyMessage='';schysstaCopyFallback=false;schysstaFocusId='';schysstaSearch='';schysstaFilterStatus='all';}
@@ -2073,7 +2121,13 @@ if(!s.error)for(const answer of s.data||[]){
 }if(!k.error)for(const skipped of k.data||[])if(skipped.deck_id==='general'&&GENERAL_CARDS.some(card=>card.id===skipped.card_id&&card.type==='understanding'))skippedUnderstanding.add(skipped.card_id);
 if(i.error)importanceLoadError='Den säkra lagringen är inte aktiverad.';else{importanceAvailable=true;for(const row of i.data||[])if([-1,0,1].includes(row.importance)&&validImportanceCard(row.deck_id,row.card_id))swipeImportance.set(importanceKey(row.deck_id,row.card_id),row.importance);}
 if(sharedPrioritiesEnabled){if(ps.error)priorityShareError='Delningsstatus kunde inte hämtas säkert. Inget kan delas.';else if(viewerRole()==='teen'){prioritySharesAvailable=true;for(const row of ps.data||[])if(validImportanceCard(row.deck_id,row.card_id))priorityShares.add(importanceKey(row.deck_id,row.card_id));}}
-if(sharedUnderstandingEnabled){if(b.error)understandingShareError='Delningsstatus kunde inte hämtas.';else if(viewerRole()==='teen')for(const row of b.data||[])if(row.deck_id==='general'&&GENERAL_CARDS.some(card=>card.id===row.card_id&&card.type==='understanding'))understandingShares.add(row.card_id);}
+if(sharedUnderstandingEnabled){
+  if(b?.error||!Array.isArray(b?.data))understandingShareError='Delningens status kunde inte kontrolleras. Använd Kontrollera delningen igen innan du delar eller återkallar.';
+  else if(viewerRole()==='teen'){
+    understandingSharesAvailable=members.length===2;
+    for(const row of b.data)if(row.deck_id==='general'&&GENERAL_CARDS.some(card=>card.id===row.card_id&&card.type==='understanding'))understandingShares.add(row.card_id);
+  }
+}
 swipeIndex=nextUnanswered();swipeSkippedReview=false;}
 if(generation!==refreshGeneration)return;
 render();
@@ -2237,6 +2291,8 @@ if(pause&&SCHYSSTA_UUID.test(pause.dataset.schysstaPause)){
   }
 }
 const schysstaDecision=e.target.closest('[data-schyssta-decision]');if(schysstaDecision)void decideSchysstaRule(schysstaDecision.dataset.schysstaDecision,schysstaDecision.dataset.approved==='true');
+const understandingRetry=e.target.closest('[data-understanding-retry]');
+if(understandingRetry&&user&&viewerRole()==='teen')void retryUnderstandingShares(user.id,sharedSession);
 const understandingShare=e.target.closest('[data-understanding-share]');
 if(understandingShare&&user&&viewerRole()==='teen')void setUnderstandingShare(understandingShare.dataset.understandingShare,understandingShare.getAttribute('aria-pressed')!=='true',user.id,sharedSession);
 const priorityShare=e.target.closest('[data-priority-share]');
