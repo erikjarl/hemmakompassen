@@ -100,7 +100,7 @@ test('readback failure or malformed row gives an explicitly unknown status',asyn
 });
 test('the questionnaire advances after a committed answer whose ACK was lost',async()=>{
   const x=fixture({mode:'lost-ack'});
-  const ui=createPersonalityExperience({db:x.db});
+  const ui=createPersonalityExperience({db:x.db,onRender:()=>{}});
   ui.reset(USER);await ui.load(USER);
   await ui.handleClick(button('start'));
   assert.match(ui.render(),/Fråga 1 av 50/);
@@ -111,7 +111,7 @@ test('the questionnaire advances after a committed answer whose ACK was lost',as
 });
 test('a rejected answer remains on the same question and can be retried',async()=>{
   const x=fixture({mode:'reject'});
-  const ui=createPersonalityExperience({db:x.db});
+  const ui=createPersonalityExperience({db:x.db,onRender:()=>{}});
   ui.reset(USER);await ui.load(USER);await ui.handleClick(button('start'));
   await ui.handleChange(radio(3));
   assert.match(ui.render(),/Fråga 1 av 50/);
@@ -124,7 +124,7 @@ test('a rejected answer remains on the same question and can be retried',async()
 });
 test('an unknown save offers an explicit server reload that finds the saved answer',async()=>{
   const x=fixture({mode:'lost-ack',readFailure:true});
-  const ui=createPersonalityExperience({db:x.db});
+  const ui=createPersonalityExperience({db:x.db,onRender:()=>{}});
   ui.reset(USER);await ui.load(USER);await ui.handleClick(button('start'));
   await ui.handleChange(radio(4));
   assert.match(ui.render(),/Fråga 1 av 50/);
