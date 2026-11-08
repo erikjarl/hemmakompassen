@@ -228,14 +228,14 @@ function familyReflectionPanel(parentProfile,teenProfile,viewerRole){
 function statusPanel(message){return '<section class="live-panel"><p class="pf-status" role="status">'+esc(message)+'</p></section>';}
 
 export function createPersonalityExperience({db,onRender,isSharingEnabled=false,useAiAnalysis=false,analysisPanel=()=>'',saveExport=downloadOwnIPIP50Export,isRetestEnabled=false}){
-  let viewer=null,sequence=0,consentRequest=0,answers={},loading=false,loaded=false,loadError='',saving=false,saveError='';
+  let viewer=null,sequence=0,consentRequest=0,answers={},loading=false,loaded=false,loadError='',saving=false,saveError='',saveUncertain=false;
   let active=false,index=0,selectedAnswer=null,shareEnabled=false,shareVerified=false,shareBusy=false,shareError='',paired=null,partnerError='',exportFeedback='';
   const repaint=()=>onRender();
   const retests=isRetestEnabled?createPrivateIpipRetests({db,onRender:repaint,
     renderOwnScores:profile=>percentileChart(profile)+table(profile)+referenceCaveat()}):null;
   function reset(userId=null){
     viewer=userId;sequence++;consentRequest++;answers={};loading=false;loaded=false;loadError='';saving=false;
-    saveError='';active=false;index=0;selectedAnswer=null;shareEnabled=false;shareVerified=false;shareBusy=false;shareError='';paired=null;partnerError='';exportFeedback='';
+    saveError='';saveUncertain=false;active=false;index=0;selectedAnswer=null;shareEnabled=false;shareVerified=false;shareBusy=false;shareError='';paired=null;partnerError='';exportFeedback='';
     retests?.reset(userId);
   }
   async function fetchPaired(userId,token){
@@ -274,7 +274,7 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false,
     if(!userId)return;
     const token=++sequence;
     consentRequest++;
-    viewer=userId;loading=true;loaded=false;loadError='';saveError='';partnerError='';paired=null;repaint();
+    viewer=userId;loading=true;loaded=false;loadError='';saveError='';saveUncertain=false;partnerError='';paired=null;repaint();
     let loadedAnswers,consent;
     try{
       loadedAnswers=await loadMyIPIP50Answers(db);
@@ -322,6 +322,7 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false,
         '<button type="button" data-pf-action="next"'+(index===49||saving?' disabled':'')+'>Nästa →</button>'+
         '<button type="button" data-pf-action="overview"'+(saving?' disabled':'')+'>Spara och avsluta för nu</button></div>'+
         '<p class="pf-status" role="status">'+esc(saving?'Valt alternativ: '+IPIP50_V1.responseOptions.find(o=>o.value===selectedAnswer?.value)?.label+'. Sparar svaret…':saveError||'Dina svar sparas bara i ditt konto. Du kan ändra dina svar senare.')+'</p>'+
+        (saveUncertain?'<button type="button" class="live-button" data-pf-action="verify-save">Kontrollera sparat svar</button>':'')+
         (complete?'<button type="button" class="live-button" data-pf-action="result">Se min profil</button>':'')+'</section>';
     }
     if(!complete){
@@ -373,6 +374,12 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false,
     if(btn.dataset.pfAction==='reload'){await load(viewer);return true;}
     if(!loaded)return false;
     const action=btn.dataset.pfAction;
+    if(action==='verify-save'){
+      // After an unreadable write acknowledgement, reload the viewer's actual
+      // saved answers instead of guessing or repeating the write automatically.
+      active=false;selectedAnswer=null;saveUncertain=false;
+      await load(viewer);return true;
+    }
     if(action==='export'){
       const payload=buildOwnIPIP50Export(answers);
       if(!payload.responses.length)return false;
@@ -441,7 +448,7 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false,
     const token=sequence,id=viewer;
     // Keep the radio visibly highlighted during save instead of immediately
     // replacing the entire page with the next question.
-    selectedAnswer={id:item.id,value};saving=true;saveError='';repaint();
+    selectedAnswer={id:item.id,value};saving=true;saveError='';saveUncertain=false;repaint();
     try{
       await Promise.all([
         saveMyIPIP50Answer(db,item.id,value),
@@ -450,13 +457,18 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false,
     }catch(e){
       if(token===sequence&&viewer===id){
         selectedAnswer=null;saving=false;
-        saveError='Kunde inte spara svaret. Välj ett alternativ igen när anslutningen fungerar.';
+        saveUncertain=e?.code==='IPIP50_SAVE_UNKNOWN';
+        saveError=saveUncertain
+          ?'Det går inte att kontrollera om svaret sparades. Välj Kontrollera sparat svar för att läsa från servern.'
+          :e?.code==='IPIP50_SAVE_NOT_CONFIRMED'
+            ?'Svaret kunde inte bekräftas som sparat. Välj ett alternativ igen när anslutningen fungerar.'
+            :'Kunde inte spara svaret. Välj ett alternativ igen när anslutningen fungerar.';
         repaint();
       }
       return true;
     }
     if(token!==sequence||viewer!==id)return true;
-    answers[item.id]=value;selectedAnswer=null;saving=false;exportFeedback='';
+    answers[item.id]=value;selectedAnswer=null;saving=false;saveUncertain=false;exportFeedback='';
     if(index<49)index++;
     else active=false;
     paired=null;shareError='';
