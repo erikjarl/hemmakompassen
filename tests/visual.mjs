@@ -2041,9 +2041,9 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
         const skips=new Map();
         if(window.__HK_PREANSWERED_SKIPPED__){answers.delete('general-02');skips.set('general-02',{deck_id:'general',card_id:'general-02'});}
         const importance=new Map(window.__HK_PRIORITISED_TEEN__?[
-          ['general:general-01',{deck_id:'general',card_id:'general-01',importance:1}],
-          ['general:general-02',{deck_id:'general',card_id:'general-02',importance:1}],
-          ['general:general-10',{deck_id:'general',card_id:'general-10',importance:0}]
+          ['general:general-01',{user_id:current().id,deck_id:'general',card_id:'general-01',importance:1}],
+          ['general:general-02',{user_id:current().id,deck_id:'general',card_id:'general-02',importance:1}],
+          ['general:general-10',{user_id:current().id,deck_id:'general',card_id:'general-10',importance:0}]
         ]:[]);
         const understandingShares=new Set(window.__HK_TEST_PAIRED__?['general-02']:[]);
         const priorityShares=new Set();
