@@ -1019,13 +1019,27 @@ async function prepareActivityMessage(cardId){
     activityInviteError='Du har redan ett meddelandeutkast. Öppna Inkorgen och ta hand om det först.';
     render();return;
   }
+  // A manual refresh or another action may already be verifying the family.
+  // Do not enter the spinner state when that verification cannot be started.
+  if(inboxPairCheckBusy){
+    activityInviteError='Familjekopplingen kontrolleras redan. Försök igen när uppdateringen är klar.';
+    render();return;
+  }
   const viewer=user.id,session=sharedSession;
   activityInviteBusy=true;activityInviteError='';render();
   // A verified JA+JA from an earlier pairing is not enough to prepare a new
   // message draft. Validate exact membership AND pair epoch before reading.
   const pairValid=await recheckInboxPair();
   if(!pairValid||user?.id!==viewer||sharedSession!==session||page()!==origin){
-    activityInviteBusy=false;return;
+    activityInviteBusy=false;
+    // The checker itself redraws and invalidates a revoked/unknown pairing.
+    // If it returned false without changing this session, restore the CTA
+    // instead of leaving the already rendered button disabled indefinitely.
+    if(user?.id===viewer&&sharedSession===session&&page()===origin){
+      activityInviteError='Familjekopplingen kunde inte kontrolleras. Uppdatera och försök igen.';
+      render();
+    }
+    return;
   }
   let response;
   try{response=await db.rpc('shared_swipe_matches',{p_deck_id:'aktiviteter'});}
