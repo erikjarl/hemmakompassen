@@ -1105,7 +1105,9 @@ async function verifyPairedTwoRoleExchange(){
     assert.deepEqual(fixture.rules[0].decisions,{parent:null,teen:null},
       'Submitting a manual proposal does not silently approve it for either member');
 
-    await teen.page.goto(base+'#inkorg',{waitUntil:'load'});
+    // Navigating to the SAME inbox URL is not a data refresh; the existing
+    // teen tab must deliberately reload to fetch the new cross-role event.
+    await teen.page.reload({waitUntil:'load'});
     try{
       await teen.page.getByText('Nytt regelförslag').waitFor({timeout:10000});
     }catch(error){
