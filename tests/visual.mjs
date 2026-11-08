@@ -542,6 +542,57 @@ async function verifyBrowserHistory(){
     ' role/viewport history-route assertions passed in synthetic Chromium.');
 }
 
+// FUN-02: an in-progress private importance write blocks an answer without
+// swallowing the click silently. Both the general and a theme deck are tested.
+async function verifyImportancePendingAnswerFeedback(){
+ const records=[];
+ for(const role of ['parent','teen']){
+  const width=role==='parent'?390:320;
+  const {page,context}=await freshContext(
+   {viewport:{width,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true},
+   {authenticated:true,paired:true,unlocked:true,role}
+  );
+  try{
+   await page.goto(base+'#swipe',{waitUntil:'load'});
+   await page.locator('#swipe-card [data-importance]').waitFor();
+   for(const deck of ['general','forandring']){
+    if(deck!=='general'){
+     await page.locator('[data-theme-open="forandring"]').click();
+     await page.locator('#swipe-card[aria-label^="Temakort 1 av 8"]').waitFor();
+    }
+    const cardBefore=await page.locator('#swipe-card').getAttribute('aria-label');
+    await page.evaluate(()=>{window.__HK_TEST_BLOCK_IMPORTANCE__=true;});
+    await page.locator('#swipe-card [data-importance]').evaluate(el=>{
+     el.value='1';el.dispatchEvent(new Event('input',{bubbles:true}));
+     el.dispatchEvent(new Event('change',{bubbles:true}));
+    });
+    await page.waitForFunction(()=>typeof window.__HK_TEST_RELEASE_IMPORTANCE__==='function');
+    await page.locator('#swipe-card').getByRole('button',{name:'Ja'}).count(); // Buttons can also sit outside the card.
+    await page.locator('.swipe-actions [data-swipe="yes"]').click();
+    assert.equal(await page.locator('#swipe-card').getAttribute('aria-label'),cardBefore,
+     'A card remains while its importance rating is being saved');
+    assert.match(await page.locator('#swipe-save-status').innerText(),/Vänta tills viktighetsskattningen har sparats/);
+    assert.equal(await page.evaluate(()=>window.__HK_SAVED_SWIPE__?.row?.deck_id=== 'forandring'&&window.__HK_SAVED_SWIPE__?.row?.answer===true),false,
+     'An unanswered card cannot be saved by a click during a pending rating');
+    await page.evaluate(()=>window.__HK_TEST_RELEASE_IMPORTANCE__());
+    await page.locator('#swipe-save-status').getByText(/Viktigheten är sparad/).waitFor();
+    assert.equal(await page.locator('#swipe-card').getAttribute('aria-label'),cardBefore);
+    await page.locator('.swipe-actions [data-swipe="yes"]').click();
+    if(deck==='general')await page.locator('#swipe-card').waitFor();
+    else await page.locator('#swipe-card[aria-label^="Temakort 2 av 8"]').waitFor();
+    assert.equal((await page.evaluate(()=>window.__HK_SAVED_SWIPE__))?.row.deck_id,deck,
+     'Retry of the intended answer saves to the intended deck');
+    records.push({role,deck,blockedClickExplained:true,lateSaveRecovery:true});
+   }
+   await checkOverflow(page,'Pending importance answer '+role+' '+width+'px');
+  }finally{await context.close();}
+ }
+ await fs.writeFile(path.join(output,'fun-02-importance-pending-feedback-synthetic.json'),
+  JSON.stringify({method:'Chromium real range change and answer clicks with deliberately delayed synthetic Supabase upsert',
+   limitations:'Mock Auth/RPC; real networking and physical devices unverified.',records},null,2)+'\n');
+ console.log('FUN-02: '+records.length+' pending-importance UI cases passed in synthetic Chromium.');
+}
+
 // FUN-02: actually open, answer and resume EVERY theme deck for both synthetic
 // roles. Finishes one short deck to exercise completion and revisiting saved cards.
 // This never requests or writes live Supabase data.
@@ -1829,7 +1880,19 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
             if(table==='swipe_skips')return {select(){return {async eq(){return {data:[...skips.values()],error:null}}}}};
             if(table==='swipe_importance')return {
               select(){return {async eq(){return window.__HK_IMPORTANCE_READ_FAIL__?{data:null,error:{message:'Synthetic private importance read failed'}}:{data:[...importance.values()],error:null}}}},
-              async upsert(row,options){importance.set(row.deck_id+':'+row.card_id,row);window.__HK_SAVED_IMPORTANCE__={row,options};return {error:null}}
+              async upsert(row,options){
+                if(window.__HK_TEST_BLOCK_IMPORTANCE__){
+                  window.__HK_TEST_BLOCK_IMPORTANCE__=false;
+                  await new Promise(resolve=>{window.__HK_TEST_RELEASE_IMPORTANCE__=()=>{
+                    window.__HK_TEST_RELEASE_IMPORTANCE__=null;resolve();};});
+                  if(window.__HK_TEST_FAIL_IMPORTANCE_ON_RELEASE__){
+                    window.__HK_TEST_FAIL_IMPORTANCE_ON_RELEASE__=false;
+                    return {error:{message:'Synthetic importance write failed'}};
+                  }
+                }
+                importance.set(row.deck_id+':'+row.card_id,row);
+                window.__HK_SAVED_IMPORTANCE__={row,options};return {error:null};
+              }
             };
             if(table==='swipe_priority_shares')return {select(){return {async eq(){return window.__HK_PRIORITY_READ_FAIL__
               ?{data:null,error:{message:'Synthetic consent read failed'}}
@@ -3990,6 +4053,7 @@ try{
   await testAccountBrowserJourney();
   await verifyBrowserHistory();
   await verifyTouchMobileTabStrip();
+  await verifyImportancePendingAnswerFeedback();
   await verifyAllThemeDeckJourneys();
   await verifyInsightsTwoRolesAndStates();
   await verifyFullPersonalitySurvey();
