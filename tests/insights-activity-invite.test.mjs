@@ -16,7 +16,7 @@ function harness({serverRows=[{deck_id:'aktiviteter',card_id:'aktiviteter-01',an
     sharedDeckId:activeDeck,sharedLoading:false,sharedError:'',
     sharedMatches:deckRows??[{deck_id:'aktiviteter',card_id:'aktiviteter-01',answer:true}],
     insightsRows:currentRows??[{deck_id:'aktiviteter',card_id:'aktiviteter-01',answer:true}],
-    activityInviteBusy:false,activityInviteError:'',
+    activityInviteBusy:false,activityInviteError:'',inboxPairCheckBusy:false,
     familyChatDraft:existingDraft,familyChatStatus:'',familyChatRequestKey:'old-request',
     location:{hash:source},render:()=>{},recheckInboxPair:async()=>true,
     requestAnimationFrame:callback=>callback(),
