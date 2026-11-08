@@ -896,6 +896,65 @@ async function verifyFullPersonalitySurvey(){
 }
 
 
+// PF-05: two server-like completed attempts on one day, actual browser actions.
+// A synthetic in-memory backend is seeded; no real user's answers are accessed.
+async function verifyDistinctPrivateRetestHistory(){
+  const records=[];
+  for(const role of ['parent','teen']){
+    const width=role==='parent'?390:320;
+    const m=await freshContext(
+      {viewport:{width,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},
+      {authenticated:true,paired:false,role,personalityComplete:true,
+        privateRetests:true,preloadedRetestHistory:true}
+    );
+    try{
+      const page=m.page;
+      await page.goto(base+'#personlighet',{waitUntil:'load'});
+      const rows=page.locator('.pf-retest-list > li');
+      await page.waitForFunction(()=>document.querySelectorAll('.pf-retest-list > li').length===2);
+      assert.match(await rows.nth(0).innerText(),/Omtest 1 av 2/);
+      assert.match(await rows.nth(1).innerText(),/Omtest 2 av 2/);
+      assert.match(await rows.nth(0).locator('[data-ipip-retest="view"]').getAttribute('aria-label'),
+        /Visa mitt resultat för Omtest 1 av 2/);
+      assert.match(await rows.nth(1).locator('[data-ipip-retest="delete"]').getAttribute('aria-label'),
+        /Radera omgången för Omtest 2 av 2/);
+      records.push({role,step:'same-day history has distinct visible and accessible actions',passed:true});
+      await rows.nth(1).locator('[data-ipip-retest="view"]').click();
+      await page.locator('.pf-retest-history h3').filter({hasText:/Omtest 2 av 2/}).waitFor();
+      await rows.nth(0).locator('[data-ipip-retest="view"]').click();
+      await page.locator('.pf-retest-history h3').filter({hasText:/Omtest 1 av 2/}).waitFor();
+      records.push({role,step:'opens older then newer private result by row',passed:true});
+      const downloadPromise=page.waitForEvent('download');
+      await rows.nth(1).locator('[data-ipip-retest="export"]').click();
+      const file=await downloadPromise;
+      const payload=JSON.parse(await fs.readFile(await file.path(),'utf8'));
+      assert.equal(payload.answered_count,50);
+      assert.equal(payload.responses[0].value,2,'Older attempt export is not the newer attempt');
+      assert.equal(Object.hasOwn(payload,'user_id'),false);
+      assert.equal(Object.hasOwn(payload,'attempt_id'),false);
+      records.push({role,step:'exports only selected older attempt',passed:true});
+      page.once('dialog',dialog=>dialog.accept());
+      await rows.nth(0).locator('[data-ipip-retest="delete"]').click();
+      await page.waitForFunction(()=>document.querySelectorAll('.pf-retest-list > li').length===1);
+      assert.match(await rows.first().innerText(),/Omtest 1 av 1/);
+      assert.equal(await page.locator('.pf-retest-empty').count(),0);
+      assert.equal(await page.locator('[data-ipip-retest="view"]').count(),1);
+      await checkOverflow(page,'PF-05 multiple retests '+role+' '+width+'px');
+      await capture(page,'pf-05-distinct-retest-history-'+role+'.png');
+      records.push({role,step:'delete newest leaves older retest and relabels history',passed:true});
+    }finally{
+      await m.context.close();
+    }
+  }
+  await fs.writeFile(path.join(output,'pf-05-distinct-retest-history-synthetic.json'),
+    JSON.stringify({
+      method:'Real Chromium clicks in parent 390px and teen 320px, preloaded synthetic private attempt table',
+      limitations:'Mocked Auth/database; no verified signed-in accounts, physical Safari or screen reader.',
+      cases:records
+    },null,2)+'\n');
+  console.log('PF-05 distinct retest history: '+records.length+' synthetic role/step checks passed.');
+}
+
 // FUN-04.05: finish a fresh private 50-item retest through real browser controls,
 // open its saved history, and export the completed JSON. Only in-memory mock data
 // is changed; the original IPIP-50 responses are not modified.
@@ -949,7 +1008,7 @@ async function verifyFullPrivateRetest(){
       await page.getByRole('button',{name:'Visa mitt resultat'}).click();
       await page.locator('.pf-retest-history').waitFor();
       const download=page.waitForEvent('download');
-      await page.getByRole('button',{name:'Exportera omgången (JSON)'}).click();
+      await page.getByRole('button',{name:/Exportera omgången som JSON för Omtest 1 av 1/}).click();
       const file=await download;
       const payload=JSON.parse(await fs.readFile(await file.path(),'utf8'));
       assert.equal(payload.answered_count,50);
@@ -1608,11 +1667,11 @@ async function verifyPairedRuleRevisionAndHistory(){
   console.log('FUN-03 rule replacement/history: '+records.length+' two-role synthetic scenarios passed.');
 }
 
-async function freshContext(options,{authenticated=false,paired=false,role="parent",unlocked=false,unlockUnavailable=false,priorityUnavailable=false,priorityFeature=true,privateImportance=false,importanceReadFailure=false,preansweredGeneral=false,preansweredSkipped=false,emptySchyssta=false,homeUnreadFailure=false,personalityComplete=false,personalitySharing=false,personalityPartnerShared=false,privateRetests=false,aiMediator=false,aiAnalyses=false,activityNotifications=false,pairFixture=null}={}){
+async function freshContext(options,{authenticated=false,paired=false,role="parent",unlocked=false,unlockUnavailable=false,priorityUnavailable=false,priorityFeature=true,privateImportance=false,importanceReadFailure=false,preansweredGeneral=false,preansweredSkipped=false,emptySchyssta=false,homeUnreadFailure=false,personalityComplete=false,personalitySharing=false,personalityPartnerShared=false,privateRetests=false,aiMediator=false,aiAnalyses=false,activityNotifications=false,preloadedRetestHistory=false,pairFixture=null}={}){
   if(pairFixture && typeof pairFixture.rpc!=='function')throw new Error('Invalid linked fixture');
   const context=await browser.newContext({...options,locale:"sv-SE",reducedMotion:"reduce"});
   if(pairFixture)await context.exposeBinding('__HK_TEST_PAIR_RPC__',(_source,name,args)=>pairFixture.rpc(role,name,args));
-  await context.addInitScript(value=>{window.__HK_TEST_USER__=value.user;window.__HK_TEST_PAIRED__=value.paired;window.__HK_TEST_ROLE__=value.role;window.__HK_TEST_UNLOCKED__=value.unlocked;window.__HK_UNLOCK_RPC_UNAVAILABLE__=value.unlockUnavailable;window.__HK_PRIORITY_RPC_UNAVAILABLE__=value.priorityUnavailable;window.__HK_PRIORITISED_TEEN__=value.privateImportance;window.__HK_IMPORTANCE_READ_FAIL__=value.importanceReadFailure;window.__HK_PREANSWERED_GENERAL__=value.preansweredGeneral;window.__HK_PREANSWERED_SKIPPED__=value.preansweredSkipped;window.__HK_SCHYSSTA_EMPTY__=value.emptySchyssta;window.__HK_HOME_UNREAD_FAILURE__=value.homeUnreadFailure;window.__HK_TEST_PERSONALITY_DONE__=value.personalityComplete;window.__HK_TEST_PERSONALITY_PARTNER_SHARED__=value.personalityPartnerShared;},{personalityPartnerShared,personalityComplete,emptySchyssta,homeUnreadFailure,preansweredGeneral,preansweredSkipped,user:authenticated?{id:role==="teen"?"10000000-0000-0000-0000-000000000002":"10000000-0000-0000-0000-000000000001",email:"synthetic@example.invalid"}:null,paired,role,unlocked,unlockUnavailable,priorityUnavailable,privateImportance,importanceReadFailure});
+  await context.addInitScript(value=>{window.__HK_TEST_USER__=value.user;window.__HK_TEST_PAIRED__=value.paired;window.__HK_TEST_ROLE__=value.role;window.__HK_TEST_UNLOCKED__=value.unlocked;window.__HK_UNLOCK_RPC_UNAVAILABLE__=value.unlockUnavailable;window.__HK_PRIORITY_RPC_UNAVAILABLE__=value.priorityUnavailable;window.__HK_PRIORITISED_TEEN__=value.privateImportance;window.__HK_IMPORTANCE_READ_FAIL__=value.importanceReadFailure;window.__HK_PREANSWERED_GENERAL__=value.preansweredGeneral;window.__HK_PREANSWERED_SKIPPED__=value.preansweredSkipped;window.__HK_SCHYSSTA_EMPTY__=value.emptySchyssta;window.__HK_HOME_UNREAD_FAILURE__=value.homeUnreadFailure;window.__HK_TEST_PERSONALITY_DONE__=value.personalityComplete;window.__HK_TEST_PERSONALITY_PARTNER_SHARED__=value.personalityPartnerShared;window.__HK_TEST_RETEST_HISTORY_TWO__=value.preloadedRetestHistory;},{preloadedRetestHistory,personalityPartnerShared,personalityComplete,emptySchyssta,homeUnreadFailure,preansweredGeneral,preansweredSkipped,user:authenticated?{id:role==="teen"?"10000000-0000-0000-0000-000000000002":"10000000-0000-0000-0000-000000000001",email:"synthetic@example.invalid"}:null,paired,role,unlocked,unlockUnavailable,priorityUnavailable,privateImportance,importanceReadFailure});
   await context.route(base+"backend-config.js*",route=>route.fulfill({
     contentType:"application/javascript",
     body:"window.HEMMAKOMPASSEN_BACKEND=Object.freeze({supabaseUrl:'https://synthetic.invalid',supabasePublishableKey:'synthetic',enableSharedPriorities:"+String(priorityFeature)+",enableSharedPolling:true,enableSharedInsights:true,enableSharedUnderstanding:true,enableSchysstaList:true,enableActivityNotifications:"+String(activityNotifications)+",enablePersonalitySharing:"+String(personalitySharing)+",enablePrivateRetests:"+String(privateRetests)+",enableAiMediator:"+String(aiMediator||aiAnalyses)+",enableAiHistory:"+String(aiMediator||aiAnalyses)+",enableAiResultAnalyses:"+String(aiAnalyses)+",aiMediatorUrl:'https://hemmakompassen-ai-medlare.erikbertiljarl.workers.dev/api/ai/mediate'});"
@@ -1625,8 +1684,17 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
         const answers=new Map(window.__HK_PREANSWERED_GENERAL__?Array.from({length:34},(_,i)=>{const id='general-'+String(i+1).padStart(2,'0');return [id,{deck_id:'general',card_id:id,answer:true}]}):window.__HK_TEST_PAIRED__?[['general-01',{deck_id:'general',card_id:'general-01',answer:true}],['general-02',{deck_id:'general',card_id:'general-02',answer:false}]]:[]);
         const personalityAnswers=new Map(window.__HK_TEST_PERSONALITY_DONE__?Array.from({length:50},(_,i)=>['ipip50-'+String(i+1).padStart(3,'0'),3]):[]);
         let personalityConsent=false;
-        const retestAttempts=[];
-        const retestAnswers=[];
+        const retestAttempts=window.__HK_TEST_RETEST_HISTORY_TWO__?[
+          {id:'90000000-0000-4000-8000-000000000022',user_id:current().id,
+            created_at:'2026-11-07T12:00:00Z',completed_at:'2026-11-07T13:00:00Z'},
+          {id:'90000000-0000-4000-8000-000000000021',user_id:current().id,
+            created_at:'2026-11-07T09:00:00Z',completed_at:'2026-11-07T10:00:00Z'}
+        ]:[];
+        const retestAnswers=window.__HK_TEST_RETEST_HISTORY_TWO__?
+          retestAttempts.flatMap((attempt,index)=>Array.from({length:50},(_,i)=>({
+            attempt_id:attempt.id,user_id:attempt.user_id,
+            question_id:'ipip50-'+String(i+1).padStart(3,'0'),answer_value:index===0?4:2
+          }))):[];
         const skips=new Map();
         if(window.__HK_PREANSWERED_SKIPPED__){answers.delete('general-02');skips.set('general-02',{deck_id:'general',card_id:'general-02'});}
         const importance=new Map(window.__HK_PRIORITISED_TEEN__?[
@@ -1670,6 +1738,14 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
                       created_at:'2026-11-07T10:00:00Z',completed_at:null};
                     list.push(row);return {data:{...row},error:null};
                   }
+                  if(operation==='delete'){
+                    const index=list.findIndex(a=>Object.entries(filters).every(([k,v])=>a[k]===v));
+                    if(index<0)return {data:null,error:{message:'missing attempt'}};
+                    const [deleted]=list.splice(index,1);
+                    for(let n=retestAnswers.length-1;n>=0;n--)
+                      if(retestAnswers[n].attempt_id===deleted.id)retestAnswers.splice(n,1);
+                    return {data:{id:deleted.id},error:null};
+                  }
                   if(operation==='update'){
                     const row=list.find(a=>Object.entries(filters).every(([k,v])=>a[k]===v));
                     if(!row)return {data:null,error:{message:'missing row'}};
@@ -1692,6 +1768,7 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
                 select(){return chain();},
                 insert(row){return chain('insert',row);},
                 update(row){return chain('update',row);},
+                delete(){return chain('delete');},
                 async upsert(row){
                   const found=retestAnswers.find(a=>a.attempt_id===row.attempt_id&&a.question_id===row.question_id);
                   if(found)found.answer_value=row.answer_value;else retestAnswers.push({...row});
@@ -3821,6 +3898,7 @@ try{
   await verifyInsightsTwoRolesAndStates();
   await verifyFullPersonalitySurvey();
   await verifyFullPrivateRetest();
+  await verifyDistinctPrivateRetestHistory();
   await verifyCommunicationForms();
   await verifyAllCommunicationExercises();
   await verifyPairedTwoRoleExchange();

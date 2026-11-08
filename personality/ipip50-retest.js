@@ -2,9 +2,11 @@ import {IPIP50_V1} from './ipip50-v1.js';
 import {scoreIPIP50} from './ipip50-scoring.js';
 
 const esc=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
-const fmtDate=value=>{
+const fmtDateTime=value=>{
   const parsed=Date.parse(String(value||''));
-  return Number.isFinite(parsed)?new Intl.DateTimeFormat('sv-SE',{year:'numeric',month:'short',day:'numeric'}).format(new Date(parsed)):'Datum saknas';
+  return Number.isFinite(parsed)?new Intl.DateTimeFormat('sv-SE',{
+    year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'
+  }).format(new Date(parsed)):'Datum saknas';
 };
 const fromRows=rows=>{
   const answers={};
@@ -137,15 +139,25 @@ export function createPrivateIpipRetests({
       '<button type="button" data-ipip-retest="delete" data-attempt-id="'+esc(draftId)+'"'+(busy?' disabled':'')+'>Radera påbörjad omgång</button></p>';
     html+='<h3>Min omtestningshistorik</h3>';
     if(!completed.length)html+='<p class="live-muted pf-retest-empty">Ingen avslutad omgång ännu. '+(draftId?'Fortsätt den påbörjade omgången ovan när du vill.':'Du kan börja ett privat omtest med knappen ovan när du vill.')+'</p>';
-    else html+='<ul>'+completed.map(a=>'<li>'+esc(fmtDate(a.completed_at))+
-      ' <button type="button" data-ipip-retest="view" data-attempt-id="'+esc(a.id)+'"'+(busy?' disabled':'')+'>Visa mitt resultat</button> '+
-      '<button type="button" data-ipip-retest="export" data-attempt-id="'+esc(a.id)+'"'+(busy?' disabled':'')+'>Exportera omgången (JSON)</button> '+
-      '<button type="button" data-ipip-retest="delete" data-attempt-id="'+esc(a.id)+'"'+(busy?' disabled':'')+'>Radera omgången</button></li>').join('')+'</ul>';
+    else html+='<p class="live-muted">Senaste avslutade omtestet visas först.</p><ol class="pf-retest-list">'+completed.map((a,index)=>{
+      // The date alone cannot distinguish several retests completed on the
+      // same day. Show a unique position and time for every history action.
+      const label='Omtest '+(index+1)+' av '+completed.length+' · '+fmtDateTime(a.completed_at);
+      const a11y=action=>esc(action+' för '+label);
+      return '<li><strong>'+esc(label)+'</strong> '+
+        '<button type="button" data-ipip-retest="view" data-attempt-id="'+esc(a.id)+'" aria-label="'+a11y('Visa mitt resultat')+'"'+(busy?' disabled':'')+'>Visa mitt resultat</button> '+
+        '<button type="button" data-ipip-retest="export" data-attempt-id="'+esc(a.id)+'" aria-label="'+a11y('Exportera omgången som JSON')+'"'+(busy?' disabled':'')+'>Exportera omgången (JSON)</button> '+
+        '<button type="button" data-ipip-retest="delete" data-attempt-id="'+esc(a.id)+'" aria-label="'+a11y('Radera omgången')+'"'+(busy?' disabled':'')+'>Radera omgången</button></li>';
+    }).join('')+'</ol>';
     if(historyId&&historyAnswers){
       const scored=scoreIPIP50(historyAnswers);
-      if(scored.complete)html+='<div class="pf-retest-history"><h3>Mitt privata omtest · '+esc(fmtDate(completed.find(a=>a.id===historyId)?.completed_at))+'</h3>'+
+      if(scored.complete){
+        const selectedIndex=completed.findIndex(a=>a.id===historyId);
+        const selected=completed[selectedIndex];
+        html+='<div class="pf-retest-history"><h3>Mitt privata omtest · Omtest '+(selectedIndex+1)+' av '+completed.length+' · '+esc(fmtDateTime(selected?.completed_at))+'</h3>'+
         '<p>Den här omgången påverkar inte den profil du eventuellt redan delar med en familjemedlem.</p>'+
         renderOwnScores(scored)+'</div>';
+      }
     }
     return html+'</section>';
   }
