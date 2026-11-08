@@ -1341,6 +1341,27 @@ function reopenThemeReview(){
   b.dataset.themeReviewIndex===String(state.index)&&!b.closest('[data-private-theme-answer]')?.hidden);
  (button||search||details?.querySelector('summary'))?.focus({preventScroll:true});
 }
+// FUN-02: A write may be committed even if its network acknowledgement is lost.
+// Check this viewer's exact stored answer before showing success or failure.
+async function reconcileOwnSwipeAnswer(row){
+ let result;
+ try{
+  result=await db.from('swipe_answers').select('deck_id,card_id,answer')
+   .eq('user_id',row.user_id).eq('deck_id',row.deck_id)
+   .eq('card_id',row.card_id).maybeSingle();
+ }catch{return 'unknown';}
+ if(result?.error)return 'unknown';
+ if(result?.data===null)return 'different';
+ const saved=result?.data;
+ if(!saved||typeof saved!=='object'||saved.deck_id!==row.deck_id||
+   saved.card_id!==row.card_id||typeof saved.answer!=='boolean')return 'unknown';
+ return saved.answer===row.answer?'confirmed':'different';
+}
+function swipeAnswerRecheckMessage(result){
+ return result==='unknown'
+  ?'Det går inte att kontrollera om ditt svar sparats. Kortet ligger kvar. Uppdatera sidan och kontrollera dina svar innan du försöker igen.'
+  :'Svaret kunde inte bekräftas som sparat med ditt val. Kortet ligger kvar så att du kan försöka igen.';
+}
 async function saveThemeAnswer(direction,index,deckId,viewer,session){
   const deck=THEME_DECKS.find(d=>d.id===deckId);
   if(!deck||!themeAccessAllowed()||user?.id!==viewer||sharedSession!==session||activeThemeDeck!==deckId){swipeBusy=false;return;}
@@ -1350,7 +1371,11 @@ async function saveThemeAnswer(direction,index,deckId,viewer,session){
   try{({error}=await db.from('swipe_answers').upsert(row,{onConflict:'user_id,deck_id,card_id'}));}
   catch(e){error=e;}
   if(user?.id!==viewer||sharedSession!==session||activeThemeDeck!==deckId)return;
-  if(error){themeSaveError='Svaret kunde inte sparas. Försök igen.';swipeBusy=false;render();return;}
+  const reconciliation=error?await reconcileOwnSwipeAnswer(row):'confirmed';
+  if(user?.id!==viewer||sharedSession!==session||activeThemeDeck!==deckId)return;
+  if(reconciliation!=='confirmed'){
+    themeSaveError=swipeAnswerRecheckMessage(reconciliation);swipeBusy=false;render();return;
+  }
   themeAnswers.get(deckId).set(row.card_id,row.answer);
   themeSaveError='';
   const returnToReview=themeReviewEdit?.index===index&&themeReviewEdit?.deckId===deckId&&themeReviewEdit?.viewer===viewer&&themeReviewEdit?.session===session;
@@ -1449,7 +1474,17 @@ async function saveSwipeAnswer(direction,index,viewer,session){
   }
   catch(e){error=e;}
   if(user?.id!==viewer||sharedSession!==session)return;
-  if(error){swipeSaveError='Svaret kunde inte sparas. Kortet ligger kvar så att du kan försöka igen.';swipeBusy=false;render();return;}
+  // B/understanding answers use a different atomic RPC and cannot be
+  // verified from the ordinary A-answer table.
+  const reconciliation=error&&GENERAL_CARDS[index]?.type!=='understanding'
+    ?await reconcileOwnSwipeAnswer(row):error?'unknown':'confirmed';
+  if(user?.id!==viewer||sharedSession!==session)return;
+  if(reconciliation!=='confirmed'){
+    swipeSaveError=GENERAL_CARDS[index]?.type==='understanding'
+      ?'Svaret kunde inte bekräftas. Kortet ligger kvar. Uppdatera sidan för att kontrollera ditt svar.'
+      :swipeAnswerRecheckMessage(reconciliation);
+    swipeBusy=false;render();return;
+  }
   swipeAnswers.set(row.card_id,row.answer);
   skippedUnderstanding.delete(row.card_id);
   if(GENERAL_CARDS[index]?.type==='understanding')understandingShares.delete(row.card_id);
