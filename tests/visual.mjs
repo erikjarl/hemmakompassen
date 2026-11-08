@@ -762,6 +762,12 @@ try{
   assert.equal(await completedPersonality.page.locator('.pf-band').count(),25);
   assert.equal(await completedPersonality.page.locator('.pf-table tbody tr').count(),5);
   assert.equal(await completedPersonality.page.locator('.pf-band-key').count(),1);
+  assert.match(await completedPersonality.page.locator('.pf-chart-description').innerText(),
+    /P≈20.*80 %.*±1 SD.*inte svensk eller tonårsvaliderad norm/,
+    'PF-04: the chart explains that an estimated P20 can also lie within one SD');
+  assert.equal(await completedPersonality.page.locator('.pf-scale-summary').count(),5);
+  assert.ok((await completedPersonality.page.locator('.pf-scale-summary').first().innerText()).includes('modellerade vuxenfördelningen'),
+    'PF-04: percentiles describe modeled adult ranking rather than generic average labels');
   assert.equal(await completedPersonality.page.locator('.pf-chart-help').evaluate(el=>el.open),false,
     'UX-04: detailed zone explanation is initially collapsed');
   assert.ok(await completedPersonality.page.locator('.pf-percentile-chart').evaluate(el=>{
