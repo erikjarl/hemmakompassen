@@ -364,6 +364,102 @@ async function captureFunctionalInventory(){
 
 // FUN-01: real Chromium history navigation with synthetic sessions for both roles.
 // Unlike DOM inventory, every item below is clicked, reversed or reloaded.
+// FUN-01 / UX-03: CDP dispatches real Chromium touch events, not JS scrollTo.
+// These tests are still synthetic emulated-phone tests, not physical iOS Safari.
+async function dragMobileTabStrip(page,fromFraction,toFraction){
+  const bounds=await page.locator('#live-mobile-nav').boundingBox();
+  assert.ok(bounds&&bounds.width>200,'Mobile navigation has a touchable viewport');
+  const y=Math.round(bounds.y+bounds.height*.5);
+  const startX=Math.round(bounds.x+bounds.width*fromFraction);
+  const endX=Math.round(bounds.x+bounds.width*toFraction);
+  const client=await page.context().newCDPSession(page);
+  try{
+    const touch=(x)=>[{x,y,id:1,radiusX:3,radiusY:3,force:1}];
+    await client.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:touch(startX)});
+    for(let step=1;step<=14;step++){
+      const x=Math.round(startX+(endX-startX)*step/14);
+      await client.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:touch(x)});
+      await sleep(16);
+    }
+    await client.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+  }finally{
+    await client.detach();
+  }
+  // Allow native momentum/snap settling. No application scroll position is set.
+  await sleep(220);
+}
+async function verifyTouchMobileTabStrip(){
+  const records=[];
+  for(const role of ['parent','teen']){
+    for(const width of [320,390,430]){
+      const m=await freshContext(
+        {viewport:{width,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},
+        {authenticated:true,paired:true,role}
+      );
+      try{
+        const page=m.page;
+        await page.goto(base+'#hem',{waitUntil:'load'});
+        await page.locator('#live-mobile-nav a').first().waitFor();
+        const state=()=>page.locator('#live-mobile-nav').evaluate(nav=>{
+          const tabs=[...nav.querySelectorAll(':scope > a')];
+          const navRect=nav.getBoundingClientRect();
+          const first=tabs[0].getBoundingClientRect(),last=tabs.at(-1).getBoundingClientRect();
+          return {
+            left:nav.scrollLeft,max:nav.scrollWidth-nav.clientWidth,
+            firstVisible:first.left>=navRect.left-4&&first.right<=navRect.right+4,
+            lastVisible:last.left>=navRect.left-4&&last.right<=navRect.right+4,
+            tabCount:tabs.length,route:location.hash
+          };
+        });
+        const initial=await state();
+        assert.equal(initial.tabCount,8);
+        assert.ok(initial.max>250,'All tabs require a meaningful horizontal swipe distance');
+        assert.ok(initial.firstVisible,'First tab is visible before swiping');
+        assert.equal(initial.route,'#hem');
+        await dragMobileTabStrip(page,.83,.17);
+        const afterOne=await state();
+        assert.ok(afterOne.left>initial.left+45,
+          'A real Chromium touch swipe should move the tab strip: '+JSON.stringify({role,width,initial,afterOne}));
+        assert.equal(afterOne.route,'#hem','A scroll gesture must not accidentally activate a tab');
+        for(let i=0;i<5&&!((await state()).lastVisible);i++)
+          await dragMobileTabStrip(page,.83,.17);
+        const end=await state();
+        assert.ok(end.lastVisible,'Settings tab must be reachable by finger swipe: '+JSON.stringify({role,width,end}));
+        await checkOverflow(page,'Native mobile tab strip swiped right '+role+' '+width+'px');
+        await capture(page,'fun-01-touch-nav-last-'+role+'-'+width+'.png');
+        records.push({role,width,step:'finger swipe right reaches last tab without route change',status:'PASS'});
+        const last=await page.locator('#live-mobile-nav a[href="#installningar"]').boundingBox();
+        assert.ok(last,'Last tab has a visible tap region');
+        await page.touchscreen.tap(last.x+last.width*.5,last.y+last.height*.5);
+        await page.getByRole('heading',{name:'Inställningar'}).waitFor();
+        assert.equal(await page.locator('#live-mobile-nav a[href="#installningar"]').getAttribute('aria-current'),'page');
+        assert.equal((await state()).lastVisible,true,'Active tab remains in view after tapping it');
+        records.push({role,width,step:'last tab native touch tap opens settings and stays in view',status:'PASS'});
+        await page.goto(base+'#hem',{waitUntil:'load'});
+        // First move to the right end again, then reverse with native fingerswipes.
+        for(let i=0;i<6&&!((await state()).lastVisible);i++)
+          await dragMobileTabStrip(page,.83,.17);
+        assert.equal((await state()).lastVisible,true,'Right end is reachable again after route reload');
+        for(let i=0;i<6&&!((await state()).firstVisible);i++)
+          await dragMobileTabStrip(page,.17,.83);
+        const reverse=await state();
+        assert.equal(reverse.firstVisible,true,'Finger swipe left reaches Home: '+JSON.stringify({role,width,reverse}));
+        assert.equal(reverse.route,'#hem','Reverse gesture must not open a different route');
+        records.push({role,width,step:'reverse fingerswipe returns to first tab',status:'PASS'});
+      }finally{
+        await m.context.close();
+      }
+    }
+  }
+  await fs.writeFile(path.join(output,'fun-01-native-touch-tabstrip-synthetic.json'),
+    JSON.stringify({
+      method:'Native Chromium CDP Input.dispatchTouchEvent plus touchscreen.tap on emulated mobile contexts',
+      limitations:'Synthetic Chromium touch emulation. Not physical iOS Safari, VoiceOver, or real signed-in users.',
+      records
+    },null,2)+'\n');
+  console.log('FUN-01 native touch tabstrip: '+records.length+' synthetic role/viewport checks passed.');
+}
+
 async function verifyBrowserHistory(){
   const records=[];
   for(const item of [
@@ -3702,6 +3798,7 @@ try{
   await captureFunctionalInventory();
   await testAccountBrowserJourney();
   await verifyBrowserHistory();
+  await verifyTouchMobileTabStrip();
   await verifyAllThemeDeckJourneys();
   await verifyInsightsTwoRolesAndStates();
   await verifyFullPersonalitySurvey();
