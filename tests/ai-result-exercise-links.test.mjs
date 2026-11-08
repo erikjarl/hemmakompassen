@@ -57,3 +57,24 @@ test('model suggested routes are clickable only for verified exercises and HTML 
  assert.doesNotMatch(output,/<img/);
  assert.doesNotMatch(output,/https?:\/\//);
 });
+
+test('malformed route tails stay plain text rather than becoming misleading partial links',()=>{
+ const examples=[
+  '#kommunikation/losning-extra',
+  '#kommunikation/losning/andra',
+  '#kommunikation/losning2',
+  '#kommunikation/losning?step=2',
+  '#kommunikation/losning_more',
+  '#kommunikation/losningå'
+ ];
+ for(const route of examples){
+  const output=renderAiAnalysisReply('Föreslagen route: '+route);
+  assert.doesNotMatch(output,/<a href=/,'invalid path '+route+' must not become a link');
+  assert.match(output,/#kommunikation\/losning/,'user can still see literal invalid route');
+ }
+ const valid=renderAiAnalysisReply('Prova #kommunikation/losning, sedan #kommunikation/lyssna. Och #kommunikation/kontakt!');
+ assert.match(valid,/href="#kommunikation\/losning"/);
+ assert.match(valid,/href="#kommunikation\/lyssna"/);
+ assert.match(valid,/href="#kommunikation\/kontakt"/);
+ assert.equal((valid.match(/<a href=/g)||[]).length,3);
+});
