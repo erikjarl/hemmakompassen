@@ -286,6 +286,10 @@ console.log('PASS: shared result renderer and role summaries reject B, NO and un
   assert.match(state.sharedError,/inte tillgängliga/);
   state.sharedError='';state.db.rpc=()=>new Promise(resolve=>{state.resolvePending=resolve;});
   const pending=state.pollSharedMatches();
+  // The family-epoch guard now awaits a separate RPC before the aggregate.
+  // Allow that microtask to resolve before controlling the pending data fetch.
+  for(let i=0;i<4&&!state.resolvePending;i++)await Promise.resolve();
+  assert.equal(typeof state.resolvePending,'function','Aggregate request begins only after valid family epoch');
   state.user={id:'account-2'};state.sharedSession++;state.sharedMatches=[];state.sharedPriorities=[];
   state.resolvePending({data:[{deck_id:'general',card_id:'general-01',answer:true}],error:null});
   await pending;
