@@ -1429,28 +1429,39 @@ function menu(){
     return '<a href="#'+key+'"'+(active?' aria-current="page"':'')+aria+'>'+label+badge+'</a>';
   };
   const html=nav.map(navItem).join('');
-  for(const id of ['live-desktop-nav','live-mobile-nav']){
-    const element=$(id);
-    // Do not replace an unchanged focused link during background refreshes.
-    if(element.innerHTML===html)continue;
-    const scrollLeft=element.scrollLeft;
-    const focusedHref=element.contains(document.activeElement)?document.activeElement.getAttribute('href'):null;
-    element.innerHTML=html;
-    element.scrollLeft=scrollLeft;
-    if(focusedHref){
-      const restored=[...element.querySelectorAll('a')].find(link=>link.getAttribute('href')===focusedHref);
-      restored?.focus({preventScroll:true});
-    }
+  const desktop=$('live-desktop-nav');
+  if(desktop.innerHTML!==html){
+    const focusedHref=desktop.contains(document.activeElement)?document.activeElement.getAttribute('href'):null;
+    desktop.innerHTML=html;
+    if(focusedHref)desktop.querySelector('a[href="'+focusedHref+'"]')?.focus({preventScroll:true});
   }
-  // Bring the active tab into view only when changing pages, not during polling.
+  // Three directly visible destinations plus a fully keyboard-accessible More menu.
+  // Keep the current route and unread/pending badges discoverable without horizontal scrolling.
   const mobile=$('live-mobile-nav');
-  if(routeChanged&&mobile.clientWidth){
-    const active=mobile.querySelector('a[aria-current="page"]');
-    if(active){
-      const outer=mobile.getBoundingClientRect(),bounds=active.getBoundingClientRect();
-      if(bounds.left<outer.left+4)mobile.scrollLeft-=outer.left+4-bounds.left;
-      else if(bounds.right>outer.right-4)mobile.scrollLeft+=bounds.right-(outer.right-4);
-    }
+  const primary=['hem','inkorg','swipe'];
+  const secondary=nav.filter(([key])=>!primary.includes(key));
+  const moreCount=secondary.reduce((sum,[key])=>sum+(key==='regler'?pending:0),0);
+  const secondaryActive=secondary.some(([key])=>route===key||(key==='kommunikation'&&['mi-foralder','nvc'].includes(route)));
+  const moreBadge=moreCount?'<span class="live-nav-count" aria-hidden="true">'+(moreCount>9?'9+':moreCount)+'</span>':'';
+  const mobileHtml=nav.filter(([key])=>primary.includes(key)).map(navItem).join('')
+    +'<details class="live-mobile-more"'+(secondaryActive?' data-current-route="true"':'')+'>'
+    +'<summary aria-label="Fler sidor'+(moreCount?', '+moreCount+' väntande regelbeslut':'')+'">Mer'+moreBadge+'</summary>'
+    +'<div class="live-mobile-more-links">'+secondary.map(navItem).join('')+'</div></details>';
+  // Preserve an opened More menu (and the keyboard target) across badge updates.
+  if(mobile.innerHTML!==mobileHtml){
+    const wasOpen=mobile.querySelector('details')?.open===true;
+    const focusedHref=mobile.contains(document.activeElement)?document.activeElement.closest('a')?.getAttribute('href'):null;
+    const focusedSummary=mobile.contains(document.activeElement)&&document.activeElement.tagName==='SUMMARY';
+    mobile.innerHTML=mobileHtml;
+    const details=mobile.querySelector('details');
+    if(details)details.open=wasOpen;
+    if(focusedHref)mobile.querySelector('a[href="'+focusedHref+'"]')?.focus({preventScroll:true});
+    else if(focusedSummary)details?.querySelector('summary')?.focus({preventScroll:true});
+  }
+  if(routeChanged){
+    // Navigation closes after choosing a destination. Every route remains within two taps.
+    const details=mobile.querySelector('details');
+    if(details)details.open=false;
   }
 }
 const card=html=>'<section class="live-panel">'+html+'</section>';
