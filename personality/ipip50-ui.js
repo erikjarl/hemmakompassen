@@ -1,5 +1,5 @@
 import {IPIP50_V1} from './ipip50-v1.js';
-import {createPrivateIpipRetests} from './ipip50-retest.js?v=20261107-authoritative-export4';
+import {createPrivateIpipRetests} from './ipip50-retest.js?v=20261108-retest-ack1';
 import {scoreIPIP50} from './ipip50-scoring.js';
 import {buildIPIP50FamilyInsights} from './ipip50-family-insights.js?v=20261107-authoritative-export4';
 import {richFamilyReflection} from './ipip50-family-copy.js?v=20261107-authoritative-export4';
