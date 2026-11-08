@@ -40,10 +40,21 @@ async function checkMobileNavigation(page,label){
     }
     details.open=true;
     await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+    const drawerElement=details.querySelector('.live-mobile-more-links');
+    const drawer=drawerElement.getBoundingClientRect();
+    const navBox=nav.getBoundingClientRect();
+    const viewportWidth=document.documentElement.clientWidth;
+    if(drawer.width>300||drawer.width>viewportWidth-16)failures.push('More drawer is not compact');
+    if(drawer.right>navBox.right+1||drawer.left<8)failures.push('More drawer outside viewport');
+    if(Math.abs(drawer.right-navBox.right)>24)failures.push('More drawer not anchored to right-side More tab');
+    if(drawer.bottom>navBox.top+1)failures.push('More drawer overlaps the bottom tab bar');
     for(const link of secondary){
-      const box=link.getBoundingClientRect();
-      const drawer=details.querySelector('.live-mobile-more-links').getBoundingClientRect();
+      const box=link.getBoundingClientRect(),styles=getComputedStyle(link);
+      const iconStyles=getComputedStyle(link,'::before');
       if(box.left<drawer.left-1||box.right>drawer.right+1)failures.push(link.textContent+' drawer overflow');
+      if(box.width<drawer.width-30||box.height<44)failures.push(link.textContent+' not a full-width tap row');
+      if(styles.flexDirection!=='row'||styles.textAlign!=='left')failures.push(link.textContent+' is laid out as a tab instead of a row');
+      if(iconStyles.display==='none')failures.push(link.textContent+' icon is hidden');
     }
     details.open=false;
     summary.focus();
