@@ -1866,6 +1866,17 @@ function schysstaView(){
   const rules=schysstaAllRules(), needs=schysstaNeedsAnswer();
   const approved=rules.filter(item=>item.status==='accepted');
   const ongoing=rules.filter(item=>item.status!=='accepted'&&!needs.includes(item));
+  // Only an authorized, fully validated snapshot reaches this view.
+  // Place the next action and compose entry before optional guidance.
+  const quickActions='<section class="schyssta-quick-actions" aria-label="Översikt och nästa steg">'
+    +'<div class="schyssta-quick-state"><strong>'+(needs.length===0?'Inget väntar just nu':needs.length===1?'1 förslag behöver ditt svar':needs.length+' förslag behöver ditt svar')+'</strong>'
+    +'<p>'+(needs.length?'Du kan svara direkt på förslagen nedan eller välja Inte nu.':'Du kan föreslå något nytt utan att fatta ett beslut åt den andra.')+'</p></div>'
+    +(schysstaDraftOpen
+      ?'<button class="live-button" type="button" data-schyssta-compose-jump>Fortsätt skriva förslag</button>'
+      :'<button class="live-button" type="button" data-schyssta-start>+ Föreslå en regel</button>')
+    +'<p class="schyssta-quick-counts">'+approved.length+' '+(approved.length===1?'gemensam överenskommelse':'gemensamma överenskommelser')
+    +' · '+ongoing.length+' '+(ongoing.length===1?'annat förslag':'andra förslag')
+    +' · '+schysstaHistory.length+' '+(schysstaHistory.length===1?'avslutad regel':'avslutade regler')+'</p></section>';
   const searchTools='<div class="schyssta-filter-toolbar" role="search" aria-label="Sök bland aktuella regler och förslag">'
     +'<label for="schyssta-search">Sök bland era regler och förslag</label>'
     +'<input type="search" id="schyssta-search" maxlength="100" autocomplete="off" placeholder="Skriv ett ord i regeln…" value="'+esc(schysstaSearch)+'">'
@@ -1879,7 +1890,7 @@ function schysstaView(){
     +'<p id="schyssta-filter-summary" role="status" aria-live="polite"></p></div>';
   const suggestionHtml=schysstaSuggestions.length?'<ul class="schyssta-list">'+schysstaSuggestions.map(item=>'<li><p>'+esc(item.body)+'</p><button class="live-button" type="button" data-schyssta-propose="'+esc(item.card_id)+'"'+(schysstaSaving.has(item.card_id)?' disabled':'')+'>Föreslå</button></li>').join('')+'</ul>':'<p class="live-muted">Inga nya gemensamma ja-förslag finns just nu.</p>';
   const firstRuleHint=rules.length===0
-    ?card('<h2>Kom igång tillsammans</h2><p>Ni har inte gjort någon gemensam överenskommelse än. Ni kan skriva ett eget förslag eller hitta idéer i Gillaswajpen.</p><div class="schyssta-actions"><button class="live-button" type="button" data-schyssta-start>+ Föreslå en regel</button><a class="schyssta-secondary" href="#swipe">Hitta idéer i Gillaswajpen</a></div>')
+    ?card('<h2>Kom igång tillsammans</h2><p>Ni har inte gjort någon gemensam överenskommelse än. Ni kan skriva ett eget förslag eller hitta idéer i Gillaswajpen.</p><div class="schyssta-actions"><a class="schyssta-secondary" href="#swipe">Hitta idéer i Gillaswajpen</a></div>')
     :'';
   const formHtml=schysstaDraftOpen?'<form id="schyssta-manual-form" class="schyssta-compose">'
     +'<label for="schyssta-body">Vad vill du att ni båda ska kunna komma överens om?</label>'
@@ -1896,9 +1907,10 @@ function schysstaView(){
     +'<button class="schyssta-secondary" type="button" id="schyssta-compose">Stäng formuläret</button></form>'
     :'<button class="live-button" type="button" id="schyssta-compose">+ Föreslå en regel</button>';
   return '<div class="schyssta-view"><header class="schyssta-page-intro"><h1>Schyssta listan</h1><p>Förslag blir gemensamma regler först när båda sagt ja.</p></header>'
-    +card('<h2>Behöver ditt svar'+(needs.length?' ('+needs.length+')':'')+'</h2><p>Förslag från den andra personen visas här först.</p>'+list(needs,'Inga nya förslag väntar på ditt svar.'))
+    +quickActions
+    +card('<h2>Behöver ditt svar'+(needs.length?' ('+needs.length+')':'')+'</h2><p>Förslag från den andra personen visas här först.</p>'+list(needs,'Inget väntar just nu. Nya förslag från den andra personen visas här.'))
     +'<details class="schyssta-page-help"><summary>Så fungerar listan och hur du uppdaterar</summary><p>Här samlar ni sådant ni båda har sagt ja till. Regler kan komma från Gillaswajpen eller skrivas av någon av er. Ni bestämmer var för sig och kan välja Inte nu.</p>'
-    +(viewerRole()==='parent'?'<p><a href="#mi-foralder">För dig som förälder: lyssna före regelförslaget</a></p>':'')
+    +(viewerRole()==='parent'?'<p>För dig som förälder: beskriv ditt önskemål, ge tonåringen utrymme att säga nej och ta ansvar för att överenskommelsen känns trygg. <a href="#mi-foralder">Läs guiden om motiverande samtal</a>.</p>':'')
     +'<button class="schyssta-secondary" type="button" data-schyssta-refresh>Uppdatera listan</button></details>'
     +firstRuleHint
     +card('<h2>'+(schysstaEditTarget?'Föreslå ändring av regel':'Skriv ett eget förslag')+'</h2>'+formHtml+(schysstaMessage?'<p role="status" class="schyssta-feedback">'+esc(schysstaMessage)+'</p>':''))
@@ -2114,6 +2126,7 @@ if(e.target.closest('[data-schyssta-refresh]')&&!schysstaLoading)void fetchSchys
 if(e.target.closest('[data-schyssta-copy]'))void copySchysstaAgreements();
 if(e.target.closest('[data-schyssta-download]'))downloadSchysstaAgreements();
 if(e.target.closest('[data-schyssta-start]')){schysstaDraftOpen=true;schysstaEditTarget=null;schysstaDraft='';schysstaDraftKey=null;render();document.getElementById('schyssta-body')?.focus();}
+if(e.target.closest('[data-schyssta-compose-jump]')){const editor=document.getElementById('schyssta-body');editor?.focus();editor?.scrollIntoView({block:'nearest'});}
 if(e.target.closest('#schyssta-compose')){schysstaDraftOpen=!schysstaDraftOpen;if(!schysstaDraftOpen){schysstaEditTarget=null;schysstaDraftKey=null;schysstaDraft='';}schysstaMessage='';render();}
 const openRule=e.target.closest('[data-schyssta-open]');
 if(openRule&&SCHYSSTA_UUID.test(openRule.dataset.schysstaOpen)){
