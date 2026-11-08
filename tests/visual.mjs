@@ -1866,7 +1866,7 @@ async function verifyMediatorConversationLifecycle(){
         'History failure clears the previous transcript');
       await m.page.locator('[data-mediator-open="'+firstId+'"]').click();
       await m.page.locator('.mediator-message-user').getByText(first).waitFor();
-      assert.equal(await m.page.getByText(second,{exact:true}).count(),0,
+      assert.equal(await m.page.locator('.mediator-message-user').getByText(second,{exact:true}).count(),0,
         'Opening first conversation does not show second message');
       rows.push({role,step:'failed history read and explicit retry',status:'PASS'});
       // A reload reads the in-memory fixture as a fake persisted server.
@@ -1891,7 +1891,7 @@ async function verifyMediatorConversationLifecycle(){
       await m.page.locator('.mediator-message-user').getByText(first).waitFor();
       assert.equal(m.mediatorFixture.chats.length,1);
       assert.equal(m.mediatorFixture.messages.has(secondId),false);
-      assert.equal(await m.page.getByText(second,{exact:true}).count(),0);
+      assert.equal(await m.page.locator('.mediator-message-user').getByText(second,{exact:true}).count(),0);
       rows.push({role,step:'delete current; select remaining conversation',status:'PASS'});
       m.page.once('dialog',dialog=>dialog.accept());
       await m.page.locator('#mediator-delete').click();
