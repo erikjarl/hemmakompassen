@@ -511,6 +511,76 @@ async function verifyAllThemeDeckJourneys(){
     ' role/deck test records passed (12 open/save/resume; two eight-card completions).');
 }
 
+
+// FUN-02: fully play through the two 104-card theme decks as both synthetic
+// roles. Assert every stable card ID, 104 private writes, completion, re-entry,
+// and restart/edit without contacting a real account or Supabase.
+async function verifyLongThemeDeckJourneys(){
+  const decks=['samtal','aktiviteter'];
+  const records=[];
+  for(const role of ['parent','teen']){
+    const width=role==='parent'?390:320;
+    const currentId=role==='parent'
+      ?'10000000-0000-0000-0000-000000000001'
+      :'10000000-0000-0000-0000-000000000002';
+    const {page,context}=await freshContext(
+      {viewport:{width,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true},
+      {authenticated:true,paired:true,role,unlocked:true}
+    );
+    try{
+      await page.goto(base+'#swipe',{waitUntil:'load'});
+      await page.locator('[data-theme-open="samtal"]').waitFor();
+      for(const deck of decks){
+        await page.locator('[data-theme-open="'+deck+'"]').click();
+        for(let n=1;n<=104;n++){
+          const cardId=deck+'-'+String(n).padStart(2,'0');
+          await page.locator('#swipe-card[aria-label^="Temakort '+n+' av 104"]').waitFor();
+          const answer=n%2===0?'no':'yes';
+          await page.locator('[data-swipe="'+answer+'"]').click();
+          if(n===1||n===52||n===104){
+            const saved=await page.evaluate(()=>window.__HK_SAVED_SWIPE__);
+            assert.equal(saved.row.user_id,currentId,'FUN-02 long deck saves the correct role');
+            assert.equal(saved.row.deck_id,deck,'FUN-02 long deck saves the current deck');
+            assert.equal(saved.row.card_id,cardId,'FUN-02 stable ID for card '+n);
+            assert.equal(saved.row.answer,answer==='yes','FUN-02 saved answer for card '+n);
+            assert.equal(saved.options.onConflict,'user_id,deck_id,card_id');
+          }
+        }
+        await page.getByRole('heading',{name:'Alla 104 kort i Alla kategorier är sparade'}).waitFor();
+        assert.match(await page.locator('.swipe-private-review summary').innerText(),
+          /Visa mina 104 besvarade kort/,'FUN-02 finished long deck shows all saved private answers');
+        await checkOverflow(page,'FUN-02 '+role+' '+deck+' completed 104 cards');
+        await page.locator('#theme-back').click();
+        assert.match(await page.locator('[data-theme-open="'+deck+'"]').locator('..').innerText(),
+          /Din privata status: 104 \/ 104/,'FUN-02 long-deck progress survives leaving the deck');
+        await page.locator('[data-theme-open="'+deck+'"]').click();
+        await page.getByRole('heading',{name:'Alla 104 kort i Alla kategorier är sparade'}).waitFor();
+        await page.locator('#theme-restart').click();
+        await page.locator('#swipe-card[aria-label^="Temakort 1 av 104"]').waitFor();
+        await page.locator('[data-swipe="no"]').click(); // initially YES
+        await page.waitForFunction(expected=>window.__HK_SAVED_SWIPE__?.row?.card_id===expected
+          &&window.__HK_SAVED_SWIPE__?.row?.answer===false,cardIdForDeck(deck));
+        const edited=page.locator('.swipe-private-review [data-theme-review-index="0"]').locator('..');
+        assert.equal(await edited.getAttribute('data-private-theme-answer'),'no',
+          'FUN-02 restart edits the first previously completed card');
+        records.push({role,deck,totalCards:104,answered:104,
+          checkpoints:[1,52,104],completion:true,reopen:true,restartAndEdit:true,
+          environment:'synthetic Chromium',liveAuth:false});
+        await page.locator('#theme-back').click();
+      }
+    }finally{
+      await context.close();
+    }
+  }
+  await fs.writeFile(path.join(output,'fun-02-long-decks-synthetic.json'),
+    JSON.stringify({method:'Actual UI clicks for all 104 cards in two decks and two mocked roles',
+      limitations:'In-memory mocked Supabase and Auth; not a real shared family, device or live Worker.',
+      records},null,2)+'\n');
+  console.log('FUN-02 long decks: '+records.length+
+    ' complete 104-card role/deck journeys passed in synthetic Chromium.');
+}
+function cardIdForDeck(deck){return deck+'-01';}
+
 async function freshContext(options,{authenticated=false,paired=false,role="parent",unlocked=false,unlockUnavailable=false,priorityUnavailable=false,priorityFeature=true,privateImportance=false,importanceReadFailure=false,preansweredGeneral=false,preansweredSkipped=false,emptySchyssta=false,homeUnreadFailure=false,personalityComplete=false,personalitySharing=false,personalityPartnerShared=false,privateRetests=false,aiMediator=false,aiAnalyses=false,activityNotifications=false}={}){
   const context=await browser.newContext({...options,locale:"sv-SE",reducedMotion:"reduce"});
   await context.addInitScript(value=>{window.__HK_TEST_USER__=value.user;window.__HK_TEST_PAIRED__=value.paired;window.__HK_TEST_ROLE__=value.role;window.__HK_TEST_UNLOCKED__=value.unlocked;window.__HK_UNLOCK_RPC_UNAVAILABLE__=value.unlockUnavailable;window.__HK_PRIORITY_RPC_UNAVAILABLE__=value.priorityUnavailable;window.__HK_PRIORITISED_TEEN__=value.privateImportance;window.__HK_IMPORTANCE_READ_FAIL__=value.importanceReadFailure;window.__HK_PREANSWERED_GENERAL__=value.preansweredGeneral;window.__HK_PREANSWERED_SKIPPED__=value.preansweredSkipped;window.__HK_SCHYSSTA_EMPTY__=value.emptySchyssta;window.__HK_HOME_UNREAD_FAILURE__=value.homeUnreadFailure;window.__HK_TEST_PERSONALITY_DONE__=value.personalityComplete;window.__HK_TEST_PERSONALITY_PARTNER_SHARED__=value.personalityPartnerShared;},{personalityPartnerShared,personalityComplete,emptySchyssta,homeUnreadFailure,preansweredGeneral,preansweredSkipped,user:authenticated?{id:role==="teen"?"10000000-0000-0000-0000-000000000002":"10000000-0000-0000-0000-000000000001",email:"synthetic@example.invalid"}:null,paired,role,unlocked,unlockUnavailable,priorityUnavailable,privateImportance,importanceReadFailure});
