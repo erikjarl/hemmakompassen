@@ -20,7 +20,7 @@ function scenario(pairAllowed=true,changeSession=false){
   const state={
     user:{id:'viewer'},sharedSession:3,
     members:[{user_id:'viewer',role:'parent'},{user_id:'teen',role:'teen'}],
-    page:()=> 'insikter',insightsLoading:false,insightsError:'',activityInviteBusy:false,
+    page:()=> 'insikter',insightsLoading:false,insightsError:'',activityInviteBusy:false,inboxPairCheckBusy:false,
     sharedInsightsEnabled:true,sharedDeckId:'aktiviteter',sharedLoading:false,sharedError:'',
     insightsRows:[{answer:true,deck_id:'aktiviteter',card_id:'aktiviteter-01'}],
     sharedMatches:[],familyChatDraft:'',familyChatRequestKey:'existing',familyChatStatus:'',

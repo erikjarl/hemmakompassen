@@ -1855,7 +1855,15 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
               return {data:null,error:null};
             }
             if(name==='my_current_inbox_pair_epoch')return {data:window.__HK_TEST_PAIRED__?'test-family:parent:teen:parent-joined:teen-joined':null,error:null};
-            if(name==='my_family_members')return {data:current()?(window.__HK_TEST_PAIRED__?[{user_id:'10000000-0000-0000-0000-000000000001',role:'parent',display_name:'Provförälder'},{user_id:'10000000-0000-0000-0000-000000000002',role:'teen',display_name:'Provtonåring'}]:[{user_id:current().id,role:window.__HK_TEST_ROLE__,display_name:window.__HK_TEST_ROLE__==='teen'?'Provtonåring':'Provförälder'}]):[],error:null};
+            if(name==='my_family_members'){
+              const data=current()?(window.__HK_TEST_PAIRED__?[{user_id:'10000000-0000-0000-0000-000000000001',role:'parent',display_name:'Provförälder'},{user_id:'10000000-0000-0000-0000-000000000002',role:'teen',display_name:'Provtonåring'}]:[{user_id:current().id,role:window.__HK_TEST_ROLE__,display_name:window.__HK_TEST_ROLE__==='teen'?'Provtonåring':'Provförälder'}]):[];
+              if(window.__HK_TEST_HOLD_NEXT_PAIR_READ__){
+                window.__HK_TEST_HOLD_NEXT_PAIR_READ__=false;
+                return await new Promise(resolve=>{window.__HK_TEST_RELEASE_PAIR_READ__=()=>{
+                  window.__HK_TEST_RELEASE_PAIR_READ__=null;resolve({data,error:null});};});
+              }
+              return {data,error:null};
+            }
              if(name==='shared_swipe_matches'){
                window.__HK_MATCH_RPC_CALLS__=(window.__HK_MATCH_RPC_CALLS__||0)+1;
                window.__HK_MATCH_RPC_ARGS__=[...(window.__HK_MATCH_RPC_ARGS__||[]),args];
@@ -3177,6 +3185,25 @@ try{
   await paired.page.locator('[data-insight-activity="aktiviteter-01"]').waitFor();
   assert.equal(await paired.page.locator('[data-insight-activity]').count(),1,
     'Only the server-verified mutual YES activity gets an invitation action');
+  // FUN-02-INVITE-01: a manual insight refresh may already hold the pair
+  // check. A simultaneous invitation click must not leave its CTA disabled.
+  await paired.page.evaluate(()=>{window.__HK_TEST_HOLD_NEXT_PAIR_READ__=true;});
+  await paired.page.locator('#insights-retry').click();
+  await paired.page.waitForFunction(()=>typeof window.__HK_TEST_RELEASE_PAIR_READ__==='function');
+  const raceCta=paired.page.locator('[data-insight-activity="aktiviteter-01"]');
+  await raceCta.click();
+  await paired.page.locator('.insights-view [role="alert"]').filter({hasText:'Familjekopplingen kontrolleras redan'}).waitFor();
+  assert.equal(await raceCta.isEnabled(),true,
+    'A concurrent pair verification leaves the invitation button actionable, not spinning forever');
+  assert.equal(await paired.page.locator('#family-chat-body').count(),0,
+    'An invitation while pairing is being checked must not create an inbox draft');
+  assert.equal(await paired.page.evaluate(()=>window.__HK_CHAT_SEND__||null),null,
+    'An invitation cannot send any message during a pair check');
+  await paired.page.evaluate(()=>window.__HK_TEST_RELEASE_PAIR_READ__());
+  await paired.page.waitForFunction(()=>document.querySelector('#insights-retry')&&!document.querySelector('#insights-retry').disabled);
+  await paired.page.locator('[data-insight-activity="aktiviteter-01"]').waitFor();
+  // After the previous check resolves, the same action can produce a voluntary
+  // inbox DRAFT. Nothing is transmitted until the separate Send action.
   const sentBefore=await paired.page.evaluate(()=>window.__HK_CHAT_SEND__||null);
   await paired.page.locator('[data-insight-activity="aktiviteter-01"]').click();
   await paired.page.locator('#family-chat-body').waitFor();
