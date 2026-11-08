@@ -56,4 +56,15 @@ assert.match(source,/themeAnswers\.get\(deck\.id\)\.has\(themeCardId\(deck,index
  'The click handler rejects not-yet-answered card indices');
 assert.match(source,/Number\.isSafeInteger\(index\)/,'The selected card index must be an integer');
 assert.match(source,/themeReview=true;[\s\S]*?themeIndex=index;/,'Review uses the existing private editing path');
+assert.match(source,/function reopenThemeReview\(\)/,'Private theme edit must support return to list');
+assert.match(source,/themeReviewEdit=\{viewer:user\.id,session:sharedSession,deckId:deck\.id,index/,
+ 'The edit return is bound to exact viewer, session and deck');
+assert.match(source,/if\(returnToReview\)reopenThemeReview\(\);else render\(\)/,
+ 'Only successful matching saves trigger list return');
+assert.match(source,/if\(e\.target\.closest\('#theme-review-back'\)/,
+ 'Cancel without saving is available');
+assert.match(source,/themeReviewEdit=null;user=u/,
+ 'Account refresh revokes private editing context');
+assert.match(source,/function renderKeepingGeneralReview\(\)[\s\S]*?activeThemeDeck[\s\S]*?filterPrivateThemeReview\(\)/,
+ 'Shared aggregate refresh must preserve expanded themed private list');
 console.log('PASS: only own saved answers rendered, escaped, and eligible for direct per-card correction');
