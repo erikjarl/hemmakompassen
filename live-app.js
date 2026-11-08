@@ -206,6 +206,19 @@ async function recheckInboxPair(){
   sharedRequest++;insightsRequest++;
   sharedMatches=[];sharedPriorities=[];sharedError='';sharedPriorityError='';sharedLoading=false;
   insightsRows=[];sharedUnderstandingRows=[];insightsError='';insightsLoading=false;
+  // Family rules, notices and pending actions are scoped to this same pair.
+  // Their old cached contents must not outlive a revoked/unknown pairing.
+  schysstaRequest++;
+  schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];
+  schysstaNotifications=[];schysstaReplacementLinks=[];schysstaHistory=[];
+  schysstaEndTarget=null;schysstaLoading=false;schysstaError='';
+  schysstaSaving.clear();schysstaPausedIds.clear();
+  schysstaDraft='';schysstaDraftOpen=false;schysstaDraftKey=null;
+  schysstaEditTarget=null;schysstaSubmitting=false;schysstaMessage='';schysstaCopyMessage='';
+  activityNotificationsRequest++;
+  activityNotifications=[];activityNotificationsError='';activityNotificationsLoading=false;
+  activityMarkBusy=null;activityFeedback='';
+  activityInviteBusy=false;activityInviteError='';
   inboxPairEpoch=null;
   members=[];
   render();

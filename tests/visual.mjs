@@ -691,6 +691,12 @@ try{
     'Remote unpair must remove old private unread badge on home focus');
   assert.equal(await homeUnpaired.page.getByRole('heading',{name:/^Inkorgen · /}).count(),0,
     'Home cannot keep old family inbox alert after remote unpair');
+  assert.equal(await homeUnpaired.page.getByRole('heading',{name:/^Behöver ditt svar/}).count(),0,
+    'Remote unpair must also clear cached pending rule proposals from the home page');
+  await homeUnpaired.page.goto(base+'#regler',{waitUntil:'load'});
+  await homeUnpaired.page.getByRole('heading',{name:'Koppla först en familjemedlem'}).waitFor();
+  assert.equal(await homeUnpaired.page.locator('[data-schyssta-decision]').count(),0,
+    'Old shared agreements must not remain actionable after remote unpair');
   await homeUnpaired.context.close();
 
   // Shared insights are also bound to the current pairing epoch. A remote

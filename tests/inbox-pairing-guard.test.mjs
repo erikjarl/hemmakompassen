@@ -22,6 +22,22 @@ function harness(remote=[parent,teen],error=null){
     sharedError:'',sharedPriorityError:'',sharedLoading:false,
     insightsRows:[{card_id:'general-01',answer:true}],
     sharedUnderstandingRows:[{card_id:'general-03'}],insightsError:'',insightsLoading:false,
+    // A revoked pairing also invalidates cached family rules/notices and any
+    // in-flight writes or reads from Schyssta list and activity notifications.
+    schysstaRequest:11,schysstaSuggestions:[{card_id:'regler-01'}],
+    schysstaRules:[{agreement_id:'rule-1'}],schysstaManualRules:[{agreement_id:'manual-1'}],
+    schysstaNotifications:[{notification_id:'notice-1'}],
+    schysstaReplacementLinks:[{agreement_id:'replacement-1'}],
+    schysstaHistory:[{agreement_id:'history-1'}],schysstaEndTarget:'rule-1',
+    schysstaLoading:true,schysstaError:'old-error',
+    schysstaSaving:new Set(['rule-1']),schysstaPausedIds:new Set(['rule-1']),
+    schysstaDraft:'Privat text om gammal familj',schysstaDraftOpen:true,
+    schysstaDraftKey:'old-key',schysstaEditTarget:'rule-1',
+    schysstaSubmitting:true,schysstaMessage:'old-message',schysstaCopyMessage:'old-copy',
+    activityNotificationsRequest:9,
+    activityNotifications:[{notification_id:'notice-2'}],activityNotificationsError:'old-error',
+    activityNotificationsLoading:true,activityMarkBusy:'notice-2',activityFeedback:'old-feedback',
+    activityInviteBusy:true,activityInviteError:'old-error',
     inboxPairCheckBusy:false,inboxPairEpoch:'epoch-1',
     db:{rpc:name=>{if(name==='my_family_members')return respond();
       assert.equal(name,'my_current_inbox_pair_epoch');return Promise.resolve(epochResponse);}},
@@ -50,6 +66,10 @@ await ok.context.check();
 assert.equal(ok.actions.cleared,0,'Same pair should not clear the conversation');
 assert.equal(ok.actions.refreshed,0,'Display name changes are not pair switches');
 assert.equal(ok.context.sharedSession,8);
+assert.equal(ok.context.schysstaRules.length,1,'Valid pairing must preserve already loaded family rules');
+assert.equal(ok.context.activityNotifications.length,1,'Valid pairing must preserve activity notices');
+assert.equal(ok.context.schysstaRequest,11);
+assert.equal(ok.context.activityNotificationsRequest,9);
 
 const changed=harness([parent,anotherTeen]);
 assert.equal(await changed.context.check(),false);
@@ -64,6 +84,23 @@ assert.equal(changed.context.sharedMatches.length,0,'Invalidate old shared match
 assert.equal(changed.context.sharedPriorities.length,0,'Invalidate old shared priorities immediately');
 assert.equal(changed.context.insightsRows.length,0,'Invalidate old pair insights immediately');
 assert.equal(changed.context.sharedUnderstandingRows.length,0,'Invalidate shared teen B cards immediately');
+assert.equal(changed.context.schysstaRequest,12,'Invalidate in-flight family rule reads and writes');
+assert.equal(changed.context.activityNotificationsRequest,10,'Invalidate in-flight activity notice requests');
+for(const key of ['schysstaSuggestions','schysstaRules','schysstaManualRules','schysstaNotifications',
+  'schysstaReplacementLinks','schysstaHistory','activityNotifications'])
+  assert.equal(changed.context[key].length,0,'Clear prior-family cache: '+key);
+assert.equal(changed.context.schysstaSaving.size,0,'Clear old agreement write-in-progress flags');
+assert.equal(changed.context.schysstaPausedIds.size,0,'Clear old agreement pause state');
+assert.equal(changed.context.schysstaDraft,'','Drop unsubmitted agreement text from previous pairing');
+assert.equal(changed.context.schysstaDraftOpen,false);
+assert.equal(changed.context.schysstaDraftKey,null);
+assert.equal(changed.context.schysstaEditTarget,null);
+assert.equal(changed.context.schysstaSubmitting,false);
+assert.equal(changed.context.activityMarkBusy,null);
+assert.equal(changed.context.activityInviteBusy,false);
+assert.equal(changed.context.schysstaEndTarget,null);
+assert.equal(changed.context.activityFeedback,'');
+assert.equal(changed.context.activityInviteError,'');
 
 const rePaired=harness();
 rePaired.setEpoch('epoch-2');
