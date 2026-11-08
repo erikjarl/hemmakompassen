@@ -1436,8 +1436,8 @@ try{
   assert.doesNotMatch(text,/Vi får pausa gräl|Vi pratar om hur vi delar på sysslorna/,'Unapproved proposals are excluded from local file');
   assert.doesNotMatch(text,/10000000-0000-0000-0000|synthetic@example.invalid|agreement_id|user_id/,'No IDs, emails or internal keys in file');
 
-  assert.equal(await paired.page.getByRole('button',{name:'Uppdatera listan'}).count(),1,
-    'A paired test user can explicitly reload the list');
+  assert.equal(await paired.page.locator('.schyssta-page-help button[data-schyssta-refresh]').count(),1,
+    'A paired test user can explicitly reload the list through expandable help');
   assert.equal(await paired.page.locator('#live-mobile-nav a[href="#inkorg"] .live-nav-count').innerText(),'2','Inbox counts both one private chat message and one rule event');
   await paired.page.waitForFunction(()=>document.querySelector('#live-mobile-nav a[href="#regler"] .live-nav-count')?.textContent==='2',
     null,{timeout:8000});
