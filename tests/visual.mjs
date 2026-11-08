@@ -1608,11 +1608,11 @@ async function verifyPairedRuleRevisionAndHistory(){
   console.log('FUN-03 rule replacement/history: '+records.length+' two-role synthetic scenarios passed.');
 }
 
-async function freshContext(options,{authenticated=false,paired=false,role="parent",unlocked=false,unlockUnavailable=false,priorityUnavailable=false,priorityFeature=true,privateImportance=false,importanceReadFailure=false,preansweredGeneral=false,preansweredSkipped=false,emptySchyssta=false,homeUnreadFailure=false,personalityComplete=false,personalitySharing=false,personalityPartnerShared=false,privateRetests=false,aiMediator=false,aiAnalyses=false,activityNotifications=false,pairFixture=null}={}){
+async function freshContext(options,{authenticated=false,paired=false,role="parent",unlocked=false,unlockUnavailable=false,priorityUnavailable=false,priorityFeature=true,privateImportance=false,importanceReadFailure=false,preansweredGeneral=false,preansweredSkipped=false,emptySchyssta=false,homeUnreadFailure=false,personalityComplete=false,personalitySharing=false,personalityPartnerShared=false,privateRetests=false,aiMediator=false,aiAnalyses=false,activityNotifications=false,preloadedRetestHistory=false,pairFixture=null}={}){
   if(pairFixture && typeof pairFixture.rpc!=='function')throw new Error('Invalid linked fixture');
   const context=await browser.newContext({...options,locale:"sv-SE",reducedMotion:"reduce"});
   if(pairFixture)await context.exposeBinding('__HK_TEST_PAIR_RPC__',(_source,name,args)=>pairFixture.rpc(role,name,args));
-  await context.addInitScript(value=>{window.__HK_TEST_USER__=value.user;window.__HK_TEST_PAIRED__=value.paired;window.__HK_TEST_ROLE__=value.role;window.__HK_TEST_UNLOCKED__=value.unlocked;window.__HK_UNLOCK_RPC_UNAVAILABLE__=value.unlockUnavailable;window.__HK_PRIORITY_RPC_UNAVAILABLE__=value.priorityUnavailable;window.__HK_PRIORITISED_TEEN__=value.privateImportance;window.__HK_IMPORTANCE_READ_FAIL__=value.importanceReadFailure;window.__HK_PREANSWERED_GENERAL__=value.preansweredGeneral;window.__HK_PREANSWERED_SKIPPED__=value.preansweredSkipped;window.__HK_SCHYSSTA_EMPTY__=value.emptySchyssta;window.__HK_HOME_UNREAD_FAILURE__=value.homeUnreadFailure;window.__HK_TEST_PERSONALITY_DONE__=value.personalityComplete;window.__HK_TEST_PERSONALITY_PARTNER_SHARED__=value.personalityPartnerShared;},{personalityPartnerShared,personalityComplete,emptySchyssta,homeUnreadFailure,preansweredGeneral,preansweredSkipped,user:authenticated?{id:role==="teen"?"10000000-0000-0000-0000-000000000002":"10000000-0000-0000-0000-000000000001",email:"synthetic@example.invalid"}:null,paired,role,unlocked,unlockUnavailable,priorityUnavailable,privateImportance,importanceReadFailure});
+  await context.addInitScript(value=>{window.__HK_TEST_USER__=value.user;window.__HK_TEST_PAIRED__=value.paired;window.__HK_TEST_ROLE__=value.role;window.__HK_TEST_UNLOCKED__=value.unlocked;window.__HK_UNLOCK_RPC_UNAVAILABLE__=value.unlockUnavailable;window.__HK_PRIORITY_RPC_UNAVAILABLE__=value.priorityUnavailable;window.__HK_PRIORITISED_TEEN__=value.privateImportance;window.__HK_IMPORTANCE_READ_FAIL__=value.importanceReadFailure;window.__HK_PREANSWERED_GENERAL__=value.preansweredGeneral;window.__HK_PREANSWERED_SKIPPED__=value.preansweredSkipped;window.__HK_SCHYSSTA_EMPTY__=value.emptySchyssta;window.__HK_HOME_UNREAD_FAILURE__=value.homeUnreadFailure;window.__HK_TEST_PERSONALITY_DONE__=value.personalityComplete;window.__HK_TEST_PERSONALITY_PARTNER_SHARED__=value.personalityPartnerShared;window.__HK_TEST_RETEST_HISTORY_TWO__=value.preloadedRetestHistory;},{preloadedRetestHistory,personalityPartnerShared,personalityComplete,emptySchyssta,homeUnreadFailure,preansweredGeneral,preansweredSkipped,user:authenticated?{id:role==="teen"?"10000000-0000-0000-0000-000000000002":"10000000-0000-0000-0000-000000000001",email:"synthetic@example.invalid"}:null,paired,role,unlocked,unlockUnavailable,priorityUnavailable,privateImportance,importanceReadFailure});
   await context.route(base+"backend-config.js*",route=>route.fulfill({
     contentType:"application/javascript",
     body:"window.HEMMAKOMPASSEN_BACKEND=Object.freeze({supabaseUrl:'https://synthetic.invalid',supabasePublishableKey:'synthetic',enableSharedPriorities:"+String(priorityFeature)+",enableSharedPolling:true,enableSharedInsights:true,enableSharedUnderstanding:true,enableSchysstaList:true,enableActivityNotifications:"+String(activityNotifications)+",enablePersonalitySharing:"+String(personalitySharing)+",enablePrivateRetests:"+String(privateRetests)+",enableAiMediator:"+String(aiMediator||aiAnalyses)+",enableAiHistory:"+String(aiMediator||aiAnalyses)+",enableAiResultAnalyses:"+String(aiAnalyses)+",aiMediatorUrl:'https://hemmakompassen-ai-medlare.erikbertiljarl.workers.dev/api/ai/mediate'});"
@@ -1625,8 +1625,17 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
         const answers=new Map(window.__HK_PREANSWERED_GENERAL__?Array.from({length:34},(_,i)=>{const id='general-'+String(i+1).padStart(2,'0');return [id,{deck_id:'general',card_id:id,answer:true}]}):window.__HK_TEST_PAIRED__?[['general-01',{deck_id:'general',card_id:'general-01',answer:true}],['general-02',{deck_id:'general',card_id:'general-02',answer:false}]]:[]);
         const personalityAnswers=new Map(window.__HK_TEST_PERSONALITY_DONE__?Array.from({length:50},(_,i)=>['ipip50-'+String(i+1).padStart(3,'0'),3]):[]);
         let personalityConsent=false;
-        const retestAttempts=[];
-        const retestAnswers=[];
+        const retestAttempts=window.__HK_TEST_RETEST_HISTORY_TWO__?[
+          {id:'90000000-0000-4000-8000-000000000022',user_id:current().id,
+            created_at:'2026-11-07T12:00:00Z',completed_at:'2026-11-07T13:00:00Z'},
+          {id:'90000000-0000-4000-8000-000000000021',user_id:current().id,
+            created_at:'2026-11-07T09:00:00Z',completed_at:'2026-11-07T10:00:00Z'}
+        ]:[];
+        const retestAnswers=window.__HK_TEST_RETEST_HISTORY_TWO__?
+          retestAttempts.flatMap((attempt,index)=>Array.from({length:50},(_,i)=>({
+            attempt_id:attempt.id,user_id:attempt.user_id,
+            question_id:'ipip50-'+String(i+1).padStart(3,'0'),answer_value:index===0?4:2
+          }))):[];
         const skips=new Map();
         if(window.__HK_PREANSWERED_SKIPPED__){answers.delete('general-02');skips.set('general-02',{deck_id:'general',card_id:'general-02'});}
         const importance=new Map(window.__HK_PRIORITISED_TEEN__?[
@@ -1670,6 +1679,14 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
                       created_at:'2026-11-07T10:00:00Z',completed_at:null};
                     list.push(row);return {data:{...row},error:null};
                   }
+                  if(operation==='delete'){
+                    const index=list.findIndex(a=>Object.entries(filters).every(([k,v])=>a[k]===v));
+                    if(index<0)return {data:null,error:{message:'missing attempt'}};
+                    const [deleted]=list.splice(index,1);
+                    for(let n=retestAnswers.length-1;n>=0;n--)
+                      if(retestAnswers[n].attempt_id===deleted.id)retestAnswers.splice(n,1);
+                    return {data:{id:deleted.id},error:null};
+                  }
                   if(operation==='update'){
                     const row=list.find(a=>Object.entries(filters).every(([k,v])=>a[k]===v));
                     if(!row)return {data:null,error:{message:'missing row'}};
@@ -1692,6 +1709,7 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
                 select(){return chain();},
                 insert(row){return chain('insert',row);},
                 update(row){return chain('update',row);},
+                delete(){return chain('delete');},
                 async upsert(row){
                   const found=retestAnswers.find(a=>a.attempt_id===row.attempt_id&&a.question_id===row.question_id);
                   if(found)found.answer_value=row.answer_value;else retestAnswers.push({...row});
