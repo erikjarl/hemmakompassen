@@ -949,12 +949,13 @@ async function verifyCommunicationForms(){
 // This exercises the real DOM and frontend workflow across two independent
 // Chromium contexts. No Supabase credentials, production replies or live users.
 function makeTwoRoleFamilyFixture(){
-  const messages=[],tokens=new Map(),rules=[],notices=[];
+  const messages=[],tokens=new Map(),rules=[],notices=[],calls=[];
   let failedSendAcknowledgement=false;
   const other=role=>role==='parent'?'teen':'parent';
   const ok=data=>({data,error:null});
   const createdAt=n=>'2026-11-01T12:'+String(Math.floor(n/50)).padStart(2,'0')+':'+String(n%50).padStart(2,'0')+'Z';
   function rpc(role,name,args={}){
+    calls.push({role,name,args});
     if(name==='my_family_messages'){
       let visible=messages.map(m=>({
         message_id:m.id,body:m.body,sent_by_me:m.sender===role,
@@ -1028,7 +1029,7 @@ function makeTwoRoleFamilyFixture(){
     }
     throw new Error('Unexpected linked pair RPC: '+name);
   }
-  return {rpc,messages,rules,notices,
+  return {rpc,messages,rules,notices,calls,
     loseNextSendAcknowledgement(){failedSendAcknowledgement=true;}};
 }
 const FUN03_LINKED_RPCS=Object.freeze([
@@ -1105,7 +1106,15 @@ async function verifyPairedTwoRoleExchange(){
       'Submitting a manual proposal does not silently approve it for either member');
 
     await teen.page.goto(base+'#inkorg',{waitUntil:'load'});
-    await teen.page.getByText('Nytt regelförslag').waitFor();
+    try{
+      await teen.page.getByText('Nytt regelförslag').waitFor({timeout:10000});
+    }catch(error){
+      const visible=await teen.page.locator('#live-app').innerText().catch(()=>'(no app)');
+      throw new Error('FUN-03 linked notice missing: '+JSON.stringify({
+        notices:fixture.notices,teenCalls:fixture.calls.filter(x=>x.role==='teen').slice(-25),
+        visible:visible.slice(0,3500)
+      }));
+    }
     assert.equal(fixture.notices[0].read_at,null,'Opening inbox does not silently mark rule notice read');
     await teen.page.locator('[data-schyssta-read]').click();
     await teen.page.waitForFunction(()=>!document.querySelector('[data-schyssta-read]'));
