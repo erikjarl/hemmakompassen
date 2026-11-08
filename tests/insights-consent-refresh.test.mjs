@@ -4,7 +4,7 @@ import vm from 'node:vm';
 import {readFileSync} from 'node:fs';
 
 const code=readFileSync(new URL('../live-app.js',import.meta.url),'utf8');
-const func=code.match(/async function fetchInsights\(\{quiet=false\}=\{\}\)\{[\s\S]*?\n\}(?=\n\nasync function setUnderstandingShare)/)?.[0];
+const func=code.match(/async function fetchInsights\(\{quiet=false\}=\{\}\)\{[\s\S]*?\n\}(?=\n\n\/\/ Read back the CURRENT consent state after a write)/)?.[0];
 assert.ok(func,'Test the actual shared-insights recheck implementation');
 
 const A={deck_id:'general',card_id:'general-01',answer:true};
