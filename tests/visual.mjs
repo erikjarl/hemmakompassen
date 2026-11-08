@@ -852,6 +852,20 @@ try{
   assert.equal(await generalReview.page.locator('#swipe-general-review-answer').inputValue(),'all');
   await checkOverflow(generalReview.page,'General saved-answer review at 390px');
   await capture(generalReview.page,'mobile-390-private-general-review.png');
+  const ownExportPromise=generalReview.page.waitForEvent('download');
+  await generalReview.page.locator('#swipe-export-private').click();
+  const ownDownload=await ownExportPromise;
+  assert.equal(ownDownload.suggestedFilename(),'mina-gillaswajp-svar.txt');
+  const ownBytes=await fs.readFile(await ownDownload.path());
+  assert.deepEqual([...ownBytes.subarray(0,3)],[239,187,191],'Own Swedish text file is UTF-8 with BOM');
+  const ownText=ownBytes.toString('utf8');
+  assert.match(ownText,/Mina privata svar i Gillaswajpen/);
+  assert.match(ownText,/Allmänna kortleken/);
+  assert.match(ownText,/Mitt svar: Nej/,'The changed private answer is exported');
+  assert.match(ownText,/Mitt svar: Överhoppat/,'The teen-only skipped B card is exported as skipped');
+  assert.doesNotMatch(ownText,/user_id|family_id|pair_id|synthetic@example\.invalid|Gemensamma möjligheter/,
+    'Export does not include account identifiers or shared results');
+  assert.match(await generalReview.page.locator('#swipe-export-status').innerText(),/privata textfil/);
   await generalReview.context.close();
   const narrow=await freshContext({viewport:{width:320,height:700},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true});
   await narrow.page.getByRole("heading",{name:/Hej[ ,]+Provförälder/}).waitFor();
