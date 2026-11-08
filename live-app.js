@@ -145,12 +145,19 @@ async function markActivityNotificationRead(notificationId){
     // An unconfirmed write must never be treated as a confirmed unread count.
     activityNotificationsError=activityFeedback;
     activityNotifications=[];
-    if(page()==='inkorg'&&!familyChatDraft.trim())render();
+    // This is a deliberate user action. Show the failed receipt even when
+    // there is an unsent chat draft; render() restores familyChatDraft.
+    if(page()==='inkorg')render();
     else menu();
     return;
   }
   // Recheck server state, rather than optimistically removing the unread badge.
   await fetchActivityNotifications();
+  // Routine background reads avoid replacing a focused composer. After an
+  // explicit read-click, however, the notice must visibly change even when
+  // the user has an unsent draft. The text is held in familyChatDraft.
+  if(viewer===user?.id&&session===sharedSession&&page()==='inkorg'&&familyChatDraft.trim())
+    render();
 }
 const familyChatTimestamp=timestamp=>new Intl.DateTimeFormat('sv-SE',{dateStyle:'medium',timeStyle:'short'}).format(new Date(timestamp));
 function validFamilyChatRows(rows){
