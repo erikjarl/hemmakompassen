@@ -856,6 +856,9 @@ try{
   await retestScreen.page.goto(base+'#personlighet',{waitUntil:'load'});
   await retestScreen.page.getByRole('heading',{name:'Gör testet igen – helt privat'}).waitFor();
   assert.match(await retestScreen.page.locator('.pf-retest').innerText(),/de delas inte med din familjemedlem eller AI-medlaren/);
+  assert.match(await retestScreen.page.locator('.pf-retest-empty').innerText(),/Ingen avslutad omgång ännu/);
+  assert.equal(await retestScreen.page.locator('.pf-retest button[data-ipip-retest="new"]').count(),1);
+  assert.equal(await retestScreen.page.locator('.pf-retest button[data-ipip-retest="refresh"]').count(),0);
   await retestScreen.page.getByRole('button',{name:'Starta en ny privat testomgång'}).click();
   await retestScreen.page.locator('input[data-ipip-retest-answer="ipip50-001"][value="4"]').focus();
   await retestScreen.page.keyboard.press('Space');
@@ -866,8 +869,9 @@ try{
   }));
   assert.equal(retestCheck.saved,1,'Private answer must be saved: '+JSON.stringify(retestCheck));
   await retestScreen.page.getByText('Fråga 2 av 50').waitFor();
-  await retestScreen.page.getByRole('button',{name:'Uppdatera mina omtest'}).click();
-  await retestScreen.page.getByText('Dina omtest har uppdaterats från servern.').waitFor();
+  assert.equal(await retestScreen.page.getByRole('button',{name:'Uppdatera mina omtest'}).count(),0,
+    'PF-05: manual refresh does not compete with continuing an in-progress private retest');
+  await retestScreen.page.getByRole('button',{name:'Spara och pausa'}).click();
   await retestScreen.page.getByRole('button',{name:'Fortsätt privat omtest'}).click();
   await retestScreen.page.getByText('Fråga 2 av 50').waitFor();
 
