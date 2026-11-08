@@ -6,14 +6,15 @@
 
 Testfunktionen `verifyMediatorConversationLifecycle()` i `tests/visual.mjs` använder verkliga klick, formulärinmatningar, en omladdning och bekräftelse av raderingsdialoger i ett lokalt Chromium-fönster. Fake-Workern håller privata chattar och meddelanden i minnet i just det webbläsarkontextet.
 
-För **var och en** av föräldra- och tonårsrollerna prövas följande sex steg:
+För **var och en** av föräldra- och tonårsrollerna prövas följande sju verifierade teststeg:
 
 1. Start utan samtal; första meddelandet skapar privat chatthistorik med ett korrekt lagrat syntetiskt användar-/assistentpar.
 2. **Nytt samtal** rensar föregående synlig historik; andra meddelandet skapar ett separat samtal.
 3. Temporärt fel vid öppning av ett äldre samtal visar feltext **utan gamla synliga meddelanden**; nytt klick laddar rätt historik.
 4. Omladdning hämtar sparad historik från den syntetiska fixturen och återöppnar det senaste samtalet.
 5. Fel vid meddelandesändning behåller textutkastet, skapar inget falskt svar och lyckad omförsändning skapar ett enda nytt användar-/assistentpar.
-6. **Radera detta samtal** tar först bort valt samtal och visar återstående konversation; efter radering av sista samtalet visas tomt tillstånd.
+6. **Radera detta samtal** tar bort den aktuella konversationen och visar den som finns kvar, utan gamla chattmeddelanden.
+7. Radering av även det sista samtalet visar tomt tillstånd utan gamla historikposter.
 
 Varje steg innehåller uttryckliga `assert`-kontroller, och båda mobilbredderna kontrolleras för dokumentöverströmning. Loggfilen `artifacts/fun-05-mediator-lifecycle-synthetic.json` och två skärmbilder publiceras som Actions-artifact.
 
@@ -21,4 +22,4 @@ Varje steg innehåller uttryckliga `assert`-kontroller, och båda mobilbredderna
 
 **Ingen riktig Supabase Auth, två inloggade riktiga testkonton, faktisk AI-modell/Worker, D1-beständighet eller fysisk iPhone/Safari har testats.** Att reload fungerar med in-memory fake-Worker bevisar inte att serverlagring överlever en riktig utloggning. Testet gör inga skrivningar i skarp databas och säger inget om AI-svarens kvalitet eller faktiska effekter för familjer.
 
-**Verifieringsstatus:** **12/12 syntetiska roll-/stegscenarier PASS** i slutlig CI, inklusive båda Chromium-vyerna och övrig Node-/byggsvit. Första [röda CI #42497904187](https://github.com/erikjarl/hemmakompassen/actions/runs/42497904187) var ett **fel i testselektorn**: den räknade historiklistans samtalstitel som ett läckt chattmeddelande. Selektorn begränsades till `.mediator-message-user` och hela sviten passerade. Ingen produktionskod ändrades i denna PR.
+**Verifieringsstatus:** **14/14 syntetiska roll-/stegscenarier PASS** i slutlig CI, inklusive båda Chromium-vyerna och övrig Node-/byggsvit. Första [röda CI #42497904187](https://github.com/erikjarl/hemmakompassen/actions/runs/42497904187) var ett **fel i testselektorn**: den räknade historiklistans samtalstitel som ett läckt chattmeddelande. Selektorn begränsades till `.mediator-message-user` och hela sviten passerade. Ingen produktionskod ändrades i denna PR.
