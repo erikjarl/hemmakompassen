@@ -495,8 +495,10 @@ async function verifyAllThemeDeckJourneys(){
     await page.locator('[data-swipe="yes"]').click(); // previously NO for deck #6
     await page.waitForFunction(()=>window.__HK_SAVED_SWIPE__?.row?.card_id==='forandring-01'
       &&window.__HK_SAVED_SWIPE__?.row?.answer===true);
-    assert.match(await page.locator('.swipe-private-review').innerText(),/Ditt svar: Ja/,
-      'FUN-02 restarting and editing a completed theme updates its own answer');
+    const updatedFirst=page.locator('.swipe-private-review [data-theme-review-index="0"]').locator('..');
+    assert.equal(await updatedFirst.getAttribute('data-private-theme-answer'),'yes',
+      'FUN-02 restarting and editing a completed deck changes only its own first answer');
+    assert.match(await updatedFirst.textContent(),/Ditt svar: Ja/);
     records.push({role,deck:'forandring',step:'all-eight-complete-restart-and-edit',
       passed:true,environment:'synthetic Chromium'});
     await context.close();
