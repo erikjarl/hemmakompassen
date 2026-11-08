@@ -20,6 +20,7 @@ function fixture({initial=false,failWriteAfter=false,failWriteBefore=false,failR
     understandingShareSaving:new Set(),
     understandingShares:new Set(initial?['general-02']:[]),
     sharedUnderstandingRows:initial?[{deck_id:'general',card_id:'general-02'}]:[],
+    insightsRequest:7,insightsLoading:true,
     GENERAL_CARDS:[{id:'general-02',type:'understanding'}],
     swipeAnswers:new Map([['general-02',true]]),
     aiResults:{invalidate:(kind,scope)=>{assert.equal(kind,'swipe');assert.equal(scope,'all');counts.invalidate++;}},
@@ -105,6 +106,8 @@ test('failed post-write verification blocks guesses; retry only reads, never re-
   assert.equal(c.understandingSharesAvailable,false);
   assert.equal(c.understandingShares.has('general-02'),false,'stale local toggle is removed');
   assert.equal(c.sharedUnderstandingRows.length,0,'stale B result is hidden');
+  assert.equal(c.insightsRequest,8,'any older in-flight insights response is invalidated');
+  assert.equal(c.insightsLoading,false,'blocked request cannot leave a loading spinner');
   assert.match(c.understandingShareError,/går inte att veta om ditt val/);
   assert.equal(counts.invalidate,1);
   const writes=counts.write;
