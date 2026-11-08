@@ -1830,6 +1830,95 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
 }
 // FUN-05: real DOM interactions against an isolated, stateful fake Worker.
 // The test does not authenticate any real account or invoke a live model.
+// FUN-06: all nine guidance exercises, six situational shortcuts, and
+// direct-link/back navigation are tested through the actual page DOM.
+async function verifyAllCommunicationExercises(){
+  const exercises=['lyssna','pausa','reparera','losning','kontakt','svaart','validera','onskemal','grans'];
+  const situationIds=['lyssna','pausa','reparera','losning','validera','grans'];
+  const records=[];
+  for(const role of ['parent','teen']){
+    const width=role==='parent'?390:320;
+    const m=await freshContext(
+      {viewport:{width,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},
+      {authenticated:true,paired:true,role}
+    );
+    try{
+      const page=m.page;
+      await page.goto(base+'#kommunikation',{waitUntil:'load'});
+      await page.locator('.comm-exercise').first().waitFor();
+      assert.equal(await page.locator('.comm-exercise').count(),9,'Exactly nine exercises must be available');
+      assert.equal(await page.locator('[data-comm-open]').count(),6,'Exactly six situational shortcuts must be available');
+      assert.equal(await page.locator('a[href="#mi-foralder"]').count(),role==='parent'?1:0,
+        'MI entry must be visible only for the parent');
+      records.push({role,step:'role visibility and exercise inventory',status:'PASS'});
+      for(const id of exercises){
+        const detail=page.locator('.comm-exercise[data-comm-skill="'+id+'"]');
+        const summary=detail.locator('summary');
+        assert.equal(await detail.evaluate(node=>node.open),false,'Exercise initially closed: '+id);
+        await summary.click();
+        assert.equal(await detail.evaluate(node=>node.open),true,'Mouse opens '+id);
+        assert.equal(await detail.locator('.comm-exercise-content li').count(),3,
+          'Every exercise has three concrete steps: '+id);
+        await summary.press('Enter');
+        assert.equal(await detail.evaluate(node=>node.open),false,'Keyboard Enter closes '+id);
+        records.push({role,step:'mouse and keyboard open/close '+id,status:'PASS'});
+      }
+      for(const id of situationIds){
+        const button=page.locator('[data-comm-open="'+id+'"]');
+        await button.click();
+        const detail=page.locator('.comm-exercise[data-comm-skill="'+id+'"]');
+        assert.equal(await detail.evaluate(node=>node.open),true,'Situational button opens '+id);
+        assert.equal(await detail.locator('summary').evaluate(node=>document.activeElement===node),true,
+          'Situational button focuses selected exercise summary: '+id);
+        records.push({role,step:'situation button opens and focuses '+id,status:'PASS'});
+      }
+      // Direct links should work after reload, including all nine exercise routes.
+      for(const id of exercises){
+        await page.goto(base+'#kommunikation/'+id,{waitUntil:'load'});
+        const detail=page.locator('.comm-exercise[data-comm-skill="'+id+'"]');
+        await detail.waitFor();
+        await page.waitForFunction(skill=>{
+          const el=document.querySelector('.comm-exercise[data-comm-skill="'+skill+'"]');
+          return el?.open&&document.activeElement===el.querySelector('summary');
+        },id);
+        assert.equal(await page.locator('#live-mobile-nav a[href="#kommunikation"]').getAttribute('aria-current'),
+          'page','Subroute retains correct primary navigation: '+id);
+        records.push({role,step:'direct link opens and focuses '+id,status:'PASS'});
+      }
+      for(const id of ['spegla','plan']){
+        await page.goto(base+'#kommunikation/'+id,{waitUntil:'load'});
+        const selector=id==='spegla'?'#comm-reflection-practice h2':'#comm-solution-planner h2';
+        await page.waitForFunction(sel=>document.activeElement===document.querySelector(sel),selector);
+        records.push({role,step:'private form deeplink focuses '+id,status:'PASS'});
+      }
+      // Browser history should restore the previous exercise rather than trapping the user.
+      await page.goto(base+'#kommunikation/lyssna',{waitUntil:'load'});
+      await page.goto(base+'#kommunikation/kontakt',{waitUntil:'load'});
+      await page.goBack({waitUntil:'load'});
+      await page.waitForURL(/#kommunikation\/lyssna$/);
+      await page.waitForFunction(()=>{
+        const detail=document.querySelector('.comm-exercise[data-comm-skill="lyssna"]');
+        return detail?.open&&document.activeElement===detail.querySelector('summary');
+      });
+      records.push({role,step:'browser back restores previous exercise',status:'PASS'});
+      await checkOverflow(page,'FUN-06 guidance '+role+' '+width+'px');
+      await capture(page,'fun-06-exercises-'+role+'.png');
+    }finally{
+      await m.context.close();
+    }
+  }
+  await fs.writeFile(path.join(output,'fun-06-exercises-synthetic.json'),
+    JSON.stringify({
+      kind:'synthetic-browser-functional-test',
+      environment:'Playwright Chromium, parent 390px and teen 320px, mocked Supabase Auth',
+      authenticAccounts:false,physicalMobile:false,
+      checkedExerciseIds:exercises,
+      checkedSituationIds:situationIds,
+      records
+    },null,2)+'\n');
+  console.log('FUN-06 exercise browser flows: '+records.length+' synthetic role/step checks passed.');
+}
+
 // FUN-05 AI-result UX: both synthetic roles use real DOM and intercepted Worker.
 async function verifyAiReflectionRetryAndRoutes(){
   const records=[];
@@ -3574,6 +3663,7 @@ try{
   await verifyFullPersonalitySurvey();
   await verifyFullPrivateRetest();
   await verifyCommunicationForms();
+  await verifyAllCommunicationExercises();
   await verifyPairedTwoRoleExchange();
   await verifyLinkedInboxOlderPages();
   await verifyPairedRuleRevisionAndHistory();
