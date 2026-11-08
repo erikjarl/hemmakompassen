@@ -1658,6 +1658,26 @@ try{
   await paired.page.locator(".swipe-results [role='alert']").waitFor();
   assert.equal(await paired.page.locator(".swipe-results .swipe-match-list li").count(),0,"RPC failure must clear previous matches");
   await paired.context.close();
+  // SEC-02: a stale rule card may be visible just before a remote unpair.
+  // A deliberate approval must verify both identities and the pair epoch,
+  // fail closed, and never send a write for the former family.
+  const revokedRules=await freshContext(
+    {viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},
+    {authenticated:true,paired:true}
+  );
+  await revokedRules.page.goto(base+'#regler',{waitUntil:'load'});
+  await revokedRules.page.getByRole('heading',{name:'Kunde inte visa listan'}).waitFor();
+  await revokedRules.page.evaluate(()=>{window.__HK_SCHYSSTA_CLEAN_RPC__=true;});
+  await revokedRules.page.locator('#schyssta-retry').click();
+  const oldRule=revokedRules.page.locator('#schyssta-rule-30000000-0000-4000-8000-000000000001');
+  await oldRule.waitFor();
+  await revokedRules.page.evaluate(()=>{window.__HK_TEST_PAIRED__=false;});
+  await oldRule.locator('[data-schyssta-decision][data-approved="true"]').click();
+  await revokedRules.page.waitForFunction(()=>
+    !document.querySelector('#schyssta-rule-30000000-0000-4000-8000-000000000001'));
+  assert.equal(await revokedRules.page.evaluate(()=>window.__HK_SCHYSSTA_DECISION__??null),null,
+    'SEC-02: revoked family cannot issue a stale rule approval from its previous UI');
+  await revokedRules.context.close();
   const freshRules=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,paired:true,emptySchyssta:true});
   await freshRules.page.goto(base+'#regler',{waitUntil:'load'});
   await freshRules.page.getByRole('heading',{name:'Kom igång tillsammans'}).waitFor();
