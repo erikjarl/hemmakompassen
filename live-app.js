@@ -1905,7 +1905,7 @@ function schysstaView(){
     +(viewerRole()==='parent'?'<p>Som förälder: prova att prata om förslaget och lyssna på tonåringens perspektiv innan du skickar. <a href="#mi-foralder">Läs guiden om att lyssna före förslag</a>.</p>':'')+'</details>'
     +'<button class="live-button" type="submit"'+(schysstaSubmitting?' disabled':'')+'>'+(schysstaSubmitting?'Skickar…':schysstaEditTarget?'Skicka ändringsförslag':'Skicka regelförslag')+'</button>'
     +'<button class="schyssta-secondary" type="button" id="schyssta-compose">Stäng formuläret</button></form>'
-    :'<button class="live-button" type="button" id="schyssta-compose">+ Föreslå en regel</button>';
+    :'<p class="live-muted">Använd knappen Föreslå en regel ovan för att öppna formuläret.</p>';
   return '<div class="schyssta-view"><header class="schyssta-page-intro"><h1>Schyssta listan</h1><p>Förslag blir gemensamma regler först när båda sagt ja.</p></header>'
     +quickActions
     +card('<h2>Behöver ditt svar'+(needs.length?' ('+needs.length+')':'')+'</h2><p>Förslag från den andra personen visas här först.</p>'+list(needs,'Inget väntar just nu. Nya förslag från den andra personen visas här.'))
