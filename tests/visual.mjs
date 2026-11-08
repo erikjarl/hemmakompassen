@@ -26,40 +26,42 @@ async function checkMobileNavigation(page,label){
   const result=await page.evaluate(async()=>{
     const nav=document.querySelector('#live-mobile-nav');
     if(!(nav instanceof HTMLElement))throw new Error('Mobile navigation is missing');
-    const links=[...nav.querySelectorAll('a')];
+    const details=nav.querySelector('details.live-mobile-more');
+    const summary=details?.querySelector('summary');
+    const primary=[...nav.querySelectorAll(':scope > a')];
+    const secondary=[...details?.querySelectorAll('a')||[]];
     const failures=[];
-    const positions=[];
-    for(const link of links){
-      link.scrollIntoView({block:'nearest',inline:'center'});
-      await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+    if(primary.length!==3||secondary.length!==5||!summary)failures.push('Missing primary or More destinations');
+    if(nav.scrollWidth>nav.clientWidth+2)failures.push('Horizontal scrolling remains');
+    for(const element of [...primary,summary].filter(Boolean)){
       const navBox=nav.getBoundingClientRect();
-      const linkBox=link.getBoundingClientRect();
-      const range=document.createRange();
-      range.selectNodeContents(link);
-      const textBox=range.getBoundingClientRect();
-      const style=getComputedStyle(link);
-      const labelText=link.textContent.trim();
-      positions.push({label:labelText,left:linkBox.left,right:linkBox.right,textHeight:textBox.height});
-      if(linkBox.left<navBox.left-1||linkBox.right>navBox.right+1)failures.push(labelText+' is clipped');
-      if(textBox.left<linkBox.left-1||textBox.right>linkBox.right+1)failures.push(labelText+' text exceeds its item');
-      if(textBox.height>Number.parseFloat(style.lineHeight)*2+1)failures.push(labelText+' exceeds two text rows');
+      const box=element.getBoundingClientRect();
+      if(box.left<navBox.left-1||box.right>navBox.right+1)failures.push(element.textContent+' clipped');
     }
-    links[3]?.focus();
+    details.open=true;
+    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+    for(const link of secondary){
+      const box=link.getBoundingClientRect();
+      const drawer=details.querySelector('.live-mobile-more-links').getBoundingClientRect();
+      if(box.left<drawer.left-1||box.right>drawer.right+1)failures.push(link.textContent+' drawer overflow');
+    }
+    details.open=false;
+    summary.focus();
     await new Promise(resolve=>requestAnimationFrame(resolve));
-    const focusStyle=links[3]?getComputedStyle(links[3]):null;
+    const focusStyle=getComputedStyle(summary);
     return {
-      count:links.length,
-      scrollable:nav.scrollWidth>nav.clientWidth,
-      focusVisible:!!focusStyle&&focusStyle.outlineStyle!=='none'&&Number.parseFloat(focusStyle.outlineWidth)>=2,
-      failures,
-      positions
+      count:primary.length+secondary.length,
+      noHorizontalScroll:nav.scrollWidth<=nav.clientWidth+2,
+      focusVisible:focusStyle.outlineStyle!=='none'&&Number.parseFloat(focusStyle.outlineWidth)>=2,
+      failures
     };
   });
-  assert.equal(result.count,8,label+': all navigation items render');
-  assert.ok(result.scrollable,label+': navigation remains horizontally scrollable');
-  assert.ok(result.focusVisible,label+': keyboard focus is visible');
-  assert.deepEqual(result.failures,[],label+': '+JSON.stringify(result.positions));
+  assert.equal(result.count,8,label+': all destinations present');
+  assert.ok(result.noHorizontalScroll,label+': all navigation uses fixed grid and More');
+  assert.ok(result.focusVisible,label+': keyboard focus on More is visible');
+  assert.deepEqual(result.failures,[],label+': mobile navigation and drawer boundaries');
 }
+
 async function capture(page,name){
   // Standardize screenshots, and fail if transient UI obscures the layout.
   await page.evaluate(()=>{
