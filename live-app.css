@@ -705,3 +705,13 @@
 .home-next-actions p{margin:0 0 12px;line-height:1.5}
 .home-next-actions .live-button{min-height:44px;box-sizing:border-box}
 @media(max-width:600px){.home-next-actions{grid-template-columns:minmax(0,1fr);gap:9px;margin-bottom:12px}}
+
+
+/* SL-UX-01: make the current rule decision and private drafting action visible first. */
+.schyssta-quick-actions{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px 16px;margin:12px 0 14px;padding:15px 18px;border:1px solid #7d745e;border-radius:14px;background:#242d3b}
+.schyssta-quick-state{min-width:0}
+.schyssta-quick-state strong{display:block;font-size:clamp(1.06rem,3.3vw,1.23rem);line-height:1.32;color:#ffdc9e}
+.schyssta-quick-state p{margin:5px 0 0;color:#e5e7ee;line-height:1.45}
+.schyssta-quick-actions>.live-button{box-sizing:border-box;display:inline-flex;justify-content:center;align-items:center;min-height:44px;text-align:center;white-space:normal}
+.schyssta-quick-counts{grid-column:1/-1;margin:0;padding-top:8px;border-top:1px solid #515d69;color:#c9d3e1;font-size:.86rem;line-height:1.5}
+@media(max-width:550px){.schyssta-quick-actions{grid-template-columns:minmax(0,1fr);gap:10px;padding:13px 14px}.schyssta-quick-actions>.live-button{width:100%}}
