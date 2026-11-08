@@ -1,6 +1,6 @@
-# Hemmakompassen – automatiska tester (status 6 november 2026)
+# Hemmakompassen – automatiska tester (status 8 november 2026)
 
-Detta är **testmiljön för kod och UI**, inte bevis för att verkliga familjeflöden fungerar. Se [aktuell utvecklingskö](../docs/CURRENT_TASKS.md) och [ROADMAP](../ROADMAP.md).
+Detta är **testmiljön för kod och UI**, inte bevis för att verkliga familjeflöden fungerar. Styrande prioriteringar finns i [ACTIVE_ROADMAP](../docs/ACTIVE_ROADMAP.md). ROADMAP och CURRENT_TASKS är historiska referenser, inte arbetskön.
 
 ## GitHub Actions
 
@@ -32,7 +32,7 @@ Testerna ska **aldrig** skriva i produktionsdatabasen eller ändra verkliga anv�
 
 ## Granskning och bevis
 
-Playwright lägger skärmbilder och `visual-audit.json` i `artifacts/` och laddar upp dem som GitHub Actions-artifact. **Grön CI betyder inte automatiskt godkänd visuell design eller säker extern lansering.** Kontrollera det faktiska utfallet och bilderna, notera exakt commit, testmiljö och vad som inte har kontrollerats.
+Playwright lägger skärmbilder, `visual-audit.json`, `functional-controls-synthetic.json` och `account-functional-synthetic.json` i `artifacts/` och laddar upp dem som GitHub Actions-artifact. Det nya [FUN-00-testprotokollet](../docs/fun-00-functional-test-matrix.md) dokumenterar 44 flöden, fyra syntetiska roll-/viewport-scenarier, och markerar vilka moment som fortfarande saknar verklig verifiering. [FUN-01-kontoresan](../docs/fun-01-account-browser-audit.md) provar även registrering, reset, QR och parning med in-memory backendmock. **Varje kontroll som upptäcks i DOM är en inventerad kontroll, inte en verifierad funktion.** **Grön CI betyder inte automatiskt godkänd visuell design eller säker extern lansering.** Kontrollera det faktiska utfallet och bilderna, notera exakt commit, testmiljö och vad som inte har kontrollerats.
 
 Den tidigare noteringen om att sista matchningsmigrationen ”inte är installerad” var en äldre status före den dokumenterade 30 oktober-installationen. Utgå från nya, explicit verifierade statusuppgifter i ROADMAP och [CURRENT_TASKS.md](../docs/CURRENT_TASKS.md), och kontrollera riktiga databasen innan nya påståenden om livefunktioner.
 
