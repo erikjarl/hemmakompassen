@@ -11,7 +11,7 @@ Datum: 2026-11-08. Kodbas: erikjarl/hemmakompassen. Utgångscommit före detta a
 - Fysisk iPhone/VoiceOver: Ej verifierat. Chromium kan inte ersätta Safari- och skärmläsartest.
 - Publicerad Pages: befintligt tillgångstest verifierar filer; detta bevisar inte att samtliga autentiserade flöden fungerar.
 
-**Statusdisciplin:** en kontroll som bara upptäckts i DOM är inte godkänd funktion. Den nya filen artifacts/functional-controls-synthetic.json genereras av tests/visual.mjs och registrerar synliga knappar, länkar och formulär från 11 rutter i fyra syntetiska scenarier: förälder 320px parad, tonåring 390px parad, förälder 1440px parad och förälder 390px oparad. För var och en sparas namn, route, synligt tillstånd, formulärkoppling och tekniska data-attribut. Rapporten omfattar inte kontosidans verkliga inloggningsflöde. Dubbletter i flera scenarier är avsiktliga. Spara rapporten som CI-artefakt; ingen personlig information används.
+**Statusdisciplin:** en kontroll som bara upptäckts i DOM är inte godkänd funktion. Den nya filen artifacts/functional-controls-synthetic.json genereras av tests/visual.mjs och registrerar synliga knappar, länkar och formulär från 11 rutter i fyra syntetiska scenarier: förälder 320px parad, tonåring 390px parad, förälder 1440px parad och förälder 390px oparad. För var och en sparas namn, route, synligt tillstånd, formulärkoppling och tekniska data-attribut. Rapporten omfattar inte kontosidans verkliga inloggningsflöde. Dubbletter i flera scenarier är avsiktliga. Efter verifierad felåterhämtning i Schyssta listan omfattar den senaste körningen **667 synliga kontrollförekomster** över 44 snapshots; samma kontroll kan förekomma i flera vyer och är inte individuellt testgodkänd. Spara rapporten som CI-artefakt; ingen personlig information används.
 
 ## Matris över nuvarande användarflöden
 
@@ -74,6 +74,10 @@ Datum: 2026-11-08. Kodbas: erikjarl/hemmakompassen. Utgångscommit före detta a
 ## Fynd – FUN-01-BUG-01
 
 [Felsökningsrapport](fun-01-account-browser-audit.md): automatiserat Chromium-test [CI #42483703848](https://github.com/erikjarl/hemmakompassen/actions/runs/42483703848) reproducerade att inbjudningsinfo skrev över registreringsbekräftelse; separat inbjudningsnotis och bevarad formulärstatus infördes i [PR #205](https://github.com/erikjarl/hemmakompassen/pull/205). Efter korrigerat äldre test passerade [CI #42484010947](https://github.com/erikjarl/hemmakompassen/actions/runs/42484010947) alla tester, inklusive 11 syntetiska kontosteg. Ej testat med riktig e-post eller Auth.
+
+## Testinventeringens korrigering – FUN-00-QA-02
+
+[PR #206](https://github.com/erikjarl/hemmakompassen/pull/206), [grön Chromium-/Node-körning](https://github.com/erikjarl/hemmakompassen/actions/runs/42484642513): den första genererade rapporten listade bara Schyssta listans simulerade felknapp trots att den ordinarie vyn existerade. Efter en explicit testad klickning på **Försök igen** inventeras nu den servermockade normala översikten, vilket ökade antalet synliga kontrollförekomster från 617 till 667. Inga riktiga familjeregler eller konton användes, och 667 betyder inte 667 separata godkända funktionstester.
 
 ## Testuppföljning
 
