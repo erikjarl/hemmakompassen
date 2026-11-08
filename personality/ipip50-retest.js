@@ -57,14 +57,14 @@ export function createPrivateIpipRetests({
 }){
   let userId=null,generation=0,loading=false,error='',busy=false;
   let attempts=[],draftId=null,answers={},questionIndex=0,surveyOpen=false;
-  let historyId=null,historyAnswers=null,status='';
+  let historyId=null,historyAnswers=null,status='',saveUncertain=false;
   const repaint=()=>onRender();
   const isCurrent=(id,token)=>userId===id&&generation===token;
 
   function reset(id=null){
     userId=id;generation++;loading=false;error='';busy=false;
     attempts=[];draftId=null;answers={};questionIndex=0;surveyOpen=false;
-    historyId=null;historyAnswers=null;status='';
+    historyId=null;historyAnswers=null;status='';saveUncertain=false;
   }
 
   async function readAnswers(id,attemptId){
@@ -78,7 +78,7 @@ export function createPrivateIpipRetests({
   async function load(id){
     if(!id)return;
     const token=++generation;
-    userId=id;loading=true;error='';repaint();
+    userId=id;loading=true;error='';status='';saveUncertain=false;repaint();
     try{
       const result=await db.from('personality_test_attempts')
         .select('id,created_at,completed_at').eq('user_id',id)
@@ -112,6 +112,7 @@ export function createPrivateIpipRetests({
     // History is loaded on entry and updated after saves, completion and deletion.
     // Manual retry appears only for a failed server read, never as a competing CTA.
     if(status)html+='<p role="status">'+esc(status)+'</p>';
+    if(saveUncertain&&draftId)html+='<button type="button" class="live-button" data-ipip-retest="verify-save"'+(busy?' disabled':'')+'>Kontrollera sparat svar</button>';
     if(draftId){
       const count=Object.keys(answers).length;
       html+='<p><strong>Påbörjad omgång:</strong> '+count+' av 50 svar.</p>';
@@ -167,6 +168,10 @@ export function createPrivateIpipRetests({
     if(!button||!userId)return false;
     const action=button.dataset.ipipRetest;
     if(action==='reload'){await load(userId);return true;}
+    if(action==='verify-save'&&saveUncertain&&draftId&&!loading&&!busy){
+      // Read the actual saved draft without resending an ambiguous answer.
+      await load(userId);return true;
+    }
     if(loading||busy||error)return true;
     if(action==='resume'){surveyOpen=true;status='';repaint();return true;}
     if(action==='overview'){surveyOpen=false;status='Omgången är sparad och kan fortsättas senare.';repaint();return true;}
@@ -290,18 +295,44 @@ export function createPrivateIpipRetests({
     const item=IPIP50_V1.items[questionIndex],value=Number(target.value);
     if(target.dataset.ipipRetestAnswer!==item.id||!Number.isInteger(value)||value<1||value>5)return false;
     const id=userId,token=generation,attemptId=draftId,index=questionIndex;
-    busy=true;status='Sparar ditt privata svar…';repaint();
+    busy=true;status='Sparar ditt privata svar…';saveUncertain=false;repaint();
+    let confirmed=true,unknown=false;
     try{
       const result=await db.from('personality_attempt_answers').upsert({
         attempt_id:attemptId,user_id:id,question_id:item.id,answer_value:value
       },{onConflict:'attempt_id,question_id'});
-      if(result.error)throw result.error;
+      if(!result||!Object.hasOwn(result,'error')||result.error)
+        throw result?.error||Error('Missing retest write acknowledgement');
+    }catch{
+      // Lost write acknowledgements can hide a successfully committed answer.
+      // Read only this viewer's active retest; never substitute the initial IPIP.
       if(!isCurrent(id,token)||draftId!==attemptId)return true;
+      try{
+        const stored=await readAnswers(id,attemptId);
+        confirmed=Object.hasOwn(stored,item.id)&&stored[item.id]===value;
+      }catch{
+        confirmed=false;unknown=true;
+      }
+      if(!confirmed){
+        // A fast error previously released busy before a synthetic click's
+        // duplicate change event had settled, causing a second unintended write.
+        // Keep the form locked briefly on ambiguous or rejected writes.
+        await new Promise(resolve=>setTimeout(resolve,650));
+      }
+    }
+    if(!isCurrent(id,token)||draftId!==attemptId)return true;
+    if(confirmed){
       answers[item.id]=value;questionIndex=index<49?index+1:index;
-      status='';
-    }catch(e){if(isCurrent(id,token))status='Svaret kunde inte sparas. Välj igen när anslutningen fungerar.';}
-    if(isCurrent(id,token)){busy=false;repaint();}
+      status='';saveUncertain=false;
+    }else{
+      saveUncertain=unknown;
+      status=unknown
+        ?'Det går inte att kontrollera om svaret sparades. Välj Kontrollera sparat svar för att läsa från servern.'
+        :'Svaret kunde inte bekräftas som sparat. Välj igen när anslutningen fungerar.';
+    }
+    busy=false;repaint();
     return true;
   }
+
   return {reset,load,render,handleClick,handleChange};
 }
