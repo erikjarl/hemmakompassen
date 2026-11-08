@@ -801,6 +801,32 @@ try{
   await teenReflection.page.locator('.pf-family-reflections h3').scrollIntoViewIfNeeded();
   await teenReflection.page.screenshot({path:path.join(output,'mobile-personality-teen-reflections.png'),animations:'disabled'});
   await teenReflection.context.close();
+  // The general deck exposes only the current user's saved answers and teen-only skips.
+  const generalReview=await freshContext(
+    {viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},
+    {authenticated:true,paired:true,role:'teen',preansweredSkipped:true}
+  );
+  await generalReview.page.goto(base+'#swipe',{waitUntil:'load'});
+  await generalReview.page.locator('#swipe-general-review summary').click();
+  assert.equal(await generalReview.page.locator('#swipe-general-review [data-general-review-kind="skipped"]').count(),1);
+  assert.equal(await generalReview.page.locator('#swipe-general-review [data-general-review-kind="yes"]').count(),1);
+  await generalReview.page.locator('#swipe-general-review-answer').selectOption('skipped');
+  await generalReview.page.locator('#swipe-general-review-count').getByText('Visar 1 av 2 kort.').waitFor();
+  await generalReview.page.locator('#swipe-general-review [data-general-review-index="1"]').click();
+  await generalReview.page.waitForFunction(()=>document.activeElement?.id==='swipe-card');
+  assert.equal(await generalReview.page.locator('#swipe-card').getAttribute('aria-label'),'Kort 2 av 34. Svep höger för ja eller vänster för nej.');
+  await generalReview.page.locator('#swipe-general-review summary').click();
+  await generalReview.page.locator('#swipe-general-review-answer').selectOption('no');
+  await generalReview.page.locator('#swipe-general-review-count').getByText('Visar 0 av 2 kort.').waitFor();
+  await generalReview.page.locator('#swipe-general-review-reset').click();
+  await generalReview.page.waitForFunction(()=>document.activeElement?.id==='swipe-general-review-search');
+  await generalReview.page.locator('#swipe-general-review [data-general-review-index="0"]').click();
+  await generalReview.page.waitForFunction(()=>document.activeElement?.id==='swipe-card');
+  await generalReview.page.locator('.swipe-actions [data-swipe="no"]').click();
+  await generalReview.page.waitForFunction(()=>window.__HK_SAVED_SWIPE__?.row.card_id==='general-01'&&window.__HK_SAVED_SWIPE__?.row.answer===false);
+  await checkOverflow(generalReview.page,'General saved-answer review at 390px');
+  await capture(generalReview.page,'mobile-390-private-general-review.png');
+  await generalReview.context.close();
   const narrow=await freshContext({viewport:{width:320,height:700},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true});
   await narrow.page.getByRole("heading",{name:/Hej[ ,]+Provförälder/}).waitFor();
   await checkMobileNavigation(narrow.page,'320px mobile navigation');
