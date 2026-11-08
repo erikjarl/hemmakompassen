@@ -1,6 +1,6 @@
 # FUN-03 – Kopiering av Schyssta listans godkända regler när urklipp nekas
 
-**Datum:** 8 november 2026. **Status:** Testgren, CI inväntas.
+**Datum:** 8 november 2026. **Verifierat:** [PR #222](https://github.com/erikjarl/hemmakompassen/pull/222) mergad till `main` (`baae91a`), [grön fullständig Node/bygg/Chromium-CI #42501825362](https://github.com/erikjarl/hemmakompassen/actions/runs/42501825362). Testsviten passerade och sparade **69 skärmbilder**, inklusive två nya skärmbilder från förälderns och tonåringens kopieringsfallback.
 
 ## Upptäckt funktionslucka
 
