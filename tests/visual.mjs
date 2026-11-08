@@ -1140,6 +1140,16 @@ async function verifyIpip50WriteAckBrowser(){
       await page.getByText('Fråga 2 av 50').waitFor();
       assert.equal(await page.locator('[data-pf-action="verify-save"]').count(),0);
     }else if(scenario==='rejected-before-commit'){
+      await page.waitForTimeout(1150);
+      const state=await page.evaluate(()=>({
+        status:document.querySelector('.pf-status')?.innerText||null,
+        question:document.querySelector('.pf-counter')?.innerText||null,
+        writes:window.__HK_PERSONALITY_WRITE_COUNT__,
+        readbacks:window.__HK_PERSONALITY_READBACK_COUNT__,
+        failBefore:window.__HK_TEST_PF_FAIL_BEFORE_WRITE__,
+        savedRow:window.__HK_PERSONALITY_SAVE__?.row||null
+      }));
+      console.log('FUN-04 rejected-write diagnostic:',JSON.stringify({role,...state}));
       await page.locator('.pf-status').filter({hasText:/kunde inte bekräftas som sparat/i}).waitFor();
       assert.match(await page.locator('.pf-survey').innerText(),/Fråga 1 av 50/);
       assert.equal(await page.locator('[data-pf-action="verify-save"]').count(),0);
