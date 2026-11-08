@@ -1147,6 +1147,10 @@ async function verifyPairedTwoRoleExchange(){
     assert.equal(fixture.calls.filter(x=>x.role==='teen'&&
       ['mark_schyssta_notification_read','mark_activity_notification_read','mark_family_messages_read'].includes(x.name)).length,
       beforeReads,'FUN-03: whole-inbox refresh never creates a receipt or rule decision');
+    await teen.page.locator('[data-activity-read]').click();
+    await teen.page.waitForFunction(()=>!document.querySelector('[data-activity-read]'));
+    assert.ok(fixture.activityNotices[0].read_at,
+      'FUN-03: activity notification is marked read only after explicit click');
     assert.equal(fixture.notices[0].read_at,null,'Opening inbox does not silently mark rule notice read');
     await teen.page.locator('[data-schyssta-read]').click();
     await teen.page.waitForFunction(()=>!document.querySelector('[data-schyssta-read]'));
@@ -1400,7 +1404,7 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
             throw new Error('Unexpected table '+table);
           },
           async rpc(name,args){
-            if(typeof window.__HK_TEST_PAIR_RPC__==='function'&&['my_family_messages','my_family_unread_message_count','send_family_message','mark_family_messages_read','shared_schyssta_rule_suggestions','my_schyssta_rules','my_manual_schyssta_rules','my_schyssta_notifications','my_schyssta_replacement_links','my_schyssta_rule_history','propose_manual_schyssta_rule','set_schyssta_rule_decision','mark_schyssta_notification_read'].includes(name))return window.__HK_TEST_PAIR_RPC__(name,args);
+            if(typeof window.__HK_TEST_PAIR_RPC__==='function'&&['my_family_messages','my_family_unread_message_count','send_family_message','mark_family_messages_read','shared_schyssta_rule_suggestions','my_schyssta_rules','my_manual_schyssta_rules','my_schyssta_notifications','my_schyssta_replacement_links','my_schyssta_rule_history','propose_manual_schyssta_rule','set_schyssta_rule_decision','mark_schyssta_notification_read','my_activity_notifications','mark_activity_notification_read'].includes(name))return window.__HK_TEST_PAIR_RPC__(name,args);
             if(name==='set_my_ipip50_share'){personalityConsent=args.p_share===true;window.__HK_PERSONALITY_SHARE__=personalityConsent;return {data:personalityConsent,error:null};}
             if(name==='my_ipip50_shared_profiles'){
               const scores={extraversion:30,agreeableness:30,conscientiousness:30,emotional_stability:30,intellect_imagination:30};
