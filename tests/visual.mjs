@@ -501,14 +501,48 @@ async function verifyAllThemeDeckJourneys(){
     assert.match(await updatedFirst.textContent(),/Ditt svar: Ja/);
     records.push({role,deck:'forandring',step:'all-eight-complete-restart-and-edit',
       passed:true,environment:'synthetic Chromium'});
+    // FUN-02: also finish the other three short decks, which already have one
+    // saved answer from the opening/resume checks above.
+    for(const deck of [
+      {id:'regler',length:12,initialFirst:'yes'},
+      {id:'uppskattning',length:8,initialFirst:'no'},
+      {id:'aterhamtning',length:8,initialFirst:'yes'}
+    ]){
+      await page.locator('#theme-back').click();
+      await page.locator('[data-theme-open="'+deck.id+'"]').click();
+      await page.locator('#swipe-card[aria-label^="Temakort 2 av '+deck.length+'"]').waitFor();
+      for(let n=2;n<=deck.length;n++){
+        await page.locator('#swipe-card[aria-label^="Temakort '+n+' av '+deck.length+'"]').waitFor();
+        await page.locator('[data-swipe="'+(n%2===0?'yes':'no')+'"]').click();
+      }
+      await page.getByRole('heading',{name:'Alla '+deck.length+' kort i Alla kategorier är sparade'}).waitFor();
+      assert.match(await page.locator('.swipe-private-review summary').innerText(),
+        new RegExp('Visa mina '+deck.length+' besvarade kort'),
+        'FUN-02 completed short deck lists every saved private answer');
+      await checkOverflow(page,'FUN-02 '+role+' '+deck.id+' completed');
+      await page.locator('#theme-restart').click();
+      await page.locator('#swipe-card[aria-label^="Temakort 1 av '+deck.length+'"]').waitFor();
+      const changed=deck.initialFirst==='yes'?'no':'yes';
+      await page.locator('[data-swipe="'+changed+'"]').click();
+      await page.locator('#swipe-card[aria-label^="Temakort 2 av '+deck.length+'"]').waitFor();
+      const saved=await page.evaluate(()=>window.__HK_SAVED_SWIPE__);
+      assert.equal(saved.row.deck_id,deck.id,'FUN-02 short-deck edit uses same deck');
+      assert.equal(saved.row.card_id,deck.id+'-01','FUN-02 short-deck edit uses first card');
+      assert.equal(saved.row.answer,changed==='yes','FUN-02 short-deck edit replaces earlier answer');
+      const changedFirst=page.locator('.swipe-private-review [data-theme-review-index="0"]').locator('..');
+      assert.equal(await changedFirst.getAttribute('data-private-theme-answer'),changed,
+        'FUN-02 edited answer appears in private review');
+      records.push({role,deck:deck.id,step:'all-'+deck.length+'-complete-restart-and-edit',
+        passed:true,environment:'synthetic Chromium'});
+    }
     await context.close();
   }
   await fs.writeFile(path.join(output,'fun-02-all-decks-synthetic.json'),
     JSON.stringify({method:'Real Chromium clicks through all six decks for two mocked roles',
-      limitations:'Only first answer/reopen for large decks; only short forandring deck completed. No real Supabase/second signed-in account.',
+      limitations:'Short decks fully clicked for both roles; long decks are exercised in fun-02-long-decks-synthetic.json. No real Supabase or second signed-in account.',
       records},null,2)+'\n');
   console.log('FUN-02 all-decks: '+records.length+
-    ' role/deck test records passed (12 open/save/resume; two eight-card completions).');
+    ' role/deck test records passed (12 open/save/resume plus 8 short-deck completions).');
 }
 
 
