@@ -1573,6 +1573,20 @@ try{
   await paired.page.getByRole('heading',{name:'Schyssta listan'}).waitFor();
   await paired.page.locator('#schyssta-rule-30000000-0000-4000-8000-000000000001').waitFor();
   await checkOverflow(paired.page,'Mobile Schyssta listan');
+  const schysstaOrder=await paired.page.locator('.schyssta-view').evaluate(root=>{
+    const heading=root.querySelector('.schyssta-page-intro h1');
+    const pending=[...root.querySelectorAll('h2')].find(el=>el.textContent?.startsWith('Behöver ditt svar'));
+    const help=root.querySelector('.schyssta-page-help');
+    const h=heading?.getBoundingClientRect(),p=pending?.getBoundingClientRect();
+    return {headingSize:h?.height,pendingBeforeHelp:!!pending&&!!help&&!!(pending.compareDocumentPosition(help)&Node.DOCUMENT_POSITION_FOLLOWING),
+      helpClosed:help?.open===false,headingText:heading?.textContent};
+  });
+  assert.equal(schysstaOrder.headingText,'Schyssta listan');
+  assert.ok(schysstaOrder.headingSize<75,'UX-04: compact Schyssta mobile title');
+  assert.ok(schysstaOrder.pendingBeforeHelp&&schysstaOrder.helpClosed,'UX-04: decisions precede optional help');
+  await paired.page.locator('.schyssta-page-help summary').click();
+  assert.equal(await paired.page.getByRole('button',{name:'Uppdatera listan'}).isVisible(),true,
+    'UX-04: refresh remains available after expanding the help');
   await capture(paired.page,'mobile-schyssta-list.png');
   await paired.page.goto(base+'#swipe',{waitUntil:'load'});
   await paired.page.getByRole('heading',{name:'Era gemensamma svar'}).waitFor();
