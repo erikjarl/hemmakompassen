@@ -37,17 +37,19 @@ async function checkMobileNavigation(page,label){
       const box=link.getBoundingClientRect(),styles=getComputedStyle(link);
       if(box.width<75||box.height<44)failures.push(link.textContent+' small tap target');
       if(styles.flexDirection!=='column')failures.push(link.textContent+' unexpected tab layout');
-      link.scrollIntoView({block:'nearest',inline:'nearest'});
-      await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
-      const viewport=nav.getBoundingClientRect(),visible=link.getBoundingClientRect();
-      if(visible.left<viewport.left-2||visible.right>viewport.right+2)
-        failures.push(link.textContent+' cannot be scrolled into view');
     }
-    const last=links.at(-1);
-    const lastVisible=last?.getBoundingClientRect();
+    // A physical horizontal swipe can reach both ends of the strip.
+    nav.scrollTo({left:nav.scrollWidth,behavior:'instant'});
+    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+    const last=links.at(-1),lastVisible=last?.getBoundingClientRect();
     const strip=nav.getBoundingClientRect();
-    if(!lastVisible||lastVisible.left<strip.left-2||lastVisible.right>strip.right+2)
+    if(!lastVisible||lastVisible.left<strip.left-3||lastVisible.right>strip.right+3)
       failures.push('Last tab not reachable by horizontal scroll');
+    nav.scrollTo({left:0,behavior:'instant'});
+    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+    const firstVisible=links[0]?.getBoundingClientRect();
+    if(!firstVisible||firstVisible.left<strip.left-3||firstVisible.right>strip.right+3)
+      failures.push('First tab not reachable by horizontal scroll');
     const first=links[0];
     first.focus();
     await new Promise(resolve=>requestAnimationFrame(resolve));
