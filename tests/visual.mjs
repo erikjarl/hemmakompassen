@@ -1415,6 +1415,7 @@ try{
   // valid rows as a partial result; recover only after a clean RPC retry.
   await paired.page.getByRole('heading',{name:'Kunde inte visa listan'}).waitFor();
   assert.equal(await paired.page.locator('.schyssta-list li').count(),0,'A malformed RPC snapshot cannot display a partial list');
+  assert.equal(await paired.page.locator('.schyssta-quick-actions').count(),0,'An RPC error cannot display a false empty/pending summary');
   assert.doesNotMatch(await paired.page.locator('.live-main').innerText(),/Falsk text|Okänd privat uppgift/,'Unexpected server rows are never rendered');
   await paired.page.evaluate(()=>{window.__HK_SCHYSSTA_CLEAN_RPC__=true;});
   await paired.page.locator('#schyssta-retry').click();
@@ -1628,6 +1629,24 @@ try{
   assert.equal(schysstaOrder.headingText,'Schyssta listan');
   assert.ok(schysstaOrder.headingSize<75,'UX-04: compact Schyssta mobile title');
   assert.ok(schysstaOrder.pendingBeforeHelp&&schysstaOrder.helpClosed,'UX-04: decisions precede optional help');
+  const quickState=paired.page.locator('.schyssta-quick-actions');
+  assert.equal(await quickState.locator('strong').innerText(),loadedRuleCount+' förslag behöver ditt svar',
+    'SL-UX-01: first-screen status equals the server-validated pending count');
+  assert.equal(await quickState.locator('[data-schyssta-start]').isVisible(),true,
+    'SL-UX-01: proposing a rule does not require opening the help panel');
+  const quickLayout=await paired.page.locator('.schyssta-view').evaluate(root=>{
+    const overview=root.querySelector('.schyssta-quick-actions');
+    const pending=[...root.querySelectorAll('h2')].find(x=>x.textContent.startsWith('Behöver ditt svar'));
+    const help=root.querySelector('.schyssta-page-help');
+    const button=overview?.querySelector('button');
+    return {abovePending:overview?.compareDocumentPosition(pending)&Node.DOCUMENT_POSITION_FOLLOWING,
+      aboveHelp:overview?.compareDocumentPosition(help)&Node.DOCUMENT_POSITION_FOLLOWING,
+      buttonHeight:button?.getBoundingClientRect().height,
+      overflow:root.scrollWidth>root.clientWidth+1};
+  });
+  assert.ok(quickLayout.abovePending&&quickLayout.aboveHelp,'Action overview is before the rule list and guidance');
+  assert.ok(quickLayout.buttonHeight>=44&&!quickLayout.overflow,'Primary action stays touch-sized without horizontal overflow');
+
   await paired.page.locator('.schyssta-page-help summary').click();
   assert.equal(await paired.page.getByRole('button',{name:'Uppdatera listan'}).isVisible(),true,
     'UX-04: refresh remains available after expanding the help');
@@ -1643,6 +1662,11 @@ try{
   await freshRules.page.goto(base+'#regler',{waitUntil:'load'});
   await freshRules.page.getByRole('heading',{name:'Kom igång tillsammans'}).waitFor();
   assert.match(await freshRules.page.locator('.schyssta-view').innerText(),/Ni har inte gjort någon gemensam överenskommelse än/,'Empty paired family has useful onboarding rather than sample data');
+  assert.equal(await freshRules.page.locator('.schyssta-quick-actions strong').innerText(),'Inget väntar just nu',
+    'SL-UX-01: an empty authorized snapshot has a truthful primary status');
+  assert.match(await freshRules.page.locator('.schyssta-quick-counts').innerText(),/0 gemensamma överenskommelser.*0 andra förslag.*0 avslutade regler/,
+    'SL-UX-01: counts do not invent rules or propose implicit agreements');
+
   assert.equal(await freshRules.page.locator('.schyssta-view .schyssta-list li').count(),0,'Empty family does not show invented rules');
   await freshRules.page.locator('[data-schyssta-start]').click();
   await freshRules.page.locator('#schyssta-body').waitFor();
@@ -1650,6 +1674,14 @@ try{
   await freshRules.page.locator('#schyssta-body').fill('<img src=x onerror=alert(1)>');
   assert.equal(await freshRules.page.locator('#schyssta-preview-text').innerText(),'<img src=x onerror=alert(1)>','Preview renders user input as literal text');
   assert.equal(await freshRules.page.locator('#schyssta-preview-text img').count(),0,'Manual proposal preview never interprets HTML');
+  await freshRules.page.locator('[data-schyssta-compose-jump]').click();
+  assert.equal(await freshRules.page.locator('#schyssta-body').inputValue(),'<img src=x onerror=alert(1)>',
+    'SL-UX-01: returning to a draft cannot erase unsent private text');
+  assert.ok(await freshRules.page.locator('#schyssta-body').evaluate(el=>document.activeElement===el),
+    'SL-UX-01: primary button moves focus back to the existing draft');
+  assert.equal(await freshRules.page.locator('.schyssta-quick-actions [data-schyssta-start]').count(),0,
+    'SL-UX-01: opening a draft replaces rather than duplicates the create action');
+
   await freshRules.context.close();
   const teenInbox=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,paired:true,role:'teen'});
   await teenInbox.page.goto(base+'#inkorg',{waitUntil:'load'});
