@@ -1433,6 +1433,22 @@ async function verifyPairedRuleRevisionAndHistory(){
     await archive.getByText(original).waitFor();
     records.push({case:'two-votes-replace-original-and-archive-old-text',passed:true});
 
+    // Clipboard denial must show a readable, selectable current rule in teen role too.
+    await teen.page.evaluate(()=>Object.defineProperty(navigator,'clipboard',{configurable:true,value:{
+      writeText:async()=>{throw Error('Synthetic denied clipboard');}
+    }}));
+    await teen.page.getByRole('button',{name:'Kopiera aktuella regler'}).click();
+    const teenFallback=teen.page.locator('#schyssta-copy-fallback');
+    await teenFallback.waitFor();
+    assert.ok((await teenFallback.inputValue()).includes(revised));
+    assert.ok(!(await teenFallback.inputValue()).includes(original),
+      'Teen fallback includes only the replacement accepted by both');
+    assert.equal(await teenFallback.evaluate(el=>document.activeElement===el
+      &&el.selectionStart===0&&el.selectionEnd===el.value.length),true);
+    await checkOverflow(teen.page,'FUN-03 clipboard denial 320px');
+    await capture(teen.page,'fun-03-clipboard-fallback-teen.png');
+    records.push({case:'teen-clipboard-denial-selectable-current-rule',passed:true});
+
     // Export should contain only the CURRENT accepted replacement.
     const download=teen.page.waitForEvent('download');
     await teen.page.getByRole('button',{name:'Ladda ner som textfil'}).click();
@@ -3141,6 +3157,34 @@ try{
   const exported=await paired.page.evaluate(()=>window.__HK_COPIED_RULES__);
   assert.match(exported,/Vi frågar innan vi lånar saker/,'Copy includes accepted rules');
   assert.doesNotMatch(exported,/Vi får pausa gräl|Vi pratar om hur vi delar på sysslorna/,'Copy excludes proposals without two approvals');
+  // FUN-03 clipboard fallback: browser permissions may deny writeText.
+  await paired.page.evaluate(()=>Object.defineProperty(navigator,'clipboard',{configurable:true,value:{
+    writeText:async()=>{throw Error('Synthetic clipboard permission denied');}
+  }}));
+  await paired.page.getByRole('button',{name:'Kopiera aktuella regler'}).click();
+  const fallback=paired.page.locator('#schyssta-copy-fallback');
+  await fallback.waitFor();
+  assert.equal(await fallback.getAttribute('readonly'),'','Fallback is read-only');
+  assert.match(await fallback.inputValue(),/Vi frågar innan vi lånar saker/);
+  assert.doesNotMatch(await fallback.inputValue(),/Vi får pausa gräl|Vi pratar om hur vi delar på sysslorna/,
+    'Manual fallback excludes unapproved proposals');
+  assert.equal(await fallback.evaluate(el=>document.activeElement===el
+    &&el.selectionStart===0&&el.selectionEnd===el.value.length),true,
+    'Fallback text is focused and selected for manual copy');
+  await fallback.press('ArrowRight');
+  await paired.page.getByRole('button',{name:'Markera texten igen'}).click();
+  assert.equal(await fallback.evaluate(el=>el.selectionStart===0&&el.selectionEnd===el.value.length),true,
+    'Reselect button restores whole-text selection');
+  await checkOverflow(paired.page,'FUN-03 clipboard failure fallback 390px');
+  await capture(paired.page,'fun-03-clipboard-fallback-parent.png');
+  await paired.page.evaluate(()=>Object.defineProperty(navigator,'clipboard',{configurable:true,value:{
+    writeText:async text=>{window.__HK_RETRY_COPIED_RULES__=text;}
+  }}));
+  await paired.page.getByRole('button',{name:'Kopiera aktuella regler'}).click();
+  await paired.page.waitForFunction(()=>typeof window.__HK_RETRY_COPIED_RULES__==='string');
+  assert.equal(await paired.page.locator('#schyssta-copy-fallback').count(),0,
+    'Manual fallback disappears after successful clipboard retry');
+  assert.match(await paired.page.locator('.schyssta-feedback').innerText(),/kopierats/);
   const schysstaDownloadPromise=paired.page.waitForEvent('download');
   await paired.page.getByRole('button',{name:'Ladda ner som textfil'}).click();
   const schysstaDownload=await schysstaDownloadPromise;
