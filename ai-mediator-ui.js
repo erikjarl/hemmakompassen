@@ -123,6 +123,9 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
     if (!historyEnabled || !userId || !chats.some(c=>c.id===chatId) || sending) return false;
     const myEpoch=epoch,account=userId,request=++listRequest;
     activeChatId=chatId;
+    // A selected chat is not the previously verified transcript. Remove stale
+    // private messages immediately, including when the new read fails.
+    turns=[];
     if(!preserveLoading)loading=true;
     historyError='';notify();
     try{
