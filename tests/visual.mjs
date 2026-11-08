@@ -1462,6 +1462,73 @@ async function verifyRetestLifecycleAckBrowser(){
  console.log('FUN-04 retest lifecycle ACK: '+records.length+' synthetic Chromium role/transition cases passed.');
 }
 
+// FUN-04: verify irreversible retest deletion feedback in the actual UI with
+// a synthetic private server. Never delete responses in live test accounts.
+async function verifyRetestDeletionAckBrowser(){
+ const records=[];
+ for(const role of ['parent','teen']){
+  const width=role==='parent'?390:320;
+  for(const scenario of ['deleted-but-ack-lost','delete-rejected','delete-readback-unavailable']){
+   const m=await freshContext(
+    {viewport:{width,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true},
+    {authenticated:true,paired:false,role,personalityComplete:true,
+      privateRetests:true,preloadedRetestHistory:true}
+   );
+   try{
+    const page=m.page;
+    await page.goto(base+'#personlighet',{waitUntil:'load'});
+    const panel=page.locator('.pf-retest');
+    await page.getByRole('heading',{name:'Min omtestningshistorik'}).waitFor();
+    assert.equal(await panel.locator('[data-ipip-retest="delete"]').count(),2);
+    await page.evaluate(scenario=>{
+      window.__HK_RETEST_DELETE_WRITES__=0;
+      window.__HK_RETEST_LIFECYCLE_READBACKS__=0;
+      window.__HK_TEST_RETEST_DELETE_LOST_ACK__=scenario!=='delete-rejected';
+      window.__HK_TEST_RETEST_DELETE_REJECT__=scenario==='delete-rejected';
+      window.__HK_TEST_RETEST_LIFECYCLE_READ_FAIL__=scenario==='delete-readback-unavailable';
+    },scenario);
+    const clickDelete=async()=>{
+      page.once('dialog',dialog=>dialog.accept());
+      await panel.locator('[data-ipip-retest="delete"]').first().click();
+    };
+    await clickDelete();
+    if(scenario==='deleted-but-ack-lost'){
+      await panel.getByText(/Servern bekräftar att omtestet är raderat trots ett kommunikationsfel/).waitFor();
+      assert.equal(await panel.locator('[data-ipip-retest="delete"]').count(),1);
+      assert.match(await panel.innerText(),/Omtest 1 av 1/);
+    }else if(scenario==='delete-rejected'){
+      await panel.getByText(/Servern visar att omtestet fortfarande finns/).waitFor();
+      assert.equal(await panel.locator('[data-ipip-retest="delete"]').count(),2);
+      await clickDelete();
+      await panel.getByText(/Den privata omgången och dess svar har raderats/).waitFor();
+      assert.equal(await panel.locator('[data-ipip-retest="delete"]').count(),1);
+    }else{
+      await panel.getByText(/Raderingen kunde inte bekräftas/).waitFor();
+      await page.getByRole('button',{name:'Kontrollera omtestets status'}).click();
+      await panel.getByText(/Omtest 1 av 1/).waitFor();
+      assert.equal(await panel.locator('[data-ipip-retest="delete"]').count(),1);
+      assert.equal(await panel.locator('[data-ipip-retest="verify-attempts"]').count(),0);
+    }
+    assert.equal(await page.evaluate(()=>window.__HK_RETEST_DELETE_WRITES__),
+      scenario==='delete-rejected'?2:1,
+      'Unknown or confirmed deletion must not issue a duplicate destructive write');
+    assert.equal(await page.evaluate(()=>window.__HK_RETEST_LIFECYCLE_READBACKS__),1);
+    assert.equal(await panel.locator('[data-ipip-retest="delete"]').count(),1);
+    assert.equal(await page.locator('.pf-results').count(),1,
+      'The initial IPIP profile is unaffected by private retest deletion');
+    await checkOverflow(page,'FUN-04 private deletion '+role+' '+scenario);
+    records.push({role,width,scenario,deletedOneOfTwo:true,originalProfileKept:true,
+      readbacks:1,deleteAttempts:scenario==='delete-rejected'?2:1,passed:true});
+   }finally{await m.context.close();}
+  }
+ }
+ await fs.writeFile(path.join(output,'fun-04-retest-deletion-ack-browser-synthetic.json'),
+   JSON.stringify({method:'Chromium private retest history buttons, accepted deletion dialog and in-memory owner-scoped server with fault injection',
+     limitations:'Mocked authentication and Supabase; no real deletion or physical mobile browser.',
+     records},null,2)+'\n');
+ console.log('FUN-04 deletion ACK: '+records.length+' synthetic Chromium cases passed.');
+}
+
 // FUN-04.05: finish a fresh private 50-item retest through real browser controls,
 // open its saved history, and export the completed JSON. Only in-memory mock data
 // is changed; the original IPIP-50 responses are not modified.
@@ -2293,11 +2360,20 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
                     return {data:{...row},error:null};
                   }
                   if(operation==='delete'){
+                    window.__HK_RETEST_DELETE_WRITES__=(window.__HK_RETEST_DELETE_WRITES__||0)+1;
+                    if(window.__HK_TEST_RETEST_DELETE_REJECT__){
+                      window.__HK_TEST_RETEST_DELETE_REJECT__=false;
+                      return {data:null,error:{message:'Synthetic private attempt delete rejected'}};
+                    }
                     const index=list.findIndex(a=>Object.entries(filters).every(([k,v])=>a[k]===v));
                     if(index<0)return {data:null,error:{message:'missing attempt'}};
                     const [deleted]=list.splice(index,1);
                     for(let n=retestAnswers.length-1;n>=0;n--)
                       if(retestAnswers[n].attempt_id===deleted.id)retestAnswers.splice(n,1);
+                    if(window.__HK_TEST_RETEST_DELETE_LOST_ACK__){
+                      window.__HK_TEST_RETEST_DELETE_LOST_ACK__=false;
+                      return {data:null,error:{message:'Synthetic private attempt deletion ACK lost'}};
+                    }
                     return {data:{id:deleted.id},error:null};
                   }
                   if(operation==='update'){
@@ -4693,6 +4769,7 @@ try{
   await verifyFullPersonalitySurvey();
   await verifyRetestAnswerAcknowledgements();
   await verifyRetestLifecycleAckBrowser();
+  await verifyRetestDeletionAckBrowser();
   await verifyFullPrivateRetest();
   await verifyDistinctPrivateRetestHistory();
   await verifyCommunicationForms();

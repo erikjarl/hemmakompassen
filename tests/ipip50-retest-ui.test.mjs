@@ -4,7 +4,7 @@ import {createPrivateIpipRetests,buildPrivateIpipRetestExport} from '../personal
 
 function makeBackend(){
   const attempts=[],answers=[],calls=[];
-  let owner='private-user',failNextAnswer=false,failDelete=false,failNextAnswerRead=false,failNextAttemptsRead=false,nextAnswerMode=null,writeAttempts=0,nextNewMode=null,nextCompleteMode=null,newAttempts=0,completionAttempts=0;
+  let owner='private-user',failNextAnswer=false,failDelete=false,failNextAnswerRead=false,failNextAttemptsRead=false,nextAnswerMode=null,writeAttempts=0,nextNewMode=null,nextCompleteMode=null,nextDeleteMode=null,newAttempts=0,completionAttempts=0,deleteAttempts=0;
   const db={
     from(table){
       assert.ok(['personality_test_attempts','personality_attempt_answers'].includes(table),
@@ -33,14 +33,20 @@ function makeBackend(){
             return {data:{...row},error:null};
           }
           if(op==='delete'){
-            if(failDelete)return {data:null,error:{message:'delete unavailable'}};
+            deleteAttempts++;
+            const mode=nextDeleteMode;nextDeleteMode=null;
+            if(failDelete||mode==='reject')return {data:null,error:{message:'delete unavailable'}};
             const index=attempts.findIndex(a=>a.id===filters.id&&a.user_id===filters.user_id);
             if(index===-1)return {data:null,error:{message:'not found'}};
             const [deleted]=attempts.splice(index,1);
             for(let i=answers.length-1;i>=0;i--){
               if(answers[i].attempt_id===deleted.id)answers.splice(i,1);
             }
-            calls.push('delete');return {data:{id:deleted.id},error:null};
+            calls.push('delete');
+            if(mode==='lost-ack')return {data:null,error:{message:'deleted, receipt lost'}};
+            if(mode==='throw-after')throw Error('delete completed, connection closed');
+            if(mode==='missing-ack')return {data:null,error:null};
+            return {data:{id:deleted.id},error:null};
           }
           if(op==='update'){
             completionAttempts++;
@@ -95,7 +101,8 @@ function makeBackend(){
   return {db,attempts,answers,calls,setOwner:v=>owner=v,failNext:()=>failNextAnswer=true,
     setDeleteFailure:v=>failDelete=v,failAnswerRead:()=>failNextAnswerRead=true,
     nextAnswer:v=>nextAnswerMode=v,writeAttempts:()=>writeAttempts,
-    nextNew:v=>nextNewMode=v,nextComplete:v=>nextCompleteMode=v,
+    nextNew:v=>nextNewMode=v,nextComplete:v=>nextCompleteMode=v,nextDelete:v=>nextDeleteMode=v,
+    deleteAttempts:()=>deleteAttempts,
     newAttempts:()=>newAttempts,completionAttempts:()=>completionAttempts,
     failAttemptsRead:()=>failNextAttemptsRead=true};
 }
@@ -560,4 +567,91 @@ test('private retest completion: account switching clears ambiguous operation st
   assert.match(ui.render(),/Kontrollera omtestets status/);
   ui.reset('another-user');await ui.load('another-user');
   assert.doesNotMatch(ui.render(),/Kontrollera omtestets status|Omtest 1 av 1/);
+});
+
+
+test('private retest deletion reconciles a lost, thrown or missing server acknowledgement',async()=>{
+  for(const mode of ['lost-ack','throw-after','missing-ack']){
+    const b=makeBackend(),ui=createPrivateIpipRetests({db:b.db,confirmDelete:()=>true});
+    ui.reset('private-user');await ui.load('private-user');await ui.handleClick(button('new'));
+    await ui.handleChange(radio('ipip50-001',4));
+    b.nextDelete(mode);
+    await ui.handleClick(button('delete','attempt-1'));
+    assert.equal(b.deleteAttempts(),1,'Never repeat a committed irreversible DELETE');
+    assert.equal(b.attempts.length,0);
+    assert.equal(b.answers.length,0);
+    assert.match(ui.render(),/Servern bekräftar att omtestet är raderat trots ett kommunikationsfel/);
+    assert.match(ui.render(),/Starta en ny privat testomgång/);
+    assert.doesNotMatch(ui.render(),/Fortsätt privat omtest|Kontrollera omtestets status/);
+    await ui.handleClick(button('delete','attempt-1'));
+    assert.equal(b.deleteAttempts(),1,'Deleted attempt is no longer an actionable control');
+  }
+});
+
+test('private retest deletion with rejected write preserves its answer and permits a deliberate retry',async()=>{
+  const b=makeBackend(),ui=createPrivateIpipRetests({db:b.db,confirmDelete:()=>true});
+  ui.reset('private-user');await ui.load('private-user');await ui.handleClick(button('new'));
+  await ui.handleChange(radio('ipip50-001',2));
+  b.nextDelete('reject');
+  await ui.handleClick(button('delete','attempt-1'));
+  assert.equal(b.deleteAttempts(),1);
+  assert.equal(b.attempts.length,1);assert.equal(b.answers.length,1);
+  assert.match(ui.render(),/Servern visar att omtestet fortfarande finns/);
+  assert.doesNotMatch(ui.render(),/Servern bekräftar att omtestet är raderat/);
+  await ui.handleClick(button('delete','attempt-1'));
+  assert.equal(b.deleteAttempts(),2);
+  assert.equal(b.attempts.length,0);
+  assert.equal(b.answers.length,0);
+});
+
+test('private retest deletion on unreadable server result pauses further actions until explicit refresh',async()=>{
+  const b=makeBackend(),ui=createPrivateIpipRetests({db:b.db,confirmDelete:()=>true});
+  ui.reset('private-user');await ui.load('private-user');await ui.handleClick(button('new'));
+  b.nextDelete('lost-ack');b.failAttemptsRead();
+  await ui.handleClick(button('delete','attempt-1'));
+  assert.equal(b.attempts.length,0,'Server did delete even though HTTP response failed');
+  assert.equal(b.deleteAttempts(),1);
+  assert.match(ui.render(),/Raderingen kunde inte bekräftas/);
+  assert.match(ui.render(),/data-ipip-retest="verify-attempts"/);
+  await ui.handleClick(button('new'));
+  await ui.handleClick(button('delete','attempt-1'));
+  assert.equal(b.deleteAttempts(),1,'An ambiguous deletion cannot be silently repeated');
+  await ui.handleClick(button('verify-attempts'));
+  assert.match(ui.render(),/Starta en ny privat testomgång/);
+  assert.doesNotMatch(ui.render(),/Kontrollera omtestets status|Fortsätt privat omtest/);
+  assert.equal(b.deleteAttempts(),1,'Explicit refresh only reads and never deletes');
+});
+
+test('lost deletion ACK removes only the selected historic attempt and keeps newer history',async()=>{
+  const b=makeBackend(),ui=createPrivateIpipRetests({db:b.db,confirmDelete:()=>true});
+  ui.reset('private-user');await ui.load('private-user');
+  for(const value of [2,4]){
+    await ui.handleClick(button('new'));
+    for(let n=1;n<=50;n++)await ui.handleChange(radio('ipip50-'+String(n).padStart(3,'0'),value));
+    await ui.handleClick(button('complete'));
+  }
+  assert.equal(b.attempts.length,2);assert.equal(b.answers.length,100);
+  await ui.handleClick(button('view','attempt-1'));
+  b.nextDelete('lost-ack');
+  await ui.handleClick(button('delete','attempt-1'));
+  assert.equal(b.deleteAttempts(),1);
+  assert.deepEqual(b.attempts.map(a=>a.id),['attempt-2']);
+  assert.equal(b.answers.length,50);
+  assert.match(ui.render(),/Servern bekräftar att omtestet är raderat/);
+  assert.match(ui.render(),/Omtest 1 av 1/);
+  assert.doesNotMatch(ui.render(),/Omtest 2 av 2|Mitt privata omtest · Omtest 2/);
+  await ui.handleClick(button('view','attempt-2'));
+  assert.match(ui.render(),/Mitt privata omtest · Omtest 1 av 1/);
+});
+
+test('switching account after an uncertain delete clears the stale verification button',async()=>{
+  const b=makeBackend(),ui=createPrivateIpipRetests({db:b.db,confirmDelete:()=>true});
+  ui.reset('private-user');await ui.load('private-user');await ui.handleClick(button('new'));
+  b.nextDelete('reject');b.failAttemptsRead();
+  await ui.handleClick(button('delete','attempt-1'));
+  assert.match(ui.render(),/Kontrollera omtestets status/);
+  ui.reset('another-user');await ui.load('another-user');
+  assert.doesNotMatch(ui.render(),/Kontrollera omtestets status|Påbörjad omgång/);
+  assert.match(ui.render(),/Starta en ny privat testomgång/);
+  assert.equal(b.deleteAttempts(),1);
 });

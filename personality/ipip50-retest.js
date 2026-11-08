@@ -284,21 +284,46 @@ export function createPrivateIpipRetests({
       if(!confirmDelete(message))return true;
       const id=userId,token=generation;
       busy=true;status='Raderar den valda privata omgången…';repaint();
+      let deleted=false,ackMissing=false,readbackUnknown=false;
       try{
         const result=await db.from('personality_test_attempts').delete()
           .eq('user_id',id).eq('id',attemptId)
           .select('id').single();
-        if(result.error||result.data?.id!==attemptId)
-          throw result.error||Error('Delete was not confirmed');
+        if(result?.error||result?.data?.id!==attemptId)
+          throw result?.error||Error('Delete was not confirmed');
+        deleted=true;
+      }catch{
+        ackMissing=true;
         if(!isCurrent(id,token))return true;
+        // An HTTP failure is not proof that a confirmed deletion was rejected.
+        // Check the exact attempt in the viewer's own private history without
+        // ever automatically issuing a second irreversible DELETE.
+        try{
+          const r=await db.from('personality_test_attempts')
+            .select('id').eq('user_id',id).eq('id',attemptId).maybeSingle();
+          if(!r||r.error||!Object.hasOwn(r,'data')||
+            (r.data!==null&&r.data?.id!==attemptId)){
+            readbackUnknown=true;
+          }else{
+            deleted=r.data===null;
+          }
+        }catch{readbackUnknown=true;}
+      }
+      if(!isCurrent(id,token))return true;
+      if(deleted){
         attempts=attempts.filter(a=>a.id!==attemptId);
         if(draftId===attemptId){draftId=null;answers={};surveyOpen=false;questionIndex=0;}
         if(historyId===attemptId){historyId=null;historyAnswers=null;}
-        status='Den privata omgången och dess svar har raderats.';
-      }catch(e){
-        if(isCurrent(id,token))status='Radering kunde inte bekräftas. Ladda om historiken innan du försöker igen.';
+        status=ackMissing
+          ?'Servern bekräftar att omtestet är raderat trots ett kommunikationsfel.'
+          :'Den privata omgången och dess svar har raderats.';
+      }else if(readbackUnknown){
+        lifecycleNeedsCheck=true;
+        status='Raderingen kunde inte bekräftas. Kontrollera omtestets status mot servern innan du försöker igen.';
+      }else{
+        status='Radering kunde inte bekräftas. Servern visar att omtestet fortfarande finns. Du kan försöka igen.';
       }
-      if(isCurrent(id,token)){busy=false;repaint();}
+      busy=false;repaint();
       return true;
     }
     if(action==='view'){
