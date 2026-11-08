@@ -442,12 +442,18 @@ function validImportanceCard(deckId,cardId){
   if(deckId==='general')return GENERAL_CARDS.some(card=>card.id===cardId&&(card.type==='match'||viewerRole()==='teen'));
   return !!THEME_DECKS.find(deck=>deck.id===deckId&&deck.cardIds.includes(cardId));
 }
+const IMPORTANCE_WAIT_MESSAGE='Vänta tills viktighetsskattningen har sparats innan du väljer Ja eller Nej. Försök sedan igen.';
+function explainImportancePendingSwipe(){
+ const status=$('swipe-save-status');
+ if(status)status.textContent=IMPORTANCE_WAIT_MESSAGE;
+}
 async function saveImportance(deckId,cardId,value,viewer,session){
   if(!importanceAvailable||user?.id!==viewer||sharedSession!==session||!validImportanceCard(deckId,cardId)||![-1,0,1].includes(value))return;
   const key=importanceKey(deckId,cardId);
   importancePending.set(key,{deckId,cardId,value,viewer,session});
   if(importanceSaving.has(key))return;
   importanceSaving.add(key);
+  let saveFailed=false;
   while(importancePending.has(key)){
     const next=importancePending.get(key);importancePending.delete(key);
     if(user?.id!==next.viewer||sharedSession!==next.session)break;
@@ -458,6 +464,7 @@ async function saveImportance(deckId,cardId,value,viewer,session){
     catch(e){error=e;}
     if(user?.id!==next.viewer||sharedSession!==next.session)break;
     if(error){
+      saveFailed=true;
       importancePending.delete(key);
       const input=document.querySelector('[data-importance]');
       if(input&&input.dataset.deckId===next.deckId&&input.dataset.cardId===next.cardId){const saved=swipeImportance.get(key)??0;input.value=String(saved);input.setAttribute('aria-valuetext',importanceValueText(saved));}
@@ -469,6 +476,15 @@ async function saveImportance(deckId,cardId,value,viewer,session){
     if(status)status.textContent='Viktighet sparad privat.';
   }
   importanceSaving.delete(key);
+  // A swipe click deliberately paused for this pending save. Restore a useful
+  // completion/failure message when the LAST outstanding importance write ends.
+  if(user?.id===viewer&&sharedSession===session&&importanceSaving.size===0){
+    const swipeStatus=$('swipe-save-status');
+    if(swipeStatus?.textContent===IMPORTANCE_WAIT_MESSAGE)
+      swipeStatus.textContent=saveFailed
+        ?'Viktigheten kunde inte sparas. Du kan justera reglaget och försöka igen, eller välja Ja/Nej.'
+        :'Viktigheten är sparad. Nu kan du välja Ja eller Nej.';
+  }
 }
 
 const joinSwedish=items=>items.length<2?(items[0]||''):items.slice(0,-1).join(', ')+' och '+items.at(-1);
@@ -1345,7 +1361,8 @@ async function saveThemeAnswer(direction,index,deckId,viewer,session){
 }
 function advanceThemeSwipe(direction){
   const deck=THEME_DECKS.find(d=>d.id===activeThemeDeck);
-  if(swipeBusy||importanceSaving.size||page()!=='swipe'||!themeAccessAllowed()||!deck||themeIndex>=deck.cards.length)return;
+  if(swipeBusy||page()!=='swipe'||!themeAccessAllowed()||!deck||themeIndex>=deck.cards.length)return;
+  if(importanceSaving.size){explainImportancePendingSwipe();return;}
   const el=$('swipe-card');if(!el)return;
   const index=themeIndex,deckId=deck.id,viewer=user.id,session=sharedSession;
   swipeBusy=true;
@@ -1467,7 +1484,7 @@ async function skipUnderstandingCard(index,viewer,session){
   if(members.length===2&&visibleGeneralIndices().every(i=>swipeAnswers.has(swipeCardId(i))||skippedUnderstanding.has(swipeCardId(i))))void fetchThemeUnlock();
 }
 function nextVisibleAfter(index){return visibleGeneralIndices().find(i=>i>index)??STATEMENTS.length;}
-function advanceSwipe(direction){if(activeThemeDeck){advanceThemeSwipe(direction);return;}if(swipeBusy||importanceSaving.size||page()!=='swipe'||!user||swipeIndex>=STATEMENTS.length||!visibleGeneralIndices().includes(swipeIndex))return;const el=$('swipe-card');if(!el)return;const index=swipeIndex,viewer=user.id,session=sharedSession;swipeBusy=true;const reduce=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;if(!reduce){el.style.transform='translateX('+(direction==='yes'?'120vw':'-120vw')+') rotate('+(direction==='yes'?18:-18)+'deg)';el.style.opacity='0';}setTimeout(()=>saveSwipeAnswer(direction,index,viewer,session),reduce?0:220);}
+function advanceSwipe(direction){if(activeThemeDeck){advanceThemeSwipe(direction);return;}if(swipeBusy||page()!=='swipe'||!user||swipeIndex>=STATEMENTS.length||!visibleGeneralIndices().includes(swipeIndex))return;if(importanceSaving.size){explainImportancePendingSwipe();return;}const el=$('swipe-card');if(!el)return;const index=swipeIndex,viewer=user.id,session=sharedSession;swipeBusy=true;const reduce=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;if(!reduce){el.style.transform='translateX('+(direction==='yes'?'120vw':'-120vw')+') rotate('+(direction==='yes'?18:-18)+'deg)';el.style.opacity='0';}setTimeout(()=>saveSwipeAnswer(direction,index,viewer,session),reduce?0:220);}
 function setupSwipeGesture(){const el=$('swipe-card');if(!el)return;let start=null;const reset=()=>{start=null;el.style.transform='';el.classList.remove('swipe-dragging','swipe-preview-yes','swipe-preview-no');};el.addEventListener('pointerdown',e=>{if(e.target.closest?.('[data-importance-control]')||(e.button!==undefined&&e.button!==0))return;start={id:e.pointerId,x:e.clientX,y:e.clientY,dragging:false};});el.addEventListener('pointermove',e=>{if(!start||start.id!==e.pointerId||swipeBusy)return;const dx=e.clientX-start.x,dy=e.clientY-start.y;if(!start.dragging&&Math.abs(dy)>Math.abs(dx)&&Math.abs(dy)>12){start=null;return;}if(Math.abs(dx)>10&&Math.abs(dx)>Math.abs(dy)){start.dragging=true;el.setPointerCapture?.(e.pointerId);}if(!start.dragging)return;el.classList.add('swipe-dragging');el.classList.toggle('swipe-preview-yes',dx>35);el.classList.toggle('swipe-preview-no',dx< -35);el.style.transform='translateX('+dx+'px) rotate('+Math.max(-13,Math.min(13,dx/18))+'deg)';});el.addEventListener('pointerup',e=>{if(!start||start.id!==e.pointerId)return;const dx=e.clientX-start.x,dragged=start.dragging;reset();if(dragged&&Math.abs(dx)>=85)advanceSwipe(dx>0?'yes':'no');});el.addEventListener('pointercancel',reset);}
 
 function insightTargetFromHash(hash){
