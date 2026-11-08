@@ -201,6 +201,11 @@ async function recheckInboxPair(){
   // can survive a revoked pairing or a failed membership check.
   sharedSession++;
   clearFamilyChat();
+  // Sharing belongs to the exact family epoch. Drop the old pair's results
+  // synchronously, before a potentially slow or failing account refresh.
+  sharedRequest++;insightsRequest++;
+  sharedMatches=[];sharedPriorities=[];sharedError='';sharedPriorityError='';sharedLoading=false;
+  insightsRows=[];sharedUnderstandingRows=[];insightsError='';insightsLoading=false;
   inboxPairEpoch=null;
   members=[];
   render();
@@ -1043,8 +1048,11 @@ async function pollSharedMatches(){
   const deckId=activeThemeDeck||'general';
   if(!sharedDeck(deckId))return;
   sharedPollPending=true;
-  try{await fetchSwipeMatches(deckId,{quiet:true});}
-  finally{sharedPollPending=false;}
+  try{
+    // A re-pair may keep the same account while revoking the prior
+    // family-wide visibility. Check both membership and pair epoch first.
+    if(await recheckInboxPair())await fetchSwipeMatches(deckId,{quiet:true});
+  }finally{sharedPollPending=false;}
 }
 
 // Theme access no longer depends on completing the general deck. This check
@@ -2197,7 +2205,8 @@ window.addEventListener('online',()=>{
 });
 window.addEventListener('focus',()=>{
   void pollSharedMatches();
-  if(page()==='insikter'&&user&&members.length===2)void fetchInsights({quiet:true});
+  if(page()==='insikter'&&user&&members.length===2)
+    void recheckInboxPair().then(valid=>{if(valid&&page()==='insikter')void fetchInsights({quiet:true});});
   if(page()==='inkorg'&&user&&members.length===2)void recheckInboxPair();
   // The home inbox badge also belongs to one exact pairing epoch. Do not
   // refresh private unread state against stale local membership after re-pair.
@@ -2217,7 +2226,10 @@ window.setInterval(()=>{
   }
 },15000);
 window.setInterval(()=>void pollSharedMatches(),SHARED_POLL_INTERVAL_MS);
-window.setInterval(()=>{if(!document.hidden&&page()==='insikter'&&user&&members.length===2)void fetchInsights({quiet:true});},INSIGHTS_CONSENT_REFRESH_MS);
+window.setInterval(()=>{
+  if(!document.hidden&&page()==='insikter'&&user&&members.length===2)
+    void recheckInboxPair().then(valid=>{if(valid&&page()==='insikter')void fetchInsights({quiet:true});});
+},INSIGHTS_CONSENT_REFRESH_MS);
 // If the other family member withdraws consent, remove their profile on the next check.
 window.setInterval(()=>{if(!document.hidden&&page()==='personlighet'&&user)void personalityExperience.refreshShared();},15000);
 db.auth.onAuthStateChange(()=>setTimeout(()=>refresh().catch(showError),0));
