@@ -947,6 +947,26 @@ try{
     'A failed private importance read must not claim a successful export');
   await failedImportance.context.close();
   await generalReview.context.close();
+  // UX-04: user-increased text size and short landscape viewport must retain every mobile destination.
+  for(const [width,height,label] of [[430,932,'large-text'],[700,360,'landscape']]){
+    const scaled=await freshContext({viewport:{width,height},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,paired:true});
+    await scaled.page.getByRole('heading',{name:/Hej[ ,]+Provförälder/}).waitFor();
+    await scaled.page.addStyleTag({content:'html{font-size:125%!important}'});
+    await checkOverflow(scaled.page,'UX-04 '+label+' home');
+    await checkMobileNavigation(scaled.page,'UX-04 '+label+' mobile menu');
+    const navSize=await scaled.page.locator('#live-mobile-nav > a').first().evaluate(el=>({
+      fontSize:parseFloat(getComputedStyle(el).fontSize),
+      height:el.getBoundingClientRect().height
+    }));
+    assert.ok(navSize.fontSize>=15&&navSize.height>=44,
+      'UX-04 '+label+': enlarged labels and usable navigation targets '+JSON.stringify(navSize));
+    await scaled.page.goto(base+'#kommunikation',{waitUntil:'load'});
+    await scaled.page.getByRole('heading',{name:'Verktyg för bättre samtal'}).waitFor();
+    await scaled.page.addStyleTag({content:'html{font-size:125%!important}'});
+    await checkOverflow(scaled.page,'UX-04 '+label+' communication guidance');
+    await capture(scaled.page,'mobile-'+label+'-communication.png');
+    await scaled.context.close();
+  }
   const narrow=await freshContext({viewport:{width:320,height:700},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true});
   await narrow.page.getByRole("heading",{name:/Hej[ ,]+Provförälder/}).waitFor();
   await checkMobileNavigation(narrow.page,'320px mobile navigation');
