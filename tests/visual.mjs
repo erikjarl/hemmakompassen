@@ -574,7 +574,7 @@ try{
   assert.equal(await m.page.evaluate(()=>window.__HK_UNLOCK_RPC_CALLS__||0),0,'Unpaired member must not request theme unlock status');
   assert.match(await m.page.locator("#swipe-card").getAttribute("aria-label"),/Kort 1 av 21/);
   // ArrowRight on a focused navigation link must NOT save a private swipe answer.
-  await m.page.locator('#live-mobile-nav a[href="#personlighet"]').focus();
+  await m.page.locator('#live-mobile-nav summary').focus();
   await m.page.keyboard.press('ArrowRight');
   await m.page.waitForTimeout(300);
   assert.match(await m.page.locator('#swipe-card').getAttribute('aria-label'),/Kort 1 av 21/,
@@ -612,11 +612,14 @@ try{
   assert.ok(mobileMain.y+mobileMain.height<=mobileNav.y+1,'Mobile navigation must occupy its own layout row, never overlay the scrollable content region');
   const activeNav=await m.page.locator('#live-mobile-nav a[aria-current="page"]').boundingBox();
   assert.ok(activeNav.x>=mobileNav.x&&activeNav.x+activeNav.width<=mobileNav.x+mobileNav.width,'Active mobile navigation label must be fully visible');
-  const lastNavLink=m.page.locator('#live-mobile-nav a').last();
-  await lastNavLink.scrollIntoViewIfNeeded();
-  const lastNavBox=await lastNavLink.boundingBox();
-  assert.ok(lastNavBox.x>=mobileNav.x&&lastNavBox.x+lastNavBox.width<=mobileNav.x+mobileNav.width,'The last mobile navigation label must be fully reachable without clipping');
-  await m.page.locator('#live-mobile-nav a[aria-current="page"]').scrollIntoViewIfNeeded();
+  const moreSummary=m.page.locator('#live-mobile-nav summary');
+  const moreBox=await moreSummary.boundingBox();
+  assert.ok(moreBox&&moreBox.x>=mobileNav.x&&moreBox.x+moreBox.width<=mobileNav.x+mobileNav.width,
+    'More remains fully visible in the four-column mobile navigation');
+  await moreSummary.click();
+  assert.equal(await m.page.locator('#live-mobile-nav a[href="#installningar"]').isVisible(),true,
+    'Last secondary destination is reachable through More without horizontal scrolling');
+  await moreSummary.click();
   // Simulate a phone tap on both ends. It must change the value, not swipe the card.
   await importance.scrollIntoViewIfNeeded();
   const tapBox=await importance.boundingBox();
@@ -948,7 +951,9 @@ try{
   assert.ok(headerAudit.singleLine&&headerAudit.visible,
     '320px account link must remain one line fully inside the viewport');
 
-  await narrow.page.locator('#live-mobile-nav a[href="#kommunikation"]').scrollIntoViewIfNeeded();
+  await narrow.page.locator('#live-mobile-nav summary').click();
+  assert.equal(await narrow.page.locator('#live-mobile-nav a[href="#kommunikation"]').isVisible(),true,
+    'Communication guidance is accessible in More at 320px');
   await capture(narrow.page,'mobile-320-navigation.png');
   await narrow.page.goto(base+'#kommunikation',{waitUntil:'load'});
   await narrow.page.getByRole('heading',{name:'Verktyg för bättre samtal'}).waitFor();
@@ -1359,6 +1364,7 @@ try{
   await checkOverflow(paired.page,"Mobile matched swipes");
   await paired.page.locator('.swipe-results').scrollIntoViewIfNeeded();
   await capture(paired.page,"mobile-shared-swipes.png");
+  await paired.page.locator('#live-mobile-nav summary').click();
   await paired.page.locator('#live-mobile-nav a[href="#regler"]').click();
   // The initial synthetic server response deliberately includes a known card
   // with forged text and a completely unknown card. Never display even its
