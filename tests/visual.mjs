@@ -1830,6 +1830,81 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
 }
 // FUN-05: real DOM interactions against an isolated, stateful fake Worker.
 // The test does not authenticate any real account or invoke a live model.
+// FUN-05 AI-result UX: both synthetic roles use real DOM and intercepted Worker.
+async function verifyAiReflectionRetryAndRoutes(){
+  const records=[];
+  for(const role of ['parent','teen']){
+    const width=role==='parent'?390:320;
+    const m=await freshContext(
+      {viewport:{width,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},
+      {authenticated:true,paired:true,role,personalityComplete:true,aiAnalyses:true}
+    );
+    try{
+      await m.page.goto(base+'#personlighet',{waitUntil:'load'});
+      const personality=m.page.locator('.pf-results .ai-result-panel');
+      await personality.locator('.ai-result-prose').waitFor();
+      assert.equal(await personality.locator('.ai-result-prose a').count(),2,
+        'Only two valid model-suggested exercise routes should be links');
+      assert.match(await personality.locator('.ai-result-prose').innerText(),
+        /#kommunikation\/losning-extra/,'Malformed route remains visible as plain text');
+      assert.equal(await personality.locator('.ai-result-prose a[href="#kommunikation/losning"]').count(),0,
+        'Malformed route must not be partially linked');
+      assert.deepEqual(Object.keys(m.aiRequests.at(-1)).sort(),['kind','scope']);
+      assert.deepEqual(m.aiRequests.at(-1),{kind:'personality',scope:'own'});
+      records.push({role,step:'personality: links and minimal Worker payload',status:'PASS'});
+      m.aiFixture.failNext=true;
+      await personality.locator('[data-ai-analysis-retry="personality:own"]').click();
+      await personality.getByRole('alert').getByText('Tillfälligt fel vid AI-analys.').waitFor();
+      assert.equal(await personality.locator('.ai-result-prose a').count(),0,
+        'Error must not leave obsolete personalized links visible');
+      records.push({role,step:'personality: error removes stale links',status:'PASS'});
+      await personality.locator('[data-ai-analysis-retry="personality:own"]').click();
+      await personality.locator('.ai-result-prose a[href="#kommunikation/lyssna"]').waitFor();
+      assert.equal(m.aiRequests.filter(x=>x.kind==='personality'&&x.scope==='own').length,3);
+      await checkOverflow(m.page,'FUN-05 personality AI '+role+' '+width+'px');
+      await capture(m.page,'fun-05-ai-personality-retry-'+role+'.png');
+      records.push({role,step:'personality: successful retry',status:'PASS'});
+      await personality.locator('.ai-result-prose a[href="#kommunikation/lyssna"]').click();
+      await m.page.waitForURL(/#kommunikation\/lyssna$/);
+      const listening=m.page.locator('.comm-exercise[data-comm-skill="lyssna"]');
+      await listening.waitFor();
+      assert.equal(await listening.evaluate(node=>node.open),true,
+        'Model link opens the intended existing listening exercise');
+      records.push({role,step:'personality: listening exercise deeplink',status:'PASS'});
+      await m.page.goto(base+'#swipe',{waitUntil:'load'});
+      const swipe=m.page.locator('.swipe-results .ai-result-panel');
+      await swipe.locator('.ai-result-prose').waitFor();
+      assert.deepEqual(m.aiRequests.at(-1),{kind:'swipe',scope:'general'});
+      assert.equal(await swipe.locator('.ai-result-prose a').count(),2);
+      records.push({role,step:'swipe: legitimate links in summary',status:'PASS'});
+      m.aiFixture.failNext=true;
+      await swipe.locator('[data-ai-analysis-retry="swipe:general"]').click();
+      await swipe.getByRole('alert').getByText('Tillfälligt fel vid AI-analys.').waitFor();
+      assert.equal(await swipe.locator('.ai-result-prose a').count(),0);
+      records.push({role,step:'swipe: error removes obsolete links',status:'PASS'});
+      await swipe.locator('[data-ai-analysis-retry="swipe:general"]').click();
+      await swipe.locator('.ai-result-prose a[href="#kommunikation/kontakt"]').waitFor();
+      assert.equal(m.aiRequests.filter(x=>x.kind==='swipe'&&x.scope==='general').length,3);
+      await checkOverflow(m.page,'FUN-05 swipe AI '+role+' '+width+'px');
+      await capture(m.page,'fun-05-ai-swipe-retry-'+role+'.png');
+      records.push({role,step:'swipe: retry restores result',status:'PASS'});
+      await swipe.locator('.ai-result-prose a[href="#kommunikation/kontakt"]').click();
+      await m.page.waitForURL(/#kommunikation\/kontakt$/);
+      const contact=m.page.locator('.comm-exercise[data-comm-skill="kontakt"]');
+      await contact.waitFor();
+      assert.equal(await contact.evaluate(node=>node.open),true);
+      records.push({role,step:'swipe: contact exercise deeplink',status:'PASS'});
+    }finally{
+      await m.context.close();
+    }
+  }
+  await fs.writeFile(path.join(output,'fun-05-ai-reflection-retry-synthetic.json'),
+    JSON.stringify({kind:'synthetic-browser-functional-test',
+      environment:'Chromium 320px/390px with mock Auth and intercepted fake AI Worker',
+      authenticAccounts:false,realAi:false,physicalMobile:false,scenarios:records},null,2)+'\n');
+  console.log('FUN-05 analysis retry/routes: '+records.length+' synthetic role/step checks passed.');
+}
+
 async function verifyMediatorConversationLifecycle(){
   const rows=[];
   for(const role of ['parent','teen']){
@@ -3490,6 +3565,7 @@ try{
   await capture(d.page,"desktop-home.png");
   await d.context.close();
   await verifyMediatorConversationLifecycle();
+  await verifyAiReflectionRetryAndRoutes();
   await captureFunctionalInventory();
   await testAccountBrowserJourney();
   await verifyBrowserHistory();
