@@ -30,6 +30,16 @@ BEGIN
   IF v_bad_defaults <> 0 THEN
     RAISE EXCEPTION 'SEC-02 failed: postgres default table ACL still has % unnecessary grants',v_bad_defaults;
   END IF;
+
+  IF (SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+      WHERE n.nspname='public' AND c.relname IN
+        ('profiles','personality_answers','private_ai_chats','private_ai_messages','private_ai_memories')
+      AND c.relrowsecurity
+      AND has_table_privilege('authenticated',c.oid,'SELECT')
+      AND has_table_privilege('authenticated',c.oid,'INSERT')
+      AND has_table_privilege('authenticated',c.oid,'UPDATE'))<>5 THEN
+    RAISE EXCEPTION 'SEC-02 failed: owner-data RLS or ordinary authenticated privileges changed';
+  END IF;
 END
 $audit$;
 
