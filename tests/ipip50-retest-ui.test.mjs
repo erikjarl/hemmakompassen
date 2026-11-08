@@ -4,7 +4,7 @@ import {createPrivateIpipRetests,buildPrivateIpipRetestExport} from '../personal
 
 function makeBackend(){
   const attempts=[],answers=[],calls=[];
-  let owner='private-user',failNextAnswer=false,failDelete=false,failNextAnswerRead=false;
+  let owner='private-user',failNextAnswer=false,failDelete=false,failNextAnswerRead=false,failNextAttemptsRead=false;
   const db={
     from(table){
       assert.ok(['personality_test_attempts','personality_attempt_answers'].includes(table),
@@ -42,6 +42,10 @@ function makeBackend(){
             row.completed_at=payload.completed_at;calls.push('complete');
             return {data:{...row},error:null};
           }
+          if(op==='read'&&table==='personality_test_attempts'&&failNextAttemptsRead){
+            failNextAttemptsRead=false;
+            return {data:null,error:{message:'offline attempts history'}};
+          }
           if(op==='read'&&table==='personality_attempt_answers'&&failNextAnswerRead){
             failNextAnswerRead=false;
             return {data:null,error:{message:'offline read'}};
@@ -69,7 +73,8 @@ function makeBackend(){
     }
   };
   return {db,attempts,answers,calls,setOwner:v=>owner=v,failNext:()=>failNextAnswer=true,
-    setDeleteFailure:v=>failDelete=v,failAnswerRead:()=>failNextAnswerRead=true};
+    setDeleteFailure:v=>failDelete=v,failAnswerRead:()=>failNextAnswerRead=true,
+    failAttemptsRead:()=>failNextAttemptsRead=true};
 }
 const button=(action,attemptId)=>({closest:sel=>sel==='[data-ipip-retest]'?{dataset:{ipipRetest:action,attemptId}}:null});
 const radio=(item,value)=>({matches:sel=>sel==='input[data-ipip-retest-answer]',dataset:{ipipRetestAnswer:item},value:String(value)});
@@ -270,4 +275,78 @@ test('re-entering the retest page does not show a deleted draft as an active tes
   assert.match(ui.render(),/Starta en ny privat testomgång/);
   assert.doesNotMatch(ui.render(),/Fortsätt privat omtest/);
   assert.equal(b.attempts.length,0);
+});
+
+
+test('two private retests completed the same day have distinguishable history and accessible actions',async()=>{
+  const b=makeBackend(),downloads=[];
+  const ui=createPrivateIpipRetests({
+    db:b.db,renderOwnScores:score=>'<strong>Privat resultat '+score.answeredCount+' frågor</strong>',
+    saveExport:(_,data)=>downloads.push(data),
+    confirmDelete:()=>true
+  });
+  ui.reset('private-user');
+  await ui.load('private-user');
+  for(const value of [2,4]){
+    await ui.handleClick(button('new'));
+    for(let i=1;i<=50;i++){
+      await ui.handleChange(radio('ipip50-'+String(i).padStart(3,'0'),value));
+    }
+    await ui.handleClick(button('complete'));
+  }
+  assert.equal(b.attempts.length,2);
+  assert.equal(b.answers.length,100);
+  // The two completion timestamps can share the same date and minute.
+  const html=ui.render();
+  assert.match(html,/Omtest 1 av 2/);
+  assert.match(html,/Omtest 2 av 2/);
+  assert.equal((html.match(/data-ipip-retest="view"/g)||[]).length,2);
+  assert.match(html,/aria-label="Visa mitt resultat för Omtest 1 av 2/);
+  assert.match(html,/aria-label="Visa mitt resultat för Omtest 2 av 2/);
+  assert.match(html,/aria-label="Exportera omgången som JSON för Omtest 1 av 2/);
+  assert.match(html,/aria-label="Radera omgången för Omtest 2 av 2/);
+  assert.ok(!html.includes('private-user'),'History must not expose the account ID');
+  await ui.handleClick(button('view','attempt-1'));
+  assert.match(ui.render(),/Mitt privata omtest · Omtest 2 av 2/);
+  await ui.handleClick(button('view','attempt-2'));
+  assert.match(ui.render(),/Mitt privata omtest · Omtest 1 av 2/);
+  await ui.handleClick(button('export','attempt-2'));
+  assert.equal(downloads.length,1);
+  assert.equal(downloads[0].answered_count,50);
+  assert.equal(downloads[0].responses[0].value,4,
+    'Newer retest exports its own result rather than the older attempt');
+  await ui.handleClick(button('delete','attempt-1'));
+  assert.equal(b.attempts.length,1);
+  assert.equal(b.answers.length,50);
+  assert.match(ui.render(),/Omtest 1 av 1/);
+  assert.doesNotMatch(ui.render(),/Omtest 2 av 2/);
+  await ui.load('private-user');
+  assert.equal((ui.render().match(/data-ipip-retest="view"/g)||[]).length,1);
+  assert.equal(b.attempts[0].id,'attempt-2');
+  ui.reset('another-user');
+  await ui.load('another-user');
+  assert.doesNotMatch(ui.render(),/data-ipip-retest="view"/,
+    'Switching user does not leave previous private history in the view');
+  assert.match(ui.render(),/Ingen avslutad omgång ännu/);
+});
+
+test('failed private history load shows only retry, then restores distinguishable history',async()=>{
+  const b=makeBackend(),ui=createPrivateIpipRetests({db:b.db});
+  ui.reset('private-user');
+  await ui.load('private-user');
+  for(let i=0;i<2;i++){
+    await ui.handleClick(button('new'));
+    for(let n=1;n<=50;n++)await ui.handleChange(radio('ipip50-'+String(n).padStart(3,'0'),3));
+    await ui.handleClick(button('complete'));
+  }
+  b.failAttemptsRead();
+  await ui.load('private-user');
+  assert.match(ui.render(),/Det gick inte att hämta dina privata omtestningar/);
+  assert.match(ui.render(),/data-ipip-retest="reload"/);
+  assert.doesNotMatch(ui.render(),/data-ipip-retest="view"/,
+    'Historical results are not shown from stale cache during a server error');
+  await ui.handleClick(button('reload'));
+  assert.match(ui.render(),/Omtest 1 av 2/);
+  assert.match(ui.render(),/Omtest 2 av 2/);
+  assert.doesNotMatch(ui.render(),/data-ipip-retest="reload"/);
 });
