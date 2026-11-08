@@ -7,7 +7,8 @@ const functions=source.match(/function privateSwipeExportRows\(\)\{[\s\S]*?(?=\n
 assert.ok(functions,'Production export snapshot and formatter must exist');
 function harness(role='teen'){
  const env={
-  user:{id:'owner'},swipeLoadError:'',swipeBusy:false,importanceSaving:new Set(),
+  user:{id:'owner'},swipeLoadError:'',swipeBusy:false,
+  importanceAvailable:true,importanceLoadError:'',importanceSaving:new Set(),importancePending:new Map(),
   viewerRole:()=>role,
   GENERAL_CARDS:[
    {id:'general-01',type:'match',category:'Fritid',teenText:'En egen sak',parentText:'Förälderns perspektiv'},
@@ -57,6 +58,20 @@ function harness(role='teen'){
  e.user={id:'owner'};
  e.swipeBusy=true;
  assert.equal(e.rows(),null,'Cannot export while own write is pending');
+ e.swipeBusy=false;
+ e.importanceAvailable=false;
+ assert.equal(e.rows(),null,'Cannot silently omit importance ratings before server load');
+ e.importanceAvailable=true;
+ e.importanceLoadError='Failed fetching own ratings';
+ assert.equal(e.rows(),null,'Cannot silently omit private ratings after Supabase read failure');
+ e.importanceLoadError='';
+ e.importancePending.set('general\u0000general-01',{value:1});
+ assert.equal(e.rows(),null,'Queued private rating writes must finish before export');
+ e.importancePending.clear();
+ e.importanceSaving.add('general\u0000general-01');
+ assert.equal(e.rows(),null,'In-progress private rating writes must finish before export');
+ e.importanceSaving.clear();
+ assert.ok(e.rows()?.length,'Export resumes when complete private data has loaded and writes finished');
 }
 assert.match(source,/id="swipe-export-private"/,'A named export control exists');
 assert.match(source,/new Blob\(\['\\uFEFF',privateSwipeExportText\(rows\)\],\{type:'text\/plain;charset=utf-8'\}\)/,'UTF-8 BOM for Swedish text');
