@@ -1424,8 +1424,8 @@ async function verifyPairedRuleRevisionAndHistory(){
     assert.equal(fixture.ruleHistory.length,1);
     assert.equal(fixture.ruleHistory[0].body,original);
     await revisit(teen.page);
-    assert.equal(await teen.page.locator('#schyssta-rule-'+originalId).count(),0,
-      'FUN-03: old rule not duplicated in the active list');
+    assert.equal(await teen.page.locator('.schyssta-filter-group #schyssta-rule-'+originalId).count(),0,
+      'FUN-03: old rule no longer exists in active lists; the archived history entry remains');
     await teen.page.locator('#schyssta-rule-'+proposalId).getByText('Godkänd av båda').waitFor();
     const archive=teen.page.locator('#schyssta-history');
     await archive.waitFor();
