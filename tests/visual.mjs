@@ -1306,11 +1306,11 @@ try{
   const exported=await paired.page.evaluate(()=>window.__HK_COPIED_RULES__);
   assert.match(exported,/Vi frågar innan vi lånar saker/,'Copy includes accepted rules');
   assert.doesNotMatch(exported,/Vi får pausa gräl|Vi pratar om hur vi delar på sysslorna/,'Copy excludes proposals without two approvals');
-  const downloadPromise=paired.page.waitForEvent('download');
+  const schysstaDownloadPromise=paired.page.waitForEvent('download');
   await paired.page.getByRole('button',{name:'Ladda ner som textfil'}).click();
-  const download=await downloadPromise;
-  assert.equal(download.suggestedFilename(),'schyssta-listan-overenskommelser.txt');
-  const bytes=await fs.readFile(await download.path());
+  const schysstaDownload=await schysstaDownloadPromise;
+  assert.equal(schysstaDownload.suggestedFilename(),'schyssta-listan-overenskommelser.txt');
+  const bytes=await fs.readFile(await schysstaDownload.path());
   assert.equal(bytes[0],0xef,'Downloaded Swedish UTF-8 text has BOM for spreadsheet/notepad compatibility');
   assert.equal(bytes[1],0xbb);
   assert.equal(bytes[2],0xbf);
