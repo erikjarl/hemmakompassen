@@ -1114,6 +1114,67 @@ async function verifyInsightsTwoRolesAndStates(){
 }
 
 
+// FUN-04: exercise actual IPIP radio clicks when a response is lost or rejected.
+// These sessions use mock Supabase; never touch the real pilot accounts.
+async function verifyIpip50WriteAckBrowser(){
+ const records=[];
+ for(const role of ['parent','teen']){
+  const width=role==='parent'?390:320;
+  for(const scenario of ['ack-lost-after-commit','rejected-before-commit','readback-unavailable']){
+   const m=await freshContext({viewport:{width,height:844},deviceScaleFactor:1,
+     isMobile:true,hasTouch:true},{authenticated:true,paired:false,role});
+   try{
+    const page=m.page;
+    await page.goto(base+'#personlighet',{waitUntil:'load'});
+    await page.getByRole('button',{name:'Börja testet'}).click();
+    await page.getByText('Fråga 1 av 50').waitFor();
+    await page.evaluate(scenario=>{
+      window.__HK_PERSONALITY_WRITE_COUNT__=0;
+      window.__HK_PERSONALITY_READBACK_COUNT__=0;
+      window.__HK_TEST_PF_FAIL_AFTER_WRITE__=scenario!=='rejected-before-commit';
+      window.__HK_TEST_PF_FAIL_BEFORE_WRITE__=scenario==='rejected-before-commit';
+      window.__HK_TEST_PF_RECHECK_READ_FAIL__=scenario==='readback-unavailable';
+    },scenario);
+    await page.locator('input[data-pf-answer="ipip50-001"][value="4"]').check();
+    if(scenario==='ack-lost-after-commit'){
+      await page.getByText('Fråga 2 av 50').waitFor();
+      assert.equal(await page.locator('[data-pf-action="verify-save"]').count(),0);
+    }else if(scenario==='rejected-before-commit'){
+      await page.locator('.pf-status').getByText(/kunde inte bekräftas som sparat/i).waitFor();
+      assert.match(await page.locator('.pf-survey').innerText(),/Fråga 1 av 50/);
+      assert.equal(await page.locator('[data-pf-action="verify-save"]').count(),0);
+      await page.locator('input[data-pf-answer="ipip50-001"][value="3"]').check();
+      await page.getByText('Fråga 2 av 50').waitFor();
+      assert.equal(await page.evaluate(()=>window.__HK_PERSONALITY_SAVE__?.row?.answer?.value),3);
+    }else{
+      await page.locator('.pf-status').getByText(/går inte att kontrollera om svaret sparades/i).waitFor();
+      await page.getByRole('button',{name:'Kontrollera sparat svar'}).click();
+      await page.getByRole('button',{name:'Fortsätt testet'}).waitFor();
+      assert.match(await page.locator('.pf-overview').innerText(),/1 av 50/);
+      await page.getByRole('button',{name:'Fortsätt testet'}).click();
+      await page.getByText('Fråga 2 av 50').waitFor();
+    }
+    assert.equal(await page.evaluate(()=>window.__HK_PERSONALITY_READBACK_COUNT__),1);
+    assert.equal(await page.evaluate(()=>window.__HK_PERSONALITY_WRITE_COUNT__),
+      scenario==='rejected-before-commit'?2:1);
+    const row=await page.evaluate(()=>window.__HK_PERSONALITY_SAVE__?.row);
+    assert.equal(row?.user_id,role==='teen'
+      ?'10000000-0000-0000-0000-000000000002'
+      :'10000000-0000-0000-0000-000000000001');
+    assert.equal(row?.instrument_id,'ipip50-sv-v1');
+    assert.equal(row?.question_id,'ipip50-001');
+    assert.equal(row?.answer?.value,scenario==='rejected-before-commit'?3:4);
+    await checkOverflow(page,'FUN-04 write ACK '+role+' '+scenario);
+    records.push({role,width,scenario,passed:true});
+   }finally{await m.context.close();}
+  }
+ }
+ await fs.writeFile(path.join(output,'fun-04-ipip50-answer-ack-browser-synthetic.json'),
+   JSON.stringify({method:'Chromium IPIP-50 radio clicks with intercepted private answer writes and owner-scoped readback',
+     limitations:'Only mocked Auth/Supabase; not two real authenticated accounts or physical Safari',records},null,2)+'\n');
+ console.log('FUN-04 IPIP-50 ACK: '+records.length+' synthetic Chromium cases passed.');
+}
+
 // FUN-04: complete the actual IPIP-50 survey UI for both mocked roles;
 // pause, navigate away, resume, revise a saved answer, finish, export and
 // reopen. All answers are stored only in the in-memory Chromium stand-in.
@@ -2124,8 +2185,44 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
               select(){return {eq(){return {eq(){return {async maybeSingle(){return {data:personalityConsent?{share_enabled:true}:null,error:null};}}}}}};}
             };
             if(table==='personality_answers')return {
-              select(){return {eq(){return {async eq(){return {data:[...personalityAnswers].map(([id,value])=>({question_id:id,answer:{value}})),error:null};}}}};},
-              async upsert(row,options){personalityAnswers.set(row.question_id,row.answer.value);window.__HK_PERSONALITY_SAVE__={row,options};return {error:null};}
+              select(columns){
+                const filters={};
+                const matching=()=>[...personalityAnswers].map(([id,value])=>({
+                  question_id:id,answer:{value}
+                })).filter(row=>!filters.question_id||row.question_id===filters.question_id);
+                const query={
+                  eq(key,value){filters[key]=value;return query;},
+                  async maybeSingle(){
+                    window.__HK_PERSONALITY_READBACK_COUNT__=(window.__HK_PERSONALITY_READBACK_COUNT__||0)+1;
+                    if(columns!=='question_id,answer'||filters.user_id!==current()?.id||
+                      filters.instrument_id!=='ipip50-sv-v1'||!filters.question_id)
+                      return {data:null,error:{message:'Invalid own-answer readback'}};
+                    if(window.__HK_TEST_PF_RECHECK_READ_FAIL__){
+                      window.__HK_TEST_PF_RECHECK_READ_FAIL__=false;
+                      return {data:null,error:{message:'Synthetic IPIP-50 readback offline'}};
+                    }
+                    return {data:matching()[0]||null,error:null};
+                  },
+                  then(resolve,reject){
+                    return Promise.resolve({data:matching(),error:null}).then(resolve,reject);
+                  }
+                };
+                return query;
+              },
+              async upsert(row,options){
+                window.__HK_PERSONALITY_WRITE_COUNT__=(window.__HK_PERSONALITY_WRITE_COUNT__||0)+1;
+                if(window.__HK_TEST_PF_FAIL_BEFORE_WRITE__){
+                  window.__HK_TEST_PF_FAIL_BEFORE_WRITE__=false;
+                  return {error:{message:'Synthetic IPIP-50 write rejected'}};
+                }
+                personalityAnswers.set(row.question_id,row.answer.value);
+                window.__HK_PERSONALITY_SAVE__={row,options};
+                if(window.__HK_TEST_PF_FAIL_AFTER_WRITE__){
+                  window.__HK_TEST_PF_FAIL_AFTER_WRITE__=false;
+                  return {error:{message:'Synthetic IPIP-50 acknowledgement lost'}};
+                }
+                return {error:null};
+              }
             };
             if(table==='profiles')return {select(){return {eq(){return {async maybeSingle(){return {data:current()?{display_name:window.__HK_TEST_ROLE__==='teen'?'Provtonåring':'Provförälder'}:null,error:null}}}}}}};
             if(table==='swipe_answers')return {
@@ -4404,6 +4501,7 @@ try{
   await verifyImportanceWriteAckBrowser();
   await verifyAllThemeDeckJourneys();
   await verifyInsightsTwoRolesAndStates();
+  await verifyIpip50WriteAckBrowser();
   await verifyFullPersonalitySurvey();
   await verifyFullPrivateRetest();
   await verifyDistinctPrivateRetestHistory();
