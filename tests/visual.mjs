@@ -3184,7 +3184,7 @@ try{
   await paired.page.waitForFunction(()=>typeof window.__HK_RETRY_COPIED_RULES__==='string');
   assert.equal(await paired.page.locator('#schyssta-copy-fallback').count(),0,
     'Manual fallback disappears after successful clipboard retry');
-  assert.match(await paired.page.locator('.schyssta-feedback').innerText(),/kopierats/);
+  assert.match(await paired.page.locator('[data-schyssta-filter-group="approved"] .schyssta-feedback').innerText(),/kopierats/);
   const schysstaDownloadPromise=paired.page.waitForEvent('download');
   await paired.page.getByRole('button',{name:'Ladda ner som textfil'}).click();
   const schysstaDownload=await schysstaDownloadPromise;
