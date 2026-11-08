@@ -5,9 +5,13 @@ import vm from 'node:vm';
 const source=readFileSync(new URL('../live-app.js',import.meta.url),'utf8');
 const extracted=source.match(/async function saveSwipeAnswer\([\s\S]*?(?=\nfunction nextVisibleAfter)/);
 assert.ok(extracted,'General swipe save and skip functions exist');
+const helperStart=source.indexOf('async function reconcileOwnSwipeAnswer(row){');
+const helperEnd=source.indexOf('async function saveThemeAnswer(direction,index,deckId,viewer,session){',helperStart);
+assert.ok(helperStart>=0&&helperEnd>helperStart,'Load actual own-answer readback helpers into VM');
+const helpers=source.slice(helperStart,helperEnd);
 
 function harness({upsert=async()=>({error:null}),rpc=async()=>({error:null})}={}){
-  const calls={writes:0,rpcs:[],renders:0,matches:0,unlocks:0,reviewReturns:0};
+  const calls={writes:0,readbacks:0,rpcs:[],renders:0,matches:0,unlocks:0,reviewReturns:0};
   const state={
     user:{id:'parent'},sharedSession:7,swipeBusy:true,swipeReview:false,swipeSkippedReview:false,swipeSaveError:'',swipeIndex:1,generalReviewEdit:null,
     swipeAnswers:new Map([['general-01',true]]),skippedUnderstanding:new Set(),understandingShares:new Set(),members:[{role:'parent'},{role:'teen'}],
@@ -17,11 +21,13 @@ function harness({upsert=async()=>({error:null}),rpc=async()=>({error:null})}={}
     $:()=>({textContent:''}),render:()=>{calls.renders++;},reopenGeneralReview:()=>{calls.reviewReturns++;},
     fetchSwipeMatches:()=>{calls.matches++;},fetchThemeUnlock:()=>{calls.unlocks++;},
     db:{
-      from:table=>{assert.equal(table,'swipe_answers');return {upsert:(row,options)=>{calls.writes++;assert.equal(options.onConflict,'user_id,deck_id,card_id');return upsert(row);}}},
+      from:table=>{assert.equal(table,'swipe_answers');const chain={eq:()=>chain,async maybeSingle(){calls.readbacks++;return {data:null,error:null};}};
+       return {select:columns=>{assert.equal(columns,'deck_id,card_id,answer');return chain;},
+         upsert:(row,options)=>{calls.writes++;assert.equal(options.onConflict,'user_id,deck_id,card_id');return upsert(row);}};},
       rpc:(name,args)=>{calls.rpcs.push({name,args});return rpc(name,args);},
     },
   };
-  vm.runInNewContext(extracted[0]+'\nthis.run=saveSwipeAnswer;this.skip=skipUnderstandingCard;',state);
+  vm.runInNewContext(helpers+'\n'+extracted[0]+'\nthis.run=saveSwipeAnswer;this.skip=skipUnderstandingCard;',state);
   return {state,calls};
 }
 
@@ -63,7 +69,8 @@ function harness({upsert=async()=>({error:null}),rpc=async()=>({error:null})}={}
 {
   const h=harness({upsert:async()=>{throw Error('synthetic network failure');}});
   await h.state.run('yes',1,'parent',7);
-  assert.match(h.state.swipeSaveError,/kunde inte sparas/,'A rejected upsert shows a recoverable error');
+  assert.match(h.state.swipeSaveError,/kunde inte bekräftas som sparat/,'A rejected upsert keeps the card with an accurate recoverable status');
+  assert.equal(h.calls.readbacks,1,'Rejected write checks current persisted answer once');
   assert.equal(h.calls.renders,1);
   assert.equal(h.calls.matches,0);
 }

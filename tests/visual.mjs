@@ -542,6 +542,70 @@ async function verifyBrowserHistory(){
     ' role/viewport history-route assertions passed in synthetic Chromium.');
 }
 
+// FUN-02: the browser may lose a write acknowledgement after the real answer
+// was saved. Exercise the production readback path with role/deck-specific clicks.
+async function verifySwipeAnswerWriteRecheck(){
+ const records=[];
+ for(const role of ['parent','teen']){
+  const width=role==='parent'?390:320;
+  for(const deck of ['general','forandring']){
+   for(const scenario of ['ack-lost-after-write','write-rejected','readback-unavailable']){
+    const m=await freshContext(
+     {viewport:{width,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true},
+     {authenticated:true,paired:deck!=='general',unlocked:deck!=='general',role}
+    );
+    try{
+     const page=m.page;
+     await page.goto(base+'#swipe',{waitUntil:'load'});
+     if(deck!=='general'){
+      await page.locator('[data-theme-open="forandring"]').click();
+      await page.locator('#swipe-card[aria-label^="Temakort 1 av 8"]').waitFor();
+     }
+     const card=page.locator('#swipe-card');
+     await card.waitFor();
+     const original=await card.getAttribute('aria-label');
+     const cardId=await page.locator('[data-importance]').getAttribute('data-card-id');
+     assert.equal(cardId,deck==='general'?'general-01':'forandring-01',
+      'Each case starts with a fresh ordinary A card');
+     await page.evaluate(scenario=>{
+      window.__HK_SWIPE_UPSERT_CALLS__=0;window.__HK_SWIPE_READBACK_COUNT__=0;
+      window.__HK_TEST_SWIPE_FAIL_AFTER_WRITE__=scenario!=='write-rejected';
+      window.__HK_TEST_SWIPE_FAIL_BEFORE_WRITE__=scenario==='write-rejected';
+      window.__HK_TEST_SWIPE_RECHECK_READ_FAIL__=scenario==='readback-unavailable';
+     },scenario);
+     await page.locator('.swipe-actions [data-swipe="yes"]').click();
+     if(scenario==='ack-lost-after-write'){
+      await page.waitForFunction(before=>document.querySelector('#swipe-card')?.getAttribute('aria-label')!==before,original);
+      assert.equal(await page.evaluate(()=>window.__HK_SWIPE_READBACK_COUNT__),1,
+       'Lost write acknowledgement gets exactly one own-answer readback');
+      assert.equal(await page.evaluate(()=>window.__HK_SWIPE_UPSERT_CALLS__),1,
+       'Acknowledgement loss does not cause a duplicate write');
+     }else{
+      await page.locator('#swipe-save-status').getByText(scenario==='write-rejected'
+       ?/kunde inte bekräftas som sparat med ditt val/
+       :/går inte att kontrollera om ditt svar sparats/).waitFor();
+      assert.equal(await card.getAttribute('aria-label'),original,
+       'Unconfirmed write must not advance the card');
+      assert.equal(await page.evaluate(()=>window.__HK_SWIPE_READBACK_COUNT__),1);
+      // A voluntary second click after checking the result may retry safely.
+      await page.locator('.swipe-actions [data-swipe="yes"]').click();
+      await page.waitForFunction(before=>document.querySelector('#swipe-card')?.getAttribute('aria-label')!==before,original);
+      assert.equal(await page.evaluate(()=>window.__HK_SWIPE_UPSERT_CALLS__),2);
+     }
+     const stored=await page.evaluate(id=>window.__HK_SAVED_SWIPE__?.row?.card_id===id&&window.__HK_SAVED_SWIPE__?.row?.answer===true,cardId);
+     assert.equal(stored,true,'Final stored record belongs to the intended A card');
+     if(deck!=='general')assert.match(await card.getAttribute('aria-label'),/^Temakort 2 av 8/);
+     records.push({role,deck,scenario,passed:true});
+    }finally{await m.context.close();}
+   }
+  }
+ }
+ await fs.writeFile(path.join(output,'fun-02-answer-write-recheck-synthetic.json'),
+  JSON.stringify({method:'Chromium click journeys with one-shot simulated Supabase write acknowledgement loss and exact answer readback',
+   limitations:'Mock Auth/RPC and ephemeral in-memory answers, no live Supabase or physical Safari',records},null,2)+'\n');
+ console.log('FUN-02 answer readback: '+records.length+' synthetic Chromium role/deck/error cases passed.');
+}
+
 // FUN-02: an in-progress private importance write blocks an answer without
 // swallowing the click silently. Both the general and a theme deck are tested.
 async function verifyImportancePendingAnswerFeedback(){
@@ -1880,8 +1944,38 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
             };
             if(table==='profiles')return {select(){return {eq(){return {async maybeSingle(){return {data:current()?{display_name:window.__HK_TEST_ROLE__==='teen'?'Provtonåring':'Provförälder'}:null,error:null}}}}}}};
             if(table==='swipe_answers')return {
-              select(){return {async eq(){return {data:[...answers.values()],error:null}}}},
-              async upsert(row,options){answers.set(row.card_id,row);window.__HK_SAVED_SWIPE__={row,options};return {error:null}}
+              select(){
+                const filters={};
+                const values=()=>[...answers.values()].filter(row=>Object.entries(filters).every(([key,value])=>
+                  (key==='user_id'&&!row.user_id)||row[key]===value));
+                const query={
+                  eq(key,value){filters[key]=value;return query;},
+                  async maybeSingle(){
+                    window.__HK_SWIPE_READBACK_COUNT__=(window.__HK_SWIPE_READBACK_COUNT__||0)+1;
+                    if(window.__HK_TEST_SWIPE_RECHECK_READ_FAIL__){
+                      window.__HK_TEST_SWIPE_RECHECK_READ_FAIL__=false;
+                      return {data:null,error:{message:'Synthetic answer readback unavailable'}};
+                    }
+                    return {data:values()[0]||null,error:null};
+                  },
+                  then(resolve,reject){return Promise.resolve({data:values(),error:null}).then(resolve,reject);}
+                };
+                return query;
+              },
+              async upsert(row,options){
+                window.__HK_SWIPE_UPSERT_CALLS__=(window.__HK_SWIPE_UPSERT_CALLS__||0)+1;
+                if(window.__HK_TEST_SWIPE_FAIL_BEFORE_WRITE__){
+                  window.__HK_TEST_SWIPE_FAIL_BEFORE_WRITE__=false;
+                  return {error:{message:'Synthetic write rejected'}};
+                }
+                answers.set(row.card_id,row);
+                window.__HK_SAVED_SWIPE__={row,options};
+                if(window.__HK_TEST_SWIPE_FAIL_AFTER_WRITE__){
+                  window.__HK_TEST_SWIPE_FAIL_AFTER_WRITE__=false;
+                  return {error:{message:'Synthetic acknowledgement lost'}};
+                }
+                return {error:null};
+              }
             };
             if(table==='swipe_skips')return {select(){return {async eq(){return {data:[...skips.values()],error:null}}}}};
             if(table==='swipe_importance')return {
@@ -4059,6 +4153,7 @@ try{
   await testAccountBrowserJourney();
   await verifyBrowserHistory();
   await verifyTouchMobileTabStrip();
+  await verifySwipeAnswerWriteRecheck();
   await verifyImportancePendingAnswerFeedback();
   await verifyAllThemeDeckJourneys();
   await verifyInsightsTwoRolesAndStates();
