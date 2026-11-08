@@ -1804,21 +1804,29 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
     });
   }
   const aiRequests=[];
+  const aiFixture={failNext:false};
   if(aiAnalyses){
     await context.route('https://hemmakompassen-ai-medlare.erikbertiljarl.workers.dev/api/ai/analyze',async route=>{
       const body=route.request().postDataJSON();
       aiRequests.push(body);
-      await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({
-        kind:body.kind,scope:body.scope,reply:'Ert resultat kan vara en bra samtalsstart. Vad fungerar redan?',
-        basis:'Enbart serververifierade resultat; syntetisk testsituation.'
-      })});
+      if(aiFixture.failNext){
+        aiFixture.failNext=false;
+        await route.fulfill({status:503,contentType:'application/json',
+          body:JSON.stringify({error:'Tillfälligt fel vid AI-analys.'})});
+      }else{
+        await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({
+          kind:body.kind,scope:body.scope,
+          reply:'Ert resultat kan vara en bra samtalsstart.\n\nReflektion: En påhittad adress #kommunikation/losning-extra ska inte länkas.\n\nFörslag:\n1. Prova att lyssna en stund. #kommunikation/lyssna\n2. Ta en liten gemensam kontaktstund. #kommunikation/kontakt',
+          basis:'Enbart serververifierade resultat; syntetisk testsituation.'
+        })});
+      }
     });
   }
   const page=await context.newPage();
   page.on("pageerror",e=>errors.push(e.message));
   // Ignore external font/network warnings; JavaScript exceptions are checked via pageerror.
   await page.goto(base+"#hem",{waitUntil:"load"});
-  return {context,page,mediatorCalls,mediatorFixture,aiRequests};
+  return {context,page,mediatorCalls,mediatorFixture,aiRequests,aiFixture};
 }
 // FUN-05: real DOM interactions against an isolated, stateful fake Worker.
 // The test does not authenticate any real account or invoke a live model.
