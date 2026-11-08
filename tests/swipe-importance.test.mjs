@@ -20,7 +20,9 @@ assert.match(app,/aria-valuetext/);
 assert.match(app,/from\('swipe_importance'\)\.select\('deck_id,card_id,importance'\)\.eq\('user_id',viewer\)/);
 assert.match(app,/from\('swipe_importance'\)\.upsert\(row,\{onConflict:'user_id,deck_id,card_id'\}\)/);
 assert.match(app,/e\.target\.closest\?\.\('\[data-importance-control\]'\)/,'Slider pointer input must not start a card swipe');
-assert.match(app,/if\(swipeBusy\|\|importanceSaving\.size\|\|page\(\)!=='swipe'/,'A card cannot advance while its importance is unsaved');
+assert.match(app,/if\(importanceSaving\.size\)\{explainImportancePendingSwipe\(\);return;\}/,'A card cannot advance silently while its importance is unsaved');
+assert.match(app,/const IMPORTANCE_WAIT_MESSAGE=/,'A waiting status describes what users need to do');
+assert.match(app,/if\(swipeStatus\?\.textContent===IMPORTANCE_WAIT_MESSAGE\)/,'Last save completion replaces obsolete waiting text');
 assert.doesNotMatch(app,/localStorage/,'Private importance must never fall back to browser storage');
 
 assert.match(css,/\.swipe-importance\{[\s\S]*?position:relative/,'Importance stays in the normal card layout');
