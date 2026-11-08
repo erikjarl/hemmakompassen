@@ -1154,7 +1154,8 @@ function filterPrivateGeneralReview(){
 }
 function reopenGeneralReview(){
  const state=generalReviewEdit;generalReviewEdit=null;
- swipeReview=false;swipeSkippedReview=false;swipeIndex=STATEMENTS.length;
+ swipeReview=state?.reviewBefore===true;swipeSkippedReview=state?.skippedBefore===true;
+ swipeIndex=Number.isSafeInteger(state?.indexBefore)?state.indexBefore:nextUnanswered();
  render();
  const root=$('swipe-general-review');if(!root)return;
  const details=root.querySelector('details');if(details)details.open=true;
@@ -1835,6 +1836,7 @@ if(generalReviewButton&&page()==='swipe'&&!activeThemeDeck&&user&&!swipeBusy){
  if(id&&visibleGeneralIndices().includes(index)&&(swipeAnswers.has(id)||
    (viewerRole()==='teen'&&GENERAL_CARDS[index]?.type==='understanding'&&skippedUnderstanding.has(id)))){
   generalReviewEdit={index,viewer:user.id,session:sharedSession,
+   indexBefore:swipeIndex,reviewBefore:swipeReview,skippedBefore:swipeSkippedReview,
    search:String($('swipe-general-review-search')?.value||'').slice(0,120),
    filter:$('swipe-general-review-answer')?.value||'all'};
   swipeReview=true;swipeSkippedReview=false;swipeIndex=index;render();
