@@ -896,6 +896,65 @@ async function verifyFullPersonalitySurvey(){
 }
 
 
+// PF-05: two server-like completed attempts on one day, actual browser actions.
+// A synthetic in-memory backend is seeded; no real user's answers are accessed.
+async function verifyDistinctPrivateRetestHistory(){
+  const records=[];
+  for(const role of ['parent','teen']){
+    const width=role==='parent'?390:320;
+    const m=await freshContext(
+      {viewport:{width,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},
+      {authenticated:true,paired:false,role,personalityComplete:true,
+        privateRetests:true,preloadedRetestHistory:true}
+    );
+    try{
+      const page=m.page;
+      await page.goto(base+'#personlighet',{waitUntil:'load'});
+      const rows=page.locator('.pf-retest-list > li');
+      await page.waitForFunction(()=>document.querySelectorAll('.pf-retest-list > li').length===2);
+      assert.match(await rows.nth(0).innerText(),/Omtest 1 av 2/);
+      assert.match(await rows.nth(1).innerText(),/Omtest 2 av 2/);
+      assert.match(await rows.nth(0).locator('[data-ipip-retest="view"]').getAttribute('aria-label'),
+        /Visa mitt resultat för Omtest 1 av 2/);
+      assert.match(await rows.nth(1).locator('[data-ipip-retest="delete"]').getAttribute('aria-label'),
+        /Radera omgången för Omtest 2 av 2/);
+      records.push({role,step:'same-day history has distinct visible and accessible actions',passed:true});
+      await rows.nth(1).locator('[data-ipip-retest="view"]').click();
+      await page.locator('.pf-retest-history h3').getByText(/Omtest 2 av 2/).waitFor();
+      await rows.nth(0).locator('[data-ipip-retest="view"]').click();
+      await page.locator('.pf-retest-history h3').getByText(/Omtest 1 av 2/).waitFor();
+      records.push({role,step:'opens older then newer private result by row',passed:true});
+      const downloadPromise=page.waitForEvent('download');
+      await rows.nth(1).locator('[data-ipip-retest="export"]').click();
+      const file=await downloadPromise;
+      const payload=JSON.parse(await fs.readFile(await file.path(),'utf8'));
+      assert.equal(payload.answered_count,50);
+      assert.equal(payload.responses[0].value,2,'Older attempt export is not the newer attempt');
+      assert.equal(Object.hasOwn(payload,'user_id'),false);
+      assert.equal(Object.hasOwn(payload,'attempt_id'),false);
+      records.push({role,step:'exports only selected older attempt',passed:true});
+      page.once('dialog',dialog=>dialog.accept());
+      await rows.nth(0).locator('[data-ipip-retest="delete"]').click();
+      await page.waitForFunction(()=>document.querySelectorAll('.pf-retest-list > li').length===1);
+      assert.match(await rows.first().innerText(),/Omtest 1 av 1/);
+      assert.equal(await page.locator('.pf-retest-empty').count(),0);
+      assert.equal(await page.locator('[data-ipip-retest="view"]').count(),1);
+      await checkOverflow(page,'PF-05 multiple retests '+role+' '+width+'px');
+      await capture(page,'pf-05-distinct-retest-history-'+role+'.png');
+      records.push({role,step:'delete newest leaves older retest and relabels history',passed:true});
+    }finally{
+      await m.context.close();
+    }
+  }
+  await fs.writeFile(path.join(output,'pf-05-distinct-retest-history-synthetic.json'),
+    JSON.stringify({
+      method:'Real Chromium clicks in parent 390px and teen 320px, preloaded synthetic private attempt table',
+      limitations:'Mocked Auth/database; no verified signed-in accounts, physical Safari or screen reader.',
+      cases:records
+    },null,2)+'\n');
+  console.log('PF-05 distinct retest history: '+records.length+' synthetic role/step checks passed.');
+}
+
 // FUN-04.05: finish a fresh private 50-item retest through real browser controls,
 // open its saved history, and export the completed JSON. Only in-memory mock data
 // is changed; the original IPIP-50 responses are not modified.
@@ -3839,6 +3898,7 @@ try{
   await verifyInsightsTwoRolesAndStates();
   await verifyFullPersonalitySurvey();
   await verifyFullPrivateRetest();
+  await verifyDistinctPrivateRetestHistory();
   await verifyCommunicationForms();
   await verifyAllCommunicationExercises();
   await verifyPairedTwoRoleExchange();
