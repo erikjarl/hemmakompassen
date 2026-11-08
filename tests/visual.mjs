@@ -615,6 +615,84 @@ async function verifyLongThemeDeckJourneys(){
 }
 function cardIdForDeck(deck){return deck+'-01';}
 
+
+// FUN-02.05: two-role shared-insights UI paths, including revoked, malformed,
+// error and retry states. Uses mocked RPCs only, never real family responses.
+async function verifyInsightsTwoRolesAndStates(){
+  const records=[];
+  for(const role of ['parent','teen']){
+    const width=role==='parent'?390:320;
+    const {page,context}=await freshContext(
+      {viewport:{width,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true},
+      {authenticated:true,paired:true,role,unlocked:true}
+    );
+    try{
+      await page.goto(base+'#insikter',{waitUntil:'load'});
+      await page.waitForFunction(()=>document.querySelectorAll('.insights-deck .swipe-match-list li').length===3);
+      assert.equal(await page.locator('.insights-deck').count(),2);
+      const b=await page.locator('#insights-understanding').innerText();
+      if(role==='teen'){
+        assert.match(b,/Jag vill helst prata färdigt innan någon kommer med råd/);
+        assert.doesNotMatch(b,/Tonåringen vill få prata färdigt innan du kommer med råd/);
+      }else{
+        assert.match(b,/Tonåringen vill få prata färdigt innan du kommer med råd/);
+        assert.doesNotMatch(b,/Jag vill helst prata färdigt innan någon kommer med råd/);
+      }
+      await checkOverflow(page,'FUN-02 insights '+role+' initial');
+      records.push({role,case:'matched-A-and-role-specific-B',passed:true});
+
+      // A and B shares both withdrawn from simulated RPC results.
+      await page.evaluate(()=>{
+        window.__HK_TEST_SHARED_MATCHES__=[];
+        window.__HK_TEST_SET_SHARED_B__([]);
+      });
+      await page.locator('#insights-retry').click();
+      await page.waitForFunction(()=>document.querySelector('.insights-view')?.textContent?.includes('Inga gemensamma ja-svar att visa ännu'));
+      assert.equal(await page.locator('.insights-deck').count(),0);
+      assert.match(await page.locator('#insights-understanding').innerText(),/Inga förståelsekort är aktivt delade/);
+      records.push({role,case:'zero-A-and-revoked-B-empty-state',passed:true});
+
+      // Mixed rows include wrong deck, NO and an obsolete ID. None are shown.
+      await page.evaluate(()=>{
+        window.__HK_TEST_SHARED_MATCHES__=[
+          {deck_id:'aktiviteter',card_id:'aktiviteter-01',answer:true},
+          {deck_id:'aktiviteter',card_id:'aktiviteter-02',answer:false},
+          {deck_id:'general',card_id:'general-02',answer:true},
+          {deck_id:'samtal',card_id:'samtal-999',answer:true}
+        ];
+        window.__HK_TEST_SET_SHARED_B__(['general-02']);
+      });
+      await page.locator('#insights-retry').click();
+      await page.locator('#insights-deck-aktiviteter').waitFor();
+      assert.equal(await page.locator('.insights-deck').count(),1);
+      assert.equal(await page.locator('.insights-deck .swipe-match-list li').count(),1);
+      assert.equal(await page.locator('[data-insight-activity]').count(),1);
+      assert.match(await page.locator('#insights-understanding').innerText(),/prata färdigt/);
+      records.push({role,case:'allowlisted-A-and-independent-B',passed:true});
+
+      // A failing RPC must erase both current A and B, and retry must recover.
+      await page.evaluate(()=>{window.__HK_RPC_UNAVAILABLE__=true;});
+      await page.locator('#insights-retry').click();
+      await page.locator('.insights-view [role="alert"]').waitFor();
+      assert.equal(await page.locator('.insights-deck').count(),0);
+      assert.equal(await page.locator('#insights-understanding').count(),0);
+      await page.evaluate(()=>{window.__HK_RPC_UNAVAILABLE__=false;});
+      await page.locator('#insights-retry').click();
+      await page.locator('#insights-deck-aktiviteter').waitFor();
+      assert.equal(await page.locator('.insights-deck .swipe-match-list li').count(),1);
+      await checkOverflow(page,'FUN-02 insights '+role+' after retry');
+      records.push({role,case:'failed-RPC-clears-and-retry-reloads',passed:true});
+    }finally{
+      await context.close();
+    }
+  }
+  await fs.writeFile(path.join(output,'fun-02-insights-role-states-synthetic.json'),
+    JSON.stringify({method:'actual Chromium controls and mocked all-deck RPCs',
+      limitations:'Not real Auth, real consent changes, live Supabase or a physical phone.',
+      records},null,2)+'\n');
+  console.log('FUN-02 insights: '+records.length+' synthetic role/state cases passed.');
+}
+
 async function freshContext(options,{authenticated=false,paired=false,role="parent",unlocked=false,unlockUnavailable=false,priorityUnavailable=false,priorityFeature=true,privateImportance=false,importanceReadFailure=false,preansweredGeneral=false,preansweredSkipped=false,emptySchyssta=false,homeUnreadFailure=false,personalityComplete=false,personalitySharing=false,personalityPartnerShared=false,privateRetests=false,aiMediator=false,aiAnalyses=false,activityNotifications=false}={}){
   const context=await browser.newContext({...options,locale:"sv-SE",reducedMotion:"reduce"});
   await context.addInitScript(value=>{window.__HK_TEST_USER__=value.user;window.__HK_TEST_PAIRED__=value.paired;window.__HK_TEST_ROLE__=value.role;window.__HK_TEST_UNLOCKED__=value.unlocked;window.__HK_UNLOCK_RPC_UNAVAILABLE__=value.unlockUnavailable;window.__HK_PRIORITY_RPC_UNAVAILABLE__=value.priorityUnavailable;window.__HK_PRIORITISED_TEEN__=value.privateImportance;window.__HK_IMPORTANCE_READ_FAIL__=value.importanceReadFailure;window.__HK_PREANSWERED_GENERAL__=value.preansweredGeneral;window.__HK_PREANSWERED_SKIPPED__=value.preansweredSkipped;window.__HK_SCHYSSTA_EMPTY__=value.emptySchyssta;window.__HK_HOME_UNREAD_FAILURE__=value.homeUnreadFailure;window.__HK_TEST_PERSONALITY_DONE__=value.personalityComplete;window.__HK_TEST_PERSONALITY_PARTNER_SHARED__=value.personalityPartnerShared;},{personalityPartnerShared,personalityComplete,emptySchyssta,homeUnreadFailure,preansweredGeneral,preansweredSkipped,user:authenticated?{id:role==="teen"?"10000000-0000-0000-0000-000000000002":"10000000-0000-0000-0000-000000000001",email:"synthetic@example.invalid"}:null,paired,role,unlocked,unlockUnavailable,priorityUnavailable,privateImportance,importanceReadFailure});
@@ -2486,6 +2564,7 @@ try{
   await testAccountBrowserJourney();
   await verifyBrowserHistory();
   await verifyAllThemeDeckJourneys();
+  await verifyInsightsTwoRolesAndStates();
   assert.deepEqual(errors,[],"Browser errors: "+errors.join("; "));
   await fs.writeFile(path.join(output,"visual-audit.json"),JSON.stringify({
     purpose:"Playwright responsive visual review",
