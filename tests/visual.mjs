@@ -737,6 +737,117 @@ async function verifyImportancePendingAnswerFeedback(){
  console.log('FUN-02: '+records.length+' pending-importance UI cases passed in synthetic Chromium.');
 }
 
+// FUN-02-IMPORTANCE-ACK-02: exercise the production importance readback
+// from real range change events, not just the isolated Node helper.
+async function verifyImportanceWriteAckBrowser(){
+ const records=[];
+ const setRating=async(page,value)=>{
+   await page.locator('#swipe-card [data-importance]').evaluate((el,next)=>{
+     el.value=String(next);
+     el.dispatchEvent(new Event('input',{bubbles:true}));
+     el.dispatchEvent(new Event('change',{bubbles:true}));
+   },value);
+ };
+ for(const role of ['parent','teen']){
+  const width=role==='parent'?390:320;
+  for(const deck of ['general','forandring']){
+   for(const scenario of ['ack-lost-after-write','write-rejected','readback-unavailable']){
+    const m=await freshContext(
+     {viewport:{width,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true},
+     {authenticated:true,paired:deck!=='general',unlocked:deck!=='general',role}
+    );
+    try{
+     const page=m.page;
+     await page.goto(base+'#swipe',{waitUntil:'load'});
+     if(deck==='forandring'){
+       await page.locator('[data-theme-open="forandring"]').click();
+       await page.locator('#swipe-card[aria-label^="Temakort 1 av 8"]').waitFor();
+     }
+     const slider=page.locator('#swipe-card [data-importance]');
+     await slider.waitFor();
+     assert.equal(await slider.getAttribute('data-card-id'),
+       deck==='general'?'general-01':'forandring-01');
+     assert.equal(await slider.inputValue(),'0');
+     const before=await page.locator('#swipe-card').getAttribute('aria-label');
+     await page.evaluate(scenario=>{
+       window.__HK_IMPORTANCE_WRITE_COUNT__=0;
+       window.__HK_IMPORTANCE_ACK_READBACKS__=0;
+       window.__HK_TEST_IMPORTANCE_FAIL_AFTER_WRITE__=scenario!=='write-rejected';
+       window.__HK_TEST_IMPORTANCE_FAIL_BEFORE_WRITE__=scenario==='write-rejected';
+       window.__HK_TEST_IMPORTANCE_READBACK_FAIL__=scenario==='readback-unavailable';
+     },scenario);
+     await setRating(page,1);
+     if(scenario==='ack-lost-after-write'){
+       await page.locator('[data-importance-status]').getByText(/Viktighet sparad privat/).waitFor();
+       assert.equal(await slider.inputValue(),'1');
+       assert.equal(await slider.getAttribute('aria-valuetext'),'Mycket viktigt');
+     }else{
+       await page.locator('[data-importance-status]').getByText(scenario==='write-rejected'
+         ?/kunde inte bekräftas som sparad/i
+         :/går inte att kontrollera om viktigheten sparades/i).waitFor();
+       assert.equal(await slider.inputValue(),'0','Unconfirmed choice shows last locally confirmed rating');
+       assert.equal(await slider.getAttribute('aria-valuetext'),'Neutral, inte prioriterad');
+       await setRating(page,1);
+       await page.locator('[data-importance-status]').getByText(/Viktighet sparad privat/).waitFor();
+       assert.equal(await slider.inputValue(),'1','Manual retry can be saved');
+     }
+     assert.equal(await page.locator('#swipe-card').getAttribute('aria-label'),before,
+       'Saving an importance rating alone never answers or advances a card');
+     assert.equal(await page.evaluate(()=>window.__HK_IMPORTANCE_ACK_READBACKS__),1,
+       'One exact own-rating readback must follow a lost write acknowledgement');
+     assert.equal(await page.evaluate(()=>window.__HK_IMPORTANCE_WRITE_COUNT__),
+       scenario==='ack-lost-after-write'?1:2,'No duplicate write on confirmed readback');
+     const stored=await page.evaluate(()=>window.__HK_SAVED_IMPORTANCE__?.row);
+     assert.equal(stored?.deck_id,deck);
+     assert.equal(stored?.card_id,deck==='general'?'general-01':'forandring-01');
+     assert.equal(stored?.importance,1);
+     assert.equal(stored?.user_id,role==='teen'
+       ?'10000000-0000-0000-0000-000000000002'
+       :'10000000-0000-0000-0000-000000000001');
+     records.push({role,width,deck,scenario,writeCount:scenario==='ack-lost-after-write'?1:2,
+       readbacks:1,passed:true});
+    }finally{await m.context.close();}
+   }
+   // A newer slider choice must not be thrown away if the older write loses its ACK.
+   const m=await freshContext(
+    {viewport:{width,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true},
+    {authenticated:true,paired:deck!=='general',unlocked:deck!=='general',role}
+   );
+   try{
+    const page=m.page;
+    await page.goto(base+'#swipe',{waitUntil:'load'});
+    if(deck==='forandring'){
+      await page.locator('[data-theme-open="forandring"]').click();
+      await page.locator('#swipe-card[aria-label^="Temakort 1 av 8"]').waitFor();
+    }
+    await page.locator('#swipe-card [data-importance]').waitFor();
+    await page.evaluate(()=>{
+      window.__HK_IMPORTANCE_WRITE_COUNT__=0;
+      window.__HK_IMPORTANCE_ACK_READBACKS__=0;
+      window.__HK_TEST_BLOCK_IMPORTANCE__=true;
+      window.__HK_TEST_IMPORTANCE_FAIL_AFTER_WRITE__=true;
+    });
+    await setRating(page,-1);
+    await page.waitForFunction(()=>typeof window.__HK_TEST_RELEASE_IMPORTANCE__==='function');
+    await setRating(page,1);
+    await page.evaluate(()=>window.__HK_TEST_RELEASE_IMPORTANCE__());
+    await page.locator('[data-importance-status]').getByText(/Viktighet sparad privat/).waitFor();
+    assert.equal(await page.locator('#swipe-card [data-importance]').inputValue(),'1');
+    assert.equal(await page.evaluate(()=>window.__HK_SAVED_IMPORTANCE__?.row?.importance),1);
+    assert.equal(await page.evaluate(()=>window.__HK_IMPORTANCE_WRITE_COUNT__),2);
+    assert.equal(await page.evaluate(()=>window.__HK_IMPORTANCE_ACK_READBACKS__),1);
+    records.push({role,width,deck,scenario:'queued-newer-choice-survives-lost-ack',
+      writeCount:2,readbacks:1,passed:true});
+   }finally{await m.context.close();}
+  }
+ }
+ await fs.writeFile(path.join(output,'fun-02-importance-write-ack-browser-synthetic.json'),
+  JSON.stringify({method:'Real Chromium range input/change events and intercepted in-memory Supabase write/readback',
+   limitations:'Synthetic Auth and in-memory mock database; not live Supabase, authenticated users or physical iOS.',
+   records},null,2)+'\n');
+ console.log('FUN-02 importance ACK: '+records.length+' synthetic Chromium role/deck/error/queue cases passed.');
+}
+
 // FUN-02: actually open, answer and resume EVERY theme deck for both synthetic
 // roles. Finishes one short deck to exercise completion and revisiting saved cards.
 // This never requests or writes live Supabase data.
@@ -1930,9 +2041,9 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
         const skips=new Map();
         if(window.__HK_PREANSWERED_SKIPPED__){answers.delete('general-02');skips.set('general-02',{deck_id:'general',card_id:'general-02'});}
         const importance=new Map(window.__HK_PRIORITISED_TEEN__?[
-          ['general:general-01',{deck_id:'general',card_id:'general-01',importance:1}],
-          ['general:general-02',{deck_id:'general',card_id:'general-02',importance:1}],
-          ['general:general-10',{deck_id:'general',card_id:'general-10',importance:0}]
+          ['general:general-01',{user_id:current().id,deck_id:'general',card_id:'general-01',importance:1}],
+          ['general:general-02',{user_id:current().id,deck_id:'general',card_id:'general-02',importance:1}],
+          ['general:general-10',{user_id:current().id,deck_id:'general',card_id:'general-10',importance:0}]
         ]:[]);
         const understandingShares=new Set(window.__HK_TEST_PAIRED__?['general-02']:[]);
         const priorityShares=new Set();
@@ -2072,8 +2183,31 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
               }
             };
             if(table==='swipe_importance')return {
-              select(){return {async eq(){return window.__HK_IMPORTANCE_READ_FAIL__?{data:null,error:{message:'Synthetic private importance read failed'}}:{data:[...importance.values()],error:null}}}},
+              select(columns){
+                const filters={};
+                const values=()=>[...importance.values()].filter(row=>
+                  Object.entries(filters).every(([key,value])=>row[key]===value));
+                const query={
+                  eq(key,value){filters[key]=value;return query;},
+                  async maybeSingle(){
+                    window.__HK_IMPORTANCE_ACK_READBACKS__=(window.__HK_IMPORTANCE_ACK_READBACKS__||0)+1;
+                    if(window.__HK_TEST_IMPORTANCE_READBACK_FAIL__){
+                      window.__HK_TEST_IMPORTANCE_READBACK_FAIL__=false;
+                      return {data:null,error:{message:'Synthetic importance readback failed'}};
+                    }
+                    return {data:values()[0]||null,error:null};
+                  },
+                  then(resolve,reject){
+                    const result=window.__HK_IMPORTANCE_READ_FAIL__
+                      ?{data:null,error:{message:'Synthetic private importance read failed'}}
+                      :{data:values(),error:null};
+                    return Promise.resolve(result).then(resolve,reject);
+                  }
+                };
+                return query;
+              },
               async upsert(row,options){
+                window.__HK_IMPORTANCE_WRITE_COUNT__=(window.__HK_IMPORTANCE_WRITE_COUNT__||0)+1;
                 if(window.__HK_TEST_BLOCK_IMPORTANCE__){
                   window.__HK_TEST_BLOCK_IMPORTANCE__=false;
                   await new Promise(resolve=>{window.__HK_TEST_RELEASE_IMPORTANCE__=()=>{
@@ -2083,8 +2217,17 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
                     return {error:{message:'Synthetic importance write failed'}};
                   }
                 }
+                if(window.__HK_TEST_IMPORTANCE_FAIL_BEFORE_WRITE__){
+                  window.__HK_TEST_IMPORTANCE_FAIL_BEFORE_WRITE__=false;
+                  return {error:{message:'Synthetic rating rejected before commit'}};
+                }
                 importance.set(row.deck_id+':'+row.card_id,row);
-                window.__HK_SAVED_IMPORTANCE__={row,options};return {error:null};
+                window.__HK_SAVED_IMPORTANCE__={row,options};
+                if(window.__HK_TEST_IMPORTANCE_FAIL_AFTER_WRITE__){
+                  window.__HK_TEST_IMPORTANCE_FAIL_AFTER_WRITE__=false;
+                  return {error:{message:'Synthetic rating ACK lost after commit'}};
+                }
+                return {error:null};
               }
             };
             if(table==='swipe_priority_shares')return {select(){return {async eq(){return window.__HK_PRIORITY_READ_FAIL__
@@ -4258,6 +4401,7 @@ try{
   await verifyUnderstandingStateWriteRecheck();
   await verifySwipeAnswerWriteRecheck();
   await verifyImportancePendingAnswerFeedback();
+  await verifyImportanceWriteAckBrowser();
   await verifyAllThemeDeckJourneys();
   await verifyInsightsTwoRolesAndStates();
   await verifyFullPersonalitySurvey();
