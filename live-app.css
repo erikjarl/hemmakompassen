@@ -125,6 +125,11 @@
 .schyssta-compose .live-muted{margin:0}
 .schyssta-compose button{max-width:100%}
 .schyssta-feedback{padding:12px 14px;margin-top:14px;border-radius:10px;background:#242d38;color:#f7e6c9;line-height:1.5}
+.schyssta-copy-manual{display:grid;gap:10px;margin-top:12px;max-width:100%}
+.schyssta-copy-manual label{font-weight:700}
+.schyssta-copy-manual textarea{box-sizing:border-box;display:block;width:100%;max-width:100%;min-height:125px;resize:vertical;border:1px solid #bda071;border-radius:9px;padding:12px;color:#f9f3e8;background:#161c2b;font:inherit;line-height:1.5}
+.schyssta-copy-manual textarea:focus-visible{outline:3px solid #f1b86e;outline-offset:2px}
+.schyssta-copy-manual button{justify-self:start}
 .schyssta-view .live-panel h2{margin-top:0}
 .schyssta-view .schyssta-list>li{scroll-margin-top:110px}
 @media(max-width:430px){.schyssta-compose button{width:100%}.schyssta-view .live-panel{padding:16px}}
