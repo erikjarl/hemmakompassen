@@ -1425,7 +1425,7 @@ try{
   assert.equal(await paired.page.locator('#live-mobile-nav a[href="#inkorg"] .live-nav-count').innerText(),'2','Inbox counts both one private chat message and one rule event');
   await paired.page.waitForFunction(()=>document.querySelector('#live-mobile-nav a[href="#regler"] .live-nav-count')?.textContent==='2',
     null,{timeout:8000});
-  assert.equal(await paired.page.locator('#live-mobile-nav a[href="#regler"] .live-nav-count').innerText(),'2','Rule tab shows only requests awaiting the current viewer');
+  assert.equal(await paired.page.locator('#live-mobile-nav a[href="#regler"] .live-nav-count').textContent(),'2','Rule tab shows only requests awaiting the current viewer');
   assert.equal(await paired.page.locator('#live-mobile-nav summary .live-nav-count').innerText(),'2',
     'More mirrors the pending-rule badge while the secondary menu is closed');
   assert.match(await paired.page.locator('#live-mobile-nav a[href="#regler"]').getAttribute('aria-label'),/2 obesvarade regelförslag/,'Navigation text announces the meaning of the count');
@@ -1451,13 +1451,13 @@ try{
   await paired.page.locator('[data-schyssta-pause="30000000-0000-4000-8000-000000000001"]').click();
   assert.equal(await paired.page.locator('#schyssta-rule-30000000-0000-4000-8000-000000000001').isVisible(),true,
     'Paused request remains accessible under ongoing proposals');
-  assert.equal(await paired.page.locator('#live-mobile-nav a[href="#regler"] .live-nav-count').innerText(),'1',
+  assert.equal(await paired.page.locator('#live-mobile-nav a[href="#regler"] .live-nav-count').textContent(),'1',
     'Pausing a request decreases only the local pending-action count');
   assert.equal(await paired.page.evaluate(()=>window.__HK_SCHYSSTA_DECISION__?.args?.p_agreement_id==='30000000-0000-4000-8000-000000000001'),false,
     'Pausing does not send any approval or rejection decision');
   assert.match(await paired.page.locator('.schyssta-view').innerText(),/Inget beslut har sparats/);
   await paired.page.locator('[data-schyssta-resume="30000000-0000-4000-8000-000000000001"]').click();
-  assert.equal(await paired.page.locator('#live-mobile-nav a[href="#regler"] .live-nav-count').innerText(),'2',
+  assert.equal(await paired.page.locator('#live-mobile-nav a[href="#regler"] .live-nav-count').textContent(),'2',
     'A deferred proposal can be returned to the actionable list without any backend change');
   await paired.page.getByRole('button',{name:'+ Föreslå en regel'}).click();
   const prompts=paired.page.locator('.schyssta-tips');
