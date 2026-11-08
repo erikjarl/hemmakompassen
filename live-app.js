@@ -997,6 +997,12 @@ async function prepareActivityMessage(cardId){
   }
   const viewer=user.id,session=sharedSession;
   activityInviteBusy=true;activityInviteError='';render();
+  // A verified JA+JA from an earlier pairing is not enough to prepare a new
+  // message draft. Validate exact membership AND pair epoch before reading.
+  const pairValid=await recheckInboxPair();
+  if(!pairValid||user?.id!==viewer||sharedSession!==session||page()!==origin){
+    activityInviteBusy=false;return;
+  }
   let response;
   try{response=await db.rpc('shared_swipe_matches',{p_deck_id:'aktiviteter'});}
   catch(error){response={error};}
@@ -2051,11 +2057,27 @@ if(filterButton&&page()==='swipe'&&sharedDeckId===filterButton.dataset.deckId&&!
   }
   return;
 }
-const refreshMatches=e.target.closest('[data-refresh-matches]');if(refreshMatches&&!sharedLoading)void fetchSwipeMatches(refreshMatches.dataset.refreshMatches);if(e.target.closest('#retry-theme-unlock')&&!themesLoading)void fetchThemeUnlock();
-if(e.target.closest('#insights-retry')&&!insightsLoading)void fetchInsights();
+const refreshMatches=e.target.closest('[data-refresh-matches]');
+if(refreshMatches&&!sharedLoading){
+  const deckId=refreshMatches.dataset.refreshMatches;
+  void recheckInboxPair().then(valid=>{
+    if(valid&&page()==='swipe'&&!sharedLoading)void fetchSwipeMatches(deckId);
+  });
+}
+if(e.target.closest('#retry-theme-unlock')&&!themesLoading)void fetchThemeUnlock();
+if(e.target.closest('#insights-retry')&&!insightsLoading)
+  void recheckInboxPair().then(valid=>{
+    if(valid&&page()==='insikter'&&!insightsLoading)void fetchInsights();
+  });
 const inviteActivity=e.target.closest('[data-insight-activity]');
 if(inviteActivity&&['insikter','swipe'].includes(page())&&!activityInviteBusy)void prepareActivityMessage(inviteActivity.dataset.insightActivity);
-if(e.target.closest('#home-refresh-notices')&&user&&members.length===2){if(schysstaListEnabled&&!schysstaLoading)void fetchSchysstaList();void fetchFamilyChatUnread();void fetchActivityNotifications();}
+if(e.target.closest('#home-refresh-notices')&&user&&members.length===2)
+  void recheckInboxPair().then(valid=>{
+    if(!valid||page()!=='hem')return;
+    if(schysstaListEnabled&&!schysstaLoading)void fetchSchysstaList();
+    void fetchFamilyChatUnread();
+    void fetchActivityNotifications();
+  });
 if(e.target.closest('#inbox-retry-pair'))void refresh().catch(showError);
 if(e.target.closest('[data-family-chat-refresh]'))void recheckInboxPair().then(valid=>{if(valid)void fetchFamilyChat();});
 if(e.target.closest('[data-family-chat-mark-all-read]'))void markAllFamilyChatRead();
