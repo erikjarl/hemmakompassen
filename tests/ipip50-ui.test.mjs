@@ -248,6 +248,7 @@ test('public entry and nested personality modules share a cache-busting release 
   assert.ok(html.includes('./live-app.css?v='+version));
   assert.ok(html.includes('./live-app.js?v='+version));
   assert.ok(app.includes("./personality/ipip50-ui.js?v="+version));
+  assert.ok(personality.includes("./ipip50-retest.js?v="+version));
   assert.ok(personality.includes("./ipip50-reference.js?v="+version));
   assert.ok(personality.includes("./ipip50-family-insights.js?v="+version));
   assert.ok(personality.includes("./ipip50-family-copy.js?v="+version));

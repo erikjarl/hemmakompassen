@@ -1332,6 +1332,71 @@ async function verifyDistinctPrivateRetestHistory(){
   console.log('PF-05 distinct retest history: '+records.length+' synthetic role/step checks passed.');
 }
 
+// FUN-04-RETEST-ACK: real Chromium clicks against a synthetic, owner-scoped
+// retest table. Never modify the live Supabase pilot accounts.
+async function verifyRetestAnswerAcknowledgements(){
+ const records=[];
+ for(const role of ['parent','teen']){
+  const width=role==='parent'?390:320;
+  for(const scenario of ['committed-lost-ack','rejected-before-write','unavailable-readback']){
+   const m=await freshContext({viewport:{width,height:844},deviceScaleFactor:1,
+     isMobile:true,hasTouch:true},{authenticated:true,paired:false,role,
+       personalityComplete:true,privateRetests:true});
+   try{
+    const page=m.page;
+    await page.goto(base+'#personlighet',{waitUntil:'load'});
+    await page.getByRole('button',{name:'Starta en ny privat testomgång'}).click();
+    await page.getByText('Fråga 1 av 50').last().waitFor();
+    await page.evaluate(mode=>{
+      window.__HK_RETEST_ACK_WRITES__=0;
+      window.__HK_RETEST_ACK_READS__=0;
+      window.__HK_TEST_RETEST_LOST_ACK__=mode!=='rejected-before-write';
+      window.__HK_TEST_RETEST_REJECT_WRITE__=mode==='rejected-before-write';
+      window.__HK_TEST_RETEST_READ_FAIL__=mode==='unavailable-readback';
+    },scenario);
+    await page.locator('[data-ipip-retest-answer="ipip50-001"][value="4"]').click();
+    if(scenario==='committed-lost-ack'){
+      await page.locator('.pf-retest').getByText('Fråga 2 av 50').waitFor();
+      assert.equal(await page.locator('[data-ipip-retest="verify-save"]').count(),0);
+    }else if(scenario==='rejected-before-write'){
+      await page.locator('.pf-retest [role="status"]')
+        .filter({hasText:/kunde inte bekräftas som sparat/i}).waitFor();
+      assert.match(await page.locator('.pf-retest').innerText(),/Fråga 1 av 50/);
+      assert.equal(await page.locator('[data-ipip-retest="verify-save"]').count(),0);
+      await page.locator('[data-ipip-retest-answer="ipip50-001"][value="3"]').click();
+      await page.locator('.pf-retest').getByText('Fråga 2 av 50').waitFor();
+    }else{
+      await page.locator('.pf-retest [role="status"]')
+        .filter({hasText:/går inte att kontrollera om svaret sparades/i}).waitFor();
+      await page.getByRole('button',{name:'Kontrollera sparat svar'}).click();
+      await page.getByRole('button',{name:'Fortsätt privat omtest'}).waitFor();
+      assert.match(await page.locator('.pf-retest').innerText(),/1 av 50 svar/);
+      await page.getByRole('button',{name:'Fortsätt privat omtest'}).click();
+      await page.locator('.pf-retest').getByText('Fråga 2 av 50').waitFor();
+    }
+    assert.equal(await page.evaluate(()=>window.__HK_RETEST_ACK_WRITES__),
+      scenario==='rejected-before-write'?2:1);
+    assert.equal(await page.evaluate(()=>window.__HK_RETEST_ACK_READS__),
+      scenario==='unavailable-readback'?2:1);
+    const row=await page.evaluate(()=>window.__HK_RETEST_LAST_WRITE__);
+    assert.equal(row?.user_id,role==='teen'
+      ?'10000000-0000-0000-0000-000000000002'
+      :'10000000-0000-0000-0000-000000000001');
+    assert.equal(row?.attempt_id,'90000000-0000-4000-8000-000000000001');
+    assert.equal(row?.question_id,'ipip50-001');
+    assert.equal(row?.answer_value,scenario==='rejected-before-write'?3:4);
+    await checkOverflow(page,'FUN-04 retest ACK '+role+' '+scenario);
+    records.push({role,width,scenario,passed:true});
+   }finally{await m.context.close();}
+  }
+ }
+ await fs.writeFile(path.join(output,'fun-04-retest-ack-browser-synthetic.json'),
+  JSON.stringify({method:'Chromium retest radio clicks and synthetic Supabase write/readback failures',
+  limitation:'Mocked Auth/Supabase only; no signed pilot accounts, live database writes or physical Safari',
+  records},null,2)+'\n');
+ console.log('FUN-04 private retest ACK: '+records.length+' synthetic Chromium scenarios passed.');
+}
+
 // FUN-04.05: finish a fresh private 50-item retest through real browser controls,
 // open its saved history, and export the completed JSON. Only in-memory mock data
 // is changed; the original IPIP-50 responses are not modified.
@@ -2166,6 +2231,13 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
                     if(retestAnswers.length!==50)return {data:null,error:{message:'incomplete'}};
                     Object.assign(row,payload);return {data:{...row},error:null};
                   }
+                  if(table==='personality_attempt_answers'&&operation==='read'){
+                    window.__HK_RETEST_ACK_READS__=(window.__HK_RETEST_ACK_READS__||0)+1;
+                    if(window.__HK_TEST_RETEST_READ_FAIL__){
+                      window.__HK_TEST_RETEST_READ_FAIL__=false;
+                      return {data:null,error:{message:'Synthetic private retest readback failed'}};
+                    }
+                  }
                   return {data:list.filter(a=>Object.entries(filters).every(([k,v])=>a[k]===v))
                     .map(a=>({...a})),error:null};
                 };
@@ -2184,9 +2256,19 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
                 update(row){return chain('update',row);},
                 delete(){return chain('delete');},
                 async upsert(row){
+                  window.__HK_RETEST_ACK_WRITES__=(window.__HK_RETEST_ACK_WRITES__||0)+1;
+                  if(window.__HK_TEST_RETEST_REJECT_WRITE__){
+                    window.__HK_TEST_RETEST_REJECT_WRITE__=false;
+                    return {error:{message:'Synthetic private retest write rejected'}};
+                  }
                   const found=retestAnswers.find(a=>a.attempt_id===row.attempt_id&&a.question_id===row.question_id);
                   if(found)found.answer_value=row.answer_value;else retestAnswers.push({...row});
                   window.__HK_PRIVATE_RETEST_ANSWERS__=retestAnswers.length;
+                  window.__HK_RETEST_LAST_WRITE__={...row};
+                  if(window.__HK_TEST_RETEST_LOST_ACK__){
+                    window.__HK_TEST_RETEST_LOST_ACK__=false;
+                    return {error:{message:'Synthetic private retest ACK lost after commit'}};
+                  }
                   return {error:null};
                 }
               };
@@ -4513,6 +4595,7 @@ try{
   await verifyInsightsTwoRolesAndStates();
   await verifyIpip50WriteAckBrowser();
   await verifyFullPersonalitySurvey();
+  await verifyRetestAnswerAcknowledgements();
   await verifyFullPrivateRetest();
   await verifyDistinctPrivateRetestHistory();
   await verifyCommunicationForms();
