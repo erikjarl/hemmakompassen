@@ -147,3 +147,32 @@ test('reflection deep link is allowlisted and focuses the correct heading',()=>{
  assert.deepEqual(actions,[['focus',true],['scroll','nearest']]);
  assert.equal(openCommunicationSkill({querySelector:()=>null},'spegla',{focus:true}),false);
 });
+
+
+test('all three private preview generators expose accessible copy and manual-selection controls',()=>{
+ const source=readFileSync(new URL('../communication/toolkit.js',import.meta.url),'utf8');
+ assert.match(source,/function renderCommunicationCopyTools\(kind\)/);
+ for(const role of ['parent','teen']){
+  const communication=renderCommunicationToolkit(role),nvc=renderNvcExercise(role);
+  for(const kind of ['reflection','solution','nvc']){
+   const markup=kind==='nvc'?nvc:communication;
+   assert.match(markup,new RegExp('data-comm-copy="'+kind+'" disabled'),'Clipboard requires a new generated preview');
+   assert.match(markup,new RegExp('id="comm-'+kind+'-copy-status"[^>]*role="status"'));
+   assert.match(markup,new RegExp('id="comm-'+kind+'-copy-manual" hidden'));
+   assert.match(markup,new RegExp('id="comm-'+kind+'-copy-fallback"[^>]*readonly'));
+   assert.match(markup,new RegExp('data-comm-select-copy="'+kind+'"'));
+  }
+ }
+ assert.match(app,/const COMM_PREVIEW_META=/);
+ assert.match(app,/output\.dataset\.commReady=ready\?'true':'false'/);
+ assert.match(app,/const form=e\.target\.closest\?\.\('form'\)/);
+ assert.match(app,/if\(form\?\.id==='comm-reflection-form'\)updateCommunicationPreview\('reflection'\)/);
+ assert.match(app,/if\(form\?\.id==='comm-solution-form'\)updateCommunicationPreview\('solution'\)/);
+ assert.match(app,/if\(form\?\.id==='comm-nvc-form'\)updateCommunicationPreview\('nvc'\)/);
+ assert.match(app,/navigator\.clipboard\.writeText\(text\)/);
+ assert.match(app,/fallback\.value=text;manual\.hidden=false/);
+ assert.match(app,/fallback\.focus\(\{preventScroll:true\}\);fallback\.select\(\)/);
+ assert.match(app,/if\(!current\(\)\)return/);
+ assert.doesNotMatch(source,/\blocalStorage\b|\bsessionStorage\b|\bsupabase\b|\bfetch\s*\(/,
+  'The copy controls never gain persistence or remote data access');
+});
