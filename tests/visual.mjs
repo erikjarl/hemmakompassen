@@ -949,8 +949,8 @@ async function verifyCommunicationForms(){
 // This exercises the real DOM and frontend workflow across two independent
 // Chromium contexts. No Supabase credentials, production replies or live users.
 function makeTwoRoleFamilyFixture(){
-  const messages=[],tokens=new Map(),rules=[],notices=[],activityNotices=[],calls=[];
-  let failedSendAcknowledgement=false,failedOlderPage=false,failedActivityRead=false;
+  const messages=[],tokens=new Map(),rules=[],notices=[],activityNotices=[],replacementLinks=[],ruleHistory=[],calls=[];
+  let failedSendAcknowledgement=false,failedOlderPage=false,failedActivityRead=false,nextRuleId=200;
   const other=role=>role==='parent'?'teen':'parent';
   const ok=data=>({data,error:null});
   const createdAt=n=>'2026-11-01T12:'+String(Math.floor(n/50)).padStart(2,'0')+':'+String(n%50).padStart(2,'0')+'Z';
@@ -997,8 +997,9 @@ function makeTwoRoleFamilyFixture(){
       for(const m of rows)m.read_at='2026-11-01T13:00:00Z';
       return ok(rows.length);
     }
-    if(name==='shared_schyssta_rule_suggestions'||name==='my_schyssta_rules'||
-       name==='my_schyssta_replacement_links'||name==='my_schyssta_rule_history')return ok([]);
+    if(name==='shared_schyssta_rule_suggestions'||name==='my_schyssta_rules')return ok([]);
+    if(name==='my_schyssta_replacement_links')return ok(replacementLinks.map(row=>({...row})));
+    if(name==='my_schyssta_rule_history')return ok(ruleHistory.map(row=>({...row})));
     if(name==='my_manual_schyssta_rules'){
       return ok(rules.map(r=>({
         agreement_id:r.id,body:r.body,status:r.status,agreement_version:1,
@@ -1014,7 +1015,7 @@ function makeTwoRoleFamilyFixture(){
         return {data:null,error:{message:'invalid proposal'}};
       const existing=rules.find(r=>r.proposer===role&&r.token===args.p_request_key);
       if(existing)return ok(existing.id);
-      const seq=rules.length+1,id='30000000-0000-4000-8000-'+String(200+seq).padStart(12,'0'),
+      const seq=++nextRuleId-200,id='30000000-0000-4000-8000-'+String(200+seq).padStart(12,'0'),
         created_at=createdAt(seq+10);
       rules.push({id,body:args.p_body,proposer:role,token:args.p_request_key,
         status:'proposed',created_at,decisions:{parent:null,teen:null}});
@@ -1023,12 +1024,45 @@ function makeTwoRoleFamilyFixture(){
         read_at:null,created_at,recipient:other(role)});
       return ok(id);
     }
+    if(name==='propose_schyssta_change'){
+      const original=rules.find(r=>r.id===args.p_agreement_id&&r.status==='accepted');
+      if(!original||!String(args.p_body||'').trim()||!args.p_request_key)
+        return {data:null,error:{message:'invalid change proposal'}};
+      const existing=rules.find(r=>r.proposer===role&&r.token===args.p_request_key);
+      if(existing)return ok(existing.id);
+      const seq=++nextRuleId-200,id='30000000-0000-4000-8000-'+String(200+seq).padStart(12,'0'),
+        created_at=createdAt(seq+10);
+      rules.push({id,body:args.p_body,proposer:role,token:args.p_request_key,
+        status:'proposed',created_at,decisions:{parent:null,teen:null}});
+      replacementLinks.push({agreement_id:id,replaces_agreement_id:original.id});
+      notices.push({notification_id:'40000000-0000-4000-8000-'+String(200+seq).padStart(12,'0'),
+        agreement_id:id,kind:'rule_proposed',body:args.p_body,
+        read_at:null,created_at,recipient:other(role)});
+      return ok(id);
+    }
+    if(name==='withdraw_schyssta_rule'){
+      const index=rules.findIndex(r=>r.id===args.p_agreement_id&&r.status==='accepted');
+      if(index<0)return {data:null,error:{message:'not a mutually accepted agreement'}};
+      const [archived]=rules.splice(index,1);
+      ruleHistory.push({agreement_id:archived.id,body:archived.body,created_at:archived.created_at});
+      const linkIndex=replacementLinks.findIndex(link=>link.agreement_id===archived.id);
+      if(linkIndex>=0)replacementLinks.splice(linkIndex,1);
+      return ok(null);
+    }
     if(name==='set_schyssta_rule_decision'){
       const row=rules.find(r=>r.id===args.p_agreement_id);
       if(!row)return {data:null,error:{message:'missing synthetic rule'}};
       row.decisions[role]=args.p_approved===true;
       row.status=row.decisions.parent===true&&row.decisions.teen===true?'accepted'
         :row.decisions.parent===false||row.decisions.teen===false?'rejected':'proposed';
+      if(row.status==='accepted'){
+        const link=replacementLinks.find(link=>link.agreement_id===row.id);
+        const oldIndex=link?rules.findIndex(r=>r.id===link.replaces_agreement_id):-1;
+        if(oldIndex>=0){
+          const [archived]=rules.splice(oldIndex,1);
+          ruleHistory.push({agreement_id:archived.id,body:archived.body,created_at:archived.created_at});
+        }
+      }
       return ok(null);
     }
     if(name==='mark_schyssta_notification_read'){
@@ -1038,7 +1072,7 @@ function makeTwoRoleFamilyFixture(){
     }
     throw new Error('Unexpected linked pair RPC: '+name);
   }
-  return {rpc,messages,rules,notices,activityNotices,calls,
+  return {rpc,messages,rules,notices,activityNotices,replacementLinks,ruleHistory,calls,
     loseNextSendAcknowledgement(){failedSendAcknowledgement=true;},
     failNextOlderPage(){failedOlderPage=true;},
     failNextActivityRead(){failedActivityRead=true;}};
@@ -1047,7 +1081,8 @@ const FUN03_LINKED_RPCS=Object.freeze([
   'my_family_messages','my_family_unread_message_count','send_family_message','mark_family_messages_read',
   'shared_schyssta_rule_suggestions','my_schyssta_rules','my_manual_schyssta_rules',
   'my_schyssta_notifications','my_schyssta_replacement_links','my_schyssta_rule_history',
-  'propose_manual_schyssta_rule','set_schyssta_rule_decision','mark_schyssta_notification_read',
+  'propose_manual_schyssta_rule','propose_schyssta_change','withdraw_schyssta_rule',
+  'set_schyssta_rule_decision','mark_schyssta_notification_read',
   'my_activity_notifications','mark_activity_notification_read'
 ]);
 
@@ -1306,6 +1341,143 @@ async function verifyLinkedInboxOlderPages(){
   console.log('FUN-03 inbox pagination: '+records.length+' synthetic browser scenarios passed.');
 }
 
+
+// FUN-03.03: a complete two-role rule lifecycle: create, dual approve, propose
+// replacement, preserve prior rule until dual approval, archive the old rule,
+// cancel end, confirm end, inspect history and export current agreements.
+async function verifyPairedRuleRevisionAndHistory(){
+  const fixture=makeTwoRoleFamilyFixture();
+  const parent=await freshContext(
+    {viewport:{width:390,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true},
+    {authenticated:true,paired:true,role:'parent',pairFixture:fixture}
+  );
+  const teen=await freshContext(
+    {viewport:{width:320,height:700},deviceScaleFactor:1,isMobile:true,hasTouch:true},
+    {authenticated:true,paired:true,role:'teen',pairFixture:fixture}
+  );
+  const records=[];
+  async function revisit(page){
+    await page.goto(base+'#hem',{waitUntil:'load'});
+    await page.goto(base+'#regler',{waitUntil:'load'});
+    await page.locator('.schyssta-view').waitFor();
+  }
+  const original='Vi promenerar tillsammans när båda vill.';
+  const revised='Vi försöker promenera tillsammans på söndagar.';
+  try{
+    await parent.page.goto(base+'#regler',{waitUntil:'load'});
+    await teen.page.goto(base+'#regler',{waitUntil:'load'});
+    await parent.page.locator('[data-schyssta-start]').click();
+    await parent.page.locator('#schyssta-body').fill(original);
+    await parent.page.getByRole('button',{name:'Skicka regelförslag'}).click();
+    await parent.page.locator('.schyssta-list li').filter({hasText:original}).waitFor();
+    const originalId=fixture.rules[0].id;
+    assert.equal(fixture.rules[0].status,'proposed');
+    assert.deepEqual(fixture.rules[0].decisions,{parent:null,teen:null});
+    await revisit(teen.page);
+    await teen.page.locator('#schyssta-rule-'+originalId)
+      .getByRole('button',{name:'Jag godkänner'}).click();
+    await teen.page.waitForFunction(()=>document.querySelector('.schyssta-view')?.textContent?.includes('Ditt val: ja'));
+    assert.equal(fixture.rules[0].status,'proposed',
+      'FUN-03: one signature is not a mutually accepted agreement');
+    await revisit(parent.page);
+    await parent.page.locator('#schyssta-rule-'+originalId)
+      .getByRole('button',{name:'Jag godkänner'}).click();
+    await parent.page.locator('#schyssta-rule-'+originalId).getByText('Godkänd av båda').waitFor();
+    assert.equal(fixture.rules[0].status,'accepted');
+    records.push({case:'initial-rule-acceptance-requires-two-votes',passed:true});
+
+    await parent.page.locator('#schyssta-rule-'+originalId).locator('[data-schyssta-edit]').click();
+    const draft=parent.page.locator('#schyssta-body');
+    await draft.waitFor();
+    assert.equal(await draft.inputValue(),original,
+      'FUN-03: edit begins with the exact previously accepted rule, not an empty draft');
+    await draft.fill(revised);
+    await parent.page.getByRole('button',{name:'Skicka ändringsförslag'}).click();
+    await parent.page.locator('.schyssta-list li').filter({hasText:revised}).waitFor();
+    const proposal=fixture.rules.find(row=>row.body===revised),proposalId=proposal?.id;
+    assert.ok(proposalId);
+    assert.equal(proposal.status,'proposed');
+    assert.equal(fixture.rules.find(row=>row.id===originalId)?.status,'accepted',
+      'FUN-03: original stays active while replacement is awaiting votes');
+    assert.equal(fixture.replacementLinks.length,1);
+    await parent.page.locator('#schyssta-rule-'+proposalId)
+      .getByText('Den tidigare överenskommelsen gäller tills ni båda har godkänt den nya formuleringen.').waitFor();
+    records.push({case:'replacement-proposal-keeps-old-rule-active',passed:true});
+
+    await revisit(teen.page);
+    await teen.page.locator('#schyssta-rule-'+proposalId).waitFor();
+    assert.equal(await teen.page.locator('#schyssta-rule-'+originalId).count(),1,
+      'FUN-03: teen still sees the old accepted rule while replacement is pending');
+    await teen.page.locator('#schyssta-rule-'+proposalId)
+      .getByRole('button',{name:'Jag godkänner'}).click();
+    await teen.page.waitForFunction(()=>document.querySelector('.schyssta-view')?.textContent?.includes('Ditt val: ja'));
+    assert.equal(proposal.status,'proposed',
+      'FUN-03: one person approving revised text cannot replace old rule');
+    assert.equal(fixture.ruleHistory.length,0);
+    await revisit(parent.page);
+    await parent.page.locator('#schyssta-rule-'+proposalId)
+      .getByRole('button',{name:'Jag godkänner'}).click();
+    await parent.page.locator('#schyssta-rule-'+proposalId).getByText('Godkänd av båda').waitFor();
+    assert.equal(proposal.status,'accepted');
+    assert.equal(fixture.rules.some(row=>row.id===originalId),false,
+      'FUN-03: original no longer active once replacement is accepted by both');
+    assert.equal(fixture.ruleHistory.length,1);
+    assert.equal(fixture.ruleHistory[0].body,original);
+    await revisit(teen.page);
+    assert.equal(await teen.page.locator('#schyssta-rule-'+originalId).count(),0,
+      'FUN-03: old rule not duplicated in the active list');
+    await teen.page.locator('#schyssta-rule-'+proposalId).getByText('Godkänd av båda').waitFor();
+    const archive=teen.page.locator('#schyssta-history');
+    await archive.waitFor();
+    await archive.locator('summary').click();
+    await archive.getByText(original).waitFor();
+    records.push({case:'two-votes-replace-original-and-archive-old-text',passed:true});
+
+    // Export should contain only the CURRENT accepted replacement.
+    const download=teen.page.waitForEvent('download');
+    await teen.page.getByRole('button',{name:'Ladda ner som textfil'}).click();
+    const file=await download;
+    const exported=await fs.readFile(await file.path(),'utf8');
+    assert.match(exported,/Våra gemensamma överenskommelser/);
+    assert.ok(exported.includes(revised));
+    assert.ok(!exported.includes(original));
+    records.push({case:'export-excludes-superseded-rule',passed:true});
+
+    // Cancel is local only; confirm archives the current rule and removes
+    // it from the other account's active list on refresh.
+    await teen.page.locator('#schyssta-rule-'+proposalId).locator('[data-schyssta-end]').click();
+    await teen.page.getByRole('group',{name:'Bekräfta avslut'}).waitFor();
+    await teen.page.getByRole('button',{name:'Avbryt'}).click();
+    assert.equal(fixture.rules.some(row=>row.id===proposalId),true);
+    assert.equal(fixture.ruleHistory.length,1);
+    await teen.page.locator('#schyssta-rule-'+proposalId).locator('[data-schyssta-end]').click();
+    await teen.page.getByRole('button',{name:'Ja, avsluta'}).click();
+    await teen.page.getByText('Överenskommelsen är avslutad och finns kvar i historiken.').waitFor();
+    assert.equal(fixture.rules.length,0);
+    assert.equal(fixture.ruleHistory.length,2);
+    assert.equal(fixture.replacementLinks.length,0);
+    await revisit(parent.page);
+    assert.equal(await parent.page.locator('[data-schyssta-edit]').count(),0);
+    assert.equal(await parent.page.locator('[data-schyssta-download]').count(),0,
+      'FUN-03: no current approved rule can be exported after ending last agreement');
+    await parent.page.locator('#schyssta-history summary').click();
+    await parent.page.locator('#schyssta-history').getByText(original).waitFor();
+    await parent.page.locator('#schyssta-history').getByText(revised).waitFor();
+    await checkOverflow(parent.page,'FUN-03 rule history parent 390px');
+    await checkOverflow(teen.page,'FUN-03 rule history teen 320px');
+    records.push({case:'end-cancel-then-explicit-confirm-shows-both-history-rows',passed:true});
+  }finally{
+    await Promise.all([parent.context.close(),teen.context.close()]);
+  }
+  await fs.writeFile(path.join(output,'fun-03-rule-replacement-history-synthetic.json'),
+    JSON.stringify({
+      method:'Two independent Chromium roles with shared in-memory rule RPC fixture',
+      limitations:'Rule replacement/archive behavior is simulated; real RPC permissions and Auth not tested.',
+      records,history:fixture.ruleHistory.map(x=>({id:x.agreement_id,body:x.body}))
+    },null,2)+'\n');
+  console.log('FUN-03 rule replacement/history: '+records.length+' two-role synthetic scenarios passed.');
+}
+
 async function freshContext(options,{authenticated=false,paired=false,role="parent",unlocked=false,unlockUnavailable=false,priorityUnavailable=false,priorityFeature=true,privateImportance=false,importanceReadFailure=false,preansweredGeneral=false,preansweredSkipped=false,emptySchyssta=false,homeUnreadFailure=false,personalityComplete=false,personalitySharing=false,personalityPartnerShared=false,privateRetests=false,aiMediator=false,aiAnalyses=false,activityNotifications=false,pairFixture=null}={}){
   if(pairFixture && typeof pairFixture.rpc!=='function')throw new Error('Invalid linked fixture');
   const context=await browser.newContext({...options,locale:"sv-SE",reducedMotion:"reduce"});
@@ -1422,7 +1594,7 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
             throw new Error('Unexpected table '+table);
           },
           async rpc(name,args){
-            if(typeof window.__HK_TEST_PAIR_RPC__==='function'&&['my_family_messages','my_family_unread_message_count','send_family_message','mark_family_messages_read','shared_schyssta_rule_suggestions','my_schyssta_rules','my_manual_schyssta_rules','my_schyssta_notifications','my_schyssta_replacement_links','my_schyssta_rule_history','propose_manual_schyssta_rule','set_schyssta_rule_decision','mark_schyssta_notification_read','my_activity_notifications','mark_activity_notification_read'].includes(name))return window.__HK_TEST_PAIR_RPC__(name,args);
+            if(typeof window.__HK_TEST_PAIR_RPC__==='function'&&['my_family_messages','my_family_unread_message_count','send_family_message','mark_family_messages_read','shared_schyssta_rule_suggestions','my_schyssta_rules','my_manual_schyssta_rules','my_schyssta_notifications','my_schyssta_replacement_links','my_schyssta_rule_history','propose_manual_schyssta_rule','propose_schyssta_change','withdraw_schyssta_rule','set_schyssta_rule_decision','mark_schyssta_notification_read','my_activity_notifications','mark_activity_notification_read'].includes(name))return window.__HK_TEST_PAIR_RPC__(name,args);
             if(name==='set_my_ipip50_share'){personalityConsent=args.p_share===true;window.__HK_PERSONALITY_SHARE__=personalityConsent;return {data:personalityConsent,error:null};}
             if(name==='my_ipip50_shared_profiles'){
               const scores={extraversion:30,agreeableness:30,conscientiousness:30,emotional_stability:30,intellect_imagination:30};
@@ -3186,6 +3358,7 @@ try{
   await verifyCommunicationForms();
   await verifyPairedTwoRoleExchange();
   await verifyLinkedInboxOlderPages();
+  await verifyPairedRuleRevisionAndHistory();
   assert.deepEqual(errors,[],"Browser errors: "+errors.join("; "));
   await fs.writeFile(path.join(output,"visual-audit.json"),JSON.stringify({
     purpose:"Playwright responsive visual review",
