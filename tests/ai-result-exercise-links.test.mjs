@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createAiResultExperience} from '../ai-result-ui.js';
+import {createAiResultExperience,renderAiAnalysisReply} from '../ai-result-ui.js';
 
 const userId='11111111-1111-4111-8111-111111111111';
 const config={
@@ -35,7 +35,7 @@ test('swipe reflection links to practical shared problem-solving and optional co
   assert.match(panel,/href="#kommunikation\/losning"/);
   assert.match(panel,/href="#kommunikation\/kontakt"/);
   assert.doesNotMatch(panel,/href="#kommunikation\/validera"/);
-  assert.match(panel,/frivilligt samtalsverktyg/);
+  assert.match(panel,/Fler frivilliga övningar/);
 });
 test('a result panel never shows exercise links before a valid authorized analysis',async()=>{
   const {ui,setStatus}=experience('personality','own');
@@ -45,4 +45,15 @@ test('a result panel never shows exercise links before a valid authorized analys
   assert.doesNotMatch(ui.panel('personality','own','unavailable-profile'),/href="#kommunikation\/validera"/);
   ui.reset(null);
   assert.doesNotMatch(ui.panel('personality','own','unavailable-profile'),/href="#kommunikation\/validera"/);
+});
+
+test('model suggested routes are clickable only for verified exercises and HTML stays inert',()=>{
+ const output=renderAiAnalysisReply('Förslag:\n1. Prova #kommunikation/kontakt.\n2. Testa #kommunikation/losning.\n3. Undvik #kommunikation/unknown. <img src=x onerror=alert(1)>');
+ assert.match(output,/href="#kommunikation\/kontakt"/);
+ assert.match(output,/href="#kommunikation\/losning"/);
+ assert.doesNotMatch(output,/href="#kommunikation\/unknown"/);
+ assert.match(output,/#kommunikation\/unknown/);
+ assert.match(output,/&lt;img/);
+ assert.doesNotMatch(output,/<img/);
+ assert.doesNotMatch(output,/https?:\/\//);
 });

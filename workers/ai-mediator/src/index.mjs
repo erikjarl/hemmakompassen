@@ -2,7 +2,7 @@
 // Tested on Workers Free: non-reasoning Llama replies within a short output limit.
 import { CHAT_ID_RE, listPrivateChats, createPrivateChat, getPrivateChat, deletePrivateChat, contextForChat, saveExchange } from './history.mjs';
 import { loadAuthorizedContext } from './context.mjs';
-import {loadResultAnalysisInput,isAnalysisScope,analysisInstructions} from './analysis.mjs';
+import {loadResultAnalysisInput,isAnalysisScope,analysisInstructions,enforceActionableAnalysis} from './analysis.mjs';
 export const MODEL = '@cf/meta/llama-3.1-8b-instruct-fp8-fast';
 export const DAILY_LIMIT = 10;
 export const MAX_MESSAGE_CHARS = 2000;
@@ -254,7 +254,7 @@ export function createHandler({ fetchAuth = fetch, now = () => new Date() } = {}
         });
         const reply=cleanReply(response);
         if(!reply || reply.length>9000)throw Error('Invalid model response');
-        return answer(200,{reply,kind,scope,basis:prepared.basis,
+        return answer(200,{reply:enforceActionableAnalysis(reply,kind),kind,scope,basis:prepared.basis,
           remainingToday:DAILY_LIMIT-Number(quota.request_count)},origin);
       } catch {
         return answer(502,{error:'AI-reflektionen kunde inte skapas just nu.'},origin);

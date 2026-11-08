@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {loadResultAnalysisInput,isAnalysisScope,analysisInstructions} from '../workers/ai-mediator/src/analysis.mjs';
+import {loadResultAnalysisInput,isAnalysisScope,analysisInstructions,enforceActionableAnalysis} from '../workers/ai-mediator/src/analysis.mjs';
 import {IPIP50_V1} from '../workers/ai-mediator/src/catalog.mjs';
 import {createHandler} from '../workers/ai-mediator/src/index.mjs';
 import {createAiResultExperience} from '../ai-result-ui.js';
@@ -144,7 +144,10 @@ test('Worker enforces identity, prepares own data, spends shared quota and retur
  const data=await good.json();
  assert.equal(data.kind,'personality');
  assert.equal(data.scope,'own');
- assert.equal(data.reply,'<b>Varsam reflektion</b>');
+ assert.match(data.reply,/&?Varsam reflektion/);
+ assert.match(data.reply,/Förslag:\n1\. /);
+ assert.match(data.reply,/#kommunikation\/validera/);
+ assert.doesNotMatch(data.reply.split('Förslag:')[1],/\?/);
  assert.equal(x.model.length,1);assert.equal(x.usage.length,1);
  const prompt=JSON.stringify(x.model[0].prompt);
  assert.ok(prompt.includes('40/50'));
@@ -230,3 +233,33 @@ test('changing shared-result signature cancels obsolete analysis, and reset prev
  assert.equal(ui.snapshot('swipe','general'),undefined);
 });
 
+
+test('AI-UX-05 prompt demands concrete question-free suggestions with existing exercise routes',()=>{
+ for(const kind of ['personality','swipe']){
+   const instructions=analysisInstructions({kind,role:'teen'});
+   assert.match(instructions,/ALDRIG FRÅGOR UNDER "Förslag:"/);
+   assert.match(instructions,/två eller tre numrerade/);
+   assert.match(instructions,/#kommunikation\/kontakt/);
+   assert.doesNotMatch(instructions,/Svara med en kort varm/);
+ }
+});
+test('AI-UX-05 backstop replaces questions, broken anchors and unstructured replies',()=>{
+ for(const kind of ['personality','swipe']){
+   const incomplete=enforceActionableAnalysis('Reflektion:\nResultatet visar en möjlighet.\n\nFörslag:\n1. Vad vill ni göra?',kind);
+   assert.match(incomplete,/Reflektion:/);
+   assert.match(incomplete,/Förslag:\n1\. /);
+   assert.doesNotMatch(incomplete.split('Förslag:')[1],/\?/);
+   assert.match(incomplete,/#kommunikation\//);
+   const unsupported=enforceActionableAnalysis('Reflektion:\nVarsamt.\n\nFörslag:\n1. Gör något konkret https://evil.example\n2. Prata lite #kommunikation/unknown',kind);
+   assert.doesNotMatch(unsupported,/evil\.example|unknown/);
+ }
+});
+test('AI-UX-05 preserves two valid action items but rejects additional unsafe links',()=>{
+ const original='Reflektion:\nSvaren visar ett gemensamt JA.\n\nFörslag:\n'+
+   '1. Välj ett JA-svar och beskriv en konkret stund att prova tillsammans. #kommunikation/kontakt\n'+
+   '2. Välj en liten överenskommelse att testa och ändra vid behov. #kommunikation/losning';
+ assert.equal(enforceActionableAnalysis(original,'swipe'),original);
+ const injected=original.replace('#kommunikation/kontakt','#kommunikation/kontakt https://evil.example');
+ const corrected=enforceActionableAnalysis(injected,'swipe');
+ assert.doesNotMatch(corrected,/evil\.example/);
+});
