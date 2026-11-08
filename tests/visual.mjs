@@ -674,6 +674,25 @@ try{
   assert.match(await keyboardSwipe.page.locator('#swipe-card').innerText(),/När kortet har fokus/,
     'The card describes keyboard controls');
   await keyboardSwipe.context.close();
+  // A remote unpair while HOME is visible must revoke cached pairing state
+  // before a badge refresh. Simulate browser focus rather than waiting 15s.
+  const homeUnpaired=await freshContext(
+    {viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},
+    {authenticated:true,paired:true}
+  );
+  await homeUnpaired.page.goto(base+'#hem',{waitUntil:'load'});
+  await homeUnpaired.page.getByRole('heading',{name:/^Inkorgen · (?:minst )?\d+ olästa$/}).waitFor();
+  await homeUnpaired.page.evaluate(()=>{
+    window.__HK_TEST_PAIRED__=false;
+    window.dispatchEvent(new Event('focus'));
+  });
+  await homeUnpaired.page.waitForFunction(()=>!Array.from(document.querySelectorAll('#live-app h2')).some(h=>h.textContent?.startsWith('Inkorgen · ')));
+  assert.equal(await homeUnpaired.page.locator('#live-mobile-nav a[href="#inkorg"] .live-nav-count').count(),0,
+    'Remote unpair must remove old private unread badge on home focus');
+  assert.equal(await homeUnpaired.page.getByRole('heading',{name:/^Inkorgen · /}).count(),0,
+    'Home cannot keep old family inbox alert after remote unpair');
+  await homeUnpaired.context.close();
+
   // NOT-01: failed unread RPCs must not silently look like an empty inbox.
   const unavailableHome=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},
     {authenticated:true,paired:true,homeUnreadFailure:true});
