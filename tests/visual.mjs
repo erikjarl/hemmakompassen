@@ -1600,6 +1600,18 @@ try{
   await paired.page.getByRole('button',{name:'Se och svara i Schyssta listan'}).first().click();
   await paired.page.getByRole('heading',{name:'Schyssta listan'}).waitFor();
   await paired.page.locator('#schyssta-rule-30000000-0000-4000-8000-000000000001').waitFor();
+  const loadedRuleHeading=await paired.page.getByRole('heading',{name:/^Behöver ditt svar/}).innerText();
+  const loadedRuleCount=Number(loadedRuleHeading.match(/\((\d+)\)/)?.[1]||0);
+  await paired.page.goto(base+'#hem',{waitUntil:'load'});
+  await paired.page.getByRole('heading',{name:/^Hej /}).waitFor();
+  await paired.page.waitForFunction(()=>!document.querySelector('#live-app')?.textContent?.includes('Kontrollerar väntande regelförslag'));
+  const loadedHomeHeadings=await paired.page.getByRole('heading',{name:/^Behöver ditt svar/}).allTextContents();
+  const loadedHomeCount=Number(loadedHomeHeadings[0]?.match(/(\d+) förslag/)?.[1]||0);
+  assert.equal(loadedHomeCount,loadedRuleCount,'NOT-02: home and Schyssta rule view have the same pending count');
+  const loadedNavCount=await paired.page.locator('#live-mobile-nav a[href="#regler"] .live-nav-count').textContent();
+  assert.equal(Number(loadedNavCount),loadedRuleCount,'NOT-02: mobile rule badge agrees with both views');
+  await paired.page.goto(base+'#regler',{waitUntil:'load'});
+  await paired.page.locator('#schyssta-rule-30000000-0000-4000-8000-000000000001').waitFor();
   await checkOverflow(paired.page,'Mobile Schyssta listan');
   const schysstaOrder=await paired.page.locator('.schyssta-view').evaluate(root=>{
     const heading=root.querySelector('.schyssta-page-intro h1');
