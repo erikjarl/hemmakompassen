@@ -57,14 +57,14 @@ export function createPrivateIpipRetests({
 }){
   let userId=null,generation=0,loading=false,error='',busy=false;
   let attempts=[],draftId=null,answers={},questionIndex=0,surveyOpen=false;
-  let historyId=null,historyAnswers=null,status='',saveUncertain=false;
+  let historyId=null,historyAnswers=null,status='',saveUncertain=false,lifecycleNeedsCheck=false;
   const repaint=()=>onRender();
   const isCurrent=(id,token)=>userId===id&&generation===token;
 
   function reset(id=null){
     userId=id;generation++;loading=false;error='';busy=false;
     attempts=[];draftId=null;answers={};questionIndex=0;surveyOpen=false;
-    historyId=null;historyAnswers=null;status='';saveUncertain=false;
+    historyId=null;historyAnswers=null;status='';saveUncertain=false;lifecycleNeedsCheck=false;
   }
 
   async function readAnswers(id,attemptId){
@@ -78,7 +78,7 @@ export function createPrivateIpipRetests({
   async function load(id){
     if(!id)return;
     const token=++generation;
-    userId=id;loading=true;error='';status='';saveUncertain=false;repaint();
+    userId=id;loading=true;error='';status='';saveUncertain=false;lifecycleNeedsCheck=false;repaint();
     try{
       const result=await db.from('personality_test_attempts')
         .select('id,created_at,completed_at').eq('user_id',id)
@@ -112,11 +112,12 @@ export function createPrivateIpipRetests({
     // History is loaded on entry and updated after saves, completion and deletion.
     // Manual retry appears only for a failed server read, never as a competing CTA.
     if(status)html+='<p role="status">'+esc(status)+'</p>';
+    if(lifecycleNeedsCheck)html+='<button type="button" class="live-button" data-ipip-retest="verify-attempts">Kontrollera omtestets status</button>';
     if(saveUncertain&&draftId)html+='<button type="button" class="live-button" data-ipip-retest="verify-save"'+(busy?' disabled':'')+'>Kontrollera sparat svar</button>';
     if(draftId){
       const count=Object.keys(answers).length;
       html+='<p><strong>Påbörjad omgång:</strong> '+count+' av 50 svar.</p>';
-      if(!surveyOpen)html+='<button type="button" class="live-button" data-ipip-retest="resume"'+(busy?' disabled':'')+'>Fortsätt privat omtest</button>';
+      if(!surveyOpen)html+='<button type="button" class="live-button" data-ipip-retest="resume"'+(busy||lifecycleNeedsCheck?' disabled':'')+'>Fortsätt privat omtest</button>';
       else{
         const item=IPIP50_V1.items[questionIndex];
         html+='<div class="pf-survey"><p>Fråga '+(questionIndex+1)+' av 50 · '+count+' sparade</p>'+
@@ -130,11 +131,11 @@ export function createPrivateIpipRetests({
           '<button type="button" data-ipip-retest="overview"'+(busy?' disabled':'')+'>Spara och pausa</button>'+
           '</div>';
         if(count===50)html+='<p>Alla 50 svar är sparade. Du kan fortfarande ändra dem innan du avslutar omgången.</p>'+
-          '<button type="button" data-ipip-retest="complete"'+(busy?' disabled':'')+'>Avsluta omgången och spara resultat</button>';
+          '<button type="button" data-ipip-retest="complete"'+(busy||lifecycleNeedsCheck?' disabled':'')+'>Avsluta omgången och spara resultat</button>';
         html+='</div>';
       }
     }else{
-      html+='<button type="button" class="live-button" data-ipip-retest="new"'+(busy?' disabled':'')+'>Starta en ny privat testomgång</button>';
+      html+='<button type="button" class="live-button" data-ipip-retest="new"'+(busy||lifecycleNeedsCheck?' disabled':'')+'>Starta en ny privat testomgång</button>';
     }
     if(draftId)html+='<p><button type="button" data-ipip-retest="export" data-attempt-id="'+esc(draftId)+'"'+(busy?' disabled':'')+'>Exportera min påbörjade omgång (JSON)</button> '+
       '<button type="button" data-ipip-retest="delete" data-attempt-id="'+esc(draftId)+'"'+(busy?' disabled':'')+'>Radera påbörjad omgång</button></p>';
@@ -167,12 +168,12 @@ export function createPrivateIpipRetests({
     const button=target?.closest?.('[data-ipip-retest]');
     if(!button||!userId)return false;
     const action=button.dataset.ipipRetest;
-    if(action==='reload'){await load(userId);return true;}
+    if(action==='reload'||action==='verify-attempts'){await load(userId);return true;}
     if(action==='verify-save'&&saveUncertain&&draftId&&!loading&&!busy){
       // Read the actual saved draft without resending an ambiguous answer.
       await load(userId);return true;
     }
-    if(loading||busy||error)return true;
+    if(loading||busy||error||lifecycleNeedsCheck)return true;
     if(action==='resume'){surveyOpen=true;status='';repaint();return true;}
     if(action==='overview'){surveyOpen=false;status='Omgången är sparad och kan fortsättas senare.';repaint();return true;}
     if(action==='prev'||action==='next'){
