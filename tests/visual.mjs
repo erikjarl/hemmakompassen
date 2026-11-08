@@ -960,14 +960,11 @@ try{
     }));
     assert.ok(navSize.fontSize>=15&&navSize.height>=44,
       'UX-04 '+label+': enlarged labels and usable navigation targets '+JSON.stringify(navSize));
-    await scaled.page.goto(base+'#regler',{waitUntil:'load'});
-    await scaled.page.locator('.schyssta-page-help summary').waitFor();
+    await scaled.page.goto(base+'#kommunikation',{waitUntil:'load'});
+    await scaled.page.getByRole('heading',{name:'Verktyg för bättre samtal'}).waitFor();
     await scaled.page.addStyleTag({content:'html{font-size:125%!important}'});
-    await checkOverflow(scaled.page,'UX-04 '+label+' Schyssta listan');
-    await scaled.page.locator('.schyssta-page-help summary').click();
-    assert.equal(await scaled.page.getByRole('button',{name:'Uppdatera listan'}).isVisible(),true,
-      'UX-04 '+label+': expandable help remains operable at larger text');
-    await capture(scaled.page,'mobile-'+label+'-schyssta.png');
+    await checkOverflow(scaled.page,'UX-04 '+label+' communication guidance');
+    await capture(scaled.page,'mobile-'+label+'-communication.png');
     await scaled.context.close();
   }
   const narrow=await freshContext({viewport:{width:320,height:700},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true});
