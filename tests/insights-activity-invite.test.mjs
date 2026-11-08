@@ -94,7 +94,7 @@ test('account change while authorization request is pending cannot create stale 
   const h=harness();
   const finish=h.delay();
   const task=h.state.prepare('aktiviteter-01');
-  await Promise.resolve(); // Complete the new pair-epoch preflight before RPC is pending.
+  await new Promise(resolve=>setImmediate(resolve)); // Let the pair-epoch preflight and RPC start.
   h.state.user={id:'another'};
   finish({data:[{deck_id:'aktiviteter',card_id:'aktiviteter-01',answer:true}],error:null});
   await task;
