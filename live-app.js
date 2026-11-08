@@ -1645,9 +1645,18 @@ async function copySchysstaAgreements(){
   }
   render();
 }
+// Every deliberate Schyssta write must first verify this exact paired membership
+// and pair epoch. Existing server-side RPC authorization remains authoritative.
+async function preflightSchysstaWrite(viewer,session){
+  if(!user||user.id!==viewer||sharedSession!==session||members.length!==2)return false;
+  const valid=await recheckInboxPair();
+  return valid&&user?.id===viewer&&sharedSession===session&&members.length===2;
+}
 async function markSchysstaRead(id){
   if(!schysstaListEnabled||!user||!SCHYSSTA_UUID.test(id)||schysstaSaving.has(id))return;
-  const viewer=user.id,session=sharedSession;schysstaSaving.add(id);
+  const viewer=user.id,session=sharedSession;
+  if(!await preflightSchysstaWrite(viewer,session)||schysstaSaving.has(id))return;
+  schysstaSaving.add(id);
   let error;try{({error}=await db.rpc('mark_schyssta_notification_read',{p_notification_id:id}));}catch(e){error=e;}
   schysstaSaving.delete(id);
   if(user?.id!==viewer||session!==sharedSession)return;
@@ -1672,7 +1681,9 @@ function validSchysstaHistory(rows){
 }
 async function withdrawSchysstaRule(id){
   if(!schysstaListEnabled||!user||!SCHYSSTA_UUID.test(id)||schysstaSaving.has(id)||schysstaEndTarget!==id)return;
-  const viewer=user.id,session=sharedSession;schysstaSaving.add(id);
+  const viewer=user.id,session=sharedSession;
+  if(!await preflightSchysstaWrite(viewer,session)||schysstaSaving.has(id)||schysstaEndTarget!==id)return;
+  schysstaSaving.add(id);
   let error;try{({error}=await db.rpc('withdraw_schyssta_rule',{p_agreement_id:id}));}catch(e){error=e;}
   schysstaSaving.delete(id);schysstaEndTarget=null;
   if(user?.id!==viewer||session!==sharedSession)return;
@@ -1684,8 +1695,10 @@ async function submitManualSchysstaRule(){
   if(!schysstaListEnabled||!user||members.length!==2||schysstaSubmitting||schysstaLoading||schysstaError)return;
   const body=schysstaDraft.trim().replace(/\s+/g,' ');
   if(body.length<5||body.length>500){schysstaMessage='Skriv mellan 5 och 500 tecken.';render();return;}
+  const viewer=user.id,session=sharedSession,draftBefore=schysstaDraft,editBefore=schysstaEditTarget;
+  if(!await preflightSchysstaWrite(viewer,session)||schysstaDraft!==draftBefore||schysstaEditTarget!==editBefore||!schysstaDraftOpen)return;
   if(!schysstaDraftKey)schysstaDraftKey=crypto.randomUUID();
-  const requestKey=schysstaDraftKey,viewer=user.id,session=sharedSession;
+  const requestKey=schysstaDraftKey;
   schysstaSubmitting=true;schysstaMessage='Skickar förslaget…';render();
   let error;try{({error}=schysstaEditTarget?await db.rpc('propose_schyssta_change',{p_agreement_id:schysstaEditTarget,p_body:body,p_request_key:requestKey}):await db.rpc('propose_manual_schyssta_rule',{p_body:body,p_request_key:requestKey}));}
   catch(e){error=e;}
@@ -1811,7 +1824,9 @@ async function fetchSchysstaList(){
 }
 async function proposeSchysstaRule(cardId){
   if(!schysstaListEnabled||!user||!SCHYSSTA_RULES[cardId]||schysstaSaving.has(cardId))return;
-  const viewer=user.id,session=sharedSession;schysstaSaving.add(cardId);render();
+  const viewer=user.id,session=sharedSession;
+  if(!await preflightSchysstaWrite(viewer,session)||schysstaSaving.has(cardId))return;
+  schysstaSaving.add(cardId);render();
   let error;try{({error}=await db.rpc('propose_schyssta_rule',{p_card_id:cardId}));}catch(e){error=e;}
   schysstaSaving.delete(cardId);if(user?.id!==viewer||sharedSession!==session)return;
   if(error){schysstaError='Förslaget kunde inte sparas. Inget godkännande registrerades.';render();return;}
@@ -1819,7 +1834,9 @@ async function proposeSchysstaRule(cardId){
 }
 async function decideSchysstaRule(agreementId,approved){
   if(!schysstaListEnabled||!user||!SCHYSSTA_UUID.test(agreementId)||schysstaSaving.has(agreementId))return;
-  const viewer=user.id,session=sharedSession;schysstaSaving.add(agreementId);render();
+  const viewer=user.id,session=sharedSession;
+  if(!await preflightSchysstaWrite(viewer,session)||schysstaSaving.has(agreementId))return;
+  schysstaSaving.add(agreementId);render();
   let error;try{({error}=await db.rpc('set_schyssta_rule_decision',{p_agreement_id:agreementId,p_approved:approved}));}catch(e){error=e;}
   schysstaSaving.delete(agreementId);if(user?.id!==viewer||sharedSession!==session)return;
   if(error){schysstaError='Ditt val kunde inte sparas. Listan har rensats tills den kan hämtas igen.';schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];schysstaNotifications=[];schysstaReplacementLinks=[];schysstaHistory=[];render();return;}
@@ -2256,7 +2273,9 @@ document.addEventListener('visibilitychange',()=>{
   if(page()==='insikter'&&user&&members.length===2)void fetchInsights({quiet:true});
   // Refresh the family's inbox after returning to the tab, without overwriting a draft.
   if(schysstaListEnabled&&user&&members.length===2&&!schysstaLoading&&!schysstaDraftOpen
-    &&['hem','inkorg','regler'].includes(page()))void fetchSchysstaList();
+    &&['hem','inkorg'].includes(page()))void fetchSchysstaList();
+  if(schysstaListEnabled&&user&&members.length===2&&page()==='regler')
+    void recheckInboxPair().then(valid=>{if(valid&&page()==='regler'&&!schysstaDraftOpen&&!schysstaLoading)void fetchSchysstaList();});
   if(activityNotificationsEnabled&&user&&members.length===2&&['hem','inkorg'].includes(page()))
     void fetchActivityNotifications({quiet:true});
 });
@@ -2270,6 +2289,8 @@ window.addEventListener('focus',()=>{
   if(page()==='insikter'&&user&&members.length===2)
     void recheckInboxPair().then(valid=>{if(valid&&page()==='insikter')void fetchInsights({quiet:true});});
   if(page()==='inkorg'&&user&&members.length===2)void recheckInboxPair();
+  if(page()==='regler'&&user&&members.length===2)
+    void recheckInboxPair().then(valid=>{if(valid&&page()==='regler'&&!schysstaDraftOpen&&!schysstaLoading)void fetchSchysstaList();});
   // The home inbox badge also belongs to one exact pairing epoch. Do not
   // refresh private unread state against stale local membership after re-pair.
   if(page()==='hem'&&user&&members.length===2)
