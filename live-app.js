@@ -1435,33 +1435,29 @@ function menu(){
     desktop.innerHTML=html;
     if(focusedHref)desktop.querySelector('a[href="'+focusedHref+'"]')?.focus({preventScroll:true});
   }
-  // Three directly visible destinations plus a fully keyboard-accessible More menu.
-  // Keep the current route and unread/pending badges discoverable without horizontal scrolling.
+  // All modules stay directly reachable in the swipeable mobile tab strip.
+  // Preserve the user's scroll position on badge changes, but bring the active
+  // destination into view after a route change.
   const mobile=$('live-mobile-nav');
-  const primary=['hem','inkorg','swipe'];
-  const secondary=nav.filter(([key])=>!primary.includes(key));
-  const moreCount=secondary.reduce((sum,[key])=>sum+(key==='regler'?pending:0),0);
-  const secondaryActive=secondary.some(([key])=>route===key||(key==='kommunikation'&&['mi-foralder','nvc'].includes(route)));
-  const moreBadge=moreCount?'<span class="live-nav-count" aria-hidden="true">'+(moreCount>9?'9+':moreCount)+'</span>':'';
-  const mobileHtml=nav.filter(([key])=>primary.includes(key)).map(navItem).join('')
-    +'<details class="live-mobile-more"'+(secondaryActive?' data-current-route="true"':'')+'>'
-    +'<summary aria-label="Fler sidor'+(moreCount?', '+moreCount+' väntande regelbeslut':'')+'">Mer'+moreBadge+'</summary>'
-    +'<div class="live-mobile-more-links">'+secondary.map(navItem).join('')+'</div></details>';
-  // Preserve an opened More menu (and the keyboard target) across badge updates.
-  if(mobile.innerHTML!==mobileHtml){
-    const wasOpen=mobile.querySelector('details')?.open===true;
-    const focusedHref=mobile.contains(document.activeElement)?document.activeElement.closest('a')?.getAttribute('href'):null;
-    const focusedSummary=mobile.contains(document.activeElement)&&document.activeElement.tagName==='SUMMARY';
-    mobile.innerHTML=mobileHtml;
-    const details=mobile.querySelector('details');
-    if(details)details.open=wasOpen;
+  if(mobile.innerHTML!==html){
+    const oldLeft=mobile.scrollLeft;
+    const focusedHref=mobile.contains(document.activeElement)
+      ?document.activeElement.closest('a')?.getAttribute('href'):null;
+    mobile.innerHTML=html;
+    mobile.scrollLeft=oldLeft;
     if(focusedHref)mobile.querySelector('a[href="'+focusedHref+'"]')?.focus({preventScroll:true});
-    else if(focusedSummary)details?.querySelector('summary')?.focus({preventScroll:true});
   }
   if(routeChanged){
-    // Navigation closes after choosing a destination. Every route remains within two taps.
-    const details=mobile.querySelector('details');
-    if(details)details.open=false;
+    const current=mobile.querySelector('a[aria-current="page"]');
+    if(current){
+      // Defer until layout, without scrolling the document or content pane.
+      requestAnimationFrame(()=>{
+        if(page()!==route)return;
+        const left=current.offsetLeft,right=left+current.offsetWidth;
+        if(left<mobile.scrollLeft)mobile.scrollLeft=left-8;
+        else if(right>mobile.scrollLeft+mobile.clientWidth)mobile.scrollLeft=right-mobile.clientWidth+8;
+      });
+    }
   }
 }
 const card=html=>'<section class="live-panel">'+html+'</section>';
