@@ -233,7 +233,7 @@ test('two-person markers preserve independent x percentages when raw scores matc
   assert.match(html,/pf-score-own/);
   assert.match(html,/pf-score-other/);
   assert.match(html,/Normalmodell|normalmodell|normalfördelning/);
-  assert.match(html,/50 ligger exakt i mitten och 75 vid tre fjärdedelar/);
+  assert.match(html,/P≈20 innebär lägre placering än ungefär 80 %.*inom ±1 SD/);
 });
 
 test('public entry and nested personality modules share a cache-busting release version',async()=>{

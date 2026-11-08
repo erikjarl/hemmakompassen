@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {IPIP50_V1} from '../personality/ipip50-v1.js';
-import {IPIP50_REFERENCE,IPIP50_Z_LIMIT,referencePosition,referenceLimits,describeReferenceProfile,normalPercentileFromZ,IPIP50_PERCENTILE_BANDS,approximateReferencePercentile} from '../personality/ipip50-reference.js';
+import {IPIP50_REFERENCE,IPIP50_Z_LIMIT,referencePosition,referenceLimits,describeReferenceProfile,normalPercentileFromZ,IPIP50_PERCENTILE_BANDS,approximateReferencePercentile,describeModeledPercentile} from '../personality/ipip50-reference.js';
 import {scoreIPIP50} from '../personality/ipip50-scoring.js';
 
 test('all five American adult reference scales retain documented N, means, SD and polarity',()=>{
@@ -71,4 +71,23 @@ test('normal-model percentile map anchors 50 at center, 75 at exactly three quar
   assert.match(score.category,/över genomsnittet/);
   assert.throws(()=>approximateReferencePercentile('extraversion',0),RangeError);
   assert.throws(()=>normalPercentileFromZ(NaN),RangeError);
+});
+
+test('PF-04: modeled percentile rank and SD interval are distinct, including P20',()=>{
+  for(const percentile of [4,9,20,37,50,62,97]){
+    // Choose the same model's z reference points; the output wording must
+    // not imply Swedish norms or observed percentile ranks.
+    const z=percentile===50?0:percentile<50?-1:1;
+    const explanation=describeModeledPercentile({z,percentile});
+    assert.match(explanation,new RegExp('P≈'+percentile));
+    assert.match(explanation,/modellerade vuxenfördelningen/);
+    assert.doesNotMatch(explanation,/svensk norm|tonårsnorm/i);
+  }
+  assert.match(describeModeledPercentile({z:-0.8416,percentile:20}),
+    /lägre än ungefär 80 %.*inom ±1 SD/);
+  assert.match(describeModeledPercentile({z:0.3055,percentile:62}),
+    /högre än ungefär 62 %.*inom ±1 SD/);
+  assert.match(describeModeledPercentile({z:-2.0537,percentile:2}),
+    /mer än 2 SD/);
+  assert.throws(()=>describeModeledPercentile({z:NaN,percentile:50}),RangeError);
 });

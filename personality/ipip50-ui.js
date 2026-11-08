@@ -3,7 +3,7 @@ import {createPrivateIpipRetests} from './ipip50-retest.js?v=20261107-authoritat
 import {scoreIPIP50} from './ipip50-scoring.js';
 import {buildIPIP50FamilyInsights} from './ipip50-family-insights.js?v=20261107-authoritative-export4';
 import {richFamilyReflection} from './ipip50-family-copy.js?v=20261107-authoritative-export4';
-import {IPIP50_REFERENCE,IPIP50_PERCENTILE_BANDS,approximateReferencePercentile,referenceLimits,describeReferenceProfile,formatSv} from './ipip50-reference.js?v=20261107-authoritative-export4';
+import {IPIP50_REFERENCE,IPIP50_PERCENTILE_BANDS,approximateReferencePercentile,describeModeledPercentile,referenceLimits,describeReferenceProfile,formatSv} from './ipip50-reference.js?v=20261107-authoritative-export4';
 import {loadMyIPIP50Answers,saveMyIPIP50Answer} from './ipip50-storage.js';
 
 const esc=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -106,15 +106,15 @@ function radarSvg(self,other=null,role='parent'){
 function percentileChart(self,other=null){
   const bandKey='<div class="pf-band-key" aria-label="Fem jämförelsezoner utifrån standardavvikelser">'+
     IPIP50_PERCENTILE_BANDS.map(b=>'<span class="pf-band-key-item"><i class="pf-band-swatch pf-band-'+esc(b.id)+'" aria-hidden="true"></i>'+
-      esc(b.label)+'</span>').join('')+'</div>';
+      esc(b.id==='average'?'Inom ±1 SD från vuxenmedelvärdet':b.label)+'</span>').join('')+'</div>';
   const rows=FACTORS.map(f=>{
     const own=approximateReferencePercentile(f.id,self.byFactor[f.id].sum);
     const partner=other?approximateReferencePercentile(f.id,other.byFactor[f.id].sum):null;
     const title= f.id==='emotional_stability'?'Emotionell balans':f.labelSv;
     const ownPct=own.percentile.toFixed(6);
     const otherPct=partner?.percentile.toFixed(6);
-    const ownText='Du: '+own.category+' (P≈'+Math.round(own.percentile)+')';
-    const partnerText=partner?'Den andra: '+partner.category+' (P≈'+Math.round(partner.percentile)+')':'';
+    const ownText='Du: '+describeModeledPercentile(own);
+    const partnerText=partner?'Den andra: '+describeModeledPercentile(partner):'';
     const aria=title+'. '+ownText+(partner?'. '+partnerText:'')+
       '. Placeringar är normalmodellerade uppskattningar, inte observerade percentiler.';
     return '<section class="pf-scale-row"><h3>'+esc(title)+'</h3>'+
@@ -130,7 +130,7 @@ function percentileChart(self,other=null){
   return '<div class="pf-percentile-chart">'+
     '<div class="pf-legend" style="--pf-own:#55d6d2;--pf-other:#f8b55b"><span class="pf-legend-own">Din profil</span>'+
     (other?'<span class="pf-legend-other">Den andras profil</span>':'')+'</div>'+
-    '<p class="pf-chart-description"><strong>Uppskattad percentil:</strong> 50 ligger exakt i mitten och 75 vid tre fjärdedelar. Färgzonerna motsvarar standardavvikelser.</p>'+
+    '<p class="pf-chart-description"><strong>Modellberäknad percentil (P≈):</strong> P≈20 innebär lägre placering än ungefär 80 % i en hypotetisk vuxenfördelning, men kan samtidigt ligga inom ±1 SD från medelvärdet. Det är inte svensk eller tonårsvaliderad norm.</p>'+
     rows+
     '<details class="pf-chart-help"><summary>Färgzoner och hur percentilerna ska tolkas</summary>'+
     bandKey+
