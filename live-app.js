@@ -1497,12 +1497,34 @@ function validSchysstaNotifications(rows){
     &&new Set(rows.map(row=>row.notification_id)).size===rows.length;
 }
 const schysstaUnreadCount=()=>schysstaNotifications.filter(n=>n.read_at===null).length;
+// Only server-validated, mutually accepted rules are available for personal export.
+function approvedSchysstaText(rows){
+ const approved=Array.isArray(rows)?rows.filter(item=>item?.status==='accepted'&&typeof item.body==='string'):[];
+ if(!approved.length)return '';
+ return 'Våra gemensamma överenskommelser\n\n'+approved.map((item,index)=>
+  (index+1)+'. '+item.body.replace(/\s+/g,' ').trim()).join('\n')+'\n';
+}
+function currentApprovedSchysstaText(){
+ if(!schysstaListEnabled||!user||members.length!==2||schysstaLoading||schysstaError)return '';
+ return approvedSchysstaText(schysstaAllRules());
+}
+function downloadSchysstaAgreements(){
+ const payload=currentApprovedSchysstaText();
+ if(!payload)return;
+ try{
+  const file=new Blob(['\uFEFF',payload],{type:'text/plain;charset=utf-8'});
+  const url=URL.createObjectURL(file),link=document.createElement('a');
+  link.href=url;link.download='schyssta-listan-overenskommelser.txt';
+  link.style.display='none';document.body.appendChild(link);
+  try{link.click();schysstaCopyMessage='Textfilen har förberetts för nedladdning. Förvara den privat om den innehåller personliga överenskommelser.';}
+  finally{link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+ }catch(e){schysstaCopyMessage='Det gick inte att skapa textfilen. Prova Kopiera aktuella regler i stället.';}
+ render();
+}
 async function copySchysstaAgreements(){
-  if(!schysstaListEnabled||!user||members.length!==2||schysstaLoading||schysstaError)return;
+  const payload=currentApprovedSchysstaText();
+  if(!payload)return;
   const approved=schysstaAllRules().filter(item=>item.status==='accepted');
-  if(!approved.length)return;
-  const payload='Våra gemensamma överenskommelser\n\n'
-    +approved.map((item,index)=>(index+1)+'. '+item.body).join('\n');
   const viewer=user.id,session=sharedSession;
   try{
     if(typeof navigator.clipboard?.writeText!=='function')throw new Error('Clipboard unsupported');
@@ -1774,7 +1796,7 @@ function schysstaView(){
     +searchTools
     +'<div class="schyssta-filter-group" data-schyssta-filter-group="approved">'
     +card('<h2>Våra överenskommelser</h2>'+list(approved,'Ni har ännu inga regler som båda godkänt.')
-      +(approved.length?'<button class="schyssta-secondary" type="button" data-schyssta-copy>Kopiera aktuella regler</button>':'')
+      +(approved.length?'<div class="schyssta-actions"><button class="schyssta-secondary" type="button" data-schyssta-copy>Kopiera aktuella regler</button><button class="schyssta-secondary" type="button" data-schyssta-download>Ladda ner som textfil</button></div><p class="live-muted">Textfilen innehåller bara regler som båda har godkänt. Den sparas på din enhet, så hantera den privat.</p>':'')
       +(schysstaCopyMessage?'<p role="status" class="schyssta-feedback">'+esc(schysstaCopyMessage)+'</p>':''))
     +'<p class="schyssta-no-results live-muted" hidden>Inga gemensamma regler matchar sökningen.</p></div>'
     +'<div class="schyssta-filter-group" data-schyssta-filter-group="ongoing">'
@@ -1964,6 +1986,7 @@ if(e.target.closest('[data-family-chat-more]'))void fetchFamilyChat(true);
 if(e.target.closest('#schyssta-retry')&&!schysstaLoading)void fetchSchysstaList();
 if(e.target.closest('[data-schyssta-refresh]')&&!schysstaLoading)void fetchSchysstaList();
 if(e.target.closest('[data-schyssta-copy]'))void copySchysstaAgreements();
+if(e.target.closest('[data-schyssta-download]'))downloadSchysstaAgreements();
 if(e.target.closest('[data-schyssta-start]')){schysstaDraftOpen=true;schysstaEditTarget=null;schysstaDraft='';schysstaDraftKey=null;render();document.getElementById('schyssta-body')?.focus();}
 if(e.target.closest('#schyssta-compose')){schysstaDraftOpen=!schysstaDraftOpen;if(!schysstaDraftOpen){schysstaEditTarget=null;schysstaDraftKey=null;schysstaDraft='';}schysstaMessage='';render();}
 const openRule=e.target.closest('[data-schyssta-open]');
