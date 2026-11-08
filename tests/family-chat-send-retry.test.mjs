@@ -17,7 +17,7 @@ function harness(){
     familyChatSending:false,familyChatDraft:'Hej!',familyChatRequestKey:null,
     familyChatStatus:'',SCHYSSTA_UUID:/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
     crypto:{randomUUID:()=>{ids++;return '81000000-0000-4000-8000-'+String(ids).padStart(12,'0');}},
-    render:()=>{renders++;},fetchFamilyChat:async()=>{refreshes++;},
+    render:()=>{renders++;},recheckInboxPair:async()=>true,fetchFamilyChat:async()=>{refreshes++;},
     setTimeout:callback=>{timers.push(callback);return timers.length;},
     clearTimeout:()=>{},
     db:{rpc:(name,args)=>{calls.push({name,args});return rpc(name,args);}},
@@ -62,6 +62,7 @@ test('a stalled request times out but preserves a safe retry path',async()=>{
   let resolveFirst;
   h.setRpc(()=>new Promise(resolve=>{resolveFirst=resolve;}));
   const pending=h.state.send();
+  await new Promise(resolve=>setImmediate(resolve));
   assert.equal(h.state.familyChatSending,true);
   assert.equal(h.timers.length,1);
   h.timers[0]();
@@ -83,6 +84,7 @@ test('an in-flight send cannot be launched twice or erase a newer draft',async()
   let finish;
   h.setRpc(()=>new Promise(resolve=>{finish=resolve;}));
   const pending=h.state.send();
+  await new Promise(resolve=>setImmediate(resolve));
   await h.state.send();
   assert.equal(h.calls.length,1,'Only one pending RPC may be issued');
   // Model an external draft change even if the on-screen textarea is disabled.
@@ -100,6 +102,7 @@ test('a reply from a previous signed-in session cannot change the new account',a
   let finish;
   h.setRpc(()=>new Promise(resolve=>{finish=resolve;}));
   const pending=h.state.send();
+  await new Promise(resolve=>setImmediate(resolve));
   h.state.user={id:'another'};
   h.state.sharedSession=11;
   h.state.familyChatDraft='Ny sessions utkast';

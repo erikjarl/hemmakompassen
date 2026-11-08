@@ -1528,6 +1528,41 @@ try{
   assert.match(await teenInbox.page.locator('.family-chat-mine').innerText(),/Hej från tonåringen/,'Teen can send from their own paired account');
   await checkOverflow(teenInbox.page,'Private message inbox on teen mobile view');
   await teenInbox.context.close();
+  // Live server pair membership might change in another tab before the next poll.
+  // A deliberate send must perform a fresh pair check and clear stale private UI.
+  const sendRevoked=await freshContext(
+    {viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},
+    {authenticated:true,paired:true}
+  );
+  await sendRevoked.page.goto(base+'#inkorg',{waitUntil:'load'});
+  await sendRevoked.page.locator('#family-chat-body').fill('Text som inte får skickas efter avparning');
+  await sendRevoked.page.evaluate(()=>{window.__HK_TEST_PAIRED__=false;});
+  await sendRevoked.page.locator('#family-chat-form').evaluate(form=>form.requestSubmit());
+  await sendRevoked.page.getByRole('heading',{name:'Para ihop era konton'}).waitFor();
+  assert.equal(await sendRevoked.page.evaluate(()=>window.__HK_CHAT_SEND__??null),null,
+    'Revoked pairing must never invoke private send RPC from the old conversation');
+  assert.equal(await sendRevoked.page.locator('.family-chat-bubble').count(),0,
+    'Revoked pairing must clear old private messages');
+  assert.equal(await sendRevoked.page.locator('#family-chat-body').count(),0,
+    'Revoked pairing must hide previous draft and composer');
+  await sendRevoked.context.close();
+
+  // Deliberate mark-all must not acknowledge incoming messages after unpairing.
+  const readRevoked=await freshContext(
+    {viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},
+    {authenticated:true,paired:true}
+  );
+  await readRevoked.page.goto(base+'#inkorg',{waitUntil:'load'});
+  await readRevoked.page.getByRole('button',{name:'Markera alla meddelanden som lästa'}).waitFor();
+  await readRevoked.page.evaluate(()=>{window.__HK_TEST_PAIRED__=false;});
+  await readRevoked.page.getByRole('button',{name:'Markera alla meddelanden som lästa'}).click();
+  await readRevoked.page.getByRole('heading',{name:'Para ihop era konton'}).waitFor();
+  assert.equal(await readRevoked.page.evaluate(()=>window.__HK_MARK_CHAT_READ__||0),0,
+    'Revoked pairing cannot invoke read-receipt RPC');
+  assert.equal(await readRevoked.page.locator('.family-chat-bubble').count(),0,
+    'Revoked pairing hides previously loaded private text');
+  await readRevoked.context.close();
+
   const unpairedInbox=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,paired:false});
   await unpairedInbox.page.goto(base+'#inkorg',{waitUntil:'load'});
   await unpairedInbox.page.getByRole('heading',{name:'Para ihop era konton'}).waitFor();

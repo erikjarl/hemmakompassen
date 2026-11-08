@@ -14,7 +14,7 @@ function harness(result={data:1,error:null}){
     user:{id:'teen'},members:[{role:'parent'},{role:'teen'}],inboxPairEpoch:'epoch-1',sharedSession:7,
     familyChatReadBusy:false,familyChatLoading:false,familyChatUnreadError:false,
     familyChatUnread:2,familyChatStatus:'',familyChatCountRequest:3,
-    render:()=>{},fetchFamilyChatUnread:async()=>{unreadRefreshes++;},db:{rpc:async name=>{assert.equal(name,'mark_family_messages_read');called++;return remote;}}
+    render:()=>{},recheckInboxPair:async()=>true,fetchFamilyChatUnread:async()=>{unreadRefreshes++;},db:{rpc:async name=>{assert.equal(name,'mark_family_messages_read');called++;return remote;}}
   };
   vm.runInNewContext(action+'\nthis.markRead=markAllFamilyChatRead;',state);
   return {state,setRemote:v=>remote=v,calls:()=>called,refreshes:()=>unreadRefreshes};
@@ -54,6 +54,9 @@ test('stale response after account switch cannot touch new session state',async(
   const h=harness();
   h.state.db.rpc=()=>new Promise(resolve=>{release=resolve;});
   const pending=h.state.markRead();
+  // A real RPC must be in flight before the simulated account switch.
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(typeof release,'function','Mark RPC must be in flight before simulating account switch');
   h.state.user={id:'another'};
   h.state.sharedSession=8;
   release({data:2,error:null});
