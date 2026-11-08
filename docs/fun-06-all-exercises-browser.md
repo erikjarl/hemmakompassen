@@ -1,6 +1,6 @@
 # FUN-06 – samtliga samtalsövningar och genvägar i syntetisk webbläsare
 
-**Datum:** 8 november 2026. **Status:** testkod incheckad, CI inväntas.
+**Datum:** 8 november 2026. **Verifierat:** [PR #221](https://github.com/erikjarl/hemmakompassen/pull/221) mergad till `main` (`1e945f9`), [slutlig grön Node/bygg/Chromium-CI #42500326594](https://github.com/erikjarl/hemmakompassen/actions/runs/42500326594). **56/56 syntetiska roll-/stegkontroller PASS**. Hela UI-sviten sparade 67 skärmbilder.
 
 ## Syfte och metod
 
