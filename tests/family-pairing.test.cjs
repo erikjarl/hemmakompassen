@@ -162,6 +162,7 @@ test('a QR invitation stays on the recipient device, pre-fills the code and need
       return {data:null,error:null};
     }
   };
+  recipientElement('invite-notice').hidden=true;
   let destination;
   const recipientLocation={href:url,hash:'#invite='+qrCode,pathname:'/konto.html',search:'',assign:value=>destination=value};
   let cleaned=false;
@@ -172,7 +173,10 @@ test('a QR invitation stays on the recipient device, pre-fills the code and need
     history:{replaceState(){cleaned=true;}}
   });
   await tick();await tick();
-  assert.match(recipientElement('status').textContent,/Logga in/);
+  assert.equal(recipientElement('invite-notice').hidden,false,'Invitation guidance is visible separately from action feedback');
+  assert.equal(recipientElement('status').textContent,'','Invitation guidance cannot overwrite form action responses');
+  const accountMarkup=readFileSync(join(__dirname,'..','konto.html'),'utf8');
+  assert.match(accountMarkup,/id="invite-notice"[^>]*>Familjeinbjudan hittad/);
   recipientElement('email').value='parent@example.invalid';
   recipientElement('password').value='very-long-password';
   recipientElement('email-form').submit({preventDefault(){}});
