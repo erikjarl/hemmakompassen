@@ -8,7 +8,7 @@ const config=readFileSync(new URL('../backend-config.js',import.meta.url),'utf8'
 const validators=source.match(/function validActivityNotifications\(rows\)\{[\s\S]*?\n\}(?=\n\/\/ Snapshot actual pair identity)/)?.[0];
 const pairHelper=source.slice(source.indexOf('const activityPairSignature='),source.indexOf('\nconst activityUnreadCount='));
 assert.ok(pairHelper,'activity pair identity snapshot available');
-const fetcher=source.match(/async function fetchActivityNotifications\(\{quiet=false\}=\{\}\)\{[\s\S]*?\n\}(?=\nasync function markActivityNotificationRead)/)?.[0];
+const fetcher=source.match(/async function fetchActivityNotifications\(\{quiet=false,forceRender=false\}=\{\}\)\{[\s\S]*?\n\}(?=\nasync function markActivityNotificationRead)/)?.[0];
 assert.ok(validators,'activity RPC rows validated independently');
 assert.ok(fetcher,'activity fetch is testable independently');
 
@@ -58,6 +58,18 @@ test('successful RPC fetch displays only the validated, current digest',async()=
  assert.equal(h.state.activityNotifications.length,1);
  assert.equal(h.state.activityNotificationsError,'');
  assert.equal(h.renders(),1);
+});
+test('explicit activity refresh redraws notification state with an unsent chat draft',async()=>{
+ const h=harness();
+ h.state.page=()=> 'inkorg';
+ h.state.familyChatDraft='Ett påbörjat, privat meddelande.';
+ await h.state.fetchActivityNotifications();
+ assert.equal(h.renders(),0,'Ordinary polling must not rerender an active draft');
+ h.setResponse({data:[{...base,read_at:'2026-11-07T09:01:00Z'}],error:null});
+ await h.state.fetchActivityNotifications({forceRender:true});
+ assert.ok(h.renders()>=1,'An explicit refresh must update the visible notice even with a draft');
+ assert.equal(h.state.activityNotifications[0].read_at,'2026-11-07T09:01:00Z');
+ assert.equal(h.state.familyChatDraft,'Ett påbörjat, privat meddelande.');
 });
 test('failed RPC clears stale notifications and flags unknown count',async()=>{
  const h=harness();await h.state.fetchActivityNotifications();
