@@ -4,7 +4,7 @@ import {createPrivateIpipRetests,buildPrivateIpipRetestExport} from '../personal
 
 function makeBackend(){
   const attempts=[],answers=[],calls=[];
-  let owner='private-user',failNextAnswer=false,failDelete=false,failNextAnswerRead=false,failNextAttemptsRead=false,nextAnswerMode=null,writeAttempts=0;
+  let owner='private-user',failNextAnswer=false,failDelete=false,failNextAnswerRead=false,failNextAttemptsRead=false,nextAnswerMode=null,writeAttempts=0,nextNewMode=null,nextCompleteMode=null,newAttempts=0,completionAttempts=0;
   const db={
     from(table){
       assert.ok(['personality_test_attempts','personality_attempt_answers'].includes(table),
@@ -14,15 +14,23 @@ function makeBackend(){
         const q={
           select(){return q;},eq(k,v){filters[k]=v;return q;},
           order(){return Promise.resolve(run());},single(){return Promise.resolve(run());},
+          maybeSingle(){const result=run();return Promise.resolve(result.error?result:{...result,data:Array.isArray(result.data)?result.data[0]||null:result.data});},
           then(ok,bad){return Promise.resolve(run()).then(ok,bad);}
         };
         function run(){
           if(op==='new'){
+            newAttempts++;
+            const mode=nextNewMode;nextNewMode=null;
+            if(mode==='reject')return {data:null,error:{message:'creation rejected'}};
             if(attempts.some(a=>a.user_id===payload.user_id&&a.completed_at===null))
               return {data:null,error:{code:'23505',message:'one open attempt per owner'}};
             const row={id:'attempt-'+(attempts.length+1),user_id:payload.user_id,
               instrument_id:payload.instrument_id,created_at:'2026-11-07T10:00:00Z',completed_at:null};
-            attempts.push(row);calls.push('new');return {data:{...row},error:null};
+            attempts.push(row);calls.push('new');
+            if(mode==='throw-after')throw Error('creation ACK lost after commit');
+            if(mode==='lost-ack')return {data:null,error:{message:'creation ACK lost'}};
+            if(mode==='missing-ack')return {data:null,error:null};
+            return {data:{...row},error:null};
           }
           if(op==='delete'){
             if(failDelete)return {data:null,error:{message:'delete unavailable'}};
@@ -35,11 +43,17 @@ function makeBackend(){
             calls.push('delete');return {data:{id:deleted.id},error:null};
           }
           if(op==='update'){
+            completionAttempts++;
+            const mode=nextCompleteMode;nextCompleteMode=null;
+            if(mode==='reject')return {data:null,error:{message:'completion rejected'}};
             const row=attempts.find(a=>a.id===filters.id&&a.user_id===filters.user_id);
             if(!row)return {data:null,error:{message:'not found'}};
             const items=answers.filter(a=>a.attempt_id===row.id&&a.user_id===row.user_id);
             if(row.completed_at||items.length!==50)return {data:null,error:{message:'incomplete'}};
             row.completed_at=payload.completed_at;calls.push('complete');
+            if(mode==='lost-ack')return {data:null,error:{message:'completion ACK lost'}};
+            if(mode==='throw-after')throw Error('completion transport closed after commit');
+            if(mode==='missing-ack')return {data:null,error:null};
             return {data:{...row},error:null};
           }
           if(op==='read'&&table==='personality_test_attempts'&&failNextAttemptsRead){
@@ -81,6 +95,8 @@ function makeBackend(){
   return {db,attempts,answers,calls,setOwner:v=>owner=v,failNext:()=>failNextAnswer=true,
     setDeleteFailure:v=>failDelete=v,failAnswerRead:()=>failNextAnswerRead=true,
     nextAnswer:v=>nextAnswerMode=v,writeAttempts:()=>writeAttempts,
+    nextNew:v=>nextNewMode=v,nextComplete:v=>nextCompleteMode=v,
+    newAttempts:()=>newAttempts,completionAttempts:()=>completionAttempts,
     failAttemptsRead:()=>failNextAttemptsRead=true};
 }
 const button=(action,attemptId)=>({closest:sel=>sel==='[data-ipip-retest]'?{dataset:{ipipRetest:action,attemptId}}:null});
@@ -438,4 +454,110 @@ test('private retest: uncertain read and identity switch do not show a stale con
   await ui.load('another-user');
   assert.doesNotMatch(ui.render(),/Kontrollera sparat svar|3 av 50 svar/);
   assert.equal(b.writeAttempts(),1);
+});
+
+
+test('private retest start: a lost or thrown creation ACK resumes the one confirmed draft',async()=>{
+  for(const mode of ['lost-ack','throw-after','missing-ack']){
+    const b=makeBackend(),ui=createPrivateIpipRetests({db:b.db});
+    ui.reset('private-user');await ui.load('private-user');
+    b.nextNew(mode);
+    await ui.handleClick(button('new'));
+    assert.equal(b.attempts.length,1);
+    assert.equal(b.newAttempts(),1,'No duplicate INSERT when the response is missing');
+    assert.match(ui.render(),/Servern visar en påbörjad omgång/);
+    assert.match(ui.render(),/Fortsätt privat omtest/);
+    await ui.handleClick(button('resume'));
+    assert.match(ui.render(),/Fråga 1 av 50/);
+    assert.equal(b.newAttempts(),1);
+  }
+});
+
+test('private retest start: server rejects creation, user may retry after fresh read',async()=>{
+  const b=makeBackend(),ui=createPrivateIpipRetests({db:b.db});
+  ui.reset('private-user');await ui.load('private-user');
+  b.nextNew('reject');
+  await ui.handleClick(button('new'));
+  assert.equal(b.attempts.length,0);
+  assert.match(ui.render(),/Servern visar ingen påbörjad omgång/);
+  await ui.handleClick(button('new'));
+  assert.equal(b.attempts.length,1);
+  assert.equal(b.newAttempts(),2);
+  assert.match(ui.render(),/Fråga 1 av 50/);
+});
+
+test('private retest start: unreadable server list allows only a refresh, not false success',async()=>{
+  const b=makeBackend(),ui=createPrivateIpipRetests({db:b.db});
+  ui.reset('private-user');await ui.load('private-user');
+  b.nextNew('lost-ack');b.failAttemptsRead();
+  await ui.handleClick(button('new'));
+  assert.equal(b.attempts.length,1,'The creation actually committed');
+  assert.match(ui.render(),/Det gick inte att hämta dina privata omtestningar/);
+  assert.doesNotMatch(ui.render(),/Fortsätt privat omtest/);
+  await ui.handleClick(button('reload'));
+  assert.match(ui.render(),/Fortsätt privat omtest/);
+  assert.equal(b.newAttempts(),1);
+});
+
+test('private retest completion: lost, thrown or missing ACK is read back and history updates once',async()=>{
+  for(const mode of ['lost-ack','throw-after','missing-ack']){
+    const b=makeBackend(),ui=createPrivateIpipRetests({db:b.db});
+    ui.reset('private-user');await ui.load('private-user');
+    await ui.handleClick(button('new'));
+    for(let i=1;i<=50;i++)await ui.handleChange(radio('ipip50-'+String(i).padStart(3,'0'),3));
+    b.nextComplete(mode);
+    await ui.handleClick(button('complete'));
+    assert.equal(b.completionAttempts(),1);
+    assert.equal(b.attempts[0].completed_at!==null,true);
+    assert.match(ui.render(),/Servern bekräftar att omgången avslutades/);
+    assert.match(ui.render(),/Omtest 1 av 1/);
+    assert.doesNotMatch(ui.render(),/Kontrollera omtestets status/);
+    await ui.handleClick(button('complete'));
+    assert.equal(b.completionAttempts(),1,'Completion is not resent after verified ACK loss');
+  }
+});
+
+test('private retest completion: rejected update requires explicit server check before retry',async()=>{
+  const b=makeBackend(),ui=createPrivateIpipRetests({db:b.db});
+  ui.reset('private-user');await ui.load('private-user');await ui.handleClick(button('new'));
+  for(let i=1;i<=50;i++)await ui.handleChange(radio('ipip50-'+String(i).padStart(3,'0'),3));
+  b.nextComplete('reject');
+  await ui.handleClick(button('complete'));
+  assert.equal(b.attempts[0].completed_at,null);
+  assert.equal(b.completionAttempts(),1);
+  assert.match(ui.render(),/Det går inte att bekräfta om omgången avslutades/);
+  assert.match(ui.render(),/data-ipip-retest="verify-attempts"/);
+  await ui.handleClick(button('complete'));
+  assert.equal(b.completionAttempts(),1,'An unconfirmed completion is not repeated blindly');
+  await ui.handleClick(button('verify-attempts'));
+  assert.match(ui.render(),/Fortsätt privat omtest/);
+  await ui.handleClick(button('resume'));
+  await ui.handleClick(button('complete'));
+  assert.equal(b.completionAttempts(),2);
+  assert.equal(b.attempts[0].completed_at!==null,true);
+});
+
+test('private retest completion: readback failure stays unknown until explicit refresh',async()=>{
+  const b=makeBackend(),ui=createPrivateIpipRetests({db:b.db});
+  ui.reset('private-user');await ui.load('private-user');await ui.handleClick(button('new'));
+  for(let i=1;i<=50;i++)await ui.handleChange(radio('ipip50-'+String(i).padStart(3,'0'),4));
+  b.nextComplete('lost-ack');b.failAttemptsRead();
+  await ui.handleClick(button('complete'));
+  assert.equal(b.attempts[0].completed_at!==null,true);
+  assert.match(ui.render(),/Kontrollera omtestets status/);
+  assert.doesNotMatch(ui.render(),/Omgången har avslutats och sparats/);
+  await ui.handleClick(button('verify-attempts'));
+  assert.match(ui.render(),/Omtest 1 av 1/);
+  assert.equal(b.completionAttempts(),1);
+});
+
+test('private retest completion: account switching clears ambiguous operation state',async()=>{
+  const b=makeBackend(),ui=createPrivateIpipRetests({db:b.db});
+  ui.reset('private-user');await ui.load('private-user');await ui.handleClick(button('new'));
+  for(let i=1;i<=50;i++)await ui.handleChange(radio('ipip50-'+String(i).padStart(3,'0'),3));
+  b.nextComplete('reject');
+  await ui.handleClick(button('complete'));
+  assert.match(ui.render(),/Kontrollera omtestets status/);
+  ui.reset('another-user');await ui.load('another-user');
+  assert.doesNotMatch(ui.render(),/Kontrollera omtestets status|Omtest 1 av 1/);
 });

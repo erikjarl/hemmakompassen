@@ -1397,6 +1397,71 @@ async function verifyRetestAnswerAcknowledgements(){
  console.log('FUN-04 private retest ACK: '+records.length+' synthetic Chromium scenarios passed.');
 }
 
+// FUN-04: confirm start/finish against the currently authenticated viewer's
+// synthetic attempts table after lost receipts; test actual browser buttons.
+async function verifyRetestLifecycleAckBrowser(){
+ const records=[];
+ for(const role of ['parent','teen']){
+  const width=role==='parent'?390:320;
+  for(const scenario of ['lost-start-and-completion','rejected-start']){
+   const m=await freshContext(
+     {viewport:{width,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true},
+     {authenticated:true,paired:false,role,personalityComplete:true,privateRetests:true}
+   );
+   try{
+    const page=m.page;
+    await page.goto(base+'#personlighet',{waitUntil:'load'});
+    const panel=page.locator('.pf-retest');
+    await page.getByRole('button',{name:'Starta en ny privat testomgång'}).waitFor();
+    await page.evaluate(scenario=>{
+      window.__HK_RETEST_START_WRITES__=0;
+      window.__HK_RETEST_COMPLETE_WRITES__=0;
+      window.__HK_RETEST_LIFECYCLE_READBACKS__=0;
+      window.__HK_TEST_RETEST_START_LOST_ACK__=scenario==='lost-start-and-completion';
+      window.__HK_TEST_RETEST_START_REJECT__=scenario==='rejected-start';
+    },scenario);
+    await page.getByRole('button',{name:'Starta en ny privat testomgång'}).click();
+    if(scenario==='rejected-start'){
+      await panel.getByText(/Servern visar ingen påbörjad omgång/).waitFor();
+      assert.equal(await page.evaluate(()=>window.__HK_RETEST_START_WRITES__),1);
+      assert.equal(await page.locator('[data-ipip-retest-answer]').count(),0);
+      await page.getByRole('button',{name:'Starta en ny privat testomgång'}).click();
+      await panel.getByText('Fråga 1 av 50').waitFor();
+      assert.equal(await page.evaluate(()=>window.__HK_RETEST_START_WRITES__),2);
+      records.push({role,scenario,phase:'start-rejected-then-manual-retry',passed:true});
+      continue;
+    }
+    await panel.getByText(/Servern visar en påbörjad omgång trots att startbekräftelsen saknades/).waitFor();
+    assert.equal(await page.evaluate(()=>window.__HK_RETEST_START_WRITES__),1);
+    await page.getByRole('button',{name:'Fortsätt privat omtest'}).click();
+    await panel.getByText('Fråga 1 av 50').waitFor();
+    for(let n=1;n<=50;n++){
+      const item='ipip50-'+String(n).padStart(3,'0');
+      await panel.getByText('Fråga '+n+' av 50').waitFor();
+      await panel.locator('[data-ipip-retest-answer="'+item+'"][value="3"]').click();
+    }
+    await panel.getByText(/Alla 50 svar är sparade/).waitFor();
+    await page.evaluate(()=>{window.__HK_TEST_RETEST_COMPLETE_LOST_ACK__=true;});
+    await page.getByRole('button',{name:'Avsluta omgången och spara resultat'}).click();
+    await panel.getByText(/Servern bekräftar att omgången avslutades trots ett kommunikationsfel/).waitFor();
+    assert.equal(await page.evaluate(()=>window.__HK_RETEST_COMPLETE_WRITES__),1);
+    assert.equal(await page.evaluate(()=>window.__HK_RETEST_LIFECYCLE_READBACKS__),1);
+    assert.equal(await page.locator('.pf-retest-history').count(),1);
+    assert.equal(await panel.locator('[data-ipip-retest="verify-attempts"]').count(),0);
+    assert.equal(await page.locator('.pf-results').count(),1,
+      'Completing a private retest leaves the original profile untouched');
+    await checkOverflow(page,'FUN-04 retest lifecycle '+role);
+    records.push({role,scenario,phase:'start-lost-ack',answers:50,passed:true});
+    records.push({role,scenario,phase:'completion-lost-ack',answers:50,passed:true});
+   }finally{await m.context.close();}
+  }
+ }
+ await fs.writeFile(path.join(output,'fun-04-retest-lifecycle-ack-browser-synthetic.json'),
+   JSON.stringify({method:'Real Chromium buttons and private 50-item retest controls with in-memory Supabase start/completion failures',
+    limits:'Mocked Auth and DB, not signed test accounts, network faults against production or physical Safari',records},null,2)+'\n');
+ console.log('FUN-04 retest lifecycle ACK: '+records.length+' synthetic Chromium role/transition cases passed.');
+}
+
 // FUN-04.05: finish a fresh private 50-item retest through real browser controls,
 // open its saved history, and export the completed JSON. Only in-memory mock data
 // is changed; the original IPIP-50 responses are not modified.
@@ -2213,9 +2278,19 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
                 const filters={};
                 const run=()=>{
                   if(operation==='insert'){
+                    window.__HK_RETEST_START_WRITES__=(window.__HK_RETEST_START_WRITES__||0)+1;
+                    if(window.__HK_TEST_RETEST_START_REJECT__){
+                      window.__HK_TEST_RETEST_START_REJECT__=false;
+                      return {data:null,error:{message:'Synthetic creation rejected'}};
+                    }
                     const row={id:'90000000-0000-4000-8000-000000000001',...payload,
                       created_at:'2026-11-07T10:00:00Z',completed_at:null};
-                    list.push(row);return {data:{...row},error:null};
+                    list.push(row);
+                    if(window.__HK_TEST_RETEST_START_LOST_ACK__){
+                      window.__HK_TEST_RETEST_START_LOST_ACK__=false;
+                      return {data:null,error:{message:'Synthetic creation ACK lost'}};
+                    }
+                    return {data:{...row},error:null};
                   }
                   if(operation==='delete'){
                     const index=list.findIndex(a=>Object.entries(filters).every(([k,v])=>a[k]===v));
@@ -2226,10 +2301,26 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
                     return {data:{id:deleted.id},error:null};
                   }
                   if(operation==='update'){
+                    window.__HK_RETEST_COMPLETE_WRITES__=(window.__HK_RETEST_COMPLETE_WRITES__||0)+1;
+                    if(window.__HK_TEST_RETEST_COMPLETE_REJECT__){
+                      window.__HK_TEST_RETEST_COMPLETE_REJECT__=false;
+                      return {data:null,error:{message:'Synthetic completion rejected'}};
+                    }
                     const row=list.find(a=>Object.entries(filters).every(([k,v])=>a[k]===v));
                     if(!row)return {data:null,error:{message:'missing row'}};
                     if(retestAnswers.length!==50)return {data:null,error:{message:'incomplete'}};
-                    Object.assign(row,payload);return {data:{...row},error:null};
+                    Object.assign(row,payload);
+                    if(window.__HK_TEST_RETEST_COMPLETE_LOST_ACK__){
+                      window.__HK_TEST_RETEST_COMPLETE_LOST_ACK__=false;
+                      return {data:null,error:{message:'Synthetic completion ACK lost'}};
+                    }
+                    return {data:{...row},error:null};
+                  }
+                  if(table==='personality_test_attempts'&&operation==='read'){
+                    if(window.__HK_TEST_RETEST_LIFECYCLE_READ_FAIL__){
+                      window.__HK_TEST_RETEST_LIFECYCLE_READ_FAIL__=false;
+                      return {data:null,error:{message:'Synthetic attempts list unreadable'}};
+                    }
                   }
                   if(table==='personality_attempt_answers'&&operation==='read'){
                     window.__HK_RETEST_ACK_READS__=(window.__HK_RETEST_ACK_READS__||0)+1;
@@ -2246,6 +2337,11 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
                   eq(k,v){filters[k]=v;return q;},
                   order(){return Promise.resolve(run());},
                   single(){return Promise.resolve(run());},
+                  maybeSingle(){
+                    const result=run();
+                    window.__HK_RETEST_LIFECYCLE_READBACKS__=(window.__HK_RETEST_LIFECYCLE_READBACKS__||0)+1;
+                    return Promise.resolve(result.error?result:{...result,data:Array.isArray(result.data)?result.data[0]||null:result.data});
+                  },
                   then(resolve,reject){return Promise.resolve(run()).then(resolve,reject);}
                 };
                 return q;
@@ -4596,6 +4692,7 @@ try{
   await verifyIpip50WriteAckBrowser();
   await verifyFullPersonalitySurvey();
   await verifyRetestAnswerAcknowledgements();
+  await verifyRetestLifecycleAckBrowser();
   await verifyFullPrivateRetest();
   await verifyDistinctPrivateRetestHistory();
   await verifyCommunicationForms();
