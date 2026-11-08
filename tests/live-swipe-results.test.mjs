@@ -233,12 +233,13 @@ console.log('PASS: shared result renderer and role summaries reject B, NO and un
    const pollSource=script.match(/async function pollSharedMatches\([\s\S]*?(?=\n\/\/ Theme access)/);
   assert.ok(source,'The aggregate fetch and polling functions remain independently testable');
    assert.ok(pollSource,'The aggregate polling function remains independently testable');
-  let rows=[{deck_id:'general',card_id:'general-01',answer:true}],calls=0,renders=0;
+  let rows=[{deck_id:'general',card_id:'general-01',answer:true}],calls=0,renders=0,allowPair=true,pairChecks=0;
   const state={
     user:{id:'account-1'},members:[{},{}],sharedSession:1,sharedRequest:0,
     sharedDeckId:'general',sharedMatches:[],sharedPriorities:[],sharedError:'',
     sharedLoading:false,sharedPollPending:false,sharedPollingEnabled:true,sharedPrioritiesEnabled:false,swipeBusy:false,activeThemeDeck:null,
     document:{hidden:false},page:()=> 'swipe',render:()=>{renders++;},renderKeepingGeneralReview:()=>{renders++;},
+    recheckInboxPair:async()=>{pairChecks++;return allowPair;},
     sharedDeck:id=>id==='general'?{cards:[
       {id:'general-01',type:'match'},{id:'general-02',type:'understanding'},
       {id:'general-03',type:'match'}
@@ -254,6 +255,12 @@ console.log('PASS: shared result renderer and role summaries reject B, NO and un
   const firstRenders=renders;
   await state.pollSharedMatches();
   assert.equal(renders,firstRenders,'Unchanged poll does not flash loading or rerender');
+  assert.equal(pairChecks,1,'Polling checks the exact family epoch before refreshing');
+  const callsBeforeDenied=calls;
+  allowPair=false;
+  await state.pollSharedMatches();
+  assert.equal(calls,callsBeforeDenied,'Rejected family epoch never invokes the shared results RPC');
+  allowPair=true;
   rows=[
     {deck_id:'general',card_id:'general-01',answer:false},
     {deck_id:'general',card_id:'general-02',answer:true},
