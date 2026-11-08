@@ -2213,9 +2213,19 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
                 const filters={};
                 const run=()=>{
                   if(operation==='insert'){
+                    window.__HK_RETEST_START_WRITES__=(window.__HK_RETEST_START_WRITES__||0)+1;
+                    if(window.__HK_TEST_RETEST_START_REJECT__){
+                      window.__HK_TEST_RETEST_START_REJECT__=false;
+                      return {data:null,error:{message:'Synthetic creation rejected'}};
+                    }
                     const row={id:'90000000-0000-4000-8000-000000000001',...payload,
                       created_at:'2026-11-07T10:00:00Z',completed_at:null};
-                    list.push(row);return {data:{...row},error:null};
+                    list.push(row);
+                    if(window.__HK_TEST_RETEST_START_LOST_ACK__){
+                      window.__HK_TEST_RETEST_START_LOST_ACK__=false;
+                      return {data:null,error:{message:'Synthetic creation ACK lost'}};
+                    }
+                    return {data:{...row},error:null};
                   }
                   if(operation==='delete'){
                     const index=list.findIndex(a=>Object.entries(filters).every(([k,v])=>a[k]===v));
@@ -2226,10 +2236,26 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
                     return {data:{id:deleted.id},error:null};
                   }
                   if(operation==='update'){
+                    window.__HK_RETEST_COMPLETE_WRITES__=(window.__HK_RETEST_COMPLETE_WRITES__||0)+1;
+                    if(window.__HK_TEST_RETEST_COMPLETE_REJECT__){
+                      window.__HK_TEST_RETEST_COMPLETE_REJECT__=false;
+                      return {data:null,error:{message:'Synthetic completion rejected'}};
+                    }
                     const row=list.find(a=>Object.entries(filters).every(([k,v])=>a[k]===v));
                     if(!row)return {data:null,error:{message:'missing row'}};
                     if(retestAnswers.length!==50)return {data:null,error:{message:'incomplete'}};
-                    Object.assign(row,payload);return {data:{...row},error:null};
+                    Object.assign(row,payload);
+                    if(window.__HK_TEST_RETEST_COMPLETE_LOST_ACK__){
+                      window.__HK_TEST_RETEST_COMPLETE_LOST_ACK__=false;
+                      return {data:null,error:{message:'Synthetic completion ACK lost'}};
+                    }
+                    return {data:{...row},error:null};
+                  }
+                  if(table==='personality_test_attempts'&&operation==='read'){
+                    if(window.__HK_TEST_RETEST_LIFECYCLE_READ_FAIL__){
+                      window.__HK_TEST_RETEST_LIFECYCLE_READ_FAIL__=false;
+                      return {data:null,error:{message:'Synthetic attempts list unreadable'}};
+                    }
                   }
                   if(table==='personality_attempt_answers'&&operation==='read'){
                     window.__HK_RETEST_ACK_READS__=(window.__HK_RETEST_ACK_READS__||0)+1;
@@ -2246,6 +2272,11 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
                   eq(k,v){filters[k]=v;return q;},
                   order(){return Promise.resolve(run());},
                   single(){return Promise.resolve(run());},
+                  maybeSingle(){
+                    const result=run();
+                    window.__HK_RETEST_LIFECYCLE_READBACKS__=(window.__HK_RETEST_LIFECYCLE_READBACKS__||0)+1;
+                    return Promise.resolve(result.error?result:{...result,data:Array.isArray(result.data)?result.data[0]||null:result.data});
+                  },
                   then(resolve,reject){return Promise.resolve(run()).then(resolve,reject);}
                 };
                 return q;
