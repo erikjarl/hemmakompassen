@@ -1574,13 +1574,23 @@ try{
   await privateAnswerFilter.selectOption('yes');
   assert.equal(await savedReview.page.locator('.swipe-private-review [data-private-theme-answer]:visible').count(),1);
   await privateAnswerFilter.selectOption('all');
+  await privateAnswerSearch.fill('veckan');
   await savedReview.page.locator('.swipe-private-review [data-theme-review-index="0"]').click();
   assert.match(await savedReview.page.locator('#swipe-card').innerText(),/Vad som varit roligt den senaste veckan/,
     'A saved theme answer can be opened directly without swiping past 100 cards');
   assert.equal(await savedReview.page.locator('#swipe-card').evaluate(el=>document.activeElement===el),true,
     'Focus moves to the selected saved card');
+  await savedReview.page.locator('#theme-review-back').click();
+  await savedReview.page.waitForFunction(()=>document.activeElement?.matches('[data-theme-review-index="0"]'));
+  assert.equal(await savedReview.page.locator('#private-theme-review-search').inputValue(),'veckan',
+    'Cancel returns to the search without changing stored answers');
+  assert.equal(await savedReview.page.locator('.swipe-private-review [data-theme-review-index="0"]').locator('..').getAttribute('data-private-theme-answer'),'yes');
+  await savedReview.page.locator('.swipe-private-review [data-theme-review-index="0"]').click();
   await savedReview.page.locator('[data-swipe="no"]').click();
-  await savedReview.page.locator('.swipe-private-review summary').click();
+  await savedReview.page.waitForFunction(()=>document.activeElement?.matches('[data-theme-review-index="0"]'));
+  assert.equal(await savedReview.page.locator('.swipe-private-review details').evaluate(el=>el.open),true,
+    'Saved answer review stays open after correction');
+  assert.equal(await savedReview.page.locator('#private-theme-review-search').inputValue(),'veckan');
   assert.match(await savedReview.page.locator('.swipe-private-review').innerText(),/Ditt svar: Nej/,
     'The private review reflects the updated answer');
   await savedReview.page.locator('#private-theme-review-answer').selectOption('no');
