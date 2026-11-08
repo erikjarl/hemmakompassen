@@ -446,6 +446,8 @@ try{
   await m.page.getByRole("heading",{name:/Hej[ ,]+Provförälder/}).waitFor();
   assert.match(await m.page.locator("#live-app").innerText(),/Din familj/i);
   await checkOverflow(m.page,"Mobile homepage");
+  assert.equal(await m.page.locator('.home-next-actions').count(),0,
+    'NOT-02: no empty action overview when there is nothing verified to do');
   const heroMetrics=await m.page.locator('.home-hero').evaluate(el=>{
     const box=el.getBoundingClientRect(),title=el.querySelector('h1').getBoundingClientRect();
     return {height:box.height,titleFits:title.left>=box.left&&title.right<=box.right,
@@ -737,6 +739,8 @@ try{
     {authenticated:true,paired:true,homeUnreadFailure:true});
   await unavailableHome.page.goto(base+'#hem',{waitUntil:'load'});
   await unavailableHome.page.locator('#home-refresh-notices').waitFor();
+  assert.equal(await unavailableHome.page.locator('.home-next-actions #home-refresh-notices').count(),1,
+    'NOT-02: failed unread checks remain actionable above the hero rather than appearing empty');
   assert.match(await unavailableHome.page.getByRole('alert').innerText(),/Noll betyder därför inte säkert att inkorgen är tom/);
   assert.equal(await unavailableHome.page.locator('.live-cards .live-panel').count(),6,'All actual feature cards remain available');
   assert.match(await unavailableHome.page.locator('.live-cards').innerText(),/50 frågor/,'Home reflects the real personality feature');
@@ -1579,6 +1583,10 @@ try{
   // The home screen surfaces the latest personal inbox alert ahead of general family information.
   await paired.page.goto(base+'#hem',{waitUntil:'load'});
   await paired.page.getByRole('heading',{name:'Inkorgen · 1 olästa'}).waitFor();
+  assert.ok(await paired.page.locator('#live-app').evaluate(el=>{
+    const actions=el.querySelector('.home-next-actions'),hero=el.querySelector('.home-hero');
+    return !!actions&&!!hero&&!!(actions.compareDocumentPosition(hero)&Node.DOCUMENT_POSITION_FOLLOWING);
+  }),'NOT-02: unread notices and pending decisions appear before the welcome hero');
   const homeSections=await paired.page.locator('#live-app h2').allTextContents();
   assert.ok(homeSections.findIndex(t=>t.startsWith('Inkorgen'))<homeSections.indexOf('Din familj'),
     'Personal inbox alerts are placed above the family overview');
