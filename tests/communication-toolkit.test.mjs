@@ -47,7 +47,8 @@ test('NVC generator handles incomplete input, whitespace, punctuation and malici
     'När vi bråkade känner jag mig ledsen. Jag behöver få bli lyssnad på. Skulle du vilja lyssna färdigt?');
   assert.equal(buildNvcSentence({observation:'<img src=x onerror=alert(1)>',feeling:'mig stressad',need:'lugn',request:'prata'}),
     'När <img src=x onerror=alert(1)> känner jag mig stressad. Jag behöver lugn. Skulle du vilja prata?');
-  assert.match(app,/output\.textContent=sentence/,'Untrusted text must not be assigned as HTML');
+  assert.match(app,/updateCommunicationPreview\('nvc',sentence\)/,'Submitted sentence enters the plain-text preview helper');
+  assert.match(app,/output\.textContent=ready\?text/,'Preview helper uses textContent and cannot inject HTML');
 });
 
 test('communication content uses its own module, is available on the public build, and has no external data calls',()=>{
@@ -85,7 +86,8 @@ test('private solution planner is available to both roles with no storage or imp
  assert.equal(buildSolutionPlan({...values,question:'x'.repeat(400)}).split('Jag vill förstå: ')[1].split('\n')[0].length,240);
  const malicious=buildSolutionPlan({...values,problem:'<img src=x onerror=alert(1)>'});
  assert.match(malicious,/<img src=x onerror=alert\(1\)>/,'Generator emits plain text, not HTML');
- assert.match(app,/output\.textContent=plan/,'Preview uses textContent and cannot inject HTML');
+ assert.match(app,/updateCommunicationPreview\('solution',plan\)/,'Planner result enters the plain-text preview helper');
+ assert.match(app,/output\.textContent=ready\?text/,'Preview helper uses textContent and cannot inject HTML');
  assert.match(app,/if\(e\.target\.id==='comm-solution-form'\)/);
  assert.match(app,/data-comm-solution-reset/);
 });
@@ -132,7 +134,8 @@ test('private reflection practice is accessible to both roles and never saves te
  assert.equal(buildReflectionPractice({heard:'H',meaning:'M',check:'x'.repeat(400)}).split('Jag skulle kunna fråga: ')[1].split('\n')[0].length,240);
  const markup=buildReflectionPractice({heard:'<img src=x onerror=alert(1)>',meaning:'trygghet',check:'kan jag fråga?'});
  assert.match(markup,/<img src=x onerror=alert\(1\)>/);
- assert.match(app,/output\.textContent=result/);
+ assert.match(app,/updateCommunicationPreview\('reflection',result\)/);
+ assert.match(app,/output\.textContent=ready\?text/);
  assert.match(app,/if\(e\.target\.id==='comm-reflection-form'\)/);
  assert.match(app,/data-comm-reflection-reset/);
 });
