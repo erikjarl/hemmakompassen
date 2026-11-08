@@ -1306,6 +1306,20 @@ try{
   const exported=await paired.page.evaluate(()=>window.__HK_COPIED_RULES__);
   assert.match(exported,/Vi frågar innan vi lånar saker/,'Copy includes accepted rules');
   assert.doesNotMatch(exported,/Vi får pausa gräl|Vi pratar om hur vi delar på sysslorna/,'Copy excludes proposals without two approvals');
+  const downloadPromise=paired.page.waitForEvent('download');
+  await paired.page.getByRole('button',{name:'Ladda ner som textfil'}).click();
+  const download=await downloadPromise;
+  assert.equal(download.suggestedFilename(),'schyssta-listan-overenskommelser.txt');
+  const bytes=await fs.readFile(await download.path());
+  assert.equal(bytes[0],0xef,'Downloaded Swedish UTF-8 text has BOM for spreadsheet/notepad compatibility');
+  assert.equal(bytes[1],0xbb);
+  assert.equal(bytes[2],0xbf);
+  const text=bytes.toString('utf8');
+  assert.match(text,/Våra gemensamma överenskommelser/);
+  assert.match(text,/Vi frågar innan vi lånar saker/);
+  assert.doesNotMatch(text,/Vi får pausa gräl|Vi pratar om hur vi delar på sysslorna/,'Unapproved proposals are excluded from local file');
+  assert.doesNotMatch(text,/10000000-0000-0000-0000|synthetic@example.invalid|agreement_id|user_id/,'No IDs, emails or internal keys in file');
+
   assert.equal(await paired.page.getByRole('button',{name:'Uppdatera listan'}).count(),1,
     'A paired test user can explicitly reload the list');
   assert.equal(await paired.page.locator('#live-mobile-nav a[href="#inkorg"] .live-nav-count').innerText(),'2','Inbox counts both one private chat message and one rule event');
