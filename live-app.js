@@ -1504,7 +1504,9 @@ function home(){
 const name=profile?.display_name||'du';
 const roster=members.length?members.map(m=>(m.role==='teen'?'Tonåring':'Förälder')+': '+esc(m.display_name||'Namnlös')).join(' · '):'Ingen familj är kopplad ännu.';
 const unread=schysstaListEnabled?schysstaUnreadCount():0;
-const needs=schysstaListEnabled?schysstaNeedsAnswer().length:0;
+const needs=schysstaListEnabled&&!schysstaLoading&&!schysstaError?schysstaNeedsAnswer().length:0;
+const pendingLoading=schysstaListEnabled&&members.length===2&&schysstaLoading
+  ?card('<p role="status" class="live-muted">Kontrollerar väntande regelförslag…</p>'):'';
 const pendingBanner=needs?card('<h2>Behöver ditt svar · '+needs+' förslag</h2><p>Den andra personen väntar på ditt beslut. Du kan också välja att svara senare.</p><a class="live-button" href="#regler">Ta ställning i Schyssta listan</a>'):'';
 const activityUnread=activityNotificationsEnabled?activityUnreadCount():0;
 const totalUnread=unread+familyChatUnread+activityUnread;
@@ -1517,7 +1519,7 @@ const inboxBanner=totalUnread?card('<h2>Inkorgen · '+(incompleteNoticeCheck?'mi
     activityUnread?activityUnread+' nya gemensamma kort- eller aktivitetsaviseringar':''
    ].filter(Boolean).join(' · ')
   +'</p><a class="live-button" href="#inkorg">Visa inkorgen</a>'):'';
-const actions=noticeWarning+pendingBanner+inboxBanner;
+const actions=noticeWarning+pendingLoading+pendingBanner+inboxBanner;
 const actionSection=actions?'<section class="home-next-actions" aria-label="Dina nästa steg">'+actions+'</section>':'';
 return actionSection+'<section class="home-hero"><div class="home-hero-inner"><span class="home-kicker">✦ '+(members.length>1?'ERT GEMENSAMMA RUM':'VÄNTAR PÅ DIN MOTPART')+'</span><h1>Hej '+esc(name)+'.<em>Välkommen till ert rum.</em></h1><p>'+(members.length>1?'Ett rum för att förstå varandra bättre, ett steg i taget.':'Medan du väntar kan du utforska Gillaswajpen och börja hitta nya samtalsämnen.')+'</p><a class="home-hero-link" href="#swipe">Utforska Gillaswajpen <span aria-hidden="true">→</span></a></div><div class="home-orbit" aria-hidden="true"><span></span></div></section>'+card('<h2>Din familj</h2><p>'+roster+'</p><p class="live-muted">'+(members.length===1?'Den andra familjemedlemmen har ännu inte anslutit.':'Familjemedlemskap hämtat från Supabase.')+'</p><a class="live-button" href="./konto.html">Hantera familj och inbjudningar</a>')+'<h2>Utforska Hemmakompassen</h2><div class="live-cards">'+nav.slice(1,7).map(([key,label])=>card('<h3>'+esc(label)+'</h3><p class="live-muted">'+esc(members.length!==2&&['inkorg','regler'].includes(key)?'Koppla ihop era konton för att använda funktionen.':HOME_MODULE_INTROS[key])+'</p><a href="#'+key+'">Öppna →</a>')).join('')+'</div>';
 }
