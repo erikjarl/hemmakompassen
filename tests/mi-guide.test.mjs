@@ -34,6 +34,7 @@ test('MI gets a distinct route gated by parent role and correct navigation highl
   assert.match(live,/if\(key==='kommunikation'\)return/);
   assert.match(live,/if\(key==='kommunikation'\)return renderCommunicationToolkit\(viewerRole\(\)\)/);
   assert.match(live,/\['mi-foralder','nvc'\]\.includes\(route\)&&key==='kommunikation'/);
-  assert.match(live,/viewerRole\(\)==='parent'\?'<p><a href="#mi-foralder"/);
+  assert.match(live,/viewerRole\(\)==='parent'\?'<p>För dig som förälder: beskriv ditt önskemål/);
+  assert.match(live,/Läs guiden om motiverande samtal<\/a>/);
   assert.match(build,/communication\/mi-guide\.js/);
 });

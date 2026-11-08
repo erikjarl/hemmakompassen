@@ -175,3 +175,16 @@ test('Inbox has pair-private messages independent of rule decisions',()=>{
   assert.match(app,/!Number\.isNaN\(Date\.parse\(m\.created_at\)\)/);
   assert.doesNotMatch(app,/familyChatMessages[^\n]*\.innerHTML/);
 });
+
+
+test('SL-UX-01: next action, empty state and counts are derived from validated rules',()=>{
+ assert.match(app,/const quickActions='<section class="schyssta-quick-actions"/);
+ assert.match(app,/needs\.length===0\?'Inget väntar just nu'/);
+ assert.match(app,/approved\.length\+' '/);
+ assert.match(app,/ongoing\.length\+' '/);
+ assert.match(app,/schysstaHistory\.length\+' '/);
+ assert.match(app,/data-schyssta-compose-jump/);
+ assert.match(app,/editor\?\.focus\(\)/);
+ assert.doesNotMatch(app,/För dig som förälder: lyssna före regelförslaget/);
+ assert.match(app,/if\(schysstaError\)return '<h1>Schyssta listan<\/h1>'\+card\('<h2>Kunde inte visa listan/);
+});
