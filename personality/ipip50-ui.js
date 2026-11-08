@@ -450,10 +450,15 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false,
     // replacing the entire page with the next question.
     selectedAnswer={id:item.id,value};saving=true;saveError='';saveUncertain=false;repaint();
     try{
-      await Promise.all([
+      // Promise.all rejects immediately: a fast failed write used to clear
+      // 'saving' before the click's UI events had settled, allowing an
+      // accidental second write of the same answer. Keep the input locked for
+      // the same minimum 650 ms on success AND failure.
+      const [writeResult]=await Promise.allSettled([
         saveMyIPIP50Answer(db,item.id,value),
         new Promise(resolve=>setTimeout(resolve,650))
       ]);
+      if(writeResult.status==='rejected')throw writeResult.reason;
     }catch(e){
       if(token===sequence&&viewer===id){
         selectedAnswer=null;saving=false;
