@@ -920,9 +920,9 @@ async function verifyDistinctPrivateRetestHistory(){
         /Radera omgången för Omtest 2 av 2/);
       records.push({role,step:'same-day history has distinct visible and accessible actions',passed:true});
       await rows.nth(1).locator('[data-ipip-retest="view"]').click();
-      await page.locator('.pf-retest-history h3').getByText(/Omtest 2 av 2/).waitFor();
+      await page.locator('.pf-retest-history h3').filter({hasText:/Omtest 2 av 2/}).waitFor();
       await rows.nth(0).locator('[data-ipip-retest="view"]').click();
-      await page.locator('.pf-retest-history h3').getByText(/Omtest 1 av 2/).waitFor();
+      await page.locator('.pf-retest-history h3').filter({hasText:/Omtest 1 av 2/}).waitFor();
       records.push({role,step:'opens older then newer private result by row',passed:true});
       const downloadPromise=page.waitForEvent('download');
       await rows.nth(1).locator('[data-ipip-retest="export"]').click();
