@@ -690,6 +690,34 @@ function swipeResults(deckId='general'){
 // A shared-match refresh must not collapse a user's expanded private answer list.
 // Only restores local presentation for the same signed-in account and pairing session.
 function renderKeepingGeneralReview(){
+ // Existing shared-match refresh also redraws themed decks. Preserve only this
+ // viewer's expanded private answer list, never remote or stale session data.
+ if(page()==='swipe'&&activeThemeDeck){
+  const owner=user?.id,session=sharedSession,deckId=activeThemeDeck;
+  const root=$('swipe-private-review');
+  const expanded=root?.querySelector('details')?.open===true;
+  const active=document.activeElement;
+  const state=expanded?{
+   search:String($('private-theme-review-search')?.value||'').slice(0,120),
+   filter:$('private-theme-review-answer')?.value||'all',
+   focusIndex:active?.closest?.('[data-theme-review-index]')?.dataset.themeReviewIndex,
+   focusId:active?.id?.startsWith('private-theme-review-')?active.id:null
+  }:null;
+  render();
+  if(!state||owner!==user?.id||session!==sharedSession||deckId!==activeThemeDeck||page()!=='swipe')return;
+  const replacement=$('swipe-private-review');if(!replacement)return;
+  const details=replacement.querySelector('details');if(details)details.open=true;
+  const search=$('private-theme-review-search'),filter=$('private-theme-review-answer');
+  if(search)search.value=state.search;
+  if(filter)filter.value=['yes','no'].includes(state.filter)?state.filter:'all';
+  filterPrivateThemeReview();
+  if(state.focusIndex){
+   const button=[...replacement.querySelectorAll('[data-theme-review-index]')].find(b=>
+    b.dataset.themeReviewIndex===state.focusIndex&&!b.closest('[data-private-theme-answer]')?.hidden);
+   (button||search)?.focus({preventScroll:true});
+  }else if(state.focusId)document.getElementById(state.focusId)?.focus({preventScroll:true});
+  return;
+ }
  const owner=user?.id,session=sharedSession;
  const root=page()==='swipe'&&!activeThemeDeck?$('swipe-general-review'):null;
  const expanded=root?.querySelector('details')?.open===true;
