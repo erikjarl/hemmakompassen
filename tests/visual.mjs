@@ -950,13 +950,14 @@ async function verifyCommunicationForms(){
 // Chromium contexts. No Supabase credentials, production replies or live users.
 function makeTwoRoleFamilyFixture(){
   const messages=[],tokens=new Map(),rules=[],notices=[],calls=[];
-  let failedSendAcknowledgement=false;
+  let failedSendAcknowledgement=false,failedOlderPage=false;
   const other=role=>role==='parent'?'teen':'parent';
   const ok=data=>({data,error:null});
   const createdAt=n=>'2026-11-01T12:'+String(Math.floor(n/50)).padStart(2,'0')+':'+String(n%50).padStart(2,'0')+'Z';
   function rpc(role,name,args={}){
     calls.push({role,name,args});
     if(name==='my_family_messages'){
+      if(args?.p_before_created_at&&failedOlderPage){failedOlderPage=false;return {data:null,error:{message:'synthetic older page unavailable'}};}
       let visible=messages.map(m=>({
         message_id:m.id,body:m.body,sent_by_me:m.sender===role,
         created_at:m.created_at,read_at:m.read_at
@@ -1030,7 +1031,8 @@ function makeTwoRoleFamilyFixture(){
     throw new Error('Unexpected linked pair RPC: '+name);
   }
   return {rpc,messages,rules,notices,calls,
-    loseNextSendAcknowledgement(){failedSendAcknowledgement=true;}};
+    loseNextSendAcknowledgement(){failedSendAcknowledgement=true;},
+    failNextOlderPage(){failedOlderPage=true;}};
 }
 const FUN03_LINKED_RPCS=Object.freeze([
   'my_family_messages','my_family_unread_message_count','send_family_message','mark_family_messages_read',
@@ -1165,6 +1167,95 @@ async function verifyPairedTwoRoleExchange(){
     },null,2)+'\n');
   console.log('FUN-03 linked two-role journey: '+record.length+' browser scenarios passed.');
 }
+
+// FUN-03: exercise the real paginated inbox UI against a single shared
+// synthetic family timeline with >50 messages and a recoverable older-page
+// RPC error. Two role-specific contexts confirm read status propagation.
+async function verifyLinkedInboxOlderPages(){
+  const fixture=makeTwoRoleFamilyFixture();
+  for(let i=1;i<=57;i++){
+    const stamp=i===7?8:i; // same-timestamp boundary, distinguish by message UUID
+    fixture.messages.push({
+      id:'71000000-0000-4000-8000-'+String(500+i).padStart(12,'0'),
+      sender:'parent',body:'Historiskt meddelande '+String(i).padStart(2,'0'),
+      created_at:'2026-11-01T12:00:'+String(stamp).padStart(2,'0')+'Z',
+      read_at:null
+    });
+  }
+  const teen=await freshContext(
+    {viewport:{width:320,height:700},deviceScaleFactor:1,isMobile:true,hasTouch:true},
+    {authenticated:true,paired:true,role:'teen',pairFixture:fixture}
+  );
+  const parent=await freshContext(
+    {viewport:{width:390,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true},
+    {authenticated:true,paired:true,role:'parent',pairFixture:fixture}
+  );
+  const records=[];
+  try{
+    await Promise.all([
+      teen.page.goto(base+'#inkorg',{waitUntil:'load'}),
+      parent.page.goto(base+'#inkorg',{waitUntil:'load'})
+    ]);
+    await teen.page.waitForFunction(()=>document.querySelectorAll('.family-chat-bubble').length===50);
+    assert.equal(await teen.page.locator('[data-family-chat-more]').count(),1,
+      'FUN-03: exactly fifty most recent messages trigger older-page action');
+    assert.equal(await teen.page.locator('.family-chat-theirs').count(),50);
+    assert.equal(await teen.page.getByText('Historiskt meddelande 01').count(),0,
+      'FUN-03: oldest item not loaded in the first page');
+    assert.equal(fixture.messages.filter(m=>m.read_at!==null).length,0,
+      'Opening the paginated conversation does not silently mark any message read');
+    records.push({case:'first-fifty-and-explicit-older-action',passed:true});
+
+    fixture.failNextOlderPage();
+    await teen.page.locator('[data-family-chat-more]').click();
+    await teen.page.locator('.family-chat [role="alert"]').getByText(/Kunde inte hämta meddelandena/).waitFor();
+    assert.equal(await teen.page.locator('.family-chat-bubble').count(),50,
+      'FUN-03: a failed older-page read retains previously verified messages');
+    assert.equal(await teen.page.locator('[data-family-chat-more]').count(),1,
+      'FUN-03: failure preserves retry control');
+    assert.equal(await teen.page.getByText('Historiskt meddelande 01').count(),0);
+    records.push({case:'failed-older-page-retains-current-history-and-retry',passed:true});
+
+    await teen.page.locator('[data-family-chat-more]').click();
+    await teen.page.waitForFunction(()=>document.querySelectorAll('.family-chat-bubble').length===57);
+    assert.equal(await teen.page.locator('[data-family-chat-more]').count(),0,
+      'FUN-03: fetching seven remaining older messages clears pagination CTA');
+    const textRows=await teen.page.locator('.family-chat-text').allTextContents();
+    assert.equal(textRows.length,57);
+    assert.equal(new Set(textRows).size,57,'FUN-03: two pages contain no duplicated messages');
+    assert.ok(textRows.includes('Historiskt meddelande 01'));
+    assert.ok(textRows.includes('Historiskt meddelande 57'));
+    const olderCalls=fixture.calls.filter(call=>call.role==='teen'&&call.name==='my_family_messages'
+      &&call.args?.p_before_id);
+    assert.equal(olderCalls.length,2,'FUN-03: first older request failed and second retried');
+    const cursor='71000000-0000-4000-8000-'+String(508).padStart(12,'0');
+    assert.ok(olderCalls.every(call=>call.args.p_before_id===cursor),
+      'FUN-03: retry uses the same stable oldest-message cursor');
+    assert.equal(fixture.messages.filter(m=>m.read_at!==null).length,0,
+      'FUN-03: loading older pages is not an implicit read receipt');
+    records.push({case:'retry-merges-seven-older-messages-with-timestamp-tie-no-duplicates',passed:true});
+
+    await teen.page.getByRole('button',{name:'Markera alla meddelanden som lästa'}).click();
+    await teen.page.getByText('Alla meddelanden har markerats som lästa.').waitFor();
+    assert.equal(fixture.messages.filter(m=>m.read_at!==null).length,57,
+      'FUN-03: explicit mark-all applies to the whole simulated incoming conversation');
+    await parent.page.locator('[data-family-chat-refresh]').click();
+    await parent.page.waitForFunction(()=>
+      [...document.querySelectorAll('.family-chat-mine .family-chat-receipt')].length===50
+      &&[...document.querySelectorAll('.family-chat-mine .family-chat-receipt')].every(el=>el.textContent?.includes('Läst')));
+    await checkOverflow(teen.page,'FUN-03 57 messages teen 320px');
+    await checkOverflow(parent.page,'FUN-03 read receipts parent 390px');
+    records.push({case:'explicit-read-of-paged-thread-updates-sender-receipts',passed:true});
+  }finally{
+    await Promise.all([teen.context.close(),parent.context.close()]);
+  }
+  await fs.writeFile(path.join(output,'fun-03-paginated-inbox-synthetic.json'),
+    JSON.stringify({method:'Two independent Chromium contexts; 57 mocked family messages in one shared in-memory fixture',
+      limitations:'No real Auth, Supabase persistence, physical mobile or server permissions.',
+      records,uniqueMessages:fixture.messages.length},null,2)+'\n');
+  console.log('FUN-03 inbox pagination: '+records.length+' synthetic browser scenarios passed.');
+}
+
 async function freshContext(options,{authenticated=false,paired=false,role="parent",unlocked=false,unlockUnavailable=false,priorityUnavailable=false,priorityFeature=true,privateImportance=false,importanceReadFailure=false,preansweredGeneral=false,preansweredSkipped=false,emptySchyssta=false,homeUnreadFailure=false,personalityComplete=false,personalitySharing=false,personalityPartnerShared=false,privateRetests=false,aiMediator=false,aiAnalyses=false,activityNotifications=false,pairFixture=null}={}){
   if(pairFixture && typeof pairFixture.rpc!=='function')throw new Error('Invalid linked fixture');
   const context=await browser.newContext({...options,locale:"sv-SE",reducedMotion:"reduce"});
@@ -3044,6 +3135,7 @@ try{
   await verifyFullPrivateRetest();
   await verifyCommunicationForms();
   await verifyPairedTwoRoleExchange();
+  await verifyLinkedInboxOlderPages();
   assert.deepEqual(errors,[],"Browser errors: "+errors.join("; "));
   await fs.writeFile(path.join(output,"visual-audit.json"),JSON.stringify({
     purpose:"Playwright responsive visual review",
