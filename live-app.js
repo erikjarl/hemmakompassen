@@ -1065,6 +1065,10 @@ async function verifyUnderstandingShares(viewer,session){
   understandingShares.clear();
   if(result?.error||!Array.isArray(result?.data)){
     understandingSharesAvailable=false;
+    // Invalidate even a pending consent-refresh RPC. Its late response may
+    // otherwise restore B cards after an unknown share/revoke outcome.
+    insightsRequest++;
+    insightsLoading=false;
     // Shared B and AI panels must not display a stale snapshot when the
     // server cannot confirm an attempted consent change.
     sharedUnderstandingRows=[];
