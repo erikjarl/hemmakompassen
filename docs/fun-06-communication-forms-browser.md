@@ -17,3 +17,15 @@ För var och en av de två syntetiska rollerna utförs **tre konkreta UI-formul�
 ## Begränsningar
 
 Ingen riktig Auth, fysisk mobil, annan webbläsarmotor, klinisk kvalitetstestning eller verkliga användare har provats. Tester av formulärens textproduktion bekräftar bara att det angivna innehållet sammanfogas på avsett sätt; de **bevisar inte att råden förbättrar relationer**. Kopiera-/klistra-in-flöden och alla nio separata övningar är inte fullständigt prövade här. Ingen Supabase-data ändrades.
+
+## Uppdatering 8 november 2026 – privat kopiering (FUN-06-COPY-01)
+
+**[PR #228](https://github.com/erikjarl/hemmakompassen/pull/228)** mergad till main (`f2be087`) efter **[grön Node-/bygg-/Chromium-CI #42512021465](https://github.com/erikjarl/hemmakompassen/actions/runs/42512021465)**.
+
+**Funktionell lucka:** spegling, samtalsplan och NVC gav enbart lokala förhandsgranskningar, utan direkt kopieringsknapp.
+
+**Ändring:** `Kopiera min text` är inaktiv tills ny förhandsgranskning genererats. Varje formulärredigering och Töm nollställer den gamla textens kopierbarhet. Kopiering använder endast den aktuella lokala texten och anropar ingen backend. Om Clipboard API nekar visas en skrivskyddad ruta med hela texten markerad och `Markera texten igen`. Sen urklippskvittens efter konto-/sidbyte eller textredigering får inte ändra UI.
+
+**Verifieringsmetod:** `tests/visual.mjs` testar riktiga DOM-klick och kontroller i syntetisk Chromium med förälder 390 px och tonåring 320 px. Syntetiskt urklipp medger och nekar kopiering. Testet verifierar exakt text i clipboard/fallback, fokus och heltextmarkering/ommarkering, att ändring och Töm spärrar äldre kopior samt att utkast inte sparas över navigering. `tests/communication-toolkit.test.mjs` verifierar samtliga tre typer, `textContent` och att kommunikationsmodulen saknar externa anrop.
+
+**Begränsning:** testad Node-/Chromium-fixture med mockad Auth, inte riktiga signerade konton eller fysisk Safari/iOS/Android. Ingen klinisk kvalitet eller effekt verifierad. En kopiering lägger avsiktligt text i *enhetens urklipp* men sparar den inte hos Hemmakompassen. Fysiskt urklipp, tangentbord och skärmläsare återstår.
