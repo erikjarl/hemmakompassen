@@ -152,7 +152,9 @@ async function testAccountBrowserJourney(){
   const invitation='A'.repeat(36);
   await page.goto(base+'konto.html#invite='+invitation,{waitUntil:'load'});
   await page.locator('#logged-out:not(.hidden)').waitFor();
-  assert.match(await page.locator('#status').innerText(),/Familjeinbjudan hittad/);
+  await page.locator('#invite-notice:not(.hidden)').waitFor();
+  assert.match(await page.locator('#invite-notice').innerText(),/Familjeinbjudan hittad/);
+  assert.equal((await page.locator('#status').innerText()).trim(),'','The invitation is not a transient form result');
   assert.equal(await page.locator('#logged-in:not(.hidden)').count(),0);
   await checkOverflow(page,'FUN-01 account logged out');
   steps.push('account logged-out invitation banner');
@@ -173,6 +175,7 @@ async function testAccountBrowserJourney(){
   await page.waitForFunction(()=>!document.querySelector('#signup-form button')?.disabled);
   assert.match(await page.locator('#status').innerText(),/Kontrollera din e-post för att bekräfta kontot/,
     'FUN-01: signup feedback must remain visible even when invite URL is present');
+  assert.equal(await page.locator('#invite-notice:not(.hidden)').count(),1,'Invite notice remains accessible after signup');
   steps.push('signup confirmation survives account refresh');
 
   await page.locator('#reset summary').click();
@@ -182,6 +185,7 @@ async function testAccountBrowserJourney(){
   await page.waitForFunction(()=>!document.querySelector('#reset-form button')?.disabled);
   assert.match(await page.locator('#status').innerText(),/Om adressen har ett konto får du ett mejl/,
     'FUN-01: password-reset confirmation must survive invite refresh');
+  assert.equal(await page.locator('#invite-notice:not(.hidden)').count(),1,'Invite notice remains accessible after password reset');
   steps.push('password reset confirmation survives refresh');
 
   await page.locator('#email').fill('test@example.invalid');
