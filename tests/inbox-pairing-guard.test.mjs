@@ -16,6 +16,12 @@ function harness(remote=[parent,teen],error=null){
   const actions={cleared:0,rendered:0,refreshed:0};
   const context={
     user:{id:parent.user_id},members:[parent,teen],sharedSession:8,
+    // Shared swipe and insights caches also depend on this exact family epoch.
+    sharedRequest:5,insightsRequest:6,
+    sharedMatches:[{card_id:'general-01',answer:true}],sharedPriorities:[{card_id:'general-01'}],
+    sharedError:'',sharedPriorityError:'',sharedLoading:false,
+    insightsRows:[{card_id:'general-01',answer:true}],
+    sharedUnderstandingRows:[{card_id:'general-03'}],insightsError:'',insightsLoading:false,
     inboxPairCheckBusy:false,inboxPairEpoch:'epoch-1',
     db:{rpc:name=>{if(name==='my_family_members')return respond();
       assert.equal(name,'my_current_inbox_pair_epoch');return Promise.resolve(epochResponse);}},
@@ -52,6 +58,12 @@ assert.equal(changed.actions.rendered,1,'UI must hide stale private messages bef
 assert.equal(changed.actions.refreshed,1);
 assert.equal(changed.context.members.length,0);
 assert.equal(changed.context.sharedSession,9,'Invalidate in-flight old-pair responses');
+assert.equal(changed.context.sharedRequest,6,'Invalidate in-flight shared swipe responses');
+assert.equal(changed.context.insightsRequest,7,'Invalidate in-flight insights responses');
+assert.equal(changed.context.sharedMatches.length,0,'Invalidate old shared matches immediately');
+assert.equal(changed.context.sharedPriorities.length,0,'Invalidate old shared priorities immediately');
+assert.equal(changed.context.insightsRows.length,0,'Invalidate old pair insights immediately');
+assert.equal(changed.context.sharedUnderstandingRows.length,0,'Invalidate shared teen B cards immediately');
 
 const rePaired=harness();
 rePaired.setEpoch('epoch-2');
@@ -97,4 +109,8 @@ assert.match(script,/if\(page\(\)==='hem'&&user&&members\.length===2\)\s*void re
   'Home tab focus checks actual current pairing before an unread refresh');
 assert.match(script,/else if\(page\(\)==='hem'\)\{\s*void recheckInboxPair\(\)\.then\(valid=>\{if\(valid\)void fetchFamilyChatUnread\(\);\}\);\s*\}/,
   'Home 15-second poll must check exact pairing before reading unread badge');
+assert.match(script,/if\(await recheckInboxPair\(\)\)await fetchSwipeMatches\(deckId,\{quiet:true\}\)/,
+  'Shared swipe polling must check membership and epoch before shared result fetch');
+assert.match(script,/void recheckInboxPair\(\)\.then\(valid=>\{if\(valid&&page\(\)==='insikter'\)void fetchInsights\(\{quiet:true\}\);\}\)/,
+  'Shared insights focus and periodic polling must verify membership and epoch first');
 console.log('PASS: current pair guard blocks remote unpair, role/partner switches, errors and stale network responses');
