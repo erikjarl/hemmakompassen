@@ -2293,11 +2293,20 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
                     return {data:{...row},error:null};
                   }
                   if(operation==='delete'){
+                    window.__HK_RETEST_DELETE_WRITES__=(window.__HK_RETEST_DELETE_WRITES__||0)+1;
+                    if(window.__HK_TEST_RETEST_DELETE_REJECT__){
+                      window.__HK_TEST_RETEST_DELETE_REJECT__=false;
+                      return {data:null,error:{message:'Synthetic private attempt delete rejected'}};
+                    }
                     const index=list.findIndex(a=>Object.entries(filters).every(([k,v])=>a[k]===v));
                     if(index<0)return {data:null,error:{message:'missing attempt'}};
                     const [deleted]=list.splice(index,1);
                     for(let n=retestAnswers.length-1;n>=0;n--)
                       if(retestAnswers[n].attempt_id===deleted.id)retestAnswers.splice(n,1);
+                    if(window.__HK_TEST_RETEST_DELETE_LOST_ACK__){
+                      window.__HK_TEST_RETEST_DELETE_LOST_ACK__=false;
+                      return {data:null,error:{message:'Synthetic private attempt deletion ACK lost'}};
+                    }
                     return {data:{id:deleted.id},error:null};
                   }
                   if(operation==='update'){
