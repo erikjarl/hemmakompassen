@@ -1114,6 +1114,60 @@ function filterPrivateThemeReview(){
   const empty=$('private-theme-review-empty');
   if(empty)empty.hidden=visible!==0;
 }
+// Export from the signed-in viewer's own loaded state only: never partner answers or aggregates.
+function privateSwipeExportRows(){
+ if(!user||swipeLoadError||!['parent','teen'].includes(viewerRole())||swipeBusy||importanceSaving.size)return null;
+ const role=viewerRole(),rows=[];
+ const decks=[{id:'general',title:'Allmänna kortleken',cards:GENERAL_CARDS},...THEME_DECK_MODELS];
+ for(const deck of decks){
+  const answers=deck.id==='general'?swipeAnswers:themeAnswers.get(deck.id);
+  if(!answers)continue;
+  for(const card of deck.cards){
+   if(deck.id==='general'&&card.type==='understanding'&&role!=='teen')continue;
+   const hasAnswer=answers.has(card.id);
+   const skipped=deck.id==='general'&&role==='teen'&&card.type==='understanding'
+     &&!hasAnswer&&skippedUnderstanding.has(card.id);
+   const importanceValue=swipeImportance.get(importanceKey(deck.id,card.id));
+   const importance=[-1,0,1].includes(importanceValue)?importanceValueText(importanceValue):null;
+   if(!hasAnswer&&!skipped&&importance===null)continue;
+   rows.push({deck:deck.title,category:card.category||deck.title,
+    statement:cardTextForRole(card,role),
+    answer:hasAnswer?(answers.get(card.id)===true?'Ja':'Nej'):skipped?'Överhoppat':'Inte besvarat',
+    importance});
+  }
+ }
+ return rows;
+}
+function privateSwipeExportText(rows){
+ if(!Array.isArray(rows)||!rows.length)return '';
+ let result='Mina privata svar i Gillaswajpen\n\n',lastDeck='';
+ const clean=value=>String(value??'').replace(/\s+/g,' ').trim();
+ for(const row of rows){
+  if(row.deck!==lastDeck){lastDeck=row.deck;result+='\n'+clean(row.deck)+'\n';}
+  result+='• '+clean(row.category)+': '+clean(row.statement)+'\n'
+    +'  Mitt svar: '+clean(row.answer)+(row.importance?' · Viktighet: '+clean(row.importance):'')+'\n';
+ }
+ return result;
+}
+function downloadPrivateSwipeAnswers(){
+ const rows=privateSwipeExportRows(),status=$('swipe-export-status');
+ if(!rows){if(status)status.textContent='Dina privata svar kan inte exporteras just nu. Försök uppdatera sidan.';return;}
+ if(!rows.length){if(status)status.textContent='Du har ännu inga sparade svar eller viktighetsskattningar att exportera.';return;}
+ try{
+  const blob=new Blob(['\uFEFF',privateSwipeExportText(rows)],{type:'text/plain;charset=utf-8'});
+  const url=URL.createObjectURL(blob),link=document.createElement('a');
+  link.href=url;link.download='mina-gillaswajp-svar.txt';link.style.display='none';
+  document.body.appendChild(link);
+  try{link.click();if(status)status.textContent='Din privata textfil har förberetts. Förvara den säkert på din enhet.';}
+  finally{link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+ }catch(e){if(status)status.textContent='Det gick inte att skapa filen. Inga svar har ändrats.';}
+}
+function privateSwipeExportControls(){
+ return '<section class="swipe-private-export" aria-label="Privat export av mina svar">'+
+  '<button type="button" class="schyssta-secondary" id="swipe-export-private">Ladda ner mina egna svar</button>'+
+  '<p class="live-muted">En privat textfil med dina inlästa svar, eventuella överhoppningar och viktighetsskattningar. Inga svar från den andra personen eller gemensamma resultat följer med. Filen sparas på din enhet.</p>'+
+  '<p id="swipe-export-status" role="status" aria-live="polite"></p></section>';
+}
 function themeSwipeView(){
   const deck=THEME_DECKS.find(d=>d.id===activeThemeDeck);
   if(!deck||!themeAccessAllowed()){activeThemeDeck=null;return swipeView();}
@@ -1124,7 +1178,7 @@ function themeSwipeView(){
   return '<div class="swipe-experience swipe-theme-play"><header class="swipe-heading">'+
     '<button type="button" class="live-button swipe-theme-back" id="theme-back">← Alla kortlekar</button>'+
     '<span class="swipe-eyebrow">TEMAKORTLEK · PRIVATA SVAR</span><h1>'+esc(deck.title)+'</h1>'+
-    '<p>Svara ja på sådant du vill prova eller prata om. Dina svar är privata. Ett ja är inte en bindande överenskommelse.</p>'+filter+'</header>'+
+    '<p>Svara ja på sådant du vill prova eller prata om. Dina svar är privata. Ett ja är inte en bindande överenskommelse.</p>'+privateSwipeExportControls()+filter+'</header>'+
     '<div class="swipe-stage"><div class="swipe-stage-top"><span>'+esc(deck.title)+'</span><span role="status">'+
     (item?ordinal+' / '+visible.length:answered+' / '+visible.length+' sparade')+'</span></div>'+
     '<div class="swipe-track"><div class="swipe-track-fill" style="width:'+Math.round(100*(item?(themeReview?ordinal-1:answered):visible.length)/visible.length)+'%"></div></div>'+
@@ -1248,7 +1302,7 @@ function reopenGeneralReview(){
    !button.closest('[data-general-review-kind]')?.hidden);
  (selected||search||details?.querySelector('summary'))?.focus({preventScroll:true});
 }
-function swipeView(){if(activeThemeDeck)return themeSwipeView();const total=visibleGeneralIndices().length,answered=visibleGeneralIndices().filter(i=>swipeAnswers.has(swipeCardId(i))).length,item=generalStatement(swipeIndex),isUnderstanding=GENERAL_CARDS[swipeIndex]?.type==='understanding',ordinal=visibleGeneralIndices().indexOf(swipeIndex)+1;if(swipeLoadError)return '<div class="swipe-experience"><header class="swipe-heading"><span class="swipe-eyebrow">UPPTÄCK VARANDRA</span><h1>Gillaswajpen</h1></header>'+card('<h2>Kunde inte hämta dina svar</h2><p role="alert">'+esc(swipeLoadError)+'</p><button class="live-button" type="button" id="swipe-reload">Försök igen</button>')+'</div>';return '<div class="swipe-experience"><header class="swipe-heading"><span class="swipe-eyebrow">UPPTÄCK VARANDRA</span><h1>Gillaswajpen</h1><p>Vad är viktigt för dig? Utforska korten i din egen takt.</p></header>'+(isUnderstanding?'<p class="swipe-understanding-notice">'+(sharedUnderstandingEnabled?'Förståelsekort: ditt svar förblir privat tills du själv väljer att dela ett ja-svar i <a href="#insikter">Gemensamma insikter</a>. Du kan återkalla delningen när som helst. Inga tidigare svar delas automatiskt.':'Förståelsekort: ditt svar sparas tills vidare privat. Delning med förälder är inte aktiverad här och gamla svar delas aldrig automatiskt.')+'</p>':'')+'<div class="swipe-stage"><div class="swipe-stage-top"><span>ALLMÄNNA KORTLEKEN</span><span role="status">'+(item?ordinal+' / '+total:answered+' svar, '+skippedUnderstanding.size+' överhoppade av '+total)+'</span></div><div class="swipe-track"><div class="swipe-track-fill" style="width:'+Math.round(100*(item?(swipeReview?ordinal-1:answered+skippedUnderstanding.size):total)/total)+'%"></div></div>'+(item?'<div id="swipe-card" class="swipe-playing-card" tabindex="0" aria-label="Kort '+ordinal+' av '+total+'. Svep höger för ja eller vänster för nej."><span class="swipe-stamp swipe-stamp-no" aria-hidden="true">NEJ</span><span class="swipe-stamp swipe-stamp-yes" aria-hidden="true">JA</span><span class="swipe-category">'+esc(item[0])+'</span><h2>'+esc(item[1])+'</h2><span class="swipe-card-hint">Dra kortet åt höger eller vänster. När kortet har fokus kan du använda vänster- eller högerpil.</span>'+importanceControl('general',swipeCardId(swipeIndex))+'</div>'+(generalReviewEdit?.index===swipeIndex?'<button type="button" class="schyssta-secondary" id="swipe-general-review-back">Tillbaka till mina svar</button>':'')+'<div class="swipe-actions"><button type="button" class="swipe-choice swipe-no" data-swipe="no" aria-label="Nej">✕ <span>Nej</span></button><button type="button" class="swipe-choice swipe-yes" data-swipe="yes" aria-label="Ja">♥ <span>Ja</span></button></div>'+(isUnderstanding?'<button type="button" id="swipe-skip" class="swipe-skip">Vill inte svara just nu</button>':''):'<div class="swipe-finished"><h2>'+(skippedUnderstanding.size?'Du har '+skippedUnderstanding.size+' kort kvar att svara på':'Alla '+total+' kort besvarade')+'</h2><p>Du har sparat '+answered+' svar'+(skippedUnderstanding.size?' och lämnat '+skippedUnderstanding.size+' förståelsekort obesvarade för tillfället':'')+'. Du kan ändra dina egna svar när du vill.</p>'+'<div class="swipe-finished-actions">'+(skippedUnderstanding.size?'<button class="live-button" type="button" id="swipe-review-skipped">Gå till överhoppade kort</button>':'')+'<button class="live-button" type="button" id="swipe-restart">Gå igenom alla kort igen</button></div></div>')+'<p id="swipe-save-status" class="swipe-disclaimer" role="status">'+(swipeSaveError?esc(swipeSaveError):(isUnderstanding?(sharedUnderstandingEnabled?'Ditt svar sparas privat. Ett ja på förståelsekort blir inte delat förrän du själv väljer Dela med min förälder i Gemensamma insikter.':'Ditt svar sparas privat. Förståelsekort delas inte förrän säker delning är aktiverad.'):'Ditt svar sparas privat i ditt konto. Matchningskort visas gemensamt först när båda svarat ja.'))+'</p></div>'+privateGeneralAnswerReview()+swipeResults()+insightsEntry()+themeDecksView()+'</div>';}
+function swipeView(){if(activeThemeDeck)return themeSwipeView();const total=visibleGeneralIndices().length,answered=visibleGeneralIndices().filter(i=>swipeAnswers.has(swipeCardId(i))).length,item=generalStatement(swipeIndex),isUnderstanding=GENERAL_CARDS[swipeIndex]?.type==='understanding',ordinal=visibleGeneralIndices().indexOf(swipeIndex)+1;if(swipeLoadError)return '<div class="swipe-experience"><header class="swipe-heading"><span class="swipe-eyebrow">UPPTÄCK VARANDRA</span><h1>Gillaswajpen</h1></header>'+card('<h2>Kunde inte hämta dina svar</h2><p role="alert">'+esc(swipeLoadError)+'</p><button class="live-button" type="button" id="swipe-reload">Försök igen</button>')+'</div>';return '<div class="swipe-experience"><header class="swipe-heading"><span class="swipe-eyebrow">UPPTÄCK VARANDRA</span><h1>Gillaswajpen</h1><p>Vad är viktigt för dig? Utforska korten i din egen takt.</p>'+privateSwipeExportControls()+'</header>'+(isUnderstanding?'<p class="swipe-understanding-notice">'+(sharedUnderstandingEnabled?'Förståelsekort: ditt svar förblir privat tills du själv väljer att dela ett ja-svar i <a href="#insikter">Gemensamma insikter</a>. Du kan återkalla delningen när som helst. Inga tidigare svar delas automatiskt.':'Förståelsekort: ditt svar sparas tills vidare privat. Delning med förälder är inte aktiverad här och gamla svar delas aldrig automatiskt.')+'</p>':'')+'<div class="swipe-stage"><div class="swipe-stage-top"><span>ALLMÄNNA KORTLEKEN</span><span role="status">'+(item?ordinal+' / '+total:answered+' svar, '+skippedUnderstanding.size+' överhoppade av '+total)+'</span></div><div class="swipe-track"><div class="swipe-track-fill" style="width:'+Math.round(100*(item?(swipeReview?ordinal-1:answered+skippedUnderstanding.size):total)/total)+'%"></div></div>'+(item?'<div id="swipe-card" class="swipe-playing-card" tabindex="0" aria-label="Kort '+ordinal+' av '+total+'. Svep höger för ja eller vänster för nej."><span class="swipe-stamp swipe-stamp-no" aria-hidden="true">NEJ</span><span class="swipe-stamp swipe-stamp-yes" aria-hidden="true">JA</span><span class="swipe-category">'+esc(item[0])+'</span><h2>'+esc(item[1])+'</h2><span class="swipe-card-hint">Dra kortet åt höger eller vänster. När kortet har fokus kan du använda vänster- eller högerpil.</span>'+importanceControl('general',swipeCardId(swipeIndex))+'</div>'+(generalReviewEdit?.index===swipeIndex?'<button type="button" class="schyssta-secondary" id="swipe-general-review-back">Tillbaka till mina svar</button>':'')+'<div class="swipe-actions"><button type="button" class="swipe-choice swipe-no" data-swipe="no" aria-label="Nej">✕ <span>Nej</span></button><button type="button" class="swipe-choice swipe-yes" data-swipe="yes" aria-label="Ja">♥ <span>Ja</span></button></div>'+(isUnderstanding?'<button type="button" id="swipe-skip" class="swipe-skip">Vill inte svara just nu</button>':''):'<div class="swipe-finished"><h2>'+(skippedUnderstanding.size?'Du har '+skippedUnderstanding.size+' kort kvar att svara på':'Alla '+total+' kort besvarade')+'</h2><p>Du har sparat '+answered+' svar'+(skippedUnderstanding.size?' och lämnat '+skippedUnderstanding.size+' förståelsekort obesvarade för tillfället':'')+'. Du kan ändra dina egna svar när du vill.</p>'+'<div class="swipe-finished-actions">'+(skippedUnderstanding.size?'<button class="live-button" type="button" id="swipe-review-skipped">Gå till överhoppade kort</button>':'')+'<button class="live-button" type="button" id="swipe-restart">Gå igenom alla kort igen</button></div></div>')+'<p id="swipe-save-status" class="swipe-disclaimer" role="status">'+(swipeSaveError?esc(swipeSaveError):(isUnderstanding?(sharedUnderstandingEnabled?'Ditt svar sparas privat. Ett ja på förståelsekort blir inte delat förrän du själv väljer Dela med min förälder i Gemensamma insikter.':'Ditt svar sparas privat. Förståelsekort delas inte förrän säker delning är aktiverad.'):'Ditt svar sparas privat i ditt konto. Matchningskort visas gemensamt först när båda svarat ja.'))+'</p></div>'+privateGeneralAnswerReview()+swipeResults()+insightsEntry()+themeDecksView()+'</div>';}
 async function saveSwipeAnswer(direction,index,viewer,session){
   // An animated swipe can finish after sign-out or a switch to another account.
   // Never write or render its result in the new user's session.
@@ -1899,6 +1953,7 @@ if(user&&members.length===2){
 }
 }
 document.addEventListener('click',e=>{
+if(e.target.closest('#swipe-export-private')&&page()==='swipe'){downloadPrivateSwipeAnswers();return;}
 if(page()==='kommunikation'){
    const choice=e.target.closest('[data-comm-open]');
    if(choice){
