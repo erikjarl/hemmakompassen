@@ -8,7 +8,9 @@ const start=app.indexOf('async function reconcileOwnSwipeAnswer(row){');
 const end=app.indexOf('async function saveThemeAnswer(direction,index,deckId,viewer,session){',start);
 assert.ok(start>=0&&end>start,'Use production answer reconciliation helpers');
 
-function harness({saved={deck_id:'general',card_id:'general-01',answer:true},error=null,throws=false}={}){
+function harness(options={}){
+ const {error=null,throws=false}=options;
+ const saved=Object.hasOwn(options,'saved')?options.saved:{deck_id:'general',card_id:'general-01',answer:true};
  const queries=[];
  const ctx={db:{from(table){
   assert.equal(table,'swipe_answers');
@@ -27,7 +29,7 @@ const request={user_id:'parent',deck_id:'general',card_id:'general-01',answer:tr
 
 for(const [name,saved,expected] of [
  ['same server YES after lost acknowledgement',{deck_id:'general',card_id:'general-01',answer:true},'confirmed'],
- ['same server NO after lost acknowledgement',{deck_id:'general',card_id:'general-01',answer:false},'different'],
+ ['old server NO does not confirm requested YES',{deck_id:'general',card_id:'general-01',answer:false},'different'],
  ['server retained previous opposite answer',{deck_id:'general',card_id:'general-01',answer:false},'different'],
  ['server has no answer',null,'different'],
  ['server returned another deck',{deck_id:'samtal',card_id:'general-01',answer:true},'unknown'],
