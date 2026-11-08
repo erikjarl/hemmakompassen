@@ -4,7 +4,7 @@ import {createPrivateIpipRetests,buildPrivateIpipRetestExport} from '../personal
 
 function makeBackend(){
   const attempts=[],answers=[],calls=[];
-  let owner='private-user',failNextAnswer=false,failDelete=false,failNextAnswerRead=false,failNextAttemptsRead=false;
+  let owner='private-user',failNextAnswer=false,failDelete=false,failNextAnswerRead=false,failNextAttemptsRead=false,nextAnswerMode=null,writeAttempts=0;
   const db={
     from(table){
       assert.ok(['personality_test_attempts','personality_attempt_answers'].includes(table),
@@ -63,17 +63,24 @@ function makeBackend(){
         delete(){return query('delete');}, 
         async upsert(row){
           assert.equal(row.user_id,owner);
-          if(failNextAnswer){failNextAnswer=false;return {error:{message:'temporary offline'}};}
+          writeAttempts++;
+          const mode=nextAnswerMode;nextAnswerMode=null;
+          if(failNextAnswer||mode==='reject'){failNextAnswer=false;return {error:{message:'temporary offline'}};}
           const record=answers.find(a=>a.attempt_id===row.attempt_id&&a.question_id===row.question_id);
           if(record)record.answer_value=row.answer_value;
           else answers.push({...row});
-          calls.push('answer');return {error:null};
+          calls.push('answer');
+          if(mode==='lost-ack')return {error:{message:'write committed, ACK lost'}};
+          if(mode==='throw-after')throw Error('transport closed after commit');
+          if(mode==='missing-ack')return undefined;
+          return {error:null};
         }
       };
     }
   };
   return {db,attempts,answers,calls,setOwner:v=>owner=v,failNext:()=>failNextAnswer=true,
     setDeleteFailure:v=>failDelete=v,failAnswerRead:()=>failNextAnswerRead=true,
+    nextAnswer:v=>nextAnswerMode=v,writeAttempts:()=>writeAttempts,
     failAttemptsRead:()=>failNextAttemptsRead=true};
 }
 const button=(action,attemptId)=>({closest:sel=>sel==='[data-ipip-retest]'?{dataset:{ipipRetest:action,attemptId}}:null});
@@ -108,7 +115,7 @@ test('unfinished attempt resumes; failed save never counts an answer',async()=>{
   b.failNext();
   await ui.handleChange(radio('ipip50-001',4));
   assert.equal(b.answers.length,0);
-  assert.match(ui.render(),/Svaret kunde inte sparas/);
+  assert.match(ui.render(),/Svaret kunde inte bekräftas som sparat/);
   await ui.handleChange(radio('ipip50-001',4));
   assert.equal(b.answers.length,1);
   await ui.handleClick(button('overview'));
@@ -349,4 +356,86 @@ test('failed private history load shows only retry, then restores distinguishabl
   assert.match(ui.render(),/Omtest 1 av 2/);
   assert.match(ui.render(),/Omtest 2 av 2/);
   assert.doesNotMatch(ui.render(),/data-ipip-retest="reload"/);
+});
+
+test('private retest: lost ACK after commit advances once with exactly one write',async()=>{
+  const b=makeBackend(),ui=createPrivateIpipRetests({db:b.db});
+  ui.reset('private-user');await ui.load('private-user');await ui.handleClick(button('new'));
+  b.nextAnswer('lost-ack');
+  await ui.handleChange(radio('ipip50-001',4));
+  assert.equal(b.answers.length,1);
+  assert.equal(b.answers[0].answer_value,4);
+  assert.equal(b.writeAttempts(),1);
+  assert.match(ui.render(),/Fråga 2 av 50/);
+  assert.doesNotMatch(ui.render(),/Kontrollera sparat svar/);
+});
+
+test('private retest: exception and missing acknowledgement are reconciled without duplicate write',async()=>{
+  for(const mode of ['throw-after','missing-ack']){
+    const b=makeBackend(),ui=createPrivateIpipRetests({db:b.db});
+    ui.reset('private-user');await ui.load('private-user');await ui.handleClick(button('new'));
+    b.nextAnswer(mode);
+    await ui.handleChange(radio('ipip50-001',3));
+    assert.equal(b.writeAttempts(),1);
+    assert.match(ui.render(),/Fråga 2 av 50/);
+  }
+});
+
+test('private retest: rejected first write stays on the same question and permits a deliberate retry',async()=>{
+  const b=makeBackend(),ui=createPrivateIpipRetests({db:b.db});
+  ui.reset('private-user');await ui.load('private-user');await ui.handleClick(button('new'));
+  b.nextAnswer('reject');
+  const pending=ui.handleChange(radio('ipip50-001',5));
+  const duplicate=await ui.handleChange(radio('ipip50-001',5));
+  assert.equal(duplicate,false,'A second synthetic event during save must not rewrite');
+  await pending;
+  assert.equal(b.writeAttempts(),1);
+  assert.equal(b.answers.length,0);
+  assert.match(ui.render(),/Fråga 1 av 50/);
+  assert.match(ui.render(),/Svaret kunde inte bekräftas som sparat/);
+  assert.doesNotMatch(ui.render(),/Kontrollera sparat svar/);
+  await ui.handleChange(radio('ipip50-001',5));
+  assert.equal(b.writeAttempts(),2);
+  assert.match(ui.render(),/Fråga 2 av 50/);
+});
+
+test('private retest: a previous different saved value does not confirm a failed overwrite',async()=>{
+  const b=makeBackend(),ui=createPrivateIpipRetests({db:b.db});
+  ui.reset('private-user');await ui.load('private-user');await ui.handleClick(button('new'));
+  await ui.handleChange(radio('ipip50-001',2));
+  await ui.handleClick(button('prev'));
+  b.nextAnswer('reject');
+  await ui.handleChange(radio('ipip50-001',4));
+  assert.equal(b.answers[0].answer_value,2);
+  assert.match(ui.render(),/Fråga 1 av 50/);
+  assert.match(ui.render(),/kunde inte bekräftas som sparat/);
+});
+
+test('private retest: unknown save offers server-only check and resumes from actual stored answer',async()=>{
+  const b=makeBackend(),ui=createPrivateIpipRetests({db:b.db});
+  ui.reset('private-user');await ui.load('private-user');await ui.handleClick(button('new'));
+  b.nextAnswer('lost-ack');b.failAnswerRead();
+  await ui.handleChange(radio('ipip50-001',4));
+  assert.equal(b.writeAttempts(),1);
+  assert.match(ui.render(),/Fråga 1 av 50/);
+  assert.match(ui.render(),/Det går inte att kontrollera om svaret sparades/);
+  assert.match(ui.render(),/data-ipip-retest="verify-save"/);
+  await ui.handleClick(button('verify-save'));
+  assert.equal(b.writeAttempts(),1,'A check must only read, not re-send the answer');
+  assert.match(ui.render(),/1 av 50 svar/);
+  assert.doesNotMatch(ui.render(),/data-ipip-retest="verify-save"/);
+  await ui.handleClick(button('resume'));
+  assert.match(ui.render(),/Fråga 2 av 50/);
+});
+
+test('private retest: uncertain read and identity switch do not show a stale confirm control',async()=>{
+  const b=makeBackend(),ui=createPrivateIpipRetests({db:b.db});
+  ui.reset('private-user');await ui.load('private-user');await ui.handleClick(button('new'));
+  b.nextAnswer('reject');b.failAnswerRead();
+  await ui.handleChange(radio('ipip50-001',3));
+  assert.match(ui.render(),/Kontrollera sparat svar/);
+  ui.reset('another-user');
+  await ui.load('another-user');
+  assert.doesNotMatch(ui.render(),/Kontrollera sparat svar|3 av 50 svar/);
+  assert.equal(b.writeAttempts(),1);
 });
