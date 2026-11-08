@@ -3299,6 +3299,8 @@ try{
   await activeShare.click();
   await teenInsights.page.locator('[data-understanding-retry]').waitFor();
   assert.equal(await activeShare.isDisabled(),true,'Unknown share status disables further consent writes');
+  assert.equal(await activeShare.getAttribute('aria-pressed'),null,'An unknown server choice must not be labelled as an explicit no');
+  assert.match(await teenInsights.page.locator('#insights-understanding').innerText(),/Det går inte att kontrollera vilka förståelsekort/);
   assert.match(await teenInsights.page.getByRole('alert').last().innerText(),/går inte att veta om ditt val/);
   const writesBeforeRetry=await teenInsights.page.evaluate(()=>window.__HK_UNDERSTANDING_WRITES__);
   await teenInsights.page.evaluate(()=>{
