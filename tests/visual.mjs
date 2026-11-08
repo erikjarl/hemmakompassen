@@ -1423,7 +1423,11 @@ try{
   assert.equal(await paired.page.getByRole('button',{name:'Uppdatera listan'}).count(),1,
     'A paired test user can explicitly reload the list');
   assert.equal(await paired.page.locator('#live-mobile-nav a[href="#inkorg"] .live-nav-count').innerText(),'2','Inbox counts both one private chat message and one rule event');
+  await paired.page.waitForFunction(()=>document.querySelector('#live-mobile-nav a[href="#regler"] .live-nav-count')?.textContent==='2',
+    null,{timeout:8000});
   assert.equal(await paired.page.locator('#live-mobile-nav a[href="#regler"] .live-nav-count').innerText(),'2','Rule tab shows only requests awaiting the current viewer');
+  assert.equal(await paired.page.locator('#live-mobile-nav summary .live-nav-count').innerText(),'2',
+    'More mirrors the pending-rule badge while the secondary menu is closed');
   assert.match(await paired.page.locator('#live-mobile-nav a[href="#regler"]').getAttribute('aria-label'),/2 obesvarade regelförslag/,'Navigation text announces the meaning of the count');
   // Search and status filters never hide incoming requests requiring the user's answer.
   const search=paired.page.locator('#schyssta-search');
