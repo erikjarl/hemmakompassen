@@ -261,13 +261,23 @@ async function captureFunctionalInventory(){
       {authenticated:true,paired:item.paired,role:item.role,aiMediator:true,
         personalityComplete:true,personalitySharing:true,privateRetests:true,aiAnalyses:true}
     );
-    // Change only this synthetic browser's allowlisted mock, not live user data.
-    await context.addInitScript(()=>{window.__HK_SCHYSSTA_CLEAN_RPC__=true;});
     for(const route of FUNCTION_AUDIT_ROUTES){
       await page.goto(base+'#'+route,{waitUntil:'load'});
       await page.waitForFunction(()=>!!document.querySelector('#live-app')?.textContent?.trim());
       // Give the local asynchronous fixtures time to settle before the sample.
       await page.waitForTimeout(180);
+      // The baseline fixture deliberately returns a forged rule first. Inventory
+      // both the retry behavior and the REAL UI after a successful synthetic reload,
+      // rather than incorrectly counting only the error screen's controls.
+      const recoveredRules=route==='regler'&&item.paired;
+      if(recoveredRules){
+        await page.getByRole('heading',{name:'Kunde inte visa listan'}).waitFor();
+        await page.evaluate(()=>{window.__HK_SCHYSSTA_CLEAN_RPC__=true;});
+        await page.locator('#schyssta-retry').click();
+        await page.getByRole('heading',{name:'Gemensamma förslag'}).waitFor();
+        assert.equal(await page.locator('.schyssta-quick-actions [data-schyssta-start]').count(),1,
+          'FUN-03: recovered rule view exposes its normal compose action');
+      }
       const result=await page.evaluate(({route})=>{
         const root=document.querySelector('#live-app');
         const controls=[...root.querySelectorAll('a[href],button,input,select,textarea,summary')];
@@ -304,6 +314,8 @@ async function captureFunctionalInventory(){
       },{route});
       assert.ok(result.heading,'FUN-00 '+item.name+' '+route+' has a page heading');
       assert.ok(result.controlCount>0,'FUN-00 '+item.name+' '+route+' exposes an action/link');
+      if(recoveredRules)assert.ok(result.controlCount>=15,
+        'FUN-03: normal Schyssta controls must be included, not only an error retry');
       assert.deepEqual(result.active,[result.expectedActive],
         'FUN-01 '+item.name+' '+route+' shows the right active primary navigation');
       assert.ok(result.pageWidth<=result.viewportWidth+2,
@@ -317,6 +329,7 @@ async function captureFunctionalInventory(){
       entries.push({scenario:item.name,role:item.role,paired:item.paired,
         viewportWidth:item.width,environment:'local mocked Chromium',
         evidence:'tests/visual.mjs captureFunctionalInventory',...result,
+        ruleRetryRecovered:recoveredRules,
         controlsStatus:'discovered-not-individually-tested'});
     }
     const nav=item.width<500?'#live-mobile-nav':'#live-desktop-nav';
