@@ -55,7 +55,8 @@ test('stale response after account switch cannot touch new session state',async(
   h.state.db.rpc=()=>new Promise(resolve=>{release=resolve;});
   const pending=h.state.markRead();
   // A real RPC must be in flight before the simulated account switch.
-  await Promise.resolve();
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(typeof release,'function','Mark RPC must be in flight before simulating account switch');
   h.state.user={id:'another'};
   h.state.sharedSession=8;
   release({data:2,error:null});
