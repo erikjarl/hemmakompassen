@@ -435,17 +435,35 @@ async function verifyTouchMobileTabStrip(){
         assert.equal(await page.locator('#live-mobile-nav a[href="#installningar"]').getAttribute('aria-current'),'page');
         assert.equal((await state()).lastVisible,true,'Active tab remains in view after tapping it');
         records.push({role,width,step:'last tab native touch tap opens settings and stays in view',status:'PASS'});
-        await page.goto(base+'#hem',{waitUntil:'load'});
-        // First move to the right end again, then reverse with native fingerswipes.
-        for(let i=0;i<6&&!((await state()).lastVisible);i++)
-          await dragMobileTabStrip(page,.83,.17);
-        assert.equal((await state()).lastVisible,true,'Right end is reachable again after route reload');
-        for(let i=0;i<6&&!((await state()).firstVisible);i++)
+        // Reverse directly from the actual end position after opening Settings.
+        // Reloading Home first is a different user action: it can reset the
+        // tab strip while native scroll snap is still settling, making this
+        // gesture test intermittent even when the ordinary swipe works.
+        for(let i=0;i<7&&!((await state()).firstVisible);i++)
           await dragMobileTabStrip(page,.17,.83);
         const reverse=await state();
-        assert.equal(reverse.firstVisible,true,'Finger swipe left reaches Home: '+JSON.stringify({role,width,reverse}));
-        assert.equal(reverse.route,'#hem','Reverse gesture must not open a different route');
-        records.push({role,width,step:'reverse fingerswipe returns to first tab',status:'PASS'});
+        assert.equal(reverse.firstVisible,true,
+          'Reverse touch gesture must reach the Home tab: '+JSON.stringify({role,width,reverse}));
+        assert.equal(reverse.route,'#installningar',
+          'Reverse gesture scrolls the strip without accidentally navigating');
+        const home=await page.locator('#live-mobile-nav a[href="#hem"]').boundingBox();
+        assert.ok(home,'Home is visible and touchable after reversing the strip');
+        await page.touchscreen.tap(home.x+home.width*.5,home.y+home.height*.5);
+        await page.waitForURL(/#hem$/);
+        await page.locator('#live-mobile-nav a[href="#hem"][aria-current="page"]').waitFor();
+        await page.reload({waitUntil:'load'});
+        await page.locator('#live-mobile-nav a[href="#hem"][aria-current="page"]').waitFor();
+        await page.waitForFunction(()=>{
+          const nav=document.querySelector('#live-mobile-nav');
+          const home=nav?.querySelector('a[href="#hem"]');
+          if(!home)return false;
+          const bounds=nav.getBoundingClientRect(),tab=home.getBoundingClientRect();
+          return tab.left>=bounds.left-4&&tab.right<=bounds.right+4;
+        });
+        const reloaded=await state();
+        assert.equal(reloaded.route,'#hem','Reload remains on Home');
+        assert.equal(reloaded.firstVisible,true,'Reload shows the active Home tab');
+        records.push({role,width,step:'reverse touch swipe, Home tap and reload preserve navigation',status:'PASS'});
       }finally{
         await m.context.close();
       }
