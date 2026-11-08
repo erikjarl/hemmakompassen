@@ -48,4 +48,20 @@ assert.match(source,/function filterPrivateGeneralReview\(\)/);
 assert.match(source,/if\(e\.target\.matches\?\.\('#swipe-general-review-search'\)\)/);
 assert.match(source,/if\(e\.target\.matches\?\.\('#swipe-general-review-answer'\)\)/);
 assert.match(source,/if\(e\.target\.closest\('#swipe-general-review-reset'\)/);
+
+assert.match(source,/function reopenGeneralReview\(\)/,
+ 'Private saved-answer edits restore the prior swipe position and review list');
+assert.match(source,/swipeIndex=Number\.isSafeInteger\(state\?\.indexBefore\)/,
+ 'The original unanswered swipe position must not be replaced by a false completed-deck state');
+assert.match(source,/filterPrivateGeneralReview\(\);[\s\S]*?\?\.focus\(\{preventScroll:true\}\)/,
+ 'The saved search and filter are reapplied with keyboard focus');
+assert.match(source,/generalReviewEdit=\{index,viewer:user\.id,session:sharedSession/,
+ 'Only an explicitly opened own saved card starts a private editing session');
+assert.match(source,/if\(returnToReview\)reopenGeneralReview\(\);else render\(\)/,
+ 'Successful answer or skip returns to the private review');
+assert.match(source,/if\(e\.target\.closest\('#swipe-general-review-back'\)/,
+ 'Canceling a private edit is allowed without saving');
+assert.match(source,/generalReviewEdit=null;user=u/,
+ 'Refresh clears ephemeral editing state across accounts');
+
 console.log('PASS private general review: owner-only, role-safe, escaped, filtered and directly editable');
