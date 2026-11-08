@@ -1383,10 +1383,10 @@ async function reconcileOwnUnderstandingCardState(cardId,viewer,expected){
  return 'unknown';
 }
 function understandingStateRecheckMessage(result,kind){
- const action=kind==='skip'?'överhoppning':'svar';
+ const skip=kind==='skip';
  return result==='unknown'
-  ?'Det går inte att kontrollera om din '+action+' sparades. Kortet ligger kvar. Uppdatera sidan och kontrollera ditt val innan du försöker igen.'
-  :'Din '+action+' kunde inte bekräftas som sparad. Kortet ligger kvar så att du kan försöka igen.';
+  ?'Det går inte att kontrollera om '+(skip?'din överhoppning':'ditt svar')+' sparades. Kortet ligger kvar. Uppdatera sidan och kontrollera ditt val innan du försöker igen.'
+  :(skip?'Din överhoppning kunde inte bekräftas som sparad.':'Ditt svar kunde inte bekräftas som sparat.')+' Kortet ligger kvar så att du kan försöka igen.';
 }
 function swipeAnswerRecheckMessage(result){
  return result==='unknown'
