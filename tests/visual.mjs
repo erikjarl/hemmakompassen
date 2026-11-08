@@ -693,6 +693,24 @@ try{
     'Home cannot keep old family inbox alert after remote unpair');
   await homeUnpaired.context.close();
 
+  // Shared insights are also bound to the current pairing epoch. A remote
+  // unpair must hide an already rendered match summary on the next focus.
+  const revokedInsights=await freshContext(
+    {viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},
+    {authenticated:true,paired:true}
+  );
+  await revokedInsights.page.goto(base+'#insikter',{waitUntil:'load'});
+  await revokedInsights.page.getByRole('heading',{name:'Era gemensamma insikter'}).waitFor();
+  await revokedInsights.page.getByRole('heading',{name:'Det ni båda svarat ja till'}).first().waitFor();
+  await revokedInsights.page.evaluate(()=>{
+    window.__HK_TEST_PAIRED__=false;
+    window.dispatchEvent(new Event('focus'));
+  });
+  await revokedInsights.page.getByText('Koppla ihop en förälder och en tonåring för att se sådant ni båda aktivt har valt.').waitFor();
+  assert.equal(await revokedInsights.page.getByRole('heading',{name:'Det ni båda svarat ja till'}).count(),0,
+    'Remote unpair must hide stale shared YES matches and private insights immediately');
+  await revokedInsights.context.close();
+
   // NOT-01: failed unread RPCs must not silently look like an empty inbox.
   const unavailableHome=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},
     {authenticated:true,paired:true,homeUnreadFailure:true});
