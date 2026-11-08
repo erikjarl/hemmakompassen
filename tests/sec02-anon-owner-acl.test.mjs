@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const migration=readFileSync(new URL('../supabase/migrations/20261108014907_remove_anon_owner_data_table_grants.sql',import.meta.url),'utf8');
+const audit=readFileSync(new URL('../supabase/tests/sec02_private_anon_dml_readonly.sql',import.meta.url),'utf8');
+const statements=migration.split('\n').filter(line=>!line.trim().startsWith('--')).join('\n');
+assert.match(statements,/REVOKE SELECT, INSERT, UPDATE, DELETE\s+ON TABLE public\.profiles, public\.personality_answers,\s+public\.private_ai_chats, public\.private_ai_messages, public\.private_ai_memories\s+FROM anon;/);
+assert.match(statements,/ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public\s+REVOKE SELECT, INSERT, UPDATE, DELETE ON TABLES FROM anon;/);
+assert.doesNotMatch(statements,/\b(DROP|DELETE FROM|UPDATE public|INSERT INTO|TRUNCATE TABLE|REVOKE ALL|FROM authenticated|FROM service_role)\b/i);
+assert.match(audit,/has_table_privilege\('anon',s\.oid,p\.privilege\)/);
+assert.match(audit,/has_table_privilege\('authenticated',s\.oid,p\.privilege\)/);
+assert.match(audit,/v_count<>5 OR v_anon<>0 OR v_signed<>20 OR v_unprotected<>0 OR v_defaults<>0/);
+assert.match(audit,/RAISE EXCEPTION 'SEC-02 anonymous owner-data ACL failure/);
+assert.match(audit,/o\.rolname='supabase_admin'/);
+console.log('PASS: anonymous owner-data grants revoked without changing signed-in permissions or rows');
