@@ -49,6 +49,18 @@ export function openCommunicationSkill(root,skill,{focus=false}={}){
  if(focus){detail.querySelector('summary')?.focus({preventScroll:true});detail.scrollIntoView({block:'nearest',behavior:'auto'});}
  return true;
 }
+// Local-only copy controls: initially disabled until a new preview is generated.
+// Fallback text is created in the browser only when automatic copying is refused.
+function renderCommunicationCopyTools(kind){
+ if(!['reflection','solution','nvc'].includes(kind))return '';
+ return '<div class="comm-copy-tools">'+
+  '<button type="button" class="comm-quiet-button" data-comm-copy="'+kind+'" disabled>Kopiera min text</button>'+
+  '<p class="live-muted" id="comm-'+kind+'-copy-status" role="status" aria-live="polite"></p>'+
+  '<div id="comm-'+kind+'-copy-manual" hidden><label for="comm-'+kind+'-copy-fallback">Markera och kopiera texten manuellt</label>'+
+  '<textarea id="comm-'+kind+'-copy-fallback" rows="5" readonly spellcheck="false"></textarea>'+
+  '<button type="button" class="comm-quiet-button" data-comm-select-copy="'+kind+'">Markera texten igen</button></div>'+
+ '</div>';
+}
 function exercise(title,purpose,steps,example){
  return '<details class="comm-exercise" data-comm-skill="'+e(COMM_SKILL_IDS[title])+'"><summary><strong>'+e(title)+'</strong><span>'+e(purpose)+'</span></summary><div class="comm-exercise-content"><ol>'+steps.map(s=>'<li>'+e(s)+'</li>').join('')+'</ol><p class="comm-example"><strong>Exempel:</strong> '+e(example)+'</p></div></details>';
 }
@@ -134,7 +146,7 @@ export function renderCommunicationToolkit(role='teen'){
     ['check','3. Hur kan jag fråga om jag förstått?','En kort, öppen kontrollfråga som den andra kan säga nej till eller rätta.']
   ].map(([key,title,hint])=>'<label for="comm-reflection-'+key+'"><strong>'+e(title)+'</strong><span>'+e(hint)+'</span></label><textarea id="comm-reflection-'+key+'" name="'+key+'" rows="2" maxlength="240" required></textarea>').join('')+
   '</div><div class="comm-actions"><button type="submit" class="live-button">Förhandsgranska min spegling</button><button type="button" class="comm-quiet-button" data-comm-reflection-reset>Töm speglingen</button></div></form>'+
-  '<p id="comm-reflection-output" class="comm-output" tabindex="-1" role="status" aria-live="polite">Din privata spegling visas här.</p>'+
+  '<p id="comm-reflection-output" class="comm-output" tabindex="-1" role="status" aria-live="polite">Din privata spegling visas här.</p>'+renderCommunicationCopyTools('reflection')+
   '<p class="live-muted">'+(parent?'Du är som vuxen ansvarig för att inte pressa fram svar.':'Du behöver inte bära ansvaret för att lösa en vuxens oro eller konflikt.')+' Inget sparas eller skickas. Vid rädsla, hot eller kontroll ska trygghet gå före samtalsövningar.</p></section>'+
   '<section class="live-panel" id="comm-solution-planner"><h2 tabindex="-1">Förbered ett förslag – utan att bestämma åt den andra</h2><p>Skriv din egen bild, en öppen fråga och ett förslag som ni kan diskutera. Din text <strong>sparas inte</strong>, skickas inte till någon och används inte av AI. Den andra personen har inte godkänt något bara för att du fyller i formuläret.</p>'+
   '<form id="comm-solution-form"><div class="comm-fields">'+[
@@ -144,7 +156,7 @@ export function renderCommunicationToolkit(role='teen'){
     ['followup','4. När skulle vi kunna följa upp?','Föreslå en tid – låt den andra välja om och när ni pratar vidare.']
   ].map(([key,title,hint])=>'<label for="comm-solution-'+key+'"><strong>'+e(title)+'</strong><span>'+e(hint)+'</span></label><textarea id="comm-solution-'+key+'" name="'+key+'" rows="2" maxlength="240" required></textarea>').join('')+
   '</div><div class="comm-actions"><button class="live-button" type="submit">Förhandsgranska min samtalsplan</button><button class="comm-quiet-button" type="button" data-comm-solution-reset>Töm fälten</button></div></form>'+
-  '<p id="comm-solution-output" class="comm-output" role="status" aria-live="polite" tabindex="-1">Din privata samtalsplan visas här.</p><p class="live-muted">Det här är ett eget utkast, inte ett gemensamt beslut. Vid hot, kontroll eller rädsla ska trygghet och stöd gå före en sådan övning.</p></section>'+
+  '<p id="comm-solution-output" class="comm-output" role="status" aria-live="polite" tabindex="-1">Din privata samtalsplan visas här.</p>'+renderCommunicationCopyTools('solution')+'<p class="live-muted">Det här är ett eget utkast, inte ett gemensamt beslut. Vid hot, kontroll eller rädsla ska trygghet och stöd gå före en sådan övning.</p></section>'+
   '<section class="live-panel"><h2>Från samtal till en idé</h2><p>Vill ni testa en ny rutin? Skriv ett frivilligt förslag i <a href="#regler">Schyssta listan</a>. Ingen regel är gemensam förrän båda uttryckligen sagt ja. Hitta gemensamma intressen i <a href="#swipe">Gillaswajpen</a>.</p>'+
   '<p>Föräldern har fortfarande ansvar för säkerhet, omsorg och rimliga gränser. Om någon är rädd eller hotad: prioritera trygghet och stöd, inte samtalsteknik.</p></section>'+
   '<section class="live-panel comm-sources"><h2>Källor och begränsningar</h2><p>Övningarna utgår från beskrivna samtalsfärdigheter och är redaktionellt anpassade för vardagen. De är inte en prövad familjebehandling. NVC är en kommunikationsmodell – inte en metod vars effekter här är kliniskt validerade.</p><ul>'+COMMUNICATION_SOURCES.map(s=>'<li><a href="'+e(s.url)+'" target="_blank" rel="noopener noreferrer">'+e(s.title)+'</a></li>').join('')+'</ul></section></div>';
@@ -181,6 +193,6 @@ export function renderNvcExercise(role='teen'){
  renderCommunicationSafety(role)+
  '<section class="live-panel"><h2>Bygg din egen formulering</h2><p>Texten skapas bara i din webbläsare. Den <strong>sparas inte</strong>, skickas inte till familjemedlemmen och används inte av AI.</p>'+
  '<form id="comm-nvc-form"><div class="comm-fields">'+fields.map(([id,title,hint,placeholder])=>'<label for="comm-'+id+'"><strong>'+e(title)+'</strong><span>'+e(hint)+'</span></label><textarea id="comm-'+id+'" name="'+id+'" rows="2" required maxlength="240" placeholder="'+e(placeholder)+'"></textarea>').join('')+'</div><div class="comm-actions"><button class="live-button" type="submit">Sätt ihop min formulering</button><button class="comm-quiet-button" type="button" data-comm-reset>Töm fälten</button></div></form>'+
- '<p id="comm-nvc-output" class="comm-output" tabindex="-1" role="status" aria-live="polite">Din formulering visas här när du är redo.</p><p class="live-muted">Läs gärna högt och ändra texten om den låter onaturlig. Den försvinner när du lämnar sidan.</p></section>'+
+ '<p id="comm-nvc-output" class="comm-output" tabindex="-1" role="status" aria-live="polite">Din formulering visas här när du är redo.</p>'+renderCommunicationCopyTools('nvc')+'<p class="live-muted">Läs gärna högt och ändra texten om den låter onaturlig. Den försvinner när du lämnar sidan.</p></section>'+
  '<section class="live-panel"><h2>Lyssna med samma fyra steg</h2><p>Pröva en försiktig gissning i stället för att tillskriva den andra motiv: ”Känner du dig frustrerad för att du vill ha mer inflytande?” Fråga om du uppfattat rätt.</p><p>NVC är en modell för samtal, inte en garanti för konfliktlösning eller en kliniskt validerad familjebehandling. <a href="https://www.cnvc.org/about/purpose-of-nvc" target="_blank" rel="noopener noreferrer">Läs mer hos CNVC</a>.</p></section></div>';
 }

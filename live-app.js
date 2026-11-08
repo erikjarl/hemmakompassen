@@ -2151,7 +2151,66 @@ if(user&&members.length===2){
   else void fetchFamilyChatUnread();
 }
 }
+// FUN-06: These three previews are local-only. Copying requires a freshly
+// generated preview; editing or resetting any field invalidates it immediately.
+const COMM_PREVIEW_META={
+ reflection:{route:'kommunikation',output:'comm-reflection-output',
+  idle:'Din privata spegling visas här.'},
+ solution:{route:'kommunikation',output:'comm-solution-output',
+  idle:'Din privata samtalsplan visas här.'},
+ nvc:{route:'nvc',output:'comm-nvc-output',
+  idle:'Din formulering visas här när du är redo.'}
+};
+function updateCommunicationPreview(kind,text,{reset=false}={}){
+ const meta=COMM_PREVIEW_META[kind];if(!meta||page()!==meta.route)return;
+ const output=$(meta.output),copy=$('live-app')?.querySelector('[data-comm-copy="'+kind+'"]');
+ if(!output||!copy)return;
+ const ready=typeof text==='string'&&text.trim().length>0;
+ output.textContent=ready?text:reset?meta.idle:'Förhandsgranska igen efter dina ändringar.';
+ output.dataset.commReady=ready?'true':'false';
+ copy.disabled=!ready;
+ const status=$('comm-'+kind+'-copy-status'),manual=$('comm-'+kind+'-copy-manual'),
+  fallback=$('comm-'+kind+'-copy-fallback');
+ if(status)status.textContent='';
+ if(manual)manual.hidden=true;
+ if(fallback)fallback.value='';
+}
+async function copyCommunicationPreview(kind){
+ const meta=COMM_PREVIEW_META[kind];if(!meta||page()!==meta.route||!user)return;
+ const output=$(meta.output),copy=document.querySelector('[data-comm-copy="'+kind+'"]');
+ if(!output||output.dataset.commReady!=='true'||!copy||copy.disabled)return;
+ const text=output.textContent,viewer=user.id,session=sharedSession;
+ const current=()=>user?.id===viewer&&sharedSession===session&&page()===meta.route
+   &&$(meta.output)===output&&output.dataset.commReady==='true'&&output.textContent===text;
+ if(!text.trim()||!current())return;
+ const status=$('comm-'+kind+'-copy-status'),manual=$('comm-'+kind+'-copy-manual'),
+  fallback=$('comm-'+kind+'-copy-fallback');
+ try{
+  if(typeof navigator.clipboard?.writeText!=='function')throw Error('Clipboard unavailable');
+  await navigator.clipboard.writeText(text);
+  if(!current())return;
+  if(manual)manual.hidden=true;
+  if(fallback)fallback.value='';
+  if(status)status.textContent='Din text har kopierats. Den sparas inte på Hemmakompassen.';
+ }catch{
+  if(!current())return;
+  if(fallback&&manual){
+   fallback.value=text;manual.hidden=false;
+   fallback.focus({preventScroll:true});fallback.select();
+  }
+  if(status)status.textContent='Automatisk kopiering fungerade inte. Texten är markerad nedan så att du kan kopiera manuellt.';
+ }
+}
+
 document.addEventListener('click',e=>{
+const commCopy=e.target.closest('[data-comm-copy]');
+if(commCopy){void copyCommunicationPreview(commCopy.dataset.commCopy);return;}
+const commSelect=e.target.closest('[data-comm-select-copy]');
+if(commSelect){const kind=commSelect.dataset.commSelectCopy,meta=COMM_PREVIEW_META[kind];
+ if(meta&&page()===meta.route){const manual=$('comm-'+kind+'-copy-manual'),fallback=$('comm-'+kind+'-copy-fallback');
+  if(manual&&!manual.hidden&&fallback){fallback.focus({preventScroll:true});fallback.select();}}
+ return;
+}
 if(e.target.closest('#swipe-export-private')&&page()==='swipe'){downloadPrivateSwipeAnswers();return;}
 if(page()==='kommunikation'){
    const choice=e.target.closest('[data-comm-open]');
@@ -2171,9 +2230,9 @@ if(page()==='kommunikation'){
   search?.focus();
   return;
 }
-if(page()==='kommunikation'&&e.target.closest('[data-comm-reflection-reset]')){const form=$('comm-reflection-form');form?.reset();const output=$('comm-reflection-output');if(output)output.textContent='Din privata spegling visas här.';$('comm-reflection-heard')?.focus();return;}
-if(page()==='kommunikation'&&e.target.closest('[data-comm-solution-reset]')){const form=$('comm-solution-form');form?.reset();const output=$('comm-solution-output');if(output)output.textContent='Din privata samtalsplan visas här.';$('comm-solution-problem')?.focus();return;}
-if(page()==='nvc'&&e.target.closest('[data-comm-reset]')){const form=$('comm-nvc-form');form?.reset();const output=$('comm-nvc-output');if(output)output.textContent='Din formulering visas här när du är redo.';$('comm-observation')?.focus();return;}
+if(page()==='kommunikation'&&e.target.closest('[data-comm-reflection-reset]')){$('comm-reflection-form')?.reset();updateCommunicationPreview('reflection',null,{reset:true});$('comm-reflection-heard')?.focus();return;}
+if(page()==='kommunikation'&&e.target.closest('[data-comm-solution-reset]')){$('comm-solution-form')?.reset();updateCommunicationPreview('solution',null,{reset:true});$('comm-solution-problem')?.focus();return;}
+if(page()==='nvc'&&e.target.closest('[data-comm-reset]')){$('comm-nvc-form')?.reset();updateCommunicationPreview('nvc',null,{reset:true});$('comm-observation')?.focus();return;}
 if(e.target.closest('#live-skip-to-main')){e.preventDefault();$('live-app')?.focus({preventScroll:true});return;}
 const aiRetry=e.target.closest('[data-ai-analysis-retry]');
 if(aiRetry&&aiResultEnabled&&user){
@@ -2345,7 +2404,12 @@ if(reviewButton&&page()==='swipe'&&themeAccessAllowed()&&!swipeBusy&&!importance
 }
 if(e.target.closest('#theme-restart')&&themeAccessAllowed()){const deck=THEME_DECKS.find(d=>d.id===activeThemeDeck);if(deck){themeReviewEdit=null;themeReview=true;themeIndex=themeVisibleIndices(deck)[0]??deck.cards.length;themeSaveError='';render();}}
 });
-document.addEventListener('input',e=>{if(e.target.matches?.('#swipe-general-review-search'))filterPrivateGeneralReview();if(e.target.matches?.('#private-theme-review-search')){filterPrivateThemeReview();return;}if(e.target.matches?.('#mediator-input')){mediatorExperience.input(e.target.value);const count=document.getElementById('mediator-char-count');if(count)count.textContent=e.target.value.length+' / 2000 tecken';const send=document.querySelector('#mediator-form button[type="submit"]');if(send)send.disabled=!e.target.value.trim();return;}if(e.target.matches?.('#family-chat-body')){familyChatDraft=e.target.value;familyChatRequestKey=null;familyChatStatus='';return;}if(e.target.matches?.('#schyssta-search')){schysstaSearch=e.target.value.slice(0,100);applySchysstaFilters();return;}if(e.target.matches?.('#schyssta-body')){schysstaDraft=e.target.value;schysstaDraftKey=null;schysstaMessage='';const preview=document.getElementById('schyssta-preview-text');if(preview)preview.textContent=schysstaDraft.trim()||'Skriv en regel ovan för att förhandsgranska texten.';const count=document.getElementById('schyssta-length');if(count)count.textContent=schysstaDraft.length+' av 500 tecken';return;}if(!e.target.matches?.('[data-importance]'))return;e.target.setAttribute('aria-valuetext',importanceValueText(Number(e.target.value)));});
+document.addEventListener('input',e=>{
+const form=e.target.closest?.('form');
+if(form?.id==='comm-reflection-form')updateCommunicationPreview('reflection');
+else if(form?.id==='comm-solution-form')updateCommunicationPreview('solution');
+else if(form?.id==='comm-nvc-form')updateCommunicationPreview('nvc');
+if(e.target.matches?.('#swipe-general-review-search'))filterPrivateGeneralReview();if(e.target.matches?.('#private-theme-review-search')){filterPrivateThemeReview();return;}if(e.target.matches?.('#mediator-input')){mediatorExperience.input(e.target.value);const count=document.getElementById('mediator-char-count');if(count)count.textContent=e.target.value.length+' / 2000 tecken';const send=document.querySelector('#mediator-form button[type="submit"]');if(send)send.disabled=!e.target.value.trim();return;}if(e.target.matches?.('#family-chat-body')){familyChatDraft=e.target.value;familyChatRequestKey=null;familyChatStatus='';return;}if(e.target.matches?.('#schyssta-search')){schysstaSearch=e.target.value.slice(0,100);applySchysstaFilters();return;}if(e.target.matches?.('#schyssta-body')){schysstaDraft=e.target.value;schysstaDraftKey=null;schysstaMessage='';const preview=document.getElementById('schyssta-preview-text');if(preview)preview.textContent=schysstaDraft.trim()||'Skriv en regel ovan för att förhandsgranska texten.';const count=document.getElementById('schyssta-length');if(count)count.textContent=schysstaDraft.length+' av 500 tecken';return;}if(!e.target.matches?.('[data-importance]'))return;e.target.setAttribute('aria-valuetext',importanceValueText(Number(e.target.value)));});
 document.addEventListener('change',e=>{if(e.target.matches?.('#swipe-general-review-answer'))filterPrivateGeneralReview();if(e.target.matches?.('#private-theme-review-answer')){filterPrivateThemeReview();return;}
   if(e.target.matches?.('#mediator-use-context')){mediatorExperience.setProjectContext(e.target.checked);return;}
   if(e.target.matches?.('input[data-pf-answer],input[data-ipip-retest-answer]')){void personalityExperience.handleChange(e.target);return;}
@@ -2370,7 +2434,7 @@ document.addEventListener('keydown',e=>{
     e.preventDefault();advanceSwipe(e.key==='ArrowRight'?'yes':'no');
   }
 });
-document.addEventListener('submit',async e=>{if(e.target.id==='comm-reflection-form'){e.preventDefault();if(page()!=='kommunikation'||!user)return;const values=Object.fromEntries(new FormData(e.target));const result=buildReflectionPractice(values);const output=$('comm-reflection-output');if(output){output.textContent=result||'Fyll i alla tre stegen innan du skapar en spegling.';output.focus();}return;}if(e.target.id==='comm-solution-form'){e.preventDefault();if(page()!=='kommunikation'||!user)return;const values=Object.fromEntries(new FormData(e.target));const plan=buildSolutionPlan(values);const output=$('comm-solution-output');if(output){output.textContent=plan||'Fyll i alla fyra fälten innan du skapar ett utkast.';output.focus();}return;}if(e.target.id==='comm-nvc-form'){e.preventDefault();if(page()!=='nvc'||!user)return;const values=Object.fromEntries(new FormData(e.target));const sentence=buildNvcSentence(values);const output=$('comm-nvc-output');if(output){output.textContent=sentence||'Fyll i alla fyra steg innan du skapar en formulering.';output.focus();}return;}if(e.target.id==='mediator-form'){e.preventDefault();await mediatorExperience.submit();return;}if(e.target.id==='family-chat-form'){e.preventDefault();await sendFamilyChatMessage();return;}if(e.target.id==='schyssta-manual-form'){e.preventDefault();await submitManualSchysstaRule();return;}if(e.target.id!=='live-login')return;e.preventDefault();const b=e.target.querySelector('button');b.disabled=true;const feedback=$('login-feedback');feedback.textContent='Loggar in…';const email=$('live-email').value.trim();try{const {error}=await db.auth.signInWithPassword({email,password:$('live-password').value});if(error)throw error;$('live-password') && ($('live-password').value='');await refresh();}catch(err){feedback.textContent='Kunde inte logga in. Kontrollera e-post och lösenord, eller välj ”Glömt lösenord eller saknar lösenord?”.';}finally{b.disabled=false;}});
+document.addEventListener('submit',async e=>{if(e.target.id==='comm-reflection-form'){e.preventDefault();if(page()!=='kommunikation'||!user)return;const values=Object.fromEntries(new FormData(e.target));const result=buildReflectionPractice(values);updateCommunicationPreview('reflection',result);const output=$('comm-reflection-output');if(output){if(!result)output.textContent='Fyll i alla tre stegen innan du skapar en spegling.';output.focus();}return;}if(e.target.id==='comm-solution-form'){e.preventDefault();if(page()!=='kommunikation'||!user)return;const values=Object.fromEntries(new FormData(e.target));const plan=buildSolutionPlan(values);updateCommunicationPreview('solution',plan);const output=$('comm-solution-output');if(output){if(!plan)output.textContent='Fyll i alla fyra fälten innan du skapar ett utkast.';output.focus();}return;}if(e.target.id==='comm-nvc-form'){e.preventDefault();if(page()!=='nvc'||!user)return;const values=Object.fromEntries(new FormData(e.target));const sentence=buildNvcSentence(values);updateCommunicationPreview('nvc',sentence);const output=$('comm-nvc-output');if(output){if(!sentence)output.textContent='Fyll i alla fyra steg innan du skapar en formulering.';output.focus();}return;}if(e.target.id==='mediator-form'){e.preventDefault();await mediatorExperience.submit();return;}if(e.target.id==='family-chat-form'){e.preventDefault();await sendFamilyChatMessage();return;}if(e.target.id==='schyssta-manual-form'){e.preventDefault();await submitManualSchysstaRule();return;}if(e.target.id!=='live-login')return;e.preventDefault();const b=e.target.querySelector('button');b.disabled=true;const feedback=$('login-feedback');feedback.textContent='Loggar in…';const email=$('live-email').value.trim();try{const {error}=await db.auth.signInWithPassword({email,password:$('live-password').value});if(error)throw error;$('live-password') && ($('live-password').value='');await refresh();}catch(err){feedback.textContent='Kunde inte logga in. Kontrollera e-post och lösenord, eller välj ”Glömt lösenord eller saknar lösenord?”.';}finally{b.disabled=false;}});
 window.addEventListener('hashchange',()=>{
   if(page()!=='insikter'){activityInviteError='';insightsRows=[];sharedUnderstandingRows=[];insightsError='';insightsLoading=false;insightsRequest++;}
   if(page()!=='regler'&&page()!=='inkorg'){schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];schysstaNotifications=[];schysstaReplacementLinks=[];schysstaHistory=[];schysstaError='';schysstaLoading=false;schysstaRequest++;}

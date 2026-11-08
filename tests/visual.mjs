@@ -1049,6 +1049,10 @@ async function verifyCommunicationForms(){
     try{
       await page.goto(base+'#kommunikation',{waitUntil:'load'});
       await page.locator('#comm-reflection-form').waitFor();
+      await page.evaluate(()=>Object.defineProperty(navigator,'clipboard',{configurable:true,value:{
+        writeText:async text=>{window.__HK_COMM_COPIED__=text;}
+      }}));
+      assert.equal(await page.locator('[data-comm-copy="reflection"]').isDisabled(),true,'No copy before generating a reflection');
       assert.equal(await page.locator('#comm-reflection-form').evaluate(form=>form.checkValidity()),false,
         'FUN-06 reflection requires its three fields');
       await page.locator('#comm-reflection-heard').fill('Jag vill få prata klart');
@@ -1059,7 +1063,17 @@ async function verifyCommunicationForms(){
       assert.match(reflection,/Jag hörde att du sa: Jag vill få prata klart/);
       assert.match(reflection,/Jag undrar om det kan vara viktigt för dig att: bli lyssnad på/);
       assert.match(reflection,/Har jag förstått rätt/);
+      await page.locator('[data-comm-copy="reflection"]').click();
+      await page.waitForFunction(()=>typeof window.__HK_COMM_COPIED__==='string');
+      assert.equal(await page.evaluate(()=>window.__HK_COMM_COPIED__),reflection,'Copies only the generated private reflection');
+      assert.match(await page.locator('#comm-reflection-copy-status').innerText(),/har kopierats/);
+      await page.locator('#comm-reflection-heard').fill('En ändrad spegling');
+      assert.equal(await page.locator('[data-comm-copy="reflection"]').isDisabled(),true,'An edited form invalidates old preview');
+      assert.match(await page.locator('#comm-reflection-output').innerText(),/Förhandsgranska igen/);
+      await page.locator('#comm-reflection-form button[type="submit"]').click();
+      assert.equal(await page.locator('[data-comm-copy="reflection"]').isEnabled(),true);
       await page.locator('[data-comm-reflection-reset]').click();
+      assert.equal(await page.locator('[data-comm-copy="reflection"]').isDisabled(),true,'Reset blocks old copy');
       assert.equal(await page.locator('#comm-reflection-heard').inputValue(),'');
       assert.match(await page.locator('#comm-reflection-output').innerText(),/Din privata spegling visas här/);
       assert.equal(await page.locator('#comm-reflection-heard').evaluate(el=>document.activeElement===el),true,
@@ -1077,7 +1091,23 @@ async function verifyCommunicationForms(){
       assert.match(plan,/Jag vill prata om: Vi vill planera en gemensam utflykt/);
       assert.match(plan,/Mitt förslag att diskutera: Vi provar en kort promenad/);
       assert.match(plan,/Detta är bara mitt utkast/);
+      await page.evaluate(()=>Object.defineProperty(navigator,'clipboard',{configurable:true,value:{
+        writeText:async()=>{throw Error('Synthetic clipboard permission denied');}
+      }}));
+      await page.locator('[data-comm-copy="solution"]').click();
+      const fallback=page.locator('#comm-solution-copy-fallback');
+      await fallback.waitFor({state:'visible'});
+      assert.equal(await fallback.inputValue(),plan,'Denied clipboard exposes exact current plan as manual fallback');
+      assert.equal(await fallback.getAttribute('readonly'),'','Fallback is read only');
+      assert.equal(await fallback.evaluate(el=>document.activeElement===el&&el.selectionStart===0&&el.selectionEnd===el.value.length),true,'Fallback text is focused and selected');
+      await fallback.press('ArrowRight');
+      await page.locator('[data-comm-select-copy="solution"]').click();
+      assert.equal(await fallback.evaluate(el=>el.selectionStart===0&&el.selectionEnd===el.value.length),true,'Select again restores whole-text selection');
+      await page.locator('#comm-solution-problem').fill('Nytt samtalsämne');
+      assert.equal(await page.locator('[data-comm-copy="solution"]').isDisabled(),true);
+      assert.equal(await page.locator('#comm-solution-copy-manual').isHidden(),true,'Editing clears outdated fallback');
       await page.locator('[data-comm-solution-reset]').click();
+      assert.equal(await page.locator('[data-comm-copy="solution"]').isDisabled(),true);
       assert.equal(await page.locator('#comm-solution-problem').inputValue(),'');
       assert.match(await page.locator('#comm-solution-output').innerText(),/Din privata samtalsplan visas här/);
       assert.equal(await page.locator('#comm-solution-problem').evaluate(el=>document.activeElement===el),true);
@@ -1096,7 +1126,14 @@ async function verifyCommunicationForms(){
       assert.match(sentence,/När vi börjar prata samtidigt känner jag mig stressad/);
       assert.match(sentence,/Jag behöver lugn och tydlighet/);
       assert.match(sentence,/Skulle du vilja prata senare ikväll/);
+      await page.evaluate(()=>Object.defineProperty(navigator,'clipboard',{configurable:true,value:{
+        writeText:async text=>{window.__HK_COMM_COPIED__=text;}
+      }}));
+      await page.locator('[data-comm-copy="nvc"]').click();
+      await page.waitForFunction(text=>window.__HK_COMM_COPIED__===text,sentence);
+      assert.equal(await page.locator('#comm-nvc-copy-manual').isHidden(),true);
       await page.locator('[data-comm-reset]').click();
+      assert.equal(await page.locator('[data-comm-copy="nvc"]').isDisabled(),true);
       assert.equal(await page.locator('#comm-observation').inputValue(),'');
       assert.match(await page.locator('#comm-nvc-output').innerText(),/Din formulering visas här när du är redo/);
       assert.equal(await page.locator('#comm-observation').evaluate(el=>document.activeElement===el),true);
@@ -1112,7 +1149,7 @@ async function verifyCommunicationForms(){
     }
   }
   await fs.writeFile(path.join(output,'fun-06-communication-forms-synthetic.json'),
-    JSON.stringify({method:'Real Chromium form fill, submit, reset, focus and route change in two mock roles',
+    JSON.stringify({method:'Real Chromium form fill, submit, copy success/denial, manual select, edit invalidation, reset, focus and route change in two mock roles',
       limitations:'No live Auth, backend, real device or human assessment of advice quality.',
       records},null,2)+'\n');
   console.log('FUN-06: '+records.length+' communication form/role cases passed in synthetic Chromium.');

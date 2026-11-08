@@ -47,7 +47,8 @@ test('NVC generator handles incomplete input, whitespace, punctuation and malici
     'När vi bråkade känner jag mig ledsen. Jag behöver få bli lyssnad på. Skulle du vilja lyssna färdigt?');
   assert.equal(buildNvcSentence({observation:'<img src=x onerror=alert(1)>',feeling:'mig stressad',need:'lugn',request:'prata'}),
     'När <img src=x onerror=alert(1)> känner jag mig stressad. Jag behöver lugn. Skulle du vilja prata?');
-  assert.match(app,/output\.textContent=sentence/,'Untrusted text must not be assigned as HTML');
+  assert.match(app,/updateCommunicationPreview\('nvc',sentence\)/,'Submitted sentence enters the plain-text preview helper');
+  assert.match(app,/output\.textContent=ready\?text/,'Preview helper uses textContent and cannot inject HTML');
 });
 
 test('communication content uses its own module, is available on the public build, and has no external data calls',()=>{
@@ -85,7 +86,8 @@ test('private solution planner is available to both roles with no storage or imp
  assert.equal(buildSolutionPlan({...values,question:'x'.repeat(400)}).split('Jag vill förstå: ')[1].split('\n')[0].length,240);
  const malicious=buildSolutionPlan({...values,problem:'<img src=x onerror=alert(1)>'});
  assert.match(malicious,/<img src=x onerror=alert\(1\)>/,'Generator emits plain text, not HTML');
- assert.match(app,/output\.textContent=plan/,'Preview uses textContent and cannot inject HTML');
+ assert.match(app,/updateCommunicationPreview\('solution',plan\)/,'Planner result enters the plain-text preview helper');
+ assert.match(app,/output\.textContent=ready\?text/,'Preview helper uses textContent and cannot inject HTML');
  assert.match(app,/if\(e\.target\.id==='comm-solution-form'\)/);
  assert.match(app,/data-comm-solution-reset/);
 });
@@ -132,7 +134,8 @@ test('private reflection practice is accessible to both roles and never saves te
  assert.equal(buildReflectionPractice({heard:'H',meaning:'M',check:'x'.repeat(400)}).split('Jag skulle kunna fråga: ')[1].split('\n')[0].length,240);
  const markup=buildReflectionPractice({heard:'<img src=x onerror=alert(1)>',meaning:'trygghet',check:'kan jag fråga?'});
  assert.match(markup,/<img src=x onerror=alert\(1\)>/);
- assert.match(app,/output\.textContent=result/);
+ assert.match(app,/updateCommunicationPreview\('reflection',result\)/);
+ assert.match(app,/output\.textContent=ready\?text/);
  assert.match(app,/if\(e\.target\.id==='comm-reflection-form'\)/);
  assert.match(app,/data-comm-reflection-reset/);
 });
@@ -146,4 +149,33 @@ test('reflection deep link is allowlisted and focuses the correct heading',()=>{
  assert.equal(openCommunicationSkill(root,'spegla',{focus:true}),true);
  assert.deepEqual(actions,[['focus',true],['scroll','nearest']]);
  assert.equal(openCommunicationSkill({querySelector:()=>null},'spegla',{focus:true}),false);
+});
+
+
+test('all three private preview generators expose accessible copy and manual-selection controls',()=>{
+ const source=readFileSync(new URL('../communication/toolkit.js',import.meta.url),'utf8');
+ assert.match(source,/function renderCommunicationCopyTools\(kind\)/);
+ for(const role of ['parent','teen']){
+  const communication=renderCommunicationToolkit(role),nvc=renderNvcExercise(role);
+  for(const kind of ['reflection','solution','nvc']){
+   const markup=kind==='nvc'?nvc:communication;
+   assert.match(markup,new RegExp('data-comm-copy="'+kind+'" disabled'),'Clipboard requires a new generated preview');
+   assert.match(markup,new RegExp('id="comm-'+kind+'-copy-status"[^>]*role="status"'));
+   assert.match(markup,new RegExp('id="comm-'+kind+'-copy-manual" hidden'));
+   assert.match(markup,new RegExp('id="comm-'+kind+'-copy-fallback"[^>]*readonly'));
+   assert.match(markup,new RegExp('data-comm-select-copy="'+kind+'"'));
+  }
+ }
+ assert.match(app,/const COMM_PREVIEW_META=/);
+ assert.match(app,/output\.dataset\.commReady=ready\?'true':'false'/);
+ assert.match(app,/const form=e\.target\.closest\?\.\('form'\)/);
+ assert.match(app,/if\(form\?\.id==='comm-reflection-form'\)updateCommunicationPreview\('reflection'\)/);
+ assert.match(app,/if\(form\?\.id==='comm-solution-form'\)updateCommunicationPreview\('solution'\)/);
+ assert.match(app,/if\(form\?\.id==='comm-nvc-form'\)updateCommunicationPreview\('nvc'\)/);
+ assert.match(app,/navigator\.clipboard\.writeText\(text\)/);
+ assert.match(app,/fallback\.value=text;manual\.hidden=false/);
+ assert.match(app,/fallback\.focus\(\{preventScroll:true\}\);fallback\.select\(\)/);
+ assert.match(app,/if\(!current\(\)\)return/);
+ assert.doesNotMatch(source,/\blocalStorage\b|\bsessionStorage\b|\bsupabase\b|\bfetch\s*\(/,
+  'The copy controls never gain persistence or remote data access');
 });
