@@ -1740,6 +1740,11 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
     `
   }));
   const mediatorCalls=[];
+  // This fixture is deliberately isolated per browser context: two roles are
+  // separate synthetic sessions, never real Supabase users or saved messages.
+  const mediatorFixture={
+    chats:[], messages:new Map(), nextChat:0, failNextOpen:false, failNextSend:false
+  };
   if(aiMediator){
     await context.route('https://hemmakompassen-ai-medlare.erikbertiljarl.workers.dev/api/ai/**',async route=>{
       const req=route.request(),method=req.method(),pathname=new URL(req.url()).pathname;
@@ -1748,15 +1753,51 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
       let result,status=200;
       if(pathname==='/api/ai/context'&&method==='GET'){
         result={sections:['Gillaswajpen – egna svar'],unavailableCount:0};
-      } else if(pathname==='/api/ai/chats'&&method==='GET'){
-        result={chats:[]};
-      } else if(pathname==='/api/ai/chats'&&method==='POST'){
+      }else if(pathname==='/api/ai/chats'&&method==='GET'){
+        result={chats:mediatorFixture.chats.map(chat=>({...chat}))};
+      }else if(pathname==='/api/ai/chats'&&method==='POST'){
         status=201;
-        result={chat:{id:'00000000-0000-4000-8000-000000000001',title:'Nytt samtal'}};
-      } else if(pathname==='/api/ai/mediate'&&method==='POST'){
-        result={reply:'Vi kan utforska detta steg för steg.',chatId:body?.chatId,
-          ephemeral:false,remainingToday:9};
-      } else {
+        const id='00000000-0000-4000-8000-'+String(++mediatorFixture.nextChat).padStart(12,'0');
+        const chat={id,title:'Nytt samtal'};
+        mediatorFixture.chats.unshift(chat);
+        mediatorFixture.messages.set(id,[]);
+        result={chat};
+      }else if(pathname.startsWith('/api/ai/chats/')&&method==='GET'){
+        const id=pathname.slice('/api/ai/chats/'.length);
+        if(mediatorFixture.failNextOpen){
+          mediatorFixture.failNextOpen=false;status=503;
+          result={error:'Tillfälligt fel vid läsning av samtalet.'};
+        }else if(!mediatorFixture.messages.has(id)){
+          status=404;result={error:'Samtalet finns inte.'};
+        }else{
+          result={chat:mediatorFixture.chats.find(chat=>chat.id===id),
+            messages:mediatorFixture.messages.get(id).map(message=>({...message}))};
+        }
+      }else if(pathname.startsWith('/api/ai/chats/')&&method==='DELETE'){
+        const id=pathname.slice('/api/ai/chats/'.length);
+        if(!mediatorFixture.messages.has(id)){
+          status=404;result={error:'Samtalet finns inte.'};
+        }else{
+          mediatorFixture.chats=mediatorFixture.chats.filter(chat=>chat.id!==id);
+          mediatorFixture.messages.delete(id);
+          result={deleted:true};
+        }
+      }else if(pathname==='/api/ai/mediate'&&method==='POST'){
+        if(mediatorFixture.failNextSend){
+          mediatorFixture.failNextSend=false;status=503;
+          result={error:'Tillfälligt fel vid svar.'};
+        }else if(!mediatorFixture.messages.has(body?.chatId)){
+          status=404;result={error:'Okänt samtal.'};
+        }else{
+          const reply='Vi kan utforska detta steg för steg.';
+          mediatorFixture.messages.get(body.chatId).push(
+            {role:'user',body:body.message},{role:'assistant',body:reply}
+          );
+          const chat=mediatorFixture.chats.find(item=>item.id===body.chatId);
+          if(chat?.title==='Nytt samtal')chat.title=body.message.slice(0,70);
+          result={reply,chatId:body.chatId,ephemeral:false,remainingToday:9};
+        }
+      }else{
         status=404;result={error:'Unexpected synthetic AI endpoint'};
       }
       await route.fulfill({status,contentType:'application/json',body:JSON.stringify(result)});
@@ -1777,7 +1818,99 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
   page.on("pageerror",e=>errors.push(e.message));
   // Ignore external font/network warnings; JavaScript exceptions are checked via pageerror.
   await page.goto(base+"#hem",{waitUntil:"load"});
-  return {context,page,mediatorCalls,aiRequests};
+  return {context,page,mediatorCalls,mediatorFixture,aiRequests};
+}
+// FUN-05: real DOM interactions against an isolated, stateful fake Worker.
+// The test does not authenticate any real account or invoke a live model.
+async function verifyMediatorConversationLifecycle(){
+  const rows=[];
+  for(const role of ['parent','teen']){
+    const width=role==='parent'?390:320;
+    const m=await freshContext(
+      {viewport:{width,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},
+      {authenticated:true,paired:true,role,aiMediator:true}
+    );
+    try{
+      await m.page.goto(base+'#medlare',{waitUntil:'load'});
+      await m.page.locator('#mediator-new').waitFor();
+      const submit=m.page.locator('#mediator-form button[type="submit"]');
+      const input=m.page.locator('#mediator-input');
+      const first='Fiktivt första samtal – '+role;
+      const second='Fiktivt andra samtal – '+role;
+      const retry='Fiktivt omförsök efter fel – '+role;
+      assert.equal(m.mediatorFixture.chats.length,0,'Fresh fixture has no saved conversations');
+      await input.fill(first);
+      await submit.click();
+      await m.page.locator('.mediator-message-user').getByText(first).waitFor();
+      await m.page.locator('.mediator-message-assistant').first().waitFor();
+      assert.equal(m.mediatorFixture.chats.length,1,'First send creates a server-side conversation');
+      const firstId=m.mediatorFixture.chats[0].id;
+      assert.deepEqual(m.mediatorFixture.messages.get(firstId).map(x=>x.role),['user','assistant']);
+      rows.push({role,step:'create and send first message',status:'PASS'});
+      await m.page.locator('#mediator-new').click();
+      await m.page.locator('.mediator-empty').waitFor();
+      assert.equal(await m.page.locator('.mediator-message-user').count(),0,
+        'New conversation does not display old transcript');
+      await input.fill(second);
+      await submit.click();
+      await m.page.locator('.mediator-message-user').getByText(second).waitFor();
+      const secondId=m.mediatorFixture.chats[0].id;
+      assert.notEqual(secondId,firstId,'Separate conversation has another id');
+      assert.equal(await m.page.locator('[data-mediator-open]').count(),2);
+      rows.push({role,step:'new conversation and isolated transcript',status:'PASS'});
+      // A failed GET must not continue showing a different private transcript.
+      m.mediatorFixture.failNextOpen=true;
+      await m.page.locator('[data-mediator-open="'+firstId+'"]').click();
+      await m.page.getByText('Tillfälligt fel vid läsning av samtalet.').waitFor();
+      assert.equal(await m.page.locator('.mediator-message-user').count(),0,
+        'History failure clears the previous transcript');
+      await m.page.locator('[data-mediator-open="'+firstId+'"]').click();
+      await m.page.locator('.mediator-message-user').getByText(first).waitFor();
+      assert.equal(await m.page.locator('.mediator-message-user').getByText(second,{exact:true}).count(),0,
+        'Opening first conversation does not show second message');
+      rows.push({role,step:'failed history read and explicit retry',status:'PASS'});
+      // A reload reads the in-memory fixture as a fake persisted server.
+      await m.page.reload({waitUntil:'load'});
+      await m.page.locator('.mediator-message-user').getByText(second).waitFor();
+      assert.equal(await m.page.locator('[data-mediator-open]').count(),2);
+      rows.push({role,step:'reload restores saved history',status:'PASS'});
+      m.mediatorFixture.failNextSend=true;
+      await m.page.locator('#mediator-input').fill(retry);
+      await m.page.locator('#mediator-form button[type="submit"]').click();
+      await m.page.locator('#mediator-status').getByText('Tillfälligt fel vid svar.').waitFor();
+      assert.equal(await m.page.locator('#mediator-input').inputValue(),retry,
+        'Message remains as draft after temporary Worker error');
+      assert.equal(m.mediatorFixture.messages.get(secondId).length,2,
+        'Failed send does not add a fabricated reply');
+      await m.page.locator('#mediator-form button[type="submit"]').click();
+      await m.page.locator('.mediator-message-user').getByText(retry).waitFor();
+      assert.equal(m.mediatorFixture.messages.get(secondId).length,4);
+      rows.push({role,step:'failed send keeps draft; retry sends once',status:'PASS'});
+      m.page.once('dialog',dialog=>dialog.accept());
+      await m.page.locator('#mediator-delete').click();
+      await m.page.locator('.mediator-message-user').getByText(first).waitFor();
+      assert.equal(m.mediatorFixture.chats.length,1);
+      assert.equal(m.mediatorFixture.messages.has(secondId),false);
+      assert.equal(await m.page.locator('.mediator-message-user').getByText(second,{exact:true}).count(),0);
+      rows.push({role,step:'delete current; select remaining conversation',status:'PASS'});
+      m.page.once('dialog',dialog=>dialog.accept());
+      await m.page.locator('#mediator-delete').click();
+      await m.page.locator('.mediator-empty').waitFor();
+      assert.equal(m.mediatorFixture.chats.length,0);
+      assert.equal(m.mediatorFixture.messages.size,0);
+      assert.equal(await m.page.locator('[data-mediator-open]').count(),0);
+      await checkOverflow(m.page,'FUN-05 '+role+' '+width+'px');
+      await capture(m.page,'fun-05-mediator-empty-'+role+'.png');
+      rows.push({role,step:'delete final conversation and empty state',status:'PASS'});
+    }finally{
+      await m.context.close();
+    }
+  }
+  await fs.writeFile(path.join(output,'fun-05-mediator-lifecycle-synthetic.json'),JSON.stringify({
+    kind:'synthetic-browser-functional-test',environment:'Chromium, intercepted fake Worker and mocked Auth',
+    authenticAccounts:false,realWorker:false,physicalMobile:false,scenarios:rows
+  },null,2)+'\n');
+  console.log('FUN-05 mediator lifecycle: '+rows.length+' synthetic role/step checks passed.');
 }
 try{
   await fs.mkdir(output,{recursive:true});
@@ -3348,6 +3481,7 @@ try{
   await checkOverflow(d.page,"Desktop homepage");
   await capture(d.page,"desktop-home.png");
   await d.context.close();
+  await verifyMediatorConversationLifecycle();
   await captureFunctionalInventory();
   await testAccountBrowserJourney();
   await verifyBrowserHistory();
