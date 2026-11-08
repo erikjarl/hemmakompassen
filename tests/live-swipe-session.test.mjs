@@ -21,9 +21,10 @@ function harness({upsert=async()=>({error:null}),rpc=async()=>({error:null})}={}
     $:()=>({textContent:''}),render:()=>{calls.renders++;},reopenGeneralReview:()=>{calls.reviewReturns++;},
     fetchSwipeMatches:()=>{calls.matches++;},fetchThemeUnlock:()=>{calls.unlocks++;},
     db:{
-      from:table=>{assert.equal(table,'swipe_answers');const chain={eq:()=>chain,async maybeSingle(){calls.readbacks++;return {data:null,error:null};}};
-       return {select:columns=>{assert.equal(columns,'deck_id,card_id,answer');return chain;},
-         upsert:(row,options)=>{calls.writes++;assert.equal(options.onConflict,'user_id,deck_id,card_id');return upsert(row);}};},
+      from:table=>{assert.ok(['swipe_answers','swipe_skips'].includes(table));
+       const chain={eq:()=>chain,async maybeSingle(){calls.readbacks++;return {data:null,error:null};}};
+       return {select:columns=>{assert.equal(columns,table==='swipe_answers'?'deck_id,card_id,answer':'deck_id,card_id');return chain;},
+         upsert:(row,options)=>{assert.equal(table,'swipe_answers');calls.writes++;assert.equal(options.onConflict,'user_id,deck_id,card_id');return upsert(row);}};},
       rpc:(name,args)=>{calls.rpcs.push({name,args});return rpc(name,args);},
     },
   };
@@ -94,7 +95,8 @@ function harness({upsert=async()=>({error:null}),rpc=async()=>({error:null})}={}
   await h.state.skip(1,'teen',7);
   assert.equal(h.state.swipeAnswers.get('general-02'),true,'A failed skip must retain the prior answer');
   assert.equal(h.state.skippedUnderstanding.has('general-02'),false,'A failed skip must not invent local state');
-  assert.match(h.state.swipeSaveError,/kunde inte sparas/);
+  assert.match(h.state.swipeSaveError,/överhoppning kunde inte bekräftas/);
+  assert.equal(h.calls.readbacks,2,'Failed teen B-card RPC verifies own answer and skip tables');
 }
 {
   let finish;

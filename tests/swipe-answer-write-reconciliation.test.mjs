@@ -62,7 +62,8 @@ test('failed or thrown readback says unknown, never definitely unsaved',async()=
 test('both ordinary general and theme save paths recheck only on write error',()=>{
  const general=app.slice(app.indexOf('async function saveSwipeAnswer(direction'),app.indexOf('async function skipUnderstandingCard('));
  const theme=app.slice(app.indexOf('async function saveThemeAnswer(direction'),app.indexOf('function advanceThemeSwipe(direction)'));
- assert.match(general,/error&&GENERAL_CARDS\[index\]\?\.type!=='understanding'/);
+ assert.match(general,/const isUnderstanding=GENERAL_CARDS\[index\]\?\.type==='understanding'/);
+ assert.match(general,/error\s*\?isUnderstanding/);
  assert.match(general,/await reconcileOwnSwipeAnswer\(row\)/);
  assert.match(theme,/error\?await reconcileOwnSwipeAnswer\(row\):'confirmed'/);
  assert.match(theme,/if\(user\?\.id!==viewer\|\|sharedSession!==session\|\|activeThemeDeck!==deckId\)return;/);

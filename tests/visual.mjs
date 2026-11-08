@@ -542,6 +542,80 @@ async function verifyBrowserHistory(){
     ' role/viewport history-route assertions passed in synthetic Chromium.');
 }
 
+// FUN-02: the teen's understanding-card RPC atomically switches between
+// an answer and a private skip. A lost acknowledgement must be reconciled
+// using BOTH private tables, with no invented confirmation or extra writes.
+async function verifyUnderstandingStateWriteRecheck(){
+ const records=[];
+ for(const width of [320,390]){
+  for(const action of ['answer','skip']){
+   for(const scenario of ['ack-lost-after-write','write-rejected','readback-unavailable']){
+    const m=await freshContext(
+     {viewport:{width,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true},
+     {authenticated:true,paired:false,role:'teen'}
+    );
+    try{
+     const page=m.page;
+     await page.goto(base+'#swipe',{waitUntil:'load'});
+     await page.locator('#swipe-card[aria-label^="Kort 1 av 34"]').waitFor();
+     // A-card 1 is answered normally. The next card is B/general-02.
+     await page.locator('.swipe-actions [data-swipe="yes"]').click();
+     await page.locator('#swipe-card[aria-label^="Kort 2 av 34"]').waitFor();
+     assert.equal(await page.locator('[data-importance]').getAttribute('data-card-id'),'general-02');
+     assert.equal(await page.locator('#swipe-skip').count(),1);
+     await page.evaluate(scenario=>{
+      window.__HK_B_STATE_WRITES__=0;
+      window.__HK_B_SKIP_READBACKS__=0;
+      window.__HK_SWIPE_READBACK_COUNT__=0;
+      window.__HK_TEST_B_FAIL_BEFORE_WRITE__=scenario==='write-rejected';
+      window.__HK_TEST_B_FAIL_AFTER_WRITE__=scenario!=='write-rejected';
+      window.__HK_TEST_B_SKIP_RECHECK_FAIL__=scenario==='readback-unavailable';
+     },scenario);
+     const click=async()=>{
+      if(action==='skip')await page.locator('#swipe-skip').click();
+      else await page.locator('.swipe-actions [data-swipe="no"]').click();
+     };
+     await click();
+     if(scenario==='ack-lost-after-write'){
+      await page.locator('#swipe-card[aria-label^="Kort 3 av 34"]').waitFor();
+      assert.equal(await page.evaluate(()=>window.__HK_B_STATE_WRITES__),1,
+       'Lost B acknowledgement cannot trigger a duplicate write');
+      assert.equal(await page.evaluate(()=>window.__HK_B_SKIP_READBACKS__),1,
+       'B outcome must include one explicit skip readback');
+      assert.equal(await page.evaluate(()=>window.__HK_SWIPE_READBACK_COUNT__),1,
+       'B outcome must include one explicit answer readback');
+     }else{
+      await page.locator('#swipe-save-status').getByText(
+       scenario==='readback-unavailable'
+       ?/går inte att kontrollera om (din överhoppning|ditt svar) sparades/
+       :/kunde inte bekräftas som (sparad|sparat)/
+      ).waitFor();
+      assert.match(await page.locator('#swipe-card').getAttribute('aria-label'),/^Kort 2 av 34/,
+       'Unconfirmed B state must not automatically advance');
+      assert.equal(await page.evaluate(()=>window.__HK_B_STATE_WRITES__),1);
+      assert.equal(await page.evaluate(()=>window.__HK_B_SKIP_READBACKS__),1);
+      assert.equal(await page.evaluate(()=>window.__HK_SWIPE_READBACK_COUNT__),1);
+      // The person chooses again; the application cannot choose on their behalf.
+      await click();
+      await page.locator('#swipe-card[aria-label^="Kort 3 av 34"]').waitFor();
+      assert.equal(await page.evaluate(()=>window.__HK_B_STATE_WRITES__),2);
+     }
+     const saved=await page.evaluate(()=>window.__HK_UNDERSTANDING_STATE__?.args);
+     assert.equal(saved?.p_card_id,'general-02');
+     assert.equal(saved?.p_skipped,action==='skip');
+     if(action==='answer')assert.equal(saved?.p_answer,false);
+     else assert.equal(saved?.p_answer,null);
+     records.push({role:'teen',width,action,scenario,passed:true});
+    }finally{await m.context.close();}
+   }
+  }
+ }
+ await fs.writeFile(path.join(output,'fun-02-b-state-ack-recheck-synthetic.json'),
+  JSON.stringify({method:'Chromium B-card answer/skip clicks with simulated RPC write and per-table private readbacks',
+   limitations:'Synthetic Supabase/Auth. Neither real signed-in users nor physical Safari tested.',records},null,2)+'\n');
+ console.log('FUN-02 B-state readback: '+records.length+' synthetic Chromium action/viewport/error cases passed.');
+}
+
 // FUN-02: the browser may lose a write acknowledgement after the real answer
 // was saved. Exercise the production readback path with role/deck-specific clicks.
 async function verifySwipeAnswerWriteRecheck(){
@@ -1977,7 +2051,26 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
                 return {error:null};
               }
             };
-            if(table==='swipe_skips')return {select(){return {async eq(){return {data:[...skips.values()],error:null}}}}};
+            if(table==='swipe_skips')return {
+              select(){
+                const filters={};
+                const values=()=>[...skips.values()].filter(row=>Object.entries(filters).every(([key,value])=>
+                  (key==='user_id'&&!row.user_id)||row[key]===value));
+                const query={
+                  eq(key,value){filters[key]=value;return query;},
+                  async maybeSingle(){
+                    window.__HK_B_SKIP_READBACKS__=(window.__HK_B_SKIP_READBACKS__||0)+1;
+                    if(window.__HK_TEST_B_SKIP_RECHECK_FAIL__){
+                      window.__HK_TEST_B_SKIP_RECHECK_FAIL__=false;
+                      return {data:null,error:{message:'Synthetic B-skip readback failed'}};
+                    }
+                    return {data:values()[0]||null,error:null};
+                  },
+                  then(resolve,reject){return Promise.resolve({data:values(),error:null}).then(resolve,reject);}
+                };
+                return query;
+              }
+            };
             if(table==='swipe_importance')return {
               select(){return {async eq(){return window.__HK_IMPORTANCE_READ_FAIL__?{data:null,error:{message:'Synthetic private importance read failed'}}:{data:[...importance.values()],error:null}}}},
               async upsert(row,options){
@@ -2057,9 +2150,18 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
               return {data:!!(window.__HK_TEST_PAIRED__&&window.__HK_TEST_UNLOCKED__),error:null};
             }
             if(name==='set_understanding_card_state'){
+              window.__HK_B_STATE_WRITES__=(window.__HK_B_STATE_WRITES__||0)+1;
+              if(window.__HK_TEST_B_FAIL_BEFORE_WRITE__){
+                window.__HK_TEST_B_FAIL_BEFORE_WRITE__=false;
+                return {data:null,error:{message:'Synthetic B state rejected'}};
+              }
               window.__HK_UNDERSTANDING_STATE__={name,args};
               if(args.p_skipped){answers.delete(args.p_card_id);skips.set(args.p_card_id,{deck_id:'general',card_id:args.p_card_id});}
               else {skips.delete(args.p_card_id);answers.set(args.p_card_id,{deck_id:'general',card_id:args.p_card_id,answer:args.p_answer});}
+              if(window.__HK_TEST_B_FAIL_AFTER_WRITE__){
+                window.__HK_TEST_B_FAIL_AFTER_WRITE__=false;
+                return {data:null,error:{message:'Synthetic B acknowledgement lost'}};
+              }
               return {data:null,error:null};
             }
             if(name==='shared_understanding_cards')return {data:[...understandingShares].map(card_id=>({deck_id:'general',card_id})),error:null};
@@ -4153,6 +4255,7 @@ try{
   await testAccountBrowserJourney();
   await verifyBrowserHistory();
   await verifyTouchMobileTabStrip();
+  await verifyUnderstandingStateWriteRecheck();
   await verifySwipeAnswerWriteRecheck();
   await verifyImportancePendingAnswerFeedback();
   await verifyAllThemeDeckJourneys();

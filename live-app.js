@@ -1357,6 +1357,37 @@ async function reconcileOwnSwipeAnswer(row){
    saved.card_id!==row.card_id||typeof saved.answer!=='boolean')return 'unknown';
  return saved.answer===row.answer?'confirmed':'different';
 }
+// The teen-only B-card RPC atomically writes either an answer OR a skip.
+// On a lost acknowledgement, read back both private tables. A matching
+// answer alone is not enough if the old skip still exists.
+async function reconcileOwnUnderstandingCardState(cardId,viewer,expected){
+ let answerResult,skipResult;
+ try{
+  [answerResult,skipResult]=await Promise.all([
+   db.from('swipe_answers').select('deck_id,card_id,answer')
+    .eq('user_id',viewer).eq('deck_id','general').eq('card_id',cardId).maybeSingle(),
+   db.from('swipe_skips').select('deck_id,card_id')
+    .eq('user_id',viewer).eq('deck_id','general').eq('card_id',cardId).maybeSingle()
+  ]);
+ }catch{return 'unknown';}
+ if(answerResult?.error||skipResult?.error)return 'unknown';
+ const answer=answerResult?.data,skip=skipResult?.data;
+ if(answer===undefined||skip===undefined)return 'unknown';
+ if(answer!==null&&(!answer||answer.deck_id!=='general'||answer.card_id!==cardId||
+   typeof answer.answer!=='boolean'))return 'unknown';
+ if(skip!==null&&(!skip||skip.deck_id!=='general'||skip.card_id!==cardId))return 'unknown';
+ if(answer!==null&&skip!==null)return 'unknown';
+ if(expected==='skipped')return skip!==null&&answer===null?'confirmed':'different';
+ if(typeof expected==='boolean')
+  return answer!==null&&answer.answer===expected&&skip===null?'confirmed':'different';
+ return 'unknown';
+}
+function understandingStateRecheckMessage(result,kind){
+ const skip=kind==='skip';
+ return result==='unknown'
+  ?'Det går inte att kontrollera om '+(skip?'din överhoppning':'ditt svar')+' sparades. Kortet ligger kvar. Uppdatera sidan och kontrollera ditt val innan du försöker igen.'
+  :(skip?'Din överhoppning kunde inte bekräftas som sparad.':'Ditt svar kunde inte bekräftas som sparat.')+' Kortet ligger kvar så att du kan försöka igen.';
+}
 function swipeAnswerRecheckMessage(result){
  return result==='unknown'
   ?'Det går inte att kontrollera om ditt svar sparats. Kortet ligger kvar. Uppdatera sidan och kontrollera dina svar innan du försöker igen.'
@@ -1474,14 +1505,16 @@ async function saveSwipeAnswer(direction,index,viewer,session){
   }
   catch(e){error=e;}
   if(user?.id!==viewer||sharedSession!==session)return;
-  // B/understanding answers use a different atomic RPC and cannot be
-  // verified from the ordinary A-answer table.
-  const reconciliation=error&&GENERAL_CARDS[index]?.type!=='understanding'
-    ?await reconcileOwnSwipeAnswer(row):error?'unknown':'confirmed';
+  const isUnderstanding=GENERAL_CARDS[index]?.type==='understanding';
+  const reconciliation=error
+    ?isUnderstanding
+      ?await reconcileOwnUnderstandingCardState(row.card_id,viewer,row.answer)
+      :await reconcileOwnSwipeAnswer(row)
+    :'confirmed';
   if(user?.id!==viewer||sharedSession!==session)return;
   if(reconciliation!=='confirmed'){
-    swipeSaveError=GENERAL_CARDS[index]?.type==='understanding'
-      ?'Svaret kunde inte bekräftas. Kortet ligger kvar. Uppdatera sidan för att kontrollera ditt svar.'
+    swipeSaveError=isUnderstanding
+      ?understandingStateRecheckMessage(reconciliation,'answer')
       :swipeAnswerRecheckMessage(reconciliation);
     swipeBusy=false;render();return;
   }
@@ -1508,7 +1541,14 @@ async function skipUnderstandingCard(index,viewer,session){
   try{({error}=await db.rpc('set_understanding_card_state',{p_card_id:cardId,p_answer:null,p_skipped:true}));}
   catch(e){error=e;}
   if(user?.id!==viewer||sharedSession!==session)return;
-  if(error){swipeSaveError='Överhoppningen kunde inte sparas. Kortet ligger kvar så att du kan försöka igen.';swipeBusy=false;render();return;}
+  const reconciliation=error
+    ?await reconcileOwnUnderstandingCardState(cardId,viewer,'skipped')
+    :'confirmed';
+  if(user?.id!==viewer||sharedSession!==session)return;
+  if(reconciliation!=='confirmed'){
+    swipeSaveError=understandingStateRecheckMessage(reconciliation,'skip');
+    swipeBusy=false;render();return;
+  }
   swipeAnswers.delete(cardId);
   skippedUnderstanding.add(cardId);
   understandingShares.delete(cardId);
