@@ -68,6 +68,7 @@ let familyChatMessages=[],familyChatUnread=0,familyChatLoading=false,familyChatL
   familyChatHasMore=false,familyChatError='',familyChatStatus='',familyChatDraft='',
   familyChatRequestKey=null,familyChatSending=false,familyChatRequest=0,familyChatCountRequest=0,
   familyChatUnreadError=false,familyChatReadBusy=false;
+let inboxRefreshing=false,inboxRefreshStatus='';
 function validActivityNotifications(rows){
   if(!Array.isArray(rows)||rows.length>30)return false;
   const allowed=['notification_id','event_kind','deck_id','read_at','updated_at'];
@@ -168,6 +169,7 @@ function clearFamilyChat(){
   familyChatMessages=[];familyChatUnread=0;familyChatUnreadError=false;familyChatReadBusy=false;familyChatLoading=false;familyChatLoadingOlder=false;
   familyChatHasMore=false;familyChatError='';familyChatStatus='';familyChatDraft='';
   familyChatRequestKey=null;familyChatSending=false;
+  inboxRefreshing=false;inboxRefreshStatus='';
 }
 // Recheck family membership on the server before background inbox reads.
 // Membership can change in another tab without an Auth event in this one.
@@ -1709,6 +1711,42 @@ async function submitManualSchysstaRule(){
   schysstaMessage='Förslaget är skickat. Ni behöver båda godkänna det innan det blir en överenskommelse.';
   await fetchSchysstaList();
 }
+// An already-open inbox must have an explicit way to refresh rule notices,
+// activity notices, the chat and its unread badge together. A chat-only
+// refresh does not update the other sections.
+async function refreshWholeInbox(){
+  if(page()!=='inkorg'||!user||members.length!==2||!inboxPairEpoch||inboxRefreshing)return;
+  const viewer=user.id,session=sharedSession;
+  inboxRefreshing=true;
+  inboxRefreshStatus='Uppdaterar hela inkorgen…';
+  render();
+  try{
+    if(!await recheckInboxPair()){
+      if(user?.id===viewer&&sharedSession===session&&page()==='inkorg')
+        inboxRefreshStatus='Familjekopplingen kunde inte bekräftas. Försök igen.';
+      return;
+    }
+    if(viewer!==user?.id||session!==sharedSession||page()!=='inkorg')return;
+    const pending=[fetchFamilyChatUnread()];
+    if(!familyChatLoading&&!familyChatLoadingOlder)pending.push(fetchFamilyChat());
+    if(schysstaListEnabled&&!schysstaLoading)pending.push(fetchSchysstaList());
+    if(activityNotificationsEnabled&&!activityNotificationsLoading)pending.push(fetchActivityNotifications());
+    await Promise.all(pending);
+    if(viewer!==user?.id||session!==sharedSession||page()!=='inkorg')return;
+    inboxRefreshStatus=familyChatError||familyChatUnreadError||schysstaError||activityNotificationsError
+      ?'Vissa delar av inkorgen kunde inte uppdateras. Kontrollera felmeddelandena och försök igen.'
+      :'Inkorgen är uppdaterad.';
+  }catch(error){
+    if(viewer===user?.id&&session===sharedSession&&page()==='inkorg')
+      inboxRefreshStatus='Inkorgen kunde inte uppdateras. Kontrollera anslutningen och försök igen.';
+  }finally{
+    inboxRefreshing=false;
+    if(viewer===user?.id&&session===sharedSession&&page()==='inkorg'){
+      render();
+      document.getElementById('inbox-refresh-all')?.focus({preventScroll:true});
+    }
+  }
+}
 function inboxView(){
   if(!user)return '<h1>Inkorg</h1>'+card('<p>Logga in för att läsa dina meddelanden.</p>');
   if(members.length===2&&!inboxPairEpoch)return '<h1>Inkorg</h1>'+card('<h2>Familjekopplingen kunde inte kontrolleras</h2><p>Privata meddelanden visas inte förrän aktuell parning har verifierats.</p><button type="button" class="live-button" id="inbox-retry-pair">Kontrollera igen</button>');
@@ -1780,6 +1818,8 @@ function inboxView(){
           +'</div></li>').join('')+'</ul>'
         :(!activityNotificationsLoading&&!activityNotificationsError?'<p class="live-muted">Inga nya aviseringar just nu.</p>':'')));
   return '<h1>Inkorg</h1><p>Här kan ni skriva privata meddelanden, se frivilligt delade gemensamma kort och hantera regelförfrågningar.</p>'
+    +'<div class="inbox-refresh-actions"><button type="button" class="schyssta-secondary" id="inbox-refresh-all"'+(inboxRefreshing?' disabled':'')+'>'+(inboxRefreshing?'Uppdaterar hela inkorgen…':'Uppdatera hela inkorgen')+'</button>'
+    +(inboxRefreshStatus?'<p role="status" aria-live="polite">'+esc(inboxRefreshStatus)+'</p>':'')+'</div>'
     +activityPanel+chat+rules;
 }
 async function fetchSchysstaList(){
@@ -2135,6 +2175,7 @@ if(e.target.closest('#home-refresh-notices')&&user&&members.length===2)
     void fetchActivityNotifications();
   });
 if(e.target.closest('#inbox-retry-pair'))void refresh().catch(showError);
+if(e.target.closest('#inbox-refresh-all'))void refreshWholeInbox();
 if(e.target.closest('[data-family-chat-refresh]'))void recheckInboxPair().then(valid=>{if(valid)void fetchFamilyChat();});
 if(e.target.closest('[data-family-chat-mark-all-read]'))void markAllFamilyChatRead();
 if(e.target.closest('[data-family-chat-more]'))void recheckInboxPair().then(valid=>{if(valid)void fetchFamilyChat(true);});
