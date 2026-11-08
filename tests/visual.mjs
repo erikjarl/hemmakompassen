@@ -799,7 +799,7 @@ async function verifyFullPrivateRetest(){
       await page.getByRole('button',{name:'Starta en ny privat testomgång'}).waitFor();
       await page.getByRole('button',{name:'Starta en ny privat testomgång'}).click();
       await page.locator('[data-ipip-retest-answer="ipip50-001"]').first().waitFor();
-      await page.locator('[data-ipip-retest-answer="ipip50-001"][value="4"]').check();
+      await page.locator('[data-ipip-retest-answer="ipip50-001"][value="4"]').click();
       await page.getByText('Fråga 2 av 50').waitFor();
       await page.getByRole('button',{name:'Spara och pausa'}).click();
       await page.getByRole('button',{name:'Fortsätt privat omtest'}).waitFor();
@@ -814,12 +814,12 @@ async function verifyFullPrivateRetest(){
       await page.getByText('Fråga 1 av 50').waitFor();
       assert.equal(await page.locator('[data-ipip-retest-answer="ipip50-001"][value="4"]').isChecked(),true,
         'FUN-04 private retest restores its first stored response after navigating away');
-      await page.locator('[data-ipip-retest-answer="ipip50-001"][value="2"]').check();
+      await page.locator('[data-ipip-retest-answer="ipip50-001"][value="2"]').click();
       await page.getByText('Fråga 2 av 50').waitFor();
       for(let n=2;n<=50;n++){
         await page.getByText('Fråga '+n+' av 50').waitFor();
         const id='ipip50-'+String(n).padStart(3,'0');
-        await page.locator('[data-ipip-retest-answer="'+id+'"][value="3"]').check();
+        await page.locator('[data-ipip-retest-answer="'+id+'"][value="3"]').click();
       }
       await page.getByText('Alla 50 svar är sparade.').waitFor();
       assert.equal(await page.evaluate(()=>window.__HK_PRIVATE_RETEST_ANSWERS__),50,
