@@ -26,51 +26,39 @@ async function checkMobileNavigation(page,label){
   const result=await page.evaluate(async()=>{
     const nav=document.querySelector('#live-mobile-nav');
     if(!(nav instanceof HTMLElement))throw new Error('Mobile navigation is missing');
-    const details=nav.querySelector('details.live-mobile-more');
-    const summary=details?.querySelector('summary');
-    const primary=[...nav.querySelectorAll(':scope > a')];
-    const secondary=[...details?.querySelectorAll('a')||[]];
+    const links=[...nav.querySelectorAll(':scope > a')];
     const failures=[];
-    if(primary.length!==3||secondary.length!==5||!summary)failures.push('Missing primary or More destinations');
-    if(nav.scrollWidth>nav.clientWidth+2)failures.push('Horizontal scrolling remains');
-    for(const element of [...primary,summary].filter(Boolean)){
-      const navBox=nav.getBoundingClientRect();
-      const box=element.getBoundingClientRect();
-      if(box.left<navBox.left-1||box.right>navBox.right+1)failures.push(element.textContent+' clipped');
-    }
-    details.open=true;
-    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
-    const drawerElement=details.querySelector('.live-mobile-more-links');
-    const drawer=drawerElement.getBoundingClientRect();
-    const navBox=nav.getBoundingClientRect();
-    const viewportWidth=document.documentElement.clientWidth;
-    if(drawer.width>300||drawer.width>viewportWidth-16)failures.push('More drawer is not compact');
-    if(drawer.right>navBox.right+1||drawer.left<8)failures.push('More drawer outside viewport');
-    if(Math.abs(drawer.right-navBox.right)>24)failures.push('More drawer not anchored to right-side More tab');
-    if(drawer.bottom>navBox.top+1)failures.push('More drawer overlaps the bottom tab bar');
-    for(const link of secondary){
+    if(links.length!==8)failures.push('Expected all eight modules as direct tabs');
+    if(nav.querySelector('details,summary'))failures.push('Unexpected More drawer');
+    if(nav.scrollWidth<=nav.clientWidth+100)failures.push('Navigation is not horizontally scrollable');
+    if(getComputedStyle(nav).overflowX!=='auto')failures.push('Horizontal swipe overflow is disabled');
+    if(nav.scrollHeight>nav.clientHeight+3)failures.push('Navigation unexpectedly scrolls vertically');
+    for(const link of links){
       const box=link.getBoundingClientRect(),styles=getComputedStyle(link);
-      const iconStyles=getComputedStyle(link,'::before');
-      if(box.left<drawer.left-1||box.right>drawer.right+1)failures.push(link.textContent+' drawer overflow');
-      if(box.width<drawer.width-30||box.height<44)failures.push(link.textContent+' not a full-width tap row');
-      if(styles.flexDirection!=='row'||styles.textAlign!=='left')failures.push(link.textContent+' is laid out as a tab instead of a row');
-      if(iconStyles.display==='none')failures.push(link.textContent+' icon is hidden');
+      if(box.width<75||box.height<44)failures.push(link.textContent+' small tap target');
+      if(styles.flexDirection!=='column')failures.push(link.textContent+' unexpected tab layout');
+      link.scrollIntoView({block:'nearest',inline:'nearest'});
+      await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+      const viewport=nav.getBoundingClientRect(),visible=link.getBoundingClientRect();
+      if(visible.left<viewport.left-2||visible.right>viewport.right+2)
+        failures.push(link.textContent+' cannot be scrolled into view');
     }
-    details.open=false;
-    summary.focus();
+    const last=links.at(-1);
+    const lastVisible=last?.getBoundingClientRect();
+    const strip=nav.getBoundingClientRect();
+    if(!lastVisible||lastVisible.left<strip.left-2||lastVisible.right>strip.right+2)
+      failures.push('Last tab not reachable by horizontal scroll');
+    const first=links[0];
+    first.focus();
     await new Promise(resolve=>requestAnimationFrame(resolve));
-    const focusStyle=getComputedStyle(summary);
-    return {
-      count:primary.length+secondary.length,
-      noHorizontalScroll:nav.scrollWidth<=nav.clientWidth+2,
-      focusVisible:focusStyle.outlineStyle!=='none'&&Number.parseFloat(focusStyle.outlineWidth)>=2,
-      failures
-    };
+    const style=getComputedStyle(first);
+    const focusVisible=style.outlineStyle!=='none'&&parseFloat(style.outlineWidth)>=2;
+    return {count:links.length,scrollable:nav.scrollWidth>nav.clientWidth+100,focusVisible,failures};
   });
-  assert.equal(result.count,8,label+': all destinations present');
-  assert.ok(result.noHorizontalScroll,label+': all navigation uses fixed grid and More');
-  assert.ok(result.focusVisible,label+': keyboard focus on More is visible');
-  assert.deepEqual(result.failures,[],label+': mobile navigation and drawer boundaries');
+  assert.equal(result.count,8,label+': all eight modules directly accessible');
+  assert.ok(result.scrollable,label+': horizontal navigation is swipeable');
+  assert.ok(result.focusVisible,label+': keyboard focus is visible');
+  assert.deepEqual(result.failures,[],label+': direct tab visibility and tap sizes');
 }
 
 async function capture(page,name){
@@ -479,17 +467,12 @@ try{
   await m.page.keyboard.press('Enter');
   assert.equal(await m.page.evaluate(()=>document.activeElement?.id),'live-app','Skip link focuses the main landmark');
   assert.equal(new URL(m.page.url()).hash,skipHash,'Skip link must not change the SPA route');
-  await m.page.locator('#live-mobile-nav summary').focus();
-  await m.page.keyboard.press('Enter');
-  assert.equal(await m.page.locator('#live-mobile-nav details').evaluate(el=>el.open),true,
-    'More opens by keyboard and exposes the secondary destinations');
   const settingsLink=m.page.locator('#live-mobile-nav a[href="#installningar"]');
   await settingsLink.focus();
   await m.page.keyboard.press('Enter');
   await m.page.getByRole('heading',{name:'Inställningar'}).waitFor();
-  assert.equal(await m.page.evaluate(()=>document.activeElement?.id),'live-app','Route changes move focus to new content');
-  assert.equal(await m.page.locator('#live-mobile-nav details').evaluate(el=>el.open),false,
-    'More closes after selecting a destination');
+  assert.equal(await m.page.evaluate(()=>document.activeElement?.id),'live-app',
+    'The direct settings tab activates by keyboard and focuses new content');
   await m.page.goto(base+'#insikter',{waitUntil:'load'});
   assert.equal(await m.page.locator('#live-mobile-nav a[href="#swipe"]').getAttribute('aria-current'),'page',
     'The insights subpage keeps Gillaswajpen marked as the active primary tab');
@@ -594,7 +577,7 @@ try{
   assert.equal(await m.page.evaluate(()=>window.__HK_UNLOCK_RPC_CALLS__||0),0,'Unpaired member must not request theme unlock status');
   assert.match(await m.page.locator("#swipe-card").getAttribute("aria-label"),/Kort 1 av 21/);
   // ArrowRight on a focused navigation link must NOT save a private swipe answer.
-  await m.page.locator('#live-mobile-nav summary').focus();
+  await m.page.locator('#live-mobile-nav a[href="#regler"]').focus();
   await m.page.keyboard.press('ArrowRight');
   await m.page.waitForTimeout(300);
   assert.match(await m.page.locator('#swipe-card').getAttribute('aria-label'),/Kort 1 av 21/,
@@ -631,15 +614,12 @@ try{
   assert.ok(mobileNav&&mobileMain,'Mobile navigation and content region must be measurable');
   assert.ok(mobileMain.y+mobileMain.height<=mobileNav.y+1,'Mobile navigation must occupy its own layout row, never overlay the scrollable content region');
   const activeNav=await m.page.locator('#live-mobile-nav a[aria-current="page"]').boundingBox();
-  assert.ok(activeNav.x>=mobileNav.x&&activeNav.x+activeNav.width<=mobileNav.x+mobileNav.width,'Active mobile navigation label must be fully visible');
-  const moreSummary=m.page.locator('#live-mobile-nav summary');
-  const moreBox=await moreSummary.boundingBox();
-  assert.ok(moreBox&&moreBox.x>=mobileNav.x&&moreBox.x+moreBox.width<=mobileNav.x+mobileNav.width,
-    'More remains fully visible in the four-column mobile navigation');
-  await moreSummary.click();
-  assert.equal(await m.page.locator('#live-mobile-nav a[href="#installningar"]').isVisible(),true,
-    'Last secondary destination is reachable through More without horizontal scrolling');
-  await moreSummary.click();
+  assert.ok(activeNav.x>=mobileNav.x-2&&activeNav.x+activeNav.width<=mobileNav.x+mobileNav.width+2,
+    'Active mobile tab must be scrolled into view');
+  await m.page.locator('#live-mobile-nav a[href="#installningar"]').scrollIntoViewIfNeeded();
+  const lastBox=await m.page.locator('#live-mobile-nav a[href="#installningar"]').boundingBox();
+  assert.ok(lastBox.x>=mobileNav.x-2&&lastBox.x+lastBox.width<=mobileNav.x+mobileNav.width+2,
+    'Last destination is reachable by horizontal swipe');
   // Simulate a phone tap on both ends. It must change the value, not swipe the card.
   await importance.scrollIntoViewIfNeeded();
   const tapBox=await importance.boundingBox();
@@ -1012,9 +992,9 @@ try{
   assert.ok(headerAudit.singleLine&&headerAudit.visible,
     '320px account link must remain one line fully inside the viewport');
 
-  await narrow.page.locator('#live-mobile-nav summary').click();
+  await narrow.page.locator('#live-mobile-nav a[href="#kommunikation"]').scrollIntoViewIfNeeded();
   assert.equal(await narrow.page.locator('#live-mobile-nav a[href="#kommunikation"]').isVisible(),true,
-    'Communication guidance is accessible in More at 320px');
+    'Communication guidance is directly accessible by swipe at 320px');
   await capture(narrow.page,'mobile-320-navigation.png');
   await narrow.page.goto(base+'#kommunikation',{waitUntil:'load'});
   await narrow.page.getByRole('heading',{name:'Verktyg för bättre samtal'}).waitFor();
@@ -1425,7 +1405,6 @@ try{
   await checkOverflow(paired.page,"Mobile matched swipes");
   await paired.page.locator('.swipe-results').scrollIntoViewIfNeeded();
   await capture(paired.page,"mobile-shared-swipes.png");
-  await paired.page.locator('#live-mobile-nav summary').click();
   await paired.page.locator('#live-mobile-nav a[href="#regler"]').click();
   // The initial synthetic server response deliberately includes a known card
   // with forged text and a completely unknown card. Never display even its
@@ -1487,8 +1466,8 @@ try{
   await paired.page.waitForFunction(()=>document.querySelector('#live-mobile-nav a[href="#regler"] .live-nav-count')?.textContent==='2',
     null,{timeout:8000});
   assert.equal(await paired.page.locator('#live-mobile-nav a[href="#regler"] .live-nav-count').textContent(),'2','Rule tab shows only requests awaiting the current viewer');
-  assert.equal(await paired.page.locator('#live-mobile-nav summary .live-nav-count').innerText(),'2',
-    'More mirrors the pending-rule badge while the secondary menu is closed');
+  assert.equal(await paired.page.locator('#live-mobile-nav details').count(),0,
+    'All badges belong to their direct tabs; no More menu remains');
   assert.match(await paired.page.locator('#live-mobile-nav a[href="#regler"]').getAttribute('aria-label'),/2 obesvarade regelförslag/,'Navigation text announces the meaning of the count');
   // Search and status filters never hide incoming requests requiring the user's answer.
   const search=paired.page.locator('#schyssta-search');
