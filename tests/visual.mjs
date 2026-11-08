@@ -950,7 +950,7 @@ async function verifyCommunicationForms(){
 // Chromium contexts. No Supabase credentials, production replies or live users.
 function makeTwoRoleFamilyFixture(){
   const messages=[],tokens=new Map(),rules=[],notices=[],activityNotices=[],calls=[];
-  let failedSendAcknowledgement=false,failedOlderPage=false;
+  let failedSendAcknowledgement=false,failedOlderPage=false,failedActivityRead=false;
   const other=role=>role==='parent'?'teen':'parent';
   const ok=data=>({data,error:null});
   const createdAt=n=>'2026-11-01T12:'+String(Math.floor(n/50)).padStart(2,'0')+':'+String(n%50).padStart(2,'0')+'Z';
@@ -970,6 +970,7 @@ function makeTwoRoleFamilyFixture(){
     if(name==='my_activity_notifications')
       return ok(activityNotices.filter(n=>n.recipient===role).map(({recipient,...rest})=>({...rest})));
     if(name==='mark_activity_notification_read'){
+      if(failedActivityRead){failedActivityRead=false;return {data:null,error:{message:'synthetic activity receipt unavailable'}};}
       const n=activityNotices.find(n=>n.recipient===role&&n.notification_id===args.p_notification_id);
       if(!n)return {data:null,error:{message:'unknown synthetic activity notice'}};
       n.read_at='2026-11-01T13:03:00Z';return ok(null);
@@ -1039,7 +1040,8 @@ function makeTwoRoleFamilyFixture(){
   }
   return {rpc,messages,rules,notices,activityNotices,calls,
     loseNextSendAcknowledgement(){failedSendAcknowledgement=true;},
-    failNextOlderPage(){failedOlderPage=true;}};
+    failNextOlderPage(){failedOlderPage=true;},
+    failNextActivityRead(){failedActivityRead=true;}};
 }
 const FUN03_LINKED_RPCS=Object.freeze([
   'my_family_messages','my_family_unread_message_count','send_family_message','mark_family_messages_read',
@@ -1147,10 +1149,26 @@ async function verifyPairedTwoRoleExchange(){
     assert.equal(fixture.calls.filter(x=>x.role==='teen'&&
       ['mark_schyssta_notification_read','mark_activity_notification_read','mark_family_messages_read'].includes(x.name)).length,
       beforeReads,'FUN-03: whole-inbox refresh never creates a receipt or rule decision');
+    // An explicit read that fails must show a recoverable error while a draft
+    // remains open. Retry fetch is also an explicit UI action.
+    fixture.failNextActivityRead();
+    await teen.page.locator('[data-activity-read]').click();
+    await teen.page.getByRole('alert').filter({hasText:'Det gick inte att bekräfta läsmarkeringen'}).waitFor();
+    assert.equal(fixture.activityNotices[0].read_at,null,
+      'FUN-03: failed receipt never invents a read acknowledgement');
+    assert.equal(await teen.page.locator('#family-chat-body').inputValue(),
+      'Det här utkastet får inte skickas.','FUN-03: explicit read error preserves unsent draft');
+    await teen.page.locator('[data-activity-refresh]').click();
+    await teen.page.locator('[data-activity-read]').waitFor();
+    assert.equal(await teen.page.locator('#family-chat-body').inputValue(),
+      'Det här utkastet får inte skickas.','FUN-03: explicit notice retry preserves unsent draft');
     await teen.page.locator('[data-activity-read]').click();
     await teen.page.waitForFunction(()=>!document.querySelector('[data-activity-read]'));
     assert.ok(fixture.activityNotices[0].read_at,
       'FUN-03: activity notification is marked read only after explicit click');
+    assert.equal(await teen.page.locator('#family-chat-body').inputValue(),
+      'Det här utkastet får inte skickas.','FUN-03: completed explicit receipt preserves unsent draft');
+    record.push({case:'failed-activity-read-visible-retry-and-success-with-unsent-draft',passed:true});
     assert.equal(fixture.notices[0].read_at,null,'Opening inbox does not silently mark rule notice read');
     await teen.page.locator('[data-schyssta-read]').click();
     await teen.page.waitForFunction(()=>!document.querySelector('[data-schyssta-read]'));
