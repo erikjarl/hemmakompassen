@@ -91,6 +91,7 @@ test('invalid or unrelated server rows never confirm an ambiguous write',async()
     undefined
   ]){
     const h=harness({server:row});
+    if(row===undefined)h.setStored(undefined); // Distinguish missing data from a null row.
     assert.equal(await h.ctx.reconcile({user_id:'parent-1',deck_id:'general',card_id:'general-01',importance:1}),'unknown');
   }
   const h=harness({server:null});
