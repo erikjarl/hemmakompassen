@@ -93,9 +93,9 @@ async function capture(page,name){
   await page.screenshot({path:path.join(output,name),fullPage:true,animations:"disabled"});
   captureRecords.push({file:name,viewport:page.viewportSize(),...overlays});
 }
-async function freshContext(options,{authenticated=false,paired=false,role="parent",unlocked=false,unlockUnavailable=false,priorityUnavailable=false,priorityFeature=true,privateImportance=false,preansweredGeneral=false,preansweredSkipped=false,emptySchyssta=false,homeUnreadFailure=false,personalityComplete=false,personalitySharing=false,personalityPartnerShared=false,privateRetests=false,aiMediator=false,aiAnalyses=false,activityNotifications=false}={}){
+async function freshContext(options,{authenticated=false,paired=false,role="parent",unlocked=false,unlockUnavailable=false,priorityUnavailable=false,priorityFeature=true,privateImportance=false,importanceReadFailure=false,preansweredGeneral=false,preansweredSkipped=false,emptySchyssta=false,homeUnreadFailure=false,personalityComplete=false,personalitySharing=false,personalityPartnerShared=false,privateRetests=false,aiMediator=false,aiAnalyses=false,activityNotifications=false}={}){
   const context=await browser.newContext({...options,locale:"sv-SE",reducedMotion:"reduce"});
-  await context.addInitScript(value=>{window.__HK_TEST_USER__=value.user;window.__HK_TEST_PAIRED__=value.paired;window.__HK_TEST_ROLE__=value.role;window.__HK_TEST_UNLOCKED__=value.unlocked;window.__HK_UNLOCK_RPC_UNAVAILABLE__=value.unlockUnavailable;window.__HK_PRIORITY_RPC_UNAVAILABLE__=value.priorityUnavailable;window.__HK_PRIORITISED_TEEN__=value.privateImportance;window.__HK_PREANSWERED_GENERAL__=value.preansweredGeneral;window.__HK_PREANSWERED_SKIPPED__=value.preansweredSkipped;window.__HK_SCHYSSTA_EMPTY__=value.emptySchyssta;window.__HK_HOME_UNREAD_FAILURE__=value.homeUnreadFailure;window.__HK_TEST_PERSONALITY_DONE__=value.personalityComplete;window.__HK_TEST_PERSONALITY_PARTNER_SHARED__=value.personalityPartnerShared;},{personalityPartnerShared,personalityComplete,emptySchyssta,homeUnreadFailure,preansweredGeneral,preansweredSkipped,user:authenticated?{id:role==="teen"?"10000000-0000-0000-0000-000000000002":"10000000-0000-0000-0000-000000000001",email:"synthetic@example.invalid"}:null,paired,role,unlocked,unlockUnavailable,priorityUnavailable,privateImportance});
+  await context.addInitScript(value=>{window.__HK_TEST_USER__=value.user;window.__HK_TEST_PAIRED__=value.paired;window.__HK_TEST_ROLE__=value.role;window.__HK_TEST_UNLOCKED__=value.unlocked;window.__HK_UNLOCK_RPC_UNAVAILABLE__=value.unlockUnavailable;window.__HK_PRIORITY_RPC_UNAVAILABLE__=value.priorityUnavailable;window.__HK_PRIORITISED_TEEN__=value.privateImportance;window.__HK_IMPORTANCE_READ_FAIL__=value.importanceReadFailure;window.__HK_PREANSWERED_GENERAL__=value.preansweredGeneral;window.__HK_PREANSWERED_SKIPPED__=value.preansweredSkipped;window.__HK_SCHYSSTA_EMPTY__=value.emptySchyssta;window.__HK_HOME_UNREAD_FAILURE__=value.homeUnreadFailure;window.__HK_TEST_PERSONALITY_DONE__=value.personalityComplete;window.__HK_TEST_PERSONALITY_PARTNER_SHARED__=value.personalityPartnerShared;},{personalityPartnerShared,personalityComplete,emptySchyssta,homeUnreadFailure,preansweredGeneral,preansweredSkipped,user:authenticated?{id:role==="teen"?"10000000-0000-0000-0000-000000000002":"10000000-0000-0000-0000-000000000001",email:"synthetic@example.invalid"}:null,paired,role,unlocked,unlockUnavailable,priorityUnavailable,privateImportance,importanceReadFailure});
   await context.route(base+"backend-config.js*",route=>route.fulfill({
     contentType:"application/javascript",
     body:"window.HEMMAKOMPASSEN_BACKEND=Object.freeze({supabaseUrl:'https://synthetic.invalid',supabasePublishableKey:'synthetic',enableSharedPriorities:"+String(priorityFeature)+",enableSharedPolling:true,enableSharedInsights:true,enableSharedUnderstanding:true,enableSchysstaList:true,enableActivityNotifications:"+String(activityNotifications)+",enablePersonalitySharing:"+String(personalitySharing)+",enablePrivateRetests:"+String(privateRetests)+",enableAiMediator:"+String(aiMediator||aiAnalyses)+",enableAiHistory:"+String(aiMediator||aiAnalyses)+",enableAiResultAnalyses:"+String(aiAnalyses)+",aiMediatorUrl:'https://hemmakompassen-ai-medlare.erikbertiljarl.workers.dev/api/ai/mediate'});"
@@ -197,7 +197,7 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
             };
             if(table==='swipe_skips')return {select(){return {async eq(){return {data:[...skips.values()],error:null}}}}};
             if(table==='swipe_importance')return {
-              select(){return {async eq(){return {data:[...importance.values()],error:null}}}},
+              select(){return {async eq(){return window.__HK_IMPORTANCE_READ_FAIL__?{data:null,error:{message:'Synthetic private importance read failed'}}:{data:[...importance.values()],error:null}}}},
               async upsert(row,options){importance.set(row.deck_id+':'+row.card_id,row);window.__HK_SAVED_IMPORTANCE__={row,options};return {error:null}}
             };
             if(table==='swipe_priority_shares')return {select(){return {async eq(){return window.__HK_PRIORITY_READ_FAIL__
@@ -866,6 +866,19 @@ try{
   assert.doesNotMatch(ownText,/user_id|family_id|pair_id|synthetic@example\.invalid|Gemensamma möjligheter/,
     'Export does not include account identifiers or shared results');
   assert.match(await generalReview.page.locator('#swipe-export-status').innerText(),/privata textfil/);
+  // If private importance read failed, never create an incomplete export that looks authoritative.
+  const failedImportance=await freshContext(
+    {viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},
+    {authenticated:true,paired:true,role:'teen',preansweredSkipped:true,importanceReadFailure:true}
+  );
+  await failedImportance.page.goto(base+'#swipe',{waitUntil:'load'});
+  await failedImportance.page.locator('#swipe-export-private').waitFor();
+  await failedImportance.page.locator('#swipe-export-private').click();
+  assert.match(await failedImportance.page.locator('#swipe-export-status').innerText(),/kunde inte hämtas/,
+    'Export explains that private importance could not be loaded');
+  assert.equal(await failedImportance.page.evaluate(()=>document.querySelector('#swipe-export-status')?.textContent?.includes('förberetts')),false,
+    'A failed private importance read must not claim a successful export');
+  await failedImportance.context.close();
   await generalReview.context.close();
   const narrow=await freshContext({viewport:{width:320,height:700},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true});
   await narrow.page.getByRole("heading",{name:/Hej[ ,]+Provförälder/}).waitFor();
