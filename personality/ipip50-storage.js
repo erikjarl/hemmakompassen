@@ -40,7 +40,9 @@ export async function saveMyIPIP50Answer(db, questionId, value) {
   try {
     const result = await db.from('personality_answers')
       .upsert(row, { onConflict: 'user_id,instrument_id,question_id' });
-    writeError = result?.error || null;
+    // A missing/malformed response is not a confirmed database write.
+    writeError = result && Object.hasOwn(result,'error')
+      ? result.error : new Error('Missing write acknowledgement');
   } catch (error) { writeError = error; }
   if (!writeError) return { saved: true, questionId, instrumentId: IPIP50_V1.id };
 
