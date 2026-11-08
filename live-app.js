@@ -862,15 +862,20 @@ function safeSharedUnderstanding(rows){
 function understandingInsights(){
   if(!sharedUnderstandingEnabled)return '<p class="live-muted">Förståelsekort visas inte här ännu. Frivillig, återkallelig delning kräver en separat säker funktion och ett nytt aktivt val av tonåringen. Inga tidigare svar delas automatiskt.</p>';
   const shared=safeSharedUnderstanding(sharedUnderstandingRows);
-  const sharedList=shared.length
-    ?'<ul class="swipe-match-list">'+shared.map(card=>'<li><p>'+esc(cardTextForRole(card,viewerRole()))+'</p></li>').join('')+'</ul>'
-    :'<p class="live-muted">Inga förståelsekort är aktivt delade just nu.</p>';
+  const shareUnknown=viewerRole()==='teen'&&!understandingSharesAvailable;
+  const sharedList=shareUnknown
+    ?'<p class="live-muted" role="status">Det går inte att kontrollera vilka förståelsekort som är delade just nu. Tidigare uppgifter döljs tills servern svarar.</p>'
+    :shared.length
+      ?'<ul class="swipe-match-list">'+shared.map(card=>'<li><p>'+esc(cardTextForRole(card,viewerRole()))+'</p></li>').join('')+'</ul>'
+      :'<p class="live-muted">Inga förståelsekort är aktivt delade just nu.</p>';
   if(viewerRole()!=='teen')return sharedList+'<p class="live-muted">Det här är tonåringens frivilligt delade budskap, inte A-matchningar eller överenskommelser.</p>';
   const eligible=GENERAL_CARDS.filter(card=>card.type==='understanding'&&swipeAnswers.get(card.id)===true);
   const controls=eligible.length
     ?'<ul class="swipe-match-list understanding-share-list">'+eligible.map(card=>{
       const active=understandingShares.has(card.id),saving=understandingShareSaving.has(card.id)||understandingShareChecking||!understandingSharesAvailable;
-      return '<li><p>'+esc(card.teenText)+'</p><button type="button" class="live-button" data-understanding-share="'+esc(card.id)+'" aria-pressed="'+active+'"'+(saving?' disabled':'')+'>'+(active?'Återkalla delning':'Dela med min förälder')+'</button></li>';
+      return '<li><p>'+esc(card.teenText)+'</p><button type="button" class="live-button" data-understanding-share="'+esc(card.id)+'"'+
+        (understandingSharesAvailable?' aria-pressed="'+active+'"':' aria-label="Delningsstatus okänd – kontrollera igen"')+
+        (saving?' disabled':'')+'>'+(understandingSharesAvailable?(active?'Återkalla delning':'Dela med min förälder'):'Kontrollera delningen först')+'</button></li>';
     }).join('')+'</ul>'
     :'<p class="live-muted">Svara ja på ett förståelsekort för att kunna välja delning här.</p>';
   const error=understandingShareError?'<p role="alert">'+esc(understandingShareError)+'</p>':'';
