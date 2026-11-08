@@ -18,6 +18,6 @@ test('direct mobile tabs retain rule and inbox badges, keyboard focus and positi
   assert.match(app,/const oldLeft=mobile\.scrollLeft/);
   assert.match(app,/mobile\.scrollLeft=oldLeft/);
   assert.match(app,/focusedHref/);
-  assert.match(app,/scrollLeft=right-mobile\.clientWidth/);
+  assert.match(app,/mobile\.scrollLeft\+=tabBox\.right-navBox\.right/);
   assert.match(html,/#live-mobile-nav > a:focus-visible/);
 });
