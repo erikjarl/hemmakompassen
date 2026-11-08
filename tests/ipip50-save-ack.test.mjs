@@ -129,6 +129,23 @@ test('a rejected answer remains on the same question and can be retried',async()
   assert.match(ui.render(),/Fråga 2 av 50/);
   assert.equal(x.answers.get(QUESTION),3);
 });
+test('fast failed save holds the input lock and ignores a duplicate same-click event',async()=>{
+  const x=fixture({mode:'reject'});
+  const ui=createPersonalityExperience({db:x.db,onRender:()=>{}});
+  ui.reset(USER);await ui.load(USER);await ui.handleClick(button('start'));
+  const first=ui.handleChange(radio(4));
+  const second=ui.handleChange(radio(4));
+  assert.equal(await second,false,'A duplicate change while saving must be ignored');
+  await first;
+  assert.equal(x.writes(),1,'Only one write attempted for one selection');
+  assert.equal(x.readbacks(),1);
+  assert.match(ui.render(),/Fråga 1 av 50/);
+  assert.match(ui.render(),/Svaret kunde inte bekräftas som sparat/);
+  x.setMode('ok');
+  await ui.handleChange(radio(4));
+  assert.equal(x.writes(),2,'A later deliberate retry is still possible');
+  assert.match(ui.render(),/Fråga 2 av 50/);
+});
 test('an unknown save offers an explicit server reload that finds the saved answer',async()=>{
   const x=fixture({mode:'lost-ack',readFailure:true});
   const ui=createPersonalityExperience({db:x.db,onRender:()=>{}});
