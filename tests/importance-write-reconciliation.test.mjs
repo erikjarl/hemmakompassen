@@ -133,8 +133,8 @@ test('stale readback from a former session cannot update the current account',as
     })
   });
   const pending=h.save(1);
-  await Promise.resolve();
-  await Promise.resolve();
+  // Wait for the readback to actually start before replacing the session.
+  await new Promise(resolve=>setImmediate(resolve));
   assert.equal(typeof finishRead,'function');
   h.ctx.user={id:'another-account'};
   h.ctx.sharedSession=9;
