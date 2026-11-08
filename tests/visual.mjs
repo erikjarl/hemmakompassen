@@ -681,15 +681,15 @@ try{
     {authenticated:true,paired:true}
   );
   await homeUnpaired.page.goto(base+'#hem',{waitUntil:'load'});
-  await homeUnpaired.page.getByRole('heading',{name:'Inkorgen · 1 olästa'}).waitFor();
+  await homeUnpaired.page.getByRole('heading',{name:/^Inkorgen · (?:minst )?\d+ olästa$/}).waitFor();
   await homeUnpaired.page.evaluate(()=>{
     window.__HK_TEST_PAIRED__=false;
     window.dispatchEvent(new Event('focus'));
   });
-  await homeUnpaired.page.waitForFunction(()=>!document.querySelector('#live-app')?.textContent?.includes('Inkorgen · 1 olästa'));
+  await homeUnpaired.page.waitForFunction(()=>!Array.from(document.querySelectorAll('#live-app h2')).some(h=>h.textContent?.startsWith('Inkorgen · ')));
   assert.equal(await homeUnpaired.page.locator('#live-mobile-nav a[href="#inkorg"] .live-nav-count').count(),0,
     'Remote unpair must remove old private unread badge on home focus');
-  assert.equal(await homeUnpaired.page.getByRole('heading',{name:'Inkorgen · 1 olästa'}).count(),0,
+  assert.equal(await homeUnpaired.page.getByRole('heading',{name:/^Inkorgen · /}).count(),0,
     'Home cannot keep old family inbox alert after remote unpair');
   await homeUnpaired.context.close();
 
