@@ -1008,7 +1008,7 @@ async function verifyFullPrivateRetest(){
       await page.getByRole('button',{name:'Visa mitt resultat'}).click();
       await page.locator('.pf-retest-history').waitFor();
       const download=page.waitForEvent('download');
-      await page.getByRole('button',{name:'Exportera omgången (JSON)'}).click();
+      await page.getByRole('button',{name:/Exportera omgången som JSON för Omtest 1 av 1/}).click();
       const file=await download;
       const payload=JSON.parse(await fs.readFile(await file.path(),'utf8'));
       assert.equal(payload.answered_count,50);
