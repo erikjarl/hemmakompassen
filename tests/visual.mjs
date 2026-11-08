@@ -459,14 +459,17 @@ try{
   await m.page.keyboard.press('Enter');
   assert.equal(await m.page.evaluate(()=>document.activeElement?.id),'live-app','Skip link focuses the main landmark');
   assert.equal(new URL(m.page.url()).hash,skipHash,'Skip link must not change the SPA route');
-  await m.page.locator('#live-mobile-nav a[href="#installningar"]').focus();
+  await m.page.locator('#live-mobile-nav summary').focus();
+  await m.page.keyboard.press('Enter');
+  assert.equal(await m.page.locator('#live-mobile-nav details').evaluate(el=>el.open),true,
+    'More opens by keyboard and exposes the secondary destinations');
+  const settingsLink=m.page.locator('#live-mobile-nav a[href="#installningar"]');
+  await settingsLink.focus();
   await m.page.keyboard.press('Enter');
   await m.page.getByRole('heading',{name:'Inställningar'}).waitFor();
   assert.equal(await m.page.evaluate(()=>document.activeElement?.id),'live-app','Route changes move focus to new content');
-  const settingsNav=await m.page.locator('#live-mobile-nav').boundingBox();
-  const settingsTab=await m.page.locator('#live-mobile-nav a[href="#installningar"]').boundingBox();
-  assert.ok(settingsNav&&settingsTab&&settingsTab.x>=settingsNav.x-2&&settingsTab.x+settingsTab.width<=settingsNav.x+settingsNav.width+2,
-    'Last mobile tab is revealed automatically when activated via keyboard');
+  assert.equal(await m.page.locator('#live-mobile-nav details').evaluate(el=>el.open),false,
+    'More closes after selecting a destination');
   await m.page.goto(base+'#insikter',{waitUntil:'load'});
   assert.equal(await m.page.locator('#live-mobile-nav a[href="#swipe"]').getAttribute('aria-current'),'page',
     'The insights subpage keeps Gillaswajpen marked as the active primary tab');
