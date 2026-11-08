@@ -89,29 +89,29 @@ const activityPairSignature=()=>JSON.stringify(members.map(member=>[
   member.user_id,member.role,member.family_id??null,member.joined_at??null
 ]).sort((a,b)=>String(a[0]).localeCompare(String(b[0]))));
 const activityUnreadCount=()=>activityNotifications.filter(n=>n.read_at===null).length;
-async function fetchActivityNotifications({quiet=false}={}){
+async function fetchActivityNotifications({quiet=false,forceRender=false}={}){
   const request=++activityNotificationsRequest,viewer=user?.id,session=sharedSession,pair=activityPairSignature();
   if(!activityNotificationsEnabled||!viewer||members.length!==2){
     activityNotifications=[];activityNotificationsError='';activityNotificationsLoading=false;
-    if(['hem','inkorg'].includes(page())&&!familyChatDraft.trim())render();
+    if(['hem','inkorg'].includes(page())&&(!familyChatDraft.trim()||forceRender))render();
     return;
   }
   const previous=JSON.stringify([activityNotifications,activityNotificationsError]);
   activityNotificationsLoading=true;
-  if(!quiet&&page()==='inkorg'&&!familyChatDraft.trim())render();
+  if(!quiet&&page()==='inkorg'&&(!familyChatDraft.trim()||forceRender))render();
   let result;
   try{result=await db.rpc('my_activity_notifications');}catch(e){result={error:e};}
   if(request!==activityNotificationsRequest||viewer!==user?.id||session!==sharedSession)return;
   if(pair!==activityPairSignature()){
     activityNotifications=[];activityNotificationsError='';activityNotificationsLoading=false;
-    if(['hem','inkorg'].includes(page())&&(page()!=='inkorg'||!familyChatDraft.trim()))render();
+    if(['hem','inkorg'].includes(page())&&(page()!=='inkorg'||!familyChatDraft.trim()||forceRender))render();
     else menu();
     return;
   }
   if(members.length!==2||!activityNotificationsEnabled){
     // The pairing may have disappeared without another refresh invalidating this request.
     activityNotifications=[];activityNotificationsError='';activityNotificationsLoading=false;
-    if(['hem','inkorg'].includes(page())&&(page()!=='inkorg'||!familyChatDraft.trim()))render();
+    if(['hem','inkorg'].includes(page())&&(page()!=='inkorg'||!familyChatDraft.trim()||forceRender))render();
     else menu();
     return;
   }
@@ -122,7 +122,7 @@ async function fetchActivityNotifications({quiet=false}={}){
     activityNotifications=result.data;activityNotificationsError='';activityFeedback='';
   }
   if(previous===JSON.stringify([activityNotifications,activityNotificationsError]))return;
-  if(['hem','inkorg'].includes(page())&&(page()!=='inkorg'||!familyChatDraft.trim()))render();
+  if(['hem','inkorg'].includes(page())&&(page()!=='inkorg'||!familyChatDraft.trim()||forceRender))render();
   else menu();
 }
 async function markActivityNotificationRead(notificationId){
@@ -152,12 +152,7 @@ async function markActivityNotificationRead(notificationId){
     return;
   }
   // Recheck server state, rather than optimistically removing the unread badge.
-  await fetchActivityNotifications();
-  // Routine background reads avoid replacing a focused composer. After an
-  // explicit read-click, however, the notice must visibly change even when
-  // the user has an unsent draft. The text is held in familyChatDraft.
-  if(viewer===user?.id&&session===sharedSession&&page()==='inkorg'&&familyChatDraft.trim())
-    render();
+  await fetchActivityNotifications({forceRender:true});
 }
 const familyChatTimestamp=timestamp=>new Intl.DateTimeFormat('sv-SE',{dateStyle:'medium',timeStyle:'short'}).format(new Date(timestamp));
 function validFamilyChatRows(rows){
@@ -2200,7 +2195,7 @@ if(openRule&&SCHYSSTA_UUID.test(openRule.dataset.schysstaOpen)){
   if(page()==='regler')void fetchSchysstaList();
 }
 const activityRefresh=e.target.closest('[data-activity-refresh]');
-if(activityRefresh&&user&&members.length===2)void fetchActivityNotifications();
+if(activityRefresh&&user&&members.length===2)void fetchActivityNotifications({forceRender:true});
 const activityRead=e.target.closest('[data-activity-read]');
 if(activityRead)void markActivityNotificationRead(activityRead.dataset.activityRead);
 const readNotice=e.target.closest('[data-schyssta-read]');if(readNotice)void markSchysstaRead(readNotice.dataset.schysstaRead);
