@@ -231,7 +231,7 @@ test('client only marks notices on a deliberate click and refreshes read status'
  assert.match(source,/data-activity-read=/);
  assert.match(source,/if\(activityRead\)void markActivityNotificationRead\(activityRead\.dataset\.activityRead\)/);
  assert.match(source,/db\.rpc\('mark_activity_notification_read',\{p_notification_id:notificationId\}\)/);
- assert.match(source,/await fetchActivityNotifications\(\)/);
+ assert.match(source,/await fetchActivityNotifications\(\{forceRender:true\}\)/);
  assert.match(source,/if\(page\(\)==='hem'\)void fetchFamilyChatUnread\(\)/);
  assert.match(source,/activityUnreadCount\(\)/);
  assert.match(source,/activityNotificationsError/);
