@@ -2,7 +2,7 @@
 
 **Datum:** 8 november 2026. **Testmiljö:** riktig UI-navigering och klick i två separata Chromium-kontexter (förälder 390 px, tonåring 320 px), med gemensam deterministisk in-memory-simulering av Supabase/Auth och Schyssta-RPC.
 
-**Testkod:** `verifyPairedRuleRevisionAndHistory()` i `tests/visual.mjs`, rapport `artifacts/fun-03-rule-replacement-history-synthetic.json` i GitHub Actions. **Testet berör inte verkliga användarsvar eller befintliga överenskommelser.**
+**Testkod:** `verifyPairedRuleRevisionAndHistory()` i `tests/visual.mjs`, rapport `artifacts/fun-03-rule-replacement-history-synthetic.json` i GitHub Actions. **Resultat:** [PR #218](https://github.com/erikjarl/hemmakompassen/pull/218) mergad som [`4e8e6388`](https://github.com/erikjarl/hemmakompassen/commit/4e8e63885826e460833f17637cd39d36ec20932c), [slutlig grön CI #42497058244](https://github.com/erikjarl/hemmakompassen/actions/runs/42497058244). Fem fulla syntetiska testmoment passerade i den körningen. **Testet berör inte verkliga användarsvar eller befintliga överenskommelser.**
 
 ## Genomförda UI-flöden och kontroller
 
@@ -17,4 +17,4 @@ Testet kontrollerar även horisontell dokumentöverströmning vid 320/390 px.
 
 ## Metodologiska begränsningar
 
-Backendlogiken för förslagslänkar, dubbelgodkännande, arkivering och historik **är simulerad** i JavaScript-testfixturen. Ett passerande test innebär att gränssnittet hanterar dessa svar på rätt sätt; det **bevisar inte** att riktiga Supabase-RPC:er eller serverns regelrättigheter uppträder identiskt. Verklig Auth, nätverksavbrott, samtidiga skrivningar, samtyckesövergångar och fysisk Safari/iOS måste testas separat. Slutlig teststatus ska hämtas från CI på den senaste PR-committen; anta inte PASS från enbart incheckad testkod.
+Backendlogiken för förslagslänkar, dubbelgodkännande, arkivering och historik **är simulerad** i JavaScript-testfixturen. Ett passerande test innebär att gränssnittet hanterar dessa svar på rätt sätt; det **bevisar inte** att riktiga Supabase-RPC:er eller serverns regelrättigheter uppträder identiskt. Verklig Auth, nätverksavbrott, samtidiga skrivningar, samtyckesövergångar och fysisk Safari/iOS måste testas separat. Första [röda CI-körningen #42497003590](https://github.com/erikjarl/hemmakompassen/actions/runs/42497003590) hittade ett felaktigt testantagande: det arkiverade gamla regel-ID:t fanns korrekt kvar i historiken men räknades av testet som en aktiv regel. Testet justerades att söka enbart i aktiva regelgrupper, och hela sviten passerade därefter [CI #42497058244](https://github.com/erikjarl/hemmakompassen/actions/runs/42497058244).
