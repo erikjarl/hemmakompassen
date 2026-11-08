@@ -1797,7 +1797,7 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
             if(table==='swipe_priority_shares')return {select(){return {async eq(){return window.__HK_PRIORITY_READ_FAIL__
               ?{data:null,error:{message:'Synthetic consent read failed'}}
               :{data:window.__HK_TEST_ROLE__==='teen'?[...priorityShares].map(key=>{const [deck_id,card_id]=key.split(':');return {deck_id,card_id};}):[],error:null};}}}};
-            if(table==='understanding_card_shares')return {select(){return {async eq(){return {data:window.__HK_TEST_ROLE__==='teen'?[...understandingShares].map(card_id=>({deck_id:'general',card_id})):[],error:null}}}}};
+            if(table==='understanding_card_shares')return {select(){return {async eq(){return window.__HK_UNDERSTANDING_SHARE_READ_FAIL__?{data:null,error:{message:'Synthetic consent read failed'}}:{data:window.__HK_TEST_ROLE__==='teen'?[...understandingShares].map(card_id=>({deck_id:'general',card_id})):[],error:null}}}}};
             throw new Error('Unexpected table '+table);
           },
           async rpc(name,args){
@@ -1857,7 +1857,10 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
             if(name==='shared_understanding_cards')return {data:[...understandingShares].map(card_id=>({deck_id:'general',card_id})),error:null};
             if(name==='set_understanding_card_share'){
               window.__HK_UNDERSTANDING_SHARE__={name,args};
+              window.__HK_UNDERSTANDING_WRITES__=(window.__HK_UNDERSTANDING_WRITES__||0)+1;
+              if(window.__HK_UNDERSTANDING_RPC_FAIL_BEFORE_WRITE__)return {data:null,error:{message:'Synthetic write rejected'}};
               if(args.p_share)understandingShares.add(args.p_card_id);else understandingShares.delete(args.p_card_id);
+              if(window.__HK_UNDERSTANDING_RPC_FAIL_AFTER_WRITE__)return {data:null,error:{message:'Synthetic acknowledgement lost'}};
               return {data:null,error:null};
             }
             if(name==='shared_schyssta_rule_suggestions')return {data:window.__HK_TEST_PAIRED__?(window.__HK_SCHYSSTA_CLEAN_RPC__===true?schysstaSuggestions.filter(row=>row.card_id==='regler-01'):schysstaSuggestions):[],error:null};
@@ -3279,7 +3282,34 @@ try{
   await teenInsights.page.waitForFunction(()=>document.querySelector('[data-understanding-share="general-02"]')?.getAttribute('aria-pressed')==='false');
   assert.match(await teenInsights.page.locator('.insights-view').innerText(),/Inga förståelsekort är aktivt delade/,'Revocation immediately removes the shared B message');
   assert.match(await activeShare.innerText(),/Dela med min förälder/,'Teen can actively consent again after revocation');
-  await checkOverflow(teenInsights.page,'Mobile teen B consent and revocation');
+  // FUN-02.02: a server write may succeed even when its acknowledgement is lost.
+  await teenInsights.page.evaluate(()=>{window.__HK_UNDERSTANDING_RPC_FAIL_AFTER_WRITE__=true;});
+  await activeShare.click();
+  await teenInsights.page.waitForFunction(()=>document.querySelector('[data-understanding-share="general-02"]')?.getAttribute('aria-pressed')==='true');
+  assert.match(await activeShare.innerText(),/Återkalla delning/,'Lost share acknowledgement is reconciled with persisted state');
+  await teenInsights.page.locator('#insights-understanding .swipe-match-list').first().locator('li').first().waitFor();
+  await activeShare.click();
+  await teenInsights.page.waitForFunction(()=>document.querySelector('[data-understanding-share="general-02"]')?.getAttribute('aria-pressed')==='false');
+  assert.match(await teenInsights.page.locator('.insights-view').innerText(),/Inga förståelsekort är aktivt delade/,'Lost revoke acknowledgement removes old shared B');
+  // A failed verification must not pretend the request was rejected or
+  // expose an actionable toggle with an unknown server consent status.
+  await teenInsights.page.evaluate(()=>{
+    window.__HK_UNDERSTANDING_SHARE_READ_FAIL__=true;
+  });
+  await activeShare.click();
+  await teenInsights.page.locator('[data-understanding-retry]').waitFor();
+  assert.equal(await activeShare.isDisabled(),true,'Unknown share status disables further consent writes');
+  assert.match(await teenInsights.page.getByRole('alert').last().innerText(),/går inte att veta om ditt val/);
+  const writesBeforeRetry=await teenInsights.page.evaluate(()=>window.__HK_UNDERSTANDING_WRITES__);
+  await teenInsights.page.evaluate(()=>{
+    window.__HK_UNDERSTANDING_RPC_FAIL_AFTER_WRITE__=false;
+    window.__HK_UNDERSTANDING_SHARE_READ_FAIL__=false;
+  });
+  await teenInsights.page.locator('[data-understanding-retry]').click();
+  await teenInsights.page.waitForFunction(()=>document.querySelector('[data-understanding-share="general-02"]')?.getAttribute('aria-pressed')==='true');
+  assert.equal(await teenInsights.page.evaluate(()=>window.__HK_UNDERSTANDING_WRITES__),writesBeforeRetry,'Retry only reads server status, never resends a consent write');
+  assert.equal(await teenInsights.page.locator('[data-understanding-retry]').count(),0);
+  await checkOverflow(teenInsights.page,'Mobile teen B consent and lost acknowledgement');
   await capture(teenInsights.page,'mobile-teen-understanding-consent.png');
 
   assert.equal(await paired.page.locator(".swipe-themes details").count(),6,"A paired family can explore all six theme decks without completing general cards");
