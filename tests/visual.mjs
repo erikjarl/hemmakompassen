@@ -428,6 +428,87 @@ async function verifyBrowserHistory(){
     ' role/viewport history-route assertions passed in synthetic Chromium.');
 }
 
+// FUN-02: actually open, answer and resume EVERY theme deck for both synthetic
+// roles. Finishes one short deck to exercise completion and revisiting saved cards.
+// This never requests or writes live Supabase data.
+async function verifyAllThemeDeckJourneys(){
+  const decks=[
+    {id:'samtal',length:104},{id:'aktiviteter',length:104},
+    {id:'regler',length:12},{id:'uppskattning',length:8},
+    {id:'aterhamtning',length:8},{id:'forandring',length:8}
+  ];
+  const records=[];
+  for(const role of ['parent','teen']){
+    const width=role==='parent'?390:320;
+    const {page,context}=await freshContext(
+      {viewport:{width,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true},
+      {authenticated:true,paired:true,role,unlocked:true}
+    );
+    await page.goto(base+'#swipe',{waitUntil:'load'});
+    await page.locator('[data-theme-open="samtal"]').waitFor();
+    assert.equal(await page.locator('[data-theme-open]').count(),6,
+      'FUN-02: all six named decks can be opened with a valid paired synthetic session');
+    const currentId=role==='parent'
+      ?'10000000-0000-0000-0000-000000000001'
+      :'10000000-0000-0000-0000-000000000002';
+    for(const [index,deck] of decks.entries()){
+      const button=page.locator('[data-theme-open="'+deck.id+'"]');
+      await button.click();
+      const first=page.locator('#swipe-card[aria-label^="Temakort 1 av '+deck.length+'"]');
+      await first.waitFor();
+      assert.equal(await page.locator('.swipe-private-review').count(),0,
+        'FUN-02 new deck must not inherit a different deck private answer history');
+      const choice=index%2===0?'yes':'no';
+      await page.locator('[data-swipe="'+choice+'"]').click();
+      await page.locator('#swipe-card[aria-label^="Temakort 2 av '+deck.length+'"]').waitFor();
+      const saved=await page.evaluate(()=>window.__HK_SAVED_SWIPE__);
+      assert.equal(saved.row.deck_id,deck.id,'FUN-02 write uses current theme deck ID');
+      assert.equal(saved.row.card_id,deck.id+'-01','FUN-02 first answer uses canonical card ID');
+      assert.equal(saved.row.answer,choice==='yes','FUN-02 persists YES or NO literally');
+      assert.equal(saved.row.user_id,currentId,'FUN-02 stores answer for current signed-in role');
+      assert.equal(saved.options.onConflict,'user_id,deck_id,card_id');
+      await page.locator('#theme-back').click();
+      assert.match(await page.locator('[data-theme-open="'+deck.id+'"]').locator('..').innerText(),
+        new RegExp('Din privata status: 1 / '+deck.length),
+        'FUN-02 status is per deck after saving one answer');
+      await page.locator('[data-theme-open="'+deck.id+'"]').click();
+      await page.locator('#swipe-card[aria-label^="Temakort 2 av '+deck.length+'"]').waitFor();
+      await checkOverflow(page,'FUN-02 '+role+' '+deck.id+' first answer and resume');
+      records.push({role,deck:deck.id,cards:deck.length,
+        firstAnswer:choice,firstCardSaved:true,nextCardResumed:true,
+        environment:'synthetic Chromium'});
+      await page.locator('#theme-back').click();
+    }
+    // The last deck has eight cards. Complete it to cover the finished,
+    // restart and edit paths without skipping untested cards.
+    await page.locator('[data-theme-open="forandring"]').click();
+    await page.locator('#swipe-card[aria-label^="Temakort 2 av 8"]').waitFor();
+    for(let n=2;n<=8;n++){
+      await page.locator('#swipe-card[aria-label^="Temakort '+n+' av 8"]').waitFor();
+      await page.locator('[data-swipe="'+(n%2===0?'yes':'no')+'"]').click();
+    }
+    await page.getByRole('heading',{name:'Alla 8 kort i Alla kategorier är sparade'}).waitFor();
+    assert.match(await page.locator('.swipe-private-review summary').innerText(),
+      /Visa mina 8 besvarade kort/,'FUN-02 completed deck retains eight private saved answers');
+    await page.locator('#theme-restart').click();
+    await page.locator('#swipe-card[aria-label^="Temakort 1 av 8"]').waitFor();
+    await page.locator('[data-swipe="yes"]').click(); // previously NO for deck #6
+    await page.waitForFunction(()=>window.__HK_SAVED_SWIPE__?.row?.card_id==='forandring-01'
+      &&window.__HK_SAVED_SWIPE__?.row?.answer===true);
+    assert.match(await page.locator('.swipe-private-review').innerText(),/Ditt svar: Ja/,
+      'FUN-02 restarting and editing a completed theme updates its own answer');
+    records.push({role,deck:'forandring',step:'all-eight-complete-restart-and-edit',
+      passed:true,environment:'synthetic Chromium'});
+    await context.close();
+  }
+  await fs.writeFile(path.join(output,'fun-02-all-decks-synthetic.json'),
+    JSON.stringify({method:'Real Chromium clicks through all six decks for two mocked roles',
+      limitations:'Only first answer/reopen for large decks; only short forandring deck completed. No real Supabase/second signed-in account.',
+      records},null,2)+'\n');
+  console.log('FUN-02 all-decks: '+records.length+
+    ' role/deck test records passed (12 open/save/resume; two eight-card completions).');
+}
+
 async function freshContext(options,{authenticated=false,paired=false,role="parent",unlocked=false,unlockUnavailable=false,priorityUnavailable=false,priorityFeature=true,privateImportance=false,importanceReadFailure=false,preansweredGeneral=false,preansweredSkipped=false,emptySchyssta=false,homeUnreadFailure=false,personalityComplete=false,personalitySharing=false,personalityPartnerShared=false,privateRetests=false,aiMediator=false,aiAnalyses=false,activityNotifications=false}={}){
   const context=await browser.newContext({...options,locale:"sv-SE",reducedMotion:"reduce"});
   await context.addInitScript(value=>{window.__HK_TEST_USER__=value.user;window.__HK_TEST_PAIRED__=value.paired;window.__HK_TEST_ROLE__=value.role;window.__HK_TEST_UNLOCKED__=value.unlocked;window.__HK_UNLOCK_RPC_UNAVAILABLE__=value.unlockUnavailable;window.__HK_PRIORITY_RPC_UNAVAILABLE__=value.priorityUnavailable;window.__HK_PRIORITISED_TEEN__=value.privateImportance;window.__HK_IMPORTANCE_READ_FAIL__=value.importanceReadFailure;window.__HK_PREANSWERED_GENERAL__=value.preansweredGeneral;window.__HK_PREANSWERED_SKIPPED__=value.preansweredSkipped;window.__HK_SCHYSSTA_EMPTY__=value.emptySchyssta;window.__HK_HOME_UNREAD_FAILURE__=value.homeUnreadFailure;window.__HK_TEST_PERSONALITY_DONE__=value.personalityComplete;window.__HK_TEST_PERSONALITY_PARTNER_SHARED__=value.personalityPartnerShared;},{personalityPartnerShared,personalityComplete,emptySchyssta,homeUnreadFailure,preansweredGeneral,preansweredSkipped,user:authenticated?{id:role==="teen"?"10000000-0000-0000-0000-000000000002":"10000000-0000-0000-0000-000000000001",email:"synthetic@example.invalid"}:null,paired,role,unlocked,unlockUnavailable,priorityUnavailable,privateImportance,importanceReadFailure});
@@ -2298,6 +2379,7 @@ try{
   await captureFunctionalInventory();
   await testAccountBrowserJourney();
   await verifyBrowserHistory();
+  await verifyAllThemeDeckJourneys();
   assert.deepEqual(errors,[],"Browser errors: "+errors.join("; "));
   await fs.writeFile(path.join(output,"visual-audit.json"),JSON.stringify({
     purpose:"Playwright responsive visual review",
