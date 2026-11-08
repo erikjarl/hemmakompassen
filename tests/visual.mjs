@@ -1140,14 +1140,14 @@ async function verifyIpip50WriteAckBrowser(){
       await page.getByText('Fråga 2 av 50').waitFor();
       assert.equal(await page.locator('[data-pf-action="verify-save"]').count(),0);
     }else if(scenario==='rejected-before-commit'){
-      await page.locator('.pf-status').getByText(/kunde inte bekräftas som sparat/i).waitFor();
+      await page.locator('.pf-status').filter({hasText:/kunde inte bekräftas som sparat/i}).waitFor();
       assert.match(await page.locator('.pf-survey').innerText(),/Fråga 1 av 50/);
       assert.equal(await page.locator('[data-pf-action="verify-save"]').count(),0);
       await page.locator('input[data-pf-answer="ipip50-001"][value="3"]').check();
       await page.getByText('Fråga 2 av 50').waitFor();
       assert.equal(await page.evaluate(()=>window.__HK_PERSONALITY_SAVE__?.row?.answer?.value),3);
     }else{
-      await page.locator('.pf-status').getByText(/går inte att kontrollera om svaret sparades/i).waitFor();
+      await page.locator('.pf-status').filter({hasText:/går inte att kontrollera om svaret sparades/i}).waitFor();
       await page.getByRole('button',{name:'Kontrollera sparat svar'}).click();
       await page.getByRole('button',{name:'Fortsätt testet'}).waitFor();
       assert.match(await page.locator('.pf-overview').innerText(),/1 av 50/);
