@@ -181,29 +181,33 @@ export function createPrivateIpipRetests({
       status='';repaint();return true;
     }
     if(action==='new'&&!draftId){
-      const id=userId,token=generation;busy=true;status='Startar en ny privat omgång…';repaint();
+      const id=userId,token=generation;
+      busy=true;status='Startar en ny privat omgång…';repaint();
       try{
         const result=await db.from('personality_test_attempts')
           .insert({user_id:id,instrument_id:IPIP50_V1.id})
           .select('id,created_at,completed_at').single();
-        if(result.error||!result.data?.id)throw result.error||Error('Invalid response');
+        if(result?.error||!result?.data?.id)throw result?.error||Error('Missing creation acknowledgement');
         if(!isCurrent(id,token))return true;
         attempts=[result.data,...attempts];draftId=result.data.id;answers={};
         questionIndex=0;surveyOpen=true;status='';
       }catch(e){
         if(!isCurrent(id,token))return true;
-        if(e?.code==='23505'){
-          // Another tab already created this owner's draft. The database is
-          // authoritative; reconcile rather than opening a second test.
-          busy=false;
-          await load(id);
-          if(userId===id&&draftId&&!error){
-            status='Det finns redan en påbörjad omgång från en annan flik. Fortsätt den i stället.';
-            repaint();
-          }
-          return true;
+        // Lost INSERT ACKs may hide a committed draft. Re-read only this
+        // user's attempts before allowing a second start, also for 23505.
+        busy=false;
+        const refresh=load(id),refreshToken=generation;
+        await refresh;
+        if(!isCurrent(id,refreshToken))return true;
+        if(!error){
+          status=draftId
+            ?e?.code==='23505'
+              ?'Det finns redan en påbörjad omgång från en annan flik. Fortsätt den i stället.'
+              :'Servern visar en påbörjad omgång trots att startbekräftelsen saknades. Fortsätt den i stället.'
+            :'Servern visar ingen påbörjad omgång. Du kan försöka starta igen.';
+          repaint();
         }
-        status='Omgången kunde inte startas. Inga gamla svar har ändrats.';
+        return true;
       }
       if(isCurrent(id,token)){busy=false;repaint();}
       return true;
