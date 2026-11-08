@@ -587,7 +587,7 @@ async function verifyUnderstandingStateWriteRecheck(){
      }else{
       await page.locator('#swipe-save-status').getByText(
        scenario==='readback-unavailable'
-       ?/går inte att kontrollera om din (överhoppning|svar) sparades/
+       ?/går inte att kontrollera om (din överhoppning|ditt svar) sparades/
        :/kunde inte bekräftas som (sparad|sparat)/
       ).waitFor();
       assert.match(await page.locator('#swipe-card').getAttribute('aria-label'),/^Kort 2 av 34/,
