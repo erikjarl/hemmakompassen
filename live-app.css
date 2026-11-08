@@ -682,3 +682,18 @@
 @media(prefers-reduced-motion:reduce){
   .home-hero-link{transition:none}
 }
+
+/* UX-04: show the actionable state before optional help in Schyssta listan. */
+.schyssta-page-intro h1{margin:0 0 8px}
+.schyssta-page-intro p{margin:0;color:var(--soft);line-height:1.5}
+.schyssta-page-help{margin:14px 0 18px;padding:12px 15px;border:1px solid #566076;border-radius:12px;background:#1b2232}
+.schyssta-page-help summary{color:#f1c98c;font-weight:700;cursor:pointer;line-height:1.5}
+.schyssta-page-help summary:focus-visible{outline:3px solid #f5bb65;outline-offset:4px}
+.schyssta-page-help p{line-height:1.55}
+.schyssta-page-help [data-schyssta-refresh]{min-height:44px}
+@media(max-width:800px){
+  .schyssta-page-intro h1{font-size:clamp(1.55rem,6.4vw,2.15rem);line-height:1.2}
+  .schyssta-page-intro p{font-size:.96rem;line-height:1.42}
+  .schyssta-view>.live-panel:first-of-type{margin-top:12px}
+  .schyssta-page-help{margin:11px 0;padding:10px 13px}
+}

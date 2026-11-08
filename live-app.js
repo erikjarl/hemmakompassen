@@ -1893,10 +1893,11 @@ function schysstaView(){
     +'<button class="live-button" type="submit"'+(schysstaSubmitting?' disabled':'')+'>'+(schysstaSubmitting?'Skickar…':schysstaEditTarget?'Skicka ändringsförslag':'Skicka regelförslag')+'</button>'
     +'<button class="schyssta-secondary" type="button" id="schyssta-compose">Stäng formuläret</button></form>'
     :'<button class="live-button" type="button" id="schyssta-compose">+ Föreslå en regel</button>';
-  return '<div class="schyssta-view"><h1>Schyssta listan</h1><p>Här samlar ni sådant ni båda har sagt ja till. Regler kan komma från Gillaswajpen eller skrivas av någon av er.</p>'
-    +(viewerRole()==='parent'?'<p><a href="#mi-foralder">För dig som förälder: lyssna före regelförslaget</a></p>':'')
-    +'<button class="schyssta-secondary" type="button" data-schyssta-refresh>Uppdatera listan</button>'
+  return '<div class="schyssta-view"><header class="schyssta-page-intro"><h1>Schyssta listan</h1><p>Förslag blir gemensamma regler först när båda sagt ja.</p></header>'
     +card('<h2>Behöver ditt svar'+(needs.length?' ('+needs.length+')':'')+'</h2><p>Förslag från den andra personen visas här först.</p>'+list(needs,'Inga nya förslag väntar på ditt svar.'))
+    +'<details class="schyssta-page-help"><summary>Så fungerar listan och hur du uppdaterar</summary><p>Här samlar ni sådant ni båda har sagt ja till. Regler kan komma från Gillaswajpen eller skrivas av någon av er. Ni bestämmer var för sig och kan välja Inte nu.</p>'
+    +(viewerRole()==='parent'?'<p><a href="#mi-foralder">För dig som förälder: lyssna före regelförslaget</a></p>':'')
+    +'<button class="schyssta-secondary" type="button" data-schyssta-refresh>Uppdatera listan</button></details>'
     +firstRuleHint
     +card('<h2>'+(schysstaEditTarget?'Föreslå ändring av regel':'Skriv ett eget förslag')+'</h2>'+formHtml+(schysstaMessage?'<p role="status" class="schyssta-feedback">'+esc(schysstaMessage)+'</p>':''))
     +searchTools
