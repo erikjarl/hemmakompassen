@@ -655,6 +655,25 @@ try{
   await checkOverflow(m.page,"Mobile authenticated section");
   await capture(m.page,"mobile-inbox.png");
   await m.context.close();
+  // Regression: arrows on page chrome must never silently change a private answer.
+  const keyboardSwipe=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},
+    {authenticated:true});
+  await keyboardSwipe.page.goto(base+'#swipe',{waitUntil:'load'});
+  await keyboardSwipe.page.locator('#swipe-card').waitFor();
+  await keyboardSwipe.page.getByRole('heading',{name:'Gillaswajpen'}).focus();
+  await keyboardSwipe.page.keyboard.press('ArrowRight');
+  await keyboardSwipe.page.waitForTimeout(300);
+  assert.equal(await keyboardSwipe.page.evaluate(()=>window.__HK_SAVED_SWIPE__??null),null,
+    'Arrow on page heading must not save a private answer');
+  assert.match(await keyboardSwipe.page.locator('#swipe-card').getAttribute('aria-label'),/Kort 1 av 21/);
+  await keyboardSwipe.page.locator('#swipe-card').focus();
+  await keyboardSwipe.page.keyboard.press('ArrowRight');
+  await keyboardSwipe.page.waitForFunction(()=>window.__HK_SAVED_SWIPE__?.row.card_id==='general-01'
+    &&window.__HK_SAVED_SWIPE__.row.answer===true);
+  await keyboardSwipe.page.locator('#swipe-card[aria-label^="Kort 2"]').waitFor();
+  assert.match(await keyboardSwipe.page.locator('#swipe-card').innerText(),/När kortet har fokus/,
+    'The card describes keyboard controls');
+  await keyboardSwipe.context.close();
   // NOT-01: failed unread RPCs must not silently look like an empty inbox.
   const unavailableHome=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},
     {authenticated:true,paired:true,homeUnreadFailure:true});
