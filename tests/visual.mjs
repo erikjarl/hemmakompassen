@@ -949,8 +949,8 @@ async function verifyCommunicationForms(){
 // This exercises the real DOM and frontend workflow across two independent
 // Chromium contexts. No Supabase credentials, production replies or live users.
 function makeTwoRoleFamilyFixture(){
-  const messages=[],tokens=new Map(),rules=[],notices=[],calls=[];
-  let failedSendAcknowledgement=false,failedOlderPage=false;
+  const messages=[],tokens=new Map(),rules=[],notices=[],activityNotices=[],calls=[];
+  let failedSendAcknowledgement=false,failedOlderPage=false,failedActivityRead=false;
   const other=role=>role==='parent'?'teen':'parent';
   const ok=data=>({data,error:null});
   const createdAt=n=>'2026-11-01T12:'+String(Math.floor(n/50)).padStart(2,'0')+':'+String(n%50).padStart(2,'0')+'Z';
@@ -966,6 +966,14 @@ function makeTwoRoleFamilyFixture(){
         visible=visible.filter(m=>m.created_at<args.p_before_created_at||
           (m.created_at===args.p_before_created_at&&m.message_id<args.p_before_id));
       return ok(visible.slice(0,50));
+    }
+    if(name==='my_activity_notifications')
+      return ok(activityNotices.filter(n=>n.recipient===role).map(({recipient,...rest})=>({...rest})));
+    if(name==='mark_activity_notification_read'){
+      if(failedActivityRead){failedActivityRead=false;return {data:null,error:{message:'synthetic activity receipt unavailable'}};}
+      const n=activityNotices.find(n=>n.recipient===role&&n.notification_id===args.p_notification_id);
+      if(!n)return {data:null,error:{message:'unknown synthetic activity notice'}};
+      n.read_at='2026-11-01T13:03:00Z';return ok(null);
     }
     if(name==='my_family_unread_message_count')
       return ok(messages.filter(m=>m.sender!==role&&m.read_at===null).length);
@@ -1030,15 +1038,17 @@ function makeTwoRoleFamilyFixture(){
     }
     throw new Error('Unexpected linked pair RPC: '+name);
   }
-  return {rpc,messages,rules,notices,calls,
+  return {rpc,messages,rules,notices,activityNotices,calls,
     loseNextSendAcknowledgement(){failedSendAcknowledgement=true;},
-    failNextOlderPage(){failedOlderPage=true;}};
+    failNextOlderPage(){failedOlderPage=true;},
+    failNextActivityRead(){failedActivityRead=true;}};
 }
 const FUN03_LINKED_RPCS=Object.freeze([
   'my_family_messages','my_family_unread_message_count','send_family_message','mark_family_messages_read',
   'shared_schyssta_rule_suggestions','my_schyssta_rules','my_manual_schyssta_rules',
   'my_schyssta_notifications','my_schyssta_replacement_links','my_schyssta_rule_history',
-  'propose_manual_schyssta_rule','set_schyssta_rule_decision','mark_schyssta_notification_read'
+  'propose_manual_schyssta_rule','set_schyssta_rule_decision','mark_schyssta_notification_read',
+  'my_activity_notifications','mark_activity_notification_read'
 ]);
 
 async function verifyPairedTwoRoleExchange(){
@@ -1046,7 +1056,7 @@ async function verifyPairedTwoRoleExchange(){
   const options={viewport:{width:390,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true};
   const parent=await freshContext(options,{authenticated:true,paired:true,role:'parent',pairFixture:fixture});
   const teen=await freshContext({...options,viewport:{width:320,height:700}},
-    {authenticated:true,paired:true,role:'teen',pairFixture:fixture});
+    {authenticated:true,paired:true,role:'teen',pairFixture:fixture,activityNotifications:true});
   const record=[];
   try{
     await Promise.all([
@@ -1107,9 +1117,23 @@ async function verifyPairedTwoRoleExchange(){
     assert.deepEqual(fixture.rules[0].decisions,{parent:null,teen:null},
       'Submitting a manual proposal does not silently approve it for either member');
 
-    // Navigating to the SAME inbox URL is not a data refresh; the existing
-    // teen tab must deliberately reload to fetch the new cross-role event.
-    await teen.page.reload({waitUntil:'load'});
+    // Both kinds of notifications must reach an already-open inbox without
+    // a page reload, while leaving the unsent draft intact.
+    fixture.activityNotices.push({
+      notification_id:'57000000-0000-4000-8000-000000000201',
+      event_kind:'mutual_match',deck_id:'aktiviteter',read_at:null,
+      updated_at:'2026-11-01T13:02:00Z',recipient:'teen'
+    });
+    await teen.page.locator('#family-chat-body').fill('Det här utkastet får inte skickas.');
+    assert.equal(await teen.page.getByText('Nytt regelförslag').count(),0,
+      'FUN-03: existing inbox has not received the latest rule yet');
+    const beforeReads=fixture.calls.filter(x=>x.role==='teen'&&
+      ['mark_schyssta_notification_read','mark_activity_notification_read','mark_family_messages_read'].includes(x.name)).length;
+    await teen.page.locator('#inbox-refresh-all').click();
+    await teen.page.getByText('Inkorgen är uppdaterad.').waitFor();
+    assert.equal(await teen.page.locator('#family-chat-body').inputValue(),
+      'Det här utkastet får inte skickas.','FUN-03: whole-inbox refresh preserves unsent chat draft');
+    assert.equal(fixture.messages.length,2,'FUN-03: refreshing never sends a draft');
     try{
       await teen.page.getByText('Nytt regelförslag').waitFor({timeout:10000});
     }catch(error){
@@ -1119,6 +1143,32 @@ async function verifyPairedTwoRoleExchange(){
         visible:visible.slice(0,3500)
       }));
     }
+    await teen.page.getByText(/Nytt gemensamt JA · Aktiviteter/).waitFor();
+    assert.equal(fixture.activityNotices[0].read_at,null,
+      'FUN-03: fresh activity notice does not automatically become read');
+    assert.equal(fixture.calls.filter(x=>x.role==='teen'&&
+      ['mark_schyssta_notification_read','mark_activity_notification_read','mark_family_messages_read'].includes(x.name)).length,
+      beforeReads,'FUN-03: whole-inbox refresh never creates a receipt or rule decision');
+    // An explicit read that fails must show a recoverable error while a draft
+    // remains open. Retry fetch is also an explicit UI action.
+    fixture.failNextActivityRead();
+    await teen.page.locator('[data-activity-read]').click();
+    await teen.page.getByRole('alert').filter({hasText:'Det gick inte att bekräfta läsmarkeringen'}).waitFor();
+    assert.equal(fixture.activityNotices[0].read_at,null,
+      'FUN-03: failed receipt never invents a read acknowledgement');
+    assert.equal(await teen.page.locator('#family-chat-body').inputValue(),
+      'Det här utkastet får inte skickas.','FUN-03: explicit read error preserves unsent draft');
+    await teen.page.locator('[data-activity-refresh]').click();
+    await teen.page.locator('[data-activity-read]').waitFor();
+    assert.equal(await teen.page.locator('#family-chat-body').inputValue(),
+      'Det här utkastet får inte skickas.','FUN-03: explicit notice retry preserves unsent draft');
+    await teen.page.locator('[data-activity-read]').click();
+    await teen.page.waitForFunction(()=>!document.querySelector('[data-activity-read]'));
+    assert.ok(fixture.activityNotices[0].read_at,
+      'FUN-03: activity notification is marked read only after explicit click');
+    assert.equal(await teen.page.locator('#family-chat-body').inputValue(),
+      'Det här utkastet får inte skickas.','FUN-03: completed explicit receipt preserves unsent draft');
+    record.push({case:'failed-activity-read-visible-retry-and-success-with-unsent-draft',passed:true});
     assert.equal(fixture.notices[0].read_at,null,'Opening inbox does not silently mark rule notice read');
     await teen.page.locator('[data-schyssta-read]').click();
     await teen.page.waitForFunction(()=>!document.querySelector('[data-schyssta-read]'));
@@ -1128,7 +1178,7 @@ async function verifyPairedTwoRoleExchange(){
     const incoming=teen.page.locator('#schyssta-rule-'+fixture.rules[0].id);
     await incoming.waitFor();
     assert.match(await incoming.innerText(),/Ditt val: inte lämnat/);
-    record.push({case:'parent-propose-teen-notified-open-without-auto-approval',passed:true});
+    record.push({case:'parent-propose-teen-whole-inbox-refresh-including-activity-draft-preserved',passed:true});
 
     await incoming.locator('[data-schyssta-pause]').click();
     assert.deepEqual(fixture.rules[0].decisions,{parent:null,teen:null},
@@ -1372,7 +1422,7 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
             throw new Error('Unexpected table '+table);
           },
           async rpc(name,args){
-            if(typeof window.__HK_TEST_PAIR_RPC__==='function'&&['my_family_messages','my_family_unread_message_count','send_family_message','mark_family_messages_read','shared_schyssta_rule_suggestions','my_schyssta_rules','my_manual_schyssta_rules','my_schyssta_notifications','my_schyssta_replacement_links','my_schyssta_rule_history','propose_manual_schyssta_rule','set_schyssta_rule_decision','mark_schyssta_notification_read'].includes(name))return window.__HK_TEST_PAIR_RPC__(name,args);
+            if(typeof window.__HK_TEST_PAIR_RPC__==='function'&&['my_family_messages','my_family_unread_message_count','send_family_message','mark_family_messages_read','shared_schyssta_rule_suggestions','my_schyssta_rules','my_manual_schyssta_rules','my_schyssta_notifications','my_schyssta_replacement_links','my_schyssta_rule_history','propose_manual_schyssta_rule','set_schyssta_rule_decision','mark_schyssta_notification_read','my_activity_notifications','mark_activity_notification_read'].includes(name))return window.__HK_TEST_PAIR_RPC__(name,args);
             if(name==='set_my_ipip50_share'){personalityConsent=args.p_share===true;window.__HK_PERSONALITY_SHARE__=personalityConsent;return {data:personalityConsent,error:null};}
             if(name==='my_ipip50_shared_profiles'){
               const scores={extraversion:30,agreeableness:30,conscientiousness:30,emotional_stability:30,intellect_imagination:30};

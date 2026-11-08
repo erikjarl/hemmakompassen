@@ -68,6 +68,7 @@ let familyChatMessages=[],familyChatUnread=0,familyChatLoading=false,familyChatL
   familyChatHasMore=false,familyChatError='',familyChatStatus='',familyChatDraft='',
   familyChatRequestKey=null,familyChatSending=false,familyChatRequest=0,familyChatCountRequest=0,
   familyChatUnreadError=false,familyChatReadBusy=false;
+let inboxRefreshing=false,inboxRefreshStatus='';
 function validActivityNotifications(rows){
   if(!Array.isArray(rows)||rows.length>30)return false;
   const allowed=['notification_id','event_kind','deck_id','read_at','updated_at'];
@@ -88,29 +89,29 @@ const activityPairSignature=()=>JSON.stringify(members.map(member=>[
   member.user_id,member.role,member.family_id??null,member.joined_at??null
 ]).sort((a,b)=>String(a[0]).localeCompare(String(b[0]))));
 const activityUnreadCount=()=>activityNotifications.filter(n=>n.read_at===null).length;
-async function fetchActivityNotifications({quiet=false}={}){
+async function fetchActivityNotifications({quiet=false,forceRender=false}={}){
   const request=++activityNotificationsRequest,viewer=user?.id,session=sharedSession,pair=activityPairSignature();
   if(!activityNotificationsEnabled||!viewer||members.length!==2){
     activityNotifications=[];activityNotificationsError='';activityNotificationsLoading=false;
-    if(['hem','inkorg'].includes(page())&&!familyChatDraft.trim())render();
+    if(['hem','inkorg'].includes(page())&&(!familyChatDraft.trim()||forceRender))render();
     return;
   }
   const previous=JSON.stringify([activityNotifications,activityNotificationsError]);
   activityNotificationsLoading=true;
-  if(!quiet&&page()==='inkorg'&&!familyChatDraft.trim())render();
+  if(!quiet&&page()==='inkorg'&&(!familyChatDraft.trim()||forceRender))render();
   let result;
   try{result=await db.rpc('my_activity_notifications');}catch(e){result={error:e};}
   if(request!==activityNotificationsRequest||viewer!==user?.id||session!==sharedSession)return;
   if(pair!==activityPairSignature()){
     activityNotifications=[];activityNotificationsError='';activityNotificationsLoading=false;
-    if(['hem','inkorg'].includes(page())&&(page()!=='inkorg'||!familyChatDraft.trim()))render();
+    if(['hem','inkorg'].includes(page())&&(page()!=='inkorg'||!familyChatDraft.trim()||forceRender))render();
     else menu();
     return;
   }
   if(members.length!==2||!activityNotificationsEnabled){
     // The pairing may have disappeared without another refresh invalidating this request.
     activityNotifications=[];activityNotificationsError='';activityNotificationsLoading=false;
-    if(['hem','inkorg'].includes(page())&&(page()!=='inkorg'||!familyChatDraft.trim()))render();
+    if(['hem','inkorg'].includes(page())&&(page()!=='inkorg'||!familyChatDraft.trim()||forceRender))render();
     else menu();
     return;
   }
@@ -121,7 +122,7 @@ async function fetchActivityNotifications({quiet=false}={}){
     activityNotifications=result.data;activityNotificationsError='';activityFeedback='';
   }
   if(previous===JSON.stringify([activityNotifications,activityNotificationsError]))return;
-  if(['hem','inkorg'].includes(page())&&(page()!=='inkorg'||!familyChatDraft.trim()))render();
+  if(['hem','inkorg'].includes(page())&&(page()!=='inkorg'||!familyChatDraft.trim()||forceRender))render();
   else menu();
 }
 async function markActivityNotificationRead(notificationId){
@@ -144,12 +145,14 @@ async function markActivityNotificationRead(notificationId){
     // An unconfirmed write must never be treated as a confirmed unread count.
     activityNotificationsError=activityFeedback;
     activityNotifications=[];
-    if(page()==='inkorg'&&!familyChatDraft.trim())render();
+    // This is a deliberate user action. Show the failed receipt even when
+    // there is an unsent chat draft; render() restores familyChatDraft.
+    if(page()==='inkorg')render();
     else menu();
     return;
   }
   // Recheck server state, rather than optimistically removing the unread badge.
-  await fetchActivityNotifications();
+  await fetchActivityNotifications({forceRender:true});
 }
 const familyChatTimestamp=timestamp=>new Intl.DateTimeFormat('sv-SE',{dateStyle:'medium',timeStyle:'short'}).format(new Date(timestamp));
 function validFamilyChatRows(rows){
@@ -168,6 +171,7 @@ function clearFamilyChat(){
   familyChatMessages=[];familyChatUnread=0;familyChatUnreadError=false;familyChatReadBusy=false;familyChatLoading=false;familyChatLoadingOlder=false;
   familyChatHasMore=false;familyChatError='';familyChatStatus='';familyChatDraft='';
   familyChatRequestKey=null;familyChatSending=false;
+  inboxRefreshing=false;inboxRefreshStatus='';
 }
 // Recheck family membership on the server before background inbox reads.
 // Membership can change in another tab without an Auth event in this one.
@@ -1709,6 +1713,42 @@ async function submitManualSchysstaRule(){
   schysstaMessage='Förslaget är skickat. Ni behöver båda godkänna det innan det blir en överenskommelse.';
   await fetchSchysstaList();
 }
+// An already-open inbox must have an explicit way to refresh rule notices,
+// activity notices, the chat and its unread badge together. A chat-only
+// refresh does not update the other sections.
+async function refreshWholeInbox(){
+  if(page()!=='inkorg'||!user||members.length!==2||!inboxPairEpoch||inboxRefreshing)return;
+  const viewer=user.id,session=sharedSession;
+  inboxRefreshing=true;
+  inboxRefreshStatus='Uppdaterar hela inkorgen…';
+  render();
+  try{
+    if(!await recheckInboxPair()){
+      if(user?.id===viewer&&sharedSession===session&&page()==='inkorg')
+        inboxRefreshStatus='Familjekopplingen kunde inte bekräftas. Försök igen.';
+      return;
+    }
+    if(viewer!==user?.id||session!==sharedSession||page()!=='inkorg')return;
+    const pending=[fetchFamilyChatUnread()];
+    if(!familyChatLoading&&!familyChatLoadingOlder)pending.push(fetchFamilyChat());
+    if(schysstaListEnabled&&!schysstaLoading)pending.push(fetchSchysstaList());
+    if(activityNotificationsEnabled&&!activityNotificationsLoading)pending.push(fetchActivityNotifications());
+    await Promise.all(pending);
+    if(viewer!==user?.id||session!==sharedSession||page()!=='inkorg')return;
+    inboxRefreshStatus=familyChatError||familyChatUnreadError||schysstaError||activityNotificationsError
+      ?'Vissa delar av inkorgen kunde inte uppdateras. Kontrollera felmeddelandena och försök igen.'
+      :'Inkorgen är uppdaterad.';
+  }catch(error){
+    if(viewer===user?.id&&session===sharedSession&&page()==='inkorg')
+      inboxRefreshStatus='Inkorgen kunde inte uppdateras. Kontrollera anslutningen och försök igen.';
+  }finally{
+    inboxRefreshing=false;
+    if(viewer===user?.id&&session===sharedSession&&page()==='inkorg'){
+      render();
+      document.getElementById('inbox-refresh-all')?.focus({preventScroll:true});
+    }
+  }
+}
 function inboxView(){
   if(!user)return '<h1>Inkorg</h1>'+card('<p>Logga in för att läsa dina meddelanden.</p>');
   if(members.length===2&&!inboxPairEpoch)return '<h1>Inkorg</h1>'+card('<h2>Familjekopplingen kunde inte kontrolleras</h2><p>Privata meddelanden visas inte förrän aktuell parning har verifierats.</p><button type="button" class="live-button" id="inbox-retry-pair">Kontrollera igen</button>');
@@ -1780,6 +1820,8 @@ function inboxView(){
           +'</div></li>').join('')+'</ul>'
         :(!activityNotificationsLoading&&!activityNotificationsError?'<p class="live-muted">Inga nya aviseringar just nu.</p>':'')));
   return '<h1>Inkorg</h1><p>Här kan ni skriva privata meddelanden, se frivilligt delade gemensamma kort och hantera regelförfrågningar.</p>'
+    +'<div class="inbox-refresh-actions"><button type="button" class="schyssta-secondary" id="inbox-refresh-all"'+(inboxRefreshing?' disabled':'')+'>'+(inboxRefreshing?'Uppdaterar hela inkorgen…':'Uppdatera hela inkorgen')+'</button>'
+    +(inboxRefreshStatus?'<p role="status" aria-live="polite">'+esc(inboxRefreshStatus)+'</p>':'')+'</div>'
     +activityPanel+chat+rules;
 }
 async function fetchSchysstaList(){
@@ -2135,6 +2177,7 @@ if(e.target.closest('#home-refresh-notices')&&user&&members.length===2)
     void fetchActivityNotifications();
   });
 if(e.target.closest('#inbox-retry-pair'))void refresh().catch(showError);
+if(e.target.closest('#inbox-refresh-all'))void refreshWholeInbox();
 if(e.target.closest('[data-family-chat-refresh]'))void recheckInboxPair().then(valid=>{if(valid)void fetchFamilyChat();});
 if(e.target.closest('[data-family-chat-mark-all-read]'))void markAllFamilyChatRead();
 if(e.target.closest('[data-family-chat-more]'))void recheckInboxPair().then(valid=>{if(valid)void fetchFamilyChat(true);});
@@ -2152,7 +2195,7 @@ if(openRule&&SCHYSSTA_UUID.test(openRule.dataset.schysstaOpen)){
   if(page()==='regler')void fetchSchysstaList();
 }
 const activityRefresh=e.target.closest('[data-activity-refresh]');
-if(activityRefresh&&user&&members.length===2)void fetchActivityNotifications();
+if(activityRefresh&&user&&members.length===2)void fetchActivityNotifications({forceRender:true});
 const activityRead=e.target.closest('[data-activity-read]');
 if(activityRead)void markActivityNotificationRead(activityRead.dataset.activityRead);
 const readNotice=e.target.closest('[data-schyssta-read]');if(readNotice)void markSchysstaRead(readNotice.dataset.schysstaRead);
