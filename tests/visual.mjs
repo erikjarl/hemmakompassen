@@ -781,6 +781,86 @@ async function verifyFullPersonalitySurvey(){
   console.log('FUN-04 IPIP-50: '+records.length+' complete synthetic role journeys passed.');
 }
 
+
+// FUN-04.05: finish a fresh private 50-item retest through real browser controls,
+// open its saved history, and export the completed JSON. Only in-memory mock data
+// is changed; the original IPIP-50 responses are not modified.
+async function verifyFullPrivateRetest(){
+  const records=[];
+  for(const role of ['parent','teen']){
+    const width=role==='parent'?390:320;
+    const {page,context}=await freshContext(
+      {viewport:{width,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true},
+      {authenticated:true,paired:false,role,personalityComplete:true,privateRetests:true}
+    );
+    try{
+      await page.goto(base+'#personlighet',{waitUntil:'load'});
+      await page.getByRole('heading',{name:'Din profil'}).waitFor();
+      await page.getByRole('button',{name:'Starta en ny privat testomgång'}).waitFor();
+      await page.getByRole('button',{name:'Starta en ny privat testomgång'}).click();
+      await page.locator('[data-ipip-retest-answer="ipip50-001"]').first().waitFor();
+      await page.locator('[data-ipip-retest-answer="ipip50-001"][value="4"]').check();
+      await page.getByText('Fråga 2 av 50').waitFor();
+      await page.getByRole('button',{name:'Spara och pausa'}).click();
+      await page.getByRole('button',{name:'Fortsätt privat omtest'}).waitFor();
+      assert.match(await page.locator('.pf-retest').innerText(),/1 av 50 svar/);
+      await page.evaluate(()=>{location.hash='hem';});
+      await page.getByRole('heading',{name:/Hej[ ,]+Prov/}).waitFor();
+      await page.evaluate(()=>{location.hash='personlighet';});
+      await page.getByRole('button',{name:'Fortsätt privat omtest'}).waitFor();
+      await page.getByRole('button',{name:'Fortsätt privat omtest'}).click();
+      await page.getByText('Fråga 2 av 50').waitFor();
+      await page.getByRole('button',{name:'Föregående'}).last().click();
+      await page.getByText('Fråga 1 av 50').waitFor();
+      assert.equal(await page.locator('[data-ipip-retest-answer="ipip50-001"][value="4"]').isChecked(),true,
+        'FUN-04 private retest restores its first stored response after navigating away');
+      await page.locator('[data-ipip-retest-answer="ipip50-001"][value="2"]').check();
+      await page.getByText('Fråga 2 av 50').waitFor();
+      for(let n=2;n<=50;n++){
+        await page.getByText('Fråga '+n+' av 50').waitFor();
+        const id='ipip50-'+String(n).padStart(3,'0');
+        await page.locator('[data-ipip-retest-answer="'+id+'"][value="3"]').check();
+      }
+      await page.getByText('Alla 50 svar är sparade.').waitFor();
+      assert.equal(await page.evaluate(()=>window.__HK_PRIVATE_RETEST_ANSWERS__),50,
+        'FUN-04 all 50 retest responses are saved to the mocked private table');
+      assert.equal(await page.locator('.pf-results').count(),1,
+        'FUN-04 the original completed profile is still visible during the private retest');
+      await page.getByRole('button',{name:'Avsluta omgången och spara resultat'}).click();
+      await page.locator('.pf-retest-history').waitFor();
+      assert.equal(await page.locator('.pf-retest button[data-ipip-retest="view"]').count(),1);
+      assert.match(await page.locator('.pf-retest').innerText(),/Den privata omgången har avslutats och sparats/);
+      assert.equal(await page.locator('.pf-results').count(),1,
+        'FUN-04 finishing a private retest does not overwrite the original profile');
+      await page.getByRole('button',{name:'Visa mitt resultat'}).click();
+      await page.locator('.pf-retest-history').waitFor();
+      const download=page.waitForEvent('download');
+      await page.getByRole('button',{name:'Exportera omgången (JSON)'}).click();
+      const file=await download;
+      const payload=JSON.parse(await fs.readFile(await file.path(),'utf8'));
+      assert.equal(payload.answered_count,50);
+      assert.equal(payload.complete,true);
+      assert.equal(payload.responses.length,50);
+      assert.equal(payload.responses[0].value,2,
+        'FUN-04 retest export records the revised first answer');
+      assert.equal(Object.hasOwn(payload,'partner'),false);
+      assert.equal(Object.hasOwn(payload,'user_id'),false);
+      await checkOverflow(page,'FUN-04 full private retest '+role+' '+width+'px');
+      await capture(page,'fun-04-private-retest-complete-'+role+'.png');
+      records.push({role,viewport:width,answers:50,paused:true,resumedAcrossRoutes:true,
+        firstAnswerRevised:true,historyViewed:true,exportCount:50,
+        originalProfileRetained:true,environment:'synthetic Chromium',liveAuth:false});
+    }finally{
+      await context.close();
+    }
+  }
+  await fs.writeFile(path.join(output,'fun-04-private-retests-complete-synthetic.json'),
+    JSON.stringify({method:'real Chromium controls for complete 50-item private retest in both mock roles',
+      limitations:'Mocked storage/Auth and browser only; not live Supabase or real users.',
+      records},null,2)+'\n');
+  console.log('FUN-04 private retest: '+records.length+' full synthetic browser journeys passed.');
+}
+
 async function freshContext(options,{authenticated=false,paired=false,role="parent",unlocked=false,unlockUnavailable=false,priorityUnavailable=false,priorityFeature=true,privateImportance=false,importanceReadFailure=false,preansweredGeneral=false,preansweredSkipped=false,emptySchyssta=false,homeUnreadFailure=false,personalityComplete=false,personalitySharing=false,personalityPartnerShared=false,privateRetests=false,aiMediator=false,aiAnalyses=false,activityNotifications=false}={}){
   const context=await browser.newContext({...options,locale:"sv-SE",reducedMotion:"reduce"});
   await context.addInitScript(value=>{window.__HK_TEST_USER__=value.user;window.__HK_TEST_PAIRED__=value.paired;window.__HK_TEST_ROLE__=value.role;window.__HK_TEST_UNLOCKED__=value.unlocked;window.__HK_UNLOCK_RPC_UNAVAILABLE__=value.unlockUnavailable;window.__HK_PRIORITY_RPC_UNAVAILABLE__=value.priorityUnavailable;window.__HK_PRIORITISED_TEEN__=value.privateImportance;window.__HK_IMPORTANCE_READ_FAIL__=value.importanceReadFailure;window.__HK_PREANSWERED_GENERAL__=value.preansweredGeneral;window.__HK_PREANSWERED_SKIPPED__=value.preansweredSkipped;window.__HK_SCHYSSTA_EMPTY__=value.emptySchyssta;window.__HK_HOME_UNREAD_FAILURE__=value.homeUnreadFailure;window.__HK_TEST_PERSONALITY_DONE__=value.personalityComplete;window.__HK_TEST_PERSONALITY_PARTNER_SHARED__=value.personalityPartnerShared;},{personalityPartnerShared,personalityComplete,emptySchyssta,homeUnreadFailure,preansweredGeneral,preansweredSkipped,user:authenticated?{id:role==="teen"?"10000000-0000-0000-0000-000000000002":"10000000-0000-0000-0000-000000000001",email:"synthetic@example.invalid"}:null,paired,role,unlocked,unlockUnavailable,priorityUnavailable,privateImportance,importanceReadFailure});
@@ -2654,6 +2734,7 @@ try{
   await verifyAllThemeDeckJourneys();
   await verifyInsightsTwoRolesAndStates();
   await verifyFullPersonalitySurvey();
+  await verifyFullPrivateRetest();
   assert.deepEqual(errors,[],"Browser errors: "+errors.join("; "));
   await fs.writeFile(path.join(output,"visual-audit.json"),JSON.stringify({
     purpose:"Playwright responsive visual review",
