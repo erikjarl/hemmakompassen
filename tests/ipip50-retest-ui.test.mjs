@@ -4,7 +4,7 @@ import {createPrivateIpipRetests,buildPrivateIpipRetestExport} from '../personal
 
 function makeBackend(){
   const attempts=[],answers=[],calls=[];
-  let owner='private-user',failNextAnswer=false,failDelete=false,failNextAnswerRead=false,failNextAttemptsRead=false,nextAnswerMode=null,writeAttempts=0,nextNewMode=null,nextCompleteMode=null,newAttempts=0,completionAttempts=0;
+  let owner='private-user',failNextAnswer=false,failDelete=false,failNextAnswerRead=false,failNextAttemptsRead=false,nextAnswerMode=null,writeAttempts=0,nextNewMode=null,nextCompleteMode=null,nextDeleteMode=null,newAttempts=0,completionAttempts=0,deleteAttempts=0;
   const db={
     from(table){
       assert.ok(['personality_test_attempts','personality_attempt_answers'].includes(table),
@@ -33,14 +33,20 @@ function makeBackend(){
             return {data:{...row},error:null};
           }
           if(op==='delete'){
-            if(failDelete)return {data:null,error:{message:'delete unavailable'}};
+            deleteAttempts++;
+            const mode=nextDeleteMode;nextDeleteMode=null;
+            if(failDelete||mode==='reject')return {data:null,error:{message:'delete unavailable'}};
             const index=attempts.findIndex(a=>a.id===filters.id&&a.user_id===filters.user_id);
             if(index===-1)return {data:null,error:{message:'not found'}};
             const [deleted]=attempts.splice(index,1);
             for(let i=answers.length-1;i>=0;i--){
               if(answers[i].attempt_id===deleted.id)answers.splice(i,1);
             }
-            calls.push('delete');return {data:{id:deleted.id},error:null};
+            calls.push('delete');
+            if(mode==='lost-ack')return {data:null,error:{message:'deleted, receipt lost'}};
+            if(mode==='throw-after')throw Error('delete completed, connection closed');
+            if(mode==='missing-ack')return {data:null,error:null};
+            return {data:{id:deleted.id},error:null};
           }
           if(op==='update'){
             completionAttempts++;
@@ -95,7 +101,8 @@ function makeBackend(){
   return {db,attempts,answers,calls,setOwner:v=>owner=v,failNext:()=>failNextAnswer=true,
     setDeleteFailure:v=>failDelete=v,failAnswerRead:()=>failNextAnswerRead=true,
     nextAnswer:v=>nextAnswerMode=v,writeAttempts:()=>writeAttempts,
-    nextNew:v=>nextNewMode=v,nextComplete:v=>nextCompleteMode=v,
+    nextNew:v=>nextNewMode=v,nextComplete:v=>nextCompleteMode=v,nextDelete:v=>nextDeleteMode=v,
+    deleteAttempts:()=>deleteAttempts,
     newAttempts:()=>newAttempts,completionAttempts:()=>completionAttempts,
     failAttemptsRead:()=>failNextAttemptsRead=true};
 }
