@@ -237,11 +237,10 @@ test('draft export reads updated server values rather than an older tab-local co
   assert.equal(downloads[0].answered_count,2);
   assert.deepEqual(downloads[0].responses.map(r=>r.value),[5,4]);
   assert.doesNotMatch(JSON.stringify(downloads[0]),/private-user|attempt-1/);
-  // Until manual refresh, the local progress may be old; export must not be.
+  // Until the next verified page entry, local progress may be old; export must not be.
   assert.match(first.render(),/1 av 50 svar/);
-  await first.handleClick(button('refresh'));
+  await first.load('private-user');
   assert.match(first.render(),/2 av 50 svar/);
-  assert.match(first.render(),/Dina omtest har uppdaterats från servern/);
 });
 
 test('server read failure never downloads a stale or partial draft snapshot',async()=>{
@@ -259,7 +258,7 @@ test('server read failure never downloads a stale or partial draft snapshot',asy
   assert.equal(downloads.length,1);
 });
 
-test('manual refresh does not show a deleted draft as an active test',async()=>{
+test('re-entering the retest page does not show a deleted draft as an active test',async()=>{
   const b=makeBackend(),ui=createPrivateIpipRetests({db:b.db});
   ui.reset('private-user');await ui.load('private-user');
   await ui.handleClick(button('new'));
@@ -267,7 +266,7 @@ test('manual refresh does not show a deleted draft as an active test',async()=>{
   // Other tab has confirmed deletion via server; this tab is stale.
   b.attempts.splice(0,1);
   b.answers.splice(0,b.answers.length);
-  await ui.handleClick(button('refresh'));
+  await ui.load('private-user');
   assert.match(ui.render(),/Starta en ny privat testomgång/);
   assert.doesNotMatch(ui.render(),/Fortsätt privat omtest/);
   assert.equal(b.attempts.length,0);
