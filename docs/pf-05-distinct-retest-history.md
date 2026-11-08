@@ -1,6 +1,6 @@
 # PF-05 – Särskilj flera privata omtest i historiklistan
 
-**Datum:** 8 november 2026. **Miljö:** Node-kontraktstest av privat IPIP-50-historik med simulerad backend; **CI inväntas**.
+**Datum:** 8 november 2026. **Verifierat:** [PR #225](https://github.com/erikjarl/hemmakompassen/pull/225) mergad till `main` (`df12174`); **två fullständiga gröna Node/Chromium-körningar** [#42506006233](https://github.com/erikjarl/hemmakompassen/actions/runs/42506006233) och [#42506034968](https://github.com/erikjarl/hemmakompassen/actions/runs/42506034968), med **8/8 nya syntetiska Chromium-kontroller** och **77 skärmbilder** i hela UI-sviten.
 
 ## Problemet
 
@@ -23,3 +23,9 @@ I `tests/ipip50-retest-ui.test.mjs` används riktig `createPrivateIpipRetests`-l
 `verifyDistinctPrivateRetestHistory()` i `tests/visual.mjs` använder riktiga webbläsarklick i två syntetiska roller (förälder 390 px, tonåring 320 px) med två förifyllda och redan avslutade omtest samma dag. För varje roll verifieras: två separata synliga rader och tillgängliga knappetiketter, val av äldre respektive nyare resultat, JSON-export av just den äldre omgångens svar samt radering av den nyare omgången utan att det äldre testet försvinner. Sista steget kontrollerar att återstående historik får etiketten `Omtest 1 av 1` och att layouten inte överskrider viewportbredden. **Totalt 8 syntetiska roll-/stegkontroller**; två skärmbilder och JSON-rapport sparas som CI-artifact.
 
 Chromiums backend är en simulerad in-memory-tabell, så detta testar inte serverpersistens över full omladdning, Supabase Auth eller fysisk iPhone. Testerna introducerar inga ändringar i verkliga svar.
+
+## Testuppföljning
+
+Tidiga [CI #42505539973](https://github.com/erikjarl/hemmakompassen/actions/runs/42505539973) misslyckades eftersom ett äldre browsertest sökte på det generiska tillgänglighetsnamnet för **Exportera omgången (JSON)**. Det hade bytts ut mot det nya omgångsspecifika namnet. Äldre Playwright-selektorn uppdaterades utan att exportfunktionen ändrades. Efter den ändringen är den fullständiga browserkörningen grön i två efterföljande CI-körningar. Det röda utfallet var alltså ett testsökningsfel, inte ett verifierat fel i exportfunktionen.
+
+Serverpersistens, signerade användare och fysisk Safari/VoiceOver är fortsatt **inte testade**.
