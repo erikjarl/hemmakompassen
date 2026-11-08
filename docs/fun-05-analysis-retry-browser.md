@@ -25,4 +25,4 @@ Dessutom kontrolleras dokumentets bredd på 320/390 px och skärmbilder samt JSO
 
 ## Begränsningar
 
-Detta är ett funktionellt klienttest med fake-Worker, inte verifiering av verklig Supabase Auth, Workers AI, modellkvalitet, nätverks-/serverpersistens eller fysisk Safari/mobil. Inga befintliga testkontons svar eller produktionsdatabaser ändras. **Status:** kod incheckad på testgren, inväntar CI.
+Detta är ett funktionellt klienttest med fake-Worker, inte verifiering av verklig Supabase Auth, Workers AI, modellkvalitet, nätverks-/serverpersistens eller fysisk Safari/mobil. Inga befintliga testkontons svar eller produktionsdatabaser ändras. **Verifiering:** [PR #220](https://github.com/erikjarl/hemmakompassen/pull/220) är mergad till `main` (`0940ffbf`). [Slutlig grön UI/Node/Chromium-CI #42499191429](https://github.com/erikjarl/hemmakompassen/actions/runs/42499191429) körde **16/16 syntetiska roll-/stegkontroller godkända**, och hela UI-sviten sparade **65 skärmbilder**. Separat backend-CI för samma PR var också grön. Detta bekräftar klientflöden med simulerad Auth/Worker, **inte** verkliga modellutdata.
