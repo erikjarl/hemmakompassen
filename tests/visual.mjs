@@ -362,6 +362,72 @@ async function captureFunctionalInventory(){
     navigation.length+' primary navigation clicks.');
 }
 
+// FUN-01: real Chromium history navigation with synthetic sessions for both roles.
+// Unlike DOM inventory, every item below is clicked, reversed or reloaded.
+async function verifyBrowserHistory(){
+  const records=[];
+  for(const item of [
+    {role:'parent',width:320,height:720,label:'parent-320'},
+    {role:'teen',width:390,height:844,label:'teen-390'},
+    {role:'parent',width:1440,height:900,label:'parent-desktop'}
+  ]){
+    const {context,page}=await freshContext({
+      viewport:{width:item.width,height:item.height},deviceScaleFactor:1,
+      isMobile:item.width<500,hasTouch:item.width<500
+    },{authenticated:true,paired:true,role:item.role});
+    const nav=item.width<500?'#live-mobile-nav':'#live-desktop-nav';
+    const assertState=async(hash,selected)=>{
+      await page.waitForFunction(({hash,selected})=>{
+        const tabs=[...document.querySelectorAll('#live-desktop-nav a[aria-current="page"]')];
+        return window.location.hash===hash&&tabs.length===1&&tabs[0].getAttribute('href')==='#'+selected
+          &&!!document.querySelector('#live-app h1')?.textContent?.trim();
+      },{hash,selected});
+      assert.equal(await page.locator(nav+' a[aria-current="page"]').getAttribute('href'),'#'+selected);
+      await checkOverflow(page,'FUN-01 history '+item.label+' '+hash);
+      records.push({case:item.label,hash,active:selected,status:'synthetic Chromium PASS'});
+    };
+    await assertState('#hem','hem');
+    for(const route of ['swipe','personlighet','kommunikation']){
+      await page.locator(nav+' a[href="#'+route+'"]').click();
+      await assertState('#'+route,route);
+    }
+    await page.goBack();
+    await assertState('#personlighet','personlighet');
+    await page.goBack();
+    await assertState('#swipe','swipe');
+    await page.goForward();
+    await assertState('#personlighet','personlighet');
+    await page.reload({waitUntil:'load'});
+    await assertState('#personlighet','personlighet');
+
+    await page.goto(base+'#kommunikation/pausa',{waitUntil:'load'});
+    await assertState('#kommunikation/pausa','kommunikation');
+    await page.locator('[data-comm-skill="pausa"][open]').waitFor();
+    await page.goto(base+'#nvc',{waitUntil:'load'});
+    await assertState('#nvc','kommunikation');
+    await page.goBack();
+    await assertState('#kommunikation/pausa','kommunikation');
+    await page.locator('[data-comm-skill="pausa"][open]').waitFor();
+    await page.reload({waitUntil:'load'});
+    await page.locator('[data-comm-skill="pausa"][open]').waitFor();
+
+    // Opening an unknown hash must not unlock arbitrary hidden routes.
+    await page.goto(base+'#kommunikation/does-not-exist',{waitUntil:'load'});
+    await assertState('#kommunikation/does-not-exist','kommunikation');
+    assert.equal(await page.locator('.comm-exercise[open]').count(),0,
+      'FUN-01 unknown skill route cannot select a non-existent exercise');
+    await page.goto(base+'#%E0%A4%A',{waitUntil:'load'});
+    await assertState('#%E0%A4%A','hem');
+    await context.close();
+  }
+  await fs.writeFile(path.join(output,'fun-01-browser-history-synthetic.json'),
+    JSON.stringify({method:'browser click, history back/forward, reload and deep links',
+      limitations:'Synthetic browser sessions. Not authenticated production users or Safari.',
+      records},null,2)+'\n');
+  console.log('FUN-01 history: '+records.length+
+    ' role/viewport history-route assertions passed in synthetic Chromium.');
+}
+
 async function freshContext(options,{authenticated=false,paired=false,role="parent",unlocked=false,unlockUnavailable=false,priorityUnavailable=false,priorityFeature=true,privateImportance=false,importanceReadFailure=false,preansweredGeneral=false,preansweredSkipped=false,emptySchyssta=false,homeUnreadFailure=false,personalityComplete=false,personalitySharing=false,personalityPartnerShared=false,privateRetests=false,aiMediator=false,aiAnalyses=false,activityNotifications=false}={}){
   const context=await browser.newContext({...options,locale:"sv-SE",reducedMotion:"reduce"});
   await context.addInitScript(value=>{window.__HK_TEST_USER__=value.user;window.__HK_TEST_PAIRED__=value.paired;window.__HK_TEST_ROLE__=value.role;window.__HK_TEST_UNLOCKED__=value.unlocked;window.__HK_UNLOCK_RPC_UNAVAILABLE__=value.unlockUnavailable;window.__HK_PRIORITY_RPC_UNAVAILABLE__=value.priorityUnavailable;window.__HK_PRIORITISED_TEEN__=value.privateImportance;window.__HK_IMPORTANCE_READ_FAIL__=value.importanceReadFailure;window.__HK_PREANSWERED_GENERAL__=value.preansweredGeneral;window.__HK_PREANSWERED_SKIPPED__=value.preansweredSkipped;window.__HK_SCHYSSTA_EMPTY__=value.emptySchyssta;window.__HK_HOME_UNREAD_FAILURE__=value.homeUnreadFailure;window.__HK_TEST_PERSONALITY_DONE__=value.personalityComplete;window.__HK_TEST_PERSONALITY_PARTNER_SHARED__=value.personalityPartnerShared;},{personalityPartnerShared,personalityComplete,emptySchyssta,homeUnreadFailure,preansweredGeneral,preansweredSkipped,user:authenticated?{id:role==="teen"?"10000000-0000-0000-0000-000000000002":"10000000-0000-0000-0000-000000000001",email:"synthetic@example.invalid"}:null,paired,role,unlocked,unlockUnavailable,priorityUnavailable,privateImportance,importanceReadFailure});
@@ -2231,6 +2297,7 @@ try{
   await d.context.close();
   await captureFunctionalInventory();
   await testAccountBrowserJourney();
+  await verifyBrowserHistory();
   assert.deepEqual(errors,[],"Browser errors: "+errors.join("; "));
   await fs.writeFile(path.join(output,"visual-audit.json"),JSON.stringify({
     purpose:"Playwright responsive visual review",
