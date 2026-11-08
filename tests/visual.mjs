@@ -446,6 +446,13 @@ try{
   await m.page.getByRole("heading",{name:/Hej[ ,]+Provförälder/}).waitFor();
   assert.match(await m.page.locator("#live-app").innerText(),/Din familj/i);
   await checkOverflow(m.page,"Mobile homepage");
+  const heroMetrics=await m.page.locator('.home-hero').evaluate(el=>{
+    const box=el.getBoundingClientRect(),title=el.querySelector('h1').getBoundingClientRect();
+    return {height:box.height,titleFits:title.left>=box.left&&title.right<=box.right,
+      actionHeight:el.querySelector('.home-hero-link').getBoundingClientRect().height};
+  });
+  assert.ok(heroMetrics.height<300,'UX-04: welcome hero should be compact on 390px: '+JSON.stringify(heroMetrics));
+  assert.ok(heroMetrics.titleFits&&heroMetrics.actionHeight>=40,'UX-04: title and hero action remain accessible');
   await capture(m.page,"mobile-home.png");
   await checkMobileNavigation(m.page,'390px mobile navigation');
   // UX-01: verify keyboard navigation and actual browser focus.
@@ -751,6 +758,15 @@ try{
   assert.equal(await completedPersonality.page.locator('.pf-band').count(),25);
   assert.equal(await completedPersonality.page.locator('.pf-table tbody tr').count(),5);
   assert.equal(await completedPersonality.page.locator('.pf-band-key').count(),1);
+  assert.equal(await completedPersonality.page.locator('.pf-chart-help').evaluate(el=>el.open),false,
+    'UX-04: detailed zone explanation is initially collapsed');
+  assert.ok(await completedPersonality.page.locator('.pf-percentile-chart').evaluate(el=>{
+    const first=el.querySelector('.pf-scale-row'),key=el.querySelector('.pf-band-key');
+    return first&&key&&first.compareDocumentPosition(key)&Node.DOCUMENT_POSITION_FOLLOWING;
+  }),'UX-04: the five profile scales precede the optional legend');
+  await completedPersonality.page.locator('.pf-chart-help summary').first().click();
+  assert.equal(await completedPersonality.page.locator('.pf-band-key').isVisible(),true,
+    'UX-04: scale color legend remains accessible after expanding the help');
   assert.match(await completedPersonality.page.locator('.pf-table').innerText(),/Vuxna M/);
   assert.match(await completedPersonality.page.locator('.pf-table').innerText(),/Vuxna SD/);
   assert.match(await completedPersonality.page.locator('.pf-reference-feedback').innerText(),/amerikanska vuxenurvalets/);
