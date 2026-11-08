@@ -24,3 +24,15 @@ Klienten förklarade tidigare ett delat/återkallat förståelsekort med endast 
 ## Kvar att verifiera
 
 Testa **två faktiskt autentiserade konton** på den publicerade sidan, med två verkliga klienter och serverns riktiga sparade värden: dela, se hos föräldern, återkalla, kontrollera att förälderns gamla vy försvinner vid aktiv uppdatering, och kontrollera återanslutning på mobil. Simulerad Chromium och en grön Github Pages-publicering utgör inte bevis på detta. Inte heller har faktisk nätverkskvittens tappats mot riktig Supabase.
+
+## Kompletterande verkligt schemakontrakt (read-only, 8 november 2026)
+
+Med anslutet Supabase-projekt `Hemmakompassen` (status `ACTIVE_HEALTHY`) lästes **enbart metadata** från `pg_proc` och `information_schema.columns`. Utan att läsa eller ändra några användarrader bekräftades att publika databasfunktioner finns med rätt namn och parametrar:
+
+- `set_understanding_card_share(p_card_id text, p_share boolean)` → `void`.
+- `shared_understanding_cards()` → `TABLE(deck_id text, card_id text)`.
+- `shared_swipe_matches(p_deck_id text)` → `TABLE(deck_id text, card_id text, answer boolean)`.
+
+Tabellen `public.understanding_card_shares` innehåller bland annat de tre kolumner som klienten behöver för eget, kontofiltrerat återläsningsanrop: `user_id uuid`, `deck_id text`, `card_id text`. Tabellen har dessutom `family_id uuid` och `shared_at timestamptz`.
+
+**Avgränsning:** detta är schema- och signaturkompatibilitet i ett verkligt projekt, inte ett uppspelat inloggat RPC-/delningsflöde. Därför ändras inte status för två autentiserade användare till verifierad.
