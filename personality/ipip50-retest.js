@@ -107,7 +107,8 @@ export function createPrivateIpipRetests({
     if(error)return introduction+'<p role="alert">'+esc(error)+'</p><button type="button" data-ipip-retest="reload">Försök igen</button></section>';
     const completed=attempts.filter(a=>a.completed_at!==null);
     let html=introduction;
-    html+='<p><button type="button" data-ipip-retest="refresh"'+(busy?' disabled':'')+'>Uppdatera mina omtest</button></p>';
+    // History is loaded on entry and updated after saves, completion and deletion.
+    // Manual retry appears only for a failed server read, never as a competing CTA.
     if(status)html+='<p role="status">'+esc(status)+'</p>';
     if(draftId){
       const count=Object.keys(answers).length;
@@ -135,7 +136,7 @@ export function createPrivateIpipRetests({
     if(draftId)html+='<p><button type="button" data-ipip-retest="export" data-attempt-id="'+esc(draftId)+'"'+(busy?' disabled':'')+'>Exportera min påbörjade omgång (JSON)</button> '+
       '<button type="button" data-ipip-retest="delete" data-attempt-id="'+esc(draftId)+'"'+(busy?' disabled':'')+'>Radera påbörjad omgång</button></p>';
     html+='<h3>Min omtestningshistorik</h3>';
-    if(!completed.length)html+='<p>Inga avslutade omtest ännu.</p>';
+    if(!completed.length)html+='<p class="live-muted pf-retest-empty">Ingen avslutad omgång ännu. '+(draftId?'Fortsätt den påbörjade omgången ovan när du vill.':'Du kan börja ett privat omtest med knappen ovan när du vill.')+'</p>';
     else html+='<ul>'+completed.map(a=>'<li>'+esc(fmtDate(a.completed_at))+
       ' <button type="button" data-ipip-retest="view" data-attempt-id="'+esc(a.id)+'"'+(busy?' disabled':'')+'>Visa mitt resultat</button> '+
       '<button type="button" data-ipip-retest="export" data-attempt-id="'+esc(a.id)+'"'+(busy?' disabled':'')+'>Exportera omgången (JSON)</button> '+
@@ -155,12 +156,6 @@ export function createPrivateIpipRetests({
     const action=button.dataset.ipipRetest;
     if(action==='reload'){await load(userId);return true;}
     if(loading||busy||error)return true;
-    if(action==='refresh'){
-      const id=userId;
-      await load(id);
-      if(userId===id&&!error){status='Dina omtest har uppdaterats från servern.';repaint();}
-      return true;
-    }
     if(action==='resume'){surveyOpen=true;status='';repaint();return true;}
     if(action==='overview'){surveyOpen=false;status='Omgången är sparad och kan fortsättas senare.';repaint();return true;}
     if(action==='prev'||action==='next'){
