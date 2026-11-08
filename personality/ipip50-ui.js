@@ -131,8 +131,9 @@ function percentileChart(self,other=null){
     '<div class="pf-legend" style="--pf-own:#55d6d2;--pf-other:#f8b55b"><span class="pf-legend-own">Din profil</span>'+
     (other?'<span class="pf-legend-other">Den andras profil</span>':'')+'</div>'+
     '<p class="pf-chart-description"><strong>Uppskattad percentil:</strong> 50 ligger exakt i mitten och 75 vid tre fjärdedelar. Färgzonerna motsvarar standardavvikelser.</p>'+
-    bandKey+rows+
-    '<details class="pf-chart-help"><summary>Hur ska jag tolka percentilerna?</summary>'+
+    rows+
+    '<details class="pf-chart-help"><summary>Färgzoner och hur percentilerna ska tolkas</summary>'+
+    bandKey+
     '<p>P≈75 betyder att ditt resultat uppskattas ligga högre än cirka 75 % i en hypotetisk normalfördelning med det amerikanska vuxenurvalets medelvärde och standardavvikelse. Det är <strong>inte</strong> en uppmätt percentil i urvalet eller en svensk norm.</p>'+
     '<p>Den gröna mittzonen motsvarar −1 till +1 SD (cirka percentil 16–84), zonerna utanför motsvarar 1–2 SD och de smala ändarna resultat bortom 2 SD. Poängen är diskreta och den svenska översättningen är inte validerad.</p></details></div>';
 }
