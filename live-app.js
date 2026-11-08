@@ -1102,7 +1102,55 @@ function advanceThemeSwipe(direction){
   setTimeout(()=>saveThemeAnswer(direction,index,deckId,viewer,session),reduce?0:220);
 }
 
-function swipeView(){if(activeThemeDeck)return themeSwipeView();const total=visibleGeneralIndices().length,answered=visibleGeneralIndices().filter(i=>swipeAnswers.has(swipeCardId(i))).length,item=generalStatement(swipeIndex),isUnderstanding=GENERAL_CARDS[swipeIndex]?.type==='understanding',ordinal=visibleGeneralIndices().indexOf(swipeIndex)+1;if(swipeLoadError)return '<div class="swipe-experience"><header class="swipe-heading"><span class="swipe-eyebrow">UPPTÄCK VARANDRA</span><h1>Gillaswajpen</h1></header>'+card('<h2>Kunde inte hämta dina svar</h2><p role="alert">'+esc(swipeLoadError)+'</p><button class="live-button" type="button" id="swipe-reload">Försök igen</button>')+'</div>';return '<div class="swipe-experience"><header class="swipe-heading"><span class="swipe-eyebrow">UPPTÄCK VARANDRA</span><h1>Gillaswajpen</h1><p>Vad är viktigt för dig? Utforska korten i din egen takt.</p></header>'+(isUnderstanding?'<p class="swipe-understanding-notice">'+(sharedUnderstandingEnabled?'Förståelsekort: ditt svar förblir privat tills du själv väljer att dela ett ja-svar i <a href="#insikter">Gemensamma insikter</a>. Du kan återkalla delningen när som helst. Inga tidigare svar delas automatiskt.':'Förståelsekort: ditt svar sparas tills vidare privat. Delning med förälder är inte aktiverad här och gamla svar delas aldrig automatiskt.')+'</p>':'')+'<div class="swipe-stage"><div class="swipe-stage-top"><span>ALLMÄNNA KORTLEKEN</span><span role="status">'+(item?ordinal+' / '+total:answered+' svar, '+skippedUnderstanding.size+' överhoppade av '+total)+'</span></div><div class="swipe-track"><div class="swipe-track-fill" style="width:'+Math.round(100*(item?(swipeReview?ordinal-1:answered+skippedUnderstanding.size):total)/total)+'%"></div></div>'+(item?'<div id="swipe-card" class="swipe-playing-card" tabindex="0" aria-label="Kort '+ordinal+' av '+total+'. Svep höger för ja eller vänster för nej."><span class="swipe-stamp swipe-stamp-no" aria-hidden="true">NEJ</span><span class="swipe-stamp swipe-stamp-yes" aria-hidden="true">JA</span><span class="swipe-category">'+esc(item[0])+'</span><h2>'+esc(item[1])+'</h2><span class="swipe-card-hint">Dra kortet åt höger eller vänster</span>'+importanceControl('general',swipeCardId(swipeIndex))+'</div><div class="swipe-actions"><button type="button" class="swipe-choice swipe-no" data-swipe="no" aria-label="Nej">✕ <span>Nej</span></button><button type="button" class="swipe-choice swipe-yes" data-swipe="yes" aria-label="Ja">♥ <span>Ja</span></button></div>'+(isUnderstanding?'<button type="button" id="swipe-skip" class="swipe-skip">Vill inte svara just nu</button>':''):'<div class="swipe-finished"><h2>'+(skippedUnderstanding.size?'Du har '+skippedUnderstanding.size+' kort kvar att svara på':'Alla '+total+' kort besvarade')+'</h2><p>Du har sparat '+answered+' svar'+(skippedUnderstanding.size?' och lämnat '+skippedUnderstanding.size+' förståelsekort obesvarade för tillfället':'')+'. Du kan ändra dina egna svar när du vill.</p>'+'<div class="swipe-finished-actions">'+(skippedUnderstanding.size?'<button class="live-button" type="button" id="swipe-review-skipped">Gå till överhoppade kort</button>':'')+'<button class="live-button" type="button" id="swipe-restart">Gå igenom alla kort igen</button></div></div>')+'<p id="swipe-save-status" class="swipe-disclaimer" role="status">'+(swipeSaveError?esc(swipeSaveError):(isUnderstanding?(sharedUnderstandingEnabled?'Ditt svar sparas privat. Ett ja på förståelsekort blir inte delat förrän du själv väljer Dela med min förälder i Gemensamma insikter.':'Ditt svar sparas privat. Förståelsekort delas inte förrän säker delning är aktiverad.'):'Ditt svar sparas privat i ditt konto. Matchningskort visas gemensamt först när båda svarat ja.'))+'</p></div>'+swipeResults()+insightsEntry()+themeDecksView()+'</div>';}
+// Private overview: only the currently signed-in user's already loaded general answers
+// and their teen-only skipped understanding cards. Never read the other account's answers.
+function privateGeneralAnswerReview(){
+ const visible=visibleGeneralIndices();
+ const items=visible.flatMap(index=>{
+  const id=swipeCardId(index);
+  const hasAnswer=swipeAnswers.has(id);
+  const skipped=!hasAnswer&&viewerRole()==='teen'&&GENERAL_CARDS[index]?.type==='understanding'&&skippedUnderstanding.has(id);
+  if(!hasAnswer&&!skipped)return [];
+  const text=generalStatement(index);
+  if(!text)return [];
+  return [{index,id,category:text[0],statement:text[1],kind:skipped?'skipped':swipeAnswers.get(id)?'yes':'no'}];
+ });
+ if(!items.length)return '';
+ return '<section id="swipe-general-review" class="live-panel swipe-private-review" aria-labelledby="swipe-general-review-heading">'+
+  '<h2 id="swipe-general-review-heading">Mina svar i allmänna kortleken</h2>'+
+  '<p class="live-muted">Här ser du bara dina egna sparade svar och eventuella överhoppade förståelsekort. Öppna ett kort för att svara på nytt. Ingenting delas när du öppnar översikten.</p>'+
+  '<details><summary>Visa '+items.length+' besvarade eller överhoppade kort</summary>'+
+  '<div class="comm-fields"><label for="swipe-general-review-search">Sök bland mina kort</label>'+
+  '<input type="search" id="swipe-general-review-search" maxlength="120" autocomplete="off" placeholder="Sök ord eller ämne">'+
+  '<label for="swipe-general-review-answer">Visa kort</label><select id="swipe-general-review-answer">'+
+  '<option value="all">Alla svar och överhoppade</option><option value="yes">Bara ja</option><option value="no">Bara nej</option>'+
+  '<option value="skipped">Bara överhoppade</option></select>'+
+  '<button type="button" id="swipe-general-review-reset" class="schyssta-secondary">Rensa sökning och filter</button></div>'+
+  '<p id="swipe-general-review-count" class="live-muted" role="status" aria-live="polite">Visar '+items.length+' av '+items.length+' kort.</p>'+
+  '<p id="swipe-general-review-empty" class="live-muted" hidden>Inga egna kort matchar sökningen. Ändra sökord eller filter.</p>'+
+  '<ul class="swipe-match-list">'+items.map(item=>'<li data-general-review-kind="'+item.kind+'">'+
+   '<p data-general-review-statement><strong>'+esc(item.category)+'</strong> · '+esc(item.statement)+'</p>'+
+   '<p class="live-muted">Ditt val: '+(item.kind==='skipped'?'Inte svarat just nu':item.kind==='yes'?'Ja':'Nej')+'</p>'+
+   '<button type="button" class="schyssta-secondary" data-general-review-index="'+item.index+'">Öppna detta kort</button></li>').join('')+
+  '</ul></details></section>';
+}
+function filterPrivateGeneralReview(){
+ const root=$('swipe-general-review');if(!root)return;
+ const search=String($('swipe-general-review-search')?.value||'').trim().toLocaleLowerCase('sv');
+ const selected=$('swipe-general-review-answer')?.value;
+ const kind=['yes','no','skipped'].includes(selected)?selected:'all';
+ const rows=[...root.querySelectorAll('[data-general-review-kind]')];
+ let count=0;
+ for(const row of rows){
+  const statement=(row.querySelector('[data-general-review-statement]')?.textContent||'').toLocaleLowerCase('sv');
+  const show=(kind==='all'||row.dataset.generalReviewKind===kind)&&statement.includes(search);
+  row.hidden=!show;row.style.display=show?'':'none';
+  if(show)count++;
+ }
+ const status=$('swipe-general-review-count');if(status)status.textContent='Visar '+count+' av '+rows.length+' kort.';
+ const empty=$('swipe-general-review-empty');if(empty)empty.hidden=count!==0;
+}
+function swipeView(){if(activeThemeDeck)return themeSwipeView();const total=visibleGeneralIndices().length,answered=visibleGeneralIndices().filter(i=>swipeAnswers.has(swipeCardId(i))).length,item=generalStatement(swipeIndex),isUnderstanding=GENERAL_CARDS[swipeIndex]?.type==='understanding',ordinal=visibleGeneralIndices().indexOf(swipeIndex)+1;if(swipeLoadError)return '<div class="swipe-experience"><header class="swipe-heading"><span class="swipe-eyebrow">UPPTÄCK VARANDRA</span><h1>Gillaswajpen</h1></header>'+card('<h2>Kunde inte hämta dina svar</h2><p role="alert">'+esc(swipeLoadError)+'</p><button class="live-button" type="button" id="swipe-reload">Försök igen</button>')+'</div>';return '<div class="swipe-experience"><header class="swipe-heading"><span class="swipe-eyebrow">UPPTÄCK VARANDRA</span><h1>Gillaswajpen</h1><p>Vad är viktigt för dig? Utforska korten i din egen takt.</p></header>'+(isUnderstanding?'<p class="swipe-understanding-notice">'+(sharedUnderstandingEnabled?'Förståelsekort: ditt svar förblir privat tills du själv väljer att dela ett ja-svar i <a href="#insikter">Gemensamma insikter</a>. Du kan återkalla delningen när som helst. Inga tidigare svar delas automatiskt.':'Förståelsekort: ditt svar sparas tills vidare privat. Delning med förälder är inte aktiverad här och gamla svar delas aldrig automatiskt.')+'</p>':'')+'<div class="swipe-stage"><div class="swipe-stage-top"><span>ALLMÄNNA KORTLEKEN</span><span role="status">'+(item?ordinal+' / '+total:answered+' svar, '+skippedUnderstanding.size+' överhoppade av '+total)+'</span></div><div class="swipe-track"><div class="swipe-track-fill" style="width:'+Math.round(100*(item?(swipeReview?ordinal-1:answered+skippedUnderstanding.size):total)/total)+'%"></div></div>'+(item?'<div id="swipe-card" class="swipe-playing-card" tabindex="0" aria-label="Kort '+ordinal+' av '+total+'. Svep höger för ja eller vänster för nej."><span class="swipe-stamp swipe-stamp-no" aria-hidden="true">NEJ</span><span class="swipe-stamp swipe-stamp-yes" aria-hidden="true">JA</span><span class="swipe-category">'+esc(item[0])+'</span><h2>'+esc(item[1])+'</h2><span class="swipe-card-hint">Dra kortet åt höger eller vänster</span>'+importanceControl('general',swipeCardId(swipeIndex))+'</div><div class="swipe-actions"><button type="button" class="swipe-choice swipe-no" data-swipe="no" aria-label="Nej">✕ <span>Nej</span></button><button type="button" class="swipe-choice swipe-yes" data-swipe="yes" aria-label="Ja">♥ <span>Ja</span></button></div>'+(isUnderstanding?'<button type="button" id="swipe-skip" class="swipe-skip">Vill inte svara just nu</button>':''):'<div class="swipe-finished"><h2>'+(skippedUnderstanding.size?'Du har '+skippedUnderstanding.size+' kort kvar att svara på':'Alla '+total+' kort besvarade')+'</h2><p>Du har sparat '+answered+' svar'+(skippedUnderstanding.size?' och lämnat '+skippedUnderstanding.size+' förståelsekort obesvarade för tillfället':'')+'. Du kan ändra dina egna svar när du vill.</p>'+'<div class="swipe-finished-actions">'+(skippedUnderstanding.size?'<button class="live-button" type="button" id="swipe-review-skipped">Gå till överhoppade kort</button>':'')+'<button class="live-button" type="button" id="swipe-restart">Gå igenom alla kort igen</button></div></div>')+'<p id="swipe-save-status" class="swipe-disclaimer" role="status">'+(swipeSaveError?esc(swipeSaveError):(isUnderstanding?(sharedUnderstandingEnabled?'Ditt svar sparas privat. Ett ja på förståelsekort blir inte delat förrän du själv väljer Dela med min förälder i Gemensamma insikter.':'Ditt svar sparas privat. Förståelsekort delas inte förrän säker delning är aktiverad.'):'Ditt svar sparas privat i ditt konto. Matchningskort visas gemensamt först när båda svarat ja.'))+'</p></div>'+privateGeneralAnswerReview()+swipeResults()+insightsEntry()+themeDecksView()+'</div>';}
 async function saveSwipeAnswer(direction,index,viewer,session){
   // An animated swipe can finish after sign-out or a switch to another account.
   // Never write or render its result in the new user's session.
@@ -1758,6 +1806,23 @@ if(aiRetry&&aiResultEnabled&&user){
   return;
 }
 if(e.target.closest('#mediator-clear')){mediatorExperience.clear();return;}if(e.target.closest('#mediator-new')){void mediatorExperience.createChat();return;}if(e.target.closest('#mediator-refresh-context')){void mediatorExperience.loadContextStatus();return;}if(e.target.closest('#mediator-delete')){if(window.confirm('Vill du radera hela detta privata samtal permanent?'))void mediatorExperience.deleteChat();return;}const mediatorOpen=e.target.closest('[data-mediator-open]');if(mediatorOpen){void mediatorExperience.openChat(mediatorOpen.dataset.mediatorOpen);return;}if(e.target.closest('[data-pf-action],[data-ipip-retest]')){void personalityExperience.handleClick(e.target,{isPaired:members.length===2&&members.some(m=>m.role==='parent')&&members.some(m=>m.role==='teen')});return;}const b=e.target.closest('[data-swipe]');if(b)advanceSwipe(b.dataset.swipe);if(e.target.closest('#swipe-restart')){swipeSkippedReview=false;swipeReview=true;swipeIndex=visibleGeneralIndices()[0]??STATEMENTS.length;render();}
+const generalReviewButton=e.target.closest('[data-general-review-index]');
+if(generalReviewButton&&page()==='swipe'&&!activeThemeDeck&&user&&!swipeBusy){
+ const raw=generalReviewButton.dataset.generalReviewIndex;
+ const index=Number(raw);
+ const id=Number.isSafeInteger(index)&&String(index)===raw?swipeCardId(index):null;
+ if(id&&visibleGeneralIndices().includes(index)&&(swipeAnswers.has(id)||
+   (viewerRole()==='teen'&&GENERAL_CARDS[index]?.type==='understanding'&&skippedUnderstanding.has(id)))){
+  swipeReview=true;swipeSkippedReview=false;swipeIndex=index;render();
+  $('swipe-card')?.focus({preventScroll:true});
+ }
+ return;
+}
+if(e.target.closest('#swipe-general-review-reset')&&page()==='swipe'&&!activeThemeDeck){
+ const search=$('swipe-general-review-search'),answer=$('swipe-general-review-answer');
+ if(search)search.value='';if(answer)answer.value='all';filterPrivateGeneralReview();
+ search?.focus();return;
+}
 if(e.target.closest('#swipe-review-skipped')&&viewerRole()==='teen'&&!swipeBusy){swipeSkippedReview=true;swipeReview=false;swipeIndex=nextSkippedAfter(-1);render();}if(e.target.closest('#swipe-skip')&&viewerRole()==='teen'&&GENERAL_CARDS[swipeIndex]?.type==='understanding'&&!swipeBusy)void skipUnderstandingCard(swipeIndex,user.id,sharedSession);if(e.target.closest('#swipe-reload'))refresh().catch(showError);const filterButton=e.target.closest('[data-shared-match-filter]');
 if(filterButton&&page()==='swipe'&&sharedDeckId===filterButton.dataset.deckId&&!sharedLoading&&!sharedError){
   // Only categories present in the exact current server-verified result can be selected.
@@ -1866,8 +1931,8 @@ if(reviewButton&&page()==='swipe'&&themeAccessAllowed()&&!swipeBusy&&!importance
 }
 if(e.target.closest('#theme-restart')&&themeAccessAllowed()){const deck=THEME_DECKS.find(d=>d.id===activeThemeDeck);if(deck){themeReview=true;themeIndex=themeVisibleIndices(deck)[0]??deck.cards.length;themeSaveError='';render();}}
 });
-document.addEventListener('input',e=>{if(e.target.matches?.('#private-theme-review-search')){filterPrivateThemeReview();return;}if(e.target.matches?.('#mediator-input')){mediatorExperience.input(e.target.value);const count=document.getElementById('mediator-char-count');if(count)count.textContent=e.target.value.length+' / 2000 tecken';const send=document.querySelector('#mediator-form button[type="submit"]');if(send)send.disabled=!e.target.value.trim();return;}if(e.target.matches?.('#family-chat-body')){familyChatDraft=e.target.value;familyChatRequestKey=null;familyChatStatus='';return;}if(e.target.matches?.('#schyssta-search')){schysstaSearch=e.target.value.slice(0,100);applySchysstaFilters();return;}if(e.target.matches?.('#schyssta-body')){schysstaDraft=e.target.value;schysstaDraftKey=null;schysstaMessage='';const preview=document.getElementById('schyssta-preview-text');if(preview)preview.textContent=schysstaDraft.trim()||'Skriv en regel ovan för att förhandsgranska texten.';const count=document.getElementById('schyssta-length');if(count)count.textContent=schysstaDraft.length+' av 500 tecken';return;}if(!e.target.matches?.('[data-importance]'))return;e.target.setAttribute('aria-valuetext',importanceValueText(Number(e.target.value)));});
-document.addEventListener('change',e=>{if(e.target.matches?.('#private-theme-review-answer')){filterPrivateThemeReview();return;}
+document.addEventListener('input',e=>{if(e.target.matches?.('#swipe-general-review-search'))filterPrivateGeneralReview();if(e.target.matches?.('#private-theme-review-search')){filterPrivateThemeReview();return;}if(e.target.matches?.('#mediator-input')){mediatorExperience.input(e.target.value);const count=document.getElementById('mediator-char-count');if(count)count.textContent=e.target.value.length+' / 2000 tecken';const send=document.querySelector('#mediator-form button[type="submit"]');if(send)send.disabled=!e.target.value.trim();return;}if(e.target.matches?.('#family-chat-body')){familyChatDraft=e.target.value;familyChatRequestKey=null;familyChatStatus='';return;}if(e.target.matches?.('#schyssta-search')){schysstaSearch=e.target.value.slice(0,100);applySchysstaFilters();return;}if(e.target.matches?.('#schyssta-body')){schysstaDraft=e.target.value;schysstaDraftKey=null;schysstaMessage='';const preview=document.getElementById('schyssta-preview-text');if(preview)preview.textContent=schysstaDraft.trim()||'Skriv en regel ovan för att förhandsgranska texten.';const count=document.getElementById('schyssta-length');if(count)count.textContent=schysstaDraft.length+' av 500 tecken';return;}if(!e.target.matches?.('[data-importance]'))return;e.target.setAttribute('aria-valuetext',importanceValueText(Number(e.target.value)));});
+document.addEventListener('change',e=>{if(e.target.matches?.('#swipe-general-review-answer'))filterPrivateGeneralReview();if(e.target.matches?.('#private-theme-review-answer')){filterPrivateThemeReview();return;}
   if(e.target.matches?.('#mediator-use-context')){mediatorExperience.setProjectContext(e.target.checked);return;}
   if(e.target.matches?.('input[data-pf-answer],input[data-ipip-retest-answer]')){void personalityExperience.handleChange(e.target);return;}
   if(e.target.matches?.('#schyssta-status-filter')){schysstaFilterStatus=['all','approved','ongoing'].includes(e.target.value)?e.target.value:'all';applySchysstaFilters();return;}
