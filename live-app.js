@@ -54,7 +54,7 @@ let insightsRows=[],insightsLoading=false,insightsError='',insightsRequest=0;
 let activityInviteBusy=false,activityInviteError='';
 let sharedUnderstandingRows=[],understandingShareError='';
 let schysstaSuggestions=[],schysstaRules=[],schysstaManualRules=[],schysstaNotifications=[],schysstaReplacementLinks=[],schysstaHistory=[],schysstaEndTarget=null,schysstaLoading=false,schysstaError='',schysstaRequest=0;
-let schysstaDraft='',schysstaDraftOpen=false,schysstaDraftKey=null,schysstaEditTarget=null,schysstaSubmitting=false,schysstaMessage='',schysstaCopyMessage='',schysstaFocusId='',schysstaSearch='',schysstaFilterStatus='all';
+let schysstaDraft='',schysstaDraftOpen=false,schysstaDraftKey=null,schysstaEditTarget=null,schysstaSubmitting=false,schysstaMessage='',schysstaCopyMessage='',schysstaCopyFallback=false,schysstaFocusId='',schysstaSearch='',schysstaFilterStatus='all';
 const schysstaSaving=new Set();
 let activityNotifications=[],activityNotificationsError='',activityNotificationsLoading=false,
   activityNotificationsRequest=0,activityMarkBusy=null,activityFeedback='';
@@ -218,7 +218,7 @@ async function recheckInboxPair(){
   schysstaEndTarget=null;schysstaLoading=false;schysstaError='';
   schysstaSaving.clear();schysstaPausedIds.clear();
   schysstaDraft='';schysstaDraftOpen=false;schysstaDraftKey=null;
-  schysstaEditTarget=null;schysstaSubmitting=false;schysstaMessage='';schysstaCopyMessage='';
+  schysstaEditTarget=null;schysstaSubmitting=false;schysstaMessage='';schysstaCopyMessage='';schysstaCopyFallback=false;
   activityNotificationsRequest++;
   activityNotifications=[];activityNotificationsError='';activityNotificationsLoading=false;
   activityMarkBusy=null;activityFeedback='';
@@ -1623,6 +1623,7 @@ function currentApprovedSchysstaText(){
 function downloadSchysstaAgreements(){
  const payload=currentApprovedSchysstaText();
  if(!payload)return;
+ schysstaCopyFallback=false;
  try{
   const file=new Blob(['\uFEFF',payload],{type:'text/plain;charset=utf-8'});
   const url=URL.createObjectURL(file),link=document.createElement('a');
@@ -1636,18 +1637,26 @@ function downloadSchysstaAgreements(){
 async function copySchysstaAgreements(){
   const payload=currentApprovedSchysstaText();
   if(!payload)return;
+  schysstaCopyFallback=false;
   const approved=schysstaAllRules().filter(item=>item.status==='accepted');
   const viewer=user.id,session=sharedSession;
   try{
     if(typeof navigator.clipboard?.writeText!=='function')throw new Error('Clipboard unsupported');
     await navigator.clipboard.writeText(payload);
     if(user?.id!==viewer||sharedSession!==session)return;
+    schysstaCopyFallback=false;
     schysstaCopyMessage=approved.length===1?'Den aktuella regeln har kopierats.':'De '+approved.length+' aktuella reglerna har kopierats.';
   }catch(e){
     if(user?.id!==viewer||sharedSession!==session)return;
-    schysstaCopyMessage='Det gick inte att kopiera. Du kan markera och kopiera texten manuellt.';
+    schysstaCopyFallback=true;
+    schysstaCopyMessage='Det gick inte att kopiera automatiskt. Markera texten nedan och kopiera den manuellt.';
   }
   render();
+  if(schysstaCopyFallback){
+    const fallback=$('schyssta-copy-fallback');
+    fallback?.focus({preventScroll:true});
+    fallback?.select();
+  }
 }
 // Every deliberate Schyssta write must first verify this exact paired membership
 // and pair epoch. Existing server-side RPC authorization remains authoritative.
@@ -1977,7 +1986,8 @@ function schysstaView(){
     +'<div class="schyssta-filter-group" data-schyssta-filter-group="approved">'
     +card('<h2>Våra överenskommelser</h2>'+list(approved,'Ni har ännu inga regler som båda godkänt.')
       +(approved.length?'<div class="schyssta-actions"><button class="schyssta-secondary" type="button" data-schyssta-copy>Kopiera aktuella regler</button><button class="schyssta-secondary" type="button" data-schyssta-download>Ladda ner som textfil</button></div><p class="live-muted">Textfilen innehåller bara regler som båda har godkänt. Den sparas på din enhet, så hantera den privat.</p>':'')
-      +(schysstaCopyMessage?'<p role="status" class="schyssta-feedback">'+esc(schysstaCopyMessage)+'</p>':''))
+      +(schysstaCopyMessage?'<p role="status" class="schyssta-feedback">'+esc(schysstaCopyMessage)+'</p>':'')
+      +(schysstaCopyFallback&&approved.length?'<div class="schyssta-copy-manual"><label for="schyssta-copy-fallback">Kopiera aktuella gemensamma regler manuellt</label><textarea id="schyssta-copy-fallback" readonly rows="6" spellcheck="false">'+esc(currentApprovedSchysstaText())+'</textarea><button type="button" class="schyssta-secondary" data-schyssta-select-copy>Markera texten igen</button></div>':''))
     +'<p class="schyssta-no-results live-muted" hidden>Inga gemensamma regler matchar sökningen.</p></div>'
     +'<div class="schyssta-filter-group" data-schyssta-filter-group="ongoing">'
     +card('<h2>Förslag på gång</h2><p>Här hittar du även förslag där du valt Inte nu. Ett eget skickat förslag kräver också ditt separata godkännande.</p>'+list(ongoing,'Inga andra pågående förslag.'))
@@ -2047,7 +2057,7 @@ if(generation!==refreshGeneration)return;
 const {data:{user:u},error}=authResult;if(error&&error.name!=='AuthSessionMissingError')throw error;generalReviewEdit=null;themeReviewEdit=null;user=u;profile=null;members=[];mediatorExperience.reset(u?.id??null);aiResults.reset(u?.id??null);personalityExperience.reset(u?.id??null);swipeAnswers.clear();swipeImportance.clear();importancePending.clear();importanceSaving.clear();importanceAvailable=false;importanceLoadError='';priorityShares.clear();priorityShareSaving.clear();prioritySharesAvailable=false;priorityShareError='';skippedUnderstanding.clear();understandingShares.clear();understandingShareSaving.clear();understandingShareError='';for(const answers of themeAnswers.values())answers.clear();activeThemeDeck=null;themeCategory='all';themeIndex=0;themeReview=false;themeSaveError='';swipeBusy=false;swipeLoadError='';swipeSaveError='';swipeReview=false;swipeSkippedReview=false;swipeIndex=0;sharedMatches=[];sharedPriorities=[];sharedDeckId='general';sharedError='';sharedPriorityError='';sharedLoading=false;sharedSession++;sharedRequest++;insightsRows=[];sharedUnderstandingRows=[];insightsLoading=false;insightsError='';insightsRequest++;themesUnlocked=false;themesLoading=false;themesError='';themesRequest++;
 inboxPairEpoch=null;
 activityNotificationsRequest++;activityNotifications=[];activityNotificationsError='';activityNotificationsLoading=false;activityMarkBusy=null;activityFeedback='';
-if(typeof schysstaRequest!=='undefined'){schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];schysstaNotifications=[];schysstaReplacementLinks=[];schysstaHistory=[];schysstaEndTarget=null;schysstaLoading=false;schysstaError='';schysstaRequest++;schysstaSaving.clear();schysstaPausedIds.clear();clearFamilyChat();schysstaDraft='';schysstaDraftOpen=false;schysstaDraftKey=null;schysstaEditTarget=null;schysstaSubmitting=false;schysstaMessage='';schysstaCopyMessage='';schysstaFocusId='';schysstaSearch='';schysstaFilterStatus='all';}
+if(typeof schysstaRequest!=='undefined'){schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];schysstaNotifications=[];schysstaReplacementLinks=[];schysstaHistory=[];schysstaEndTarget=null;schysstaLoading=false;schysstaError='';schysstaRequest++;schysstaSaving.clear();schysstaPausedIds.clear();clearFamilyChat();schysstaDraft='';schysstaDraftOpen=false;schysstaDraftKey=null;schysstaEditTarget=null;schysstaSubmitting=false;schysstaMessage='';schysstaCopyMessage='';schysstaCopyFallback=false;schysstaFocusId='';schysstaSearch='';schysstaFilterStatus='all';}
 if(user){const viewer=user.id;
 let loaded;
 try{loaded=await Promise.all([db.from('profiles').select('display_name').eq('user_id',viewer).maybeSingle(),db.rpc('my_family_members'),db.from('swipe_answers').select('deck_id,card_id,answer').eq('user_id',viewer),db.from('swipe_skips').select('deck_id,card_id').eq('user_id',viewer),db.from('swipe_importance').select('deck_id,card_id,importance').eq('user_id',viewer),sharedUnderstandingEnabled?db.from('understanding_card_shares').select('deck_id,card_id').eq('user_id',viewer):Promise.resolve({data:[],error:null}),sharedPrioritiesEnabled?db.from('swipe_priority_shares').select('deck_id,card_id').eq('user_id',viewer):Promise.resolve({data:[],error:null}),db.rpc('my_current_inbox_pair_epoch')]);}
@@ -2183,6 +2193,7 @@ if(e.target.closest('[data-family-chat-mark-all-read]'))void markAllFamilyChatRe
 if(e.target.closest('[data-family-chat-more]'))void recheckInboxPair().then(valid=>{if(valid)void fetchFamilyChat(true);});
 if(e.target.closest('#schyssta-retry')&&!schysstaLoading)void fetchSchysstaList();
 if(e.target.closest('[data-schyssta-refresh]')&&!schysstaLoading)void fetchSchysstaList();
+if(e.target.closest('[data-schyssta-select-copy]')){const fallback=$('schyssta-copy-fallback');fallback?.focus({preventScroll:true});fallback?.select();return;}
 if(e.target.closest('[data-schyssta-copy]'))void copySchysstaAgreements();
 if(e.target.closest('[data-schyssta-download]'))downloadSchysstaAgreements();
 if(e.target.closest('[data-schyssta-start]')){schysstaDraftOpen=true;schysstaEditTarget=null;schysstaDraft='';schysstaDraftKey=null;render();document.getElementById('schyssta-body')?.focus();}
