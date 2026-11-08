@@ -91,4 +91,10 @@ assert.match(script,/void recheckInboxPair\(\)\.then\(valid=>/,'15-second pollin
 assert.match(script,/if\(valid&&!familyChatDraft\.trim\(\)/,'Only poll messages after confirming membership');
 assert.match(script,/if\(page\(\)==='inkorg'&&user&&members\.length===2\)void recheckInboxPair\(\)/,
   'Recheck pairing when browser receives focus');
+// Home's badge must never refresh unread state against a stale pairing, either
+// when the tab gains focus or on its normal 15-second poll.
+assert.match(script,/if\(page\(\)==='hem'&&user&&members\.length===2\)\s*void recheckInboxPair\(\)\.then\(valid=>\{if\(valid\)void fetchFamilyChatUnread\(\);\}\)/,
+  'Home tab focus checks actual current pairing before an unread refresh');
+assert.match(script,/else if\(page\(\)==='hem'\)\{\s*void recheckInboxPair\(\)\.then\(valid=>\{if\(valid\)void fetchFamilyChatUnread\(\);\}\);\s*\}/,
+  'Home 15-second poll must check exact pairing before reading unread badge');
 console.log('PASS: current pair guard blocks remote unpair, role/partner switches, errors and stale network responses');
