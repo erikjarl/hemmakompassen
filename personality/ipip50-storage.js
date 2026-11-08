@@ -36,8 +36,38 @@ export async function saveMyIPIP50Answer(db, questionId, value) {
   // Stable instrument ID includes version; do not overwrite another version's answers.
   const row = { user_id: userId, instrument_id: IPIP50_V1.id,
     question_id: questionId, answer: { value } };
-  const { error } = await db.from('personality_answers')
-    .upsert(row, { onConflict: 'user_id,instrument_id,question_id' });
-  if (error) throw error;
-  return { saved: true, questionId, instrumentId: IPIP50_V1.id };
+  let writeError;
+  try {
+    const result = await db.from('personality_answers')
+      .upsert(row, { onConflict: 'user_id,instrument_id,question_id' });
+    writeError = result?.error || null;
+  } catch (error) { writeError = error; }
+  if (!writeError) return { saved: true, questionId, instrumentId: IPIP50_V1.id };
+
+  // A lost HTTP acknowledgement does not prove the database rejected the answer.
+  // Read exactly the signed-in viewer's current answer for this instrument/item.
+  let verification;
+  try {
+    verification = await db.from('personality_answers')
+      .select('question_id,answer')
+      .eq('user_id',userId)
+      .eq('instrument_id',IPIP50_V1.id)
+      .eq('question_id',questionId)
+      .maybeSingle();
+  } catch (error) { verification = {error}; }
+  const saved = verification?.data;
+  if (!verification?.error && saved?.question_id === questionId &&
+    Number.isInteger(saved.answer?.value) && saved.answer.value >= 1 &&
+    saved.answer.value <= 5 && saved.answer.value === value) {
+    return { saved: true, questionId, instrumentId: IPIP50_V1.id };
+  }
+  if (verification?.error || saved === undefined ||
+    (saved !== null && (saved?.question_id !== questionId ||
+      !Number.isInteger(saved.answer?.value) || saved.answer.value < 1 ||
+      saved.answer.value > 5))) {
+    throw Object.assign(new Error('Det går inte att kontrollera om svaret sparades.'),
+      {code:'IPIP50_SAVE_UNKNOWN'});
+  }
+  throw Object.assign(new Error('Svaret kunde inte bekräftas som sparat.'),
+    {code:'IPIP50_SAVE_NOT_CONFIRMED'});
 }
