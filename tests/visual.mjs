@@ -801,6 +801,32 @@ try{
   await teenReflection.page.locator('.pf-family-reflections h3').scrollIntoViewIfNeeded();
   await teenReflection.page.screenshot({path:path.join(output,'mobile-personality-teen-reflections.png'),animations:'disabled'});
   await teenReflection.context.close();
+  // The general deck exposes only the current user's saved answers and teen-only skips.
+  const generalReview=await freshContext(
+    {viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},
+    {authenticated:true,paired:true,role:'teen',preansweredSkipped:true}
+  );
+  await generalReview.page.goto(base+'#swipe',{waitUntil:'load'});
+  await generalReview.page.locator('#swipe-general-review summary').click();
+  assert.equal(await generalReview.page.locator('#swipe-general-review [data-general-review-kind="skipped"]').count(),1);
+  assert.equal(await generalReview.page.locator('#swipe-general-review [data-general-review-kind="yes"]').count(),1);
+  await generalReview.page.locator('#swipe-general-review-answer').selectOption('skipped');
+  await generalReview.page.locator('#swipe-general-review-count').getByText('Visar 1 av 2 kort.').waitFor();
+  await generalReview.page.locator('#swipe-general-review [data-general-review-index="1"]').click();
+  await generalReview.page.waitForFunction(()=>document.activeElement?.id==='swipe-card');
+  assert.equal(await generalReview.page.locator('#swipe-card').getAttribute('aria-label'),'Kort 2 av 34. Svep höger för ja eller vänster för nej.');
+  await generalReview.page.locator('#swipe-general-review summary').click();
+  await generalReview.page.locator('#swipe-general-review-answer').selectOption('no');
+  await generalReview.page.locator('#swipe-general-review-count').getByText('Visar 0 av 2 kort.').waitFor();
+  await generalReview.page.locator('#swipe-general-review-reset').click();
+  await generalReview.page.waitForFunction(()=>document.activeElement?.id==='swipe-general-review-search');
+  await generalReview.page.locator('#swipe-general-review [data-general-review-index="0"]').click();
+  await generalReview.page.waitForFunction(()=>document.activeElement?.id==='swipe-card');
+  await generalReview.page.locator('.swipe-actions [data-swipe="no"]').click();
+  await generalReview.page.waitForFunction(()=>window.__HK_SAVED_SWIPE__?.row.card_id==='general-01'&&window.__HK_SAVED_SWIPE__?.row.answer===false);
+  await checkOverflow(generalReview.page,'General saved-answer review at 390px');
+  await capture(generalReview.page,'mobile-390-private-general-review.png');
+  await generalReview.context.close();
   const narrow=await freshContext({viewport:{width:320,height:700},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true});
   await narrow.page.getByRole("heading",{name:/Hej[ ,]+Provförälder/}).waitFor();
   await checkMobileNavigation(narrow.page,'320px mobile navigation');
@@ -951,7 +977,7 @@ try{
   await paired.page.getByRole("heading",{name:"Era gemensamma svar"}).waitFor();
   await paired.page.getByRole("heading",{name:"Det ni båda svarat ja till"}).waitFor();
   await paired.page.locator(".swipe-match-group h4").filter({hasText:"Relationer"}).waitFor();
-  assert.equal(await paired.page.locator(".swipe-match-list li").count(),2,"Only catalogued mutual YES cards appear; malicious RPC NO, B and unknown cards are discarded");
+  assert.equal(await paired.page.locator(".swipe-results .swipe-match-list li").count(),2,"Only catalogued mutual YES cards appear; malicious RPC NO, B and unknown cards are discarded");
   // An editorial category filter must only narrow already-verified JA+JA rows.
   await paired.page.evaluate(()=>{
     window.__HK_TEST_SHARED_MATCHES__=[
@@ -1020,17 +1046,17 @@ try{
     ];
     window.dispatchEvent(new Event('focus'));
   });
-  await paired.page.waitForFunction(()=>document.querySelectorAll('.swipe-match-list li').length===1);
+  await paired.page.waitForFunction(()=>document.querySelectorAll('.swipe-results .swipe-match-list li').length===1);
   assert.doesNotMatch(await paired.page.locator('.swipe-results').innerText(),/Jag vill helst prata färdigt innan någon kommer med råd/,'Automatic refresh must not expose B or NO');
   await paired.page.locator('.swipe-results').scrollIntoViewIfNeeded();
   await capture(paired.page,'mobile-auto-shared-match.png');
   await paired.page.evaluate(()=>{window.__HK_TEST_SHARED_MATCHES__=[];window.dispatchEvent(new Event('focus'));});
   await paired.page.waitForFunction(()=>document.querySelector('.swipe-results')?.textContent?.includes('Inga gemensamma ja-svar'));
-  assert.equal(await paired.page.locator('.swipe-match-list li').count(),0,'Automatic refresh must remove a revoked match');
+  assert.equal(await paired.page.locator('.swipe-results .swipe-match-list li').count(),0,'Automatic refresh must remove a revoked match');
   await paired.page.locator('.swipe-results').scrollIntoViewIfNeeded();
   await capture(paired.page,'mobile-auto-revoked-match.png');
   await paired.page.evaluate(()=>{delete window.__HK_TEST_SHARED_MATCHES__;window.dispatchEvent(new Event('focus'));});
-  await paired.page.waitForFunction(()=>document.querySelectorAll('.swipe-match-list li').length===2);
+  await paired.page.waitForFunction(()=>document.querySelectorAll('.swipe-results .swipe-match-list li').length===2);
 
   // All-deck insights use seven independent, server-verified A-only RPC reads.
   // The mock includes historical B YES, mutual NO, unknown and wrong-deck rows.
@@ -1214,10 +1240,10 @@ try{
   // general answers but may already explore a theme and see only mutual YES.
   await paired.page.locator('[data-theme-open="samtal"]').click();
   await paired.page.locator("#swipe-card[aria-label^='Temakort 1 av 104']").waitFor();
-  await paired.page.locator(".swipe-match-list li").first().waitFor();
-  assert.equal(await paired.page.locator(".swipe-match-list li").count(),1,"An unfinished theme shows only its verified mutual YES, not NO or other-deck answers");
+  await paired.page.locator(".swipe-results .swipe-match-list li").first().waitFor();
+  assert.equal(await paired.page.locator(".swipe-results .swipe-match-list li").count(),1,"An unfinished theme shows only its verified mutual YES, not NO or other-deck answers");
   await paired.page.locator("#theme-back").click();
-  await paired.page.locator(".swipe-match-list li").first().waitFor();
+  await paired.page.locator(".swipe-results .swipe-match-list li").first().waitFor();
   assert.ok((await paired.page.locator('.swipe-summary-overview li').count())>=1,'Authorized A advice renders a compact icon overview');
   assert.equal(await paired.page.locator('.swipe-summary-overview svg[aria-hidden="true"]').count(),await paired.page.locator('.swipe-summary-overview li').count(),'Every overview topic has one decorative SVG and a text heading');
   const hiddenIconLabel=paired.page.locator('.swipe-summary-icon-label').first();
@@ -1412,7 +1438,7 @@ try{
   await paired.page.evaluate(()=>{window.__HK_RPC_UNAVAILABLE__=true;});
   await paired.page.getByRole("button",{name:"Uppdatera gemensamma svar"}).click();
   await paired.page.locator(".swipe-results [role='alert']").waitFor();
-  assert.equal(await paired.page.locator(".swipe-match-list li").count(),0,"RPC failure must clear previous matches");
+  assert.equal(await paired.page.locator(".swipe-results .swipe-match-list li").count(),0,"RPC failure must clear previous matches");
   await paired.context.close();
   const freshRules=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,paired:true,emptySchyssta:true});
   await freshRules.page.goto(base+'#regler',{waitUntil:'load'});
