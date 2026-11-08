@@ -815,7 +815,9 @@ try{
   await generalReview.page.locator('#swipe-general-review [data-general-review-index="1"]').click();
   await generalReview.page.waitForFunction(()=>document.activeElement?.id==='swipe-card');
   assert.equal(await generalReview.page.locator('#swipe-card').getAttribute('aria-label'),'Kort 2 av 34. Svep höger för ja eller vänster för nej.');
-  await generalReview.page.locator('#swipe-general-review summary').click();
+  await generalReview.page.locator('#swipe-general-review-back').click();
+  assert.equal(await generalReview.page.locator('#swipe-general-review-answer').inputValue(),'skipped');
+  await generalReview.page.waitForFunction(()=>document.activeElement?.matches('[data-general-review-index="1"]'));
   await generalReview.page.locator('#swipe-general-review-answer').selectOption('no');
   await generalReview.page.locator('#swipe-general-review-count').getByText('Visar 0 av 2 kort.').waitFor();
   await generalReview.page.locator('#swipe-general-review-reset').click();
@@ -824,6 +826,11 @@ try{
   await generalReview.page.waitForFunction(()=>document.activeElement?.id==='swipe-card');
   await generalReview.page.locator('.swipe-actions [data-swipe="no"]').click();
   await generalReview.page.waitForFunction(()=>window.__HK_SAVED_SWIPE__?.row.card_id==='general-01'&&window.__HK_SAVED_SWIPE__?.row.answer===false);
+  await generalReview.page.waitForFunction(()=>document.activeElement?.matches('[data-general-review-index="0"]'));
+  assert.equal(await generalReview.page.locator('#swipe-general-review details').evaluate(el=>el.open),true,
+    'Private review remains expanded after saving the selected answer');
+  assert.equal(await generalReview.page.locator('#swipe-general-review [data-general-review-index="0"]').locator('..').getAttribute('data-general-review-kind'),'no');
+  assert.equal(await generalReview.page.locator('#swipe-general-review-answer').inputValue(),'all');
   await checkOverflow(generalReview.page,'General saved-answer review at 390px');
   await capture(generalReview.page,'mobile-390-private-general-review.png');
   await generalReview.context.close();

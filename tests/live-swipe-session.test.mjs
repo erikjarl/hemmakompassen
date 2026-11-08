@@ -7,14 +7,14 @@ const extracted=source.match(/async function saveSwipeAnswer\([\s\S]*?(?=\nfunct
 assert.ok(extracted,'General swipe save and skip functions exist');
 
 function harness({upsert=async()=>({error:null}),rpc=async()=>({error:null})}={}){
-  const calls={writes:0,rpcs:[],renders:0,matches:0,unlocks:0};
+  const calls={writes:0,rpcs:[],renders:0,matches:0,unlocks:0,reviewReturns:0};
   const state={
-    user:{id:'parent'},sharedSession:7,swipeBusy:true,swipeReview:false,swipeSkippedReview:false,swipeSaveError:'',swipeIndex:1,
+    user:{id:'parent'},sharedSession:7,swipeBusy:true,swipeReview:false,swipeSkippedReview:false,swipeSaveError:'',swipeIndex:1,generalReviewEdit:null,
     swipeAnswers:new Map([['general-01',true]]),skippedUnderstanding:new Set(),understandingShares:new Set(),members:[{role:'parent'},{role:'teen'}],
     visibleGeneralIndices:()=>[0,1],swipeCardId:i=>'general-'+String(i+1).padStart(2,'0'),
     GENERAL_CARDS:[{type:'match'},{type:'match'},{type:'match'}],viewerRole:()=>state.user?.id==='teen'?'teen':'parent',
     nextVisibleAfter:i=>i+1,nextSkippedAfter:i=>3,nextUnanswered:i=>i,
-    $:()=>({textContent:''}),render:()=>{calls.renders++;},
+    $:()=>({textContent:''}),render:()=>{calls.renders++;},reopenGeneralReview:()=>{calls.reviewReturns++;},
     fetchSwipeMatches:()=>{calls.matches++;},fetchThemeUnlock:()=>{calls.unlocks++;},
     db:{
       from:table=>{assert.equal(table,'swipe_answers');return {upsert:(row,options)=>{calls.writes++;assert.equal(options.onConflict,'user_id,deck_id,card_id');return upsert(row);}}},
@@ -169,3 +169,17 @@ const deferred=()=>{let resolve,reject;const promise=new Promise((ok,no)=>{resol
 }
 
 console.log('PASS: session-isolated saves and atomic understanding-card answers/skips');
+
+{
+ const h=harness();
+ h.state.generalReviewEdit={index:1,viewer:'parent',session:7,indexBefore:0};
+ await h.state.run('no',1,'parent',7);
+ assert.equal(h.calls.reviewReturns,1,'Editing one own saved card returns to the private review');
+ assert.equal(h.calls.renders,0,'The return helper owns the redraw, not a second render');
+}
+{
+ const h=harness({upsert:async()=>({error:{message:'synthetic refused write'}})});
+ h.state.generalReviewEdit={index:1,viewer:'parent',session:7,indexBefore:0};
+ await h.state.run('no',1,'parent',7);
+ assert.equal(h.calls.reviewReturns,0,'Failed saves cannot claim the review edit completed');
+}
