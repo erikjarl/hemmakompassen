@@ -1,6 +1,6 @@
 # FUN-01 / UX-03 – Horisontell mobilmeny med fingersvep
 
-**Datum:** 8 november 2026. **Status:** ny syntetisk browserregression, CI inväntas.
+**Datum:** 8 november 2026. **Verifierat:** [PR #223](https://github.com/erikjarl/hemmakompassen/pull/223) mergad (`3358956`), [grön Node/bygg/Chromium-CI #42503079341](https://github.com/erikjarl/hemmakompassen/actions/runs/42503079341), **18/18 syntetiska roll-/viewportkontroller godkända**. Den fullständiga testsviten sparade **75 skärmbilder**.
 
 ## Motiv och testmetod
 
