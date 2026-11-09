@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="sv"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Konto – Hemmakompassen</title><link rel="stylesheet" href="./styles.css"><link rel="stylesheet" href="./feedback.css?v=20261109-test-feedback1"><style>
+<html lang="sv"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Konto – Hemmakompassen</title><link rel="stylesheet" href="./styles.css"><link rel="stylesheet" href="./feedback.css?v=20261109-test-feedback2"><style>
 body{padding:24px;max-width:650px;margin:auto}main{display:grid;gap:18px;padding:20px;border:1px solid #7775;border-radius:16px}form{display:grid;gap:12px}input,select,button{font:inherit;padding:12px;border-radius:8px}label{display:grid;gap:6px;min-width:0}input,select{width:100%;min-width:0;box-sizing:border-box;border:1px solid #777}button{cursor:pointer}#status{min-height:2em;white-space:pre-wrap}section{display:grid;gap:12px}.hidden{display:none!important}a{color:inherit}
 .invite-code{overflow-wrap:anywhere;font-weight:650;letter-spacing:.02em}
 .pairing-qr{margin:0;display:grid;justify-items:center;gap:10px;padding:18px;border:1px solid #7775;border-radius:14px;text-align:center}
@@ -31,11 +31,12 @@ body{padding:24px;max-width:650px;margin:auto}main{display:grid;gap:18px;padding
     <label>Vad borde hända eller stå istället? (valfritt)
       <textarea name="expected" maxlength="1000" placeholder="Ditt förslag eller det resultat du förväntade dig"></textarea>
     </label>
-    <p class="hk-feedback-note">Vi lägger automatiskt till vilken del av webbplatsen du är på, men inga privata svar, chattar eller skärmbilder. Undvik namn och känsliga personuppgifter i texten. Du behöver vara inloggad för att skicka.</p>
+    <p class="hk-feedback-note">Vi lägger automatiskt till vilken del av webbplatsen du är på, men inga privata svar, chattar eller skärmbilder. Undvik namn och känsliga personuppgifter i texten. Du behöver vara inloggad för att skicka. Ett utkast bevaras när du stänger och öppnar formuläret igen, men inte om du laddar om sidan.</p>
     <div class="hk-feedback-actions">
       <button type="submit">Skicka rapport</button>
+      <button type="button" id="hk-feedback-clear">Rensa utkast</button>
       <button type="button" id="hk-feedback-close">Stäng</button>
     </div>
     <p id="hk-feedback-status" role="status" aria-live="polite"></p>
   </form>
-</dialog><script src="./backend-config.js"></script><script src="./feedback.js?v=20261109-test-feedback3"></script><script src="./vendor/qrcode.js"></script><script type="module" src="./konto.js?v=20261109-account-timeouts1"></script></body></html>
+</dialog><script src="./backend-config.js"></script><script src="./feedback.js?v=20261109-test-feedback4"></script><script src="./vendor/qrcode.js"></script><script type="module" src="./konto.js?v=20261109-account-timeouts1"></script></body></html>
