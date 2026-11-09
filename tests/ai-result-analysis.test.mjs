@@ -154,6 +154,20 @@ test('Worker enforces identity, prepares own data, spends shared quota and retur
  assert.ok(!prompt.includes('ipip50-001'));
  assert.ok(!prompt.includes('question_id'));
 });
+test('AI-04: authenticated Worker analysis replaces overconfident AI prose without leaking unshared partner scores',async()=>{
+ const x=worker({share:null});
+ x.env.AI.run=async()=>({response:'Reflektion:\nTack för att du delade. Du är helt säkert introvert med P≈91, och detta orsakar familjens problem.\n\nFörslag:\n1. Formulera ett litet frivilligt önskemål om hur du vill prata om dina svar. #kommunikation/onskemal\n2. Prova att ge ett neutralt vardagsexempel när ni har lugn och ro. #kommunikation/validera'});
+ const result=await x.handle(x.request({kind:'personality',scope:'own'}),x.env);
+ assert.equal(result.status,200);
+ const data=await result.json();
+ assert.match(data.reply,/Dina fem självskattade skalpoäng/);
+ assert.match(data.reply,/Extraversion: 30\/50/);
+ assert.match(data.reply,/ingen annan profil godkänd för jämförelse/i);
+ assert.doesNotMatch(data.reply,/Tack för att|introvert|P≈91|orsakar familjens problem|40\/50/i);
+ assert.equal((data.reply.match(/#kommunikation\//g)||[]).length,2);
+ assert.equal(data.kind,'personality');
+ assert.equal(data.scope,'own');
+});
 test('incomplete profile yields empty response before daily quota',async()=>{
  const x=worker({answers:complete.slice(0,25)});
  const result=await x.handle(x.request({kind:'personality',scope:'own'}),x.env);
