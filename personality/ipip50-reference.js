@@ -20,8 +20,8 @@ export function referencePosition(factorId,score){
   const z=(score-norm.mean)/norm.sd;
   const size=Math.abs(z);
   const classification=size>=IPIP50_Z_LIMIT?'unusual':size>=1?'aboveOneSd':'nearAverage';
-  const label=z< -2?'Mer än 2 SD under vuxenmedelvärdet':z< -1?'Mellan 1 och 2 SD under vuxenmedelvärdet':
-    z<=1?'Inom ±1 SD från vuxenmedelvärdet':z<=2?'Mellan 1 och 2 SD över vuxenmedelvärdet':'Mer än 2 SD över vuxenmedelvärdet';
+  const label=z<=-2?'Minst 2 SD under vuxenmedelvärdet':z<=-1?'Mellan 1 och 2 SD under vuxenmedelvärdet':
+    z<1?'Inom ±1 SD från vuxenmedelvärdet':z<2?'Mellan 1 och 2 SD över vuxenmedelvärdet':'Minst 2 SD över vuxenmedelvärdet';
   const description=label+' i jämförelsen med det amerikanska vuxenurvalets medelvärde och SD. Detta är ingen svensk norm.';
   return {factorId,score,mean:norm.mean,sd:norm.sd,z,classification,description};
 }
@@ -62,11 +62,11 @@ export const IPIP50_PERCENTILE_BANDS=Object.freeze([
 export function approximateReferencePercentile(factorId,score){
   const r=referencePosition(factorId,score);
   const percentile=normalPercentileFromZ(r.z);
-  const category=r.z< -2?'mer än 2 SD under vuxenmedelvärdet'
-    :r.z< -1?'mellan 1 och 2 SD under vuxenmedelvärdet'
-    :r.z<=1?'inom ±1 SD från vuxenmedelvärdet'
-    :r.z<=2?'mellan 1 och 2 SD över vuxenmedelvärdet'
-    :'mer än 2 SD över vuxenmedelvärdet';
+  const category=r.z<=-2?'minst 2 SD under vuxenmedelvärdet'
+    :r.z<=-1?'mellan 1 och 2 SD under vuxenmedelvärdet'
+    :r.z<1?'inom ±1 SD från vuxenmedelvärdet'
+    :r.z<2?'mellan 1 och 2 SD över vuxenmedelvärdet'
+    :'minst 2 SD över vuxenmedelvärdet';
   return {...r,percentile,category};
 }
 
