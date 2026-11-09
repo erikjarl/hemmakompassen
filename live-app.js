@@ -1,5 +1,5 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261109-retest-delete-ack1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261109-late-session1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261107-authoritative-export4';
 import {createAiResultExperience} from './ai-result-ui.js?v=20261109-late-session1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
