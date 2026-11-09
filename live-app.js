@@ -2080,7 +2080,10 @@ async function proposeSchysstaRule(cardId){
   if(!await preflightSchysstaWrite(viewer,session)||schysstaSaving.has(cardId))return;
   schysstaSaving.add(cardId);render();
   let error;try{({error}=await db.rpc('propose_schyssta_rule',{p_card_id:cardId}));}catch(e){error=e;}
-  schysstaSaving.delete(cardId);if(user?.id!==viewer||sharedSession!==session)return;
+  // A response from a former account/family may not release the current
+  // session's in-flight action for the same rule card.
+  if(user?.id!==viewer||sharedSession!==session)return;
+  schysstaSaving.delete(cardId);
   if(error){schysstaError='Förslaget kunde inte sparas. Inget godkännande registrerades.';render();return;}
   await fetchSchysstaList();
 }
@@ -2090,7 +2093,9 @@ async function decideSchysstaRule(agreementId,approved){
   if(!await preflightSchysstaWrite(viewer,session)||schysstaSaving.has(agreementId))return;
   schysstaSaving.add(agreementId);render();
   let error;try{({error}=await db.rpc('set_schyssta_rule_decision',{p_agreement_id:agreementId,p_approved:approved}));}catch(e){error=e;}
-  schysstaSaving.delete(agreementId);if(user?.id!==viewer||sharedSession!==session)return;
+  // The current session owns the saving flag and cached decisions.
+  if(user?.id!==viewer||sharedSession!==session)return;
+  schysstaSaving.delete(agreementId);
   if(error){schysstaError='Ditt val kunde inte sparas. Listan har rensats tills den kan hämtas igen.';schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];schysstaNotifications=[];schysstaReplacementLinks=[];schysstaHistory=[];render();return;}
   await fetchSchysstaList();
 }
