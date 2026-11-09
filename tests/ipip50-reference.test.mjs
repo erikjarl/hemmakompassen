@@ -22,18 +22,18 @@ test('SD deviations and unusual labels apply to >=2SD only and clearly name US a
   const high=referencePosition('extraversion',50); // (50-30.45)/7.61 = 2.57
   assert.ok(high.z>2);
   assert.equal(high.classification,'unusual');
-  assert.match(high.description,/Mycket över genomsnittet.*amerikanska vuxenurvalets/);
+  assert.match(high.description,/Minst 2 SD över vuxenmedelvärdet.*amerikanska vuxenurvalets/);
   const low=referencePosition('conscientiousness',10);
   assert.ok(low.z< -2);
   assert.equal(low.classification,'unusual');
-  assert.match(low.description,/Mycket under genomsnittet/);
+  assert.match(low.description,/Minst 2 SD under vuxenmedelvärdet/);
   const middle=referencePosition('extraversion',30);
   assert.equal(middle.classification,'nearAverage');
-  assert.match(middle.description,/Runt genomsnittet/);
+  assert.match(middle.description,/Inom ±1 SD från vuxenmedelvärdet/);
   const moderate=referencePosition('extraversion',39);
   assert.ok(moderate.z>1&&moderate.z<2);
   assert.equal(moderate.classification,'aboveOneSd');
-  assert.match(moderate.description,/Över genomsnittet/);
+  assert.match(moderate.description,/Mellan 1 och 2 SD över vuxenmedelvärdet/);
 });
 
 test('invalid, missing, incomplete and wrong-version scores never get a norm label',()=>{
@@ -68,7 +68,7 @@ test('normal-model percentile map anchors 50 at center, 75 at exactly three quar
   const score=approximateReferencePercentile('extraversion',39);
   assert.equal(score.score,39);
   assert.ok(score.percentile>50&&score.percentile<100);
-  assert.match(score.category,/över genomsnittet/);
+  assert.match(score.category,/mellan 1 och 2 SD över vuxenmedelvärdet/);
   assert.throws(()=>approximateReferencePercentile('extraversion',0),RangeError);
   assert.throws(()=>normalPercentileFromZ(NaN),RangeError);
 });
@@ -90,4 +90,29 @@ test('PF-04: modeled percentile rank and SD interval are distinct, including P20
   assert.match(describeModeledPercentile({z:-2.0537,percentile:2}),
     /mer än 2 SD/);
   assert.throws(()=>describeModeledPercentile({z:NaN,percentile:50}),RangeError);
+});
+
+test('PF-04: modeled P≈20 remains inside one SD but is not described as around average',()=>{
+  const result=approximateReferencePercentile('extraversion',24);
+  assert.ok(result.percentile>=19 && result.percentile<=21,'chosen valid raw score should model roughly P20');
+  assert.equal(result.classification,'nearAverage');
+  assert.match(result.description,/Inom ±1 SD från vuxenmedelvärdet/);
+  assert.match(result.category,/inom ±1 SD från vuxenmedelvärdet/);
+  assert.doesNotMatch(result.description+' '+result.category,/runt genomsnittet/i);
+  const explanation=describeModeledPercentile(result);
+  assert.match(explanation,/lägre än ungefär 80 %.*inom ±1 SD/i);
+  assert.match(IPIP50_PERCENTILE_BANDS.find(b=>b.id==='average').label,/Inom ±1 SD/);
+  assert.equal(IPIP50_PERCENTILE_BANDS.find(b=>b.id==='average').start,normalPercentileFromZ(-1));
+  assert.equal(IPIP50_PERCENTILE_BANDS.find(b=>b.id==='average').end,normalPercentileFromZ(1));
+});
+
+test('PF-04: all five factors keep their raw score and adult-reference polarity',()=>{
+  for(const factor of IPIP50_V1.factors){
+    const a=approximateReferencePercentile(factor.id,10);
+    const b=approximateReferencePercentile(factor.id,50);
+    assert.ok(a.z<b.z,'higher raw score should map to higher modeled percentile');
+    assert.ok(a.percentile<b.percentile,'scale direction must be monotonic');
+    assert.match(a.category,/under vuxenmedelvärdet/);
+    assert.match(b.category,/över vuxenmedelvärdet/);
+  }
 });

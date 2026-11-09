@@ -20,8 +20,8 @@ export function referencePosition(factorId,score){
   const z=(score-norm.mean)/norm.sd;
   const size=Math.abs(z);
   const classification=size>=IPIP50_Z_LIMIT?'unusual':size>=1?'aboveOneSd':'nearAverage';
-  const label=z< -2?'Mycket under genomsnittet':z< -1?'Under genomsnittet':
-    z<=1?'Runt genomsnittet':z<=2?'Över genomsnittet':'Mycket över genomsnittet';
+  const label=z<=-2?'Minst 2 SD under vuxenmedelvärdet':z<=-1?'Mellan 1 och 2 SD under vuxenmedelvärdet':
+    z<1?'Inom ±1 SD från vuxenmedelvärdet':z<2?'Mellan 1 och 2 SD över vuxenmedelvärdet':'Minst 2 SD över vuxenmedelvärdet';
   const description=label+' i jämförelsen med det amerikanska vuxenurvalets medelvärde och SD. Detta är ingen svensk norm.';
   return {factorId,score,mean:norm.mean,sd:norm.sd,z,classification,description};
 }
@@ -55,18 +55,18 @@ export function normalPercentileFromZ(z){
 export const IPIP50_PERCENTILE_BANDS=Object.freeze([
   {id:'very-low', label:'Mycket under genomsnittet',start:0,end:normalPercentileFromZ(-2)},
   {id:'low', label:'Under genomsnittet',start:normalPercentileFromZ(-2),end:normalPercentileFromZ(-1)},
-  {id:'average',label:'Runt genomsnittet',start:normalPercentileFromZ(-1),end:normalPercentileFromZ(1)},
+  {id:'average',label:'Inom ±1 SD från vuxenmedelvärdet',start:normalPercentileFromZ(-1),end:normalPercentileFromZ(1)},
   {id:'high',label:'Över genomsnittet',start:normalPercentileFromZ(1),end:normalPercentileFromZ(2)},
   {id:'very-high',label:'Mycket över genomsnittet',start:normalPercentileFromZ(2),end:100}
 ]);
 export function approximateReferencePercentile(factorId,score){
   const r=referencePosition(factorId,score);
   const percentile=normalPercentileFromZ(r.z);
-  const category=r.z< -2?'mycket under genomsnittet'
-    :r.z< -1?'under genomsnittet'
-    :r.z<=1?'runt genomsnittet'
-    :r.z<=2?'över genomsnittet'
-    :'mycket över genomsnittet';
+  const category=r.z<=-2?'minst 2 SD under vuxenmedelvärdet'
+    :r.z<=-1?'mellan 1 och 2 SD under vuxenmedelvärdet'
+    :r.z<1?'inom ±1 SD från vuxenmedelvärdet'
+    :r.z<2?'mellan 1 och 2 SD över vuxenmedelvärdet'
+    :'minst 2 SD över vuxenmedelvärdet';
   return {...r,percentile,category};
 }
 
