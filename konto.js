@@ -96,50 +96,74 @@ async function refresh() {
   }
 }
 let busy=false;
-async function run(action,{successMessage=null}={}){if(busy)return;busy=true;const buttons=[...document.querySelectorAll('button')];buttons.forEach(b=>b.disabled=true);try{status('Arbetar…');await withAccountDeadline(action());await refresh();if(successMessage)status(successMessage);}catch(e){status(e?.message||'Ett fel inträffade');}finally{busy=false;buttons.forEach(b=>b.disabled=false);}}
+// Network timeouts release the UI, but do not cancel an already sent request.
+// Prevent the continuation of that old action from navigating, updating the
+// visible invite or initiating a second write after its deadline has expired.
+async function run(action,{successMessage=null}={}){
+  if(busy)return;
+  busy=true;
+  let active=true;
+  const isCurrent=()=>active;
+  const buttons=[...document.querySelectorAll('button')];
+  buttons.forEach(b=>b.disabled=true);
+  try{
+    status('Arbetar…');
+    await withAccountDeadline(action(isCurrent));
+    await refresh();
+    if(successMessage)status(successMessage);
+  }catch(e){status(e?.message||'Ett fel inträffade');}
+  finally{active=false;busy=false;buttons.forEach(b=>b.disabled=false);}
+}
 $('refresh-account').addEventListener('click',()=>run(async()=>{}, {successMessage:'Kontot har uppdaterats.'}));
-$('email-form').addEventListener('submit',e=>{e.preventDefault();run(async()=>{
+$('email-form').addEventListener('submit',e=>{e.preventDefault();run(async isCurrent=>{
   const {error}=await client.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});
+  if(!isCurrent())return;
   if(error)throw Error('Kunde inte logga in. Kontrollera e-post och lösenord. Har du bara använt mejllänk tidigare? Välj ”Glömt lösenord eller saknar lösenord?”.');
   $('password').value='';
   if(scannedInviteCode){status('Inloggad. Kontrollera den ifyllda familjekoden nedan.');return;}
   location.assign('./index.html');
 });});
-$('signup-form').addEventListener('submit',e=>{e.preventDefault();run(async()=>{
+$('signup-form').addEventListener('submit',e=>{e.preventDefault();run(async isCurrent=>{
   const password=$('signup-password').value;
   if(password.length<12)throw Error('Lösenordet behöver innehålla minst 12 tecken.');
   if(password!==$('signup-confirm').value)throw Error('Lösenorden stämmer inte överens.');
   const {data,error}=await client.auth.signUp({email:$('signup-email').value.trim(),password,options:{emailRedirectTo:accountRedirectUrl()}});
+  if(!isCurrent())return;
   if(error)throw error;
   $('signup-form').reset();
   status(data.session?'Kontot är skapat. Du är inloggad.':'Kontrollera din e-post för att bekräfta kontot. Om du redan har ett konto, logga in eller återställ lösenordet.');
 });});
-$('reset-form').addEventListener('submit',e=>{e.preventDefault();run(async()=>{
+$('reset-form').addEventListener('submit',e=>{e.preventDefault();run(async isCurrent=>{
   const {error}=await client.auth.resetPasswordForEmail($('reset-email').value.trim(),{redirectTo:accountRedirectUrl()});
   if(error)throw error;
+  if(!isCurrent())return;
   status('Om adressen har ett konto får du ett mejl för att välja lösenord. Öppna länken i samma webbläsare.');
 });});
-$('password-form').addEventListener('submit',e=>{e.preventDefault();run(async()=>{
+$('password-form').addEventListener('submit',e=>{e.preventDefault();run(async isCurrent=>{
   const password=$('new-password').value;
   if(password.length<12)throw Error('Lösenordet behöver innehålla minst 12 tecken.');
   if(password!==$('confirm-password').value)throw Error('Lösenorden stämmer inte överens.');
   const {data:{user},error:authError}=await client.auth.getUser();
+  if(!isCurrent())return;
   if(authError||!user)throw Error('Logga in eller öppna en ny återställningslänk innan du väljer lösenord.');
   const {error}=await client.auth.updateUser({password});
+  if(!isCurrent())return;
   if(error)throw error;
   $('password-form').reset();
   status('Lösenordet är sparat. Nästa gång loggar du in med e-post och lösenord.');
 });});
-$('name-form').addEventListener('submit',e=>{e.preventDefault();run(async()=>{const {data:{user}}=await client.auth.getUser();if(!user)throw Error('Inte inloggad');const {error}=await client.from('profiles').upsert({user_id:user.id,display_name:$('display-name').value.trim()});if(error)throw error;status('Namnet sparat.');});});
-$('create-family').addEventListener('click',()=>run(async()=>{const {error}=await client.rpc('start_family',{p_role:$('role').value});if(error)throw error;status('Familjen skapad. Skapa en kod för att bjuda in den andra personen.');}));
-$('make-invite').addEventListener('click',()=>run(async()=>{
+$('name-form').addEventListener('submit',e=>{e.preventDefault();run(async isCurrent=>{const {data:{user}}=await client.auth.getUser();if(!isCurrent())return;if(!user)throw Error('Inte inloggad');const {error}=await client.from('profiles').upsert({user_id:user.id,display_name:$('display-name').value.trim()});if(!isCurrent())return;if(error)throw error;status('Namnet sparat.');});});
+$('create-family').addEventListener('click',()=>run(async isCurrent=>{const {error}=await client.rpc('start_family',{p_role:$('role').value});if(!isCurrent())return;if(error)throw error;status('Familjen skapad. Skapa en kod för att bjuda in den andra personen.');}));
+$('make-invite').addEventListener('click',()=>run(async isCurrent=>{
   const bytes=crypto.getRandomValues(new Uint8Array(18));
   const code=Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('').toUpperCase();
   const inviteOwnerId=renderedAccountId;
   const {data,error}=await client.rpc('create_family_invite',{p_code:code});
+  if(!isCurrent())return;
   // Check the actual current account, not just whether any refresh took place:
   // a same-account refresh while the request was pending must not lose the new code.
   const {data:{user:currentUser}}=await client.auth.getUser();
+  if(!isCurrent())return;
   if(!inviteOwnerId || currentUser?.id!==inviteOwnerId || renderedAccountId!==inviteOwnerId) return;
   if(error)throw error;
   $('new-invite').textContent='Dela koden privat: '+code+' (gäller till '+new Date(data).toLocaleString('sv-SE')+')';
@@ -151,14 +175,14 @@ $('make-invite').addEventListener('click',()=>run(async()=>{
     status('Familjekoden har skapats, men QR-koden kunde inte visas. Dela textkoden istället.');
   }
 }));
-$('accept-form').addEventListener('submit',e=>{e.preventDefault();run(async()=>{const {error}=await client.rpc('accept_family_invite',{p_code:$('invite-code').value.trim().toUpperCase()});if(error)throw error;
+$('accept-form').addEventListener('submit',e=>{e.preventDefault();run(async isCurrent=>{const {error}=await client.rpc('accept_family_invite',{p_code:$('invite-code').value.trim().toUpperCase()});if(!isCurrent())return;if(error)throw error;
   $('accept-form').reset();
   if(scannedInviteCode) {
     scannedInviteCode = '';
     if(typeof history !== 'undefined') history.replaceState(null, '', location.pathname + location.search);
   }
   status('Du är nu ansluten till familjen. Din profil och privata kontodata är kvar.');});});
-$('logout').addEventListener('click',()=>run(async()=>{const {error}=await client.auth.signOut();if(error)throw error;status('Utloggad.');}));
+$('logout').addEventListener('click',()=>run(async isCurrent=>{const {error}=await client.auth.signOut();if(!isCurrent())return;if(error)throw error;status('Utloggad.');}));
 client.auth.onAuthStateChange(event=>{setTimeout(async()=>{try{await refresh();if(event==='PASSWORD_RECOVERY'){status('Välj ditt nya lösenord nedan.');$('new-password').focus();}}catch(e){status(e.message);}},0);});
 if(location.hash==='#register')$('register').open=true;
 if(location.hash==='#reset')$('reset').open=true;
