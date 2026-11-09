@@ -8,6 +8,6 @@ assert.match(guard[0],/e\.target===document\.activeElement/,'A bubbled keyboard 
 assert.match(guard[0],/!e\.repeat/,'Repeated held key must not submit another answer');
 assert.match(guard[0],/!e\.altKey&&!e\.ctrlKey&&!e\.metaKey&&!e\.shiftKey/,'Modified arrow keys are never answers');
 assert.doesNotMatch(guard[0],/const interactive=/,'Do not treat any non-interactive page region as a swipable card');
-assert.ok((s.match(/När kortet har fokus kan du använda vänster- eller högerpil/g)||[]).length===2,
+assert.ok((s.match(/Med tangentbordet: ← eller →./g)||[]).length===2,
   'Both general and themed cards explain explicit keyboard control');
 console.log('PASS: swipe keyboard controls require focus on the playing card');
