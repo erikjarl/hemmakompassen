@@ -7,8 +7,12 @@ const appHtml = readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const widget = appHtml.match(/<button type="button" id="hk-feedback-open"[\s\S]*?<\/dialog>/)?.[0];
 assert.ok(widget,'The shared feedback widget must be present in the actual app markup');
 const accountHtml = readFileSync(new URL('../konto.html',import.meta.url),'utf8');
-const accountWidget = accountHtml.match(/<button type="button" id="hk-feedback-open"[\s\S]*?<\/dialog>/)?.[0];
-assert.ok(accountWidget, 'The same tester report control must be present on the account page');
+const accountHeader = accountHtml.match(/<header class="account-toolbar">[\s\S]*?<\/header>/)?.[0];
+const accountLoggedOut = accountHtml.match(/<section id="logged-out">[\s\S]*?<\/section>/)?.[0];
+const accountDialog = accountHtml.match(/<dialog id="hk-feedback-dialog"[\s\S]*?<\/dialog>/)?.[0];
+const accountCss = accountHtml.match(/<style>([\s\S]*?)<\/style>/)?.[1];
+assert.ok(accountHeader && accountLoggedOut && accountDialog && accountCss,
+  'The account toolbar, actual login controls and report dialog must be present');
 const js = readFileSync(new URL('../feedback.js',import.meta.url),'utf8');
 const css = readFileSync(new URL('../feedback.css',import.meta.url),'utf8');
 const browser = await chromium.launch({headless:true,args:['--no-sandbox']});
@@ -235,16 +239,31 @@ try {
   const accountPage = await browser.newPage({viewport:{width:320,height:700}});
   await accountPage.route('https://account.test/**', route => route.fulfill({
     status:200, contentType:'text/html; charset=utf-8',
-    body:'<!doctype html><html lang="sv"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><body>'+accountWidget+'</body></html>'
+    body:'<!doctype html><html lang="sv"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><body>'+
+      accountHeader+'<main>'+accountLoggedOut+'</main><div style="height:900px"></div>'+accountDialog+'</body></html>'
   }));
   await accountPage.goto('https://account.test/hk/konto.html#invite=FAKE_SECRET_INVITE_123456');
-  await accountPage.addStyleTag({content:css});
+  await accountPage.addStyleTag({content:css+'\n'+accountCss});
   const accountButton = accountPage.locator('#hk-feedback-open');
   const accountBox = await accountButton.boundingBox();
   assert.ok(accountBox && accountBox.width <= 56 && accountBox.x >= 0
     && accountBox.x + accountBox.width <= 320 && accountBox.y + accountBox.height <= 700-8,
     'Account page report control remains usable at 320px without a bottom nav');
   assert.equal(await accountButton.getAttribute('aria-label'),'Rapportera fel eller innehåll');
+  assert.equal(await accountButton.evaluate(el=>getComputedStyle(el).position),'static',
+    'On the account page the reporter belongs to the toolbar, not floating above form text');
+  const backBox=await accountPage.locator('.account-toolbar a').boundingBox();
+  const resetBox=await accountPage.locator('#reset summary').boundingBox();
+  assert.ok(backBox && accountBox && backBox.x+backBox.width+6 <= accountBox.x,
+    'Toolbar has separate, non-overlapping navigation and report actions at 320px');
+  assert.ok(resetBox && accountBox.y+accountBox.height <= resetBox.y,
+    'The report control no longer obscures the password recovery disclosure');
+  await accountPage.evaluate(()=>window.scrollTo(0,450));
+  await accountPage.waitForFunction(()=>window.scrollY>100);
+  const stickyBox=await accountButton.boundingBox();
+  assert.ok(stickyBox && stickyBox.y>=0 && stickyBox.y+stickyBox.height<=700,
+    'The report control remains available in the sticky toolbar while scrolling');
+  await accountPage.evaluate(()=>window.scrollTo(0,0));
 
   // FBK-01/FUN-01: actual account-page keyboard/form interactions with
   // synthetic signed-in Auth. Invitation fragments must not leave the browser.
@@ -269,7 +288,7 @@ try {
   const accountReport='Det vore enklare med en tydligare registreringsguide.';
   await accountPage.locator('[name="description"]').fill(accountReport);
   await accountPage.locator('[name="expected"]').fill('Visa en steg-för-steg-guide vid registrering.');
-  await accountPage.locator('button[type=submit]').click();
+  await accountPage.locator('#hk-feedback-form button[type=submit]').click();
   await accountPage.waitForFunction(()=>document.querySelector('#hk-feedback-status').textContent.includes('sparad'));
   const accountRows=await accountPage.evaluate(()=>window.accountFeedbackRows);
   assert.equal(accountRows.length,1,'A single account-page submission must create one mock report');
