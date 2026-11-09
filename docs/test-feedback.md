@@ -60,3 +60,14 @@ Testet kortar ned klientens 15-sekunders väntetid **enbart i mockad Chromium**;
 Kontosidan har nu ett separat **verkligt Chromium-formulärflöde**: 320px-knappen öppnas via tangentbordets Enter, en förbättringsrapport med fritext och frivilligt förslag skickas via mockad inloggad Supabase-klient, exakt en korrekt rapportpayload inspekteras, sparad formulärtext rensas och dialogen stängs och öppnas igen och kan stängas med Escape. Testad konto-URL innehåller en fiktiv `#invite=`-kod, som **inte** får förekomma i rapportens `page_context` eller övrig payload.
 
 Även denna testnivå är **syntetisk**: inget riktigt testkonto, ingen INSERT i live Supabase och ingen fysisk Safari/iOS testas.
+
+
+## FBK-01-DRAFT-01 – utkast kvar när dialogen stängs (9 november 2026)
+
+**Reproducerat före:** `feedback.js` anropade `form.reset()` varje gång rapportdialogen öppnades. Därför förlorades en påbörjad eller misslyckad rapport efter **Stäng** eller **Escape** följt av ny öppning, trots löftet om bevarad text vid fel.
+
+**Åtgärd:** utkastet ligger kvar **i sidans arbetsminne** vid Stäng, Escape och ny öppning, både före och efter avvisat eller osäkert inskick. Endast användarens **Rensa utkast** eller ett **bekräftat sparat** inskick rensar fälten. Vid pågående inskick är Rensa utkast avaktiverad tillsammans med övriga knappar. Ingen rapporttext sparas automatiskt i `localStorage`, `sessionStorage`, URL eller extern tjänst.
+
+I appdialogen finns även en vanlig länk **Öppna Ditt konto i en ny flik**. Den som behöver logga in kan behålla den ursprungliga fliken och utkastet öppet och återvända efteråt. En faktisk autentiserad cross-tab-inloggning är **inte** verifierad: det automatiserade Chromium-testet kontrollerar popup-länken och att utkastet kvarstår, med mockad Auth för själva rapporten. Laddas den ursprungliga sidan om eller stängs fliken försvinner utkastet, vilket också förklaras i dialogen.
+
+**Syntetiska kontroller:** Node/VM verifierar att knappen finns och återaktiveras efter Auth-timeout; Chromium verifierar kategori, beskrivning och frivilligt fält genom Stäng/öppna/Escape, nytt flikfönster och bevarat utkast efter misslyckad INSERT, uttrycklig Rensa utkast och ren formulärstart efter lyckat inskick. Fysisk Safari, faktisk Auth och live Supabase-INSERT återstår separat.

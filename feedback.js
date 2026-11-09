@@ -43,16 +43,25 @@ function installFeedback({ db }) {
   const open = document.getElementById('hk-feedback-open');
   const form = document.getElementById('hk-feedback-form');
   const close = document.getElementById('hk-feedback-close');
+  const clear = document.getElementById('hk-feedback-clear');
   const status = document.getElementById('hk-feedback-status');
-  if (!dialog || !open || !form || !close || !status) return;
+  if (!dialog || !open || !form || !close || !clear || !status) return;
   const submit = form.querySelector('button[type="submit"]');
   let busy = false;
   const setStatus = message => { status.textContent = message; };
   open.addEventListener('click', () => {
     if (busy) return;
-    form.reset();
+    // Preserve unsent edits when the dialog is dismissed, including after
+    // a failed write. The user alone decides when to clear the draft.
     setStatus('');
     dialog.showModal();
+    const hasDraft = form.elements.description.value.trim() || form.elements.expected.value.trim();
+    (hasDraft ? form.elements.description : form.elements.category).focus();
+  });
+  clear.addEventListener('click', () => {
+    if (busy) return;
+    form.reset();
+    setStatus('Utkastet har rensats.');
     form.elements.category.focus();
   });
   close.addEventListener('click', () => { if (!busy) dialog.close(); });
@@ -71,6 +80,7 @@ function installFeedback({ db }) {
     busy = true;
     submit.disabled = true;
     close.disabled = true;
+    clear.disabled = true;
     setStatus('Skickar rapporten…');
     try {
       let authResponse;
@@ -111,6 +121,7 @@ function installFeedback({ db }) {
       busy = false;
       submit.disabled = false;
       close.disabled = false;
+      clear.disabled = false;
     }
   });
 }

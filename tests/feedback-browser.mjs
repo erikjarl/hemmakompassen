@@ -14,7 +14,8 @@ const css = readFileSync(new URL('../feedback.css',import.meta.url),'utf8');
 const browser = await chromium.launch({headless:true,args:['--no-sandbox']});
 try {
   const page = await browser.newPage({viewport:{width:390,height:844}});
-  await page.route('https://site.test/**',route=>route.fulfill({
+  // Route the full browser context so the new account tab uses the fixture too.
+  await page.context().route('https://site.test/**',route=>route.fulfill({
     status:200,contentType:'text/html',
     body:'<!doctype html><html lang="sv"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><body><div class="live-layout"><nav class="live-mobile" style="position:fixed;bottom:0;height:60px;width:100%"></nav></div>'+widget+'</body></html>'
   }));
@@ -73,6 +74,29 @@ try {
   assert.equal(await page.locator('#hk-feedback-dialog').evaluate(el=>el.open),true);
   await page.locator('[name="category"]').selectOption('bug');
   await page.locator('[name="description"]').fill('Knappen reagerade inte när jag tryckte.');
+  await page.locator('[name="expected"]').fill('Knappen ska reagera på första klicket.');
+  // VIS/FBK-01: a signed-out user can open account in a separate tab
+  // without destroying their edited report in the current tab.
+  const newTabLink=page.locator('#hk-feedback-form a[href="./konto.html"]');
+  assert.equal(await newTabLink.getAttribute('target'),'_blank');
+  assert.equal(await newTabLink.getAttribute('rel'),'noopener noreferrer');
+  const [accountTab] = await Promise.all([
+    page.waitForEvent('popup'),
+    newTabLink.click()
+  ]);
+  await accountTab.waitForLoadState('domcontentloaded');
+  assert.match(accountTab.url(),/\/hemmakompassen\/konto\.html/);
+  await accountTab.close();
+  assert.equal(await page.locator('[name="description"]').inputValue(),'Knappen reagerade inte när jag tryckte.');
+  await page.locator('#hk-feedback-close').click();
+  await btn.click();
+  assert.equal(await page.locator('[name="description"]').inputValue(),'Knappen reagerade inte när jag tryckte.',
+    'Dismiss/reopen must not erase an unsent report');
+  assert.equal(await page.locator('[name="expected"]').inputValue(),'Knappen ska reagera på första klicket.');
+  await page.keyboard.press('Escape');
+  await btn.click();
+  assert.equal(await page.locator('[name="description"]').inputValue(),'Knappen reagerade inte när jag tryckte.',
+    'Escape/reopen must preserve a draft');
   await page.locator('button[type=submit]').click();
   await page.waitForFunction(()=>document.querySelector('#hk-feedback-status').textContent.includes('Logga in'));
   assert.equal(await page.locator('[name="description"]').inputValue(),'Knappen reagerade inte när jag tryckte.');
@@ -105,6 +129,13 @@ try {
   assert.equal(await page.locator('#hk-feedback-close').isEnabled(),true);
   assert.equal(await page.evaluate(()=>window.feedbackInsertAttempts),2);
   assert.equal((await page.evaluate(()=>window.testFeedbackRows)).length,1);
+
+  // Failed submissions must keep the draft after leaving/reopening the modal.
+  await page.locator('#hk-feedback-close').click();
+  await btn.click();
+  assert.equal(await page.locator('[name="description"]').inputValue(),draft);
+  assert.equal(await page.locator('[name="category"]').inputValue(),'content');
+  assert.equal(await page.locator('button[type=submit]').isEnabled(),true);
 
   await page.evaluate(()=>window.setFeedbackScenario('authError'));
   await page.locator('button[type=submit]').click();
@@ -145,6 +176,20 @@ try {
   assert.equal(finalRows[1].row.category,'content');
   assert.equal(finalRows[1].row.page_context,'index.html#kommunikation');
   assert.equal(await page.evaluate(()=>window.feedbackInsertAttempts),4);
+  assert.equal(await page.locator('[name="description"]').inputValue(),'');
+  await page.locator('#hk-feedback-close').click();
+
+  await btn.click();
+  await page.locator('[name="category"]').selectOption('suggestion');
+  await page.locator('[name="description"]').fill('Rapport som användaren vill kasta bort.');
+  await page.locator('[name="expected"]').fill('Ett frivilligt utkast.');
+  await page.locator('#hk-feedback-clear').click();
+  assert.equal(await page.locator('[name="category"]').inputValue(),'');
+  assert.equal(await page.locator('[name="description"]').inputValue(),'');
+  assert.equal(await page.locator('[name="expected"]').inputValue(),'');
+  assert.match(await page.locator('#hk-feedback-status').innerText(),/Utkastet har rensats/);
+  await page.locator('#hk-feedback-close').click();
+  await btn.click();
   assert.equal(await page.locator('[name="description"]').inputValue(),'');
   await page.locator('#hk-feedback-close').click();
 
@@ -209,7 +254,7 @@ try {
   assert.equal(await accountPage.locator('#hk-feedback-dialog').evaluate(el=>el.open),false,
     'The dialog can close with Escape after a completed submission');
   await accountPage.close();
-  console.log('PASS: 320/390px reporter, keyboard-sized modal, rejected/unknown saves, Auth timeout, retained draft and explicit retry');
+  console.log('PASS: report draft retention on close/Escape/error, explicit clear, new-tab login, failure recovery, account reporting');
 } finally {
   await browser.close();
 }
