@@ -165,7 +165,7 @@ test('FUN-01: an invite RPC reply arriving after timeout must not expose an old 
  p.releaseInvite();
  await pause(50);
  assert.equal(p.el('new-invite').textContent,'','Expired invitation must not be displayed');
- assert.equal(p.el('invite-qr-image').src,'','Expired invitation must not render a QR');
+ assert.ok(!p.el('invite-qr-image').src,'Expired invitation must not render a QR');
  assert.equal(p.el('status').textContent,timeoutStatus);
  assert.equal(p.inviteCalls,1,'Do not create another invitation after timeout');
 });
