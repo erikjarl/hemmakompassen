@@ -37,6 +37,7 @@ try {
       db:{
         auth:{getUser:async()=>{
           if(scenario==='authHang')return new Promise(()=>{});
+          if(scenario==='authError')return {data:{user:null},error:{message:'Simulerat nätverksfel'}};
           return {data:{user:signedIn?{id:'test-user-id'}:null},error:null};
         }},
         from:table=>({insert:async row=>{
@@ -104,6 +105,16 @@ try {
   assert.equal(await page.locator('#hk-feedback-close').isEnabled(),true);
   assert.equal(await page.evaluate(()=>window.feedbackInsertAttempts),2);
   assert.equal((await page.evaluate(()=>window.testFeedbackRows)).length,1);
+
+  await page.evaluate(()=>window.setFeedbackScenario('authError'));
+  await page.locator('button[type=submit]').click();
+  await page.waitForFunction(()=>document.querySelector('#hk-feedback-status').textContent.includes('Kunde inte kontrollera inloggningen'));
+  assert.doesNotMatch(await page.locator('#hk-feedback-status').innerText(),/Logga in via Ditt konto/,
+    'A service error is not misleadingly treated as an explicit logout');
+  assert.equal(await page.locator('[name="description"]').inputValue(),draft);
+  assert.equal(await page.locator('button[type=submit]').isEnabled(),true);
+  assert.equal(await page.evaluate(()=>window.feedbackInsertAttempts),2,
+    'A returned Auth service error must not create a new report');
 
   await page.evaluate(()=>window.setFeedbackScenario('authHang'));
   await page.locator('button[type=submit]').click();
