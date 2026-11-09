@@ -14,7 +14,8 @@ const css = readFileSync(new URL('../feedback.css',import.meta.url),'utf8');
 const browser = await chromium.launch({headless:true,args:['--no-sandbox']});
 try {
   const page = await browser.newPage({viewport:{width:390,height:844}});
-  await page.route('https://site.test/**',route=>route.fulfill({
+  // Route the full browser context so the new account tab uses the fixture too.
+  await page.context().route('https://site.test/**',route=>route.fulfill({
     status:200,contentType:'text/html',
     body:'<!doctype html><html lang="sv"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><body><div class="live-layout"><nav class="live-mobile" style="position:fixed;bottom:0;height:60px;width:100%"></nav></div>'+widget+'</body></html>'
   }));
