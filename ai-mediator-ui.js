@@ -10,7 +10,7 @@ export function renderMediatorInternalLinks(text,escapeHtml,getViewerRole=()=>nu
     return '<a href="#'+match[1]+'">'+escapeHtml(piece)+'</a>';
   }).join('');
 }
-export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl = fetch, onRender = () => {}, getViewerRole=()=>null }) {
+export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl = fetch, onRender = () => {}, getViewerRole=()=>null, historyReadTimeoutMs=15000 }) {
   const h = escapeHtml;
   let userId = null;
   let epoch = 0;
@@ -36,6 +36,8 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
     && /^https:\/\/[a-z0-9-]+\.erikbertiljarl\.workers\.dev\/api\/ai\/mediate$/.test(config.aiMediatorUrl);
 
   const historyEnabled = enabled && config.enableAiHistory === true;
+  const readDeadlineMs=Number.isFinite(historyReadTimeoutMs)&&historyReadTimeoutMs>0
+    ?Math.min(historyReadTimeoutMs,60000):15000;
   function notify() { onRender(); }
   async function tokenFor(account) {
     const {data, error: sessionError} = await db.auth.getSession();
@@ -45,22 +47,44 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
     return data.session.access_token;
   }
   async function callApi(path, method, account, payload = null, signal) {
-    const token = await tokenFor(account);
-    const url = config.aiMediatorUrl.replace(/\/mediate$/, '') + path;
-    const res = await fetchImpl(url, {
-      method,
-      headers: {
-        Authorization: 'Bearer ' + token,
-        ...(payload ? {'Content-Type':'application/json'} : {})
-      },
-      ...(payload ? {body: JSON.stringify(payload)} : {}),
-      ...(signal ? {signal} : {}),
-      credentials:'omit',cache:'no-store',referrerPolicy:'no-referrer'
-    });
-    let result;
-    try{result=await res.json();}catch{throw new Error('Servern gav ett oläsligt svar.');}
-    if (!res.ok) throw new Error(typeof result?.error === 'string' ? result.error : 'Privata samtal kan inte nås.');
-    return result;
+    // A stalled read used to leave the chat list or context overview loading
+    // forever. Only GET is time-limited here: writes must not be retried after
+    // an ambiguous timeout (a server could already have saved a message).
+    const reader=method==='GET'?new AbortController():null;
+    const activeSignal=signal||reader?.signal;
+    let timer;
+    const operation=(async()=>{
+      const token=await tokenFor(account);
+      // Auth adapters may ignore AbortSignal; never start a late fetch after
+      // a deadline has already expired.
+      if(activeSignal?.aborted)throw Error('Hämtningen tog för lång tid. Försök igen.');
+      const url = config.aiMediatorUrl.replace(/\/mediate$/, '') + path;
+      const res = await fetchImpl(url, {
+        method,
+        headers: {
+          Authorization: 'Bearer ' + token,
+          ...(payload ? {'Content-Type':'application/json'} : {})
+        },
+        ...(payload ? {body: JSON.stringify(payload)} : {}),
+        ...(activeSignal ? {signal:activeSignal} : {}),
+        credentials:'omit',cache:'no-store',referrerPolicy:'no-referrer'
+      });
+      let result;
+      try{result=await res.json();}catch{throw new Error('Servern gav ett oläsligt svar.');}
+      if (!res.ok) throw new Error(typeof result?.error === 'string' ? result.error : 'Privata samtal kan inte nås.');
+      return result;
+    })();
+    if(!reader)return operation;
+    try{
+      return await Promise.race([operation,new Promise((_,reject)=>{
+        timer=setTimeout(()=>{
+          reader.abort();
+          reject(Error('Hämtningen tog för lång tid. Försök igen.'));
+        },readDeadlineMs);
+      })]);
+    }finally{
+      clearTimeout(timer);
+    }
   }
   async function loadContextStatus() {
     if (!historyEnabled || !userId || !includeProjectContext || contextLoading) return false;
@@ -98,14 +122,14 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
       if (!Array.isArray(data.chats) || data.chats.length > 12) throw new Error('Samtalslistan är ogiltig.');
       chats = data.chats;
       if (!chats.some(x=>x.id===activeChatId)) activeChatId = chats[0]?.id || null;
-      if (activeChatId) await openChat(activeChatId, true);
-      else turns = [];
+      if (activeChatId && !await openChat(activeChatId, true)) return false;
+      if (!activeChatId) turns = [];
       return true;
     } catch(err) {
-      if (epoch===epochAtStart && userId===account) historyError=err?.message||'Samtalslistan kunde inte laddas.';
+      if (epoch===epochAtStart && userId===account && request===listRequest) historyError=err?.message||'Samtalslistan kunde inte laddas.';
       return false;
     } finally {
-      if (epoch===epochAtStart && userId===account){loading=false;notify();}
+      if (epoch===epochAtStart && userId===account && request===listRequest){loading=false;notify();}
     }
   }
   async function createChat() {
@@ -127,7 +151,9 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
   }
   async function openChat(chatId, preserveLoading=false) {
     if (!historyEnabled || !userId || !chats.some(c=>c.id===chatId) || sending) return false;
-    const myEpoch=epoch,account=userId,request=++listRequest;
+    // A read opened as part of loadList belongs to that list's request.
+    // User-initiated switches must supersede both the list and its read.
+    const myEpoch=epoch,account=userId,request=preserveLoading?listRequest:++listRequest;
     activeChatId=chatId;
     // A selected chat is not the previously verified transcript. Remove stale
     // private messages immediately, including when the new read fails.
@@ -224,7 +250,7 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
     const historyBar = historyEnabled
       ? '<section class="mediator-history"><div class="mediator-history-heading"><h2>Privata samtal</h2><button type="button" class="mediator-clear" id="mediator-new"'+(sending?' disabled':'')+'>+ Nytt samtal</button></div>'
         + (loading?'<p>Hämtar dina samtal…</p>':'')
-        + (historyError?'<p role="alert" class="mediator-error">'+h(historyError)+'</p>':'')
+        + (historyError?'<p role="alert" class="mediator-error">'+h(historyError)+'</p><button type="button" class="mediator-clear" id="mediator-retry-list"'+(sending||loading?' disabled':'')+'>Försök hämta samtal igen</button>':'')
         + (chats.length ? '<div class="mediator-thread-list" role="group" aria-label="Dina samtal">'
            + chats.map(c=>'<button type="button" data-mediator-open="'+h(c.id)+'"'+(c.id===activeChatId?' aria-current="true"':'')+(sending?' disabled':'')+'>'+h(c.title)+'</button>').join('')+'</div>'
           : '<p>Inga sparade samtal ännu. Skriv nedan så skapas ett privat samtal.</p>')
