@@ -23,6 +23,12 @@ function renderInviteQr(code) {
 }
 const status = message => { $('status').textContent=message; };
 const show = (id,yes) => $(id).classList.toggle('hidden',!yes);
+function clearGeneratedInvite(){
+  $('new-invite').textContent='';
+  $('invite-qr-image').removeAttribute('src');
+  $('invite-link').removeAttribute('href');
+  show('invite-qr',false);
+}
 let refreshVersion = 0;
 let renderedAccountId = null;
 async function refresh() {
@@ -39,10 +45,7 @@ async function refresh() {
     $('display-name').value='';
     $('members').textContent='';
     show('unpaired',false);show('family',false);show('waiting',false);show('join-family',false);
-    $('new-invite').textContent='';
-    $('invite-qr-image').removeAttribute('src');
-    $('invite-link').removeAttribute('href');
-    show('invite-qr', false);
+    clearGeneratedInvite();
     renderedAccountId=accountId;
   }
   if(error && error.name!=='AuthSessionMissingError') status(error.message);
@@ -68,7 +71,8 @@ async function refresh() {
   if(membersError){status(membersError.message);return;}
   const memberCount=members?.length||0;
   show('unpaired',memberCount===0);show('family',memberCount>0);show('waiting',memberCount===1);show('join-family',memberCount<2);
-  if(memberCount===2) show('invite-qr', false);
+  // A completed pair (or no family) must not leave an obsolete invite behind.
+  if(memberCount!==1) clearGeneratedInvite();
   if(scannedInviteCode && memberCount<2){
     $('invite-code').value = scannedInviteCode;
     $('join-help').textContent = 'Inbjudningskoden från QR-länken är ifylld. Kontrollera att du är inloggad på rätt konto och välj Anslut till familj.';
