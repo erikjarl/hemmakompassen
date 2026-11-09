@@ -12,6 +12,7 @@ Detta är en **kodgranskningsgrundad användarflödesbrist**, inte en uppmätt i
 
 - Spåra vilken inloggad identitet kontosidans DOM faktiskt visar. Vid byte av användar-ID eller utloggning: rensa den skapade textkoden och ta bort QR-bildens `src` och länkattributets `href`, och dölj QR-figuren.
 - Vid vanlig `refresh()` av **samma användare** bevaras den pågående QR-inbjudan; ingen onödig ny familjekod skapas.
+- Vid **kontoändring** döljs också föregående familjs namn och paneler direkt, innan ny familjehämtning är klar; de fylls först från den nya kontosessionens svar.
 - När `create_family_invite` returnerar verifieras **kontot som faktiskt är inloggat** mot kontot som begärde koden. Ett annat konto får inte se gammalt svar, medan en vanlig uppdatering av samma konto inte kastar bort en redan skapad inbjudan.
 - Ingen förändring av backend, befintliga inbjudningsposter, inloggnings-/parningsregler eller användarsvar.
 
@@ -24,5 +25,7 @@ Detta är en **kodgranskningsgrundad användarflödesbrist**, inte en uppmätt i
 3. Utloggning rensar alla genererade inbjudningsfält.
 4. Ett gammalt RPC-svar anländer efter kontoändring och får inte återinföra den gamla koden.
 5. En Auth-uppdatering av **samma konto medan inbjudningsanropet väntar** ska inte förlora den giltiga, nyskapade koden.
+
+Ett kompletterande test i `tests/account-refresh-race.test.mjs` håller den nya familjeläsningen avsiktligt väntande och verifierar att det tidigare kontots familjenamn/paneler inte fortsätter synas innan korrekt svar kommer.
 
 **Avgränsning:** Mockad Supabase/Auth, inga riktiga användare/servrar, inget nätverksavbrott och ingen Safari/VoiceOver eller manuell QR-skanning. En grön CI är inte bevis för autentiserad tvåkontoparning. FUN-01 kvarstår som **Pågår** tills verklig funktionsverifiering har gjorts.
