@@ -30,6 +30,7 @@ function harness({delayInvite=false}={}){
     return nodes.get(id);
   };
   let current={id:'parent-a',email:'parent-a@example.test'};
+  let memberCount=1;
   let authEvent;
   let inviteCalls=0;
   const auth={
@@ -42,7 +43,7 @@ function harness({delayInvite=false}={}){
     from(){return {select(){return {eq(){return {async maybeSingle(){return {data:{display_name:'Namn'}};}};}};}};},
     async rpc(name){
       if(name==='my_family_members'){
-        return {data:current?[{role:'parent',display_name:'Namn'}]:[],error:null};
+        return {data:current?Array.from({length:memberCount},(_,index)=>({role:index?'teen':'parent',display_name:index?'Tonåring':'Namn'})):[],error:null};
       }
       assert.equal(name,'create_family_invite');
       inviteCalls++;
@@ -65,6 +66,7 @@ function harness({delayInvite=false}={}){
   return {
     el,gate,
     switchUser(user){current=user;authEvent('SIGNED_IN');},
+    setMemberCount(value){memberCount=value;},
     async createInvite(){el('make-invite').click();await tick();await tick();},
     async logOut(){el('logout').click();await tick();await tick();},
     get inviteCalls(){return inviteCalls;}
@@ -138,4 +140,24 @@ test('FUN-01: pending invitation remains visible after same-account auth refresh
   assert.match(h.el('new-invite').textContent,new RegExp(generatedCode));
   assert.equal(h.el('invite-qr').hidden,false);
   assert.equal(h.inviteCalls,1);
+});
+
+test('FUN-01: a completed family pair removes an obsolete invitation',async()=>{
+  const h=harness();
+  await tick();await tick();
+  await h.createInvite();
+  assert.equal(h.el('invite-qr').hidden,false);
+  h.setMemberCount(2);
+  h.switchUser({id:'parent-a',email:'parent-a@example.test'});
+  await delay(15);
+  assert.match(h.el('members').textContent,/Tonåring/);
+  assert.equal(h.el('waiting').hidden,true);
+  assert.equal(h.el('new-invite').textContent,'');
+  assert.equal(h.el('invite-qr').hidden,true);
+  assert.equal(h.el('invite-qr-image').src,undefined);
+  assert.equal(h.el('invite-link').href,undefined);
+  h.setMemberCount(1);
+  h.switchUser({id:'parent-a',email:'parent-a@example.test'});
+  await delay(15);
+  assert.equal(h.el('new-invite').textContent,'','Old invite must not reappear after later family changes');
 });
