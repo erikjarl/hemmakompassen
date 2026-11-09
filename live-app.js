@@ -1,5 +1,5 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261109-private-retest-deadline1-fun02ai10';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261109-private-retest-deadline1-fun02ai11';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261107-authoritative-export4';
 import {createAiResultExperience} from './ai-result-ui.js?v=20261109-private-retest-deadline1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
@@ -849,9 +849,11 @@ function renderKeepingGeneralReview(){
  if(page()==='swipe'&&activeThemeDeck){
   const owner=user?.id,session=sharedSession,deckId=activeThemeDeck;
   const root=$('swipe-private-review');
-  const expanded=root?.querySelector('details')?.open===true;
+  const currentDetails=root?.querySelector('details');
+  const expanded=currentDetails?.open===true;
   const active=document.activeElement;
   const state=expanded?{
+   focusSummary:active===currentDetails?.querySelector('summary'),
    search:String($('private-theme-review-search')?.value||'').slice(0,120),
    filter:$('private-theme-review-answer')?.value||'all',
    focusIndex:active?.closest?.('[data-theme-review-index]')?.dataset.themeReviewIndex,
@@ -865,7 +867,8 @@ function renderKeepingGeneralReview(){
   if(search)search.value=state.search;
   if(filter)filter.value=['yes','no'].includes(state.filter)?state.filter:'all';
   filterPrivateThemeReview();
-  if(state.focusIndex){
+  if(state.focusSummary)details?.querySelector('summary')?.focus({preventScroll:true});
+  else if(state.focusIndex){
    const button=[...replacement.querySelectorAll('[data-theme-review-index]')].find(b=>
     b.dataset.themeReviewIndex===state.focusIndex&&!b.closest('[data-private-theme-answer]')?.hidden);
    (button||search)?.focus({preventScroll:true});
@@ -874,11 +877,13 @@ function renderKeepingGeneralReview(){
  }
  const owner=user?.id,session=sharedSession;
  const root=page()==='swipe'&&!activeThemeDeck?$('swipe-general-review'):null;
- const expanded=root?.querySelector('details')?.open===true;
+ const currentDetails=root?.querySelector('details');
+ const expanded=currentDetails?.open===true;
  const active=document.activeElement;
  const focusIndex=expanded?active?.closest?.('[data-general-review-index]')?.dataset.generalReviewIndex:null;
  const focusId=expanded&&active?.id?.startsWith('swipe-general-review-')?active.id:null;
  const state=expanded?{
+  focusSummary:active===currentDetails?.querySelector('summary'),
   search:String($('swipe-general-review-search')?.value||'').slice(0,120),
   filter:$('swipe-general-review-answer')?.value||'all',
   focusIndex,focusId
@@ -893,7 +898,8 @@ function renderKeepingGeneralReview(){
  if(search)search.value=state.search;
  if(answer)answer.value=['yes','no','skipped'].includes(state.filter)?state.filter:'all';
  filterPrivateGeneralReview();
- if(focusIndex){
+ if(state.focusSummary)details?.querySelector('summary')?.focus({preventScroll:true});
+ else if(focusIndex){
   const selected=[...replacement.querySelectorAll('[data-general-review-index]')].find(b=>
     b.dataset.generalReviewIndex===focusIndex&&!b.closest('[data-general-review-kind]')?.hidden);
   (selected||search)?.focus({preventScroll:true});
@@ -2391,7 +2397,11 @@ function render(){
   // received focus. Preserve focus only if it is still the SAME question.
   const focusedSwipeCard=page()==='swipe'&&document.activeElement?.id==='swipe-card'
     ?document.activeElement.getAttribute('aria-label'):null;
-  const mainScroll=(page()==='inkorg'||priorityFocus||focusedSwipeCard||themeFilterFocus?.target)
+  // A private answer review may be mid-search when a shared match or AI result
+  // finishes. Keep the scroll of the active review, not only the input focus.
+  const focusedPrivateReview=page()==='swipe'
+    ?document.activeElement?.closest?.('#swipe-private-review,#swipe-general-review'):null;
+  const mainScroll=(page()==='inkorg'||priorityFocus||focusedSwipeCard||themeFilterFocus?.target||focusedPrivateReview)
     ?document.querySelector('.live-main')?.scrollTop:null;
   menu();$('live-app').innerHTML=user?(page()==='hem'?home():section(page())):login();
   if(expandedThemeCategory!==undefined){
