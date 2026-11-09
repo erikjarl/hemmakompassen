@@ -75,10 +75,16 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
       if(result.unavailableCount>0)contextError='Några uppgifter kunde inte hämtas. AI:n ska inte gissa vad de innehåller.';
       return true;
     } catch(e) {
-      if(myEpoch===epoch&&userId===account)contextError='Kunde inte kontrollera tillgängliga uppgifter.';
+      // Opting out and then back in may start a newer overview request.
+      // An obsolete failure must not replace that newer request's status.
+      if(myEpoch===epoch&&userId===account&&request===contextRequest&&includeProjectContext)
+        contextError='Kunde inte kontrollera tillgängliga uppgifter.';
       return false;
     } finally {
-      if(myEpoch===epoch&&userId===account){contextLoading=false;notify();}
+      if(myEpoch===epoch&&userId===account&&request===contextRequest&&includeProjectContext){
+        contextLoading=false;
+        notify();
+      }
     }
   }
   async function loadList() {
