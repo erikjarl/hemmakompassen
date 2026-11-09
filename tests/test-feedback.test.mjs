@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { feedbackPageContext, feedbackPayload } from '../feedback.js';
+import {runInNewContext} from 'node:vm';
+const scope={window:{},URL};
+runInNewContext(readFileSync(new URL('../feedback.js',import.meta.url),'utf8'),scope);
+const {feedbackPageContext,feedbackPayload}=scope.window.HKFeedback;
 
 assert.equal(feedbackPageContext('https://site.test/hk/index.html#swipe/theme'),
   'index.html#swipe');
@@ -13,7 +16,7 @@ assert.equal(feedbackPageContext('https://site.test/hk/index.html#invite=SECRET1
 assert.equal(feedbackPageContext('https://site.test/hk/'), 'index.html');
 const report = feedbackPayload('self-test-id', {category:'content',description:'  Texten kan misstolkas  ',expected:'Skriv tydligare'},
   'https://site.test/hk/index.html#personlighet');
-assert.deepEqual(report, {
+assert.deepEqual(JSON.parse(JSON.stringify(report)), {
   user_id:'self-test-id',category:'content',page_context:'index.html#personlighet',
   description:'Texten kan misstolkas',expected_result:'Skriv tydligare'
 });
@@ -32,8 +35,8 @@ for (const page of [html,konto]) {
   }
   assert.match(page,/feedback\.css/);
 }
-assert.match(live,/installFeedback\(\{db\}\)/);
-assert.match(account,/installFeedback\(\{db:client\}\)/);
+assert.match(live,/HKFeedback\?\.installFeedback\(\{db\}\)/);
+assert.match(account,/HKFeedback\?\.installFeedback\(\{db:client\}\)/);
 assert.match(build,/'feedback\.js'/);
 assert.match(build,/'feedback\.css'/);
 assert.match(sql,/enable row level security/i);
