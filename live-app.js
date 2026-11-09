@@ -121,7 +121,12 @@ async function fetchActivityNotifications({quiet=false,forceRender=false}={}){
   }else{
     activityNotifications=result.data;activityNotificationsError='';activityFeedback='';
   }
-  if(previous===JSON.stringify([activityNotifications,activityNotificationsError]))return;
+  if(previous===JSON.stringify([activityNotifications,activityNotificationsError])){
+    // Even an unchanged empty result must dismiss the foreground loading view.
+    // Quiet background checks should remain render-free to preserve focus/scroll.
+    if(!quiet&&page()==='inkorg'&&!activityNotifications.length&&(!familyChatDraft.trim()||forceRender))render();
+    return;
+  }
   if(['hem','inkorg'].includes(page())&&(page()!=='inkorg'||!familyChatDraft.trim()||forceRender))render();
   else menu();
 }
