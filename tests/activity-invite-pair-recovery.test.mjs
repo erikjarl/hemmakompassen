@@ -133,11 +133,11 @@ test('FUN-02: previous account match-RPC completion must not clear current activ
   let readCount=0;
   h.c.db.rpc=()=>++readCount===1?oldMatches.promise:newMatches.promise;
   const oldAction=h.c.prepare('aktiviteter-01');
-  await Promise.resolve();
+  await new Promise(resolve=>setImmediate(resolve));
   assert.equal(readCount,1,'First action has reached server match lookup');
   switchToSecondFamily(h);
   const currentAction=h.c.prepare('aktiviteter-01');
-  await Promise.resolve();
+  await new Promise(resolve=>setImmediate(resolve));
   assert.equal(readCount,2,'Second family starts an independent match lookup');
   oldMatches.resolve({data:[{deck_id:'aktiviteter',card_id:'aktiviteter-01',answer:true}],error:null});
   await oldAction;
