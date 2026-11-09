@@ -2959,11 +2959,16 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
     });
   }
   const aiRequests=[];
-  const aiFixture={failNext:false};
+  const aiFixture={failNext:false,holdNext:false,release:null};
   if(aiAnalyses){
     await context.route('https://hemmakompassen-ai-medlare.erikbertiljarl.workers.dev/api/ai/analyze',async route=>{
       const body=route.request().postDataJSON();
       aiRequests.push(body);
+      if(aiFixture.holdNext){
+        aiFixture.holdNext=false;
+        await new Promise(resolve=>{aiFixture.release=resolve;});
+        aiFixture.release=null;
+      }
       if(aiFixture.failNext){
         aiFixture.failNext=false;
         await route.fulfill({status:503,contentType:'application/json',
@@ -3132,6 +3137,48 @@ async function verifyAiReflectionRetryAndRoutes(){
       await checkOverflow(m.page,'FUN-05 swipe AI '+role+' '+width+'px');
       await capture(m.page,'fun-05-ai-swipe-retry-'+role+'.png');
       records.push({role,step:'swipe: retry restores result',status:'PASS'});
+
+      // FUN-02: AI completion is a separate async rerender, not a new card
+      // action. A private saved-answer search entered while it runs must survive.
+      const review=m.page.locator('#swipe-general-review');
+      await review.locator('details > summary').click();
+      const reviewSearch=review.locator('#swipe-general-review-search');
+      const reviewFilter=review.locator('#swipe-general-review-answer');
+      m.aiFixture.holdNext=true;
+      const previousAiCalls=m.aiRequests.length;
+      await swipe.locator('[data-ai-analysis-retry="swipe:general"]').click();
+      for(let attempt=0;attempt<60&&typeof m.aiFixture.release!=='function';attempt++)
+        await sleep(25);
+      assert.equal(m.aiRequests.length,previousAiCalls+1,
+        'FUN-02: real AI retry must reach the mocked Worker before completing');
+      assert.equal(typeof m.aiFixture.release,'function',
+        'FUN-02: AI response is deliberately held while user searches private answers');
+      await reviewFilter.selectOption('no');
+      await reviewSearch.fill('mitt-pågående-sökord');
+      const scrollBefore=await m.page.evaluate(()=>{
+        const main=document.querySelector('.live-main');
+        main.scrollTop=Math.min(120,main.scrollHeight-main.clientHeight);
+        const input=document.querySelector('#swipe-general-review-search');
+        input.focus({preventScroll:true});
+        return main.scrollTop;
+      });
+      m.aiFixture.release();
+      await swipe.locator('.ai-result-prose a[href="#kommunikation/kontakt"]').waitFor();
+      assert.equal(await review.locator('details').evaluate(el=>el.open),true,
+        'FUN-02: returning AI text must not collapse the private saved-answer list');
+      assert.equal(await reviewSearch.inputValue(),'mitt-pågående-sökord',
+        'FUN-02: returning AI text must not discard the private search draft');
+      assert.equal(await reviewFilter.inputValue(),'no',
+        'FUN-02: returning AI text keeps the selected private answer filter');
+      assert.equal(await reviewSearch.evaluate(el=>el===document.activeElement),true,
+        'FUN-02: returning AI text keeps keyboard focus in private search');
+      const scrollAfter=await m.page.locator('.live-main').evaluate(el=>el.scrollTop);
+      assert.ok(Math.abs(scrollAfter-scrollBefore)<=3,
+        'FUN-02: AI refresh must not jump the mobile scroller: '+
+          JSON.stringify({scrollBefore,scrollAfter}));
+      records.push({role,step:'swipe: async AI reply preserves private answer search/filter/focus',
+        status:'PASS'});
+
       await swipe.locator('.ai-result-prose a[href="#kommunikation/kontakt"]').click();
       await m.page.waitForURL(/#kommunikation\/kontakt$/);
       const contact=m.page.locator('.comm-exercise[data-comm-skill="kontakt"]');
