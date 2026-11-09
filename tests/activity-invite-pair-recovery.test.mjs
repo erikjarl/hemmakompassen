@@ -151,3 +151,13 @@ test('FUN-02: previous account match-RPC completion must not clear current activ
   assert.match(h.c.familyChatDraft,/Laga mat tillsammans/);
   assert.deepEqual(h.locations,['inkorg']);
 });
+
+
+test('FUN-02: account refresh clears abandoned activity loading and status',()=>{
+  const start=file.indexOf('async function refresh(){');
+  const end=file.indexOf('// FUN-06:',start);
+  assert.ok(start>=0&&end>start,'Use the real account refresh implementation');
+  const refresh=file.slice(start,end);
+  assert.match(refresh,/sharedSession\+\+;sharedRequest\+\+;activityInviteBusy=false;activityInviteError='';/,
+    'The next account session must discard the previous activity spinner and error');
+});
