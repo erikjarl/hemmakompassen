@@ -3,7 +3,7 @@ import vm from 'node:vm';
 import assert from 'node:assert/strict';
 const source=readFileSync(new URL('../konto.js',import.meta.url),'utf8').replace(/^import .*\n/,'');
 const elements=new Map();
-const el=id=>{if(!elements.has(id))elements.set(id,{value:'',textContent:'',classList:{toggle(){}},addEventListener(type,fn){this[type]=fn;},reset(){},focus(){}});return elements.get(id);};
+const el=id=>{if(!elements.has(id))elements.set(id,{value:'',textContent:'',classList:{toggle(){}},addEventListener(type,fn){this[type]=fn;},removeAttribute(name){delete this[name];},reset(){},focus(){}});return elements.get(id);};
 let user=null,calls=[],destination;
 const auth={
  getUser:async()=>({data:{user}}),
