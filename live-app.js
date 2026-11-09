@@ -1129,7 +1129,7 @@ async function prepareActivityMessage(cardId){
   familyChatStatus='Detta är bara ett utkast. Läs igenom och välj själv om du vill skicka.';
   activityInviteError='';
   location.hash='inkorg';
-  requestAnimationFrame(()=>document.getElementById('family-chat-body')?.focus({preventScroll:true}));
+  requestAnimationFrame(()=>document.getElementById('family-chat-body')?.focus());
 }
 
 // Read back the CURRENT consent state after a write, including a lost RPC
