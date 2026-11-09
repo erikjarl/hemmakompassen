@@ -57,7 +57,7 @@ assert.match(source,/filterPrivateGeneralReview\(\);[\s\S]*?\?\.focus\(\{prevent
  'The saved search and filter are reapplied with keyboard focus');
 assert.match(source,/generalReviewEdit=\{index,viewer:user\.id,session:sharedSession/,
  'Only an explicitly opened own saved card starts a private editing session');
-assert.match(source,/if\(returnToReview\)reopenGeneralReview\(\);else render\(\)/,
+assert.match(source,/if\(returnToReview\)reopenGeneralReview\(\);\s*else\{render\(\);revealNextSwipeCard\(viewer,session,null\);\}/,
  'Successful answer or skip returns to the private review');
 assert.match(source,/if\(e\.target\.closest\('#swipe-general-review-back'\)/,
  'Canceling a private edit is allowed without saving');
