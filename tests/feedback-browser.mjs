@@ -6,6 +6,9 @@ import {chromium} from 'playwright';
 const appHtml = readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const widget = appHtml.match(/<button type="button" id="hk-feedback-open"[\s\S]*?<\/dialog>/)?.[0];
 assert.ok(widget,'The shared feedback widget must be present in the actual app markup');
+const accountHtml = readFileSync(new URL('../konto.html',import.meta.url),'utf8');
+const accountWidget = accountHtml.match(/<button type="button" id="hk-feedback-open"[\s\S]*?<\/dialog>/)?.[0];
+assert.ok(accountWidget, 'The same tester report control must be present on the account page');
 const js = readFileSync(new URL('../feedback.js',import.meta.url),'utf8');
 const css = readFileSync(new URL('../feedback.css',import.meta.url),'utf8');
 const browser = await chromium.launch({headless:true,args:['--no-sandbox']});
@@ -13,7 +16,7 @@ try {
   const page = await browser.newPage({viewport:{width:390,height:844}});
   await page.route('https://site.test/**',route=>route.fulfill({
     status:200,contentType:'text/html',
-    body:'<!doctype html><html lang="sv"><meta name="viewport" content="width=device-width,initial-scale=1"><body>'+widget+'</body></html>'
+    body:'<!doctype html><html lang="sv"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><body><div class="live-layout"><nav class="live-mobile" style="position:fixed;bottom:0;height:60px;width:100%"></nav></div>'+widget+'</body></html>'
   }));
   await page.goto('https://site.test/hemmakompassen/index.html#kommunikation/plan');
   await page.addStyleTag({content:css});
@@ -35,8 +38,21 @@ try {
   const btn=page.locator('#hk-feedback-open');
   assert.equal(await btn.isVisible(),true);
   const box=await btn.boundingBox();
-  assert.ok(box && box.x>=0 && box.x+box.width<=390 && box.y+box.height < 844-70,
-    'Fixed mobile control stays within viewport and above bottom navigation');
+  const navBox = await page.locator('.live-mobile').boundingBox();
+  assert.equal(await btn.getAttribute('aria-label'),'Rapportera fel eller innehåll');
+  assert.ok(box && box.width <= 56 && box.x >= 0 && box.x + box.width <= 390,
+    'Mobile report button is compact and inside the viewport');
+  assert.ok(navBox && box.y + box.height <= navBox.y - 8,
+    'Fixed report control does not cover the horizontal navigation');
+  assert.equal(await page.locator('.hk-feedback-open-label').isVisible(), false,
+    'The full label is visually hidden only on mobile, retaining its accessible name');
+  await page.setViewportSize({width:320,height:700});
+  const narrowBox = await btn.boundingBox();
+  const narrowNav = await page.locator('.live-mobile').boundingBox();
+  assert.ok(narrowBox && narrowBox.width <= 56 && narrowBox.x >= 0
+    && narrowBox.x + narrowBox.width <= 320 && narrowBox.y + narrowBox.height <= narrowNav.y - 8,
+    'Compact report control stays usable at 320px');
+  await page.setViewportSize({width:390,height:844});
 
   await btn.click();
   assert.equal(await page.locator('#hk-feedback-dialog').evaluate(el=>el.open),true);
@@ -59,7 +75,22 @@ try {
   assert.equal(await page.locator('[name="description"]').inputValue(),'');
   await page.locator('#hk-feedback-close').click();
   assert.equal(await page.locator('#hk-feedback-dialog').evaluate(el=>el.open),false);
-  console.log('PASS: 390px Chromium open, logged-out draft, signed-in mock insert, context, close and mobile geometry');
+  // Account page lacks the swipe-nav; its button must still fit the small viewport.
+  const accountPage = await browser.newPage({viewport:{width:320,height:700}});
+  await accountPage.route('https://account.test/**', route => route.fulfill({
+    status:200, contentType:'text/html; charset=utf-8',
+    body:'<!doctype html><html lang="sv"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><body>'+accountWidget+'</body></html>'
+  }));
+  await accountPage.goto('https://account.test/hk/konto.html');
+  await accountPage.addStyleTag({content:css});
+  const accountButton = accountPage.locator('#hk-feedback-open');
+  const accountBox = await accountButton.boundingBox();
+  assert.ok(accountBox && accountBox.width <= 56 && accountBox.x >= 0
+    && accountBox.x + accountBox.width <= 320 && accountBox.y + accountBox.height <= 700-8,
+    'Account page report control remains usable at 320px without a bottom nav');
+  assert.equal(await accountButton.getAttribute('aria-label'),'Rapportera fel eller innehåll');
+  await accountPage.close();
+  console.log('PASS: 320/390px compact accessible report button, bottom-nav clearance, mock auth/insert and modal');
 } finally {
   await browser.close();
 }
