@@ -1,5 +1,5 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261109-private-retest-deadline1-vis08';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261109-private-retest-deadline1-fun02focus09';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261107-authoritative-export4';
 import {createAiResultExperience} from './ai-result-ui.js?v=20261109-private-retest-deadline1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
@@ -2371,11 +2371,20 @@ function render(){
   // A shared-results refresh or category change must not close an expanded
   // category selector, making a keyboard user's current control disappear.
   const expandedThemeCategory=$('theme-category')?.closest?.('details')?.open;
+  // Shared-result refreshes also rebuild the category filter. Preserve its
+  // keyboard position only while the same viewer, session and deck remain.
+  const activeThemeFilter=page()==='swipe'&&activeThemeDeck
+    ?document.activeElement?.closest?.('.swipe-category-filter'):null;
+  const themeFilterFocus=activeThemeFilter?{
+    deck:activeThemeDeck,viewer:user?.id,session:sharedSession,
+    target:document.activeElement?.id==='theme-category'?'select'
+      :document.activeElement?.matches?.('summary')?'summary':null
+  }:null;
   // Shared-match refreshes can rerender the current swipe card just after it
   // received focus. Preserve focus only if it is still the SAME question.
   const focusedSwipeCard=page()==='swipe'&&document.activeElement?.id==='swipe-card'
     ?document.activeElement.getAttribute('aria-label'):null;
-  const mainScroll=(page()==='inkorg'||priorityFocus||focusedSwipeCard)
+  const mainScroll=(page()==='inkorg'||priorityFocus||focusedSwipeCard||themeFilterFocus?.target)
     ?document.querySelector('.live-main')?.scrollTop:null;
   menu();$('live-app').innerHTML=user?(page()==='hem'?home():section(page())):login();
   if(expandedThemeCategory!==undefined){
@@ -2395,6 +2404,12 @@ function render(){
     const replacement=$('swipe-card');
     if(replacement?.getAttribute('aria-label')===focusedSwipeCard)
       replacement.focus({preventScroll:true});
+  }
+  if(themeFilterFocus?.target&&page()==='swipe'&&activeThemeDeck===themeFilterFocus.deck
+    &&user?.id===themeFilterFocus.viewer&&sharedSession===themeFilterFocus.session){
+    const replacement=themeFilterFocus.target==='select' ? $('theme-category')
+      :document.querySelector('.swipe-theme-play .swipe-category-filter > summary');
+    replacement?.focus({preventScroll:true});
   }
   if(user&&page()==='kommunikation')openCommunicationSkill($('live-app'),communicationSkillFromHash(location.hash));
   if(page()==='regler'&&user)applySchysstaFilters();
