@@ -1063,7 +1063,7 @@ function insightsView(){
     ?'<p id="insights-target-unavailable" tabindex="-1" role="status">Den här insikten är inte längre tillgänglig eller delad. Du kan se andra gemensamma insikter nedan.</p>':'';
   return title+missingTargetNotice+'<section class="live-panel" aria-labelledby="insights-a-heading"><h2 id="insights-a-heading">Möjligt att utforska</h2>'+
     '<p class="insights-main-intro">Här visas bara det ni båda sagt ja till. Det är möjligheter, inte överenskommelser.</p>'+ 
-    '<details class="insights-method"><summary>Hur visas insikterna?</summary><p>Endast serververifierade JA+JA på A-kort visas här. För gemensamma aktiviteter kan du öppna ett frivilligt meddelandeutkast i inkorgen, utan att något skickas automatiskt.</p></details>'+
+    '<details class="insights-method"><summary>Hur visas insikterna?</summary><p>Endast serververifierade JA+JA på A-kort visas här. För aktiviteter kan du öppna ett frivilligt meddelandeutkast, utan att något skickas automatiskt.</p></details>'+
     (activityInviteError?'<p role="alert">'+esc(activityInviteError)+'</p>':'')+
     (sections?sharedFactOverview(overviewGroups,'Gemensamt i alla kortlekar'): '')+(sections||empty)+
     (aiResultEnabled&&insightsAiSignature()?aiResults.panel('swipe','all',insightsAiSignature()):'')+'</section>'+
