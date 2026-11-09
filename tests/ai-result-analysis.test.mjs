@@ -268,6 +268,21 @@ test('AI-UX-05 backstop replaces questions, broken anchors and unstructured repl
    assert.doesNotMatch(unsupported,/evil\.example|unknown/);
  }
 });
+test('AI-UX-05 removes markdown-bold suggestion headings instead of leaving question proposals in reflection',()=>{
+ for(const kind of ['swipe','personality']){
+  for(const heading of ['**Förslag:**','*Förslag:*','**Förslag**:','## **Förslag:**']){
+   const raw='Reflektion:\nEtt gemensamt JA kan vara en möjlighet.\n\n'+heading+
+     '\n1. Vad ska vi göra nu?\n2. Prova en okänd väg #kommunikation/unknown';
+   const result=enforceActionableAnalysis(raw,kind);
+   assert.equal((result.match(/^Förslag:/gm)||[]).length,1,'one canonical heading: '+heading);
+   assert.doesNotMatch(result,/Vad ska vi göra nu\?|#kommunikation\/unknown|\*\*Förslag/);
+   assert.match(result,/Reflektion:\nEtt gemensamt JA kan vara en möjlighet\./);
+   assert.match(result,/^Förslag:\n1\. /m);
+   assert.equal((result.match(/#kommunikation\//g)||[]).length,2);
+  }
+ }
+});
+
 test('AI-UX-05 preserves two valid action items but rejects additional unsafe links',()=>{
  const original='Reflektion:\nSvaren visar ett gemensamt JA.\n\nFörslag:\n'+
    '1. Välj ett JA-svar och beskriv en konkret stund att prova tillsammans. #kommunikation/kontakt\n'+
