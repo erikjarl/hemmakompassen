@@ -8,6 +8,9 @@ import {readFileSync} from 'node:fs';
 const production=readFileSync(new URL('../live-app.js',import.meta.url),'utf8');
 const start=production.indexOf('async function proposeSchysstaRule(cardId){');
 const end=production.indexOf('\nfunction schysstaView(){',start);
+const helper=production.slice(production.indexOf('async function schysstaWriteRpc(operation){'),
+  production.indexOf('async function markSchysstaRead(id){'));
+assert.ok(helper.startsWith('async function schysstaWriteRpc'),'Find shared Schyssta deadline');
 assert.ok(start>0&&end>start,'Find active Schyssta rule-card handlers');
 
 const id='75000000-0000-4000-8000-000000000001';
@@ -28,11 +31,12 @@ function harness(){
     SCHYSSTA_RULES:{[deck]:'Vi respekterar varandras gränser.'},
     SCHYSSTA_UUID:/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
     preflightSchysstaWrite:async()=>true,
+    setTimeout,clearTimeout,
     db:{rpc(name,args){calls.push({name,args});return gate.promise;}},
     render:()=>rendered.push('render'),
     fetchSchysstaList:async()=>{refreshes.push('reload');}
   };
-  vm.runInNewContext(production.slice(start,end)+
+  vm.runInNewContext(helper+'\n'+production.slice(start,end)+
     '\nthis.propose=proposeSchysstaRule;this.decide=decideSchysstaRule;',state,
     {filename:'live-app.js'});
   return {state,gate,calls,rendered,refreshes,change(){
@@ -88,7 +92,7 @@ for(const action of [
     h.gate.resolve({error:{message:'network unavailable'}});
     await current;
     assert.equal(h.state.schysstaSaving.has(action.key),false);
-    assert.match(h.state.schysstaError,/kunde inte sparas/);
+    assert.match(h.state.schysstaError,/inte att bekräfta om/);
     assert.equal(h.refreshes.length,0);
     if(action.name==='decision'){
       assert.equal(h.state.schysstaRules.length,0,'Unconfirmed decision clears the obsolete list');

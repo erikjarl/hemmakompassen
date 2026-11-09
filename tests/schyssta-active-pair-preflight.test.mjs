@@ -32,6 +32,7 @@ function scenario({allowed=true,moveSession=false,editDraft=false}={}){
   SCHYSSTA_RULES:{'regler-01':'En enkel regel'},
   SCHYSSTA_UUID:/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
   crypto:{randomUUID:()=>ID},
+  setTimeout,clearTimeout,
   recheckInboxPair:async()=>{events.checks++;if(moveSession)state.sharedSession++;if(editDraft)state.schysstaDraft='Ändrad text';return allowed;},
   db:{rpc:async(name,args)=>{events.calls.push({name,args});return {data:null,error:null};}},
   fetchSchysstaList:async()=>{events.fetches++;},

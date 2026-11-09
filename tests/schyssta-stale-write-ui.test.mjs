@@ -9,7 +9,10 @@ const source=readFileSync(new URL('../live-app.js',import.meta.url),'utf8');
 const start=source.indexOf('async function markSchysstaRead(id){');
 const end=source.indexOf('// An already-open inbox',start);
 assert.ok(start>0&&end>start,'Schyssta actions must be present in production');
-const actions=source.slice(start,end);
+const helper=source.slice(source.indexOf('async function schysstaWriteRpc(operation){'),
+  source.indexOf('async function markSchysstaRead(id){'));
+assert.ok(helper.startsWith('async function schysstaWriteRpc'),'Find shared Schyssta deadline helper');
+const actions=helper+'\n'+source.slice(start,end);
 const oldId='00000000-0000-4000-8000-000000000011';
 const newId='00000000-0000-4000-8000-000000000022';
 const tick=()=>new Promise(resolve=>setImmediate(resolve));
@@ -31,6 +34,7 @@ function harness(){
     SCHYSSTA_UUID:/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i,
     crypto:{randomUUID:()=>oldId},
     preflightSchysstaWrite:async()=>true,
+    setTimeout,clearTimeout,
     db:{rpc(name,args){calls.push({name,args});return pending.promise;}},
     render:()=>renders.push('render'),fetchSchysstaList:async()=>{refreshes.push('list');}
   };
@@ -113,7 +117,7 @@ test('FUN-03: rejected current-session proposal retains draft and permits retry'
   assert.equal(h.state.schysstaSubmitting,false);
   assert.equal(h.state.schysstaDraft,'Ett tydligt gammalt regelförslag');
   assert.equal(h.state.schysstaDraftKey,key);
-  assert.match(h.state.schysstaMessage,/Kunde inte skicka/);
+  assert.match(h.state.schysstaMessage,/inte att bekräfta om förslaget skickades/);
   assert.equal(h.refreshes.length,0);
 });
 
