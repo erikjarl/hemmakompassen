@@ -288,7 +288,7 @@ try {
   const accountReport='Det vore enklare med en tydligare registreringsguide.';
   await accountPage.locator('[name="description"]').fill(accountReport);
   await accountPage.locator('[name="expected"]').fill('Visa en steg-för-steg-guide vid registrering.');
-  await accountPage.locator('button[type=submit]').click();
+  await accountPage.locator('#hk-feedback-form button[type=submit]').click();
   await accountPage.waitForFunction(()=>document.querySelector('#hk-feedback-status').textContent.includes('sparad'));
   const accountRows=await accountPage.evaluate(()=>window.accountFeedbackRows);
   assert.equal(accountRows.length,1,'A single account-page submission must create one mock report');
