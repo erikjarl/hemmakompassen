@@ -123,10 +123,11 @@ h1,h2,h3,.live-brand{font-family:Georgia,'Playfair Display',serif;letter-spacing
   }
   #live-mobile-nav > a{
     box-sizing:border-box;
-    flex:0 0 102px;
-    width:102px;
+    /* Size each tab to its readable label; the strip already scrolls sideways. */
+    flex:0 0 auto;
+    width:max-content;
     min-width:102px;
-    max-width:102px;
+    max-width:none;
     min-height:max(66px,3.6em);
     padding:8px 5px;
     margin:0;
@@ -138,7 +139,10 @@ h1,h2,h3,.live-brand{font-family:Georgia,'Playfair Display',serif;letter-spacing
     font:600 clamp(0.75rem,2.8vw,0.875rem)/1.25 "DM Sans",system-ui,sans-serif;
     text-align:center;
     white-space:normal;
-    overflow-wrap:anywhere;
+    /* Do not split Swedish words into stray single letters at larger text sizes. */
+    overflow-wrap:normal;
+    word-break:normal;
+    hyphens:none;
     scroll-snap-align:start;
     border:1px solid transparent;
     border-radius:12px;
