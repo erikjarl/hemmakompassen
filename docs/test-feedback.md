@@ -35,3 +35,12 @@ Skapa vid behov avidentifierad GitHub-issue för reproducerade problem; **public
 En låst `db.auth.getUser()` kunde tidigare hålla **Skicka rapport** och **Stäng** inaktiverade utan tidsgräns, innan någon INSERT ens prövats. Rapporten ska gå att försöka skicka igen efter högst 15 s autentiseringskontroll. Användarens text ska stå kvar och UI ska uttryckligen säga att **ingen rapport skickats** om just autentiseringskontrollen avbröts. Förlorad kvittens på själva INSERT-skrivningen fortsätter att anges som **okänt resultat** och försöks inte om automatiskt.
 
 Automatiska Node/VM-regressionstester simulerar en autentiseringskontroll som aldrig svarar, triggar tidsgränsen, verifierar **0 INSERT-anrop** samt att båda formulärknapparna aktiveras igen. Testar även timeout-hjälparens timerstädning och normalt fullbordat löfte. Detta är **inte** ett faktiskt autentiserat E2E-test mot Supabase eller fysisk mobil.
+
+
+## FBK-01-VIS-01 – rapportknappen skymmer mobilt innehåll (9 november 2026)
+
+**Före-bilder:** de syntetiska Chromium-skärmbilderna `mobile-home.png`, `mobile-shared-insights.png`, `mobile-personality-profile.png` och `mobile-320-communication.png` i [Actions #42607633953](https://github.com/erikjarl/hemmakompassen/actions/runs/42607633953) visar att den långa fasta rapportknappen ligger ovanpå brödtext/kortinnehåll strax ovanför bottennavigeringen. Detta syntes i verklig skärmbild, inte enbart i geometrimätning.
+
+**Ändring:** på mobil blir knappen 48 × 48 CSS-pixlar med en synlig pennikon. Hela texten **Rapportera fel eller innehåll** behålls i knappens tillgängliga namn (`aria-label`) och syns fortfarande på dator. På appen placeras knappen ovanför den horisontella mobilmenyn; på kontosidan, som saknar den menyn, placeras den vid fönstrets nederkant. De två sidorna använder samma CSS.
+
+**Automatiska acceptanstester:** 320 och 390 CSS-pixlar i Chromium kontrollerar knappbredd, åtkomligt namn, synlighet, läge ovanför den simulerade bottenmenyn samt att rapportformulärets tidigare mockade flöden fungerar. Före/efter-bilder på samtliga sidor och fysisk Safari/zoom behöver fortfarande bedömas separat; en reducerad överlagringsyta betyder inte att alla visuella problem är lösta.
