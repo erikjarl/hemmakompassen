@@ -1735,6 +1735,7 @@ async function verifyCommunicationForms(){
 function makeTwoRoleFamilyFixture(){
   const messages=[],tokens=new Map(),rules=[],notices=[],activityNotices=[],replacementLinks=[],ruleHistory=[],calls=[];
   let failedSendAcknowledgement=false,failedOlderPage=false,failedActivityRead=false,failedRuleNoticeRead=false,nextRuleId=200;
+  let holdRuleReadRole=null,heldRuleRead=null;
   const other=role=>role==='parent'?'teen':'parent';
   const ok=data=>({data,error:null});
   const createdAt=n=>'2026-11-01T12:'+String(Math.floor(n/50)).padStart(2,'0')+':'+String(n%50).padStart(2,'0')+'Z';
@@ -1780,6 +1781,10 @@ function makeTwoRoleFamilyFixture(){
       const rows=messages.filter(m=>m.sender!==role&&m.read_at===null);
       for(const m of rows)m.read_at='2026-11-01T13:00:00Z';
       return ok(rows.length);
+    }
+    if(name==='my_schyssta_rules'&&holdRuleReadRole===role){
+      holdRuleReadRole=null;
+      return new Promise(resolve=>{heldRuleRead=resolve;});
     }
     if(name==='shared_schyssta_rule_suggestions'||name==='my_schyssta_rules')return ok([]);
     if(name==='my_schyssta_replacement_links')return ok(replacementLinks.map(row=>({...row})));
@@ -1861,7 +1866,10 @@ function makeTwoRoleFamilyFixture(){
     loseNextSendAcknowledgement(){failedSendAcknowledgement=true;},
     failNextOlderPage(){failedOlderPage=true;},
     failNextActivityRead(){failedActivityRead=true;},
-    failNextRuleNoticeRead(){failedRuleNoticeRead=true;}};
+    failNextRuleNoticeRead(){failedRuleNoticeRead=true;},
+    holdNextRuleRead(role){holdRuleReadRole=role;},
+    releaseHeldRuleRead(){if(!heldRuleRead)throw new Error('No held synthetic rule fetch');heldRuleRead(ok([]));heldRuleRead=null;},
+    get isHoldingRuleRead(){return !!heldRuleRead;}};
 }
 const FUN03_LINKED_RPCS=Object.freeze([
   'my_family_messages','my_family_unread_message_count','send_family_message','mark_family_messages_read',
@@ -1871,6 +1879,48 @@ const FUN03_LINKED_RPCS=Object.freeze([
   'set_schyssta_rule_decision','mark_schyssta_notification_read',
   'my_activity_notifications','mark_activity_notification_read'
 ]);
+
+async function verifyWholeInboxBackgroundLoadStatus(){
+  // Two-role fixture with one deliberately unresolved rule-list read. The
+  // actual browser must show a partial status, not a false full all-clear.
+  const fixture=makeTwoRoleFamilyFixture();
+  fixture.holdNextRuleRead('teen');
+  const teen=await freshContext(
+    {viewport:{width:390,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true},
+    {authenticated:true,paired:true,role:'teen',pairFixture:fixture,activityNotifications:true}
+  );
+  try{
+    await teen.page.goto(base+'#inkorg',{waitUntil:'load'});
+    await teen.page.locator('#inbox-refresh-all').waitFor();
+    await teen.page.getByText('Hämtar regelförfrågningar…').waitFor();
+    assert.equal(fixture.isHoldingRuleRead,true,'Synthetic rule RPC is still in flight');
+    await teen.page.locator('#family-chat-body').fill('Ett oskickat utkast under hämtningen');
+    const before=fixture.calls.filter(x=>x.role==='teen'&&x.name==='my_schyssta_rules').length;
+    await teen.page.locator('#inbox-refresh-all').click();
+    const status=teen.page.locator('.inbox-refresh-actions [role="status"]');
+    await status.getByText(/Vissa delar hämtades redan i bakgrunden/).waitFor();
+    assert.match(await status.innerText(),/regelförfrågningar/,
+      'The skipped section must be named in the actual inbox DOM');
+    assert.equal(fixture.calls.filter(x=>x.role==='teen'&&x.name==='my_schyssta_rules').length,
+      before,'Manual refresh does not create a duplicate rule RPC while one is pending');
+    assert.equal(await teen.page.locator('#family-chat-body').inputValue(),
+      'Ett oskickat utkast under hämtningen','A partial refresh does not erase the private draft');
+    assert.equal(await teen.page.locator('#inbox-refresh-all').isEnabled(),true,
+      'A partial response must release the combined refresh button');
+    fixture.releaseHeldRuleRead();
+    await teen.page.getByText('Regelförfrågningar').waitFor();
+    await teen.page.locator('#inbox-refresh-all').click();
+    await status.getByText('Inkorgen är uppdaterad.').waitFor();
+    assert.equal(await teen.page.locator('#family-chat-body').inputValue(),
+      'Ett oskickat utkast under hämtningen','The successful retry also preserves the draft');
+    assert.equal(fixture.calls.filter(x=>x.role==='teen'&&x.name==='my_schyssta_rules').length,
+      before+1,'Fresh explicit retry performs the missing rule-list check');
+    console.log('FUN-03 full inbox overlapping-load browser test passed.');
+  }finally{
+    if(fixture.isHoldingRuleRead)fixture.releaseHeldRuleRead();
+    await teen.context.close();
+  }
+}
 
 async function verifyPairedTwoRoleExchange(){
   const fixture=makeTwoRoleFamilyFixture();
@@ -4820,6 +4870,7 @@ try{
   await verifyDistinctPrivateRetestHistory();
   await verifyCommunicationForms();
   await verifyAllCommunicationExercises();
+  await verifyWholeInboxBackgroundLoadStatus();
   await verifyPairedTwoRoleExchange();
   await verifyLinkedInboxOlderPages();
   await verifyPairedRuleRevisionAndHistory();
