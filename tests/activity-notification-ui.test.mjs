@@ -118,6 +118,7 @@ test('late activity read receipt after unpairing does not refresh or retain a bu
   activityFeedback:'',activityNotifications:[base],activityNotificationsError:'',
   SCHYSSTA_UUID:/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
   familyChatDraft:'',page:()=> 'hem',render:()=>{},menu:()=>{},
+  setTimeout,clearTimeout,
   db:{rpc:()=>new Promise(resolve=>{finish=resolve;})},
   fetchActivityNotifications:async()=>{refreshes++;}
  };
@@ -141,6 +142,7 @@ test('late activity read receipt after disabling feature does not refresh',async
   activityFeedback:'',activityNotifications:[base],activityNotificationsError:'',
   SCHYSSTA_UUID:/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
   familyChatDraft:'',page:()=> 'hem',render:()=>{},menu:()=>{},
+  setTimeout,clearTimeout,
   db:{rpc:()=>new Promise(resolve=>{finish=resolve;})},
   fetchActivityNotifications:async()=>{refreshes++;}
  };
@@ -216,6 +218,7 @@ test('same-sized replacement pair ignores an old activity read receipt',async()=
   activityFeedback:'',activityNotifications:[base],activityNotificationsError:'',
   SCHYSSTA_UUID:/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
   familyChatDraft:'',page:()=> 'hem',render:()=>{},menu:()=>{},
+  setTimeout,clearTimeout,
   db:{rpc:()=>new Promise(resolve=>{finish=resolve;})},
   fetchActivityNotifications:async()=>{refreshes++;}
  };
