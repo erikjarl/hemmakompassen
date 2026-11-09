@@ -45,8 +45,9 @@ function harness(){
     activityNotificationsLoading:false,activityMarkBusy:null,activityFeedback:'',
     activityInviteBusy:false,activityInviteError:''
   };
-  vm.runInNewContext(pair+'\n'+send+
-    '\nthis.check=recheckInboxPair;this.send=sendFamilyChatMessage;this.isBusy=()=>inboxPairCheckBusy;',ctx);
+  vm.runInNewContext(pair.replace('let inboxPairCheckBusy=false,inboxPairEpoch=null;',
+    "let inboxPairCheckBusy=false,inboxPairEpoch='epoch-1';")+'\n'+send+
+    '\nthis.check=recheckInboxPair;this.send=sendFamilyChatMessage;this.isBusy=()=>inboxPairCheckBusy;this.setEpoch=value=>{inboxPairEpoch=value;};',ctx);
   function replyPair(start=0,{rows=[parent,teen],epoch='epoch-1',error=null}={}){
     assert.equal(requests[start]?.name,'my_family_members','First request is members');
     assert.equal(requests[start+1]?.name,'my_current_inbox_pair_epoch','Second request is epoch');
@@ -88,7 +89,7 @@ test('FUN-03: a new signed-in session starts its own verification despite an old
   const old=h.ctx.check();
   assert.equal(h.requests.length,2);
   h.ctx.user={id:'p-2'};h.ctx.members=[otherParent,otherTeen];
-  h.ctx.sharedSession=13;h.ctx.inboxPairEpoch='epoch-2';
+  h.ctx.sharedSession=13;h.setEpoch('epoch-2');
   const current=h.ctx.check();
   assert.equal(h.requests.length,4,'New session must not be blocked by a former account check');
   h.replyPair(0);
