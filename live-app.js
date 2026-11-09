@@ -1081,12 +1081,9 @@ async function prepareActivityMessage(cardId){
     activityInviteError='Du har redan ett meddelandeutkast. Öppna Inkorgen och ta hand om det först.';
     render();return;
   }
-  // A manual refresh or another action may already be verifying the family.
-  // Do not enter the spinner state when that verification cannot be started.
-  if(inboxPairCheckBusy){
-    activityInviteError='Familjekopplingen kontrolleras redan. Försök igen när uppdateringen är klar.';
-    render();return;
-  }
+  // The current session can join an ongoing family check (e.g. one started
+  // by polling). Keep this deliberate action pending until verification ends.
+  // No activity data is read or draft created before the pair is confirmed.
   const viewer=user.id,session=sharedSession;
   activityInviteBusy=true;activityInviteError='';render();
   // A verified JA+JA from an earlier pairing is not enough to prepare a new

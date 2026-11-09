@@ -3954,27 +3954,26 @@ try{
   await paired.page.locator('[data-insight-activity="aktiviteter-01"]').waitFor();
   assert.equal(await paired.page.locator('[data-insight-activity]').count(),1,
     'Only the server-verified mutual YES activity gets an invitation action');
-  // FUN-02-INVITE-01: a manual insight refresh may already hold the pair
-  // check. A simultaneous invitation click must not leave its CTA disabled.
+  // FUN-02/03-ACTIVITY-PAIR-JOIN-01: an insight refresh may have already
+  // started the same pair/epoch check. A deliberate activity CTA joins that
+  // pending result rather than forcing a second click or a second pair RPC.
   await paired.page.evaluate(()=>{window.__HK_TEST_HOLD_NEXT_PAIR_READ__=true;});
   await paired.page.locator('#insights-retry').click();
   await paired.page.waitForFunction(()=>typeof window.__HK_TEST_RELEASE_PAIR_READ__==='function');
   const raceCta=paired.page.locator('[data-insight-activity="aktiviteter-01"]');
-  await raceCta.click();
-  await paired.page.locator('.insights-view [role="alert"]').filter({hasText:'Familjekopplingen kontrolleras redan'}).waitFor();
-  assert.equal(await raceCta.isEnabled(),true,
-    'A concurrent pair verification leaves the invitation button actionable, not spinning forever');
-  assert.equal(await paired.page.locator('#family-chat-body').count(),0,
-    'An invitation while pairing is being checked must not create an inbox draft');
-  assert.equal(await paired.page.evaluate(()=>window.__HK_CHAT_SEND__||null),null,
-    'An invitation cannot send any message during a pair check');
-  await paired.page.evaluate(()=>window.__HK_TEST_RELEASE_PAIR_READ__());
-  await paired.page.waitForFunction(()=>document.querySelector('#insights-retry')&&!document.querySelector('#insights-retry').disabled);
-  await paired.page.locator('[data-insight-activity="aktiviteter-01"]').waitFor();
-  // After the previous check resolves, the same action can produce a voluntary
-  // inbox DRAFT. Nothing is transmitted until the separate Send action.
   const sentBefore=await paired.page.evaluate(()=>window.__HK_CHAT_SEND__||null);
-  await paired.page.locator('[data-insight-activity="aktiviteter-01"]').click();
+  await raceCta.click();
+  await paired.page.waitForFunction(()=>
+    document.querySelector('[data-insight-activity="aktiviteter-01"]')?.disabled===true);
+  assert.equal(await raceCta.isEnabled(),false,
+    'Invitation remains locked while awaiting a concurrent family check');
+  assert.equal(await paired.page.locator('#family-chat-body').count(),0,
+    'No inbox draft exists before the family epoch is confirmed');
+  assert.deepEqual(await paired.page.evaluate(()=>window.__HK_CHAT_SEND__||null),sentBefore,
+    'A pending invitation must never send a message');
+  await paired.page.evaluate(()=>window.__HK_TEST_RELEASE_PAIR_READ__());
+  // Once the shared check succeeds, the same click creates an editable DRAFT.
+  // No second click is needed, and no send RPC runs.
   await paired.page.locator('#family-chat-body').waitFor();
   assert.match(await paired.page.locator('#family-chat-body').inputValue(),
     /Laga mat tillsammans.*bestämmer en dag/s,'Activity invitation is an editable inbox draft');
