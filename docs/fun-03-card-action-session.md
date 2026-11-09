@@ -1,6 +1,6 @@
 # FUN-03-SCHYSSTA-CARD-RACE-03 – gamla regelsvar påverkar ny användarsession
 
-**Datum:** 9 november 2026 · [PR #243](https://github.com/erikjarl/hemmakompassen/pull/243) · **Status:** fix i PR, slutlig grön CI och merge inväntas.
+**Datum:** 9 november 2026 · [PR #243](https://github.com/erikjarl/hemmakompassen/pull/243) · **Status:** PR #243 mergad (`ac8a61b`), syntetiska Node/Chromium-tester och publicerad Pages-kod verifierade; verkliga Auth-sessioner och fysisk Safari återstår.
 
 ## Användarflöde och reproduktion
 
@@ -29,3 +29,12 @@ Flytta kontrollen `user?.id===viewer && sharedSession===session` **före** `schy
 Testet innehåller alltså **tio** fall (två knappar gånger fem scenarier). Full GitHub CI testar även befintliga kontraktskontroller, byggkontroll och syntetisk Chromium när PR:en är klar.
 
 **Begränsningar:** Deterministiskt simulerad responsordning; ingen faktisk inloggning med två verkliga konton, inga riktiga Supabase-/nätverksavbrott, ingen fysisk Safari. FUN-03 förblir **Pågår** trots grön syntetisk testsvit.
+
+## Slutlig verifiering – 9 november 2026
+
+- **Före rättningen:** [röd CI #42544678516](https://github.com/erikjarl/hemmakompassen/actions/runs/42544678516): 427 Node PASS, 4 FAIL av totalt 431.
+- **Efter rättningen:** [grön PR-CI #42544854779](https://github.com/erikjarl/hemmakompassen/actions/runs/42544854779): **431/431 Node PASS**, statisk build och syntetisk Chromium PASS, 77 skärmbilder och `visual-audit.json` som Actions-artifact.
+- **Merge:** [PR #243](https://github.com/erikjarl/hemmakompassen/pull/243), commit [`ac8a61b`](https://github.com/erikjarl/hemmakompassen/commit/ac8a61b28050b4f79e02277a62a9eb2b7c2170b0).
+- **Publicerad fil:** [Pages-deploy #42545299830](https://github.com/erikjarl/hemmakompassen/actions/runs/42545299830) godkänd; [bytekontroll #42545299705](https://github.com/erikjarl/hemmakompassen/actions/runs/42545299705) bekräftade att fyra offentligt serverade filer inklusive `live-app.js` matchar mergecommitten exakt. De första fyra försöken fick äldre `live-app.js` under utrullning; därefter matchade alla fyra.
+
+**Verifieringsgräns:** Ingen riktig tvåkontoinloggning, nätverksfelinjektion mot Supabase eller fysisk Safari/VoiceOver. Dessa acceptanskriterier kvarstår i FUN-03.
