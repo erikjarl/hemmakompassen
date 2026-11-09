@@ -28,6 +28,7 @@ assert.equal(pendingTimeouts.size, 0, 'Success also clears the timeout');
 let onSubmit;
 const sendButton = {disabled: false};
 const closeButton = {disabled: false, addEventListener() {}};
+const clearButton = {disabled: false, addEventListener() {}};
 const statusNode = {textContent: ''};
 const fakeForm = {
   elements: {
@@ -42,6 +43,7 @@ const fakeNodes = {
   'hk-feedback-open': {addEventListener() {}},
   'hk-feedback-form': fakeForm,
   'hk-feedback-close': closeButton,
+  'hk-feedback-clear': clearButton,
   'hk-feedback-status': statusNode
 };
 timeoutScope.document = {getElementById: id => fakeNodes[id]};
@@ -63,6 +65,7 @@ assert.equal(inserted, 0, 'No report is inserted without completed authenticatio
 assert.match(statusNode.textContent, /Ingen rapport har skickats/);
 assert.equal(sendButton.disabled, false, 'The report form is available again');
 assert.equal(closeButton.disabled, false, 'The report can be closed after an auth timeout');
+assert.equal(clearButton.disabled, false, 'The report can be cleared after an auth timeout');
 
 assert.equal(feedbackPageContext('https://site.test/hk/index.html#swipe/theme'),
   'index.html#swipe');
@@ -89,7 +92,7 @@ const account = readFileSync(new URL('../konto.js',import.meta.url),'utf8');
 const build = readFileSync(new URL('../scripts/build-static.mjs',import.meta.url),'utf8');
 const sql = readFileSync(new URL('../supabase/migrations/20261109121500_test_feedback.sql',import.meta.url),'utf8');
 for (const page of [html,konto]) {
-  for (const marker of ['id="hk-feedback-open"','id="hk-feedback-dialog"','id="hk-feedback-form"','id="hk-feedback-close"','id="hk-feedback-status"']) {
+  for (const marker of ['id="hk-feedback-open"','id="hk-feedback-dialog"','id="hk-feedback-form"','id="hk-feedback-close"','id="hk-feedback-clear"','id="hk-feedback-status"']) {
     assert.ok(page.includes(marker), 'Missing tester feedback control: ' + marker);
   }
   assert.match(page,/feedback\.css/);
