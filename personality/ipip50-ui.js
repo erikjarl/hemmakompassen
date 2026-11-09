@@ -227,10 +227,20 @@ function familyReflectionPanel(parentProfile,teenProfile,viewerRole){
 
 function statusPanel(message){return '<section class="live-panel"><p class="pf-status" role="status">'+esc(message)+'</p></section>';}
 
-export function createPersonalityExperience({db,onRender,isSharingEnabled=false,useAiAnalysis=false,analysisPanel=()=>'',saveExport=downloadOwnIPIP50Export,isRetestEnabled=false}){
+export function createPersonalityExperience({db,onRender,isSharingEnabled=false,useAiAnalysis=false,analysisPanel=()=>'',saveExport=downloadOwnIPIP50Export,isRetestEnabled=false,requestTimeoutMs=15000}){
   let viewer=null,sequence=0,consentRequest=0,answers={},loading=false,loaded=false,loadError='',saving=false,saveError='',saveUncertain=false;
   let active=false,index=0,selectedAnswer=null,shareEnabled=false,shareVerified=false,shareBusy=false,shareError='',paired=null,partnerError='',exportFeedback='';
   const repaint=()=>onRender();
+  // A stalled browser-to-Supabase request must not leave the user locked on
+  // a spinner or disabled radio. A timed-out write is UNKNOWN, never success.
+  const deadlineMs=Number.isFinite(requestTimeoutMs)&&requestTimeoutMs>0
+    ?Math.min(requestTimeoutMs,60000):15000;
+  function withinDeadline(operation,code){
+    let timer;
+    return Promise.race([operation,new Promise((_,reject)=>{
+      timer=setTimeout(()=>reject(Object.assign(new Error('IPIP50 request timed out'),{code})),deadlineMs);
+    })]).finally(()=>clearTimeout(timer));
+  }
   const retests=isRetestEnabled?createPrivateIpipRetests({db,onRender:repaint,
     renderOwnScores:profile=>percentileChart(profile)+table(profile)+referenceCaveat()}):null;
   function reset(userId=null){
@@ -241,7 +251,7 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false,
   async function fetchPaired(userId,token){
     if(!isSharingEnabled)return;
     let result;
-    try{result=await db.rpc('my_ipip50_shared_profiles');}catch(e){result={error:e};}
+    try{result=await withinDeadline(db.rpc('my_ipip50_shared_profiles'),'IPIP50_READ_TIMEOUT');}catch(e){result={error:e};}
     if(token!==sequence||viewer!==userId)return;
     if(result?.error){partnerError='Kunde inte kontrollera delningen. Försök uppdatera.';paired=null;}
     else{partnerError='';paired=validatedPartnerPayload(result?.data);}
@@ -277,10 +287,10 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false,
     viewer=userId;loading=true;loaded=false;loadError='';saveError='';saveUncertain=false;partnerError='';paired=null;repaint();
     let loadedAnswers,consent;
     try{
-      loadedAnswers=await loadMyIPIP50Answers(db);
+      loadedAnswers=await withinDeadline(loadMyIPIP50Answers(db),'IPIP50_READ_TIMEOUT');
       if(isSharingEnabled){
-        const result=await db.from('personality_share_preferences').select('share_enabled')
-          .eq('user_id',userId).eq('instrument_id',IPIP50_V1.id).maybeSingle();
+        const result=await withinDeadline(db.from('personality_share_preferences').select('share_enabled')
+          .eq('user_id',userId).eq('instrument_id',IPIP50_V1.id).maybeSingle(),'IPIP50_READ_TIMEOUT');
         if(result.error)throw result.error;
         consent=result.data?.share_enabled===true;
       }
@@ -455,7 +465,7 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false,
       // accidental second write of the same answer. Keep the input locked for
       // the same minimum 650 ms on success AND failure.
       const [writeResult]=await Promise.allSettled([
-        saveMyIPIP50Answer(db,item.id,value),
+        withinDeadline(saveMyIPIP50Answer(db,item.id,value),'IPIP50_SAVE_UNKNOWN'),
         new Promise(resolve=>setTimeout(resolve,650))
       ]);
       if(writeResult.status==='rejected')throw writeResult.reason;
