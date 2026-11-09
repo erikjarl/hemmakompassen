@@ -47,6 +47,7 @@ function installFeedback({ db }) {
   const status = document.getElementById('hk-feedback-status');
   if (!dialog || !open || !form || !close || !clear || !status) return;
   const submit = form.querySelector('button[type="submit"]');
+  const editableFields = [form.elements.category, form.elements.description, form.elements.expected];
   let busy = false;
   const setStatus = message => { status.textContent = message; };
   open.addEventListener('click', () => {
@@ -78,6 +79,9 @@ function installFeedback({ db }) {
       expected: form.elements.expected.value
     };
     busy = true;
+    // Freeze the submitted snapshot: otherwise text entered during the pending
+    // request would be silently erased by form.reset() on successful delivery.
+    editableFields.forEach(field => { field.disabled = true; });
     submit.disabled = true;
     close.disabled = true;
     clear.disabled = true;
@@ -119,6 +123,7 @@ function installFeedback({ db }) {
       }
     } finally {
       busy = false;
+      editableFields.forEach(field => { field.disabled = false; });
       submit.disabled = false;
       close.disabled = false;
       clear.disabled = false;
