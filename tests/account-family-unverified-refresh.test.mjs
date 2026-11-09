@@ -21,9 +21,9 @@ function setup(){
  }
  let result={data:[{role:'parent',display_name:'Testförälder'}],error:null};
  let profileError=null,userError=null;
- let stalls=false,readCount=0;
+ let stalls=false,stallsAuth=false,readCount=0;
  const client={
-  auth:{getUser:async()=>({data:{user:{id:'parent-a',email:'parent@example.invalid'}},error:userError}),
+  auth:{getUser:async()=>stallsAuth?new Promise(()=>{}):({data:{user:{id:'parent-a',email:'parent@example.invalid'}},error:userError}),
    onAuthStateChange(){}},
   from(name){
    assert.equal(name,'profiles');
@@ -50,6 +50,8 @@ function setup(){
   stallFamily(){stalls=true;},
   setProfileError(value){profileError=value;},
   setUserError(value){userError=value;},
+  stallAuth(){stallsAuth=true;},
+  resumeAuth(){stallsAuth=false;},
   refresh(){element('refresh-account').click();},
   get familyReads(){return readCount;}
  };
@@ -137,4 +139,45 @@ test('FUN-01: profile or Auth lookup errors cannot falsely confirm an account re
  h.refresh();await tick();await tick();
  assert.equal(h.element('family').hidden,true);
  assert.match(h.element('status').textContent,/Auth ej tillgänglig/);
+});
+
+
+test('FUN-01: failed Auth refresh hides an old signed-in account and preserves its name draft for retry',async()=>{
+ const h=await initialVerified();
+ assert.match(h.element('account').textContent,/parent@example.invalid/);
+ h.element('display-name').value='Mitt osparade namn';
+ h.element('display-name').input();
+ h.setUserError({name:'AuthApiError',message:'Auth kunde inte kontrolleras'});
+ h.refresh();await tick();await tick();
+ assert.equal(h.element('logged-in').hidden,true,'Previous signed-in controls must not remain visible');
+ assert.equal(h.element('logged-out').hidden,true,'Unknown identity is not a confirmed logout');
+ assert.equal(h.element('account').textContent,'');
+ assert.equal(h.element('display-name').value,'Mitt osparade namn','Do not erase a hidden unsaved draft');
+ assert.equal(h.element('family').hidden,true);
+ assert.equal(h.element('refresh-account').disabled,false,'Independent retry must remain available');
+ assert.match(h.element('status').textContent,/Auth kunde inte kontrolleras/);
+ h.setUserError(null);
+ h.refresh();await tick();await tick();
+ assert.equal(h.element('logged-in').hidden,false);
+ assert.equal(h.element('logged-out').hidden,true);
+ assert.equal(h.element('family').hidden,false);
+ assert.match(h.element('account').textContent,/parent@example.invalid/);
+ assert.equal(h.element('display-name').value,'Mitt osparade namn');
+ assert.equal(h.element('status').textContent,'Kontot har uppdaterats.');
+});
+
+test('FUN-01: Auth timeout hides stale account details until successful manual retry',async()=>{
+ const h=await initialVerified();
+ h.stallAuth();
+ h.refresh();await delay(100);
+ assert.equal(h.element('logged-in').hidden,true);
+ assert.equal(h.element('logged-out').hidden,true);
+ assert.equal(h.element('account').textContent,'');
+ assert.equal(h.element('waiting').hidden,true);
+ assert.match(h.element('status').textContent,/svarade inte i tid/);
+ h.resumeAuth();
+ h.refresh();await tick();await tick();
+ assert.equal(h.element('logged-in').hidden,false);
+ assert.equal(h.element('waiting').hidden,false);
+ assert.equal(h.element('status').textContent,'Kontot har uppdaterats.');
 });
