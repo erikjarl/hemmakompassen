@@ -2,12 +2,13 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {analysisInstructions,enforceActionableAnalysis} from '../workers/ai-mediator/src/analysis.mjs';
+import {IPIP50_V1} from '../workers/ai-mediator/src/catalog.mjs';
 
 const profile=(total=30,role='teen',shared=false)=>({
   kind:'personality',role,scope:'own',shared,sourceCount:shared?2:1,
   basis:'Självskattning: fem sammanlagda IPIP-50-poäng (inte diagnos eller svensk ungdomsnorm).',
-  data:'DINA FEM POÄNG: Extraversion: '+total+'/50; Vänlighet: 30/50; Samvetsgrannhet: 30/50; Emotionell stabilitet: 30/50; Öppenhet: 30/50'+
-    (shared?'\nDEN ANDRAS FEM SERVERGODKÄNDA POÄNG: Extraversion: 45/50; Vänlighet: 44/50; Samvetsgrannhet: 43/50; Emotionell stabilitet: 42/50; Öppenhet: 41/50':'')
+  data:'DINA FEM POÄNG: '+IPIP50_V1.factors.map((f,i)=>f.labelSv+': '+(i===0?total:30)+'/50').join('; ')+
+    (shared?'\nDEN ANDRAS FEM SERVERGODKÄNDA POÄNG: '+IPIP50_V1.factors.map((f,i)=>f.labelSv+': '+(45-i)+'/50').join('; '):'')
 });
 const actions='\n\nFörslag:\n1. Välj en vanlig situation som du känner igen och försök beskriva den sakligt. #kommunikation/validera\n2. Föreslå ett kort samtal när det passar för er båda och beskriv ett önskemål. #kommunikation/onskemal';
 
