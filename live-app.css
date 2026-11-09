@@ -720,3 +720,49 @@
 .schyssta-quick-actions>.live-button{box-sizing:border-box;display:inline-flex;justify-content:center;align-items:center;min-height:44px;text-align:center;white-space:normal}
 .schyssta-quick-counts{grid-column:1/-1;margin:0;padding-top:8px;border-top:1px solid #515d69;color:#c9d3e1;font-size:.86rem;line-height:1.5}
 @media(max-width:550px){.schyssta-quick-actions{grid-template-columns:minmax(0,1fr);gap:10px;padding:13px 14px}.schyssta-quick-actions>.live-button{width:100%}}
+
+
+/* VIS-00-03: put users' shared matches before lengthy explanatory copy. */
+.insights-view .insights-heading{text-align:left;margin:0 auto 14px}
+.insights-view .insights-heading h1{
+  margin:6px 0 8px;
+  font-size:clamp(1.8rem,4.1vw,2.7rem);
+  line-height:1.14;
+  overflow-wrap:normal;
+}
+.insights-view .insights-heading p{
+  margin:0;
+  max-width:690px;
+  color:var(--soft);
+  line-height:1.45;
+}
+.insights-back-link{
+  display:inline-flex;
+  align-items:center;
+  min-height:44px;
+  color:#f8c66b;
+  font-weight:650;
+  text-decoration:underline;
+  text-underline-offset:3px;
+}
+.insights-back-link:focus-visible,
+.insights-method summary:focus-visible{outline:3px solid #f59e0b;outline-offset:3px}
+.insights-main-intro{margin:6px 0 9px;color:var(--soft);line-height:1.5}
+.insights-method{
+  margin:8px 0 14px;
+  padding:10px 13px;
+  border:1px solid #575c72;
+  border-radius:12px;
+  background:#191e2c;
+}
+.insights-method summary{cursor:pointer;color:#f8c66b;font-weight:650;line-height:1.45}
+.insights-method p{margin:8px 0 0;line-height:1.5}
+@media(max-width:800px){
+  .insights-view .insights-heading{margin:0 auto 8px}
+  .insights-view .insights-heading h1{font-size:clamp(1.6rem,6.4vw,2rem);line-height:1.16;margin:5px 0 6px}
+  .insights-view .insights-heading p{font-size:.96rem;line-height:1.4}
+  .insights-view .insights-heading .swipe-eyebrow{font-size:.68rem;letter-spacing:.09em}
+  .insights-view>.live-panel:first-of-type{margin-top:9px}
+  .insights-main-intro{font-size:.95rem;margin:5px 0 8px;line-height:1.45}
+  .insights-method{margin:7px 0 10px;padding:9px 12px}
+}
