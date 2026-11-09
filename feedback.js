@@ -3,7 +3,7 @@
 const CATEGORIES = new Set(['bug', 'content', 'suggestion']);
 const ROUTES = new Set(['hem', 'inkorg', 'swipe', 'insikter', 'personlighet', 'kommunikation', 'regler', 'medlare', 'installningar']);
 
-export function feedbackPageContext(href) {
+function feedbackPageContext(href) {
   const url = new URL(href);
   const page = url.pathname.endsWith('/') ? 'index.html' : (url.pathname.split('/').filter(Boolean).at(-1) || 'index.html');
   // Account invitation tokens must never be collected as issue context.
@@ -12,7 +12,7 @@ export function feedbackPageContext(href) {
   return ROUTES.has(route) ? 'index.html#' + route : 'index.html';
 }
 
-export function feedbackPayload(userId, fields, href) {
+function feedbackPayload(userId, fields, href) {
   const category = String(fields.category || '');
   const description = String(fields.description || '').trim();
   const expected = String(fields.expected || '').trim();
@@ -28,7 +28,7 @@ export function feedbackPayload(userId, fields, href) {
   };
 }
 
-export function installFeedback({ db }) {
+function installFeedback({ db }) {
   const dialog = document.getElementById('hk-feedback-dialog');
   const open = document.getElementById('hk-feedback-open');
   const form = document.getElementById('hk-feedback-form');
@@ -101,4 +101,9 @@ export function installFeedback({ db }) {
       close.disabled = false;
     }
   });
+}
+
+// Classic script loaded before the main app/account module. Reuse their auth client.
+if (typeof window !== 'undefined') {
+  window.HKFeedback = Object.freeze({feedbackPageContext, feedbackPayload, installFeedback});
 }
