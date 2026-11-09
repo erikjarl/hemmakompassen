@@ -68,7 +68,7 @@ function accountHarness({holdUser=false,holdProfile=false,holdMembers=false,hold
     createClient:()=>client,document:{getElementById:node,querySelectorAll:()=>[]},
     window:{HEMMAKOMPASSEN_BACKEND:{}},
     location:{href:'https://example.test/konto.html',hash:'',pathname:'/konto.html',search:'',assign(){}},
-    URL,setTimeout
+    URL,setTimeout,clearTimeout
   },{filename:'konto.js'});
   return {
     node,gates,
