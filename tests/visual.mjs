@@ -178,7 +178,24 @@ async function testAccountBrowserJourney(){
   assert.equal((await page.locator('#status').innerText()).trim(),'','The invitation is not a transient form result');
   assert.equal(await page.locator('#logged-in:not(.hidden)').count(),0);
   await checkOverflow(page,'FUN-01 account logged out');
-  steps.push('account logged-out invitation banner');
+  // VIS-00: make the first actual sign-in controls visible on a mobile screen.
+  // This is a real layout measurement, but still a synthetic Auth session.
+  const firstFold=await page.evaluate(()=>{
+    const email=document.querySelector('#email').getBoundingClientRect();
+    const login=document.querySelector('#email-form button[type="submit"]').getBoundingClientRect();
+    const heading=document.querySelector('main > h1').getBoundingClientRect();
+    return {emailTop:email.top,loginBottom:login.bottom,headingBottom:heading.bottom};
+  });
+  assert.ok(firstFold.emailTop<510,
+    'At 390px the e-mail field should no longer be pushed down by the heading and spacing');
+  assert.ok(firstFold.loginBottom<735,
+    'At 390px the primary sign-in action should be visible in the initial 844px viewport');
+  await page.setViewportSize({width:320,height:700});
+  await checkOverflow(page,'VIS-00 account narrow login');
+  assert.ok(await page.locator('#email').isVisible(),
+    'The first account input remains visible and accessible at 320px');
+  await page.setViewportSize({width:390,height:844});
+  steps.push('account logged-out invitation banner and compact first sign-in viewport');
   await capture(page,'mobile-account-invite-loggedout.png');
 
   await page.locator('#register summary').click();
