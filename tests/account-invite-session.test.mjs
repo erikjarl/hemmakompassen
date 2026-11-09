@@ -125,3 +125,17 @@ test('FUN-01: late invitation RPC result cannot appear after account switch',asy
   assert.equal(h.el('invite-qr').hidden,true);
   assert.equal(h.el('account').textContent,'Inloggad: teen-b@example.test');
 });
+
+test('FUN-01: pending invitation remains visible after same-account auth refresh',async()=>{
+  const h=harness({delayInvite:true});
+  await tick();await tick();
+  await h.createInvite();
+  assert.equal(h.inviteCalls,1);
+  h.switchUser({id:'parent-a',email:'parent-a@example.test'});
+  await delay(15);
+  h.gate.resolve({data:'2026-12-01T12:00:00Z',error:null});
+  await tick();await tick();
+  assert.match(h.el('new-invite').textContent,new RegExp(generatedCode));
+  assert.equal(h.el('invite-qr').hidden,false);
+  assert.equal(h.inviteCalls,1);
+});
