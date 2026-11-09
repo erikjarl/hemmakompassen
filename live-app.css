@@ -766,3 +766,55 @@
   .insights-main-intro{font-size:.95rem;margin:5px 0 8px;line-height:1.45}
   .insights-method{margin:7px 0 10px;padding:9px 12px}
 }
+
+
+/* VIS-00-04: main action first. Private export remains reachable after the card. */
+.swipe-play-view > .swipe-private-export{
+  box-sizing:border-box;
+  max-width:780px;
+  margin:18px auto 24px;
+  padding:15px 18px;
+  border:1px solid #41495c;
+  border-radius:14px;
+  background:#191e2c;
+}
+.swipe-play-view > .swipe-private-export p{
+  margin:10px 0 0;
+  line-height:1.5;
+  font-size:13px;
+}
+@media(max-width:800px){
+  .swipe-play-view > .swipe-heading{
+    margin:0 auto 12px;
+    text-align:left;
+  }
+  .swipe-play-view > .swipe-heading h1{
+    font-size:clamp(1.7rem,6.3vw,2.15rem);
+    line-height:1.14;
+    margin:5px 0 6px;
+    overflow-wrap:normal;
+  }
+  .swipe-play-view > .swipe-heading > p{
+    margin:4px 0 8px;
+    line-height:1.42;
+    font-size:.96rem;
+  }
+  .swipe-play-view > .swipe-heading .swipe-eyebrow{
+    font-size:.7rem;
+    letter-spacing:.08em;
+    margin-bottom:5px;
+  }
+  .swipe-play-view > .swipe-heading .swipe-theme-back{
+    margin:0 0 12px;
+  }
+  .swipe-play-view .swipe-stage{
+    padding:15px;
+  }
+  .swipe-play-view .swipe-track{
+    margin:10px 0 15px;
+  }
+  .swipe-play-view > .swipe-private-export{
+    margin:15px auto 20px;
+    padding:13px;
+  }
+}
