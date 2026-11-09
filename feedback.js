@@ -83,7 +83,11 @@ function installFeedback({ db }) {
         return;
       }
       const { data, error: authError } = authResponse || {};
-      if (authError || !data?.user) {
+      if (authError) {
+        setStatus('Kunde inte kontrollera inloggningen. Ingen rapport har skickats. Din text ligger kvar. Försök igen när anslutningen fungerar.');
+        return;
+      }
+      if (!data?.user) {
         setStatus('Logga in via Ditt konto och försök sedan igen. Din text ligger kvar.');
         return;
       }
