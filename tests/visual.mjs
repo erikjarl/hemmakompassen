@@ -1736,12 +1736,17 @@ function makeTwoRoleFamilyFixture(){
   const messages=[],tokens=new Map(),rules=[],notices=[],activityNotices=[],replacementLinks=[],ruleHistory=[],calls=[];
   let failedSendAcknowledgement=false,failedOlderPage=false,failedActivityRead=false,failedRuleNoticeRead=false,nextRuleId=200;
   let holdRuleReadRole=null,heldRuleRead=null,failRuleReadRole=null;
+  let holdMessageReadRole=null,heldMessageRead=null;
   const other=role=>role==='parent'?'teen':'parent';
   const ok=data=>({data,error:null});
   const createdAt=n=>'2026-11-01T12:'+String(Math.floor(n/50)).padStart(2,'0')+':'+String(n%50).padStart(2,'0')+'Z';
   function rpc(role,name,args={}){
     calls.push({role,name,args});
     if(name==='my_family_messages'){
+      if(holdMessageReadRole===role){
+        holdMessageReadRole=null;
+        return new Promise(resolve=>{heldMessageRead=resolve;});
+      }
       if(args?.p_before_created_at&&failedOlderPage){failedOlderPage=false;return {data:null,error:{message:'synthetic older page unavailable'}};}
       let visible=messages.map(m=>({
         message_id:m.id,body:m.body,sent_by_me:m.sender===role,
@@ -1874,7 +1879,10 @@ function makeTwoRoleFamilyFixture(){
     failNextRuleRead(role){failRuleReadRole=role;},
     holdNextRuleRead(role){holdRuleReadRole=role;},
     releaseHeldRuleRead(){if(!heldRuleRead)throw new Error('No held synthetic rule fetch');heldRuleRead(ok([]));heldRuleRead=null;},
-    get isHoldingRuleRead(){return !!heldRuleRead;}};
+    get isHoldingRuleRead(){return !!heldRuleRead;},
+    holdNextMessageRead(role){holdMessageReadRole=role;},
+    releaseHeldMessageRead(){if(!heldMessageRead)throw new Error('No held synthetic message fetch');heldMessageRead(ok([]));heldMessageRead=null;},
+    get isHoldingMessageRead(){return !!heldMessageRead;}};
 }
 const FUN03_LINKED_RPCS=Object.freeze([
   'my_family_messages','my_family_unread_message_count','send_family_message','mark_family_messages_read',
@@ -1886,54 +1894,49 @@ const FUN03_LINKED_RPCS=Object.freeze([
 ]);
 
 async function verifyWholeInboxBackgroundLoadStatus(){
-  // Two-role fixture with one deliberately unresolved rule-list read. The
-  // actual browser must show a partial status, not a false full all-clear.
+  // Start a delayed read deliberately with the REAL conversation refresh
+  // button. It is less timing-sensitive than holding an RPC during page boot.
   const fixture=makeTwoRoleFamilyFixture();
-  fixture.failNextRuleRead('teen');
   const teen=await freshContext(
     {viewport:{width:390,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true},
     {authenticated:true,paired:true,role:'teen',pairFixture:fixture,activityNotifications:true}
   );
   try{
     await teen.page.goto(base+'#inkorg',{waitUntil:'load'});
+    await teen.page.locator('.family-chat-history').waitFor();
     await teen.page.locator('#inbox-refresh-all').waitFor();
-    // The first (deliberately failed) load exposes the real inbox retry
-    // button, so we can initiate and hold exactly its next fetch on demand.
-    try{await teen.page.locator('#schyssta-retry').waitFor({timeout:10000});}
-    catch(error){
-      throw new Error('FUN-03 rule retry unavailable: '+JSON.stringify({
-        calls:fixture.calls.filter(x=>x.role==='teen').map(x=>x.name).slice(-20),
-        visible:(await teen.page.locator('#live-app').innerText()).slice(0,1800)
-      }),{cause:error});
-    }
-    fixture.holdNextRuleRead('teen');
-    await teen.page.locator('#schyssta-retry').click();
-    await teen.page.getByText('Hämtar regelförfrågningar…').waitFor();
-    assert.equal(fixture.isHoldingRuleRead,true,'Synthetic rule RPC is still in flight');
     await teen.page.locator('#family-chat-body').fill('Ett oskickat utkast under hämtningen');
-    const before=fixture.calls.filter(x=>x.role==='teen'&&x.name==='my_schyssta_rules').length;
+    fixture.holdNextMessageRead('teen');
+    await teen.page.locator('[data-family-chat-refresh]').click();
+    for(let i=0;i<60&&!fixture.isHoldingMessageRead;i++)await sleep(50);
+    assert.equal(fixture.isHoldingMessageRead,true,
+      'Explicit conversation refresh must start the delayed mock message read; calls: '+
+      fixture.calls.filter(x=>x.role==='teen').map(x=>x.name).slice(-18).join(', '));
+    const before=fixture.calls.filter(x=>x.role==='teen'&&x.name==='my_family_messages').length;
     await teen.page.locator('#inbox-refresh-all').click();
     const status=teen.page.locator('.inbox-refresh-actions [role="status"]');
     await teen.page.getByText(/Vissa delar hämtades redan i bakgrunden/).waitFor();
-    assert.match(await status.innerText(),/regelförfrågningar/,
-      'The skipped section must be named in the actual inbox DOM');
-    assert.equal(fixture.calls.filter(x=>x.role==='teen'&&x.name==='my_schyssta_rules').length,
-      before,'Manual refresh does not create a duplicate rule RPC while one is pending');
+    assert.match(await status.innerText(),/meddelanden/,
+      'Skipped ongoing message read is named in actual inbox DOM');
+    assert.equal(fixture.calls.filter(x=>x.role==='teen'&&x.name==='my_family_messages').length,
+      before,'Whole inbox refresh never duplicates an already-loading message RPC');
     assert.equal(await teen.page.locator('#family-chat-body').inputValue(),
-      'Ett oskickat utkast under hämtningen','A partial refresh does not erase the private draft');
+      'Ett oskickat utkast under hämtningen','Partial refresh preserves private unsent draft');
     assert.equal(await teen.page.locator('#inbox-refresh-all').isEnabled(),true,
-      'A partial response must release the combined refresh button');
-    fixture.releaseHeldRuleRead();
-    await teen.page.getByText('Hämtar regelförfrågningar…').waitFor({state:'hidden'});
+      'A partial update must release the whole-inbox button');
+    fixture.releaseHeldMessageRead();
+    // The finished private message fetch may choose a render-free completion
+    // while a draft is active; permit its Promise continuation to settle.
+    await teen.page.waitForTimeout(150);
     await teen.page.locator('#inbox-refresh-all').click();
     await teen.page.getByText('Inkorgen är uppdaterad.',{exact:true}).waitFor();
     assert.equal(await teen.page.locator('#family-chat-body').inputValue(),
-      'Ett oskickat utkast under hämtningen','The successful retry also preserves the draft');
-    assert.equal(fixture.calls.filter(x=>x.role==='teen'&&x.name==='my_schyssta_rules').length,
-      before+1,'Fresh explicit retry performs the missing rule-list check');
+      'Ett oskickat utkast under hämtningen','Successful explicit retry preserves draft');
+    assert.equal(fixture.calls.filter(x=>x.role==='teen'&&x.name==='my_family_messages').length,
+      before+1,'Fresh retry includes previously skipped message read');
     console.log('FUN-03 full inbox overlapping-load browser test passed.');
   }finally{
-    if(fixture.isHoldingRuleRead)fixture.releaseHeldRuleRead();
+    if(fixture.isHoldingMessageRead)fixture.releaseHeldMessageRead();
     await teen.context.close();
   }
 }
