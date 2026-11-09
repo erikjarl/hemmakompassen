@@ -321,7 +321,11 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
         + turns.map(turn => '<li class="mediator-message mediator-message-' + h(turn.role) + '"><strong>'
           + (turn.role === 'user' ? 'Du' : turn.role === 'safety' ? 'Säkerhetsinformation' : 'Samtalsstödet') + '</strong><p>' + (turn.role==='assistant'?renderMediatorInternalLinks(turn.text,h,getViewerRole):h(turn.text)) + '</p></li>').join('')
         + '</ol>'
-      : '<p class="mediator-empty">Inga meddelanden ännu. Skriv ett fiktivt exempel för att testa samtalsstödet.</p>';
+      : historyEnabled && loading
+        ? '<p class="mediator-empty" role="status">Hämtar samtalshistoriken…</p>'
+        : historyEnabled && activeChatId && !activeChatReady
+          ? '<p class="mediator-empty" role="status">Samtalshistoriken kunde inte laddas. Försök öppna samtalet igen innan du skickar ett meddelande.</p>'
+          : '<p class="mediator-empty">Inga meddelanden ännu. Skriv ett fiktivt exempel för att testa samtalsstödet.</p>';
     const count = draft.length;
     const status = sending ? 'AI:n arbetar…' : error;
     return '<div class="mediator-view">'

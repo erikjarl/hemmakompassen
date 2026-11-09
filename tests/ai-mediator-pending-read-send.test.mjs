@@ -51,6 +51,8 @@ test('FUN-05: while an existing chat is loading, no POST is allowed and draft su
   await flush();
   assert.equal(ui.getState().activeChatId,B);
   assert.equal(ui.getState().activeChatReady,false);
+  assert.match(ui.render(),/Hämtar samtalshistoriken…/);
+  assert.doesNotMatch(ui.render(),/Inga meddelanden ännu/);
   assert.match(ui.render(),/type="submit" disabled/);
   assert.equal(await ui.submit(),false,'Direct action also needs guarding');
   assert.equal(aiPosts(),0);
@@ -74,6 +76,8 @@ test('FUN-05: failed chat read must not permit a send into an unverified transcr
   assert.equal(ui.getState().activeChatReady,false);
   assert.equal(ui.getState().draft,'Utkast efter misslyckad läsning');
   assert.match(ui.render(),/Kunde inte läsa B/);
+  assert.match(ui.render(),/Samtalshistoriken kunde inte laddas/);
+  assert.doesNotMatch(ui.render(),/Inga meddelanden ännu/);
   assert.match(ui.render(),/type="submit" disabled/);
   assert.equal(await ui.submit(),false);
   assert.equal(aiPosts(),0);
@@ -97,4 +101,11 @@ test('FUN-05: failed DELETE leaves an otherwise verified transcript sendable',as
   assert.equal(await ui.submit(),true);
   assert.equal(aiPosts(),1);
   assert.deepEqual(ui.getState().turns.map(t=>t.text),['Tidigare ALFA','Nytt försök att skriva','AI-svar']);
+});
+
+test('FUN-05: no selected or loaded chat still shows the honest empty state',()=>{
+  const {ui}=fixture();
+  assert.equal(ui.getState().activeChatId,null);
+  assert.match(ui.render(),/Inga meddelanden ännu/);
+  assert.doesNotMatch(ui.render(),/Hämtar samtalshistoriken|Samtalshistoriken kunde inte laddas/);
 });
