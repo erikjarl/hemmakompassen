@@ -130,3 +130,30 @@ test('FUN-03: successful current-session proposal clears draft and refreshes',as
   assert.match(h.state.schysstaMessage,/Förslaget är skickat/);
   assert.equal(h.refreshes.length,1);
 });
+
+test('FUN-03: current-session withdrawal must not close a different pending dialog',async()=>{
+  const h=harness();
+  const underway=h.state.withdraw(oldId);
+  await tick();
+  h.state.schysstaEndTarget=newId;
+  h.pending.resolve({error:null});
+  await underway;
+  assert.equal(h.state.schysstaEndTarget,newId,'User switched dialog while older request was pending');
+  assert.match(h.state.schysstaMessage,/avslutad/);
+  assert.equal(h.refreshes.length,1);
+});
+
+test('FUN-03: changing a draft while the proposal is pending must not discard the new text',async()=>{
+  const h=harness();
+  const underway=h.state.submitRule();
+  await tick();
+  h.state.schysstaDraft='Ett nytt, oskickat utkast efter klicket';
+  h.state.schysstaDraftKey=newId; // input event starts a new request identity
+  h.pending.resolve({error:null});
+  await underway;
+  assert.equal(h.state.schysstaDraft,'Ett nytt, oskickat utkast efter klicket');
+  assert.equal(h.state.schysstaDraftKey,newId);
+  assert.equal(h.state.schysstaDraftOpen,true,'Editor should remain open with new work');
+  assert.match(h.state.schysstaMessage,/Förslaget är skickat/);
+  assert.equal(h.refreshes.length,1);
+});
