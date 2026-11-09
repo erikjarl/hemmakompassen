@@ -47,7 +47,7 @@ for(const role of ['parent','teen']){
   test('FUN-03: '+role+' stuck read-receipt RPC times out, unlocks button and reports unknown receipt',async()=>{
     const h=chatHarness(role);
     const pending=h.state.markRead();
-    await Promise.resolve();await Promise.resolve();
+    await new Promise(resolve=>setImmediate(resolve));
     assert.equal(h.requests.length,1);
     assert.equal(h.state.familyChatReadBusy,true);
     h.timer.expire();
@@ -60,7 +60,7 @@ for(const role of ['parent','teen']){
     assert.equal(h.refreshes.length,0,'No success readback is launched after uncertain RPC');
     // The same control can recover with a later deliberate retry.
     const retry=h.state.markRead();
-    await Promise.resolve();await Promise.resolve();
+    await new Promise(resolve=>setImmediate(resolve));
     assert.equal(h.requests.length,2);
     h.requests[1].resolve({data:2,error:null});
     assert.equal(await retry,true);
@@ -92,7 +92,7 @@ test('FUN-03: timed-out activity notification receipt releases busy state and re
   timer.expire();
   await pending;
   assert.equal(state.activityMarkBusy,null);
-  assert.match(state.activityNotificationsError,/kunde inte bekräfta läsmarkeringen/i);
+  assert.match(state.activityNotificationsError,/inte att bekräfta läsmarkeringen/i);
   assert.equal(state.activityNotifications.length,0,'Unknown receipt must not leave a guessed unread badge');
   assert.equal(refreshes.length,0,'Do not treat timeout as success');
   assert.equal(timer.timers.size,0);
