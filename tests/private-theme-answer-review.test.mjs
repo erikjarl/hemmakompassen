@@ -59,7 +59,7 @@ assert.match(source,/themeReview=true;[\s\S]*?themeIndex=index;/,'Review uses th
 assert.match(source,/function reopenThemeReview\(\)/,'Private theme edit must support return to list');
 assert.match(source,/themeReviewEdit=\{viewer:user\.id,session:sharedSession,deckId:deck\.id,index/,
  'The edit return is bound to exact viewer, session and deck');
-assert.match(source,/if\(returnToReview\)reopenThemeReview\(\);else render\(\)/,
+assert.match(source,/if\(returnToReview\)reopenThemeReview\(\);\s*else\{render\(\);revealNextSwipeCard\(viewer,session,deckId\);\}/,
  'Only successful matching saves trigger list return');
 assert.match(source,/if\(e\.target\.closest\('#theme-review-back'\)/,
  'Cancel without saving is available');
