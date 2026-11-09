@@ -1015,7 +1015,7 @@ function insightsAiSignature(){
   return JSON.stringify([user.id,viewerRole(),insightsRows,sharedUnderstandingEnabled?sharedUnderstandingRows:[]]);
 }
 function insightsView(){
-  const title='<div class="swipe-experience insights-view"><header class="swipe-heading"><span class="swipe-eyebrow">ENDAST REDAN DELADE SVAR</span><h1>Era gemensamma insikter</h1><p>Här samlas möjliga samtalsöppningar från alla kortlekar. Ni kan fortsätta swajpa i er egen takt.</p><a class="live-button" href="#swipe">← Till Gillaswajpen</a></header>';
+  const title='<div class="swipe-experience insights-view"><header class="swipe-heading insights-heading"><span class="swipe-eyebrow">ENDAST REDAN DELADE SVAR</span><h1>Era gemensamma insikter</h1><p>Utforska det ni båda valt att dela. Fortsätt gärna swajpa i er egen takt.</p><a class="insights-back-link" href="#swipe">← Till Gillaswajpen</a></header>';
   if(!sharedInsightsEnabled)return title+card('<h2>Insiktsytan förbereds</h2><p>Den aktiveras först efter säker serververifiering med två konton.</p>')+'</div>';
   if(!user||members.length!==2||!members.some(m=>m.user_id===user.id)||!members.some(m=>m.role==='parent')||!members.some(m=>m.role==='teen'))
     return title+card('<h2>Gemensamma insikter</h2><p>Koppla ihop en förälder och en tonåring för att se sådant ni båda aktivt har valt.</p>')+'</div>';
@@ -1062,7 +1062,8 @@ function insightsView(){
   const missingTargetNotice=requested&&!stillShared
     ?'<p id="insights-target-unavailable" tabindex="-1" role="status">Den här insikten är inte längre tillgänglig eller delad. Du kan se andra gemensamma insikter nedan.</p>':'';
   return title+missingTargetNotice+'<section class="live-panel" aria-labelledby="insights-a-heading"><h2 id="insights-a-heading">Möjligt att utforska</h2>'+
-    '<p class="live-muted">Endast serververifierade JA+JA på A-kort. Det här är möjligheter, inte färdiga överenskommelser. För aktiviteter kan du öppna ett frivilligt meddelandeutkast, utan att något skickas automatiskt.</p>'+ 
+    '<p class="insights-main-intro">Här visas bara det ni båda sagt ja till. Det är möjligheter, inte överenskommelser.</p>'+ 
+    '<details class="insights-method"><summary>Hur visas insikterna?</summary><p>Endast serververifierade JA+JA på A-kort visas här. För gemensamma aktiviteter kan du öppna ett frivilligt meddelandeutkast i inkorgen, utan att något skickas automatiskt.</p></details>'+
     (activityInviteError?'<p role="alert">'+esc(activityInviteError)+'</p>':'')+
     (sections?sharedFactOverview(overviewGroups,'Gemensamt i alla kortlekar'): '')+(sections||empty)+
     (aiResultEnabled&&insightsAiSignature()?aiResults.panel('swipe','all',insightsAiSignature()):'')+'</section>'+
