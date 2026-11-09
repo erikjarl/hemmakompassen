@@ -47,6 +47,7 @@ function harness(){
   sharedSession:2,activityNotificationsRequest:0,activityNotificationsEnabled:true,
   activityNotifications:[],activityNotificationsError:'',activityNotificationsLoading:false,
   activityFeedback:'',familyChatDraft:'',
+  setTimeout,clearTimeout,
   page:()=>'hem',render:()=>renders++,menu:()=>menus++,
   db:{rpc:async name=>{assert.equal(name,'my_activity_notifications');return response;}}
  };

@@ -1,7 +1,7 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261109-schyssta-write-timeout1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261109-inbox-reads-timeout1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261107-authoritative-export4';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261109-schyssta-write-timeout1';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261109-inbox-reads-timeout1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
 import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261107-authoritative-export4';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
@@ -99,8 +99,16 @@ async function fetchActivityNotifications({quiet=false,forceRender=false}={}){
   const previous=JSON.stringify([activityNotifications,activityNotificationsError]);
   activityNotificationsLoading=true;
   if(!quiet&&page()==='inkorg'&&(!familyChatDraft.trim()||forceRender))render();
-  let result;
-  try{result=await db.rpc('my_activity_notifications');}catch(e){result={error:e};}
+  let result,timeout;
+  try{
+    result=await Promise.race([
+      db.rpc('my_activity_notifications'),
+      new Promise((_,reject)=>{timeout=setTimeout(
+        ()=>reject(new Error('Activity notifications fetch timed out')),15000
+      );})
+    ]);
+  }catch(e){result={error:e};}
+  finally{clearTimeout(timeout);}
   if(request!==activityNotificationsRequest||viewer!==user?.id||session!==sharedSession)return;
   if(pair!==activityPairSignature()){
     activityNotifications=[];activityNotificationsError='';activityNotificationsLoading=false;
@@ -274,8 +282,18 @@ async function recheckInboxPair(){
 async function fetchFamilyChatUnread(){
   if(!user||members.length!==2||!inboxPairEpoch){familyChatUnread=0;familyChatUnreadError=!!user&&members.length===2&&!inboxPairEpoch;return;}
   const request=++familyChatCountRequest,viewer=user.id,session=sharedSession;
-  let result;
-  try{result=await db.rpc('my_family_unread_message_count');}catch(e){result={error:e};}
+  let result,timeout;
+  try{
+    // A missing unread-count response must not block the whole-inbox refresh.
+    // Mark the count unknown rather than displaying zero as confirmed.
+    result=await Promise.race([
+      db.rpc('my_family_unread_message_count'),
+      new Promise((_,reject)=>{timeout=setTimeout(
+        ()=>reject(new Error('Unread message count timed out')),15000
+      );})
+    ]);
+  }catch(e){result={error:e};}
+  finally{clearTimeout(timeout);}
   if(request!==familyChatCountRequest||user?.id!==viewer||sharedSession!==session)return;
   const beforeCount=familyChatUnread,beforeError=familyChatUnreadError;
   if(result?.error||!Number.isInteger(result?.data)||result.data<0){
