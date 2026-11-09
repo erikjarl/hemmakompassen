@@ -27,7 +27,7 @@ function harness(){
       const task=deferred();requests.push({name,...task});return task.promise;
     }},
     setTimeout,clearTimeout,
-    render:()=>renders.push('render'),
+    page:()=> 'inkorg',render:()=>renders.push('render'),
     fetchFamilyChat:async()=>{},
     refresh:async()=>{refreshes.push('refresh');},
     showError:err=>{throw err;},
