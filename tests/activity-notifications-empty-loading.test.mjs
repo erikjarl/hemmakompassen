@@ -64,6 +64,17 @@ test('FUN-03: identical quiet background activity response does not rerender the
   assert.equal(h.state.activityNotificationsLoading,false);
 });
 
+test('FUN-03: unchanged nonempty results do not force a redundant foreground rerender',async()=>{
+  const initial=[{notification_id:'71000000-0000-4000-8000-000000000001'}];
+  const h=harness({initial});
+  h.setReply({data:initial,error:null});
+  await h.state.load();
+  assert.deepEqual(h.renders.map(frame=>frame.loading),[true],
+    'Existing notices have no empty-state spinner, so avoid interrupting focus with another render');
+  assert.equal(h.renders[0].empty,false);
+  assert.equal(h.state.activityNotificationsLoading,false);
+});
+
 test('FUN-03: changed results and error replies still replace the loading view',async()=>{
   const h=harness();
   h.setReply({error:{message:'offline'},data:null});
