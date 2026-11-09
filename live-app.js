@@ -1,5 +1,5 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261109-private-retest-deadline1-fun02focus09';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261109-private-retest-deadline1-fun02ai10';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261107-authoritative-export4';
 import {createAiResultExperience} from './ai-result-ui.js?v=20261109-private-retest-deadline1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
@@ -42,7 +42,14 @@ const STATEMENTS=GENERAL_CARDS.map(card=>[card.category,card.teenText]);
 const THEME_DECKS=THEME_DECK_MODELS.map(deck=>({...deck,cards:deck.cards.map(card=>card.teenText),cardIds:deck.cards.map(card=>card.id)}));
 let user=null,profile=null,members=[],refreshGeneration=0;
 const mediatorExperience=createAiMediatorExperience({db,config:c,escapeHtml:esc,getViewerRole:()=>viewerRole(),onRender:()=>{if(user&&page()==='medlare')render();}});
-const aiResults=createAiResultExperience({db,config:c,onRender:()=>{if(user&&['personlighet','swipe','insikter'].includes(page()))render();}});
+// AI completion is asynchronous and may arrive while someone is searching
+// their own saved swipe answers. Preserve that local review state instead
+// of replacing the expanded list and losing the query or keyboard focus.
+const aiResults=createAiResultExperience({db,config:c,onRender:()=>{
+  if(!user)return;
+  if(page()==='swipe')renderKeepingGeneralReview();
+  else if(['personlighet','insikter'].includes(page()))render();
+}});
 const personalityExperience=createPersonalityExperience({db,isSharingEnabled:personalitySharingEnabled,isRetestEnabled:c.enablePrivateRetests===true,
   useAiAnalysis:aiResultEnabled,analysisPanel:(kind,scope,signature)=>aiResults.panel(kind,scope,signature),
   onRender:()=>{if(user&&page()==='personlighet')render();}});
