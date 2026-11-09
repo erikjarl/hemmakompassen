@@ -33,15 +33,18 @@ function harness({busy=false,pairValid=true,rpcMatches=true}={}){
   return {c,renders,reads,locations};
 }
 
-test('already-running family check leaves invite enabled and provides an understandable retry message',async()=>{
+test('already-running family check can be joined by a voluntary activity invitation',async()=>{
   const h=harness({busy:true});
+  // The checker is stubbed here. The linked real checker + CTA with delayed
+  // pair RPCs is tested in activity-invite-shared-pair-check.test.mjs.
   await h.c.prepare('aktiviteter-01');
   assert.equal(h.c.activityInviteBusy,false);
-  assert.match(h.c.activityInviteError,/kontrolleras redan/);
+  assert.equal(h.c.activityInviteError,'');
   assert.equal(h.renders.length,1);
-  assert.deepEqual(h.reads,[],'Do not start a second family check or query activities');
-  assert.equal(h.c.familyChatDraft,'');
-  assert.deepEqual(h.locations,[],'Do not navigate or send');
+  assert.deepEqual(h.reads,['pair','shared_swipe_matches']);
+  assert.match(h.c.familyChatDraft,/Laga mat tillsammans/);
+  assert.match(h.c.familyChatStatus,/bara ett utkast/);
+  assert.deepEqual(h.locations,['inkorg'],'Opens a draft, never sends it');
 });
 
 test('false pair recheck without session change clears spinner and redraws failure',async()=>{
