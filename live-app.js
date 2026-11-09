@@ -1,7 +1,7 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261109-inbox-reads-timeout1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261109-schyssta-notice-feedback1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261107-authoritative-export4';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261109-inbox-reads-timeout1';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261109-schyssta-notice-feedback1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
 import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261107-authoritative-export4';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
@@ -1960,6 +1960,8 @@ async function markSchysstaRead(id){
   if(user?.id!==viewer||session!==sharedSession)return;
   schysstaSaving.delete(id);
   if(error){schysstaMessage='Det gick inte att bekräfta läsmarkeringen. Uppdatera listan för att kontrollera statusen.';render();return;}
+  // A confirmed successful retry must dismiss the previous uncertainty.
+  schysstaMessage='';
   await fetchSchysstaList();
 }
 function validSchysstaReplacementLinks(rows,manualRules){
@@ -2106,6 +2108,9 @@ function inboxView(){
       +(needs.length?'<ul class="schyssta-list">'+needs.map(row=>'<li><p>'+esc(row.body)+'</p><button type="button" class="live-button" data-schyssta-open="'+row.agreement_id+'">Se och svara i Schyssta listan</button></li>').join('')+'</ul>'
         :'<p class="live-muted">Inga regelförslag väntar på ditt svar.</p>')
       +'<h3>Händelser från Schyssta listan'+(schysstaUnreadCount()?' · '+schysstaUnreadCount()+' olästa':'')+'</h3>'
+      // Rule-notice actions can run directly in this inbox, so their feedback
+      // must be announced here instead of only on the separate rules page.
+      +(schysstaMessage?'<p role="status" class="schyssta-feedback">'+esc(schysstaMessage)+'</p>':'')
       +noticeHtml+'<p><a href="#regler">Öppna Schyssta listan</a></p>');
   const activityPanel=!activityNotificationsEnabled?''
     :card('<h2>Gemensamma kort och aktiviteter'
