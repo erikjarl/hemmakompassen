@@ -1947,10 +1947,15 @@ async function refreshWholeInbox(){
     if(viewer===user?.id&&session===sharedSession&&page()==='inkorg')
       inboxRefreshStatus='Inkorgen kunde inte uppdateras. Kontrollera anslutningen och försök igen.';
   }finally{
-    inboxRefreshing=false;
-    if(viewer===user?.id&&session===sharedSession&&page()==='inkorg'){
-      render();
-      document.getElementById('inbox-refresh-all')?.focus({preventScroll:true});
+    // clearFamilyChat() resets the flag on a pair/account change. A late
+    // response from that former session must not unlock the next session's
+    // still-running refresh or steal its button focus.
+    if(viewer===user?.id&&session===sharedSession){
+      inboxRefreshing=false;
+      if(page()==='inkorg'){
+        render();
+        document.getElementById('inbox-refresh-all')?.focus({preventScroll:true});
+      }
     }
   }
 }
