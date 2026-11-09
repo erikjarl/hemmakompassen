@@ -1,6 +1,6 @@
 # FUN-01-INVITE-01 – genererad QR-inbjudan vid sessionbyte
 
-**Datum:** 9 november 2026 · **PR:** [#240](https://github.com/erikjarl/hemmakompassen/pull/240) · **Status:** syntetiska automatiska tester inväntas.
+**Datum:** 9 november 2026 · **PR:** [#240](https://github.com/erikjarl/hemmakompassen/pull/240) · **Status:** PR #240 mergad (`a6e4016`), Node/Chromium och publicerade Pages-bytes godkända. Riktig Auth och fysisk mobil ännu inte verifierade.
 
 ## Funktionell brist
 
@@ -31,3 +31,10 @@ Detta är en **kodgranskningsgrundad användarflödesbrist**, inte en uppmätt i
 Ett kompletterande test i `tests/account-refresh-race.test.mjs` håller den nya familjeläsningen avsiktligt väntande och verifierar att det tidigare kontots familjenamn/paneler inte fortsätter synas innan korrekt svar kommer.
 
 **Avgränsning:** Mockad Supabase/Auth, inga riktiga användare/servrar, inget nätverksavbrott och ingen Safari/VoiceOver eller manuell QR-skanning. En grön CI är inte bevis för autentiserad tvåkontoparning. FUN-01 kvarstår som **Pågår** tills verklig funktionsverifiering har gjorts.
+
+## Slutlig verifiering 9 november 2026
+
+- **Kod:** [PR #240](https://github.com/erikjarl/hemmakompassen/pull/240) mergad till `main`, [commit `a6e4016`](https://github.com/erikjarl/hemmakompassen/commit/a6e4016fe5e6f108c2f8dc22c6046cf5e6302e3d).
+- **Automatiska tester:** [grön PR-CI #42540289413](https://github.com/erikjarl/hemmakompassen/actions/runs/42540289413), **407/407 Node-tester utan fel** och godkänd byggkontroll. Chromium-sviten avslutades godkänt med 77 skärmbilder och `visual-audit.json` i Actions-artifact. Dessa testmiljöer är syntetiska, inte autentiserade konton.
+- **Publicering:** [GitHub Pages-deploy #42540732516](https://github.com/erikjarl/hemmakompassen/actions/runs/42540732516) godkänd. [Byte-verifiering #42540732611](https://github.com/erikjarl/hemmakompassen/actions/runs/42540732611) bekräftade att **fyra serverade filer inklusive `konto.js`** matchade committen; de första tre kontrollförsöken hittade den äldre kontofilen, det fjärde matchade.
+- **Kvarstår:** ingen verklig tvåkontoparning i Supabase, fysisk Safari/VoiceOver, QR-skanning eller nätverksfelinjektion. FUN-01 har status **Pågår**, inte "färdig och verifierad".
