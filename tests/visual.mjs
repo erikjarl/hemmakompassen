@@ -3982,6 +3982,15 @@ try{
   assert.match(await paired.page.locator('#family-chat-help').innerText(),
     /Skickas bara när du väljer Skicka/);
   await checkOverflow(paired.page,'Mobile voluntary activity invitation draft');
+  await paired.page.waitForFunction(()=>{
+    const draft=document.querySelector('#family-chat-body');
+    const main=document.querySelector('.live-main');
+    if(!draft||!main)return false;
+    const field=draft.getBoundingClientRect(),viewport=main.getBoundingClientRect();
+    return field.top<viewport.bottom-32&&field.bottom>viewport.top+32;
+  },null,{timeout:4000});
+  assert.ok(await paired.page.evaluate(()=>document.querySelector('.live-main')?.scrollTop>0),
+    'Activity CTA must bring the unsent draft into the visible mobile inbox viewport');
   await capture(paired.page,'mobile-activity-invite-draft.png');
   await paired.page.locator('#family-chat-body').fill('');
   // NOT-01D: same verified activity CTA is directly reachable in its own
@@ -3998,6 +4007,15 @@ try{
     /Laga mat tillsammans.*bestämmer en dag/s);
   assert.deepEqual(await paired.page.evaluate(()=>window.__HK_CHAT_SEND__||null),sentBefore,
     'The direct deck path must never send an activity invitation automatically');
+  await paired.page.waitForFunction(()=>{
+    const draft=document.querySelector('#family-chat-body');
+    const main=document.querySelector('.live-main');
+    if(!draft||!main)return false;
+    const field=draft.getBoundingClientRect(),viewport=main.getBoundingClientRect();
+    return field.top<viewport.bottom-32&&field.bottom>viewport.top+32;
+  },null,{timeout:4000});
+  assert.ok(await paired.page.evaluate(()=>document.querySelector('.live-main')?.scrollTop>0),
+    'Activity deck CTA must bring the unsent draft into the visible mobile inbox viewport');
   await capture(paired.page,'mobile-activity-invite-from-deck.png');
   await paired.page.locator('#family-chat-body').fill('');
   await paired.page.evaluate(()=>{delete window.__HK_TEST_SHARED_MATCHES__;location.hash='insikter';});

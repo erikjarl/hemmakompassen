@@ -51,7 +51,7 @@ let sharedPollPending=false;
 // Presentation-only selection. It never changes, fetches, or shares answers.
 let sharedMatchFilter={deckId:null,category:null};
 let insightsRows=[],insightsLoading=false,insightsError='',insightsRequest=0;
-let activityInviteBusy=false,activityInviteError='';
+let activityInviteBusy=false,activityInviteError='',activityInviteFocus=null;
 let sharedUnderstandingRows=[],understandingShareError='',understandingSharesAvailable=false,understandingShareChecking=false;
 let schysstaSuggestions=[],schysstaRules=[],schysstaManualRules=[],schysstaNotifications=[],schysstaReplacementLinks=[],schysstaHistory=[],schysstaEndTarget=null,schysstaLoading=false,schysstaError='',schysstaRequest=0;
 let schysstaDraft='',schysstaDraftOpen=false,schysstaDraftKey=null,schysstaEditTarget=null,schysstaSubmitting=false,schysstaMessage='',schysstaCopyMessage='',schysstaCopyFallback=false,schysstaFocusId='',schysstaSearch='',schysstaFilterStatus='all';
@@ -1128,6 +1128,9 @@ async function prepareActivityMessage(cardId){
   familyChatRequestKey=null;
   familyChatStatus='Detta är bara ett utkast. Läs igenom och välj själv om du vill skicka.';
   activityInviteError='';
+  // The hashchange handler first renders the Inbox and resets its scroller.
+  // Schedule visibility/focus there, not before the new route is ready.
+  activityInviteFocus={viewer,session};
   location.hash='inkorg';
   requestAnimationFrame(()=>document.getElementById('family-chat-body')?.focus({preventScroll:true}));
 }
@@ -2610,6 +2613,19 @@ window.addEventListener('hashchange',()=>{
   if(page()!=='regler'&&page()!=='inkorg'){schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];schysstaNotifications=[];schysstaReplacementLinks=[];schysstaHistory=[];schysstaError='';schysstaLoading=false;schysstaRequest++;}
   render();scrollLiveMainTop();
   if(!user||!openCommunicationSkill($('live-app'),communicationSkillFromHash(location.hash),{focus:true}))$('live-app')?.focus({preventScroll:true});
+  // A voluntary activity invitation should land on its editable draft, not at
+  // the top of a long message history. This must run AFTER route scroll reset.
+  const draftFocus=activityInviteFocus;
+  activityInviteFocus=null;
+  if(draftFocus&&page()==='inkorg'){
+    requestAnimationFrame(()=>{
+      if(user?.id!==draftFocus.viewer||sharedSession!==draftFocus.session||page()!=='inkorg')return;
+      const input=document.getElementById('family-chat-body');
+      if(!input)return;
+      input.focus({preventScroll:true});
+      input.scrollIntoView({block:'center'});
+    });
+  }
   if(page()==='insikter')void fetchInsights();
   if(page()==='personlighet')void personalityExperience.refreshShared();
   if(page()==='medlare')void mediatorExperience.loadList();
