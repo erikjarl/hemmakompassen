@@ -1918,16 +1918,30 @@ async function preflightSchysstaWrite(viewer,session){
   const valid=await recheckInboxPair();
   return valid&&user?.id===viewer&&sharedSession===session&&members.length===2;
 }
+// Network loss can leave a write unacknowledged. Bound all user-initiated
+// Schyssta RPCs while retaining their existing per-session action locks.
+// A deadline releases the UI but does not prove whether the server committed.
+async function schysstaWriteRpc(operation){
+  let timeout;
+  try{
+    return await Promise.race([
+      operation,
+      new Promise((_,reject)=>{timeout=setTimeout(
+        ()=>reject(new Error('Schyssta write reply timed out')),15000
+      );})
+    ]);
+  }finally{clearTimeout(timeout);}
+}
 async function markSchysstaRead(id){
   if(!schysstaListEnabled||!user||!SCHYSSTA_UUID.test(id)||schysstaSaving.has(id))return;
   const viewer=user.id,session=sharedSession;
   if(!await preflightSchysstaWrite(viewer,session)||schysstaSaving.has(id))return;
   schysstaSaving.add(id);
-  let error;try{({error}=await db.rpc('mark_schyssta_notification_read',{p_notification_id:id}));}catch(e){error=e;}
+  let error;try{({error}=await schysstaWriteRpc(db.rpc('mark_schyssta_notification_read',{p_notification_id:id})));}catch(e){error=e;}
   // Another account/family session owns its own pending actions.
   if(user?.id!==viewer||session!==sharedSession)return;
   schysstaSaving.delete(id);
-  if(error){schysstaMessage='Det gick inte att markera meddelandet som läst.';render();return;}
+  if(error){schysstaMessage='Det gick inte att bekräfta läsmarkeringen. Uppdatera listan för att kontrollera statusen.';render();return;}
   await fetchSchysstaList();
 }
 function validSchysstaReplacementLinks(rows,manualRules){
@@ -1951,12 +1965,12 @@ async function withdrawSchysstaRule(id){
   const viewer=user.id,session=sharedSession;
   if(!await preflightSchysstaWrite(viewer,session)||schysstaSaving.has(id)||schysstaEndTarget!==id)return;
   schysstaSaving.add(id);
-  let error;try{({error}=await db.rpc('withdraw_schyssta_rule',{p_agreement_id:id}));}catch(e){error=e;}
+  let error;try{({error}=await schysstaWriteRpc(db.rpc('withdraw_schyssta_rule',{p_agreement_id:id})));}catch(e){error=e;}
   // Ignore late responses from a previous family, and keep a newer dialog.
   if(user?.id!==viewer||session!==sharedSession)return;
   schysstaSaving.delete(id);
   if(schysstaEndTarget===id)schysstaEndTarget=null;
-  if(error){schysstaMessage='Det gick inte att avsluta överenskommelsen.';render();return;}
+  if(error){schysstaMessage='Det gick inte att bekräfta om överenskommelsen avslutades. Uppdatera listan för att kontrollera statusen.';render();return;}
   schysstaMessage='Överenskommelsen är avslutad och finns kvar i historiken.';
   await fetchSchysstaList();
 }
@@ -1969,11 +1983,11 @@ async function submitManualSchysstaRule(){
   if(!schysstaDraftKey)schysstaDraftKey=crypto.randomUUID();
   const requestKey=schysstaDraftKey;
   schysstaSubmitting=true;schysstaMessage='Skickar förslaget…';render();
-  let error;try{({error}=schysstaEditTarget?await db.rpc('propose_schyssta_change',{p_agreement_id:schysstaEditTarget,p_body:body,p_request_key:requestKey}):await db.rpc('propose_manual_schyssta_rule',{p_body:body,p_request_key:requestKey}));}
+  let error;try{({error}=await schysstaWriteRpc(schysstaEditTarget?db.rpc('propose_schyssta_change',{p_agreement_id:schysstaEditTarget,p_body:body,p_request_key:requestKey}):db.rpc('propose_manual_schyssta_rule',{p_body:body,p_request_key:requestKey})));}
   catch(e){error=e;}
   if(user?.id!==viewer||sharedSession!==session)return;
   schysstaSubmitting=false;
-  if(error){schysstaMessage='Kunde inte skicka förslaget. Kontrollera anslutningen och försök igen.';render();return;}
+  if(error){schysstaMessage='Det gick inte att bekräfta om förslaget skickades. Utkastet finns kvar. Uppdatera listan eller försök igen med samma text.';render();return;}
   // The editable textarea stays enabled while submitting. If the user has
   // started a different draft meanwhile, never delete that newer text.
   if(schysstaDraft===draftBefore&&schysstaEditTarget===editBefore&&schysstaDraftKey===requestKey){
@@ -2143,12 +2157,12 @@ async function proposeSchysstaRule(cardId){
   const viewer=user.id,session=sharedSession;
   if(!await preflightSchysstaWrite(viewer,session)||schysstaSaving.has(cardId))return;
   schysstaSaving.add(cardId);render();
-  let error;try{({error}=await db.rpc('propose_schyssta_rule',{p_card_id:cardId}));}catch(e){error=e;}
+  let error;try{({error}=await schysstaWriteRpc(db.rpc('propose_schyssta_rule',{p_card_id:cardId})));}catch(e){error=e;}
   // A response from a former account/family may not release the current
   // session's in-flight action for the same rule card.
   if(user?.id!==viewer||sharedSession!==session)return;
   schysstaSaving.delete(cardId);
-  if(error){schysstaError='Förslaget kunde inte sparas. Inget godkännande registrerades.';render();return;}
+  if(error){schysstaError='Det gick inte att bekräfta om förslaget sparades. Uppdatera listan för att kontrollera resultatet.';render();return;}
   await fetchSchysstaList();
 }
 async function decideSchysstaRule(agreementId,approved){
@@ -2156,11 +2170,11 @@ async function decideSchysstaRule(agreementId,approved){
   const viewer=user.id,session=sharedSession;
   if(!await preflightSchysstaWrite(viewer,session)||schysstaSaving.has(agreementId))return;
   schysstaSaving.add(agreementId);render();
-  let error;try{({error}=await db.rpc('set_schyssta_rule_decision',{p_agreement_id:agreementId,p_approved:approved}));}catch(e){error=e;}
+  let error;try{({error}=await schysstaWriteRpc(db.rpc('set_schyssta_rule_decision',{p_agreement_id:agreementId,p_approved:approved})));}catch(e){error=e;}
   // The current session owns the saving flag and cached decisions.
   if(user?.id!==viewer||sharedSession!==session)return;
   schysstaSaving.delete(agreementId);
-  if(error){schysstaError='Ditt val kunde inte sparas. Listan har rensats tills den kan hämtas igen.';schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];schysstaNotifications=[];schysstaReplacementLinks=[];schysstaHistory=[];render();return;}
+  if(error){schysstaError='Det gick inte att bekräfta om ditt val sparades. Listan har rensats tills du kontrollerat aktuell status igen.';schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];schysstaNotifications=[];schysstaReplacementLinks=[];schysstaHistory=[];render();return;}
   await fetchSchysstaList();
 }
 function schysstaView(){
