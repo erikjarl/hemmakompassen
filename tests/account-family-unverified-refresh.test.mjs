@@ -196,7 +196,8 @@ test('VIS-00-12: manual account refresh reports errors and success only beside r
  assert.equal(h.element('status').textContent,'');
  // Other forms still have their own status target and clear obsolete refresh feedback.
  h.element('refresh-account-status').textContent='Gammalt uppdateringsmeddelande';
- h.element('name-form').submit({preventDefault(){}});
+ h.element('signup-form').submit({preventDefault(){}});
  await tick();await tick();
  assert.equal(h.element('refresh-account-status').textContent,'');
+ assert.match(h.element('status').textContent,/Lösenordet behöver innehålla minst 12 tecken/,'Other form keeps its own status region');
 });
