@@ -1,6 +1,6 @@
 # FUN-02-ACTIVITY-SESSION-01 – aktivitetsinbjudan och försenade tidigare kontosvar
 
-**Datum:** 9 november 2026 · **PR:** [#246](https://github.com/erikjarl/hemmakompassen/pull/246) · **Verifieringsnivå:** Node/VM mot riktig klientfunktion; riktiga signerade tvåkontotester kvarstår.
+**Datum:** 9 november 2026 · **PR:** [#246](https://github.com/erikjarl/hemmakompassen/pull/246) · **Verifieringsnivå:** Node/VM mot riktig klientfunktion och syntetisk Chromium; riktiga signerade tvåkontotester kvarstår.
 
 ## Reproducerat funktionsfel
 
@@ -16,4 +16,4 @@ I `live-app.js` får en gammal åtgärd inte längre skriva `activityInviteBusy=
 
 ## Återstående verifiering
 
-Kontrollera grön Node/bygg/Chromium-CI på PR, merge till `main`, Pages-deploy och serverade bytekontroller. Därefter krävs fortfarande verkliga två inloggade testkonton, nätverksfördröjning och fysisk mobil/Safari för fullständig FUN-02-verifiering. Testerna i denna PR ändrar inte några verkliga användarsvar eller meddelanden.
+**Grön PR-CI #42549075806:** 440/440 Node-tester, byggkontroll och syntetisk Chromium med 77 skärmbilder. Efter sammanfogning med uppdaterad `main` ska slutlig PR-CI, merge till `main`, Pages-deploy och serverade bytekontroller kontrolleras. Därefter krävs fortfarande verkliga två inloggade testkonton, nätverksfördröjning och fysisk mobil/Safari för fullständig FUN-02-verifiering. Testerna i denna PR ändrar inte några verkliga användarsvar eller meddelanden.
