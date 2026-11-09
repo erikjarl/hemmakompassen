@@ -156,7 +156,11 @@ async function testAccountBrowserJourney(){
     '    upsert:async row=>{record("name-update");state.name=row.display_name;return {error:null};}',
     '  });',
     '  const rpc=async name=>{record(name);',
-    '    if(name==="my_family_members")return {data:state.members,error:null};',
+    '    if(name==="my_family_members"){',
+    '      if(window.__HK_ACCOUNT_FAIL_MEMBERS__)return {data:null,error:{message:"Simulerat fel vid familjeläsning"}};',
+    '      if(window.__HK_ACCOUNT_INVALID_MEMBERS__)return {data:null,error:null};',
+    '      return {data:state.members,error:null};',
+    '    }',
     '    if(name==="start_family"){state.members=[{user_id:"synthetic-parent",role:"parent",display_name:"Provförälder"}];return {data:null,error:null};}',
     '    if(name==="create_family_invite")return {data:"2030-01-01T12:00:00Z",error:null};',
     '    if(name==="accept_family_invite"){state.members.push({user_id:"synthetic-teen",role:"teen",display_name:"Provtonåring"});return {data:null,error:null};}',
@@ -257,6 +261,39 @@ async function testAccountBrowserJourney(){
   assert.equal(new URL(page.url()).hash,'','FUN-01 consumed invitation hash is removed');
   assert.match(await page.locator('#members').innerText(),/Förälder.*Tonåring/);
   steps.push('in-memory invite acceptance displays both family roles');
+
+  // FUN-01: a real account refresh must not display the last-known family as
+  // verified, or report success, if the current family RPC fails.
+  await page.evaluate(()=>{window.__HK_ACCOUNT_FAIL_MEMBERS__=true;});
+  await page.locator('#refresh-account').click();
+  await page.locator('#status').getByText('Simulerat fel vid familjeläsning').waitFor();
+  for(const id of ['family','waiting','unpaired','join-family']){
+    assert.equal(await page.locator('#'+id+':not(.hidden)').count(),0,
+      'Unverified family response may not leave '+id+' visible');
+  }
+  assert.equal((await page.locator('#members').innerText()).trim(),'');
+  assert.doesNotMatch(await page.locator('#status').innerText(),/Kontot har uppdaterats/);
+  await checkOverflow(page,'FUN-01 unknown family after failed refresh');
+  await page.evaluate(()=>window.scrollTo(0,0));
+  await capture(page,'mobile-account-family-unverified.png');
+  steps.push('family RPC failure hides previously verified family and preserves error');
+
+  await page.evaluate(()=>{
+    window.__HK_ACCOUNT_FAIL_MEMBERS__=false;
+    window.__HK_ACCOUNT_INVALID_MEMBERS__=true;
+  });
+  await page.locator('#refresh-account').click();
+  await page.locator('#status').getByText(/kunde inte bekräftas/).waitFor();
+  assert.equal(await page.locator('#unpaired:not(.hidden)').count(),0,
+    'Null RPC payload must not be interpreted as a verified unpaired family');
+  steps.push('null family response cannot falsely show unpaired state');
+
+  await page.evaluate(()=>{window.__HK_ACCOUNT_INVALID_MEMBERS__=false;});
+  await page.locator('#refresh-account').click();
+  await page.locator('#family:not(.hidden)').waitFor();
+  await page.locator('#status').getByText('Kontot har uppdaterats.').waitFor();
+  assert.match(await page.locator('#members').innerText(),/Förälder.*Tonåring/);
+  steps.push('explicit successful retry restores family controls');
 
   await page.locator('#display-name').fill('Nytt syntetiskt namn');
   await page.locator('#name-form').evaluate(el=>el.requestSubmit());

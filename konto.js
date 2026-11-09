@@ -42,6 +42,15 @@ function clearGeneratedInvite(){
 }
 let refreshVersion = 0;
 let renderedAccountId = null;
+// An old or incomplete family RPC must never leave verified-looking controls
+// enabled. Keep any unsent invitation visible again after a successful retry.
+function hideUnverifiedFamily(){
+  $('members').textContent='';
+  show('unpaired',false);
+  show('family',false);
+  show('waiting',false);
+  show('join-family',false);
+}
 async function refresh() {
   // Auth events and form actions can start overlapping refreshes. Only the newest
   // request may update the account view after an asynchronous server read.
@@ -55,12 +64,11 @@ async function refresh() {
   if(accountId!==renderedAccountId){
     // Hide the previous account's family while the new family's RPC is loading.
     $('display-name').value='';
-    $('members').textContent='';
-    show('unpaired',false);show('family',false);show('waiting',false);show('join-family',false);
+    hideUnverifiedFamily();
     clearGeneratedInvite();
     renderedAccountId=accountId;
   }
-  if(error && error.name!=='AuthSessionMissingError') status(error.message);
+  if(error && error.name!=='AuthSessionMissingError') throw error;
   show('logged-in',!!user);show('logged-out',!user);
   // A persistent invitation notice is separate from one-off form feedback.
   // Refresh after registration/reset must never overwrite an important status.
@@ -75,13 +83,20 @@ async function refresh() {
     return;
   }
   $('account').textContent='Inloggad: '+user.email;
-  const {data:profile}=await withAccountDeadline(client.from('profiles').select('display_name').eq('user_id',user.id).maybeSingle());
+  const {data:profile,error:profileError}=await withAccountDeadline(client.from('profiles').select('display_name').eq('user_id',user.id).maybeSingle());
   if(version!==refreshVersion) return;
+  if(profileError) throw profileError;
   $('display-name').value=profile?.display_name||'';
   const {data:members,error:membersError}=await withAccountDeadline(client.rpc('my_family_members'));
   if(version!==refreshVersion) return;
-  if(membersError){status(membersError.message);return;}
-  const memberCount=members?.length||0;
+  if(membersError) throw membersError;
+  // Empty array means verified unpaired. A missing/malformed response must
+  // not be mistaken for a verified family of zero members.
+  if(!Array.isArray(members) || members.length>2 ||
+     members.some(m=>!m || !['parent','teen'].includes(m.role)) ||
+     (members.length===2 && members[0].role===members[1].role))
+    throw new Error('Familjeuppgifter kunde inte bekräftas. Uppdatera kontostatus och försök igen.');
+  const memberCount=members.length;
   show('unpaired',memberCount===0);show('family',memberCount>0);show('waiting',memberCount===1);show('join-family',memberCount<2);
   // A completed pair (or no family) must not leave an obsolete invite behind.
   if(memberCount!==1) clearGeneratedInvite();
@@ -93,7 +108,10 @@ async function refresh() {
   }catch(e){
     // A previous refresh can time out after another signed-in account has
     // already completed a newer refresh. Never restore the stale error.
-    if(version===refreshVersion)throw e;
+    if(version===refreshVersion){
+      hideUnverifiedFamily();
+      throw e;
+    }
   }
 }
 let busy=false;
