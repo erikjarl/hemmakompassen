@@ -42,6 +42,9 @@ function clearGeneratedInvite(){
 }
 let refreshVersion = 0;
 let renderedAccountId = null;
+// A background Auth/profile refresh must not erase text the user has typed.
+let nameDraftDirty = false;
+$('display-name').addEventListener('input',()=>{nameDraftDirty=true;});
 // An old or incomplete family RPC must never leave verified-looking controls
 // enabled. Keep any unsent invitation visible again after a successful retry.
 function hideUnverifiedFamily(){
@@ -63,6 +66,7 @@ async function refresh() {
   const accountId=user?.id??null;
   if(accountId!==renderedAccountId){
     // Hide the previous account's family while the new family's RPC is loading.
+    nameDraftDirty=false;
     $('display-name').value='';
     hideUnverifiedFamily();
     clearGeneratedInvite();
@@ -76,6 +80,7 @@ async function refresh() {
   if(!user){
     // Do not leave a previous account's family details in the logged-out DOM.
     $('account').textContent='';
+    nameDraftDirty=false;
     $('display-name').value='';
     $('members').textContent='';
     show('unpaired',false);show('family',false);show('waiting',false);show('join-family',false);
@@ -86,7 +91,9 @@ async function refresh() {
   const {data:profile,error:profileError}=await withAccountDeadline(client.from('profiles').select('display_name').eq('user_id',user.id).maybeSingle());
   if(version!==refreshVersion) return;
   if(profileError) throw profileError;
-  $('display-name').value=profile?.display_name||'';
+  // Preserve an unsaved draft for this exact account, even if focus moved
+  // elsewhere or the profile fetch returns while the user is still typing.
+  if(!nameDraftDirty)$('display-name').value=profile?.display_name||'';
   const {data:members,error:membersError}=await withAccountDeadline(client.rpc('my_family_members'));
   if(version!==refreshVersion) return;
   if(membersError) throw membersError;
@@ -171,7 +178,21 @@ $('password-form').addEventListener('submit',e=>{e.preventDefault();run(async is
   $('password-form').reset();
   status('Lösenordet är sparat. Nästa gång loggar du in med e-post och lösenord.');
 });});
-$('name-form').addEventListener('submit',e=>{e.preventDefault();run(async isCurrent=>{const {data:{user}}=await client.auth.getUser();if(!isCurrent())return;if(!user)throw Error('Inte inloggad');const {error}=await client.from('profiles').upsert({user_id:user.id,display_name:$('display-name').value.trim()});if(!isCurrent())return;if(error)throw error;status('Namnet sparat.');});});
+$('name-form').addEventListener('submit',e=>{e.preventDefault();run(async isCurrent=>{
+  const requestedName=$('display-name').value.trim();
+  const {data:{user}}=await client.auth.getUser();
+  if(!isCurrent())return;
+  if(!user)throw Error('Inte inloggad');
+  const {error}=await client.from('profiles').upsert({user_id:user.id,display_name:requestedName});
+  if(!isCurrent())return;
+  if(error)throw error;
+  // If the user continued editing after pressing Save, the newer draft wins
+  // in the input; only the submitted snapshot has been confirmed as saved.
+  nameDraftDirty=$('display-name').value.trim()!==requestedName;
+  status(nameDraftDirty
+    ?'Den tidigare namnversionen sparades. Dina nyare ändringar i fältet är fortfarande osparade.'
+    :'Namnet sparat.');
+});});
 $('create-family').addEventListener('click',()=>run(async isCurrent=>{const {error}=await client.rpc('start_family',{p_role:$('role').value});if(!isCurrent())return;if(error)throw error;status('Familjen skapad. Skapa en kod för att bjuda in den andra personen.');}));
 $('make-invite').addEventListener('click',()=>run(async isCurrent=>{
   const bytes=crypto.getRandomValues(new Uint8Array(18));
