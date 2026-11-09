@@ -110,9 +110,12 @@ $('create-family').addEventListener('click',()=>run(async()=>{const {error}=awai
 $('make-invite').addEventListener('click',()=>run(async()=>{
   const bytes=crypto.getRandomValues(new Uint8Array(18));
   const code=Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('').toUpperCase();
-  const activeRefresh=refreshVersion;
+  const inviteOwnerId=renderedAccountId;
   const {data,error}=await client.rpc('create_family_invite',{p_code:code});
-  if(activeRefresh!==refreshVersion) return; // Session was refreshed while creating this invitation.
+  // Check the actual current account, not just whether any refresh took place:
+  // a same-account refresh while the request was pending must not lose the new code.
+  const {data:{user:currentUser}}=await client.auth.getUser();
+  if(!inviteOwnerId || currentUser?.id!==inviteOwnerId || renderedAccountId!==inviteOwnerId) return;
   if(error)throw error;
   $('new-invite').textContent='Dela koden privat: '+code+' (gäller till '+new Date(data).toLocaleString('sv-SE')+')';
   try {
