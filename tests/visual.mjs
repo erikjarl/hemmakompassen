@@ -1734,7 +1734,7 @@ async function verifyCommunicationForms(){
 // Chromium contexts. No Supabase credentials, production replies or live users.
 function makeTwoRoleFamilyFixture(){
   const messages=[],tokens=new Map(),rules=[],notices=[],activityNotices=[],replacementLinks=[],ruleHistory=[],calls=[];
-  let failedSendAcknowledgement=false,failedOlderPage=false,failedActivityRead=false,nextRuleId=200;
+  let failedSendAcknowledgement=false,failedOlderPage=false,failedActivityRead=false,failedRuleNoticeRead=false,nextRuleId=200;
   const other=role=>role==='parent'?'teen':'parent';
   const ok=data=>({data,error:null});
   const createdAt=n=>'2026-11-01T12:'+String(Math.floor(n/50)).padStart(2,'0')+':'+String(n%50).padStart(2,'0')+'Z';
@@ -1850,6 +1850,7 @@ function makeTwoRoleFamilyFixture(){
       return ok(null);
     }
     if(name==='mark_schyssta_notification_read'){
+      if(failedRuleNoticeRead){failedRuleNoticeRead=false;return {data:null,error:{message:'synthetic rule receipt unavailable'}};}
       const notice=notices.find(n=>n.recipient===role&&n.notification_id===args.p_notification_id);
       if(!notice)return {data:null,error:{message:'unknown synthetic notice'}};
       notice.read_at='2026-11-01T13:01:00Z';return ok(null);
@@ -1859,7 +1860,8 @@ function makeTwoRoleFamilyFixture(){
   return {rpc,messages,rules,notices,activityNotices,replacementLinks,ruleHistory,calls,
     loseNextSendAcknowledgement(){failedSendAcknowledgement=true;},
     failNextOlderPage(){failedOlderPage=true;},
-    failNextActivityRead(){failedActivityRead=true;}};
+    failNextActivityRead(){failedActivityRead=true;},
+    failNextRuleNoticeRead(){failedRuleNoticeRead=true;}};
 }
 const FUN03_LINKED_RPCS=Object.freeze([
   'my_family_messages','my_family_unread_message_count','send_family_message','mark_family_messages_read',
@@ -1989,9 +1991,25 @@ async function verifyPairedTwoRoleExchange(){
       'Det här utkastet får inte skickas.','FUN-03: completed explicit receipt preserves unsent draft');
     record.push({case:'failed-activity-read-visible-retry-and-success-with-unsent-draft',passed:true});
     assert.equal(fixture.notices[0].read_at,null,'Opening inbox does not silently mark rule notice read');
+    // Verify actual DOM feedback after the rule-notice read fails, not merely
+    // the internal message state or the separate Schyssta page.
+    fixture.failNextRuleNoticeRead();
+    await teen.page.locator('[data-schyssta-read]').click();
+    await teen.page.getByRole('status').filter({
+      hasText:'Det gick inte att bekräfta läsmarkeringen'
+    }).waitFor();
+    assert.equal(fixture.notices[0].read_at,null,
+      'FUN-03: an unacknowledged rule notice cannot be treated as read');
+    assert.equal(await teen.page.locator('#family-chat-body').inputValue(),
+      'Det här utkastet får inte skickas.','Rule notice feedback must preserve the chat draft');
+    assert.equal(await teen.page.locator('[data-schyssta-read]').count(),1,
+      'Failed rule notice is still available for a deliberate retry');
     await teen.page.locator('[data-schyssta-read]').click();
     await teen.page.waitForFunction(()=>!document.querySelector('[data-schyssta-read]'));
     assert.ok(fixture.notices[0].read_at,'Teen explicitly reads their own notification');
+    assert.equal(await teen.page.getByText('Det gick inte att bekräfta läsmarkeringen').count(),0,
+      'Confirmed successful retry removes the obsolete read-receipt warning');
+    record.push({case:'rule-notice-read-failure-visible-in-inbox-and-retry-clears',passed:true});
     await teen.page.locator('[data-schyssta-open]').first().click();
     await teen.page.getByRole('heading',{name:'Schyssta listan'}).waitFor();
     const incoming=teen.page.locator('#schyssta-rule-'+fixture.rules[0].id);
