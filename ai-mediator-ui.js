@@ -17,6 +17,7 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
   let controller = null;
   let sending = false;
   let creatingChat = false;
+  let deletingChat = false;
   let unconfirmedChatCreate = false;
   let draft = '';
   let error = '';
@@ -25,6 +26,7 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
   let chats = [];
   let activeChatId = null;
   let loading = false;
+  let activeChatReady = false; // Only verified or newly created transcripts can receive new messages.
   let historyError = '';
   let contextSections = [];
   let contextError = '';
@@ -116,7 +118,7 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
     }
   }
   async function loadList() {
-    if (!historyEnabled || !userId || loading || sending || creatingChat) return false;
+    if (!historyEnabled || !userId || loading || sending || creatingChat || deletingChat) return false;
     if(includeProjectContext&&!contextSections.length&&!contextLoading)void loadContextStatus();
     const epochAtStart = epoch, account = userId, request = ++listRequest;
     loading = true;historyError = '';notify();
@@ -128,7 +130,7 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
       unconfirmedChatCreate=false; // Verified read reconciles a timed-out create.
       if (!chats.some(x=>x.id===activeChatId)) activeChatId = chats[0]?.id || null;
       if (activeChatId && !await openChat(activeChatId, true)) return false;
-      if (!activeChatId) turns = [];
+      if (!activeChatId) { turns = []; activeChatReady = false; }
       return true;
     } catch(err) {
       if (epoch===epochAtStart && userId===account && request===listRequest) historyError=err?.message||'Samtalslistan kunde inte laddas.';
@@ -140,7 +142,7 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
   async function createChat(fromSubmit=false) {
     // Repeated taps while the POST is pending must never create duplicate
     // blank chats. A reply submission may enter here during its own busy state.
-    if(!historyEnabled || !userId || creatingChat || loading || (sending&&!fromSubmit))return false;
+    if(!historyEnabled || !userId || creatingChat || deletingChat || loading || (sending&&!fromSubmit))return false;
     if(unconfirmedChatCreate){
       historyError='Kontrollera samtalslistan innan du skapar ett nytt samtal.';
       notify();
@@ -166,6 +168,7 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
         throw Error('Samtal kunde inte skapas.');
       chats=[data.chat,...chats];
       activeChatId=data.chat.id;
+      activeChatReady=true; // Successful creation starts with an intentionally empty transcript.
       turns=[];error='';historyError='';notify();
       return data.chat.id;
     }catch(e){
@@ -183,11 +186,12 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
     }
   }
   async function openChat(chatId, preserveLoading=false) {
-    if (!historyEnabled || !userId || !chats.some(c=>c.id===chatId) || sending || creatingChat) return false;
+    if (!historyEnabled || !userId || !chats.some(c=>c.id===chatId) || sending || creatingChat || deletingChat) return false;
     // A read opened as part of loadList belongs to that list's request.
     // User-initiated switches must supersede both the list and its read.
     const myEpoch=epoch,account=userId,request=preserveLoading?listRequest:++listRequest;
     activeChatId=chatId;
+    activeChatReady=false;
     // A selected chat is not the previously verified transcript. Remove stale
     // private messages immediately, including when the new read fails.
     turns=[];
@@ -198,6 +202,7 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
       if(myEpoch!==epoch || userId!==account || activeChatId!==chatId || request!==listRequest)return false;
       if(!Array.isArray(result.messages) || result.messages.length>40 || result.messages.some(m=>!['user','assistant','safety'].includes(m.role)||typeof m.body!=='string'))throw new Error('Samtalet har ogiltigt innehåll.');
       turns=result.messages.map(m=>({role:m.role,text:m.body}));
+      activeChatReady=true;
       return true;
     }catch(e){
       // A failed read for an older selection must not show an error in the
@@ -213,20 +218,38 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
     }
   }
   async function deleteChat() {
-    if (!historyEnabled || !activeChatId || !userId || sending || creatingChat || loading) return false;
+    // Block repeated DELETE and conversation switches while a write is pending.
+    // A server error must leave the selected transcript and unsent draft intact.
+    if (!historyEnabled || !activeChatId || !userId || sending || creatingChat || loading || deletingChat) return false;
     listRequest++; // A pending list fetch may not restore a just-deleted chat.
     const account=userId,myEpoch=epoch,id=activeChatId;
+    deletingChat=true;
+    historyError='';
+    notify();
     try {
       await callApi('/chats/'+encodeURIComponent(id),'DELETE',account);
       if(myEpoch!==epoch || account!==userId)return false;
-      chats=chats.filter(c=>c.id!==id);activeChatId=null;turns=[];draft='';error='';remaining=null;
+      chats=chats.filter(c=>c.id!==id);
+      activeChatId=null;activeChatReady=false;turns=[];draft='';error='';remaining=null;
+      // Once the write is confirmed, normal read-only navigation is safe.
+      // openChat synchronously sets loading=true while it fetches the next one.
+      deletingChat=false;
       if(chats.length)await openChat(chats[0].id);
-      notify();return true;
-    }catch(e){if(myEpoch===epoch && account===userId){historyError=e?.message||'Kunde inte radera samtalet.';notify();}return false;}
+      return true;
+    }catch(e){
+      if(myEpoch===epoch && account===userId)
+        historyError=e?.message||'Kunde inte radera samtalet.';
+      return false;
+    }finally{
+      if(myEpoch===epoch && account===userId){
+        deletingChat=false;
+        notify();
+      }
+    }
   }
   function setProjectContext(value) {
     // An in-flight request uses its already captured setting.
-    if (sending || !historyEnabled) return false;
+    if (sending || deletingChat || !historyEnabled) return false;
     const enabledForReply = value === true;
     if (includeProjectContext === enabledForReply) return true;
     includeProjectContext = enabledForReply;
@@ -245,6 +268,7 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
     userId = nextId;
     sending = false;
     creatingChat=false;
+    deletingChat=false;
     unconfirmedChatCreate=false;
     draft = '';
     error = '';
@@ -252,6 +276,7 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
     turns = [];
     chats = [];
     activeChatId = null;
+    activeChatReady = false;
     loading = false;
     historyError = '';
     contextSections = [];
@@ -283,11 +308,12 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
         + '<p>Den privata AI-tjänsten håller på att anslutas. Inga samtal skickas innan anslutningen är verifierad.</p></section>';
     }
     const historyBar = historyEnabled
-      ? '<section class="mediator-history"><div class="mediator-history-heading"><h2>Privata samtal</h2><button type="button" class="mediator-clear" id="mediator-new"'+(sending||loading||creatingChat||unconfirmedChatCreate?' disabled':'')+'>+ Nytt samtal</button></div>'
+      ? '<section class="mediator-history"><div class="mediator-history-heading"><h2>Privata samtal</h2><button type="button" class="mediator-clear" id="mediator-new"'+(sending||loading||creatingChat||deletingChat||unconfirmedChatCreate?' disabled':'')+'>+ Nytt samtal</button></div>'
         + (loading?'<p>Hämtar dina samtal…</p>':'')
-        + (historyError?'<p role="alert" class="mediator-error">'+h(historyError)+'</p><button type="button" class="mediator-clear" id="mediator-retry-list"'+(sending||loading?' disabled':'')+'>Försök hämta samtal igen</button>':'')
+        + (deletingChat?'<p role="status">Raderar samtalet…</p>':'')
+        + (historyError?'<p role="alert" class="mediator-error">'+h(historyError)+'</p><button type="button" class="mediator-clear" id="mediator-retry-list"'+(sending||loading||deletingChat?' disabled':'')+'>Försök hämta samtal igen</button>':'')
         + (chats.length ? '<div class="mediator-thread-list" role="group" aria-label="Dina samtal">'
-           + chats.map(c=>'<button type="button" data-mediator-open="'+h(c.id)+'"'+(c.id===activeChatId?' aria-current="true"':'')+(sending||creatingChat?' disabled':'')+'>'+h(c.title)+'</button>').join('')+'</div>'
+           + chats.map(c=>'<button type="button" data-mediator-open="'+h(c.id)+'"'+(c.id===activeChatId?' aria-current="true"':'')+(sending||creatingChat||deletingChat||loading?' disabled':'')+'>'+h(c.title)+'</button>').join('')+'</div>'
           : '<p>Inga sparade samtal ännu. Skriv nedan så skapas ett privat samtal.</p>')
         + '</section>' : '';
     const messages = turns.length
@@ -311,7 +337,7 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
       + '<p>Det här är inte terapi eller krishjälp. Vid akut fara, ring 112.</p><p>Du kan också läsa <a href="#kommunikation">Kommunikationsråd</a> eller <a href="#nvc">öva på NVC</a> direkt. AI:n kan föreslå länkar till de verktygen i ett svar.</p></div>'
       + (historyEnabled ? '<section class="mediator-context"><h2>Uppgifter som AI:n får använda</h2>'
          + '<label class="mediator-context-choice" for="mediator-use-context"><input type="checkbox" id="mediator-use-context"'
-         + (includeProjectContext ? ' checked' : '') + (sending ? ' disabled' : '')
+         + (includeProjectContext ? ' checked' : '') + (sending||deletingChat ? ' disabled' : '')
          + '> Använd mina uppgifter från övriga delar av Hemmakompassen när AI:n svarar</label>'
          + (includeProjectContext
             ? (contextLoading ? '<p>Kontrollerar tillgängliga uppgifter…</p>' : '')
@@ -325,10 +351,10 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
       + '<form id="mediator-form">'
       + '<label for="mediator-input"><strong>Ditt testmeddelande</strong></label>'
       + '<textarea id="mediator-input" rows="4" maxlength="2000" placeholder="Exempel: Min förälder tycker att jag använder mobilen för mycket…"'
-      + (sending||creatingChat ? ' disabled' : '') + '>' + h(draft) + '</textarea>'
+      + (sending||creatingChat||deletingChat ? ' disabled' : '') + '>' + h(draft) + '</textarea>'
       + '<div class="mediator-actions"><span class="live-muted" id="mediator-char-count">' + count + ' / 2000 tecken</span>'
-      + '<button class="live-button" type="submit"' + (sending || creatingChat || (historyEnabled&&!activeChatId&&(loading||unconfirmedChatCreate)) || !draft.trim() ? ' disabled' : '') + '>Skicka testmeddelande</button>'
-      + (historyEnabled ? '<button class="mediator-clear" type="button" id="mediator-delete"' + (!activeChatId || sending || loading || creatingChat ? ' disabled' : '') + '>Radera detta samtal</button>'
+      + '<button class="live-button" type="submit"' + (sending || creatingChat || deletingChat || (historyEnabled&&(loading||unconfirmedChatCreate||(activeChatId&&!activeChatReady))) || !draft.trim() ? ' disabled' : '') + '>Skicka testmeddelande</button>'
+      + (historyEnabled ? '<button class="mediator-clear" type="button" id="mediator-delete"' + (!activeChatId || sending || loading || creatingChat || deletingChat ? ' disabled' : '') + '>Radera detta samtal</button>'
         : '<button class="mediator-clear" type="button" id="mediator-clear"' + (!turns.length && !draft && !error || sending ? ' disabled' : '') + '>Rensa chatten</button>') + '</div>'
       + '</form><p role="status" id="mediator-status"' + (error ? ' class="mediator-error"' : '') + '>'
       + h(status) + '</p>'
@@ -336,7 +362,8 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
       + '</div></div>';
   }
   async function submit() {
-    if (!enabled || !userId || sending || creatingChat || (historyEnabled && loading && !activeChatId)) return false;
+    if (!enabled || !userId || sending || creatingChat || deletingChat ||
+        (historyEnabled && (loading || unconfirmedChatCreate || (activeChatId && !activeChatReady)))) return false;
     const message = draft.trim();
     if (!message || message.length > 2000) return false;
     const requestEpoch = epoch;
@@ -399,5 +426,5 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
     }
   }
   return { render, reset, clear, input, submit, loadList, loadContextStatus, setProjectContext, createChat, openChat, deleteChat,
-    getState: () => ({ userId, sending, creatingChat, unconfirmedChatCreate, draft, error, remaining, turns: turns.map(x => ({ ...x })), chats:chats.map(c=>({...c})),activeChatId,historyError,contextSections:[...contextSections],contextError,includeProjectContext }) };
+    getState: () => ({ userId, sending, creatingChat, deletingChat, unconfirmedChatCreate, draft, error, remaining, turns: turns.map(x => ({ ...x })), chats:chats.map(c=>({...c})),activeChatId,activeChatReady,historyError,contextSections:[...contextSections],contextError,includeProjectContext }) };
 }
