@@ -1090,6 +1090,8 @@ async function prepareActivityMessage(cardId){
   // message draft. Validate exact membership AND pair epoch before reading.
   const pairValid=await recheckInboxPair();
   if(!pairValid||user?.id!==viewer||sharedSession!==session||page()!==origin){
+    // A previous account's completion must not unlock a new action's spinner.
+    if(user?.id!==viewer||sharedSession!==session)return;
     activityInviteBusy=false;
     // The checker itself redraws and invalidates a revoked/unknown pairing.
     // If it returned false without changing this session, restore the CTA
@@ -1104,7 +1106,9 @@ async function prepareActivityMessage(cardId){
   try{response=await db.rpc('shared_swipe_matches',{p_deck_id:'aktiviteter'});}
   catch(error){response={error};}
   if(user?.id!==viewer||sharedSession!==session||page()!==origin){
-    activityInviteBusy=false;return;
+    // The old RPC may finish after a different account started its own CTA.
+    if(user?.id===viewer&&sharedSession===session)activityInviteBusy=false;
+    return;
   }
   activityInviteBusy=false;
   let stillMatched=false;
