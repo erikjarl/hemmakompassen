@@ -17,7 +17,7 @@ function harness(){
     familyChatSending:false,familyChatDraft:'Hej!',familyChatRequestKey:null,
     familyChatStatus:'',SCHYSSTA_UUID:/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
     crypto:{randomUUID:()=>{ids++;return '81000000-0000-4000-8000-'+String(ids).padStart(12,'0');}},
-    render:()=>{renders++;},recheckInboxPair:async()=>true,fetchFamilyChat:async()=>{refreshes++;},
+    page:()=> 'inkorg',render:()=>{renders++;},recheckInboxPair:async()=>true,fetchFamilyChat:async()=>{refreshes++;},
     setTimeout:callback=>{timers.push(callback);return timers.length;},
     clearTimeout:()=>{},
     db:{rpc:(name,args)=>{calls.push({name,args});return rpc(name,args);}},
