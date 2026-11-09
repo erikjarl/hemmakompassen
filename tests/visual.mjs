@@ -389,6 +389,34 @@ async function captureFunctionalInventory(){
           const s=getComputedStyle(el);
           return !!el.getClientRects().length&&s.display!=='none'&&s.visibility!=='hidden';
         };
+        // Inventory text is NOT a complete accessible-name computation. Record
+        // its provenance so placeholder-only or missing names can be reviewed
+        // without falsely accusing correctly labelled HTML form controls.
+        const controlName=el=>{
+          const normalize=value=>String(value??'').replace(/\s+/g,' ').trim();
+          const tag=el.tagName.toLowerCase();
+          const refs=(el.getAttribute('aria-labelledby')||'').split(/\s+/)
+            .filter(Boolean).map(id=>document.getElementById(id)?.textContent||'').join(' ');
+          const htmlLabels=[...(el.labels||[])].map(label=>label.textContent).join(' ');
+          const candidates=[
+            ['aria-labelledby',refs],
+            ['aria-label',el.getAttribute('aria-label')],
+            ['html-label',htmlLabels],
+            ['visible-text',['button','a','summary'].includes(tag)?el.textContent:null],
+            ['input-value',tag==='input'&&['submit','button','reset'].includes(el.type)?el.value:null],
+            ['alt',el.getAttribute('alt')],
+            ['title',el.getAttribute('title')],
+            ['placeholder-hint',el.getAttribute('placeholder')]
+          ];
+          const selected=candidates.map(([source,value])=>({source,label:normalize(value)}))
+            .find(candidate=>candidate.label);
+          const nameSource=selected?.source||'missing';
+          return {
+            label:selected?.label.slice(0,100)||null,
+            nameSource,
+            needsManualNameReview:['missing','placeholder-hint','title'].includes(nameSource)
+          };
+        };
         const fields=controls.filter(visible).map(el=>{
           const attrs={};
           for(const {name,value} of el.attributes){
@@ -397,13 +425,37 @@ async function captureFunctionalInventory(){
               name.includes('chat')||name.includes('insights')||name.includes('theme')))
               attrs[name]=value.slice(0,80);
           }
-          const text=(el.getAttribute('aria-label')||el.textContent||
-            el.getAttribute('placeholder')||'').replace(/\s+/g,' ').trim().slice(0,100);
           return {tag:el.tagName.toLowerCase(),id:el.id||null,
-            label:text||null,href:el.getAttribute('href')||null,
+            ...controlName(el),href:el.getAttribute('href')||null,
             type:el.getAttribute('type')||null,disabled:el.disabled===true,
             form:el.closest('form')?.id||null,data:attrs};
         });
+        // Real Chromium DOM probes catch regressions in HTML label association,
+        // ARIA references and the distinction between hints and actual names.
+        // They are removed before snapshots and never count as app controls.
+        const nameProbe=route==='hem'?(()=>{
+          const fixture=document.createElement('div');
+          fixture.innerHTML='<label for="hk-audit-explicit">Explicit etikett</label>'+
+            '<input id="hk-audit-explicit">'+
+            '<label>Implicit etikett <textarea></textarea></label>'+
+            '<span id="hk-audit-aria">ARIA-referens</span>'+
+            '<input id="hk-audit-aria-input" aria-labelledby="hk-audit-aria">'+
+            '<input id="hk-audit-hint" placeholder="Enbart platshållare">'+
+            '<input id="hk-audit-unnamed">'+
+            '<button id="hk-audit-icon" aria-label="Beskrivande knappnamn">✎</button>';
+          root.appendChild(fixture);
+          const get=selector=>controlName(fixture.querySelector(selector));
+          const result={
+            explicit:get('#hk-audit-explicit'),
+            implicit:get('textarea'),
+            aria:get('#hk-audit-aria-input'),
+            placeholder:get('#hk-audit-hint'),
+            missing:get('#hk-audit-unnamed'),
+            button:get('#hk-audit-icon')
+          };
+          fixture.remove();
+          return result;
+        })():null;
         const active=[...document.querySelectorAll(
           '#live-mobile-nav a[aria-current="page"],#live-desktop-nav a[aria-current="page"]'
         )].map(x=>x.getAttribute('href'));
@@ -411,7 +463,7 @@ async function captureFunctionalInventory(){
           ['nvc','mi-foralder'].includes(route)?'#kommunikation':'#'+route;
         const h1=root.querySelector('h1')?.textContent?.trim()||null;
         return {route,expectedActive:expected,active:[...new Set(active)],heading:h1,
-          controls:fields,formIds:[...root.querySelectorAll('form[id]')].map(el=>el.id),
+          controls:fields,nameProbe,formIds:[...root.querySelectorAll('form[id]')].map(el=>el.id),
           pageWidth:document.documentElement.scrollWidth,
           viewportWidth:document.documentElement.clientWidth,
           controlCount:fields.length};
@@ -430,9 +482,20 @@ async function captureFunctionalInventory(){
         assert.equal(await page.locator('.mi-parent-guide').count(),0,
           'FUN-06: teen cannot see parent-only MI guide');
       }
+      if(route==='hem'){
+        assert.deepEqual(result.nameProbe,{
+          explicit:{label:'Explicit etikett',nameSource:'html-label',needsManualNameReview:false},
+          implicit:{label:'Implicit etikett',nameSource:'html-label',needsManualNameReview:false},
+          aria:{label:'ARIA-referens',nameSource:'aria-labelledby',needsManualNameReview:false},
+          placeholder:{label:'Enbart platshållare',nameSource:'placeholder-hint',needsManualNameReview:true},
+          missing:{label:null,nameSource:'missing',needsManualNameReview:true},
+          button:{label:'Beskrivande knappnamn',nameSource:'aria-label',needsManualNameReview:false}
+        },'FUN-00 name extraction distinguishes HTML labels, ARIA and review-only hints');
+      }
+      const {nameProbe,...snapshot}=result;
       entries.push({scenario:item.name,role:item.role,paired:item.paired,
         viewportWidth:item.width,environment:'local mocked Chromium',
-        evidence:'tests/visual.mjs captureFunctionalInventory',...result,
+        evidence:'tests/visual.mjs captureFunctionalInventory',...snapshot,
         ruleRetryRecovered:recoveredRules,
         controlsStatus:'discovered-not-individually-tested'});
     }
@@ -452,14 +515,33 @@ async function captureFunctionalInventory(){
     }
     await context.close();
   }
+  // Count render occurrences, not distinct controls or verified actions.
+  // A placeholder is useful context but is not proof of an accessible name.
+  const controls=entries.flatMap(entry=>entry.controls);
+  const nameSourceOccurrences={};
+  for(const control of controls)
+    nameSourceOccurrences[control.nameSource]=(nameSourceOccurrences[control.nameSource]||0)+1;
+  const nameReviewCandidates=entries.flatMap(entry=>entry.controls
+    .filter(control=>control.needsManualNameReview)
+    .map(({id,tag,type,label,nameSource})=>({
+      scenario:entry.scenario,route:entry.route,id,tag,type,label,nameSource
+    })));
+  const summary={
+    routeScenarioSnapshots:entries.length,
+    visibleControlOccurrences:controls.length,
+    primaryNavigationClicks:navigation.length,
+    nameSourceOccurrences,
+    manualNameReviewOccurrences:nameReviewCandidates.length,
+    nameReviewCandidates
+  };
   // No private names, messages, or real credentials are collected: all data is mocked.
   const outputPath=path.join(output,'functional-controls-synthetic.json');
   await fs.writeFile(outputPath,JSON.stringify({
     inventory:'FUN-00',commit:process.env.GITHUB_SHA||'local',
     generatedAt:new Date().toISOString(),
-    method:'Chromium route render + DOM enumeration + primary tab click',
-    caveat:'SYNTHETIC ONLY. A control listed here is discovered, not functionally verified. Real sign-in, API, two-person consent, and mobile Safari remain UNTESTED.',
-    navigation,entries
+    method:'Chromium route rendering, DOM control enumeration, HTML label/ARIA name hints and actual primary-tab clicks',
+    caveat:'SYNTHETIC ONLY. Counts are render occurrences across scenarios, NOT unique controls or individually passed functional tests. Name hints are NOT a complete accessible-name/VoiceOver audit; title and placeholder alone need manual review. Real sign-in, API, two-person consent and mobile Safari remain UNTESTED.',
+    summary,navigation,entries
   },null,2)+'\n');
   console.log('FUN-00 synthetic inventory: '+entries.length+' route/role/viewport snapshots, '+
     entries.reduce((n,row)=>n+row.controlCount,0)+' visible control occurrences, '+

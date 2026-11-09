@@ -56,3 +56,14 @@ test('FUN-00 matrix links all modules to real test files and clearly names evide
    assert.ok(doc.includes(file),'Documentation missing evidence '+file);
  }
 });
+
+test('FUN-00 distinguishes actual HTML/ARIA name evidence from mere placeholder hints',()=>{
+ assert.match(visual,/el\.labels/,'Explicit and implicit HTML labels must be inspected');
+ assert.match(visual,/aria-labelledby/,'ARIA ID-reference names must be inspected');
+ assert.match(visual,/needsManualNameReview/,'Uncertain names are explicitly flagged');
+ assert.match(visual,/nameProbe/,'Real Chromium DOM probes test the name extraction algorithm');
+ assert.match(visual,/visibleControlOccurrences/,'Counts are render occurrences rather than unique buttons');
+ assert.match(visual,/manualNameReviewOccurrences/,'Review candidates are explicitly counted');
+ assert.match(visual,/NOT unique controls or individually passed functional tests/,
+   'Inventory limitations must be explicit in the generated artifact');
+});
