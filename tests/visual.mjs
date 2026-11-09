@@ -266,14 +266,30 @@ async function testAccountBrowserJourney(){
   // verified, or report success, if the current family RPC fails.
   await page.evaluate(()=>{window.__HK_ACCOUNT_FAIL_MEMBERS__=true;});
   await page.locator('#refresh-account').click();
-  await page.locator('#status').getByText('Simulerat fel vid familjeläsning').waitFor();
+  await page.locator('#refresh-account-status').getByText('Simulerat fel vid familjeläsning').waitFor();
   for(const id of ['family','waiting','unpaired','join-family']){
     assert.equal(await page.locator('#'+id+':not(.hidden)').count(),0,
       'Unverified family response may not leave '+id+' visible');
   }
   assert.equal((await page.locator('#members').innerText()).trim(),'');
-  assert.doesNotMatch(await page.locator('#status').innerText(),/Kontot har uppdaterats/);
+  assert.doesNotMatch(await page.locator('#refresh-account-status').innerText(),/Kontot har uppdaterats/);
   await checkOverflow(page,'FUN-01 unknown family after failed refresh');
+  // VIS-00-12: the status is immediately below the action, not after the
+  // password, name, pairing and logout forms, even on a narrow phone.
+  for(const width of [320,390]){
+    await page.setViewportSize({width,height:844});
+    await page.evaluate(()=>window.scrollTo(0,0));
+    const button=await page.locator('#refresh-account').boundingBox();
+    const feedback=await page.locator('#refresh-account-status').boundingBox();
+    assert.ok(button && feedback,`VIS-00-12: refresh action and live status visible at ${width}px`);
+    assert.ok(feedback.y >= button.y+button.height-2 && feedback.y <= button.y+button.height+35,
+      `VIS-00-12: refresh status must follow button closely at ${width}px`);
+    assert.ok(feedback.y+feedback.height<=844,
+      `VIS-00-12: refresh error should appear within first screen at ${width}px`);
+    assert.equal((await page.locator('#status').innerText()).trim(),'','Other forms must not duplicate account refresh status');
+    await checkOverflow(page,`VIS-00-12 inline account status ${width}px`);
+  }
+  await page.setViewportSize({width:390,height:844});
   await page.evaluate(()=>window.scrollTo(0,0));
   await capture(page,'mobile-account-family-unverified.png');
   steps.push('family RPC failure hides previously verified family and preserves error');
@@ -283,7 +299,7 @@ async function testAccountBrowserJourney(){
     window.__HK_ACCOUNT_INVALID_MEMBERS__=true;
   });
   await page.locator('#refresh-account').click();
-  await page.locator('#status').getByText(/kunde inte bekräftas/).waitFor();
+  await page.locator('#refresh-account-status').getByText(/kunde inte bekräftas/).waitFor();
   assert.equal(await page.locator('#unpaired:not(.hidden)').count(),0,
     'Null RPC payload must not be interpreted as a verified unpaired family');
   steps.push('null family response cannot falsely show unpaired state');
@@ -291,7 +307,7 @@ async function testAccountBrowserJourney(){
   await page.evaluate(()=>{window.__HK_ACCOUNT_INVALID_MEMBERS__=false;});
   await page.locator('#refresh-account').click();
   await page.locator('#family:not(.hidden)').waitFor();
-  await page.locator('#status').getByText('Kontot har uppdaterats.').waitFor();
+  await page.locator('#refresh-account-status').getByText('Kontot har uppdaterats.').waitFor();
   assert.match(await page.locator('#members').innerText(),/Förälder.*Tonåring/);
   steps.push('explicit successful retry restores family controls');
 
@@ -299,7 +315,7 @@ async function testAccountBrowserJourney(){
   // the real DOM input before the user explicitly presses Save.
   await page.locator('#display-name').fill('Osparat namn under pågående uppdatering');
   await page.locator('#refresh-account').click();
-  await page.locator('#status').getByText('Kontot har uppdaterats.').waitFor();
+  await page.locator('#refresh-account-status').getByText('Kontot har uppdaterats.').waitFor();
   assert.equal(await page.locator('#display-name').inputValue(),
     'Osparat namn under pågående uppdatering',
     'Manual refresh must preserve the unsaved name field');
