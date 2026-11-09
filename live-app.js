@@ -1,5 +1,5 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261109-private-retest-deadline1-vis04';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261109-private-retest-deadline1-vis05';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261107-authoritative-export4';
 import {createAiResultExperience} from './ai-result-ui.js?v=20261109-private-retest-deadline1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
@@ -1416,13 +1416,13 @@ function themeSwipeView(){
   return '<div class="swipe-experience swipe-theme-play swipe-play-view"><header class="swipe-heading">'+
     '<button type="button" class="live-button swipe-theme-back" id="theme-back">← Alla kortlekar</button>'+
     '<span class="swipe-eyebrow">TEMAKORTLEK · PRIVATA SVAR</span><h1>'+esc(deck.title)+'</h1>'+
-    '<p>Svara ja på sådant du vill prova eller prata om. Dina svar är privata. Ett ja är inte en bindande överenskommelse.</p>'+filter+'</header>'+
+    '<p>Svara Ja eller Nej på varje kort. Dina svar är privata och är inga överenskommelser.</p>'+filter+'</header>'+
     '<div class="swipe-stage"><div class="swipe-stage-top"><span>'+esc(deck.title)+'</span><span role="status">'+
     (item?ordinal+' / '+visible.length:answered+' / '+visible.length+' sparade')+'</span></div>'+
     '<div class="swipe-track"><div class="swipe-track-fill" style="width:'+Math.round(100*(item?(themeReview?ordinal-1:answered):visible.length)/visible.length)+'%"></div></div>'+
     (item?'<div id="swipe-card" class="swipe-playing-card" tabindex="0" aria-label="Temakort '+ordinal+' av '+visible.length+' i '+esc(categoryLabel)+'. Svep höger för ja eller vänster för nej.">'+
       '<span class="swipe-stamp swipe-stamp-no" aria-hidden="true">NEJ</span><span class="swipe-stamp swipe-stamp-yes" aria-hidden="true">JA</span>'+
-      '<span class="swipe-category">'+esc(themeCardModel(deck,themeIndex)?.category||deck.title)+'</span><h2>'+esc(itemText)+'</h2><span class="swipe-card-hint">Dra kortet åt höger eller vänster. När kortet har fokus kan du använda vänster- eller högerpil.</span>'+importanceControl(deck.id,themeCardId(deck,themeIndex))+'</div>'+
+      '<span class="swipe-category">'+esc(themeCardModel(deck,themeIndex)?.category||deck.title)+'</span><h2>'+esc(itemText)+'</h2><span class="swipe-card-hint">Dra höger för Ja, vänster för Nej. Med tangentbordet: ← eller →.</span>'+importanceControl(deck.id,themeCardId(deck,themeIndex))+'</div>'+
       (themeReviewEdit?.deckId===deck.id&&themeReviewEdit.index===themeIndex?'<button type="button" class="schyssta-secondary" id="theme-review-back">Tillbaka till mina sparade svar</button>':'')+
       '<div class="swipe-actions"><button type="button" class="swipe-choice swipe-no" data-swipe="no" aria-label="Nej">✕ <span>Nej</span></button>'+
       '<button type="button" class="swipe-choice swipe-yes" data-swipe="yes" aria-label="Ja">♥ <span>Ja</span></button></div>'
@@ -1518,7 +1518,8 @@ async function saveThemeAnswer(direction,index,deckId,viewer,session){
   const returnToReview=themeReviewEdit?.index===index&&themeReviewEdit?.deckId===deckId&&themeReviewEdit?.viewer===viewer&&themeReviewEdit?.session===session;
   themeIndex=themeReview?nextThemeVisible(deck,index):nextThemeUnanswered(deck,index+1);
   swipeBusy=false;
-  if(returnToReview)reopenThemeReview();else render();
+  if(returnToReview)reopenThemeReview();
+  else{render();revealNextSwipeCard(viewer,session,deckId);}
   if(members.length===2)void fetchSwipeMatches(deckId);
 }
 function advanceThemeSwipe(direction){
@@ -1597,7 +1598,7 @@ function reopenGeneralReview(){
    !button.closest('[data-general-review-kind]')?.hidden);
  (selected||search||details?.querySelector('summary'))?.focus({preventScroll:true});
 }
-function swipeView(){if(activeThemeDeck)return themeSwipeView();const total=visibleGeneralIndices().length,answered=visibleGeneralIndices().filter(i=>swipeAnswers.has(swipeCardId(i))).length,item=generalStatement(swipeIndex),isUnderstanding=GENERAL_CARDS[swipeIndex]?.type==='understanding',ordinal=visibleGeneralIndices().indexOf(swipeIndex)+1;if(swipeLoadError)return '<div class="swipe-experience"><header class="swipe-heading"><span class="swipe-eyebrow">UPPTÄCK VARANDRA</span><h1>Gillaswajpen</h1></header>'+card('<h2>Kunde inte hämta dina svar</h2><p role="alert">'+esc(swipeLoadError)+'</p><button class="live-button" type="button" id="swipe-reload">Försök igen</button>')+'</div>';return '<div class="swipe-experience swipe-play-view"><header class="swipe-heading"><span class="swipe-eyebrow">UPPTÄCK VARANDRA</span><h1>Gillaswajpen</h1><p>Vad är viktigt för dig? Utforska korten i din egen takt.</p></header>'+(isUnderstanding?'<p class="swipe-understanding-notice">'+(sharedUnderstandingEnabled?'Förståelsekort: ditt svar förblir privat tills du själv väljer att dela ett ja-svar i <a href="#insikter">Gemensamma insikter</a>. Du kan återkalla delningen när som helst. Inga tidigare svar delas automatiskt.':'Förståelsekort: ditt svar sparas tills vidare privat. Delning med förälder är inte aktiverad här och gamla svar delas aldrig automatiskt.')+'</p>':'')+'<div class="swipe-stage"><div class="swipe-stage-top"><span>ALLMÄNNA KORTLEKEN</span><span role="status">'+(item?ordinal+' / '+total:answered+' svar, '+skippedUnderstanding.size+' överhoppade av '+total)+'</span></div><div class="swipe-track"><div class="swipe-track-fill" style="width:'+Math.round(100*(item?(swipeReview?ordinal-1:answered+skippedUnderstanding.size):total)/total)+'%"></div></div>'+(item?'<div id="swipe-card" class="swipe-playing-card" tabindex="0" aria-label="Kort '+ordinal+' av '+total+'. Svep höger för ja eller vänster för nej."><span class="swipe-stamp swipe-stamp-no" aria-hidden="true">NEJ</span><span class="swipe-stamp swipe-stamp-yes" aria-hidden="true">JA</span><span class="swipe-category">'+esc(item[0])+'</span><h2>'+esc(item[1])+'</h2><span class="swipe-card-hint">Dra kortet åt höger eller vänster. När kortet har fokus kan du använda vänster- eller högerpil.</span>'+importanceControl('general',swipeCardId(swipeIndex))+'</div>'+(generalReviewEdit?.index===swipeIndex?'<button type="button" class="schyssta-secondary" id="swipe-general-review-back">Tillbaka till mina svar</button>':'')+'<div class="swipe-actions"><button type="button" class="swipe-choice swipe-no" data-swipe="no" aria-label="Nej">✕ <span>Nej</span></button><button type="button" class="swipe-choice swipe-yes" data-swipe="yes" aria-label="Ja">♥ <span>Ja</span></button></div>'+(isUnderstanding?'<button type="button" id="swipe-skip" class="swipe-skip">Vill inte svara just nu</button>':''):'<div class="swipe-finished"><h2>'+(skippedUnderstanding.size?'Du har '+skippedUnderstanding.size+' kort kvar att svara på':'Alla '+total+' kort besvarade')+'</h2><p>Du har sparat '+answered+' svar'+(skippedUnderstanding.size?' och lämnat '+skippedUnderstanding.size+' förståelsekort obesvarade för tillfället':'')+'. Du kan ändra dina egna svar när du vill.</p>'+'<div class="swipe-finished-actions">'+(skippedUnderstanding.size?'<button class="live-button" type="button" id="swipe-review-skipped">Gå till överhoppade kort</button>':'')+'<button class="live-button" type="button" id="swipe-restart">Gå igenom alla kort igen</button></div></div>')+'<p id="swipe-save-status" class="swipe-disclaimer" role="status">'+(swipeSaveError?esc(swipeSaveError):(isUnderstanding?(sharedUnderstandingEnabled?'Ditt svar sparas privat. Ett ja på förståelsekort blir inte delat förrän du själv väljer Dela med min förälder i Gemensamma insikter.':'Ditt svar sparas privat. Förståelsekort delas inte förrän säker delning är aktiverad.'):'Ditt svar sparas privat i ditt konto. Matchningskort visas gemensamt först när båda svarat ja.'))+'</p></div>'+privateSwipeExportControls()+privateGeneralAnswerReview()+swipeResults()+insightsEntry()+themeDecksView()+'</div>';}
+function swipeView(){if(activeThemeDeck)return themeSwipeView();const total=visibleGeneralIndices().length,answered=visibleGeneralIndices().filter(i=>swipeAnswers.has(swipeCardId(i))).length,item=generalStatement(swipeIndex),isUnderstanding=GENERAL_CARDS[swipeIndex]?.type==='understanding',ordinal=visibleGeneralIndices().indexOf(swipeIndex)+1;if(swipeLoadError)return '<div class="swipe-experience"><header class="swipe-heading"><span class="swipe-eyebrow">UPPTÄCK VARANDRA</span><h1>Gillaswajpen</h1></header>'+card('<h2>Kunde inte hämta dina svar</h2><p role="alert">'+esc(swipeLoadError)+'</p><button class="live-button" type="button" id="swipe-reload">Försök igen</button>')+'</div>';return '<div class="swipe-experience swipe-play-view"><header class="swipe-heading"><span class="swipe-eyebrow">UPPTÄCK VARANDRA</span><h1>Gillaswajpen</h1><p>Vad är viktigt för dig? Utforska korten i din egen takt.</p></header>'+(isUnderstanding?'<p class="swipe-understanding-notice">'+(sharedUnderstandingEnabled?'Förståelsekort: ditt svar förblir privat tills du själv väljer att dela ett ja-svar i <a href="#insikter">Gemensamma insikter</a>. Du kan återkalla delningen när som helst. Inga tidigare svar delas automatiskt.':'Förståelsekort: ditt svar sparas tills vidare privat. Delning med förälder är inte aktiverad här och gamla svar delas aldrig automatiskt.')+'</p>':'')+'<div class="swipe-stage"><div class="swipe-stage-top"><span>ALLMÄNNA KORTLEKEN</span><span role="status">'+(item?ordinal+' / '+total:answered+' svar, '+skippedUnderstanding.size+' överhoppade av '+total)+'</span></div><div class="swipe-track"><div class="swipe-track-fill" style="width:'+Math.round(100*(item?(swipeReview?ordinal-1:answered+skippedUnderstanding.size):total)/total)+'%"></div></div>'+(item?'<div id="swipe-card" class="swipe-playing-card" tabindex="0" aria-label="Kort '+ordinal+' av '+total+'. Svep höger för ja eller vänster för nej."><span class="swipe-stamp swipe-stamp-no" aria-hidden="true">NEJ</span><span class="swipe-stamp swipe-stamp-yes" aria-hidden="true">JA</span><span class="swipe-category">'+esc(item[0])+'</span><h2>'+esc(item[1])+'</h2><span class="swipe-card-hint">Dra höger för Ja, vänster för Nej. Med tangentbordet: ← eller →.</span>'+importanceControl('general',swipeCardId(swipeIndex))+'</div>'+(generalReviewEdit?.index===swipeIndex?'<button type="button" class="schyssta-secondary" id="swipe-general-review-back">Tillbaka till mina svar</button>':'')+'<div class="swipe-actions"><button type="button" class="swipe-choice swipe-no" data-swipe="no" aria-label="Nej">✕ <span>Nej</span></button><button type="button" class="swipe-choice swipe-yes" data-swipe="yes" aria-label="Ja">♥ <span>Ja</span></button></div>'+(isUnderstanding?'<button type="button" id="swipe-skip" class="swipe-skip">Vill inte svara just nu</button>':''):'<div class="swipe-finished"><h2>'+(skippedUnderstanding.size?'Du har '+skippedUnderstanding.size+' kort kvar att svara på':'Alla '+total+' kort besvarade')+'</h2><p>Du har sparat '+answered+' svar'+(skippedUnderstanding.size?' och lämnat '+skippedUnderstanding.size+' förståelsekort obesvarade för tillfället':'')+'. Du kan ändra dina egna svar när du vill.</p>'+'<div class="swipe-finished-actions">'+(skippedUnderstanding.size?'<button class="live-button" type="button" id="swipe-review-skipped">Gå till överhoppade kort</button>':'')+'<button class="live-button" type="button" id="swipe-restart">Gå igenom alla kort igen</button></div></div>')+'<p id="swipe-save-status" class="swipe-disclaimer" role="status">'+(swipeSaveError?esc(swipeSaveError):(isUnderstanding?(sharedUnderstandingEnabled?'Ditt svar sparas privat. Ett ja på förståelsekort blir inte delat förrän du själv väljer Dela med min förälder i Gemensamma insikter.':'Ditt svar sparas privat. Förståelsekort delas inte förrän säker delning är aktiverad.'):'Ditt svar sparas privat i ditt konto. Matchningskort visas gemensamt först när båda svarat ja.'))+'</p></div>'+privateSwipeExportControls()+privateGeneralAnswerReview()+swipeResults()+insightsEntry()+themeDecksView()+'</div>';}
 async function saveSwipeAnswer(direction,index,viewer,session){
   // An animated swipe can finish after sign-out or a switch to another account.
   // Never write or render its result in the new user's session.
@@ -1631,7 +1632,8 @@ async function saveSwipeAnswer(direction,index,viewer,session){
   const returnToReview=generalReviewEdit?.index===index&&generalReviewEdit?.viewer===viewer&&generalReviewEdit?.session===session;
   swipeIndex=swipeSkippedReview?nextSkippedAfter(index):swipeReview?nextVisibleAfter(index):nextUnanswered(index+1);
   swipeBusy=false;
-  if(returnToReview)reopenGeneralReview();else render();
+  if(returnToReview)reopenGeneralReview();
+  else{render();revealNextSwipeCard(viewer,session,null);}
   if(members.length===2){
     void fetchSwipeMatches('general');
     // A parent sees only 21 match cards; a teen can also skip 13 understanding cards.
@@ -1661,7 +1663,8 @@ async function skipUnderstandingCard(index,viewer,session){
   const returnToReview=generalReviewEdit?.index===index&&generalReviewEdit?.viewer===viewer&&generalReviewEdit?.session===session;
   swipeIndex=swipeSkippedReview?nextSkippedAfter(index):swipeReview?nextVisibleAfter(index):nextUnanswered(index+1);
   swipeBusy=false;
-  if(returnToReview)reopenGeneralReview();else render();
+  if(returnToReview)reopenGeneralReview();
+  else{render();revealNextSwipeCard(viewer,session,null);}
   if(members.length===2&&visibleGeneralIndices().every(i=>swipeAnswers.has(swipeCardId(i))||skippedUnderstanding.has(swipeCardId(i))))void fetchThemeUnlock();
 }
 function nextVisibleAfter(index){return visibleGeneralIndices().find(i=>i>index)??STATEMENTS.length;}
@@ -1686,6 +1689,17 @@ function focusInsightTarget(){
 function page(){if(insightTargetFromHash(location.hash))return 'insikter';if(location.hash.startsWith('#kommunikation/'))return 'kommunikation';let h;try{h=decodeURIComponent(location.hash.slice(1));}catch{return 'hem';}return ['insikter','mi-foralder','nvc'].includes(h)?h:nav.some(n=>n[0]===h)?h:'hem';}
 // On mobile, the scroll container is .live-main rather than window.
 function scrollLiveMainTop(){const main=document.querySelector('.live-main');if(main)main.scrollTop=0;window.scrollTo(0,0);}
+/* FUN-02: after a confirmed swipe, reveal and focus the next private card.
+   The user may have scrolled to Ja/Nej and must not land halfway down a
+   newly rendered question. Never move focus on failed or stale writes. */
+function revealNextSwipeCard(viewer,session,deckId){
+  if(user?.id!==viewer||sharedSession!==session||page()!=='swipe'||activeThemeDeck!==deckId)return;
+  const target=$('swipe-card')||document.querySelector('.swipe-finished');
+  if(!target)return;
+  if(!target.hasAttribute('tabindex'))target.setAttribute('tabindex','-1');
+  target.scrollIntoView({block:'start',behavior:'auto'});
+  target.focus({preventScroll:true});
+}
 let previousMenuRoute=null;
 function menu(){
   const route=page();
@@ -2351,7 +2365,12 @@ function render(){
   // Hash navigation explicitly calls scrollLiveMainTop() after its render.
   const focusedPriority=page()==='swipe'?document.activeElement?.closest?.('[data-priority-share]'):null;
   const priorityFocus=focusedPriority?{deck:focusedPriority.dataset.deckId,card:focusedPriority.dataset.cardId}:null;
-  const mainScroll=(page()==='inkorg'||priorityFocus)?document.querySelector('.live-main')?.scrollTop:null;
+  // Shared-match refreshes can rerender the current swipe card just after it
+  // received focus. Preserve focus only if it is still the SAME question.
+  const focusedSwipeCard=page()==='swipe'&&document.activeElement?.id==='swipe-card'
+    ?document.activeElement.getAttribute('aria-label'):null;
+  const mainScroll=(page()==='inkorg'||priorityFocus||focusedSwipeCard)
+    ?document.querySelector('.live-main')?.scrollTop:null;
   menu();$('live-app').innerHTML=user?(page()==='hem'?home():section(page())):login();
   if(mainScroll!=null){
     const main=document.querySelector('.live-main');
@@ -2361,6 +2380,11 @@ function render(){
     const replacement=[...document.querySelectorAll('[data-priority-share]')]
       .find(button=>button.dataset.deckId===priorityFocus.deck&&button.dataset.cardId===priorityFocus.card);
     replacement?.focus({preventScroll:true});
+  }
+  if(focusedSwipeCard&&page()==='swipe'){
+    const replacement=$('swipe-card');
+    if(replacement?.getAttribute('aria-label')===focusedSwipeCard)
+      replacement.focus({preventScroll:true});
   }
   if(user&&page()==='kommunikation')openCommunicationSkill($('live-app'),communicationSkillFromHash(location.hash));
   if(page()==='regler'&&user)applySchysstaFilters();
