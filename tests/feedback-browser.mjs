@@ -13,7 +13,7 @@ try {
   const page = await browser.newPage({viewport:{width:390,height:844}});
   await page.route('https://site.test/**',route=>route.fulfill({
     status:200,contentType:'text/html',
-    body:'<!doctype html><html lang="sv"><meta name="viewport" content="width=device-width,initial-scale=1"><body>'+widget+'</body></html>'
+    body:'<!doctype html><html lang="sv"><meta name="viewport" content="width=device-width,initial-scale=1"><body><div class="live-layout"><nav class="live-mobile" style="position:fixed;bottom:0;height:60px;width:100%"></nav></div>'+widget+'</body></html>'
   }));
   await page.goto('https://site.test/hemmakompassen/index.html#kommunikation/plan');
   await page.addStyleTag({content:css});
@@ -35,8 +35,21 @@ try {
   const btn=page.locator('#hk-feedback-open');
   assert.equal(await btn.isVisible(),true);
   const box=await btn.boundingBox();
-  assert.ok(box && box.x>=0 && box.x+box.width<=390 && box.y+box.height < 844-70,
-    'Fixed mobile control stays within viewport and above bottom navigation');
+  const navBox = await page.locator('.live-mobile').boundingBox();
+  assert.equal(await btn.getAttribute('aria-label'),'Rapportera fel eller innehåll');
+  assert.ok(box && box.width <= 56 && box.x >= 0 && box.x + box.width <= 390,
+    'Mobile report button is compact and inside the viewport');
+  assert.ok(navBox && box.y + box.height <= navBox.y - 8,
+    'Fixed report control does not cover the horizontal navigation');
+  assert.equal(await page.locator('.hk-feedback-open-label').isVisible(), false,
+    'The full label is visually hidden only on mobile, retaining its accessible name');
+  await page.setViewportSize({width:320,height:700});
+  const narrowBox = await btn.boundingBox();
+  const narrowNav = await page.locator('.live-mobile').boundingBox();
+  assert.ok(narrowBox && narrowBox.width <= 56 && narrowBox.x >= 0
+    && narrowBox.x + narrowBox.width <= 320 && narrowBox.y + narrowBox.height <= narrowNav.y - 8,
+    'Compact report control stays usable at 320px');
+  await page.setViewportSize({width:390,height:844});
 
   await btn.click();
   assert.equal(await page.locator('#hk-feedback-dialog').evaluate(el=>el.open),true);
@@ -59,7 +72,7 @@ try {
   assert.equal(await page.locator('[name="description"]').inputValue(),'');
   await page.locator('#hk-feedback-close').click();
   assert.equal(await page.locator('#hk-feedback-dialog').evaluate(el=>el.open),false);
-  console.log('PASS: 390px Chromium open, logged-out draft, signed-in mock insert, context, close and mobile geometry');
+  console.log('PASS: 320/390px compact accessible report button, bottom-nav clearance, mock auth/insert and modal');
 } finally {
   await browser.close();
 }
