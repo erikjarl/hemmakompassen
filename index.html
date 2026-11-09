@@ -109,7 +109,8 @@ h1,h2,h3,.live-brand{font-family:Georgia,'Playfair Display',serif;letter-spacing
     flex-wrap:nowrap;
     align-items:stretch;
     gap:6px;
-    width:100%;
+    /* Reserve a dedicated slot for the always-visible report button. */
+    width:calc(100% - 64px);
     min-width:0;
     overflow-x:auto;
     overflow-y:hidden;
