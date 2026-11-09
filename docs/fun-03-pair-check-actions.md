@@ -1,6 +1,6 @@
 # FUN-03-PAIR-CHECK-COALESCE-01 – parningskontroll under aktiv inkorgsåtgärd
 
-**Datum:** 9 november 2026 · [PR #244](https://github.com/erikjarl/hemmakompassen/pull/244) · **Status:** korrigering och regressionstester i PR; slutlig verifiering inväntas.
+**Datum:** 9 november 2026 · [PR #244](https://github.com/erikjarl/hemmakompassen/pull/244) · **Status:** PR #244 mergad (`5591af6`); Node/Chromium och serverade GitHub Pages-filer verifierade, riktig Auth/tvåkontofunktion och fysisk Safari återstår.
 
 ## Reproducerat användarflödesfel
 
@@ -33,3 +33,12 @@ Inga ändringar görs i Supabase-RPC, autentiseringsregler, befintliga meddeland
 Det befintliga `tests/inbox-pairing-guard.test.mjs` uppdateras: det förväntade beteendet är nu att andra anropet **väntar på samma resultat**, inte returnerar falskt utan att kontrollera.
 
 **Verifieringsgräns:** Node/VM och syntetisk Chromium/Pages kan påvisa kodflöde men inte att verkliga tvåkontoinloggningar, fysiska telefoner eller faktiska Supabase-fel beter sig likadant. FUN-03 behåller status **Pågår** tills det har testats.
+
+## Slutlig verifiering 9 november 2026
+
+- **Avsiktlig röd testfas:** [CI #42546176903](https://github.com/erikjarl/hemmakompassen/actions/runs/42546176903), 432/435 PASS och tre reproducerade beteendefel med produktionskoden före rättning.
+- **Efter rättning:** [Grön CI #42546643793](https://github.com/erikjarl/hemmakompassen/actions/runs/42546643793), **435/435 Node PASS**, statisk byggkontroll och syntetisk Chromium PASS med 77 skärmbilder och `visual-audit.json`.
+- **Merge:** [PR #244](https://github.com/erikjarl/hemmakompassen/pull/244), commit [`5591af6`](https://github.com/erikjarl/hemmakompassen/commit/5591af6c165d8b8b4a0d4ac6eb6a3bbb7c63d84f).
+- **Publicerad kod:** [Pages #42547077592](https://github.com/erikjarl/hemmakompassen/actions/runs/42547077592) och [kontroll av fyra serverade filers bytes #42547078001](https://github.com/erikjarl/hemmakompassen/actions/runs/42547078001) lyckade, även för `live-app.js`.
+
+Detta bekräftar den publicerade kodens bytes och syntetiskt UI-beteende, inte verkliga familjekonton, verkliga Supabase-fel eller Safari. FUN-03 fortsatt **Pågår**.
