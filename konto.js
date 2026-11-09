@@ -1,8 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import {installFeedback} from './feedback.js?v=20261109-test-feedback1';
 const config = window.HEMMAKOMPASSEN_BACKEND;
 const client = createClient(config.supabaseUrl, config.supabasePublishableKey, {auth:{flowType:'pkce',detectSessionInUrl:true}});
-installFeedback({db:client});
+if (typeof document !== 'undefined' && document.getElementById('hk-feedback-dialog')) window.HKFeedback?.installFeedback({db:client});
 // Bound a single account read or form action. A timeout does not prove a
 // write failed: do not retry login, pairing or invite creation automatically.
 const accountWaitMs=Number.isFinite(config.accountRequestTimeoutMs)&&config.accountRequestTimeoutMs>0
