@@ -139,7 +139,7 @@ function neutralPersonalityReflection(input){
 // The original reflection is kept; no family data are sent elsewhere.
 export function enforceActionableAnalysis(reply,kind,input=null){
   const text=String(reply??'').replace(/\r\n/g,'\n').trim();
-  const heading=/(?:^|\n)[ \t]*(?:#{1,3}[ \t]*)?(?:\*{1,2})?Förslag(?:\*{1,2})?[ \t]*[:?]?[ \t]*(?=\n|$)/i.exec(text);
+  const heading=/(?:^|\n)[ \t]*(?:#{1,3}[ \t]*)?(?:\*{1,2})?Förslag[ \t]*[:?]?(?:\*{1,2})?[ \t]*[:?]?[ \t]*(?=\n|$)/i.exec(text);
   const unverifiedReflection=(heading?text.slice(0,heading.index):text).trim().slice(0,7000);
   const reflection=kind==='personality'&&PROFILE_OVERCLAIM_RE.test(unverifiedReflection)
     ?neutralPersonalityReflection(input):unverifiedReflection;
