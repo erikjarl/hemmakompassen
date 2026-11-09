@@ -37,6 +37,27 @@ async function checkMobileNavigation(page,label){
       const box=link.getBoundingClientRect(),styles=getComputedStyle(link);
       if(box.width<75||box.height<44)failures.push(link.textContent+' small tap target');
       if(styles.flexDirection!=='column')failures.push(link.textContent+' unexpected tab layout');
+      if(styles.overflowWrap!=='normal'||styles.wordBreak!=='normal')
+        failures.push(link.textContent+' may break a word inside the tab');
+      // Count the rendered boxes for each actual word in the text node.
+      // A word split across two rows yields two rects even when the whole
+      // page has no document-level horizontal overflow.
+      const textNode=[...link.childNodes].find(node=>node.nodeType===Node.TEXT_NODE);
+      if(!textNode||!textNode.textContent?.trim()){
+        failures.push(link.textContent+' missing visible label');
+      }else{
+        for(const match of textNode.textContent.matchAll(/\\S+/gu)){
+          const range=document.createRange();
+          range.setStart(textNode,match.index);
+          range.setEnd(textNode,match.index+match[0].length);
+          const parts=[...range.getClientRects()].filter(rect=>rect.width>0.5);
+          if(parts.length!==1){
+            failures.push(link.textContent+' splits word '+match[0]+' into '+parts.length+' lines');
+          }else if(parts[0].left<box.left-2||parts[0].right>box.right+2){
+            failures.push(link.textContent+' word '+match[0]+' exceeds its tab');
+          }
+        }
+      }
     }
     // A physical horizontal swipe can reach both ends of the strip.
     nav.scrollTo({left:nav.scrollWidth,behavior:'instant'});
