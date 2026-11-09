@@ -134,8 +134,18 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
       if(!Array.isArray(result.messages) || result.messages.length>40 || result.messages.some(m=>!['user','assistant','safety'].includes(m.role)||typeof m.body!=='string'))throw new Error('Samtalet har ogiltigt innehåll.');
       turns=result.messages.map(m=>({role:m.role,text:m.body}));
       return true;
-    }catch(e){if(myEpoch===epoch && userId===account)historyError=e?.message||'Kunde inte öppna samtalet.';return false;}
-    finally{if(myEpoch===epoch && userId===account){if(!preserveLoading)loading=false;notify();}}
+    }catch(e){
+      // A failed read for an older selection must not show an error in the
+      // currently selected conversation (or clear its pending indicator).
+      if(myEpoch===epoch && userId===account && activeChatId===chatId && request===listRequest)
+        historyError=e?.message||'Kunde inte öppna samtalet.';
+      return false;
+    }finally{
+      if(myEpoch===epoch && userId===account && activeChatId===chatId && request===listRequest){
+        if(!preserveLoading)loading=false;
+        notify();
+      }
+    }
   }
   async function deleteChat() {
     if (!historyEnabled || !activeChatId || !userId || sending) return false;
