@@ -2365,7 +2365,12 @@ function render(){
   // Hash navigation explicitly calls scrollLiveMainTop() after its render.
   const focusedPriority=page()==='swipe'?document.activeElement?.closest?.('[data-priority-share]'):null;
   const priorityFocus=focusedPriority?{deck:focusedPriority.dataset.deckId,card:focusedPriority.dataset.cardId}:null;
-  const mainScroll=(page()==='inkorg'||priorityFocus)?document.querySelector('.live-main')?.scrollTop:null;
+  // Shared-match refreshes can rerender the current swipe card just after it
+  // received focus. Preserve focus only if it is still the SAME question.
+  const focusedSwipeCard=page()==='swipe'&&document.activeElement?.id==='swipe-card'
+    ?document.activeElement.getAttribute('aria-label'):null;
+  const mainScroll=(page()==='inkorg'||priorityFocus||focusedSwipeCard)
+    ?document.querySelector('.live-main')?.scrollTop:null;
   menu();$('live-app').innerHTML=user?(page()==='hem'?home():section(page())):login();
   if(mainScroll!=null){
     const main=document.querySelector('.live-main');
@@ -2375,6 +2380,11 @@ function render(){
     const replacement=[...document.querySelectorAll('[data-priority-share]')]
       .find(button=>button.dataset.deckId===priorityFocus.deck&&button.dataset.cardId===priorityFocus.card);
     replacement?.focus({preventScroll:true});
+  }
+  if(focusedSwipeCard&&page()==='swipe'){
+    const replacement=$('swipe-card');
+    if(replacement?.getAttribute('aria-label')===focusedSwipeCard)
+      replacement.focus({preventScroll:true});
   }
   if(user&&page()==='kommunikation')openCommunicationSkill($('live-app'),communicationSkillFromHash(location.hash));
   if(page()==='regler'&&user)applySchysstaFilters();
