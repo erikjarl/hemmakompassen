@@ -44,7 +44,8 @@ function harness(remote=[parent,teen],error=null){
     clearFamilyChat:()=>{actions.cleared++;},
     render:()=>{actions.rendered++;},
     refresh:async()=>{actions.refreshed++;},
-    showError:err=>{throw err;}
+    showError:err=>{throw err;},
+    setTimeout,clearTimeout
   };
   vm.runInNewContext(methods.replace('let inboxPairCheckBusy=false,inboxPairEpoch=null;',"let inboxPairCheckBusy=false,inboxPairEpoch='epoch-1';")+'\nthis.matches=sameInboxPair;this.check=recheckInboxPair;this.isBusy=()=>inboxPairCheckBusy;this.getEpoch=()=>inboxPairEpoch;',context);
   return {context,actions,

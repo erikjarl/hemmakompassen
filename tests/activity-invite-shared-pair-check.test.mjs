@@ -49,6 +49,7 @@ function harness(role='parent'){
     }},
     location:{set hash(route){nav.push(route);},get hash(){return nav.at(-1)||'insikter';}},
     requestAnimationFrame:callback=>callback(),
+    setTimeout,clearTimeout,
     document:{getElementById:()=>({focus:()=>focus.push('editor')})}
   };
   const initialized=pair.replace('let inboxPairCheckBusy=false,inboxPairEpoch=null;',

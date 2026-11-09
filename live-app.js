@@ -1,7 +1,7 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261109-late-session1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261109-inbox-pair-timeout1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261107-authoritative-export4';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261109-late-session1';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261109-inbox-pair-timeout1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
 import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261107-authoritative-export4';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
@@ -205,9 +205,18 @@ async function recheckInboxPair(){
   inboxPairCheckViewer=viewer;
   inboxPairCheckSession=session;
   const checkTask=(async()=>{
-    let result,epoch;
-    try{[result,epoch]=await Promise.all([db.rpc('my_family_members'),db.rpc('my_current_inbox_pair_epoch')]);}
-    catch(error){result={error};}
+    let result,epoch,deadline;
+    try{
+      // A stalled membership/epoch RPC must not leave inbox actions or
+      // background checks blocked indefinitely. Match the 15s inbox deadline.
+      [result,epoch]=await Promise.race([
+        Promise.all([db.rpc('my_family_members'),db.rpc('my_current_inbox_pair_epoch')]),
+        new Promise((_,reject)=>{deadline=setTimeout(
+          ()=>reject(new Error('Pair verification timed out')),15000
+        );})
+      ]);
+    }catch(error){result={error};}
+    finally{clearTimeout(deadline);}
     if(user?.id!==viewer||sharedSession!==session)return false;
     if(!result?.error&&sameInboxPair(oldMembers,result.data,viewer)
       &&typeof epoch?.data==='string'&&epoch.data.length>0
