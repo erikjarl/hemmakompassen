@@ -26,7 +26,7 @@ jobs:
           # Compare the delivered bytes, not only the Pages workflow status.
           for attempt in $(seq 1 30); do
             all_match=true
-            for file in index.html live-app.js ai-result-ui.js konto.js backend-config.js personality/ipip50-ui.js; do
+            for file in index.html live-app.js ai-result-ui.js konto.js backend-config.js personality/ipip50-ui.js personality/ipip50-retest.js; do
               remote_file="$(mktemp)"
               if ! curl --fail --location --silent --show-error --max-time 15 \
                 --header 'Cache-Control: no-cache' \
@@ -40,7 +40,7 @@ jobs:
               if [ "${all_match}" != true ]; then break; fi
             done
             if [ "${all_match}" = true ]; then
-              echo "Verified: all six publicly served files match commit ${GITHUB_SHA}."
+              echo "Verified: all seven publicly served files match commit ${GITHUB_SHA}."
               exit 0
             fi
             sleep 10
