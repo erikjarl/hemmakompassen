@@ -33,6 +33,8 @@
 .hk-feedback-dialog button[type=button]{background:transparent;border:1px solid #81889a;color:#fff}
 .hk-feedback-dialog button:disabled{opacity:.5;cursor:wait}
 .hk-feedback-dialog .hk-feedback-note{color:#c9ceda;font-size:13px;font-weight:400}
+.hk-feedback-dialog .hk-feedback-note a{color:#f8c66b;text-decoration:underline;text-underline-offset:3px;font-weight:650}
+.hk-feedback-dialog .hk-feedback-note a:focus-visible{outline:3px solid #f8c66b;outline-offset:3px}
 #hk-feedback-status{min-height:1.5em;overflow-wrap:anywhere}
 .hk-feedback-open{gap:7px;box-sizing:border-box}
 .hk-feedback-open-icon{font-size:18px;line-height:1;flex:none}
