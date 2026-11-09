@@ -25,6 +25,45 @@ assert.ok(clearedTimeouts.includes(timerId), 'Timeout is cleared on failure');
 assert.equal(await withFeedbackDeadline(Promise.resolve('ok')), 'ok');
 assert.equal(pendingTimeouts.size, 0, 'Success also clears the timeout');
 
+let onSubmit;
+const sendButton = {disabled: false};
+const closeButton = {disabled: false, addEventListener() {}};
+const statusNode = {textContent: ''};
+const fakeForm = {
+  elements: {
+    category: {value: 'bug'}, description: {value: 'Beskrivning av ett riktigt fel'},
+    expected: {value: ''}
+  },
+  querySelector: () => sendButton,
+  addEventListener(type, handler) { if (type === 'submit') onSubmit = handler; }
+};
+const fakeNodes = {
+  'hk-feedback-dialog': {addEventListener() {}},
+  'hk-feedback-open': {addEventListener() {}},
+  'hk-feedback-form': fakeForm,
+  'hk-feedback-close': closeButton,
+  'hk-feedback-status': statusNode
+};
+timeoutScope.document = {getElementById: id => fakeNodes[id]};
+timeoutScope.location = {href: 'https://site.test/hk/index.html#swipe'};
+let inserted = 0;
+timeoutScope.window.HKFeedback.installFeedback({
+  db: {
+    auth: {getUser: () => new Promise(() => {})},
+    from: () => ({insert: () => { inserted++; return Promise.resolve({error:null}); }})
+  }
+});
+assert.equal(typeof onSubmit, 'function');
+const submission = onSubmit({preventDefault() {}});
+assert.equal(sendButton.disabled, true);
+assert.equal(pendingTimeouts.size, 1);
+[...pendingTimeouts.values()][0]();
+await submission;
+assert.equal(inserted, 0, 'No report is inserted without completed authentication');
+assert.match(statusNode.textContent, /Ingen rapport har skickats/);
+assert.equal(sendButton.disabled, false, 'The report form is available again');
+assert.equal(closeButton.disabled, false, 'The report can be closed after an auth timeout');
+
 assert.equal(feedbackPageContext('https://site.test/hk/index.html#swipe/theme'),
   'index.html#swipe');
 assert.equal(feedbackPageContext('https://site.test/hk/index.html#kommunikation/plan'),
