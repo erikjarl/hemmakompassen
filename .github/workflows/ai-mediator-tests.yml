@@ -18,6 +18,7 @@ on:
       - 'ai-result-ui.js'
       - 'tests/communication-crosslinks.test.mjs'
       - 'tests/ai-result-analysis.test.mjs'
+      - 'tests/ai-profile-grounded-reflection.test.mjs'
       - '.github/workflows/ai-mediator-tests.yml'
   pull_request:
     paths:
@@ -31,6 +32,7 @@ on:
       - 'ai-result-ui.js'
       - 'tests/communication-crosslinks.test.mjs'
       - 'tests/ai-result-analysis.test.mjs'
+      - 'tests/ai-profile-grounded-reflection.test.mjs'
       - '.github/workflows/ai-mediator-tests.yml'
 
 permissions:
@@ -46,7 +48,7 @@ jobs:
         with:
           node-version: '22'
       - name: Run offline security tests
-        run: node --test tests/ai-mediator-worker.test.mjs tests/ai-mediator-ui.test.mjs tests/ai-mediator-private-history.test.mjs tests/ai-mediator-saved-ui.test.mjs tests/ai-mediator-context.test.mjs tests/ai-result-analysis.test.mjs tests/communication-crosslinks.test.mjs
+        run: node --test tests/ai-mediator-worker.test.mjs tests/ai-mediator-ui.test.mjs tests/ai-mediator-private-history.test.mjs tests/ai-mediator-saved-ui.test.mjs tests/ai-mediator-context.test.mjs tests/ai-result-analysis.test.mjs tests/ai-profile-grounded-reflection.test.mjs tests/communication-crosslinks.test.mjs
       - name: JavaScript syntax checks
         run: |
           node --check ai-mediator-ui.js

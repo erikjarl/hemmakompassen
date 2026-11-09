@@ -254,7 +254,7 @@ export function createHandler({ fetchAuth = fetch, now = () => new Date() } = {}
         });
         const reply=cleanReply(response);
         if(!reply || reply.length>9000)throw Error('Invalid model response');
-        return answer(200,{reply:enforceActionableAnalysis(reply,kind),kind,scope,basis:prepared.basis,
+        return answer(200,{reply:enforceActionableAnalysis(reply,kind,prepared),kind,scope,basis:prepared.basis,
           remainingToday:DAILY_LIMIT-Number(quota.request_count)},origin);
       } catch {
         return answer(502,{error:'AI-reflektionen kunde inte skapas just nu.'},origin);
