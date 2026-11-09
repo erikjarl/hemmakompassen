@@ -46,7 +46,7 @@ async function checkMobileNavigation(page,label){
       if(!textNode||!textNode.textContent?.trim()){
         failures.push(link.textContent+' missing visible label');
       }else{
-        for(const match of textNode.textContent.matchAll(/\\S+/gu)){
+        for(const match of textNode.textContent.matchAll(/\S+/gu)){
           const range=document.createRange();
           range.setStart(textNode,match.index);
           range.setEnd(textNode,match.index+match[0].length);
