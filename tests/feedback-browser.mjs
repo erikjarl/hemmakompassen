@@ -33,7 +33,7 @@ try {
     // authentication token or stored report is involved.
     const browserSetTimeout = window.setTimeout.bind(window);
     window.setTimeout = (fn, ms, ...args) =>
-      browserSetTimeout(fn, ms === 15000 ? 30 : ms, ...args);
+      browserSetTimeout(fn, ms === 15000 ? (scenario === 'slowOk' ? 5000 : 30) : ms, ...args);
     window.HKFeedback.installFeedback({
       db:{
         auth:{getUser:async()=>{
