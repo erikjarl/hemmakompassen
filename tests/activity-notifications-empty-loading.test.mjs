@@ -22,6 +22,7 @@ function harness({draft='',route='inkorg',initial=[]}={}){
     activityFeedback:'',
     familyChatDraft:draft,
     activityPairSignature:()=> 'same-pair',
+    setTimeout,clearTimeout,
     validActivityNotifications:Array.isArray,
     page:()=>route,
     render:()=>renders.push({
