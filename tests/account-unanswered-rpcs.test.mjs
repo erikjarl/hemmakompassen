@@ -26,12 +26,13 @@ function makePage({signedIn=false,members=null}={}){
    buttons.push(el(id));
  let user=signedIn?{id:'synthetic-parent',email:'parent@example.com'}:null;
  let stallLogin=false,stallFamily=false,stallInvite=false;
+ let resolveLogin=null,resolveInvite=null;
  let loginCalls=0,inviteCalls=0,memberCalls=0,destination=null;
  const auth={
    async getUser(){return {data:{user},error:null};},
    signInWithPassword(){
      loginCalls++;
-     return stallLogin?never:Promise.resolve({error:null});
+     return stallLogin?new Promise(resolve=>{resolveLogin=resolve;}):Promise.resolve({error:null});
    },
    onAuthStateChange(){},
    signUp:async()=>({data:{session:null},error:null}),
@@ -58,7 +59,7 @@ function makePage({signedIn=false,members=null}={}){
      }
      if(name==='create_family_invite'){
        inviteCalls++;
-       return stallInvite?never:Promise.resolve({data:'2026-11-12T12:00:00Z',error:null});
+       return stallInvite?new Promise(resolve=>{resolveInvite=resolve;}):Promise.resolve({data:'2026-11-12T12:00:00Z',error:null});
      }
      return Promise.resolve({data:null,error:null});
    }
@@ -78,6 +79,8 @@ function makePage({signedIn=false,members=null}={}){
    setLoginStall(v){stallLogin=v;},
    setFamilyStall(v){stallFamily=v;},
    setInviteStall(v){stallInvite=v;},
+   releaseLogin(){if(resolveLogin){resolveLogin({error:null});resolveLogin=null;}},
+   releaseInvite(){if(resolveInvite){resolveInvite({data:'2026-11-12T12:00:00Z',error:null});resolveInvite=null;}},
    setUser(v){user=v;},
    get loginCalls(){return loginCalls;},
    get inviteCalls(){return inviteCalls;},
@@ -131,4 +134,38 @@ test('FUN-01: unanswered invite creation shows failure, unlocks and never create
  assert.match(p.el('status').textContent,/tog för lång tid|svarade inte i tid/i);
  assert.equal(p.inviteCalls,1);
  assert.equal(p.el('new-invite').textContent,'');
+});
+
+test('FUN-01: a login reply arriving after timeout must not navigate or erase the password',async()=>{
+ const p=makePage();
+ await pause(15);
+ p.el('email').value='parent@example.com';
+ p.el('password').value='a-test-password';
+ p.setLoginStall(true);
+ submit(p.el('email-form'));
+ await pause(120);
+ const timeoutStatus=p.el('status').textContent;
+ assert.match(timeoutStatus,/svarade inte i tid/);
+ p.releaseLogin();
+ await pause(50);
+ assert.equal(p.destination,null,'Expired login must not redirect to the app');
+ assert.equal(p.el('password').value,'a-test-password','Do not erase credentials after expired login');
+ assert.equal(p.el('status').textContent,timeoutStatus,'Late response must not replace timeout feedback');
+ assert.equal(p.loginCalls,1);
+});
+
+test('FUN-01: an invite RPC reply arriving after timeout must not expose an old code or QR',async()=>{
+ const p=makePage({signedIn:true,members:[{role:'parent',display_name:'Parent'}]});
+ await pause(35);
+ p.setInviteStall(true);
+ p.el('make-invite').click();
+ await pause(120);
+ const timeoutStatus=p.el('status').textContent;
+ assert.match(timeoutStatus,/svarade inte i tid/);
+ p.releaseInvite();
+ await pause(50);
+ assert.equal(p.el('new-invite').textContent,'','Expired invitation must not be displayed');
+ assert.equal(p.el('invite-qr-image').src,'','Expired invitation must not render a QR');
+ assert.equal(p.el('status').textContent,timeoutStatus);
+ assert.equal(p.inviteCalls,1,'Do not create another invitation after timeout');
 });
