@@ -1735,12 +1735,18 @@ async function verifyCommunicationForms(){
 function makeTwoRoleFamilyFixture(){
   const messages=[],tokens=new Map(),rules=[],notices=[],activityNotices=[],replacementLinks=[],ruleHistory=[],calls=[];
   let failedSendAcknowledgement=false,failedOlderPage=false,failedActivityRead=false,failedRuleNoticeRead=false,nextRuleId=200;
+  let holdRuleReadRole=null,heldRuleRead=null,failRuleReadRole=null;
+  let holdMessageReadRole=null,heldMessageRead=null;
   const other=role=>role==='parent'?'teen':'parent';
   const ok=data=>({data,error:null});
   const createdAt=n=>'2026-11-01T12:'+String(Math.floor(n/50)).padStart(2,'0')+':'+String(n%50).padStart(2,'0')+'Z';
   function rpc(role,name,args={}){
     calls.push({role,name,args});
     if(name==='my_family_messages'){
+      if(holdMessageReadRole===role){
+        holdMessageReadRole=null;
+        return new Promise(resolve=>{heldMessageRead=resolve;});
+      }
       if(args?.p_before_created_at&&failedOlderPage){failedOlderPage=false;return {data:null,error:{message:'synthetic older page unavailable'}};}
       let visible=messages.map(m=>({
         message_id:m.id,body:m.body,sent_by_me:m.sender===role,
@@ -1780,6 +1786,14 @@ function makeTwoRoleFamilyFixture(){
       const rows=messages.filter(m=>m.sender!==role&&m.read_at===null);
       for(const m of rows)m.read_at='2026-11-01T13:00:00Z';
       return ok(rows.length);
+    }
+    if(name==='my_schyssta_rules'&&failRuleReadRole===role){
+      failRuleReadRole=null;
+      return {data:null,error:{message:'Synthetic rule list read unavailable'}};
+    }
+    if(name==='my_schyssta_rules'&&holdRuleReadRole===role){
+      holdRuleReadRole=null;
+      return new Promise(resolve=>{heldRuleRead=resolve;});
     }
     if(name==='shared_schyssta_rule_suggestions'||name==='my_schyssta_rules')return ok([]);
     if(name==='my_schyssta_replacement_links')return ok(replacementLinks.map(row=>({...row})));
@@ -1861,7 +1875,14 @@ function makeTwoRoleFamilyFixture(){
     loseNextSendAcknowledgement(){failedSendAcknowledgement=true;},
     failNextOlderPage(){failedOlderPage=true;},
     failNextActivityRead(){failedActivityRead=true;},
-    failNextRuleNoticeRead(){failedRuleNoticeRead=true;}};
+    failNextRuleNoticeRead(){failedRuleNoticeRead=true;},
+    failNextRuleRead(role){failRuleReadRole=role;},
+    holdNextRuleRead(role){holdRuleReadRole=role;},
+    releaseHeldRuleRead(){if(!heldRuleRead)throw new Error('No held synthetic rule fetch');heldRuleRead(ok([]));heldRuleRead=null;},
+    get isHoldingRuleRead(){return !!heldRuleRead;},
+    holdNextMessageRead(role){holdMessageReadRole=role;},
+    releaseHeldMessageRead(){if(!heldMessageRead)throw new Error('No held synthetic message fetch');heldMessageRead(ok([]));heldMessageRead=null;},
+    get isHoldingMessageRead(){return !!heldMessageRead;}};
 }
 const FUN03_LINKED_RPCS=Object.freeze([
   'my_family_messages','my_family_unread_message_count','send_family_message','mark_family_messages_read',
@@ -1871,6 +1892,54 @@ const FUN03_LINKED_RPCS=Object.freeze([
   'set_schyssta_rule_decision','mark_schyssta_notification_read',
   'my_activity_notifications','mark_activity_notification_read'
 ]);
+
+async function verifyWholeInboxBackgroundLoadStatus(){
+  // Start a delayed read deliberately with the REAL conversation refresh
+  // button. It is less timing-sensitive than holding an RPC during page boot.
+  const fixture=makeTwoRoleFamilyFixture();
+  const teen=await freshContext(
+    {viewport:{width:390,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true},
+    {authenticated:true,paired:true,role:'teen',pairFixture:fixture,activityNotifications:true}
+  );
+  try{
+    await teen.page.goto(base+'#inkorg',{waitUntil:'load'});
+    await teen.page.locator('.family-chat-history').waitFor();
+    await teen.page.locator('#inbox-refresh-all').waitFor();
+    await teen.page.locator('#family-chat-body').fill('Ett oskickat utkast under hämtningen');
+    fixture.holdNextMessageRead('teen');
+    await teen.page.locator('[data-family-chat-refresh]').click();
+    for(let i=0;i<60&&!fixture.isHoldingMessageRead;i++)await sleep(50);
+    assert.equal(fixture.isHoldingMessageRead,true,
+      'Explicit conversation refresh must start the delayed mock message read; calls: '+
+      fixture.calls.filter(x=>x.role==='teen').map(x=>x.name).slice(-18).join(', '));
+    const before=fixture.calls.filter(x=>x.role==='teen'&&x.name==='my_family_messages').length;
+    await teen.page.locator('#inbox-refresh-all').click();
+    const status=teen.page.locator('.inbox-refresh-actions [role="status"]');
+    await teen.page.getByText(/Vissa delar hämtades redan i bakgrunden/).waitFor();
+    assert.match(await status.innerText(),/meddelanden/,
+      'Skipped ongoing message read is named in actual inbox DOM');
+    assert.equal(fixture.calls.filter(x=>x.role==='teen'&&x.name==='my_family_messages').length,
+      before,'Whole inbox refresh never duplicates an already-loading message RPC');
+    assert.equal(await teen.page.locator('#family-chat-body').inputValue(),
+      'Ett oskickat utkast under hämtningen','Partial refresh preserves private unsent draft');
+    assert.equal(await teen.page.locator('#inbox-refresh-all').isEnabled(),true,
+      'A partial update must release the whole-inbox button');
+    fixture.releaseHeldMessageRead();
+    // The finished private message fetch may choose a render-free completion
+    // while a draft is active; permit its Promise continuation to settle.
+    await teen.page.waitForTimeout(150);
+    await teen.page.locator('#inbox-refresh-all').click();
+    await teen.page.getByText('Inkorgen är uppdaterad.',{exact:true}).waitFor();
+    assert.equal(await teen.page.locator('#family-chat-body').inputValue(),
+      'Ett oskickat utkast under hämtningen','Successful explicit retry preserves draft');
+    assert.equal(fixture.calls.filter(x=>x.role==='teen'&&x.name==='my_family_messages').length,
+      before+1,'Fresh retry includes previously skipped message read');
+    console.log('FUN-03 full inbox overlapping-load browser test passed.');
+  }finally{
+    if(fixture.isHoldingMessageRead)fixture.releaseHeldMessageRead();
+    await teen.context.close();
+  }
+}
 
 async function verifyPairedTwoRoleExchange(){
   const fixture=makeTwoRoleFamilyFixture();
@@ -4820,6 +4889,7 @@ try{
   await verifyDistinctPrivateRetestHistory();
   await verifyCommunicationForms();
   await verifyAllCommunicationExercises();
+  await verifyWholeInboxBackgroundLoadStatus();
   await verifyPairedTwoRoleExchange();
   await verifyLinkedInboxOlderPages();
   await verifyPairedRuleRevisionAndHistory();
