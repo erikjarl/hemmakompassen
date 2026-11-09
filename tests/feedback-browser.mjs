@@ -17,7 +17,7 @@ try {
   // Route the full browser context so the new account tab uses the fixture too.
   await page.context().route('https://site.test/**',route=>route.fulfill({
     status:200,contentType:'text/html',
-    body:'<!doctype html><html lang="sv"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><body><div class="live-layout"><nav class="live-mobile" style="position:fixed;bottom:0;height:60px;width:100%"></nav></div>'+widget+'</body></html>'
+    body:'<!doctype html><html lang="sv"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><body><div class="live-layout"><nav class="live-mobile" style="position:fixed;bottom:0;height:76px;left:0;box-sizing:border-box"></nav></div>'+widget+'</body></html>'
   }));
   await page.goto('https://site.test/hemmakompassen/index.html#kommunikation/plan');
   await page.addStyleTag({content:css});
@@ -58,16 +58,18 @@ try {
   assert.equal(await btn.getAttribute('aria-label'),'Rapportera fel eller innehåll');
   assert.ok(box && box.width <= 56 && box.x >= 0 && box.x + box.width <= 390,
     'Mobile report button is compact and inside the viewport');
-  assert.ok(navBox && box.y + box.height <= navBox.y - 8,
-    'Fixed report control does not cover the horizontal navigation');
+  assert.ok(navBox && navBox.x + navBox.width <= box.x - 6 &&
+    box.y >= navBox.y - 2 && box.y + box.height <= navBox.y + navBox.height + 2,
+    'Docked report control sits beside, not on top of, the horizontal navigation');
   assert.equal(await page.locator('.hk-feedback-open-label').isVisible(), false,
     'The full label is visually hidden only on mobile, retaining its accessible name');
   await page.setViewportSize({width:320,height:700});
   const narrowBox = await btn.boundingBox();
   const narrowNav = await page.locator('.live-mobile').boundingBox();
   assert.ok(narrowBox && narrowBox.width <= 56 && narrowBox.x >= 0
-    && narrowBox.x + narrowBox.width <= 320 && narrowBox.y + narrowBox.height <= narrowNav.y - 8,
-    'Compact report control stays usable at 320px');
+    && narrowBox.x + narrowBox.width <= 320 && narrowNav.x + narrowNav.width <= narrowBox.x - 6
+    && narrowBox.y >= narrowNav.y - 2 && narrowBox.y + narrowBox.height <= narrowNav.y + narrowNav.height + 2,
+    'At 320px the report button occupies reserved navigation space, not page content');
   await page.setViewportSize({width:390,height:844});
 
   await btn.click();

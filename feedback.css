@@ -50,3 +50,17 @@
   /* The app has a fixed horizontally scrollable module bar; the account page does not. */
   .live-layout + .hk-feedback-open{bottom:calc(74px + env(safe-area-inset-bottom))}
 }
+
+/* VIS-00-07: on app pages, dock report beside (not over) the swipeable
+   mobile tab bar.  A floating control above the bar obscured the chart's
+   rightmost percentile tick and other content while scrolling. The account
+   page has no bottom tabs and retains the original floating button. */
+@media(max-width:800px){
+  .live-layout .live-mobile{
+    width:calc(100% - 64px);
+  }
+  .live-layout + .hk-feedback-open{
+    bottom:calc(12px + env(safe-area-inset-bottom));
+    right:8px;
+  }
+}

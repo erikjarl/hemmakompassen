@@ -3680,6 +3680,25 @@ try{
   assert.doesNotMatch(firstScalePosition.introText,/Utforska fem sidor/,
     'UX-04: finished profile does not repeat questionnaire onboarding');
   await checkOverflow(narrowPersonality.page,'Private personality profile 320px');
+  // VIS-00-07: a persistent report shortcut must never hide graph labels.
+  // Its dedicated right-hand slot belongs to the bottom nav, outside main.
+  const reportDock=await narrowPersonality.page.evaluate(()=>{
+    const report=document.querySelector('#hk-feedback-open')?.getBoundingClientRect();
+    const nav=document.querySelector('#live-mobile-nav')?.getBoundingClientRect();
+    const main=document.querySelector('.live-main')?.getBoundingClientRect();
+    return report&&nav&&main?{
+      report:{left:report.left,top:report.top,right:report.right,bottom:report.bottom},
+      nav:{left:nav.left,top:nav.top,right:nav.right,bottom:nav.bottom},
+      main:{top:main.top,bottom:main.bottom},
+      viewport:document.documentElement.clientWidth
+    }:null;
+  });
+  assert.ok(reportDock &&
+    reportDock.report.left >= reportDock.nav.right + 4 &&
+    reportDock.report.right <= reportDock.viewport + 1 &&
+    reportDock.report.top >= reportDock.main.bottom - 2 &&
+    reportDock.report.bottom <= reportDock.nav.bottom + 2,
+    'VIS-00-07: the mobile report shortcut is docked beside the swipe tabs, entirely below personality content: '+JSON.stringify(reportDock));
   await capture(narrowPersonality.page,'mobile-320-personality-percentiles.png');
   await narrowPersonality.page.locator('.pf-percentile-chart').screenshot({path:path.join(output,'mobile-320-personality-bars.png'),animations:'disabled'});
   await narrowPersonality.context.close();
