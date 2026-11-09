@@ -65,9 +65,9 @@ const variants=[
       assert.match(h.state.schysstaMessage,/inte bekräfta/i);
     }},
   {name:'rule-card proposal',run:h=>h.state.propose(RULE),rpc:'propose_schyssta_rule',
-    after:h=>{assert.equal(h.state.schysstaSaving.has(RULE),false);assert.match(h.state.schysstaError,/kunde inte/i);}},
+    after:h=>{assert.equal(h.state.schysstaSaving.has(RULE),false);assert.match(h.state.schysstaError,/inte att bekräfta/i);}},
   {name:'accept decision',run:h=>h.state.decide(ID,true),rpc:'set_schyssta_rule_decision',
-    after:h=>{assert.equal(h.state.schysstaSaving.has(ID),false);assert.equal(h.state.schysstaRules.length,0);assert.match(h.state.schysstaError,/kunde inte/i);}},
+    after:h=>{assert.equal(h.state.schysstaSaving.has(ID),false);assert.equal(h.state.schysstaRules.length,0);assert.match(h.state.schysstaError,/inte att bekräfta/i);}},
   {name:'withdraw accepted agreement',run:h=>h.state.withdraw(ID),rpc:'withdraw_schyssta_rule',
     after:h=>{assert.equal(h.state.schysstaSaving.has(ID),false);assert.match(h.state.schysstaMessage,/inte bekräfta/i);}},
   {name:'mark notice read',run:h=>h.state.mark(ID),rpc:'mark_schyssta_notification_read',
