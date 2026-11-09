@@ -205,9 +205,18 @@ async function recheckInboxPair(){
   inboxPairCheckViewer=viewer;
   inboxPairCheckSession=session;
   const checkTask=(async()=>{
-    let result,epoch;
-    try{[result,epoch]=await Promise.all([db.rpc('my_family_members'),db.rpc('my_current_inbox_pair_epoch')]);}
-    catch(error){result={error};}
+    let result,epoch,deadline;
+    try{
+      // A stalled membership/epoch RPC must not leave inbox actions or
+      // background checks blocked indefinitely. Match the 15s inbox deadline.
+      [result,epoch]=await Promise.race([
+        Promise.all([db.rpc('my_family_members'),db.rpc('my_current_inbox_pair_epoch')]),
+        new Promise((_,reject)=>{deadline=setTimeout(
+          ()=>reject(new Error('Pair verification timed out')),15000
+        );})
+      ]);
+    }catch(error){result={error};}
+    finally{clearTimeout(deadline);}
     if(user?.id!==viewer||sharedSession!==session)return false;
     if(!result?.error&&sameInboxPair(oldMembers,result.data,viewer)
       &&typeof epoch?.data==='string'&&epoch.data.length>0
