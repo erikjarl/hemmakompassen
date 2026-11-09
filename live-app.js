@@ -288,14 +288,16 @@ function mergeFamilyChatPage(previous,latest,{older=false,quiet=false,hasMore=fa
   }
   return {messages:latest,hasMore:latest.length===50};
 }
-async function fetchFamilyChat(older=false,{quiet=false}={}){
+async function fetchFamilyChat(older=false,{quiet=false,preserveStatus=false}={}){
   if(!user||members.length!==2||!inboxPairEpoch)return;
   if(older?(!familyChatHasMore||familyChatLoadingOlder||familyChatLoading):(familyChatLoading||familyChatLoadingOlder))return;
   const viewer=user.id,session=sharedSession,request=++familyChatRequest;
   const oldest=older?familyChatMessages[familyChatMessages.length-1]:null;
   const previous=quiet?JSON.stringify([familyChatMessages,familyChatHasMore,familyChatError]):null;
   familyChatError='';
-  if(!quiet)familyChatStatus='';
+  // A confirmed send remains confirmed even when the subsequent read fails.
+  // Ordinary deliberate refreshes still clear old, unrelated confirmations.
+  if(!quiet&&!preserveStatus)familyChatStatus='';
   if(older)familyChatLoadingOlder=true;else familyChatLoading=true;
   if(!quiet&&page()==='inkorg'&&!familyChatDraft.trim()&&!familyChatMessages.length)render();
   let result,timer;
@@ -398,7 +400,10 @@ async function sendFamilyChatMessage(){
   if(familyChatDraft.trim()===body)familyChatDraft='';
   if(familyChatRequestKey===token)familyChatRequestKey=null;
   familyChatStatus='Meddelandet har skickats.';
-  await fetchFamilyChat();
+  // Show the receipt and unlock the composer even if a previous inbox read
+  // is still loading and the automatic fetch below is therefore skipped.
+  if(page()==='inkorg')render();
+  await fetchFamilyChat(false,{preserveStatus:true});
 }
 // A local, session-only pause never records a NO vote or changes shared data.
 const schysstaPausedIds=new Set();
