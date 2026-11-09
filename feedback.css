@@ -34,6 +34,17 @@
 .hk-feedback-dialog button:disabled{opacity:.5;cursor:wait}
 .hk-feedback-dialog .hk-feedback-note{color:#c9ceda;font-size:13px;font-weight:400}
 #hk-feedback-status{min-height:1.5em;overflow-wrap:anywhere}
+.hk-feedback-open{gap:7px;box-sizing:border-box}
+.hk-feedback-open-icon{font-size:18px;line-height:1;flex:none}
 @media(max-width:800px){
-  .hk-feedback-open{bottom:calc(96px + env(safe-area-inset-bottom));right:12px;font-size:13px;padding:10px 12px}
+  /* Avoid covering the last line of mobile cards with a full-width label. */
+  .hk-feedback-open{
+    bottom:calc(18px + env(safe-area-inset-bottom));right:12px;
+    width:48px;min-width:48px;max-width:48px;height:48px;
+    min-height:48px;padding:0;border-radius:16px;
+  }
+  .hk-feedback-open-icon{font-size:24px}
+  .hk-feedback-open-label{display:none}
+  /* The app has a fixed horizontally scrollable module bar; the account page does not. */
+  .live-layout + .hk-feedback-open{bottom:calc(74px + env(safe-area-inset-bottom))}
 }
