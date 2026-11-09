@@ -23,12 +23,27 @@ try {
   await page.addScriptTag({content:js});
   await page.evaluate(()=>{
     window.testFeedbackRows = [];
+    window.feedbackInsertAttempts = 0;
     let signedIn = false;
+    let scenario = 'ok';
     window.toggleSignedIn = v => { signedIn = v; };
+    window.setFeedbackScenario = value => { scenario = value; };
+    // Speed up only the client's real 15-second deadline; no live server,
+    // authentication token or stored report is involved.
+    const browserSetTimeout = window.setTimeout.bind(window);
+    window.setTimeout = (fn, ms, ...args) =>
+      browserSetTimeout(fn, ms === 15000 ? 30 : ms, ...args);
     window.HKFeedback.installFeedback({
       db:{
-        auth:{getUser:async()=>({data:{user:signedIn?{id:'test-user-id'}:null},error:null})},
+        auth:{getUser:async()=>{
+          if(scenario==='authHang')return new Promise(()=>{});
+          if(scenario==='authError')return {data:{user:null},error:{message:'Simulerat nätverksfel'}};
+          return {data:{user:signedIn?{id:'test-user-id'}:null},error:null};
+        }},
         from:table=>({insert:async row=>{
+          window.feedbackInsertAttempts++;
+          if(scenario==='writeHang')return new Promise(()=>{});
+          if(scenario==='writeFail')return {error:{code:'MOCK_503',message:'Servern avvisade inskick.'}};
           window.testFeedbackRows.push({table,row});
           return {error:null};
         }})
@@ -75,6 +90,64 @@ try {
   assert.equal(await page.locator('[name="description"]').inputValue(),'');
   await page.locator('#hk-feedback-close').click();
   assert.equal(await page.locator('#hk-feedback-dialog').evaluate(el=>el.open),false);
+
+  // FUN-00/FBK-01: real Chromium events for failed writes and unknown timeouts.
+  // None of these synthetic failures may clear the report or silently re-send.
+  await btn.click();
+  await page.locator('[name="category"]').selectOption('content');
+  const draft='Texten i förklaringen blev obegriplig för mig.';
+  await page.locator('[name="description"]').fill(draft);
+  await page.evaluate(()=>window.setFeedbackScenario('writeFail'));
+  await page.locator('button[type=submit]').click();
+  await page.waitForFunction(()=>document.querySelector('#hk-feedback-status').textContent.includes('kunde inte bekräftas'));
+  assert.equal(await page.locator('[name="description"]').inputValue(),draft);
+  assert.equal(await page.locator('button[type=submit]').isEnabled(),true);
+  assert.equal(await page.locator('#hk-feedback-close').isEnabled(),true);
+  assert.equal(await page.evaluate(()=>window.feedbackInsertAttempts),2);
+  assert.equal((await page.evaluate(()=>window.testFeedbackRows)).length,1);
+
+  await page.evaluate(()=>window.setFeedbackScenario('authError'));
+  await page.locator('button[type=submit]').click();
+  await page.waitForFunction(()=>document.querySelector('#hk-feedback-status').textContent.includes('Kunde inte kontrollera inloggningen'));
+  assert.doesNotMatch(await page.locator('#hk-feedback-status').innerText(),/Logga in via Ditt konto/,
+    'A service error is not misleadingly treated as an explicit logout');
+  assert.equal(await page.locator('[name="description"]').inputValue(),draft);
+  assert.equal(await page.locator('button[type=submit]').isEnabled(),true);
+  assert.equal(await page.evaluate(()=>window.feedbackInsertAttempts),2,
+    'A returned Auth service error must not create a new report');
+
+  await page.evaluate(()=>window.setFeedbackScenario('authHang'));
+  await page.locator('button[type=submit]').click();
+  await page.waitForFunction(()=>document.querySelector('#hk-feedback-status').textContent.includes('Ingen rapport har skickats'));
+  assert.equal(await page.locator('[name="description"]').inputValue(),draft);
+  assert.equal(await page.locator('button[type=submit]').isEnabled(),true);
+  assert.equal(await page.evaluate(()=>window.feedbackInsertAttempts),2,
+    'Authentication timeout cannot result in an INSERT');
+
+  await page.evaluate(()=>window.setFeedbackScenario('writeHang'));
+  await page.locator('button[type=submit]').click();
+  await page.waitForFunction(()=>document.querySelector('#hk-feedback-status').textContent.includes('kan redan vara sparad'));
+  assert.equal(await page.locator('[name="description"]').inputValue(),draft);
+  assert.equal(await page.locator('button[type=submit]').isEnabled(),true);
+  assert.equal(await page.locator('#hk-feedback-close').isEnabled(),true);
+  assert.equal(await page.evaluate(()=>window.feedbackInsertAttempts),3,
+    'Lost write confirmation must not trigger an automatic retry');
+  assert.equal((await page.evaluate(()=>window.testFeedbackRows)).length,1);
+
+  // An explicitly chosen new submission is allowed; it must keep category,
+  // page context and the previously retained text.
+  await page.evaluate(()=>window.setFeedbackScenario('ok'));
+  await page.locator('button[type=submit]').click();
+  await page.waitForFunction(()=>document.querySelector('#hk-feedback-status').textContent.includes('sparad'));
+  const finalRows=await page.evaluate(()=>window.testFeedbackRows);
+  assert.equal(finalRows.length,2);
+  assert.equal(finalRows[1].row.description,draft);
+  assert.equal(finalRows[1].row.category,'content');
+  assert.equal(finalRows[1].row.page_context,'index.html#kommunikation');
+  assert.equal(await page.evaluate(()=>window.feedbackInsertAttempts),4);
+  assert.equal(await page.locator('[name="description"]').inputValue(),'');
+  await page.locator('#hk-feedback-close').click();
+
   // Account page lacks the swipe-nav; its button must still fit the small viewport.
   const accountPage = await browser.newPage({viewport:{width:320,height:700}});
   await accountPage.route('https://account.test/**', route => route.fulfill({
@@ -90,7 +163,7 @@ try {
     'Account page report control remains usable at 320px without a bottom nav');
   assert.equal(await accountButton.getAttribute('aria-label'),'Rapportera fel eller innehåll');
   await accountPage.close();
-  console.log('PASS: 320/390px compact accessible report button, bottom-nav clearance, mock auth/insert and modal');
+  console.log('PASS: 320/390px reporter, keyboard-sized modal, rejected/unknown saves, Auth timeout, retained draft and explicit retry');
 } finally {
   await browser.close();
 }
