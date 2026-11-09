@@ -4743,6 +4743,16 @@ try{
   assert.equal(await unlocked.page.locator('[data-theme-open]').count(),6,"All six decks offer private swipe actions after unlock");
   await unlocked.page.locator('[data-theme-open="samtal"]').click();
   await unlocked.page.locator("#swipe-card[aria-label^='Temakort 1 av 104']").waitFor();
+  // VIS-00-04: exporting is optional, not a screenful before the first card.
+  await unlocked.page.locator('.live-main').evaluate(el=>{el.scrollTop=0;});
+  assert.equal(await unlocked.page.locator('.swipe-theme-play > .swipe-heading #swipe-export-private').count(),0,
+    'Theme export no longer dominates the card intro');
+  assert.equal(await unlocked.page.locator('.swipe-theme-play > .swipe-stage + .swipe-private-export').count(),1);
+  const themeCardRect=await unlocked.page.locator('#swipe-card').boundingBox();
+  const themeNavRect=await unlocked.page.locator('#live-mobile-nav').boundingBox();
+  assert.ok(themeCardRect && themeNavRect && themeCardRect.y + 100 < themeNavRect.y,
+    'The first theme card starts visibly above the mobile navigation');
+  await capture(unlocked.page,'mobile-theme-first-card-top.png');
   const categoryFilter=unlocked.page.getByLabel('Välj kategori');
   assert.equal(await categoryFilter.count(),1,'Large theme decks expose one labelled category filter');
   assert.ok(await categoryFilter.isEnabled(),'Category filter is keyboard reachable');
@@ -4918,6 +4928,15 @@ try{
   await capture(aiView.page,'mobile-ai-personality-result.png');
   await aiView.page.goto(base+'#swipe',{waitUntil:'load'});
   await aiView.page.locator('.swipe-results .ai-result-panel .ai-result-prose').waitFor();
+  await aiView.page.locator('.live-main').evaluate(el=>{el.scrollTop=0;});
+  assert.equal(await aiView.page.locator('.swipe-play-view > .swipe-heading #swipe-export-private').count(),0);
+  assert.equal(await aiView.page.locator('.swipe-play-view > .swipe-stage + .swipe-private-export').count(),1,
+    'Optional export remains reachable immediately after the playable card');
+  const generalCardRect=await aiView.page.locator('#swipe-card').boundingBox();
+  const generalNavRect=await aiView.page.locator('#live-mobile-nav').boundingBox();
+  assert.ok(generalCardRect && generalNavRect && generalCardRect.y + 190 < generalNavRect.y,
+    'At 390px the playable card has substantial visible room above navigation');
+  await capture(aiView.page,'mobile-general-swipe-first-card-top.png');
   const swipeRequest=aiView.aiRequests.find(x=>x.kind==='swipe');
   assert.equal(swipeRequest.scope,'general');
   assert.deepEqual(Object.keys(swipeRequest).sort(),['kind','scope']);
