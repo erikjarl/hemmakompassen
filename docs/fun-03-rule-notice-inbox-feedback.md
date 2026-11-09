@@ -21,6 +21,6 @@ Ingen databas, parningslogik, meddelandesändning eller AI-tjänst har ändrats.
 
 ## Verifiering och begränsningar
 
-Nya regressioner är Node/VM-kontroller av verklig klientlogik och genererad HTML med mockade RPC-svar. Fulla Node-, bygg- och Chromium-test, Pages-publicering samt filbyteskontroll redovisas först efter avslutade körningar.
+Nya regressioner är Node/VM-kontroller av verklig klientlogik och genererad HTML med mockade RPC-svar. Dessutom kör den befintliga tvårollsövningen i `tests/visual.mjs` en **verklig Chromium-klicksekvens** på notifieringens `Markera som läst`: injicerad felkvittens, synlig status i inkorgens DOM, bevarat oskickat chattutkast, återförsök med bekräftad läsning och att den gamla feltexten försvinner. Detta är två **syntetiska** rollsessioner med gemensam in-memory-familjedata, inte två riktiga Supabase-inloggningar. Fulla Node-, bygg- och Chromium-test, Pages-publicering samt filbyteskontroll redovisas först efter avslutade körningar.
 
 **Inte verifierat:** faktisk inloggning med två konton, fysisk mobil/Safari, riktiga läsmarkeringar mot Supabase, skärmläsarens uppläsning av live-regionen. Ingen befintlig användardata har ändrats.
