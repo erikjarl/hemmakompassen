@@ -295,6 +295,19 @@ async function testAccountBrowserJourney(){
   assert.match(await page.locator('#members').innerText(),/Förälder.*Tonåring/);
   steps.push('explicit successful retry restores family controls');
 
+  // FUN-01: automatic account/profile reads must not erase edits typed into
+  // the real DOM input before the user explicitly presses Save.
+  await page.locator('#display-name').fill('Osparat namn under pågående uppdatering');
+  await page.locator('#refresh-account').click();
+  await page.locator('#status').getByText('Kontot har uppdaterats.').waitFor();
+  assert.equal(await page.locator('#display-name').inputValue(),
+    'Osparat namn under pågående uppdatering',
+    'Manual refresh must preserve the unsaved name field');
+  await page.evaluate(()=>window.scrollTo(0,0));
+  await checkOverflow(page,'FUN-01 account name draft retained');
+  await capture(page,'mobile-account-name-draft.png');
+  steps.push('unsaved display name survives a verified account refresh');
+
   await page.locator('#display-name').fill('Nytt syntetiskt namn');
   await page.locator('#name-form').evaluate(el=>el.requestSubmit());
   await page.waitForFunction(()=>(window.__HK_ACCOUNT_CALLS__||[]).includes('name-update'));
