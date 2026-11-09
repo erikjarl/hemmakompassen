@@ -3543,7 +3543,7 @@ try{
   await keyboardSwipe.page.waitForFunction(()=>window.__HK_SAVED_SWIPE__?.row.card_id==='general-01'
     &&window.__HK_SAVED_SWIPE__.row.answer===true);
   await keyboardSwipe.page.locator('#swipe-card[aria-label^="Kort 2"]').waitFor();
-  assert.match(await keyboardSwipe.page.locator('#swipe-card').innerText(),/När kortet har fokus/,
+  assert.match(await keyboardSwipe.page.locator('#swipe-card').innerText(),/Med tangentbordet: ← eller →/,
     'The card describes keyboard controls');
   await keyboardSwipe.context.close();
   // A remote unpair while HOME is visible must revoke cached pairing state
