@@ -20,12 +20,19 @@ function fixture(){
     from(name){
       assert.equal(name,'personality_answers');
       return {
-        select(){return {eq(){return {eq(){
-          if(stallRead)return never;
-          return Promise.resolve({data:[...answers].map(([question_id,value])=>({
-            question_id,answer:{value}
-          })),error:null});
-        }}};}},
+        select(){
+          const query={
+            eq(){return query;},
+            then(resolve,reject){
+              const result=stallRead?never:Promise.resolve({
+                data:[...answers].map(([question_id,value])=>({question_id,answer:{value}})),
+                error:null
+              });
+              return result.then(resolve,reject);
+            }
+          };
+          return query;
+        },
         upsert(row){
           writes++;
           if(stallWrite)return never;
