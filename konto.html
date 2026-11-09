@@ -11,6 +11,24 @@ main{display:grid;gap:18px;padding:20px;border:1px solid #7775;border-radius:16p
 .pairing-qr img{display:block;width:240px;max-width:100%;height:auto;aspect-ratio:1;background:#fff;border:10px solid #fff;border-radius:10px;box-sizing:border-box}
 .pairing-qr figcaption{display:grid;gap:8px;max-width:100%;font-size:.95rem}
 .pairing-qr a{overflow-wrap:anywhere;text-underline-offset:3px}
+/* VIS-00: make actual sign-in fields visible sooner on a small screen.
+   The previous first view spent most of its height on the oversized heading,
+   default paragraph margins and stacked automatic grid tracks. */
+@media(max-width:580px){
+  body{padding:16px}
+  .account-toolbar{min-height:64px;margin:-16px -16px 12px;padding:8px 16px}
+  body>main{align-content:start;min-height:0;gap:12px;padding:16px}
+  body>main>h1{font-size:clamp(2.1rem,8.5vw,2.6rem);line-height:1.12;margin:0}
+  body>main>p{margin:0;line-height:1.45}
+  #refresh-account{padding:10px 12px}
+  #logged-out{gap:10px}
+  #logged-out>h2{font-size:clamp(1.5rem,6vw,1.8rem);margin:0}
+  #logged-out>p{margin:0;line-height:1.45}
+  #logged-out form{gap:10px}
+  #logged-out label{gap:4px}
+  #logged-out input{padding:10px}
+  #logged-out details summary{padding:5px 0}
+}
 </style></head><body><header class="account-toolbar"><a href="./index.html">← Till Hemmakompassen</a><button type="button" id="hk-feedback-open" class="hk-feedback-open" aria-haspopup="dialog" aria-label="Rapportera fel eller innehåll" title="Rapportera fel eller innehåll"><span class="hk-feedback-open-icon" aria-hidden="true">✎</span><span class="hk-feedback-open-label">Rapportera fel eller innehåll</span></button></header><main><h1>Ditt konto</h1><p>Här loggar du in och kopplar ihop två riktiga konton. Övriga funktioner ansluts stegvis till era konton.</p><button id="refresh-account" type="button">Uppdatera kontostatus</button>
 <section id="logged-out">
 <h2>Logga in</h2><p id="invite-notice" class="hidden" role="status">Familjeinbjudan hittad. Logga in på ditt eget konto för att använda den.</p><form id="email-form"><label>E-postadress <input type="email" id="email" required autocomplete="username"></label><label>Lösenord <input type="password" id="password" required autocomplete="current-password"></label><button type="submit">Logga in</button></form>
