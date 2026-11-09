@@ -28,3 +28,10 @@ Skapa vid behov avidentifierad GitHub-issue för reproducerade problem; **public
 - Verifiera gärna med ett riktigt testkonto och kontrollera exakt en ny rad i Supabase Table Editor utan att ändra några befintliga testdata.
 
 **Status vid implementation:** Kod, migration och automatiserade kontraktstester levereras som PR. Verifiera separat Node/Chromium/CI, migration i verklig Supabase, publicerade filer samt faktisk autentiserad rapportering; markera inte `Färdig och verifierad` om något av dessa steg saknas.
+
+
+## FBK-01-AUTH-TIMEOUT – funktionell felåterhämtning (9 november 2026)
+
+En låst `db.auth.getUser()` kunde tidigare hålla **Skicka rapport** och **Stäng** inaktiverade utan tidsgräns, innan någon INSERT ens prövats. Rapporten ska gå att försöka skicka igen efter högst 15 s autentiseringskontroll. Användarens text ska stå kvar och UI ska uttryckligen säga att **ingen rapport skickats** om just autentiseringskontrollen avbröts. Förlorad kvittens på själva INSERT-skrivningen fortsätter att anges som **okänt resultat** och försöks inte om automatiskt.
+
+Automatiska Node/VM-regressionstester simulerar en autentiseringskontroll som aldrig svarar, triggar tidsgränsen, verifierar **0 INSERT-anrop** samt att båda formulärknapparna aktiveras igen. Testar även timeout-hjälparens timerstädning och normalt fullbordat löfte. Detta är **inte** ett faktiskt autentiserat E2E-test mot Supabase eller fysisk mobil.
