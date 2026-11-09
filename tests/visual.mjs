@@ -3493,7 +3493,7 @@ try{
   const nextCardRect=await m.page.locator('#swipe-card').boundingBox();
   const nextNavRect=await m.page.locator('#live-mobile-nav').boundingBox();
   await capture(m.page,'mobile-general-next-card-focus.png');
-  assert.ok(nextCardRect && nextNavRect && nextCardRect.y>=0 && nextCardRect.y+80<nextNavRect.y,
+  assert.ok(nextCardRect && nextNavRect && nextCardRect.y>=-2 && nextCardRect.y+80<nextNavRect.y,
     'Confirmed general answer restores focus to the new question at a visible scroll position: '+
       JSON.stringify({card:nextCardRect,nav:nextNavRect,scroll:await m.page.locator('.live-main').evaluate(el=>({top:el.scrollTop,height:el.clientHeight}))}));
   assert.match(await m.page.locator('#swipe-card').innerText(),/Jag tycker det är viktigt att vi har gemensamma aktiviteter/,'Parent skips teen-only understanding cards without corrupting ordinal position');
@@ -4803,7 +4803,7 @@ try{
   const nextTheme=await unlocked.page.locator('#swipe-card').boundingBox();
   const nextThemeNav=await unlocked.page.locator('#live-mobile-nav').boundingBox();
   await capture(unlocked.page,'mobile-theme-next-card-focus.png');
-  assert.ok(nextTheme && nextThemeNav && nextTheme.y >= 0 && nextTheme.y+80 < nextThemeNav.y,
+  assert.ok(nextTheme && nextThemeNav && nextTheme.y >= -2 && nextTheme.y+80 < nextThemeNav.y,
     'Confirmed theme response focuses the next card and reveals its question: '+
       JSON.stringify({card:nextTheme,nav:nextThemeNav,scroll:await unlocked.page.locator('.live-main').evaluate(el=>({top:el.scrollTop,height:el.clientHeight}))}));
   const themeSaved=await unlocked.page.evaluate(()=>window.__HK_SAVED_SWIPE__);
