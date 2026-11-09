@@ -200,41 +200,42 @@ async function recheckInboxPair(){
   inboxPairCheckViewer=viewer;
   inboxPairCheckSession=session;
   const checkTask=(async()=>{
-  let result,epoch;
-  try{[result,epoch]=await Promise.all([db.rpc('my_family_members'),db.rpc('my_current_inbox_pair_epoch')]);}
-  catch(error){result={error};}
-  if(user?.id!==viewer||sharedSession!==session)return false;
-  if(!result?.error&&sameInboxPair(oldMembers,result.data,viewer)
-    &&typeof epoch?.data==='string'&&epoch.data.length>0
-    &&!epoch.error&&epoch.data===inboxPairEpoch)return true;
-  // Fail closed, including RPC failure. Invalidate in-flight message reads
-  // before triggering refresh, so neither previous messages nor old badges
-  // can survive a revoked pairing or a failed membership check.
-  sharedSession++;
-  clearFamilyChat();
-  // Sharing belongs to the exact family epoch. Drop the old pair's results
-  // synchronously, before a potentially slow or failing account refresh.
-  sharedRequest++;insightsRequest++;
-  sharedMatches=[];sharedPriorities=[];sharedError='';sharedPriorityError='';sharedLoading=false;
-  insightsRows=[];sharedUnderstandingRows=[];insightsError='';insightsLoading=false;
-  // Family rules, notices and pending actions are scoped to this same pair.
-  // Their old cached contents must not outlive a revoked/unknown pairing.
-  schysstaRequest++;
-  schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];
-  schysstaNotifications=[];schysstaReplacementLinks=[];schysstaHistory=[];
-  schysstaEndTarget=null;schysstaLoading=false;schysstaError='';
-  schysstaSaving.clear();schysstaPausedIds.clear();
-  schysstaDraft='';schysstaDraftOpen=false;schysstaDraftKey=null;
-  schysstaEditTarget=null;schysstaSubmitting=false;schysstaMessage='';schysstaCopyMessage='';schysstaCopyFallback=false;
-  activityNotificationsRequest++;
-  activityNotifications=[];activityNotificationsError='';activityNotificationsLoading=false;
-  activityMarkBusy=null;activityFeedback='';
-  activityInviteBusy=false;activityInviteError='';
-  inboxPairEpoch=null;
-  members=[];
-  render();
-  void refresh().catch(showError);
-  return false;  })();
+    let result,epoch;
+    try{[result,epoch]=await Promise.all([db.rpc('my_family_members'),db.rpc('my_current_inbox_pair_epoch')]);}
+    catch(error){result={error};}
+    if(user?.id!==viewer||sharedSession!==session)return false;
+    if(!result?.error&&sameInboxPair(oldMembers,result.data,viewer)
+      &&typeof epoch?.data==='string'&&epoch.data.length>0
+      &&!epoch.error&&epoch.data===inboxPairEpoch)return true;
+    // Fail closed, including RPC failure. Invalidate in-flight message reads
+    // before triggering refresh, so neither previous messages nor old badges
+    // can survive a revoked pairing or a failed membership check.
+    sharedSession++;
+    clearFamilyChat();
+    // Sharing belongs to the exact family epoch. Drop the old pair's results
+    // synchronously, before a potentially slow or failing account refresh.
+    sharedRequest++;insightsRequest++;
+    sharedMatches=[];sharedPriorities=[];sharedError='';sharedPriorityError='';sharedLoading=false;
+    insightsRows=[];sharedUnderstandingRows=[];insightsError='';insightsLoading=false;
+    // Family rules, notices and pending actions are scoped to this same pair.
+    // Their old cached contents must not outlive a revoked/unknown pairing.
+    schysstaRequest++;
+    schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];
+    schysstaNotifications=[];schysstaReplacementLinks=[];schysstaHistory=[];
+    schysstaEndTarget=null;schysstaLoading=false;schysstaError='';
+    schysstaSaving.clear();schysstaPausedIds.clear();
+    schysstaDraft='';schysstaDraftOpen=false;schysstaDraftKey=null;
+    schysstaEditTarget=null;schysstaSubmitting=false;schysstaMessage='';schysstaCopyMessage='';schysstaCopyFallback=false;
+    activityNotificationsRequest++;
+    activityNotifications=[];activityNotificationsError='';activityNotificationsLoading=false;
+    activityMarkBusy=null;activityFeedback='';
+    activityInviteBusy=false;activityInviteError='';
+    inboxPairEpoch=null;
+    members=[];
+    render();
+    void refresh().catch(showError);
+    return false;
+  })();
   inboxPairCheckTask=checkTask;
   try{return await checkTask;}
   finally{

@@ -54,7 +54,7 @@ function harness(){
     requests[start].resolve({data:rows,error});
     requests[start+1].resolve({data:epoch,error});
   }
-  return {ctx,requests,renders,refreshes,messages,replyPair};
+  return {ctx,requests,renders,refreshes,messages,replyPair,setEpoch:ctx.setEpoch};
 }
 
 test('FUN-03: a manual send joins a background pair-check instead of silently doing nothing',async()=>{
