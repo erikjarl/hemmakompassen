@@ -1412,11 +1412,14 @@ function themeSwipeView(){
   const answers=themeAnswers.get(deck.id),categories=themeCategories(deck),visible=themeVisibleIndices(deck),item=visible.includes(themeIndex)?deck.cards[themeIndex]:undefined;
   const itemText=item?cardTextForRole(themeCardModel(deck,themeIndex),viewerRole()):'',answered=visible.filter(index=>answers.has(themeCardId(deck,index))).length,ordinal=visible.indexOf(themeIndex)+1;
   const categoryLabel=themeCategory==='all'?'Alla kategorier':themeCategory;
-  const filter=categories.length>1?'<div class="swipe-category-filter"><label for="theme-category">Välj kategori</label><select id="theme-category" aria-describedby="theme-category-status"><option value="all"'+(themeCategory==='all'?' selected':'')+'>Alla kategorier ('+deck.cards.length+')</option>'+categories.map(category=>'<option value="'+esc(category)+'"'+(themeCategory===category?' selected':'')+'>'+esc(category)+' ('+themeVisibleIndices(deck,category).length+')</option>').join('')+'</select><p id="theme-category-status" class="live-muted" role="status">'+answered+' av '+visible.length+' kort sparade i '+esc(categoryLabel)+'.</p></div>':'';
+  // The category selector is a secondary control. Keep it available on every
+  // device, but initially collapse it on narrow screens so the question comes first.
+  const desktopCategoryFilter=window.matchMedia?.('(min-width: 801px)').matches===true;
+  const filter=categories.length>1?'<details class="swipe-category-filter"'+(desktopCategoryFilter?' open':'')+'><summary>Välj kategori: '+esc(categoryLabel)+'</summary><div class="swipe-category-options"><label for="theme-category">Välj kategori</label><select id="theme-category" aria-describedby="theme-category-status"><option value="all"'+(themeCategory==='all'?' selected':'')+'>Alla kategorier ('+deck.cards.length+')</option>'+categories.map(category=>'<option value="'+esc(category)+'"'+(themeCategory===category?' selected':'')+'>'+esc(category)+' ('+themeVisibleIndices(deck,category).length+')</option>').join('')+'</select><p id="theme-category-status" class="live-muted" role="status">'+answered+' av '+visible.length+' kort sparade i '+esc(categoryLabel)+'.</p></div></details>':'';
   return '<div class="swipe-experience swipe-theme-play swipe-play-view"><header class="swipe-heading">'+
     '<button type="button" class="live-button swipe-theme-back" id="theme-back">← Alla kortlekar</button>'+
     '<span class="swipe-eyebrow">TEMAKORTLEK · PRIVATA SVAR</span><h1>'+esc(deck.title)+'</h1>'+
-    '<p>Svara Ja eller Nej på varje kort. Dina svar är privata och är inga överenskommelser.</p>'+filter+'</header>'+
+    '<p>Svara Ja eller Nej. Svaren är privata och inga överenskommelser.</p>'+filter+'</header>'+
     '<div class="swipe-stage"><div class="swipe-stage-top"><span>'+esc(deck.title)+'</span><span role="status">'+
     (item?ordinal+' / '+visible.length:answered+' / '+visible.length+' sparade')+'</span></div>'+
     '<div class="swipe-track"><div class="swipe-track-fill" style="width:'+Math.round(100*(item?(themeReview?ordinal-1:answered):visible.length)/visible.length)+'%"></div></div>'+
@@ -2365,6 +2368,9 @@ function render(){
   // Hash navigation explicitly calls scrollLiveMainTop() after its render.
   const focusedPriority=page()==='swipe'?document.activeElement?.closest?.('[data-priority-share]'):null;
   const priorityFocus=focusedPriority?{deck:focusedPriority.dataset.deckId,card:focusedPriority.dataset.cardId}:null;
+  // A shared-results refresh or category change must not close an expanded
+  // category selector, making a keyboard user's current control disappear.
+  const expandedThemeCategory=$('theme-category')?.closest?.('details')?.open;
   // Shared-match refreshes can rerender the current swipe card just after it
   // received focus. Preserve focus only if it is still the SAME question.
   const focusedSwipeCard=page()==='swipe'&&document.activeElement?.id==='swipe-card'
@@ -2372,6 +2378,10 @@ function render(){
   const mainScroll=(page()==='inkorg'||priorityFocus||focusedSwipeCard)
     ?document.querySelector('.live-main')?.scrollTop:null;
   menu();$('live-app').innerHTML=user?(page()==='hem'?home():section(page())):login();
+  if(expandedThemeCategory!==undefined){
+    const nextFilter=$('theme-category')?.closest?.('details');
+    if(nextFilter)nextFilter.open=expandedThemeCategory;
+  }
   if(mainScroll!=null){
     const main=document.querySelector('.live-main');
     if(main)main.scrollTop=Math.min(mainScroll,Math.max(0,main.scrollHeight-main.clientHeight));
