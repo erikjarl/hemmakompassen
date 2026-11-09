@@ -12,7 +12,8 @@ function harness(initial){
   const state={
     user:{id:'viewer'},members:[{user_id:'viewer'},{user_id:'other'}],sharedSession:3,inboxPairEpoch:'epoch-1',
     familyChatUnread:4,familyChatUnreadError:false,familyChatCountRequest:0,
-    db:{rpc:async()=>response},page:()=>'hem',render:()=>renderCount++,menu:()=>{}
+    db:{rpc:async()=>response},page:()=>'hem',render:()=>renderCount++,menu:()=>{},
+    setTimeout,clearTimeout
   };
   vm.runInNewContext(fn+'\nthis.fetchUnread=fetchFamilyChatUnread;',state);
   return {state,setResponse:v=>response=v,rendered:()=>renderCount};
