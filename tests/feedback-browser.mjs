@@ -44,6 +44,12 @@ try {
         from:table=>({insert:async row=>{
           window.feedbackInsertAttempts++;
           if(scenario==='writeHang')return new Promise(()=>{});
+          if(scenario==='slowOk')return new Promise(resolve=>{
+            window.finishFeedbackInsert=()=>{
+              window.testFeedbackRows.push({table,row});
+              resolve({error:null});
+            };
+          });
           if(scenario==='writeFail')return {error:{code:'MOCK_503',message:'Servern avvisade inskick.'}};
           window.testFeedbackRows.push({table,row});
           return {error:null};
@@ -127,6 +133,10 @@ try {
   await page.locator('button[type=submit]').click();
   await page.waitForFunction(()=>document.querySelector('#hk-feedback-status').textContent.includes('kunde inte bekräftas'));
   assert.equal(await page.locator('[name="description"]').inputValue(),draft);
+  for(const field of ['category','description','expected']){
+    assert.equal(await page.locator('[name="'+field+'"]').isEnabled(),true,
+      'The input must be editable again after a failed report');
+  }
   assert.equal(await page.locator('button[type=submit]').isEnabled(),true);
   assert.equal(await page.locator('#hk-feedback-close').isEnabled(),true);
   assert.equal(await page.evaluate(()=>window.feedbackInsertAttempts),2);
@@ -195,6 +205,32 @@ try {
   assert.equal(await page.locator('[name="description"]').inputValue(),'');
   await page.locator('#hk-feedback-close').click();
 
+  // FBK-01: freeze report fields while an INSERT is pending, otherwise a user
+  // could type into the old form and lose those edits when success resets it.
+  await btn.click();
+  await page.locator('[name="category"]').selectOption('suggestion');
+  await page.locator('[name="description"]').fill('Rapport med fördröjd bekräftelse.');
+  await page.locator('[name="expected"]').fill('Fälten ska inte kunna ändras mitt under sändningen.');
+  await page.evaluate(()=>window.setFeedbackScenario('slowOk'));
+  await page.locator('button[type=submit]').click();
+  await page.waitForFunction(()=>typeof window.finishFeedbackInsert==='function');
+  for(const field of ['category','description','expected']){
+    assert.equal(await page.locator('[name="'+field+'"]').isDisabled(),true,
+      'Input values are frozen until the server settles the write');
+  }
+  assert.equal(await page.locator('#hk-feedback-clear').isDisabled(),true);
+  assert.equal(await page.locator('#hk-feedback-close').isDisabled(),true);
+  assert.equal(await page.locator('[name="description"]').inputValue(),'Rapport med fördröjd bekräftelse.');
+  await page.evaluate(()=>window.finishFeedbackInsert());
+  await page.waitForFunction(()=>document.querySelector('#hk-feedback-status').textContent.includes('sparad'));
+  for(const field of ['category','description','expected']){
+    assert.equal(await page.locator('[name="'+field+'"]').isEnabled(),true,
+      'The settled form must become editable again');
+  }
+  assert.equal(await page.locator('[name="description"]').inputValue(),'');
+  assert.equal((await page.evaluate(()=>window.testFeedbackRows)).length,3);
+  await page.locator('#hk-feedback-close').click();
+
   // Account page lacks the swipe-nav; its button must still fit the small viewport.
   const accountPage = await browser.newPage({viewport:{width:320,height:700}});
   await accountPage.route('https://account.test/**', route => route.fulfill({
@@ -256,7 +292,7 @@ try {
   assert.equal(await accountPage.locator('#hk-feedback-dialog').evaluate(el=>el.open),false,
     'The dialog can close with Escape after a completed submission');
   await accountPage.close();
-  console.log('PASS: report draft retention on close/Escape/error, explicit clear, new-tab login, failure recovery, account reporting');
+  console.log('PASS: report draft retention, frozen in-flight edits, error recovery, explicit clear, new-tab login and account reporting');
 } finally {
   await browser.close();
 }
