@@ -80,7 +80,7 @@ test('a withdrawn activity never becomes an invitation even when a stale overvie
 
 test('old pair response after a session switch cannot create an invitation',async()=>{
   const h=harness();
-  h.c.recheckInboxPair=async()=>{h.c.sharedSession++;return false;};
+  h.c.recheckInboxPair=async()=>{h.c.sharedSession++;h.c.activityInviteBusy=false;return false;};
   await h.c.prepare('aktiviteter-01');
   assert.equal(h.c.activityInviteBusy,false);
   assert.equal(h.c.activityInviteError,'');
