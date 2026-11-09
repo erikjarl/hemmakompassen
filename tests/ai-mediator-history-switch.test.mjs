@@ -61,3 +61,44 @@ test('late response from previous selection cannot overwrite current transcript'
  assert.equal(f.ui.getState().activeChatId,chatA);
  assert.doesNotMatch(f.ui.render(),/HEMLIG BETA/);
 });
+
+
+test('late failed chat read cannot replace another chat error or prematurely hide its loading state',async()=>{
+ const pending=new Map();
+ let delayReads=false;
+ const fetchImpl=async requestUrl=>{
+  if(requestUrl.endsWith('/chats'))return Response.json({chats:[{id:chatA,title:'Samtal A'},{id:chatB,title:'Samtal B'}]});
+  for(const [id,label] of [[chatA,'ALFA'],[chatB,'BETA']]){
+   if(requestUrl.endsWith('/chats/'+id)){
+    if(delayReads)return new Promise((resolve,reject)=>pending.set(id,{resolve,reject}));
+    return Response.json({messages:[{role:'user',body:label}]});
+   }
+  }
+  throw Error('Unexpected URL '+requestUrl);
+ };
+ const db={auth:{getSession:async()=>({data:{session:{user:{id:owner},access_token:'synthetic'}},error:null})}};
+ const ui=createAiMediatorExperience({
+  db,config:{enableAiMediator:true,enableAiHistory:true,aiMediatorUrl:url},
+  escapeHtml:escape,fetchImpl
+ });
+ ui.reset(owner);
+ assert.equal(await ui.loadList(),true);
+ delayReads=true;
+ const oldRead=ui.openChat(chatA);
+ for(let i=0;i<8;i++)await Promise.resolve();
+ assert.ok(pending.has(chatA),'A first load must be pending before switching');
+ const newRead=ui.openChat(chatB);
+ for(let i=0;i<8;i++)await Promise.resolve();
+ assert.ok(pending.has(chatB),'New selection must have its own pending read');
+ pending.get(chatA).reject(Error('OLD CHAT READ FAILED'));
+ assert.equal(await oldRead,false);
+ assert.equal(ui.getState().activeChatId,chatB);
+ assert.equal(ui.getState().historyError,'','Old error must not appear on the new conversation');
+ assert.match(ui.render(),/Hämtar dina samtal…/,
+  'Old finally must not hide the newer loading indicator');
+ pending.get(chatB).resolve(Response.json({messages:[{role:'user',body:'BETA'}]}));
+ assert.equal(await newRead,true);
+ assert.equal(ui.getState().historyError,'');
+ assert.doesNotMatch(ui.render(),/Hämtar dina samtal…|OLD CHAT READ FAILED|ALFA/);
+ assert.match(ui.render(),/BETA/);
+});
