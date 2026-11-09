@@ -14,7 +14,8 @@ När den inloggade användaren öppnar Inkorg med en verifierad familjeparning o
 2. **Utkast och uttryckligt återförsök:** samma övergång ska ske utan att utkastet ändras.
 3. **Tyst bakgrundskontroll:** oförändrat svar ska *inte* orsaka omrendering, så fokus och scroll förblir opåverkade.
 4. **Serverfel:** befintlig felåterkoppling och omrendering ska fortsätta fungera.
+5. **Oförändrad fylld lista:** ingen extra slutrendering får störa fokus när aviseringar redan visas och ingen tomlägesspinner finns.
 
-[Röd CI #42552871411](https://github.com/erikjarl/hemmakompassen/actions/runs/42552871411) reproducerade **två underkända av 445 tester** (443 PASS) i fall 1 och 2, innan produktionsfixen. Fixen kompletterar den oförändrade snapshot-vägen med enbart den nödvändiga förgrundsomrenderingen; tysta bakgrundshämtningar förblir orörda.
+[Röd CI #42552871411](https://github.com/erikjarl/hemmakompassen/actions/runs/42552871411) reproducerade **två underkända av 445 tester** (443 PASS) i fall 1 och 2, innan produktionsfixen. Fixen kompletterar den oförändrade snapshot-vägen med enbart den nödvändiga förgrundsomrenderingen för tom aviseringlista; tysta bakgrundshämtningar förblir orörda.
 
 **Begränsning:** Node-VM med simulerade tjänstesvar är inte en verklig inloggning eller fysisk Safari-verifiering. Ingen riktig användardata eller konto ändrades. Slutlig grön PR-/main-CI och driftsättning redovisas separat när faktiskt bekräftade.
