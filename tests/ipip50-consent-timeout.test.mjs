@@ -15,18 +15,28 @@ function fixture(role){
  const db={
   auth:{async getUser(){return {data:{user:{id:userId}},error:null};}},
   from(table){
-   if(table==='personality_answers')return {
-    select(){return {eq(){return {async eq(){return {data:completeRows,error:null};}}}};}
-   };
+   if(table==='personality_answers')return {select(){
+    const query={
+     eq(){return this;},
+     then(resolve,reject){
+      return Promise.resolve({data:completeRows,error:null}).then(resolve,reject);
+     }
+    };
+    return query;
+   }};
    assert.equal(table,'personality_share_preferences');
-   return {select(){return {eq(){return {eq(){return {
-    maybeSingle(){
-     reads++;
-     return stallRead?never:Promise.resolve({
-      data:shared?{share_enabled:true}:null,error:null
-     });
-    }
-   };}};}};}}};
+   return {select(){
+    const query={
+     eq(){return this;},
+     maybeSingle(){
+      reads++;
+      return stallRead?never:Promise.resolve({
+       data:shared?{share_enabled:true}:null,error:null
+      });
+     }
+    };
+    return query;
+   }};
   },
   rpc(name,args){
    if(name==='my_ipip50_shared_profiles')return Promise.resolve({data:null,error:null});
