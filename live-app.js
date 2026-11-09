@@ -1518,7 +1518,8 @@ async function saveThemeAnswer(direction,index,deckId,viewer,session){
   const returnToReview=themeReviewEdit?.index===index&&themeReviewEdit?.deckId===deckId&&themeReviewEdit?.viewer===viewer&&themeReviewEdit?.session===session;
   themeIndex=themeReview?nextThemeVisible(deck,index):nextThemeUnanswered(deck,index+1);
   swipeBusy=false;
-  if(returnToReview)reopenThemeReview();else render();
+  if(returnToReview)reopenThemeReview();
+  else{render();revealNextSwipeCard(viewer,session,deckId);}
   if(members.length===2)void fetchSwipeMatches(deckId);
 }
 function advanceThemeSwipe(direction){
@@ -1631,7 +1632,8 @@ async function saveSwipeAnswer(direction,index,viewer,session){
   const returnToReview=generalReviewEdit?.index===index&&generalReviewEdit?.viewer===viewer&&generalReviewEdit?.session===session;
   swipeIndex=swipeSkippedReview?nextSkippedAfter(index):swipeReview?nextVisibleAfter(index):nextUnanswered(index+1);
   swipeBusy=false;
-  if(returnToReview)reopenGeneralReview();else render();
+  if(returnToReview)reopenGeneralReview();
+  else{render();revealNextSwipeCard(viewer,session,null);}
   if(members.length===2){
     void fetchSwipeMatches('general');
     // A parent sees only 21 match cards; a teen can also skip 13 understanding cards.
@@ -1661,7 +1663,8 @@ async function skipUnderstandingCard(index,viewer,session){
   const returnToReview=generalReviewEdit?.index===index&&generalReviewEdit?.viewer===viewer&&generalReviewEdit?.session===session;
   swipeIndex=swipeSkippedReview?nextSkippedAfter(index):swipeReview?nextVisibleAfter(index):nextUnanswered(index+1);
   swipeBusy=false;
-  if(returnToReview)reopenGeneralReview();else render();
+  if(returnToReview)reopenGeneralReview();
+  else{render();revealNextSwipeCard(viewer,session,null);}
   if(members.length===2&&visibleGeneralIndices().every(i=>swipeAnswers.has(swipeCardId(i))||skippedUnderstanding.has(swipeCardId(i))))void fetchThemeUnlock();
 }
 function nextVisibleAfter(index){return visibleGeneralIndices().find(i=>i>index)??STATEMENTS.length;}
@@ -1686,6 +1689,17 @@ function focusInsightTarget(){
 function page(){if(insightTargetFromHash(location.hash))return 'insikter';if(location.hash.startsWith('#kommunikation/'))return 'kommunikation';let h;try{h=decodeURIComponent(location.hash.slice(1));}catch{return 'hem';}return ['insikter','mi-foralder','nvc'].includes(h)?h:nav.some(n=>n[0]===h)?h:'hem';}
 // On mobile, the scroll container is .live-main rather than window.
 function scrollLiveMainTop(){const main=document.querySelector('.live-main');if(main)main.scrollTop=0;window.scrollTo(0,0);}
+/* FUN-02: after a confirmed swipe, reveal and focus the next private card.
+   The user may have scrolled to Ja/Nej and must not land halfway down a
+   newly rendered question. Never move focus on failed or stale writes. */
+function revealNextSwipeCard(viewer,session,deckId){
+  if(user?.id!==viewer||sharedSession!==session||page()!=='swipe'||activeThemeDeck!==deckId)return;
+  const target=$('swipe-card')||document.querySelector('.swipe-finished');
+  if(!target)return;
+  if(!target.hasAttribute('tabindex'))target.setAttribute('tabindex','-1');
+  target.scrollIntoView({block:'start',behavior:'auto'});
+  target.focus({preventScroll:true});
+}
 let previousMenuRoute=null;
 function menu(){
   const route=page();
