@@ -106,3 +106,53 @@ test('reset during a pending create discards the previous account result',async(
  assert.equal(ui.getState().activeChatId,null);
  assert.doesNotMatch(ui.render(),/PRIVAT A/);
 });
+
+
+test('new chat is unavailable while the current conversation list is loading',async()=>{
+ let finishList,posts=0;
+ const ui=uiWith(async(url,opts)=>{
+   if(url===base+'/chats'&&opts.method==='GET')
+     return new Promise(resolve=>{finishList=resolve;});
+   if(url===base+'/chats'&&opts.method==='POST'){
+     posts++;return Response.json({chat:{id:chat,title:'Nytt samtal'}});
+   }
+   throw Error('Unexpected request '+url);
+ },500);
+ const pending=ui.loadList();
+ await flush();
+ assert.equal(typeof finishList,'function');
+ assert.match(ui.render(),/id="mediator-new" disabled/);
+ assert.equal(await ui.createChat(),false,'A pending list cannot be superseded by a new POST');
+ ui.input('Test innan listan är hämtad');
+ assert.equal(await ui.submit(),false,'Do not create a chat from a draft during initial loading');
+ assert.equal(posts,0);
+ finishList(Response.json({chats:[]}));
+ assert.equal(await pending,true);
+ assert.doesNotMatch(ui.render(),/Hämtar dina samtal/);
+ assert.equal(await ui.createChat(),chat);
+ assert.equal(posts,1);
+});
+
+test('delete is unavailable while a new list read is pending',async()=>{
+ let hang=false,finishList,deletes=0;
+ const ui=uiWith(async(url,opts)=>{
+   if(url===base+'/chats'&&opts.method==='GET')
+     return hang?new Promise(resolve=>{finishList=resolve;}):
+       Response.json({chats:[{id:chat,title:'Tidigare samtal'}]});
+   if(url===base+'/chats/'+chat&&opts.method==='GET')
+     return Response.json({messages:[]});
+   if(url===base+'/chats/'+chat&&opts.method==='DELETE'){
+     deletes++;return Response.json({deleted:true});
+   }
+   throw Error('Unexpected request '+url);
+ },500);
+ assert.equal(await ui.loadList(),true);
+ hang=true;
+ const pending=ui.loadList();
+ await flush();
+ assert.equal(await ui.deleteChat(),false);
+ assert.equal(deletes,0);
+ finishList(Response.json({chats:[{id:chat,title:'Tidigare samtal'}]}));
+ assert.equal(await pending,true);
+ assert.doesNotMatch(ui.render(),/Hämtar dina samtal/);
+});
