@@ -5,7 +5,7 @@ const ROUTES = new Set(['hem', 'inkorg', 'swipe', 'insikter', 'personlighet', 'k
 
 export function feedbackPageContext(href) {
   const url = new URL(href);
-  const page = url.pathname.split('/').filter(Boolean).at(-1) || 'index.html';
+  const page = url.pathname.endsWith('/') ? 'index.html' : (url.pathname.split('/').filter(Boolean).at(-1) || 'index.html');
   // Account invitation tokens must never be collected as issue context.
   if (page !== 'index.html') return page === 'konto.html' ? 'konto.html' : 'annan-sida';
   const route = url.hash.slice(1).split('/')[0];
