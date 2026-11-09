@@ -1,0 +1,39 @@
+/* Shared always-available tester report control: index and account page. */
+.hk-feedback-open{
+  position:fixed;right:18px;bottom:18px;z-index:75;
+  display:inline-flex;align-items:center;justify-content:center;
+  min-height:44px;max-width:calc(100vw - 24px);padding:11px 16px;
+  border:1px solid #e7ae54;border-radius:999px;
+  background:#302a28;color:#ffe2b0;box-shadow:0 6px 22px #0009;
+  font:600 14px/1.25 system-ui,sans-serif;cursor:pointer;
+}
+.hk-feedback-open:hover{background:#423325}
+.hk-feedback-open:focus-visible,.hk-feedback-dialog :focus-visible{outline:3px solid #f8c66b;outline-offset:3px}
+.hk-feedback-dialog{
+  position:fixed;inset:0;margin:auto;box-sizing:border-box;
+  width:min(520px,calc(100vw - 24px));max-height:calc(100dvh - 28px);
+  overflow-y:auto;border:1px solid #5d6476;border-radius:20px;
+  padding:clamp(18px,4vw,28px);background:#1e2235;color:#e2e8f0;
+  box-shadow:0 28px 90px #000b;font:400 15px/1.5 system-ui,sans-serif;
+}
+.hk-feedback-dialog::backdrop{background:#02040bd9}
+.hk-feedback-dialog h2{margin:0 0 10px;color:inherit}
+.hk-feedback-dialog p{margin:0 0 15px}
+.hk-feedback-dialog form{display:grid;gap:14px}
+.hk-feedback-dialog label{display:grid;gap:6px;font-weight:600}
+.hk-feedback-dialog select,.hk-feedback-dialog textarea{
+  box-sizing:border-box;width:100%;min-width:0;padding:11px;
+  border:1px solid #81889a;border-radius:10px;background:#121622;color:#f6f7fa;
+  font:400 16px/1.45 system-ui,sans-serif;
+}
+.hk-feedback-dialog textarea{min-height:100px;resize:vertical}
+.hk-feedback-dialog .hk-feedback-actions{display:flex;flex-wrap:wrap;gap:10px}
+.hk-feedback-dialog button{min-height:44px;padding:10px 16px;border-radius:10px;cursor:pointer;font:600 15px system-ui,sans-serif}
+.hk-feedback-dialog button[type=submit]{background:#f59e0b;border:0;color:#15141b}
+.hk-feedback-dialog button[type=button]{background:transparent;border:1px solid #81889a;color:#fff}
+.hk-feedback-dialog button:disabled{opacity:.5;cursor:wait}
+.hk-feedback-dialog .hk-feedback-note{color:#c9ceda;font-size:13px;font-weight:400}
+#hk-feedback-status{min-height:1.5em;overflow-wrap:anywhere}
+@media(max-width:800px){
+  .hk-feedback-open{bottom:calc(96px + env(safe-area-inset-bottom));right:12px;font-size:13px;padding:10px 12px}
+}

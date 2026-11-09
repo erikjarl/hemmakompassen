@@ -23,6 +23,8 @@ jobs:
         run: npm install --no-save playwright@latest
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
+      - name: Tester feedback modal (Chromium)
+        run: node tests/feedback-browser.mjs
       - name: Browser tests and screenshots
         run: node tests/visual.mjs
       - name: Save screenshots

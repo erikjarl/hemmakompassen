@@ -19,6 +19,7 @@ const activityNotificationsEnabled=c.enableActivityNotifications===true;
 const personalitySharingEnabled=c.enablePersonalitySharing===true;
 const aiResultEnabled=c.enableAiResultAnalyses===true;
 const db=createClient(c.supabaseUrl,c.supabasePublishableKey,{auth:{flowType:'pkce',detectSessionInUrl:true}});
+if (typeof document !== 'undefined' && document.getElementById('hk-feedback-dialog')) window.HKFeedback?.installFeedback({db});
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??'').replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x]));
 const nav=[['hem','Hem'],['inkorg','Inkorg'],['swipe','Gillaswajpen'],['personlighet','Min personlighet'],['kommunikation','Kommunikationsråd'],['regler','Schyssta listan'],['medlare','AI-medlaren'],['installningar','Inställningar']];
