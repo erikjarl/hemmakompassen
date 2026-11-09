@@ -10,7 +10,7 @@ Detta är ett användbarhetsproblem, inte bevis för förlorad data: ett tidigar
 
 ## Ändring och regressionskontroll
 
-I `live-app.js` fokuseras samma textarea utan `preventScroll`, så webbläsaren får rulla scrollbehållaren till inmatningsfältet. Inga ändringar i själva texten, JA+JA-verifieringen, server-API eller meddelandesändning.
+**Röd UI-CI #42550943961:** en första minimal ändring till vanlig `focus()` misslyckades på det nya Chromium-kravet (`page.waitForFunction`, timeout), trots gröna Node-tester: hashändringshanteraren renderar Inbox och återställer `.live-main` till toppen. Därför gör den slutliga rättningen ett **engångsmarkerat hopp i hashchange-hanteraren efter `render();scrollLiveMainTop()`**. Den fokuserar samma textarea utan att aktivera dubbel-scroll och använder `scrollIntoView({block:'center'})` först när den nya Inbox-vyn har renderats. Markeraren är knuten till samma kontos ID och `sharedSession`, och rensas vid nästa hashändring. Inga ändringar i själva texten, JA+JA-verifieringen, server-API eller meddelandesändning.
 
 I `tests/visual.mjs` läggs två webbläsarassertioner efter verkligt klick och sparat oskickat utkast: från dels **Gemensamma insikter**, dels en **färdig aktivitetstemalek**. Båda kräver att inmatningsfältets `getBoundingClientRect()` överlappar den synliga `.live-main`-porten och att `scrollTop>0`. Samma befintliga Playwright-flöde kontrollerar att inget meddelande skickas automatiskt och fångar nya skärmbilder.
 
