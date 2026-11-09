@@ -14,6 +14,13 @@ Detta är ett användbarhetsproblem, inte bevis för förlorad data: ett tidigar
 
 I `tests/visual.mjs` läggs två webbläsarassertioner efter verkligt klick och sparat oskickat utkast: från dels **Gemensamma insikter**, dels en **färdig aktivitetstemalek**. Båda kräver att inmatningsfältets `getBoundingClientRect()` överlappar den synliga `.live-main`-porten och att `scrollTop>0`. Samma befintliga Playwright-flöde kontrollerar att inget meddelande skickas automatiskt och fångar nya skärmbilder.
 
+## Verifiering efter rättningen
+
+- [Grön UI/Chromium-CI #42551222690](https://github.com/erikjarl/hemmakompassen/actions/runs/42551222690) på produktionsrättningen; [grön slutlig PR-CI #42551264121](https://github.com/erikjarl/hemmakompassen/actions/runs/42551264121) efter dokumentationsändringen.
+- De två faktiska syntetiska klickvägarna (Gemensamma insikter respektive färdig aktivitetskortlek) uppfyller nu kravet att textfältet överlappar synlig `.live-main`-viewport efter navigation, med positiv scrollposition.
+- De nya skärmbilderna `mobile-activity-invite-draft.png` och `mobile-activity-invite-from-deck.png` i CI-artifact har granskats. De visar både redigerbart textfält och **Skicka meddelande** utan att ytterligare manuell scroll behövs; det tidigare toppvyläget är åtgärdat i denna emulerade mobilmiljö.
+- [PR #247](https://github.com/erikjarl/hemmakompassen/pull/247) mergad som [`f0b1f889`](https://github.com/erikjarl/hemmakompassen/commit/f0b1f88992b2400cece1fd5f9c2871f71a76a740). [Pages-deploy #42551717757](https://github.com/erikjarl/hemmakompassen/actions/runs/42551717757) och [filbyteskontroll #42551718317](https://github.com/erikjarl/hemmakompassen/actions/runs/42551718317) godkända. Ny `main`-Chromium-CI är separat och kan ge ytterligare regressionssignal.
+
 ## Begränsningar
 
 Detta är en syntetisk Chromium-körning med mockad familj och server. En faktisk mobil-webbläsare, skärmtangentbord, fysisk iOS/Safari samt två inloggade konton har **inte** verifierats. Bedömningen om detta är en verklig användarobserverad brist bygger på skärmbild + DOM/scroll-data; inga externa användartester har genomförts.
