@@ -116,6 +116,8 @@ test('FUN-01: edits made during a delayed save remain after old write succeeds',
  await settle();
  assert.equal(h.names['parent-a'],'Första versionen');
  assert.equal(h.el('display-name').value,'Andra versionen efter klick');
+ assert.match(h.el('status').textContent,/nyare ändringar.*osparade/);
+ assert.doesNotMatch(h.el('status').textContent,/^Namnet sparat\.$/);
  h.refresh();await settle();
  assert.equal(h.el('display-name').value,'Andra versionen efter klick',
   'The already-written first version must not replace a newer unsubmitted draft');
