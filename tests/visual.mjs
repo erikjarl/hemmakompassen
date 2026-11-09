@@ -1071,6 +1071,29 @@ async function verifyInsightsTwoRolesAndStates(){
       await page.goto(base+'#insikter',{waitUntil:'load'});
       await page.waitForFunction(()=>document.querySelectorAll('.insights-deck .swipe-match-list li').length===3);
       assert.equal(await page.locator('.insights-deck').count(),2);
+      // VIS-00-03: real shared content appears early, while the precise sharing
+      // explanation remains reachable by keyboard instead of dominating mobile.
+      const insightsHeader=await page.locator('.insights-heading').boundingBox();
+      const firstFact=await page.locator('.insights-view .swipe-fact-summary').boundingBox();
+      const viewportHeight=page.viewportSize().height;
+      assert.ok(insightsHeader&&insightsHeader.height<230,
+        'Shared-insights heading must fit a compact first mobile screen: '+role);
+      assert.ok(firstFact&&firstFact.y<viewportHeight*.76,
+        'First server-verified insight overview must begin in the upper viewport: '+role);
+      const disclosure=page.locator('.insights-method');
+      assert.equal(await disclosure.getAttribute('open'),null,
+        'Detailed server/messaging explanation starts collapsed');
+      assert.equal(await disclosure.locator('p').isVisible(),false,
+        'No detailed method paragraph crowds out the first results');
+      await disclosure.locator('summary').focus();
+      await page.keyboard.press('Enter');
+      assert.equal(await disclosure.locator('p').isVisible(),true,
+        'Keyboard expands exact server-verification and voluntary-draft explanation');
+      assert.match(await disclosure.locator('p').innerText(),/serververifierade JA\+JA/);
+      assert.match(await disclosure.locator('p').innerText(),/utan att något skickas automatiskt/);
+      await page.keyboard.press('Enter');
+      assert.equal(await disclosure.locator('p').isVisible(),false);
+      await capture(page,'mobile-'+width+'-insights-first-screen.png');
       const b=await page.locator('#insights-understanding').innerText();
       if(role==='teen'){
         assert.match(b,/Jag vill helst prata färdigt innan någon kommer med råd/);
