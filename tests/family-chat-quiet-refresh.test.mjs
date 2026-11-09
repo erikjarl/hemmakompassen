@@ -94,6 +94,6 @@ test('unchanged unread count never rerenders inbox, change or unavailable state 
 
 test('visible 15-second polling uses quiet mode and mobile scroll is preserved on rerender',()=>{
   assert.match(source,/fetchFamilyChat\(false,\{quiet:true\}\)/);
-  assert.match(source,/const mainScroll=\(page\(\)==='inkorg'\|\|priorityFocus\)\?/,'Inbox scroll stays preserved while consent focus gets the same protection');
+  assert.match(source,/const mainScroll=\(page\(\)==='inkorg'\|\|priorityFocus\|\|focusedSwipeCard\)\s*\?/,'Inbox scroll stays preserved while consent and active swipe-card focus get the same protection');
   assert.match(source,/main\.scrollTop=Math\.min\(mainScroll/);
 });
