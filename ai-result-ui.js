@@ -66,6 +66,10 @@ export function createAiResultExperience({db,config,fetchImpl=fetch,onRender=()=
       // so Promise.race prevents a permanently stuck loading indicator.
       const operation=(async()=>{
       const session=await db.auth.getSession();
+      // Session retrieval may outlive a logout, a consent/result change or a retry.
+      // An aborted request must never start a late Worker analysis or spend quota.
+      if(controller.signal.aborted||account!==userId||requestEpoch!==epoch||pending.get(key)!==controller)
+        return null;
       if(session?.error||session?.data?.session?.user?.id!==account||!session?.data?.session?.access_token)
         throw Error('Din inloggning behöver förnyas.');
       const url=config.aiMediatorUrl.replace(/\/mediate$/,'')+'/analyze';
