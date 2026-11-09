@@ -35,6 +35,10 @@ async function refresh() {
   // after logout or switching users. Refreshing the same user keeps it visible.
   const accountId=user?.id??null;
   if(accountId!==renderedAccountId){
+    // Hide the previous account's family while the new family's RPC is loading.
+    $('display-name').value='';
+    $('members').textContent='';
+    show('unpaired',false);show('family',false);show('waiting',false);show('join-family',false);
     $('new-invite').textContent='';
     $('invite-qr-image').removeAttribute('src');
     $('invite-link').removeAttribute('href');
