@@ -80,10 +80,84 @@ test('a withdrawn activity never becomes an invitation even when a stale overvie
 
 test('old pair response after a session switch cannot create an invitation',async()=>{
   const h=harness();
-  h.c.recheckInboxPair=async()=>{h.c.sharedSession++;return false;};
+  h.c.recheckInboxPair=async()=>{h.c.sharedSession++;h.c.activityInviteBusy=false;return false;};
   await h.c.prepare('aktiviteter-01');
   assert.equal(h.c.activityInviteBusy,false);
   assert.equal(h.c.activityInviteError,'');
   assert.equal(h.c.familyChatDraft,'');
   assert.deepEqual(h.locations,[]);
+});
+
+
+function deferred(){
+  let resolve;
+  const promise=new Promise(done=>{resolve=done;});
+  return {promise,resolve};
+}
+function switchToSecondFamily(h){
+  h.c.user={id:'parent-new'};
+  h.c.sharedSession++;
+  h.c.members=[{user_id:'parent-new',role:'parent'},{user_id:'teen-new',role:'teen'}];
+  // An account refresh clears the old action state before exposing controls.
+  h.c.activityInviteBusy=false;
+  h.c.activityInviteError='';
+  h.c.familyChatDraft='';
+}
+
+test('FUN-02: previous account pair-check completion must not clear current activity loading state',async()=>{
+  const h=harness();
+  const oldCheck=deferred(),newCheck=deferred();
+  let checkCount=0;
+  h.c.recheckInboxPair=()=>++checkCount===1?oldCheck.promise:newCheck.promise;
+  const oldAction=h.c.prepare('aktiviteter-01');
+  assert.equal(h.c.activityInviteBusy,true);
+  switchToSecondFamily(h);
+  const currentAction=h.c.prepare('aktiviteter-01');
+  assert.equal(h.c.activityInviteBusy,true);
+  oldCheck.resolve(false);
+  await oldAction;
+  assert.equal(h.c.activityInviteBusy,true,
+    'A late response from the previous account may not unlock the new action');
+  assert.equal(h.c.activityInviteError,'');
+  assert.equal(h.c.familyChatDraft,'');
+  newCheck.resolve(true);
+  await currentAction;
+  assert.equal(h.c.activityInviteBusy,false);
+  assert.match(h.c.familyChatDraft,/Laga mat tillsammans/);
+  assert.deepEqual(h.locations,['inkorg']);
+});
+
+test('FUN-02: previous account match-RPC completion must not clear current activity loading state',async()=>{
+  const h=harness();
+  const oldMatches=deferred(),newMatches=deferred();
+  let readCount=0;
+  h.c.db.rpc=()=>++readCount===1?oldMatches.promise:newMatches.promise;
+  const oldAction=h.c.prepare('aktiviteter-01');
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(readCount,1,'First action has reached server match lookup');
+  switchToSecondFamily(h);
+  const currentAction=h.c.prepare('aktiviteter-01');
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(readCount,2,'Second family starts an independent match lookup');
+  oldMatches.resolve({data:[{deck_id:'aktiviteter',card_id:'aktiviteter-01',answer:true}],error:null});
+  await oldAction;
+  assert.equal(h.c.activityInviteBusy,true,
+    'Previous match result must not unlock a new account action');
+  assert.equal(h.c.familyChatDraft,'');
+  assert.deepEqual(h.locations,[]);
+  newMatches.resolve({data:[{deck_id:'aktiviteter',card_id:'aktiviteter-01',answer:true}],error:null});
+  await currentAction;
+  assert.equal(h.c.activityInviteBusy,false);
+  assert.match(h.c.familyChatDraft,/Laga mat tillsammans/);
+  assert.deepEqual(h.locations,['inkorg']);
+});
+
+
+test('FUN-02: account refresh clears abandoned activity loading and status',()=>{
+  const start=file.indexOf('async function refresh(){');
+  const end=file.indexOf('// FUN-06:',start);
+  assert.ok(start>=0&&end>start,'Use the real account refresh implementation');
+  const refresh=file.slice(start,end);
+  assert.match(refresh,/sharedSession\+\+;sharedRequest\+\+;activityInviteBusy=false;activityInviteError='';/,
+    'The next account session must discard the previous activity spinner and error');
 });

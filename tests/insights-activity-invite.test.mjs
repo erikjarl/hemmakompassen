@@ -96,6 +96,8 @@ test('account change while authorization request is pending cannot create stale 
   const task=h.state.prepare('aktiviteter-01');
   await new Promise(resolve=>setImmediate(resolve)); // Let the pair-epoch preflight and RPC start.
   h.state.user={id:'another'};
+  // The real account refresh clears the old session's pending action UI.
+  h.state.activityInviteBusy=false;
   finish({data:[{deck_id:'aktiviteter',card_id:'aktiviteter-01',answer:true}],error:null});
   await task;
   assert.equal(h.state.familyChatDraft,'');
