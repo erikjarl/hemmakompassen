@@ -11,14 +11,14 @@ assert.ok(helperStart>=0&&helperEnd>helperStart,'Load actual own-answer readback
 const helpers=source.slice(helperStart,helperEnd);
 
 function harness({upsert=async()=>({error:null}),rpc=async()=>({error:null})}={}){
-  const calls={writes:0,readbacks:0,rpcs:[],renders:0,matches:0,unlocks:0,reviewReturns:0};
+  const calls={writes:0,readbacks:0,rpcs:[],renders:0,matches:0,unlocks:0,reviewReturns:0,reveals:0};
   const state={
     user:{id:'parent'},sharedSession:7,swipeBusy:true,swipeReview:false,swipeSkippedReview:false,swipeSaveError:'',swipeIndex:1,generalReviewEdit:null,
     swipeAnswers:new Map([['general-01',true]]),skippedUnderstanding:new Set(),understandingShares:new Set(),members:[{role:'parent'},{role:'teen'}],
     visibleGeneralIndices:()=>[0,1],swipeCardId:i=>'general-'+String(i+1).padStart(2,'0'),
     GENERAL_CARDS:[{type:'match'},{type:'match'},{type:'match'}],viewerRole:()=>state.user?.id==='teen'?'teen':'parent',
     nextVisibleAfter:i=>i+1,nextSkippedAfter:i=>3,nextUnanswered:i=>i,
-    $:()=>({textContent:''}),render:()=>{calls.renders++;},reopenGeneralReview:()=>{calls.reviewReturns++;},
+    $:()=>({textContent:''}),render:()=>{calls.renders++;},revealNextSwipeCard:()=>{calls.reveals++;},reopenGeneralReview:()=>{calls.reviewReturns++;},
     fetchSwipeMatches:()=>{calls.matches++;},fetchThemeUnlock:()=>{calls.unlocks++;},
     db:{
       from:table=>{assert.ok(['swipe_answers','swipe_skips'].includes(table));
@@ -49,12 +49,14 @@ function harness({upsert=async()=>({error:null}),rpc=async()=>({error:null})}={}
   assert.equal(h.state.swipeAnswers.has('general-02'),false,'Old account result must not contaminate the new account');
   assert.equal(h.calls.renders,0,'Stale response must not redraw another account');
   assert.equal(h.calls.matches,0,'Stale response must not refresh shared results');
+  assert.equal(h.calls.reveals,0,'A stale account must never reveal a next card');
 }
 {
   const h=harness();
   await h.state.run('yes',1,'parent',7);
   assert.equal(h.state.swipeAnswers.get('general-02'),true);
   assert.equal(h.calls.matches,1);
+  assert.equal(h.calls.reveals,1,'Only confirmed saves reveal the next card');
   assert.equal(h.calls.unlocks,1,'A parent completing the 21 visible match cards must recheck unlock');
 }
 {
@@ -74,6 +76,7 @@ function harness({upsert=async()=>({error:null}),rpc=async()=>({error:null})}={}
   assert.equal(h.calls.readbacks,1,'Rejected write checks current persisted answer once');
   assert.equal(h.calls.renders,1);
   assert.equal(h.calls.matches,0);
+  assert.equal(h.calls.reveals,0,'A failed upsert must not advance focus');
 }
 {
   const h=harness();
