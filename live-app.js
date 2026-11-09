@@ -2032,15 +2032,26 @@ async function refreshWholeInbox(){
       return;
     }
     if(viewer!==user?.id||session!==sharedSession||page()!=='inkorg')return;
-    const pending=[fetchFamilyChatUnread()];
+    const pending=[fetchFamilyChatUnread()],skipped=[];
+    // Background requests already in flight are not part of this manual
+    // refresh. Don't claim all sections were refreshed if some were skipped.
     if(!familyChatLoading&&!familyChatLoadingOlder)pending.push(fetchFamilyChat());
-    if(schysstaListEnabled&&!schysstaLoading)pending.push(fetchSchysstaList());
-    if(activityNotificationsEnabled&&!activityNotificationsLoading)pending.push(fetchActivityNotifications());
+    else skipped.push('meddelanden');
+    if(schysstaListEnabled){
+      if(!schysstaLoading)pending.push(fetchSchysstaList());
+      else skipped.push('regelförfrågningar');
+    }
+    if(activityNotificationsEnabled){
+      if(!activityNotificationsLoading)pending.push(fetchActivityNotifications());
+      else skipped.push('aktivitetsaviseringar');
+    }
     await Promise.all(pending);
     if(viewer!==user?.id||session!==sharedSession||page()!=='inkorg')return;
     inboxRefreshStatus=familyChatError||familyChatUnreadError||schysstaError||activityNotificationsError
       ?'Vissa delar av inkorgen kunde inte uppdateras. Kontrollera felmeddelandena och försök igen.'
-      :'Inkorgen är uppdaterad.';
+      :skipped.length
+        ?'Vissa delar hämtades redan i bakgrunden ('+skipped.join(', ')+'). Kontrollera resultatet och uppdatera inkorgen igen vid behov.'
+        :'Inkorgen är uppdaterad.';
   }catch(error){
     if(viewer===user?.id&&session===sharedSession&&page()==='inkorg')
       inboxRefreshStatus='Inkorgen kunde inte uppdateras. Kontrollera anslutningen och försök igen.';
