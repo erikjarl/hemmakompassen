@@ -26,3 +26,7 @@
 ## Spårbarhet
 
 Se PR och CI-länk i `docs/ACTIVE_ROADMAP.md` när dessa är färdigställda.
+
+## Publicering
+
+GitHub Actions-kontrollen `verify-pages-assets.yml` utökas från tre till fyra serverade filer och byte-jämför även `konto.js` mot `main` efter merge. Det ger ett särskilt **distributionsbevis** för rätt konto-JavaScript på GitHub Pages, men bevisar inte att inloggning, sessioner eller två faktiska konton fungerar.
