@@ -1,9 +1,9 @@
 import {IPIP50_V1} from './ipip50-v1.js';
-import {createPrivateIpipRetests} from './ipip50-retest.js?v=20261109-ipip50-deadline1';
+import {createPrivateIpipRetests} from './ipip50-retest.js?v=20261109-ipip50-share-deadline1';
 import {scoreIPIP50} from './ipip50-scoring.js';
-import {buildIPIP50FamilyInsights} from './ipip50-family-insights.js?v=20261109-ipip50-deadline1';
-import {richFamilyReflection} from './ipip50-family-copy.js?v=20261109-ipip50-deadline1';
-import {IPIP50_REFERENCE,IPIP50_PERCENTILE_BANDS,approximateReferencePercentile,describeModeledPercentile,referenceLimits,describeReferenceProfile,formatSv} from './ipip50-reference.js?v=20261109-ipip50-deadline1';
+import {buildIPIP50FamilyInsights} from './ipip50-family-insights.js?v=20261109-ipip50-share-deadline1';
+import {richFamilyReflection} from './ipip50-family-copy.js?v=20261109-ipip50-share-deadline1';
+import {IPIP50_REFERENCE,IPIP50_PERCENTILE_BANDS,approximateReferencePercentile,describeModeledPercentile,referenceLimits,describeReferenceProfile,formatSv} from './ipip50-reference.js?v=20261109-ipip50-share-deadline1';
 import {loadMyIPIP50Answers,saveMyIPIP50Answer} from './ipip50-storage.js';
 
 const esc=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -262,8 +262,8 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false,
     const before=JSON.stringify([shareEnabled,shareVerified,paired,shareError,partnerError]);
     let status;
     try{
-      status=await db.from('personality_share_preferences').select('share_enabled')
-        .eq('user_id',id).eq('instrument_id',IPIP50_V1.id).maybeSingle();
+      status=await withinDeadline(db.from('personality_share_preferences').select('share_enabled')
+        .eq('user_id',id).eq('instrument_id',IPIP50_V1.id).maybeSingle(),'IPIP50_READ_TIMEOUT');
     }catch(e){status={error:e};}
     if(id!==viewer||token!==sequence||request!==consentRequest||shareBusy||saving)return;
     if(status?.error){
@@ -413,7 +413,7 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false,
       shareBusy=true;shareError='';repaint();
       let writeError=null;
       if(action!=='verify-share'){
-        try{const r=await db.rpc('set_my_ipip50_share',{p_share:desired});writeError=r?.error||null;}
+        try{const r=await withinDeadline(db.rpc('set_my_ipip50_share',{p_share:desired}),'IPIP50_SHARE_WRITE_TIMEOUT');writeError=r?.error||null;}
         catch(e){writeError=e;}
       }
       if(token!==sequence||viewer!==id)return true;
@@ -421,8 +421,8 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false,
       // Read the actual self-owned consent row again before showing a result.
       let verification;
       try{
-        verification=await db.from('personality_share_preferences').select('share_enabled')
-          .eq('user_id',id).eq('instrument_id',IPIP50_V1.id).maybeSingle();
+        verification=await withinDeadline(db.from('personality_share_preferences').select('share_enabled')
+          .eq('user_id',id).eq('instrument_id',IPIP50_V1.id).maybeSingle(),'IPIP50_READ_TIMEOUT');
       }catch(e){verification={error:e};}
       if(token!==sequence||viewer!==id)return true;
       shareBusy=false;paired=null;
