@@ -189,7 +189,9 @@ $('name-form').addEventListener('submit',e=>{e.preventDefault();run(async isCurr
   // If the user continued editing after pressing Save, the newer draft wins
   // in the input; only the submitted snapshot has been confirmed as saved.
   nameDraftDirty=$('display-name').value.trim()!==requestedName;
-  status('Namnet sparat.');
+  status(nameDraftDirty
+    ?'Den tidigare namnversionen sparades. Dina nyare ändringar i fältet är fortfarande osparade.'
+    :'Namnet sparat.');
 });});
 $('create-family').addEventListener('click',()=>run(async isCurrent=>{const {error}=await client.rpc('start_family',{p_role:$('role').value});if(!isCurrent())return;if(error)throw error;status('Familjen skapad. Skapa en kod för att bjuda in den andra personen.');}));
 $('make-invite').addEventListener('click',()=>run(async isCurrent=>{
