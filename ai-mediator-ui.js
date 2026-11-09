@@ -26,6 +26,7 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
   let chats = [];
   let activeChatId = null;
   let loading = false;
+  let activeChatReady = false; // Only verified or newly created transcripts can receive new messages.
   let historyError = '';
   let contextSections = [];
   let contextError = '';
@@ -129,7 +130,7 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
       unconfirmedChatCreate=false; // Verified read reconciles a timed-out create.
       if (!chats.some(x=>x.id===activeChatId)) activeChatId = chats[0]?.id || null;
       if (activeChatId && !await openChat(activeChatId, true)) return false;
-      if (!activeChatId) turns = [];
+      if (!activeChatId) { turns = []; activeChatReady = false; }
       return true;
     } catch(err) {
       if (epoch===epochAtStart && userId===account && request===listRequest) historyError=err?.message||'Samtalslistan kunde inte laddas.';
@@ -167,6 +168,7 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
         throw Error('Samtal kunde inte skapas.');
       chats=[data.chat,...chats];
       activeChatId=data.chat.id;
+      activeChatReady=true; // Successful creation starts with an intentionally empty transcript.
       turns=[];error='';historyError='';notify();
       return data.chat.id;
     }catch(e){
@@ -189,6 +191,7 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
     // User-initiated switches must supersede both the list and its read.
     const myEpoch=epoch,account=userId,request=preserveLoading?listRequest:++listRequest;
     activeChatId=chatId;
+    activeChatReady=false;
     // A selected chat is not the previously verified transcript. Remove stale
     // private messages immediately, including when the new read fails.
     turns=[];
@@ -199,6 +202,7 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
       if(myEpoch!==epoch || userId!==account || activeChatId!==chatId || request!==listRequest)return false;
       if(!Array.isArray(result.messages) || result.messages.length>40 || result.messages.some(m=>!['user','assistant','safety'].includes(m.role)||typeof m.body!=='string'))throw new Error('Samtalet har ogiltigt innehåll.');
       turns=result.messages.map(m=>({role:m.role,text:m.body}));
+      activeChatReady=true;
       return true;
     }catch(e){
       // A failed read for an older selection must not show an error in the
@@ -226,7 +230,7 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
       await callApi('/chats/'+encodeURIComponent(id),'DELETE',account);
       if(myEpoch!==epoch || account!==userId)return false;
       chats=chats.filter(c=>c.id!==id);
-      activeChatId=null;turns=[];draft='';error='';remaining=null;
+      activeChatId=null;activeChatReady=false;turns=[];draft='';error='';remaining=null;
       // Once the write is confirmed, normal read-only navigation is safe.
       // openChat synchronously sets loading=true while it fetches the next one.
       deletingChat=false;
@@ -272,6 +276,7 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
     turns = [];
     chats = [];
     activeChatId = null;
+    activeChatReady = false;
     loading = false;
     historyError = '';
     contextSections = [];
@@ -348,7 +353,7 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
       + '<textarea id="mediator-input" rows="4" maxlength="2000" placeholder="Exempel: Min förälder tycker att jag använder mobilen för mycket…"'
       + (sending||creatingChat||deletingChat ? ' disabled' : '') + '>' + h(draft) + '</textarea>'
       + '<div class="mediator-actions"><span class="live-muted" id="mediator-char-count">' + count + ' / 2000 tecken</span>'
-      + '<button class="live-button" type="submit"' + (sending || creatingChat || deletingChat || (historyEnabled&&!activeChatId&&(loading||unconfirmedChatCreate)) || !draft.trim() ? ' disabled' : '') + '>Skicka testmeddelande</button>'
+      + '<button class="live-button" type="submit"' + (sending || creatingChat || deletingChat || (historyEnabled&&(loading||unconfirmedChatCreate||(activeChatId&&!activeChatReady))) || !draft.trim() ? ' disabled' : '') + '>Skicka testmeddelande</button>'
       + (historyEnabled ? '<button class="mediator-clear" type="button" id="mediator-delete"' + (!activeChatId || sending || loading || creatingChat || deletingChat ? ' disabled' : '') + '>Radera detta samtal</button>'
         : '<button class="mediator-clear" type="button" id="mediator-clear"' + (!turns.length && !draft && !error || sending ? ' disabled' : '') + '>Rensa chatten</button>') + '</div>'
       + '</form><p role="status" id="mediator-status"' + (error ? ' class="mediator-error"' : '') + '>'
@@ -357,7 +362,8 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
       + '</div></div>';
   }
   async function submit() {
-    if (!enabled || !userId || sending || creatingChat || deletingChat || (historyEnabled && loading && !activeChatId)) return false;
+    if (!enabled || !userId || sending || creatingChat || deletingChat ||
+        (historyEnabled && (loading || unconfirmedChatCreate || (activeChatId && !activeChatReady)))) return false;
     const message = draft.trim();
     if (!message || message.length > 2000) return false;
     const requestEpoch = epoch;
@@ -420,5 +426,5 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
     }
   }
   return { render, reset, clear, input, submit, loadList, loadContextStatus, setProjectContext, createChat, openChat, deleteChat,
-    getState: () => ({ userId, sending, creatingChat, deletingChat, unconfirmedChatCreate, draft, error, remaining, turns: turns.map(x => ({ ...x })), chats:chats.map(c=>({...c})),activeChatId,historyError,contextSections:[...contextSections],contextError,includeProjectContext }) };
+    getState: () => ({ userId, sending, creatingChat, deletingChat, unconfirmedChatCreate, draft, error, remaining, turns: turns.map(x => ({ ...x })), chats:chats.map(c=>({...c})),activeChatId,activeChatReady,historyError,contextSections:[...contextSections],contextError,includeProjectContext }) };
 }
