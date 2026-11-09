@@ -140,7 +140,7 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
   async function createChat(fromSubmit=false) {
     // Repeated taps while the POST is pending must never create duplicate
     // blank chats. A reply submission may enter here during its own busy state.
-    if(!historyEnabled || !userId || creatingChat || (sending&&!fromSubmit))return false;
+    if(!historyEnabled || !userId || creatingChat || loading || (sending&&!fromSubmit))return false;
     if(unconfirmedChatCreate){
       historyError='Kontrollera samtalslistan innan du skapar ett nytt samtal.';
       notify();
@@ -213,7 +213,7 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
     }
   }
   async function deleteChat() {
-    if (!historyEnabled || !activeChatId || !userId || sending || creatingChat) return false;
+    if (!historyEnabled || !activeChatId || !userId || sending || creatingChat || loading) return false;
     listRequest++; // A pending list fetch may not restore a just-deleted chat.
     const account=userId,myEpoch=epoch,id=activeChatId;
     try {
@@ -283,7 +283,7 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
         + '<p>Den privata AI-tjänsten håller på att anslutas. Inga samtal skickas innan anslutningen är verifierad.</p></section>';
     }
     const historyBar = historyEnabled
-      ? '<section class="mediator-history"><div class="mediator-history-heading"><h2>Privata samtal</h2><button type="button" class="mediator-clear" id="mediator-new"'+(sending||creatingChat||unconfirmedChatCreate?' disabled':'')+'>+ Nytt samtal</button></div>'
+      ? '<section class="mediator-history"><div class="mediator-history-heading"><h2>Privata samtal</h2><button type="button" class="mediator-clear" id="mediator-new"'+(sending||loading||creatingChat||unconfirmedChatCreate?' disabled':'')+'>+ Nytt samtal</button></div>'
         + (loading?'<p>Hämtar dina samtal…</p>':'')
         + (historyError?'<p role="alert" class="mediator-error">'+h(historyError)+'</p><button type="button" class="mediator-clear" id="mediator-retry-list"'+(sending||loading?' disabled':'')+'>Försök hämta samtal igen</button>':'')
         + (chats.length ? '<div class="mediator-thread-list" role="group" aria-label="Dina samtal">'
@@ -327,7 +327,7 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
       + '<textarea id="mediator-input" rows="4" maxlength="2000" placeholder="Exempel: Min förälder tycker att jag använder mobilen för mycket…"'
       + (sending||creatingChat ? ' disabled' : '') + '>' + h(draft) + '</textarea>'
       + '<div class="mediator-actions"><span class="live-muted" id="mediator-char-count">' + count + ' / 2000 tecken</span>'
-      + '<button class="live-button" type="submit"' + (sending || creatingChat || (historyEnabled&&!activeChatId&&unconfirmedChatCreate) || !draft.trim() ? ' disabled' : '') + '>Skicka testmeddelande</button>'
+      + '<button class="live-button" type="submit"' + (sending || creatingChat || (historyEnabled&&!activeChatId&&(loading||unconfirmedChatCreate)) || !draft.trim() ? ' disabled' : '') + '>Skicka testmeddelande</button>'
       + (historyEnabled ? '<button class="mediator-clear" type="button" id="mediator-delete"' + (!activeChatId || sending ? ' disabled' : '') + '>Radera detta samtal</button>'
         : '<button class="mediator-clear" type="button" id="mediator-clear"' + (!turns.length && !draft && !error || sending ? ' disabled' : '') + '>Rensa chatten</button>') + '</div>'
       + '</form><p role="status" id="mediator-status"' + (error ? ' class="mediator-error"' : '') + '>'
@@ -336,7 +336,7 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
       + '</div></div>';
   }
   async function submit() {
-    if (!enabled || !userId || sending || creatingChat) return false;
+    if (!enabled || !userId || sending || creatingChat || (historyEnabled && loading && !activeChatId)) return false;
     const message = draft.trim();
     if (!message || message.length > 2000) return false;
     const requestEpoch = epoch;
