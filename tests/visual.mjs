@@ -3484,6 +3484,9 @@ async function verifyMediatorConversationLifecycle(){
       m.mediatorFixture.failNextOpen=true;
       await m.page.locator('[data-mediator-open="'+firstId+'"]').click();
       await m.page.getByText('Tillfälligt fel vid läsning av samtalet.').waitFor();
+      assert.match(await m.page.locator('.mediator-empty').innerText(),
+        /Samtalshistoriken kunde inte laddas/,'Failed history read must not claim chat is empty');
+      await capture(m.page,'fun-05-mediator-read-error-'+role+'.png');
       assert.equal(await input.inputValue(),failedReadDraft,
         'A failed chat read must not discard an unsent draft');
       assert.equal(await submit.isDisabled(),true,
@@ -3515,6 +3518,8 @@ async function verifyMediatorConversationLifecycle(){
         'Synthetic Worker GET is held before response');
       assert.equal(await submit.isDisabled(),true,
         'Send is disabled while the selected chat history is pending');
+      assert.match(await m.page.locator('.mediator-empty').innerText(),
+        /Hämtar samtalshistoriken/,'Pending history read must not claim chat is empty');
       assert.equal(await input.inputValue(),pendingDraft,
         'Draft remains in the textarea while history is loading');
       await m.page.evaluate(()=>document.querySelector('#mediator-form')
