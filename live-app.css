@@ -899,3 +899,46 @@
     transition:none;
   }
 }
+
+/* VIS-00-06: category selection is available but does not consume the
+   first screen of long thematic decks on small phones. */
+.swipe-theme-play .swipe-category-filter{
+  box-sizing:border-box;
+  border:1px solid #565c70;
+  border-radius:12px;
+  padding:9px 12px;
+  background:#1c2231;
+}
+.swipe-theme-play .swipe-category-filter summary{
+  cursor:pointer;
+  min-height:28px;
+  line-height:1.4;
+  color:#ffd083;
+  font-size:14px;
+  font-weight:650;
+  overflow-wrap:anywhere;
+}
+.swipe-theme-play .swipe-category-filter summary:focus-visible{
+  outline:3px solid #f59e0b;
+  outline-offset:4px;
+  border-radius:4px;
+}
+.swipe-theme-play .swipe-category-options{
+  padding-top:12px;
+}
+@media(max-width:800px){
+  .swipe-theme-play>.swipe-heading>.swipe-theme-back{
+    min-height:44px;
+    padding:8px 12px;
+    font-size:.91rem;
+  }
+  .swipe-theme-play>.swipe-heading>p{
+    margin:3px 0 7px;
+    font-size:.93rem;
+    line-height:1.4;
+  }
+  .swipe-play-view.swipe-theme-play .swipe-category-filter{
+    margin:7px 0 0;
+    padding:8px 12px;
+  }
+}
