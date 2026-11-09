@@ -328,7 +328,7 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
       + (sending||creatingChat ? ' disabled' : '') + '>' + h(draft) + '</textarea>'
       + '<div class="mediator-actions"><span class="live-muted" id="mediator-char-count">' + count + ' / 2000 tecken</span>'
       + '<button class="live-button" type="submit"' + (sending || creatingChat || (historyEnabled&&!activeChatId&&(loading||unconfirmedChatCreate)) || !draft.trim() ? ' disabled' : '') + '>Skicka testmeddelande</button>'
-      + (historyEnabled ? '<button class="mediator-clear" type="button" id="mediator-delete"' + (!activeChatId || sending ? ' disabled' : '') + '>Radera detta samtal</button>'
+      + (historyEnabled ? '<button class="mediator-clear" type="button" id="mediator-delete"' + (!activeChatId || sending || loading || creatingChat ? ' disabled' : '') + '>Radera detta samtal</button>'
         : '<button class="mediator-clear" type="button" id="mediator-clear"' + (!turns.length && !draft && !error || sending ? ' disabled' : '') + '>Rensa chatten</button>') + '</div>'
       + '</form><p role="status" id="mediator-status"' + (error ? ' class="mediator-error"' : '') + '>'
       + h(status) + '</p>'
