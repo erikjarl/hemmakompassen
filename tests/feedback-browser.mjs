@@ -6,6 +6,9 @@ import {chromium} from 'playwright';
 const appHtml = readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const widget = appHtml.match(/<button type="button" id="hk-feedback-open"[\s\S]*?<\/dialog>/)?.[0];
 assert.ok(widget,'The shared feedback widget must be present in the actual app markup');
+const accountHtml = readFileSync(new URL('../konto.html',import.meta.url),'utf8');
+const accountWidget = accountHtml.match(/<button type="button" id="hk-feedback-open"[\s\S]*?<\/dialog>/)?.[0];
+assert.ok(accountWidget, 'The same tester report control must be present on the account page');
 const js = readFileSync(new URL('../feedback.js',import.meta.url),'utf8');
 const css = readFileSync(new URL('../feedback.css',import.meta.url),'utf8');
 const browser = await chromium.launch({headless:true,args:['--no-sandbox']});
@@ -72,6 +75,21 @@ try {
   assert.equal(await page.locator('[name="description"]').inputValue(),'');
   await page.locator('#hk-feedback-close').click();
   assert.equal(await page.locator('#hk-feedback-dialog').evaluate(el=>el.open),false);
+  // Account page lacks the swipe-nav; its button must still fit the small viewport.
+  const accountPage = await browser.newPage({viewport:{width:320,height:700}});
+  await accountPage.route('https://account.test/**', route => route.fulfill({
+    status:200, contentType:'text/html; charset=utf-8',
+    body:'<!doctype html><html lang="sv"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><body>'+accountWidget+'</body></html>'
+  }));
+  await accountPage.goto('https://account.test/hk/konto.html');
+  await accountPage.addStyleTag({content:css});
+  const accountButton = accountPage.locator('#hk-feedback-open');
+  const accountBox = await accountButton.boundingBox();
+  assert.ok(accountBox && accountBox.width <= 56 && accountBox.x >= 0
+    && accountBox.x + accountBox.width <= 320 && accountBox.y + accountBox.height <= 700-8,
+    'Account page report control remains usable at 320px without a bottom nav');
+  assert.equal(await accountButton.getAttribute('aria-label'),'Rapportera fel eller innehåll');
+  await accountPage.close();
   console.log('PASS: 320/390px compact accessible report button, bottom-nav clearance, mock auth/insert and modal');
 } finally {
   await browser.close();
