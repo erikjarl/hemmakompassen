@@ -942,3 +942,46 @@
     padding:8px 12px;
   }
 }
+
+/* VIS-00-08: small screens should show the first theme question rather
+   than a dominant primary button and a repeated eyebrow in the header.
+   Do not shrink the private importance control or Ja/Nej touch targets. */
+@media(max-width:800px){
+  .swipe-theme-play>.swipe-heading{
+    margin-bottom:8px;
+  }
+  .swipe-theme-play>.swipe-heading>.swipe-theme-back{
+    display:inline-flex;
+    align-items:center;
+    justify-content:flex-start;
+    min-height:44px;
+    margin:0 0 2px;
+    padding:5px 0;
+    border:0;
+    border-radius:4px;
+    background:transparent;
+    color:#f8c66b;
+    box-shadow:none;
+    font-size:.91rem;
+    font-weight:650;
+    text-decoration:underline;
+    text-underline-offset:3px;
+  }
+  .swipe-theme-play>.swipe-heading>.swipe-theme-back:hover{
+    background:transparent;
+    color:#ffdc9e;
+  }
+  .swipe-theme-play>.swipe-heading>.swipe-theme-back:focus-visible{
+    outline:3px solid #f59e0b;
+    outline-offset:3px;
+  }
+  .swipe-theme-play>.swipe-heading>.swipe-eyebrow{
+    display:none;
+  }
+  .swipe-theme-play>.swipe-heading>h1{
+    margin:2px 0 4px;
+  }
+  .swipe-theme-play>.swipe-heading>p{
+    margin:2px 0 5px;
+  }
+}
