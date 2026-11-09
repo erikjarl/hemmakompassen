@@ -130,7 +130,6 @@ function percentileChart(self,other=null){
   return '<div class="pf-percentile-chart">'+
     '<div class="pf-legend" style="--pf-own:#55d6d2;--pf-other:#f8b55b"><span class="pf-legend-own">Din profil</span>'+
     (other?'<span class="pf-legend-other">Den andras profil</span>':'')+'</div>'+
-    '<p class="pf-chart-short-note">P≈ visar en modellberäknad jämförelse med amerikanska vuxna – inte en svensk eller tonårsvaliderad norm.</p>'+
     rows+
     '<details class="pf-chart-help"><summary>Färgzoner och hur percentilerna ska tolkas</summary>'+
     '<p class="pf-chart-description"><strong>Modellberäknad percentil (P≈):</strong> P≈20 innebär lägre placering än ungefär 80 % i en hypotetisk vuxenfördelning, men kan samtidigt ligga inom ±1 SD från medelvärdet. Det är inte svensk eller tonårsvaliderad norm.</p>'+
