@@ -1860,8 +1860,9 @@ async function markSchysstaRead(id){
   if(!await preflightSchysstaWrite(viewer,session)||schysstaSaving.has(id))return;
   schysstaSaving.add(id);
   let error;try{({error}=await db.rpc('mark_schyssta_notification_read',{p_notification_id:id}));}catch(e){error=e;}
-  schysstaSaving.delete(id);
+  // Another account/family session owns its own pending actions.
   if(user?.id!==viewer||session!==sharedSession)return;
+  schysstaSaving.delete(id);
   if(error){schysstaMessage='Det gick inte att markera meddelandet som läst.';render();return;}
   await fetchSchysstaList();
 }
@@ -1887,8 +1888,10 @@ async function withdrawSchysstaRule(id){
   if(!await preflightSchysstaWrite(viewer,session)||schysstaSaving.has(id)||schysstaEndTarget!==id)return;
   schysstaSaving.add(id);
   let error;try{({error}=await db.rpc('withdraw_schyssta_rule',{p_agreement_id:id}));}catch(e){error=e;}
-  schysstaSaving.delete(id);schysstaEndTarget=null;
+  // Ignore late responses from a previous family, and keep a newer dialog.
   if(user?.id!==viewer||session!==sharedSession)return;
+  schysstaSaving.delete(id);
+  if(schysstaEndTarget===id)schysstaEndTarget=null;
   if(error){schysstaMessage='Det gick inte att avsluta överenskommelsen.';render();return;}
   schysstaMessage='Överenskommelsen är avslutad och finns kvar i historiken.';
   await fetchSchysstaList();
@@ -1904,10 +1907,14 @@ async function submitManualSchysstaRule(){
   schysstaSubmitting=true;schysstaMessage='Skickar förslaget…';render();
   let error;try{({error}=schysstaEditTarget?await db.rpc('propose_schyssta_change',{p_agreement_id:schysstaEditTarget,p_body:body,p_request_key:requestKey}):await db.rpc('propose_manual_schyssta_rule',{p_body:body,p_request_key:requestKey}));}
   catch(e){error=e;}
-  schysstaSubmitting=false;
   if(user?.id!==viewer||sharedSession!==session)return;
+  schysstaSubmitting=false;
   if(error){schysstaMessage='Kunde inte skicka förslaget. Kontrollera anslutningen och försök igen.';render();return;}
-  schysstaDraft='';schysstaDraftKey=null;schysstaEditTarget=null;schysstaDraftOpen=false;
+  // The editable textarea stays enabled while submitting. If the user has
+  // started a different draft meanwhile, never delete that newer text.
+  if(schysstaDraft===draftBefore&&schysstaEditTarget===editBefore&&schysstaDraftKey===requestKey){
+    schysstaDraft='';schysstaDraftKey=null;schysstaEditTarget=null;schysstaDraftOpen=false;
+  }
   schysstaMessage='Förslaget är skickat. Ni behöver båda godkänna det innan det blir en överenskommelse.';
   await fetchSchysstaList();
 }
