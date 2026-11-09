@@ -13,7 +13,7 @@ try {
   const page = await browser.newPage({viewport:{width:390,height:844}});
   await page.route('https://site.test/**',route=>route.fulfill({
     status:200,contentType:'text/html',
-    body:'<!doctype html><html lang="sv"><meta name="viewport" content="width=device-width,initial-scale=1"><body><div class="live-layout"><nav class="live-mobile" style="position:fixed;bottom:0;height:60px;width:100%"></nav></div>'+widget+'</body></html>'
+    body:'<!doctype html><html lang="sv"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><body><div class="live-layout"><nav class="live-mobile" style="position:fixed;bottom:0;height:60px;width:100%"></nav></div>'+widget+'</body></html>'
   }));
   await page.goto('https://site.test/hemmakompassen/index.html#kommunikation/plan');
   await page.addStyleTag({content:css});
