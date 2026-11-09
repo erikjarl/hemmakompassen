@@ -61,7 +61,7 @@ function harness({delayInvite=false}={}){
     createClient:()=>client,document:{getElementById:el,querySelectorAll:()=>[]},
     window:{HEMMAKOMPASSEN_BACKEND:{}},
     location:{href:'https://example.test/konto.html',hash:'',pathname:'/konto.html',search:'',assign(){}},
-    URL,setTimeout,crypto,qrcode
+    URL,setTimeout,clearTimeout,crypto,qrcode
   },{filename:'konto.js'});
   return {
     el,gate,

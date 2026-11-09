@@ -14,7 +14,7 @@ const auth={
  onAuthStateChange(){},signOut:async()=>({error:null})
 };
 const client={auth,from:()=>({select:()=>({eq:()=>({maybeSingle:async()=>({data:null})})})}),rpc:async()=>({data:[]})};
-vm.runInNewContext(source,{createClient:()=>client,window:{HEMMAKOMPASSEN_BACKEND:{}},document:{getElementById:el,querySelectorAll:()=>[]},location:{href:'https://example.com/konto.html',hash:'',assign:v=>destination=v},URL,setTimeout});
+vm.runInNewContext(source,{createClient:()=>client,window:{HEMMAKOMPASSEN_BACKEND:{}},document:{getElementById:el,querySelectorAll:()=>[]},location:{href:'https://example.com/konto.html',hash:'',assign:v=>destination=v},URL,setTimeout,clearTimeout});
 const tick=()=>new Promise(r=>setImmediate(r));
 async function submit(id){el(id).submit({preventDefault(){}});await tick();await tick();}
 await tick();

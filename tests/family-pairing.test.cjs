@@ -57,7 +57,7 @@ test('a singleton account can enter a code and becomes paired after acceptance',
     window:{HEMMAKOMPASSEN_BACKEND:{}},
     document:{getElementById:element,querySelectorAll:()=>[]},
     location:{href:'https://example.com/konto.html',hash:'',assign(){}},
-    URL,setTimeout,crypto
+    URL,setTimeout,clearTimeout,crypto
   });
   const tick=()=>new Promise(resolve=>setImmediate(resolve));
   await tick();await tick();
@@ -124,7 +124,7 @@ test('a QR invitation stays on the recipient device, pre-fills the code and need
   vm.runInNewContext(source,{
     createClient:()=>client,window:{HEMMAKOMPASSEN_BACKEND:{}},
     document:{getElementById:element,querySelectorAll:()=>[]},
-    location,URL,setTimeout,crypto:cryptoMock,qrcode:qrContext.qrcode
+    location,URL,setTimeout,clearTimeout,crypto:cryptoMock,qrcode:qrContext.qrcode
   });
   await tick();await tick();
   element('make-invite').click();
@@ -171,7 +171,7 @@ test('a QR invitation stays on the recipient device, pre-fills the code and need
   vm.runInNewContext(source,{
     createClient:()=>recipientClient,window:{HEMMAKOMPASSEN_BACKEND:{}},
     document:{getElementById:recipientElement,querySelectorAll:()=>[]},
-    location:recipientLocation,URL,setTimeout,crypto:cryptoMock,qrcode:qrContext.qrcode,
+    location:recipientLocation,URL,setTimeout,clearTimeout,crypto:cryptoMock,qrcode:qrContext.qrcode,
     history:{replaceState(){cleaned=true;}}
   });
   await tick();await tick();
