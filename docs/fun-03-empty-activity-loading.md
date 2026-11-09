@@ -18,4 +18,6 @@ När den inloggade användaren öppnar Inkorg med en verifierad familjeparning o
 
 [Röd CI #42552871411](https://github.com/erikjarl/hemmakompassen/actions/runs/42552871411) reproducerade **två underkända av 445 tester** (443 PASS) i fall 1 och 2, innan produktionsfixen. Fixen kompletterar den oförändrade snapshot-vägen med enbart den nödvändiga förgrundsomrenderingen för tom aviseringlista; tysta bakgrundshämtningar förblir orörda.
 
+**Utfall 9 november:** [PR #248](https://github.com/erikjarl/hemmakompassen/pull/248) **mergad** som [`66d76e1`](https://github.com/erikjarl/hemmakompassen/commit/66d76e141979825ee02931439b74168bd0b45b77). [Slutlig PR-CI #42553096975](https://github.com/erikjarl/hemmakompassen/actions/runs/42553096975): **446/446 Node-tester PASS**, och webbläsarsteg med syntetisk Chromium **PASS**. Tidigare röd körning med 2/445 FAIL styrker reproduktion före produktionsändringen. Verifiering av GitHub Pages-publiceringen efter merge redovisas separat.
+
 **Begränsning:** Node-VM med simulerade tjänstesvar är inte en verklig inloggning eller fysisk Safari-verifiering. Ingen riktig användardata eller konto ändrades. Slutlig grön PR-/main-CI och driftsättning redovisas separat när faktiskt bekräftade.
