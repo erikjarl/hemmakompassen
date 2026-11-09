@@ -21,6 +21,7 @@ function accountHarness({holdUser=false,holdProfile=false,holdMembers=false}={})
         value:'',textContent:'',hidden:false,open:false,
         classList:{toggle(_name,hide){element.hidden=hide;}},
         addEventListener(type,fn){element[type]=fn;},
+        removeAttribute(name){delete element[name];},
         reset(){},focus(){}
       };
       nodes.set(id,element);
