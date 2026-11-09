@@ -3185,6 +3185,76 @@ async function verifyAiReflectionRetryAndRoutes(){
       await contact.waitFor();
       assert.equal(await contact.evaluate(node=>node.open),true);
       records.push({role,step:'swipe: contact exercise deeplink',status:'PASS'});
+
+      // FUN-02/FUN-05: an AI retry in an actual theme deck can finish while
+      // the viewer is using their own saved-answer list. The existing
+      // shared-results refresh protection must also apply to this path.
+      await m.page.goto(base+'#swipe',{waitUntil:'load'});
+      await m.page.locator('[data-theme-open="samtal"]').click();
+      await m.page.locator('#swipe-card').waitFor();
+      await m.page.locator('[data-swipe="yes"]').click();
+      const themeReview=m.page.locator('#swipe-private-review');
+      await themeReview.locator('details > summary').waitFor();
+      const themePanel=m.page.locator('.swipe-results .ai-result-panel');
+      await themePanel.locator('.ai-result-prose').waitFor();
+      assert.ok(m.aiRequests.some(request=>request.kind==='swipe'&&request.scope==='samtal'),
+        'FUN-02: an actual theme results panel requests analysis of only its own scope');
+
+      // A keyboard user can be focused on an expanded details summary, not
+      // only the search input. Previously this focused summary was replaced.
+      m.aiFixture.holdNext=true;
+      await themePanel.locator('[data-ai-analysis-retry="swipe:samtal"]').click();
+      for(let i=0;i<80&&typeof m.aiFixture.release!=='function';i++)await sleep(25);
+      assert.equal(typeof m.aiFixture.release,'function',
+        'FUN-02: intercepted theme Worker call must be held for summary-focus test');
+      await themeReview.locator('details > summary').click();
+      await themeReview.locator('details > summary').focus();
+      const beforeSummary=await m.page.evaluate(()=>{
+        const main=document.querySelector('.live-main');
+        main.scrollTop=Math.min(150,Math.max(0,main.scrollHeight-main.clientHeight));
+        document.querySelector('#swipe-private-review details > summary').focus({preventScroll:true});
+        return main.scrollTop;
+      });
+      m.aiFixture.release();
+      await themePanel.locator('.ai-result-prose').waitFor();
+      assert.equal(await themeReview.locator('details').evaluate(el=>el.open),true,
+        'FUN-02: theme private review remains expanded when a delayed AI reply arrives');
+      assert.equal(await themeReview.locator('details > summary').evaluate(el=>document.activeElement===el),true,
+        'FUN-02: delayed AI reply preserves focus on the expanded theme review summary');
+      assert.ok(Math.abs((await m.page.locator('.live-main').evaluate(el=>el.scrollTop))-beforeSummary)<=3,
+        'FUN-02: delayed AI reply preserves theme review summary scroll position');
+      records.push({role,step:'theme: delayed AI reply preserves focused summary',status:'PASS'});
+
+      // Repeat with a search and answer filter; a typical ongoing review
+      // must not lose its unsubmitted search when the remote analysis lands.
+      m.aiFixture.holdNext=true;
+      await themePanel.locator('[data-ai-analysis-retry="swipe:samtal"]').click();
+      for(let i=0;i<80&&typeof m.aiFixture.release!=='function';i++)await sleep(25);
+      assert.equal(typeof m.aiFixture.release,'function',
+        'FUN-02: intercepted Worker call must be held for themed search-focus test');
+      const themeSearch=themeReview.locator('#private-theme-review-search');
+      const themeAnswerFilter=themeReview.locator('#private-theme-review-answer');
+      await themeAnswerFilter.selectOption('yes');
+      await themeSearch.fill('veckan');
+      const beforeSearch=await m.page.evaluate(()=>{
+        const main=document.querySelector('.live-main');
+        main.scrollTop=Math.min(150,Math.max(0,main.scrollHeight-main.clientHeight));
+        document.querySelector('#private-theme-review-search').focus({preventScroll:true});
+        return main.scrollTop;
+      });
+      m.aiFixture.release();
+      await themePanel.locator('.ai-result-prose').waitFor();
+      assert.equal(await themeReview.locator('details').evaluate(el=>el.open),true);
+      assert.equal(await themeSearch.inputValue(),'veckan');
+      assert.equal(await themeAnswerFilter.inputValue(),'yes');
+      assert.equal(await themeSearch.evaluate(el=>document.activeElement===el),true);
+      assert.ok(Math.abs((await m.page.locator('.live-main').evaluate(el=>el.scrollTop))-beforeSearch)<=3,
+        'FUN-02: delayed theme AI reply preserves private search scroll position');
+      assert.match(await themeReview.locator('#private-theme-review-count').innerText(),/Visar 1 av 1/,
+        'FUN-02: the saved answer search remains filtered after AI completion');
+      await themeReview.scrollIntoViewIfNeeded();
+      await capture(m.page,'fun-02-ai-theme-private-review-'+role+'.png');
+      records.push({role,step:'theme: delayed AI reply preserves private search/filter/focus',status:'PASS'});
     }finally{
       await m.context.close();
     }
