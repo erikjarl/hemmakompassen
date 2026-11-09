@@ -3063,7 +3063,8 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
   // This fixture is deliberately isolated per browser context: two roles are
   // separate synthetic sessions, never real Supabase users or saved messages.
   const mediatorFixture={
-    chats:[], messages:new Map(), nextChat:0, failNextOpen:false, failNextSend:false
+    chats:[], messages:new Map(), nextChat:0, failNextOpen:false, failNextSend:false,
+    holdNextOpen:false, releaseOpen:null, holdNextDelete:false, releaseDelete:null
   };
   if(aiMediator){
     await context.route('https://hemmakompassen-ai-medlare.erikbertiljarl.workers.dev/api/ai/**',async route=>{
@@ -3084,6 +3085,11 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
         result={chat};
       }else if(pathname.startsWith('/api/ai/chats/')&&method==='GET'){
         const id=pathname.slice('/api/ai/chats/'.length);
+        if(mediatorFixture.holdNextOpen){
+          mediatorFixture.holdNextOpen=false;
+          await new Promise(resolve=>{mediatorFixture.releaseOpen=resolve;});
+          mediatorFixture.releaseOpen=null;
+        }
         if(mediatorFixture.failNextOpen){
           mediatorFixture.failNextOpen=false;status=503;
           result={error:'Tillfälligt fel vid läsning av samtalet.'};
@@ -3095,6 +3101,11 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
         }
       }else if(pathname.startsWith('/api/ai/chats/')&&method==='DELETE'){
         const id=pathname.slice('/api/ai/chats/'.length);
+        if(mediatorFixture.holdNextDelete){
+          mediatorFixture.holdNextDelete=false;
+          await new Promise(resolve=>{mediatorFixture.releaseDelete=resolve;});
+          mediatorFixture.releaseDelete=null;
+        }
         if(!mediatorFixture.messages.has(id)){
           status=404;result={error:'Samtalet finns inte.'};
         }else{
@@ -3468,16 +3479,55 @@ async function verifyMediatorConversationLifecycle(){
       assert.equal(await m.page.locator('[data-mediator-open]').count(),2);
       rows.push({role,step:'new conversation and isolated transcript',status:'PASS'});
       // A failed GET must not continue showing a different private transcript.
+      const failedReadDraft='Oskickat utkast under läsfel – '+role;
+      await input.fill(failedReadDraft);
       m.mediatorFixture.failNextOpen=true;
       await m.page.locator('[data-mediator-open="'+firstId+'"]').click();
       await m.page.getByText('Tillfälligt fel vid läsning av samtalet.').waitFor();
+      assert.equal(await input.inputValue(),failedReadDraft,
+        'A failed chat read must not discard an unsent draft');
+      assert.equal(await submit.isDisabled(),true,
+        'Sending stays disabled after a failed history read, even with a non-empty draft');
+      const sendsBeforeReadRetry=m.mediatorCalls.filter(c=>c.pathname==='/api/ai/mediate').length;
+      await m.page.evaluate(()=>document.querySelector('#mediator-form')
+        ?.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true})));
+      assert.equal(m.mediatorCalls.filter(c=>c.pathname==='/api/ai/mediate').length,
+        sendsBeforeReadRetry,'Programmatic submit also refuses an unverified transcript');
       assert.equal(await m.page.locator('.mediator-message-user').count(),0,
         'History failure clears the previous transcript');
       await m.page.locator('[data-mediator-open="'+firstId+'"]').click();
       await m.page.locator('.mediator-message-user').getByText(first).waitFor();
       assert.equal(await m.page.locator('.mediator-message-user').getByText(second,{exact:true}).count(),0,
         'Opening first conversation does not show second message');
-      rows.push({role,step:'failed history read and explicit retry',status:'PASS'});
+      assert.equal(await input.inputValue(),failedReadDraft,
+        'Successful explicit read retry keeps the draft');
+      assert.equal(await submit.isEnabled(),true,'Verified transcript re-enables sending');
+      rows.push({role,step:'failed history read blocks submit and explicit retry preserves draft',status:'PASS'});
+      // A deliberately delayed GET must not race with a POST to its chat.
+      const pendingDraft='Utkast medan historik hämtas – '+role;
+      await input.fill(pendingDraft);
+      m.mediatorFixture.holdNextOpen=true;
+      const sendsBeforePendingRead=m.mediatorCalls.filter(c=>c.pathname==='/api/ai/mediate').length;
+      await m.page.locator('[data-mediator-open="'+secondId+'"]').click();
+      for(let attempt=0;attempt<100&&typeof m.mediatorFixture.releaseOpen!=='function';attempt++)
+        await sleep(25);
+      assert.equal(typeof m.mediatorFixture.releaseOpen,'function',
+        'Synthetic Worker GET is held before response');
+      assert.equal(await submit.isDisabled(),true,
+        'Send is disabled while the selected chat history is pending');
+      assert.equal(await input.inputValue(),pendingDraft,
+        'Draft remains in the textarea while history is loading');
+      await m.page.evaluate(()=>document.querySelector('#mediator-form')
+        ?.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true})));
+      assert.equal(m.mediatorCalls.filter(c=>c.pathname==='/api/ai/mediate').length,
+        sendsBeforePendingRead,'No POST when a GET is pending');
+      await checkOverflow(m.page,'FUN-05 pending read '+role+' '+width+'px');
+      await capture(m.page,'fun-05-mediator-loading-'+role+'.png');
+      m.mediatorFixture.releaseOpen();
+      await m.page.locator('.mediator-message-user').getByText(second).waitFor();
+      assert.equal(await submit.isEnabled(),true,'Successful read re-enables sending');
+      assert.equal(await input.inputValue(),pendingDraft,'A delayed read does not erase the draft');
+      rows.push({role,step:'pending history GET blocks submit and retains draft',status:'PASS'});
       // A reload reads the in-memory fixture as a fake persisted server.
       await m.page.reload({waitUntil:'load'});
       await m.page.locator('.mediator-message-user').getByText(second).waitFor();
@@ -3495,13 +3545,32 @@ async function verifyMediatorConversationLifecycle(){
       await m.page.locator('.mediator-message-user').getByText(retry).waitFor();
       assert.equal(m.mediatorFixture.messages.get(secondId).length,4);
       rows.push({role,step:'failed send keeps draft; retry sends once',status:'PASS'});
+      // A pending DELETE must not accept a second deletion or chat switching.
+      m.mediatorFixture.holdNextDelete=true;
+      const deletesBefore=m.mediatorCalls.filter(c=>c.method==='DELETE').length;
       m.page.once('dialog',dialog=>dialog.accept());
       await m.page.locator('#mediator-delete').click();
+      for(let attempt=0;attempt<100&&typeof m.mediatorFixture.releaseDelete!=='function';attempt++)
+        await sleep(25);
+      assert.equal(typeof m.mediatorFixture.releaseDelete,'function',
+        'Synthetic Worker DELETE is held before completion');
+      await m.page.getByRole('status').getByText('Raderar samtalet…').waitFor();
+      assert.equal(await m.page.locator('#mediator-delete').isDisabled(),true);
+      assert.equal(await m.page.locator('#mediator-new').isDisabled(),true);
+      assert.equal(await m.page.locator('[data-mediator-open="'+firstId+'"]').isDisabled(),true);
+      assert.equal(await input.isDisabled(),true);
+      await m.page.evaluate(()=>{
+        document.querySelector('#mediator-delete')?.click();
+        document.querySelector('[data-mediator-open]')?.click();
+      });
+      assert.equal(m.mediatorCalls.filter(c=>c.method==='DELETE').length,
+        deletesBefore+1,'Repeated clicks cannot send duplicate DELETE');
+      m.mediatorFixture.releaseDelete();
       await m.page.locator('.mediator-message-user').getByText(first).waitFor();
       assert.equal(m.mediatorFixture.chats.length,1);
       assert.equal(m.mediatorFixture.messages.has(secondId),false);
       assert.equal(await m.page.locator('.mediator-message-user').getByText(second,{exact:true}).count(),0);
-      rows.push({role,step:'delete current; select remaining conversation',status:'PASS'});
+      rows.push({role,step:'in-flight DELETE locks controls and selects remaining chat',status:'PASS'});
       m.page.once('dialog',dialog=>dialog.accept());
       await m.page.locator('#mediator-delete').click();
       await m.page.locator('.mediator-empty').waitFor();
