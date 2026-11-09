@@ -1898,7 +1898,7 @@ async function verifyWholeInboxBackgroundLoadStatus(){
     const before=fixture.calls.filter(x=>x.role==='teen'&&x.name==='my_schyssta_rules').length;
     await teen.page.locator('#inbox-refresh-all').click();
     const status=teen.page.locator('.inbox-refresh-actions [role="status"]');
-    await status.getByText(/Vissa delar hämtades redan i bakgrunden/).waitFor();
+    await teen.page.getByText(/Vissa delar hämtades redan i bakgrunden/).waitFor();
     assert.match(await status.innerText(),/regelförfrågningar/,
       'The skipped section must be named in the actual inbox DOM');
     assert.equal(fixture.calls.filter(x=>x.role==='teen'&&x.name==='my_schyssta_rules').length,
@@ -1908,9 +1908,9 @@ async function verifyWholeInboxBackgroundLoadStatus(){
     assert.equal(await teen.page.locator('#inbox-refresh-all').isEnabled(),true,
       'A partial response must release the combined refresh button');
     fixture.releaseHeldRuleRead();
-    await teen.page.getByText('Regelförfrågningar').waitFor();
+    await teen.page.getByText('Hämtar regelförfrågningar…').waitFor({state:'hidden'});
     await teen.page.locator('#inbox-refresh-all').click();
-    await status.getByText('Inkorgen är uppdaterad.').waitFor();
+    await teen.page.getByText('Inkorgen är uppdaterad.',{exact:true}).waitFor();
     assert.equal(await teen.page.locator('#family-chat-body').inputValue(),
       'Ett oskickat utkast under hämtningen','The successful retry also preserves the draft');
     assert.equal(fixture.calls.filter(x=>x.role==='teen'&&x.name==='my_schyssta_rules').length,
