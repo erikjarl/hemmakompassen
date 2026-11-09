@@ -4761,6 +4761,12 @@ try{
     'The first theme card starts visibly above the mobile navigation');
   // VIS-00-05: on 390px and 320px phones a real Ja/Nej button can be
   // reached without scrolling past a full-screen introduction.
+  const categoryDisclosure=unlocked.page.locator('.swipe-theme-play .swipe-category-filter');
+  assert.equal(await categoryDisclosure.count(),1,'Large theme decks have a discoverable category disclosure');
+  assert.equal(await categoryDisclosure.evaluate(el=>el.open),false,
+    'The category chooser starts collapsed on mobile so the first question appears sooner');
+  assert.match(await categoryDisclosure.locator('summary').innerText(),/Välj kategori: Alla kategorier/,
+    'The collapsed chooser still names the current category');
   const themeActions=await unlocked.page.locator('.swipe-actions').boundingBox();
   assert.ok(themeActions&&themeActions.y < themeNavRect.y+140,
     '390px theme-choice row should start near the first viewport');
@@ -4776,9 +4782,18 @@ try{
   await capture(unlocked.page,'mobile-theme-first-card-top.png');
   const categoryFilter=unlocked.page.getByLabel('Välj kategori');
   assert.equal(await categoryFilter.count(),1,'Large theme decks expose one labelled category filter');
-  assert.ok(await categoryFilter.isEnabled(),'Category filter is keyboard reachable');
+  assert.equal(await categoryDisclosure.evaluate(el=>el.open),false,
+    'A resize between phone widths does not unexpectedly expand a secondary control');
+  await categoryDisclosure.locator('summary').click();
+  assert.ok(await categoryFilter.isEnabled(),'Category filter is keyboard reachable after expansion');
   await categoryFilter.selectOption({label:'Framtid och möjligheter (8)'});
   await unlocked.page.locator("#swipe-card[aria-label*='i Framtid och möjligheter']").waitFor();
+  assert.equal(await categoryDisclosure.evaluate(el=>el.open),true,
+    'Choosing a category must not collapse the control during a rerender');
+  assert.equal(await categoryFilter.evaluate(el=>document.activeElement===el),true,
+    'After choosing a category the keyboard focus remains on its selector');
+  assert.match(await categoryDisclosure.locator('summary').innerText(),/Framtid och möjligheter/,
+    'The current category is stated even when the filter is collapsed');
   assert.match(await unlocked.page.locator('#theme-category-status').innerText(),/^0 av 8 kort sparade i Framtid och möjligheter\.$/,'Filter reports only the signed-in user’s private progress for the selected category');
   assert.match(await unlocked.page.locator('#swipe-card').innerText(),/Prata om en plats vi vill besöka någon gång/,'Filter starts at the first unanswered card in the selected category');
   await unlocked.page.locator('.swipe-category-filter').scrollIntoViewIfNeeded();
