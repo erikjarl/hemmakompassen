@@ -188,46 +188,66 @@ function sameInboxPair(previous,current,viewer){
       previous.find(m=>m.role===role)?.user_id===current.find(m=>m.role===role)?.user_id);
 }
 let inboxPairCheckBusy=false,inboxPairEpoch=null;
+let inboxPairCheckTask=null,inboxPairCheckViewer=null,inboxPairCheckSession=null;
 async function recheckInboxPair(){
-  if(inboxPairCheckBusy||!user||members.length!==2)return false;
+  if(!user||members.length!==2)return false;
   const viewer=user.id,session=sharedSession,oldMembers=members;
+  // The visible action can occur while a background polling check is pending.
+  // Share the same verified result instead of dropping the user's click.
+  if(inboxPairCheckTask&&inboxPairCheckViewer===viewer&&inboxPairCheckSession===session)
+    return inboxPairCheckTask;
   inboxPairCheckBusy=true;
-  let result,epoch;
-  try{[result,epoch]=await Promise.all([db.rpc('my_family_members'),db.rpc('my_current_inbox_pair_epoch')]);}
-  catch(error){result={error};}
-  finally{inboxPairCheckBusy=false;}
-  if(user?.id!==viewer||sharedSession!==session)return false;
-  if(!result?.error&&sameInboxPair(oldMembers,result.data,viewer)
-    &&typeof epoch?.data==='string'&&epoch.data.length>0
-    &&!epoch.error&&epoch.data===inboxPairEpoch)return true;
-  // Fail closed, including RPC failure. Invalidate in-flight message reads
-  // before triggering refresh, so neither previous messages nor old badges
-  // can survive a revoked pairing or a failed membership check.
-  sharedSession++;
-  clearFamilyChat();
-  // Sharing belongs to the exact family epoch. Drop the old pair's results
-  // synchronously, before a potentially slow or failing account refresh.
-  sharedRequest++;insightsRequest++;
-  sharedMatches=[];sharedPriorities=[];sharedError='';sharedPriorityError='';sharedLoading=false;
-  insightsRows=[];sharedUnderstandingRows=[];insightsError='';insightsLoading=false;
-  // Family rules, notices and pending actions are scoped to this same pair.
-  // Their old cached contents must not outlive a revoked/unknown pairing.
-  schysstaRequest++;
-  schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];
-  schysstaNotifications=[];schysstaReplacementLinks=[];schysstaHistory=[];
-  schysstaEndTarget=null;schysstaLoading=false;schysstaError='';
-  schysstaSaving.clear();schysstaPausedIds.clear();
-  schysstaDraft='';schysstaDraftOpen=false;schysstaDraftKey=null;
-  schysstaEditTarget=null;schysstaSubmitting=false;schysstaMessage='';schysstaCopyMessage='';schysstaCopyFallback=false;
-  activityNotificationsRequest++;
-  activityNotifications=[];activityNotificationsError='';activityNotificationsLoading=false;
-  activityMarkBusy=null;activityFeedback='';
-  activityInviteBusy=false;activityInviteError='';
-  inboxPairEpoch=null;
-  members=[];
-  render();
-  void refresh().catch(showError);
-  return false;
+  inboxPairCheckViewer=viewer;
+  inboxPairCheckSession=session;
+  const checkTask=(async()=>{
+    let result,epoch;
+    try{[result,epoch]=await Promise.all([db.rpc('my_family_members'),db.rpc('my_current_inbox_pair_epoch')]);}
+    catch(error){result={error};}
+    if(user?.id!==viewer||sharedSession!==session)return false;
+    if(!result?.error&&sameInboxPair(oldMembers,result.data,viewer)
+      &&typeof epoch?.data==='string'&&epoch.data.length>0
+      &&!epoch.error&&epoch.data===inboxPairEpoch)return true;
+    // Fail closed, including RPC failure. Invalidate in-flight message reads
+    // before triggering refresh, so neither previous messages nor old badges
+    // can survive a revoked pairing or a failed membership check.
+    sharedSession++;
+    clearFamilyChat();
+    // Sharing belongs to the exact family epoch. Drop the old pair's results
+    // synchronously, before a potentially slow or failing account refresh.
+    sharedRequest++;insightsRequest++;
+    sharedMatches=[];sharedPriorities=[];sharedError='';sharedPriorityError='';sharedLoading=false;
+    insightsRows=[];sharedUnderstandingRows=[];insightsError='';insightsLoading=false;
+    // Family rules, notices and pending actions are scoped to this same pair.
+    // Their old cached contents must not outlive a revoked/unknown pairing.
+    schysstaRequest++;
+    schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];
+    schysstaNotifications=[];schysstaReplacementLinks=[];schysstaHistory=[];
+    schysstaEndTarget=null;schysstaLoading=false;schysstaError='';
+    schysstaSaving.clear();schysstaPausedIds.clear();
+    schysstaDraft='';schysstaDraftOpen=false;schysstaDraftKey=null;
+    schysstaEditTarget=null;schysstaSubmitting=false;schysstaMessage='';schysstaCopyMessage='';schysstaCopyFallback=false;
+    activityNotificationsRequest++;
+    activityNotifications=[];activityNotificationsError='';activityNotificationsLoading=false;
+    activityMarkBusy=null;activityFeedback='';
+    activityInviteBusy=false;activityInviteError='';
+    inboxPairEpoch=null;
+    members=[];
+    render();
+    void refresh().catch(showError);
+    return false;
+  })();
+  inboxPairCheckTask=checkTask;
+  try{return await checkTask;}
+  finally{
+    // An old account's completed request must not unlock the new session's
+    // still-pending pair check.
+    if(inboxPairCheckTask===checkTask){
+      inboxPairCheckTask=null;
+      inboxPairCheckViewer=null;
+      inboxPairCheckSession=null;
+      inboxPairCheckBusy=false;
+    }
+  }
 }
 async function fetchFamilyChatUnread(){
   if(!user||members.length!==2||!inboxPairEpoch){familyChatUnread=0;familyChatUnreadError=!!user&&members.length===2&&!inboxPairEpoch;return;}

@@ -122,8 +122,9 @@ deferred.setResponder(()=>new Promise(r=>{resolve=r;}));
 const pending=deferred.context.check();
 await Promise.resolve();
 assert.equal(deferred.context.isBusy(),true);
-assert.equal(await deferred.context.check(),false,'Do not start overlapping verification');
+const joined=deferred.context.check();
 resolve({data:[parent,anotherTeen],error:null});
+assert.equal(await joined,false,'Concurrent same-session caller joins the same invalid pair-check');
 await pending;
 assert.equal(deferred.actions.cleared,1);
 
