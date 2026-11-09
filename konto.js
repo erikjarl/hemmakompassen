@@ -33,6 +33,7 @@ function renderInviteQr(code) {
   show('invite-qr', true);
 }
 const status = message => { $('status').textContent=message; };
+const refreshStatus = message => { $('refresh-account-status').textContent=message; };
 const show = (id,yes) => $(id).classList.toggle('hidden',!yes);
 function clearGeneratedInvite(){
   $('new-invite').textContent='';
@@ -138,7 +139,7 @@ let busy=false;
 // Network timeouts release the UI, but do not cancel an already sent request.
 // Prevent the continuation of that old action from navigating, updating the
 // visible invite or initiating a second write after its deadline has expired.
-async function run(action,{successMessage=null}={}){
+async function run(action,{successMessage=null,reportStatus=status}={}){
   if(busy)return;
   busy=true;
   let active=true;
@@ -146,14 +147,18 @@ async function run(action,{successMessage=null}={}){
   const buttons=[...document.querySelectorAll('button')];
   buttons.forEach(b=>b.disabled=true);
   try{
-    status('Arbetar…');
+    // A manual account refresh has its own live region next to the button;
+    // other account actions retain their existing form-feedback region.
+    if(reportStatus===status)refreshStatus('');
+    else status('');
+    reportStatus('Arbetar…');
     await withAccountDeadline(action(isCurrent));
     await refresh();
-    if(successMessage)status(successMessage);
-  }catch(e){status(e?.message||'Ett fel inträffade');}
+    if(successMessage)reportStatus(successMessage);
+  }catch(e){reportStatus(e?.message||'Ett fel inträffade');}
   finally{active=false;busy=false;buttons.forEach(b=>b.disabled=false);}
 }
-$('refresh-account').addEventListener('click',()=>run(async()=>{}, {successMessage:'Kontot har uppdaterats.'}));
+$('refresh-account').addEventListener('click',()=>run(async()=>{}, {successMessage:'Kontot har uppdaterats.',reportStatus:refreshStatus}));
 $('email-form').addEventListener('submit',e=>{e.preventDefault();run(async isCurrent=>{
   const {error}=await client.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});
   if(!isCurrent())return;
