@@ -4368,6 +4368,7 @@ try{
   await paired.page.waitForFunction(()=>window.__HK_CHAT_SEND__?.args?.p_body==='Hej tillbaka! Vi kan prata efter maten.');
   assert.match(await paired.page.locator('.family-chat-mine').innerText(),/Hej tillbaka/,'Sent message appears in conversation');
   assert.match(await paired.page.locator('.family-chat-mine .family-chat-receipt').innerText(),/Skickat/,'Read receipt distinguishes sent from read');
+  await paired.page.locator('.family-chat .schyssta-feedback').getByText('Meddelandet har skickats.',{exact:true}).waitFor();
   assert.equal(await paired.page.locator('#family-chat-body').inputValue(),'','Successful send clears composer');
   await paired.page.locator('#family-chat-body').fill('<img src=x onerror=alert(1)>');
   await paired.page.getByRole('button',{name:'Skicka meddelande'}).click();
@@ -4385,6 +4386,8 @@ try{
   const scrollAfter=await paired.page.locator('.live-main').evaluate(el=>el.scrollTop);
   assert.ok(Math.abs(scrollAfter-scrollBefore)<=9,'Inbox refresh preserves mobile scroll position; before '+scrollBefore+', after '+scrollAfter);
   assert.match(await paired.page.locator('.family-chat-history').innerText(),/Hej tillbaka/,'Message history remains intact after refresh');
+  assert.equal(await paired.page.locator('.family-chat .schyssta-feedback').count(),0,
+    'A deliberate inbox refresh clears the previous send confirmation');
 
   const inboxText=await paired.page.locator('#live-app').innerText();
   assert.match(inboxText,/Vi pratar om hur vi delar på sysslorna/,'Inbox shows other member pending manual request');
