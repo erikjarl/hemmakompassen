@@ -1735,7 +1735,7 @@ async function verifyCommunicationForms(){
 function makeTwoRoleFamilyFixture(){
   const messages=[],tokens=new Map(),rules=[],notices=[],activityNotices=[],replacementLinks=[],ruleHistory=[],calls=[];
   let failedSendAcknowledgement=false,failedOlderPage=false,failedActivityRead=false,failedRuleNoticeRead=false,nextRuleId=200;
-  let holdRuleReadRole=null,heldRuleRead=null;
+  let holdRuleReadRole=null,heldRuleRead=null,failRuleReadRole=null;
   const other=role=>role==='parent'?'teen':'parent';
   const ok=data=>({data,error:null});
   const createdAt=n=>'2026-11-01T12:'+String(Math.floor(n/50)).padStart(2,'0')+':'+String(n%50).padStart(2,'0')+'Z';
@@ -1781,6 +1781,10 @@ function makeTwoRoleFamilyFixture(){
       const rows=messages.filter(m=>m.sender!==role&&m.read_at===null);
       for(const m of rows)m.read_at='2026-11-01T13:00:00Z';
       return ok(rows.length);
+    }
+    if(name==='my_schyssta_rules'&&failRuleReadRole===role){
+      failRuleReadRole=null;
+      return {data:null,error:{message:'Synthetic rule list read unavailable'}};
     }
     if(name==='my_schyssta_rules'&&holdRuleReadRole===role){
       holdRuleReadRole=null;
@@ -1867,6 +1871,7 @@ function makeTwoRoleFamilyFixture(){
     failNextOlderPage(){failedOlderPage=true;},
     failNextActivityRead(){failedActivityRead=true;},
     failNextRuleNoticeRead(){failedRuleNoticeRead=true;},
+    failNextRuleRead(role){failRuleReadRole=role;},
     holdNextRuleRead(role){holdRuleReadRole=role;},
     releaseHeldRuleRead(){if(!heldRuleRead)throw new Error('No held synthetic rule fetch');heldRuleRead(ok([]));heldRuleRead=null;},
     get isHoldingRuleRead(){return !!heldRuleRead;}};
@@ -1884,7 +1889,7 @@ async function verifyWholeInboxBackgroundLoadStatus(){
   // Two-role fixture with one deliberately unresolved rule-list read. The
   // actual browser must show a partial status, not a false full all-clear.
   const fixture=makeTwoRoleFamilyFixture();
-  fixture.holdNextRuleRead('teen');
+  fixture.failNextRuleRead('teen');
   const teen=await freshContext(
     {viewport:{width:390,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true},
     {authenticated:true,paired:true,role:'teen',pairFixture:fixture,activityNotifications:true}
@@ -1892,6 +1897,17 @@ async function verifyWholeInboxBackgroundLoadStatus(){
   try{
     await teen.page.goto(base+'#inkorg',{waitUntil:'load'});
     await teen.page.locator('#inbox-refresh-all').waitFor();
+    // The first (deliberately failed) load exposes the real inbox retry
+    // button, so we can initiate and hold exactly its next fetch on demand.
+    try{await teen.page.locator('#schyssta-retry').waitFor({timeout:10000});}
+    catch(error){
+      throw new Error('FUN-03 rule retry unavailable: '+JSON.stringify({
+        calls:fixture.calls.filter(x=>x.role==='teen').map(x=>x.name).slice(-20),
+        visible:(await teen.page.locator('#live-app').innerText()).slice(0,1800)
+      }),{cause:error});
+    }
+    fixture.holdNextRuleRead('teen');
+    await teen.page.locator('#schyssta-retry').click();
     await teen.page.getByText('Hämtar regelförfrågningar…').waitFor();
     assert.equal(fixture.isHoldingRuleRead,true,'Synthetic rule RPC is still in flight');
     await teen.page.locator('#family-chat-body').fill('Ett oskickat utkast under hämtningen');
