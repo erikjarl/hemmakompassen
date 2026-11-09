@@ -4871,6 +4871,52 @@ try{
   assert.match(await unlocked.page.locator("#swipe-card").getAttribute("aria-label"),/Temakort 1 av 104/,"Another deck starts independently");
   await unlocked.page.locator("#theme-back").click();
   await unlocked.context.close();
+
+  // FUN-02: a genuine Chromium rerender after a mocked background match
+  // refresh must not displace the teen's keyboard from the category picker.
+  const filterRefresh=await freshContext(
+    {viewport:{width:320,height:700},deviceScaleFactor:2,isMobile:true,hasTouch:true},
+    {authenticated:true,paired:true,unlocked:true,role:'teen'});
+  await filterRefresh.page.goto(base+'#swipe',{waitUntil:'load'});
+  await filterRefresh.page.locator('[data-theme-open="samtal"]').click();
+  await filterRefresh.page.locator('#swipe-card').waitFor();
+  await filterRefresh.page.waitForFunction(()=>
+    document.querySelector('.swipe-results')?.textContent?.includes('Vad som varit roligt den senaste veckan'));
+  await filterRefresh.page.locator('.swipe-category-filter summary').click();
+  await filterRefresh.page.locator('#theme-category').focus();
+  const pollBaseline=await filterRefresh.page.evaluate(()=>{
+    document.querySelector('.live-main').scrollTop=60;
+    const select=document.querySelector('#theme-category');
+    select.focus({preventScroll:true});
+    window.__HK_FILTER_OLD_NODE__=select;
+    const before={scroll:document.querySelector('.live-main').scrollTop,
+      calls:window.__HK_MATCH_RPC_CALLS__||0,selected:select.value};
+    window.__HK_TEST_SHARED_MATCHES__=[];
+    window.__HK_TEST_FILTER_MIN_CALLS__=before.calls;
+    window.dispatchEvent(new Event('focus'));
+    return before;
+  });
+  await filterRefresh.page.waitForFunction(()=>
+    (window.__HK_MATCH_RPC_CALLS__||0)>window.__HK_TEST_FILTER_MIN_CALLS__ &&
+    document.querySelector('#theme-category')!==window.__HK_FILTER_OLD_NODE__,
+    null,{timeout:10000});
+  const refreshFocusState=await filterRefresh.page.evaluate(()=>({
+    active:document.activeElement?.id,
+    open:document.querySelector('.swipe-category-filter')?.open,
+    selected:document.querySelector('#theme-category')?.value,
+    scroll:document.querySelector('.live-main')?.scrollTop
+  }));
+  assert.equal(refreshFocusState.active,'theme-category',
+    'FUN-02: background refresh preserves keyboard focus on the theme category selector');
+  assert.equal(refreshFocusState.open,true,
+    'FUN-02: background refresh keeps the category selector expanded');
+  assert.equal(refreshFocusState.selected,pollBaseline.selected,
+    'FUN-02: background refresh must not change the selected category');
+  assert.ok(Math.abs(refreshFocusState.scroll-pollBaseline.scroll)<=3,
+    'FUN-02: background refresh should not jump the mobile scroller: '+
+      JSON.stringify({pollBaseline,refreshFocusState}));
+  await filterRefresh.context.close();
+
   // Separate browser context: this correction scenario must not mutate the
   // saved-answer fixture used by the existing swipe progression tests.
   const savedReview=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},
