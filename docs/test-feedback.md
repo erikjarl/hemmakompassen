@@ -44,3 +44,10 @@ Automatiska Node/VM-regressionstester simulerar en autentiseringskontroll som al
 **Ändring:** på mobil blir knappen 48 × 48 CSS-pixlar med en synlig pennikon. Hela texten **Rapportera fel eller innehåll** behålls i knappens tillgängliga namn (`aria-label`) och syns fortfarande på dator. På appen placeras knappen ovanför den horisontella mobilmenyn; på kontosidan, som saknar den menyn, placeras den vid fönstrets nederkant. De två sidorna använder samma CSS.
 
 **Automatiska acceptanstester:** 320 och 390 CSS-pixlar i Chromium kontrollerar knappbredd, åtkomligt namn, synlighet, läge ovanför den simulerade bottenmenyn samt att rapportformulärets tidigare mockade flöden fungerar. Före/efter-bilder på samtliga sidor och fysisk Safari/zoom behöver fortfarande bedömas separat; en reducerad överlagringsyta betyder inte att alla visuella problem är lösta.
+
+
+## FBK-01-ERROR-CHROMIUM – verifiera utkast och retry utan dubbletter (9 november 2026)
+
+I `tests/feedback-browser.mjs` körs nu samma **riktiga rapportformulär och eventhanterare** i en isolerad Chromium-sida (390 px) genom utloggat läge, bekräftad mock-INSERT, simulerad serveravvisning, autentiserings-timeout och förlorad INSERT-kvittens. Det kontrolleras att användarens text ligger kvar vid samtliga fel, **Skicka** och **Stäng** går att använda igen, autentiserings-timeout gör **0 INSERT**, och förlorad kvittens **inte** föranleder någon automatisk omsändning. En ny rapport sparas bara vid ett separat avsiktligt klick. Kategori och tillåten modulkontext kontrolleras också.
+
+Testet kortar ned klientens 15-sekunders väntetid **enbart i mockad Chromium**; produktionsgränsen är fortsatt 15 sekunder. Resultaten bevisar inte faktisk nätverksfördröjning, riktiga Supabase-användare, lagring eller fysisk Safari. En verkligt signerad testsändning och en inspekterad rad i Table Editor krävs fortfarande för full FBK-01-verifiering.
