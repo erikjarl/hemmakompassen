@@ -4793,8 +4793,22 @@ try{
   await unlocked.page.locator('.live-main').evaluate(el=>{el.scrollTop=0;});
   const narrowActions=await unlocked.page.locator('.swipe-actions').boundingBox();
   const narrowNav=await unlocked.page.locator('#live-mobile-nav').boundingBox();
-  assert.ok(narrowActions&&narrowNav&&narrowActions.y < narrowNav.y+260,
-    '320px theme-choice row must require no more than a short scroll');
+  const compactBack=unlocked.page.locator('.swipe-theme-back');
+  const compactBackStyle=await compactBack.evaluate(el=>({
+    height:el.getBoundingClientRect().height,
+    background:getComputedStyle(el).backgroundColor,
+    color:getComputedStyle(el).color,
+    decoration:getComputedStyle(el).textDecorationLine
+  }));
+  assert.ok(compactBackStyle.height>=44&&compactBackStyle.height<=50,
+    '320px theme back navigation retains an accessible 44px target without a tall primary button: '+JSON.stringify(compactBackStyle));
+  assert.match(compactBackStyle.decoration,/underline/,
+    'Compact theme back control remains visibly identifiable as navigation');
+  assert.equal(await unlocked.page.locator('.swipe-theme-play>.swipe-heading>.swipe-eyebrow').isVisible(),false,
+    'The redundant theme eyebrow is removed on phones; the heading and privacy explanation remain visible');
+  assert.ok(narrowActions&&narrowNav&&narrowActions.y < narrowNav.y+160,
+    '320px theme Ja/Nej should require considerably less scrolling after reducing the header: '+
+      JSON.stringify({actions:narrowActions,nav:narrowNav}));
   await capture(unlocked.page,'mobile-320-theme-choices-compact.png');
   await unlocked.page.setViewportSize({width:390,height:844});
   await unlocked.page.locator('.live-main').evaluate(el=>{el.scrollTop=0;});
