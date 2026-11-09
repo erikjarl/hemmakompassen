@@ -3489,6 +3489,11 @@ try{
   await capture(m.page,"mobile-swipe-importance.png");
   await m.page.getByRole("button",{name:"Ja"}).click();
   await m.page.locator("#swipe-card[aria-label^='Kort 2 av 21']").waitFor();
+  await m.page.waitForFunction(()=>document.activeElement?.id==='swipe-card');
+  const nextCardRect=await m.page.locator('#swipe-card').boundingBox();
+  const nextNavRect=await m.page.locator('#live-mobile-nav').boundingBox();
+  assert.ok(nextCardRect && nextNavRect && nextCardRect.y>=0 && nextCardRect.y+80<nextNavRect.y,
+    'Confirmed general answer restores focus to the new question at a visible scroll position');
   assert.match(await m.page.locator('#swipe-card').innerText(),/Jag tycker det är viktigt att vi har gemensamma aktiviteter/,'Parent skips teen-only understanding cards without corrupting ordinal position');
   const saved=await m.page.evaluate(()=>window.__HK_SAVED_SWIPE__);
   assert.equal(saved.row.user_id,"10000000-0000-0000-0000-000000000001");
@@ -4752,6 +4757,20 @@ try{
   const themeNavRect=await unlocked.page.locator('#live-mobile-nav').boundingBox();
   assert.ok(themeCardRect && themeNavRect && themeCardRect.y + 100 < themeNavRect.y,
     'The first theme card starts visibly above the mobile navigation');
+  // VIS-00-05: on 390px and 320px phones a real Ja/Nej button can be
+  // reached without scrolling past a full-screen introduction.
+  const themeActions=await unlocked.page.locator('.swipe-actions').boundingBox();
+  assert.ok(themeActions&&themeActions.y < themeNavRect.y+140,
+    '390px theme-choice row should start near the first viewport');
+  await unlocked.page.setViewportSize({width:320,height:700});
+  await unlocked.page.locator('.live-main').evaluate(el=>{el.scrollTop=0;});
+  const narrowActions=await unlocked.page.locator('.swipe-actions').boundingBox();
+  const narrowNav=await unlocked.page.locator('#live-mobile-nav').boundingBox();
+  assert.ok(narrowActions&&narrowNav&&narrowActions.y < narrowNav.y+260,
+    '320px theme-choice row must require no more than a short scroll');
+  await capture(unlocked.page,'mobile-320-theme-choices-compact.png');
+  await unlocked.page.setViewportSize({width:390,height:844});
+  await unlocked.page.locator('.live-main').evaluate(el=>{el.scrollTop=0;});
   await capture(unlocked.page,'mobile-theme-first-card-top.png');
   const categoryFilter=unlocked.page.getByLabel('Välj kategori');
   assert.equal(await categoryFilter.count(),1,'Large theme decks expose one labelled category filter');
@@ -4778,6 +4797,11 @@ try{
   await capture(unlocked.page,"mobile-theme-swipe.png");
   await unlocked.page.getByRole("button",{name:"Ja"}).click();
   await unlocked.page.locator("#swipe-card[aria-label^='Temakort 2 av 104']").waitFor();
+  await unlocked.page.waitForFunction(()=>document.activeElement?.id==='swipe-card');
+  const nextTheme=await unlocked.page.locator('#swipe-card').boundingBox();
+  const nextThemeNav=await unlocked.page.locator('#live-mobile-nav').boundingBox();
+  assert.ok(nextTheme && nextThemeNav && nextTheme.y >= 0 && nextTheme.y+80 < nextThemeNav.y,
+    'Confirmed theme response focuses the next card and reveals its question');
   const themeSaved=await unlocked.page.evaluate(()=>window.__HK_SAVED_SWIPE__);
   assert.equal(themeSaved.row.deck_id,"samtal","Theme answer must use its own deck id");
   assert.equal(themeSaved.row.card_id,"samtal-01","Theme answer must use a stable card id");
@@ -4936,6 +4960,10 @@ try{
   const generalNavRect=await aiView.page.locator('#live-mobile-nav').boundingBox();
   assert.ok(generalCardRect && generalNavRect && generalCardRect.y + 190 < generalNavRect.y,
     'At 390px the playable card has substantial visible room above navigation');
+  const generalActions=await aiView.page.locator('.swipe-actions').boundingBox();
+  assert.ok(generalActions && generalActions.y < generalNavRect.y+85,
+    '390px general Ja/Nej row is near the first viewport, not far below it');
+  await capture(aiView.page,'mobile-general-swipe-compact-choices.png');
   await capture(aiView.page,'mobile-general-swipe-first-card-top.png');
   const swipeRequest=aiView.aiRequests.find(x=>x.kind==='swipe');
   assert.equal(swipeRequest.scope,'general');
