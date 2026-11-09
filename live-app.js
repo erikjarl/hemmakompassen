@@ -1,7 +1,7 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261109-inbox-pair-timeout1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261109-inbox-receipt-timeout1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261107-authoritative-export4';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261109-inbox-pair-timeout1';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261109-inbox-receipt-timeout1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
 import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261107-authoritative-export4';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
@@ -137,9 +137,17 @@ async function markActivityNotificationRead(notificationId){
   const viewer=user.id,session=sharedSession,pair=activityPairSignature();
   activityMarkBusy=notificationId;activityFeedback='';
   if(page()==='inkorg'&&!familyChatDraft.trim())render();
-  let result;
-  try{result=await db.rpc('mark_activity_notification_read',{p_notification_id:notificationId});}
-  catch(e){result={error:e};}
+  let result,deadline;
+  try{
+    // Do not leave a read-receipt button busy forever if the RPC never replies.
+    result=await Promise.race([
+      db.rpc('mark_activity_notification_read',{p_notification_id:notificationId}),
+      new Promise((_,reject)=>{deadline=setTimeout(
+        ()=>reject(new Error('Activity receipt timeout')),15000
+      );})
+    ]);
+  }catch(e){result={error:e};}
+  finally{clearTimeout(deadline);}
   if(viewer!==user?.id||session!==sharedSession)return;
   if(members.length!==2||!activityNotificationsEnabled||pair!==activityPairSignature()){
     activityMarkBusy=null;return;
@@ -360,8 +368,17 @@ async function markAllFamilyChatRead(){
   familyChatReadBusy=true;
   familyChatStatus='Markerar alla meddelanden som lästa…';
   render();
-  let result;
-  try{result=await db.rpc('mark_family_messages_read');}catch(e){result={error:e};}
+  let result,deadline;
+  try{
+    // A lost write receipt is unknown, not a confirmed mark-as-read.
+    result=await Promise.race([
+      db.rpc('mark_family_messages_read'),
+      new Promise((_,reject)=>{deadline=setTimeout(
+        ()=>reject(new Error('Message receipt timeout')),15000
+      );})
+    ]);
+  }catch(e){result={error:e};}
+  finally{clearTimeout(deadline);}
   if(user?.id!==viewer||sharedSession!==session)return false;
   familyChatReadBusy=false;
   if(result?.error||!Number.isInteger(result?.data)||result.data<0){

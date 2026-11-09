@@ -14,6 +14,7 @@ function harness(result={data:1,error:null}){
     user:{id:'teen'},members:[{role:'parent'},{role:'teen'}],inboxPairEpoch:'epoch-1',sharedSession:7,
     familyChatReadBusy:false,familyChatLoading:false,familyChatUnreadError:false,
     familyChatUnread:2,familyChatStatus:'',familyChatCountRequest:3,
+    setTimeout,clearTimeout,
     render:()=>{},recheckInboxPair:async()=>true,fetchFamilyChatUnread:async()=>{unreadRefreshes++;},db:{rpc:async name=>{assert.equal(name,'mark_family_messages_read');called++;return remote;}}
   };
   vm.runInNewContext(action+'\nthis.markRead=markAllFamilyChatRead;',state);
