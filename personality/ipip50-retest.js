@@ -53,13 +53,23 @@ function downloadPrivateRetest(filename,data){
 }
 export function createPrivateIpipRetests({
   db,onRender=()=>{},renderOwnScores=()=>'',saveExport=downloadPrivateRetest,
-  confirmDelete=message=>window.confirm(message)
+  confirmDelete=message=>window.confirm(message),requestTimeoutMs=15000
 }){
   let userId=null,generation=0,loading=false,error='',busy=false;
   let attempts=[],draftId=null,answers={},questionIndex=0,surveyOpen=false;
   let historyId=null,historyAnswers=null,status='',saveUncertain=false,lifecycleNeedsCheck=false;
   const repaint=()=>onRender();
   const isCurrent=(id,token)=>userId===id&&generation===token;
+  // A missing response cannot hold the private retest's disabled controls
+  // forever. A timed-out write remains UNKNOWN until server readback succeeds.
+  const deadlineMs=Number.isFinite(requestTimeoutMs)&&requestTimeoutMs>0
+    ?Math.min(requestTimeoutMs,60000):15000;
+  function withinDeadline(operation){
+    let timer;
+    return Promise.race([operation,new Promise((_,reject)=>{
+      timer=setTimeout(()=>reject(new Error('Private retest request timed out')),deadlineMs);
+    })]).finally(()=>clearTimeout(timer));
+  }
 
   function reset(id=null){
     userId=id;generation++;loading=false;error='';busy=false;
@@ -68,9 +78,9 @@ export function createPrivateIpipRetests({
   }
 
   async function readAnswers(id,attemptId){
-    const result=await db.from('personality_attempt_answers')
+    const result=await withinDeadline(db.from('personality_attempt_answers')
       .select('question_id,answer_value')
-      .eq('user_id',id).eq('attempt_id',attemptId);
+      .eq('user_id',id).eq('attempt_id',attemptId));
     if(result.error||!Array.isArray(result.data))throw result.error||Error('Invalid answer response');
     return fromRows(result.data);
   }
@@ -80,9 +90,9 @@ export function createPrivateIpipRetests({
     const token=++generation;
     userId=id;loading=true;error='';status='';saveUncertain=false;lifecycleNeedsCheck=false;repaint();
     try{
-      const result=await db.from('personality_test_attempts')
+      const result=await withinDeadline(db.from('personality_test_attempts')
         .select('id,created_at,completed_at').eq('user_id',id)
-        .order('created_at',{ascending:false});
+        .order('created_at',{ascending:false}));
       if(result.error||!Array.isArray(result.data))throw result.error||Error('Invalid attempts');
       if(!isCurrent(id,token))return;
       attempts=result.data.filter(a=>typeof a.id==='string'&&a.id.length>0);
@@ -184,9 +194,9 @@ export function createPrivateIpipRetests({
       const id=userId,token=generation;
       busy=true;status='Startar en ny privat omgång…';repaint();
       try{
-        const result=await db.from('personality_test_attempts')
+        const result=await withinDeadline(db.from('personality_test_attempts')
           .insert({user_id:id,instrument_id:IPIP50_V1.id})
-          .select('id,created_at,completed_at').single();
+          .select('id,created_at,completed_at').single());
         if(result?.error||!result?.data?.id)throw result?.error||Error('Missing creation acknowledgement');
         if(!isCurrent(id,token))return true;
         attempts=[result.data,...attempts];draftId=result.data.id;answers={};
@@ -217,10 +227,10 @@ export function createPrivateIpipRetests({
       busy=true;status='Avslutar omgången…';repaint();
       let completedAt=null,ackMissing=false;
       try{
-        const result=await db.from('personality_test_attempts')
+        const result=await withinDeadline(db.from('personality_test_attempts')
           .update({completed_at:new Date().toISOString()})
           .eq('user_id',id).eq('id',attemptId)
-          .select('id,completed_at').single();
+          .select('id,completed_at').single());
         if(result?.error||result?.data?.id!==attemptId||
           !Number.isFinite(Date.parse(String(result?.data?.completed_at||''))))
           throw result?.error||Error('Completion unconfirmed');
@@ -231,8 +241,8 @@ export function createPrivateIpipRetests({
         // only this signed-in viewer's exact attempt before declaring failure.
         if(!isCurrent(id,token))return true;
         try{
-          const r=await db.from('personality_test_attempts')
-            .select('id,completed_at').eq('user_id',id).eq('id',attemptId).maybeSingle();
+          const r=await withinDeadline(db.from('personality_test_attempts')
+            .select('id,completed_at').eq('user_id',id).eq('id',attemptId).maybeSingle());
           if(!r?.error&&r?.data?.id===attemptId&&
             Number.isFinite(Date.parse(String(r.data.completed_at||''))))
             completedAt=r.data.completed_at;
@@ -286,9 +296,9 @@ export function createPrivateIpipRetests({
       busy=true;status='Raderar den valda privata omgången…';repaint();
       let deleted=false,ackMissing=false,readbackUnknown=false;
       try{
-        const result=await db.from('personality_test_attempts').delete()
+        const result=await withinDeadline(db.from('personality_test_attempts').delete()
           .eq('user_id',id).eq('id',attemptId)
-          .select('id').single();
+          .select('id').single());
         if(result?.error||result?.data?.id!==attemptId)
           throw result?.error||Error('Delete was not confirmed');
         deleted=true;
@@ -299,8 +309,8 @@ export function createPrivateIpipRetests({
         // Check the exact attempt in the viewer's own private history without
         // ever automatically issuing a second irreversible DELETE.
         try{
-          const r=await db.from('personality_test_attempts')
-            .select('id').eq('user_id',id).eq('id',attemptId).maybeSingle();
+          const r=await withinDeadline(db.from('personality_test_attempts')
+            .select('id').eq('user_id',id).eq('id',attemptId).maybeSingle());
           if(!r||r.error||!Object.hasOwn(r,'data')||
             (r.data!==null&&r.data?.id!==attemptId)){
             readbackUnknown=true;
@@ -351,9 +361,9 @@ export function createPrivateIpipRetests({
     busy=true;status='Sparar ditt privata svar…';saveUncertain=false;repaint();
     let confirmed=true,unknown=false;
     try{
-      const result=await db.from('personality_attempt_answers').upsert({
+      const result=await withinDeadline(db.from('personality_attempt_answers').upsert({
         attempt_id:attemptId,user_id:id,question_id:item.id,answer_value:value
-      },{onConflict:'attempt_id,question_id'});
+      },{onConflict:'attempt_id,question_id'}));
       if(!result||!Object.hasOwn(result,'error')||result.error)
         throw result?.error||Error('Missing retest write acknowledgement');
     }catch{
