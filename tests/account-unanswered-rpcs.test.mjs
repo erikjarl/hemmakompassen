@@ -115,11 +115,11 @@ test('FUN-01: family list timeout has explicit retry and does not show stale fam
  assert.ok(p.buttons.every(button=>button.disabled));
  await pause(120);
  assert.ok(p.buttons.every(button=>!button.disabled));
- assert.match(p.el('status').textContent,/tog för lång tid|svarade inte i tid/i);
+ assert.match(p.el('refresh-account-status').textContent,/tog för lång tid|svarade inte i tid/i);
  p.setFamilyStall(false);
  p.el('refresh-account').click();
  await pause(100);
- assert.match(p.el('status').textContent,/Kontot har uppdaterats/);
+ assert.match(p.el('refresh-account-status').textContent,/Kontot har uppdaterats/);
  assert.match(p.el('members').textContent,/Förälder: Parent/);
  assert.equal(p.el('waiting').hidden,false);
 });
