@@ -76,8 +76,8 @@ test('FUN-01: family RPC error removes stale controls and never reports successf
  assert.equal(h.element('unpaired').hidden,true);
  assert.equal(h.element('join-family').hidden,true);
  assert.equal(h.element('members').textContent,'');
- assert.match(h.element('status').textContent,/Familjetjänsten svarade med fel/);
- assert.doesNotMatch(h.element('status').textContent,/Kontot har uppdaterats/);
+ assert.match(h.element('refresh-account-status').textContent,/Familjetjänsten svarade med fel/);
+ assert.doesNotMatch(h.element('refresh-account-status').textContent,/Kontot har uppdaterats/);
 });
 
 test('FUN-01: a family read timeout cannot leave the last verified pairing onscreen',async()=>{
@@ -89,7 +89,7 @@ test('FUN-01: a family read timeout cannot leave the last verified pairing onscr
  assert.equal(h.element('waiting').hidden,true);
  assert.equal(h.element('join-family').hidden,true);
  assert.equal(h.element('members').textContent,'');
- assert.match(h.element('status').textContent,/svarade inte i tid/i);
+ assert.match(h.element('refresh-account-status').textContent,/svarade inte i tid/i);
 });
 
 test('FUN-01: missing or malformed member payload never becomes false "unpaired" state',async()=>{
@@ -103,7 +103,7 @@ test('FUN-01: missing or malformed member payload never becomes false "unpaired"
   assert.equal(h.element('waiting').hidden,true);
   assert.equal(h.element('join-family').hidden,true);
   assert.equal(h.element('family').hidden,true);
-  assert.match(h.element('status').textContent,/kunde inte bekräftas/);
+  assert.match(h.element('refresh-account-status').textContent,/kunde inte bekräftas/);
  }
  // A genuinely successful empty array is the only verified unpaired state.
  h.setFamily({data:[],error:null});
@@ -111,7 +111,7 @@ test('FUN-01: missing or malformed member payload never becomes false "unpaired"
  assert.equal(h.element('unpaired').hidden,false);
  assert.equal(h.element('join-family').hidden,false);
  assert.equal(h.element('family').hidden,true);
- assert.equal(h.element('status').textContent,'Kontot har uppdaterats.');
+ assert.equal(h.element('refresh-account-status').textContent,'Kontot har uppdaterats.');
 });
 
 test('FUN-01: successful family retry restores the correct controls',async()=>{
@@ -124,7 +124,7 @@ test('FUN-01: successful family retry restores the correct controls',async()=>{
  assert.equal(h.element('waiting').hidden,false);
  assert.equal(h.element('family').hidden,false);
  assert.match(h.element('members').textContent,/Tonåring: Testtonåring/);
- assert.equal(h.element('status').textContent,'Kontot har uppdaterats.');
+ assert.equal(h.element('refresh-account-status').textContent,'Kontot har uppdaterats.');
 });
 
 test('FUN-01: profile or Auth lookup errors cannot falsely confirm an account refresh',async()=>{
@@ -132,13 +132,13 @@ test('FUN-01: profile or Auth lookup errors cannot falsely confirm an account re
  h.setProfileError({message:'Profilfel'});
  h.refresh();await tick();await tick();
  assert.equal(h.element('family').hidden,true);
- assert.match(h.element('status').textContent,/Profilfel/);
- assert.doesNotMatch(h.element('status').textContent,/Kontot har uppdaterats/);
+ assert.match(h.element('refresh-account-status').textContent,/Profilfel/);
+ assert.doesNotMatch(h.element('refresh-account-status').textContent,/Kontot har uppdaterats/);
  h.setProfileError(null);
  h.setUserError({name:'NetworkError',message:'Auth ej tillgänglig'});
  h.refresh();await tick();await tick();
  assert.equal(h.element('family').hidden,true);
- assert.match(h.element('status').textContent,/Auth ej tillgänglig/);
+ assert.match(h.element('refresh-account-status').textContent,/Auth ej tillgänglig/);
 });
 
 
@@ -155,7 +155,7 @@ test('FUN-01: failed Auth refresh hides an old signed-in account and preserves i
  assert.equal(h.element('display-name').value,'Mitt osparade namn','Do not erase a hidden unsaved draft');
  assert.equal(h.element('family').hidden,true);
  assert.equal(h.element('refresh-account').disabled,false,'Independent retry must remain available');
- assert.match(h.element('status').textContent,/Auth kunde inte kontrolleras/);
+ assert.match(h.element('refresh-account-status').textContent,/Auth kunde inte kontrolleras/);
  h.setUserError(null);
  h.refresh();await tick();await tick();
  assert.equal(h.element('logged-in').hidden,false);
@@ -163,7 +163,7 @@ test('FUN-01: failed Auth refresh hides an old signed-in account and preserves i
  assert.equal(h.element('family').hidden,false);
  assert.match(h.element('account').textContent,/parent@example.invalid/);
  assert.equal(h.element('display-name').value,'Mitt osparade namn');
- assert.equal(h.element('status').textContent,'Kontot har uppdaterats.');
+ assert.equal(h.element('refresh-account-status').textContent,'Kontot har uppdaterats.');
 });
 
 test('FUN-01: Auth timeout hides stale account details until successful manual retry',async()=>{
@@ -174,10 +174,29 @@ test('FUN-01: Auth timeout hides stale account details until successful manual r
  assert.equal(h.element('logged-out').hidden,true);
  assert.equal(h.element('account').textContent,'');
  assert.equal(h.element('waiting').hidden,true);
- assert.match(h.element('status').textContent,/svarade inte i tid/);
+ assert.match(h.element('refresh-account-status').textContent,/svarade inte i tid/);
  h.resumeAuth();
  h.refresh();await tick();await tick();
  assert.equal(h.element('logged-in').hidden,false);
  assert.equal(h.element('waiting').hidden,false);
- assert.equal(h.element('status').textContent,'Kontot har uppdaterats.');
+ assert.equal(h.element('refresh-account-status').textContent,'Kontot har uppdaterats.');
+});
+
+
+test('VIS-00-12: manual account refresh reports errors and success only beside refresh button',async()=>{
+ const h=await initialVerified();
+ h.element('status').textContent='Tidigare status för ett annat formulär';
+ h.setFamily({data:null,error:{message:'Familjeläsning misslyckades'}});
+ h.refresh();await tick();await tick();
+ assert.match(h.element('refresh-account-status').textContent,/Familjeläsning misslyckades/);
+ assert.equal(h.element('status').textContent,'','Old form status must not duplicate refresh feedback');
+ h.setFamily({data:[{role:'parent',display_name:'Testförälder'}],error:null});
+ h.refresh();await tick();await tick();
+ assert.equal(h.element('refresh-account-status').textContent,'Kontot har uppdaterats.');
+ assert.equal(h.element('status').textContent,'');
+ // Other forms still have their own status target and clear obsolete refresh feedback.
+ h.element('refresh-account-status').textContent='Gammalt uppdateringsmeddelande';
+ h.element('name-form').submit({preventDefault(){}});
+ await tick();await tick();
+ assert.equal(h.element('refresh-account-status').textContent,'');
 });
