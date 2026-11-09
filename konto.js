@@ -23,21 +23,33 @@ function renderInviteQr(code) {
 }
 const status = message => { $('status').textContent=message; };
 const show = (id,yes) => $(id).classList.toggle('hidden',!yes);
+let refreshVersion = 0;
 async function refresh() {
+  // Auth events and form actions can start overlapping refreshes. Only the newest
+  // request may update the account view after an asynchronous server read.
+  const version = ++refreshVersion;
   const {data:{user},error}=await client.auth.getUser();
+  if(version!==refreshVersion) return;
   if(error && error.name!=='AuthSessionMissingError') status(error.message);
   show('logged-in',!!user);show('logged-out',!user);
   // A persistent invitation notice is separate from one-off form feedback.
   // Refresh after registration/reset must never overwrite an important status.
   show('invite-notice', !user && !!scannedInviteCode);
   if(!user){
+    // Do not leave a previous account's family details in the logged-out DOM.
+    $('account').textContent='';
+    $('display-name').value='';
+    $('members').textContent='';
+    show('unpaired',false);show('family',false);show('waiting',false);show('join-family',false);
     show('invite-qr', false);
     return;
   }
   $('account').textContent='Inloggad: '+user.email;
   const {data:profile}=await client.from('profiles').select('display_name').eq('user_id',user.id).maybeSingle();
+  if(version!==refreshVersion) return;
   $('display-name').value=profile?.display_name||'';
   const {data:members,error:membersError}=await client.rpc('my_family_members');
+  if(version!==refreshVersion) return;
   if(membersError){status(membersError.message);return;}
   const memberCount=members?.length||0;
   show('unpaired',memberCount===0);show('family',memberCount>0);show('waiting',memberCount===1);show('join-family',memberCount<2);
