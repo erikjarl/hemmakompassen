@@ -1,5 +1,4 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {installFeedback} from './feedback.js?v=20261109-test-feedback1';
 import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261109-private-retest-deadline1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261107-authoritative-export4';
 import {createAiResultExperience} from './ai-result-ui.js?v=20261109-private-retest-deadline1';
@@ -20,7 +19,7 @@ const activityNotificationsEnabled=c.enableActivityNotifications===true;
 const personalitySharingEnabled=c.enablePersonalitySharing===true;
 const aiResultEnabled=c.enableAiResultAnalyses===true;
 const db=createClient(c.supabaseUrl,c.supabasePublishableKey,{auth:{flowType:'pkce',detectSessionInUrl:true}});
-installFeedback({db});
+if (typeof document !== 'undefined' && document.getElementById('hk-feedback-dialog')) window.HKFeedback?.installFeedback({db});
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??'').replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x]));
 const nav=[['hem','Hem'],['inkorg','Inkorg'],['swipe','Gillaswajpen'],['personlighet','Min personlighet'],['kommunikation','Kommunikationsråd'],['regler','Schyssta listan'],['medlare','AI-medlaren'],['installningar','Inställningar']];
