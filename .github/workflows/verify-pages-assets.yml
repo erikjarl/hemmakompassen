@@ -11,7 +11,7 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
         with:
@@ -24,7 +24,10 @@ jobs:
           set -euo pipefail
           # GitHub Pages may still be deploying when this push workflow starts.
           # Compare the delivered bytes, not only the Pages workflow status.
-          for attempt in $(seq 1 30); do
+          # Pages deployment on 2026-11-09 completed after the previous 5-minute
+          # check had already exhausted its attempts. Allow up to 10 minutes
+          # for deployment + CDN propagation before declaring a mismatch.
+          for attempt in $(seq 1 60); do
             all_match=true
             for file in index.html live-app.js ai-result-ui.js konto.html konto.js feedback.js feedback.css backend-config.js personality/ipip50-ui.js personality/ipip50-retest.js; do
               remote_file="$(mktemp)"
@@ -43,7 +46,10 @@ jobs:
               echo "Verified: all ten publicly served files match commit ${GITHUB_SHA}."
               exit 0
             fi
+            if (( attempt % 6 == 0 )); then
+              echo "Waiting for Pages propagation: attempt ${attempt}/60."
+            fi
             sleep 10
           done
-          echo "::error::GitHub Pages files did not match this commit within the check window."
+          echo "::error::GitHub Pages files did not match this commit within the 10-minute check window."
           exit 1
