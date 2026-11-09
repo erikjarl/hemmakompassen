@@ -28,6 +28,16 @@ function feedbackPayload(userId, fields, href) {
   };
 }
 
+function withFeedbackDeadline(promise, timeoutMs = 15000) {
+  let timer;
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => {
+      timer = setTimeout(() => reject(Object.assign(new Error('timeout'), { code: 'FEEDBACK_TIMEOUT' })), timeoutMs);
+    })
+  ]).finally(() => clearTimeout(timer));
+}
+
 function installFeedback({ db }) {
   const dialog = document.getElementById('hk-feedback-dialog');
   const open = document.getElementById('hk-feedback-open');
@@ -63,7 +73,16 @@ function installFeedback({ db }) {
     close.disabled = true;
     setStatus('Skickar rapporten…');
     try {
-      const { data, error: authError } = await db.auth.getUser();
+      let authResponse;
+      try {
+        authResponse = await withFeedbackDeadline(db.auth.getUser());
+      } catch (error) {
+        setStatus(error?.code === 'FEEDBACK_TIMEOUT'
+          ? 'Inloggningskontrollen svarade inte i tid. Ingen rapport har skickats. Din text ligger kvar.'
+          : 'Kunde inte kontrollera inloggningen. Ingen rapport har skickats. Din text ligger kvar.');
+        return;
+      }
+      const { data, error: authError } = authResponse || {};
       if (authError || !data?.user) {
         setStatus('Logga in via Ditt konto och försök sedan igen. Din text ligger kvar.');
         return;
@@ -71,18 +90,7 @@ function installFeedback({ db }) {
       const payload = feedbackPayload(data.user.id, fields, location.href);
       // Avoid an indefinite disabled form. A deadline cannot determine whether a
       // write succeeded, so never automatically retry a timed-out submission.
-      let timeout;
-      let result;
-      try {
-        result = await Promise.race([
-          db.from('test_feedback').insert(payload),
-          new Promise((_, reject) => {
-            timeout = setTimeout(() => reject(Object.assign(new Error('timeout'), { code: 'FEEDBACK_TIMEOUT' })), 15000);
-          })
-        ]);
-      } finally {
-        clearTimeout(timeout);
-      }
+      const result = await withFeedbackDeadline(db.from('test_feedback').insert(payload));
       if (result.error) throw result.error;
       form.reset();
       setStatus('Tack! Rapporten är sparad och kan läsas av projektansvarig.');
@@ -105,5 +113,5 @@ function installFeedback({ db }) {
 
 // Classic script loaded before the main app/account module. Reuse their auth client.
 if (typeof window !== 'undefined') {
-  window.HKFeedback = Object.freeze({feedbackPageContext, feedbackPayload, installFeedback});
+  window.HKFeedback = Object.freeze({feedbackPageContext, feedbackPayload, withFeedbackDeadline, installFeedback});
 }
