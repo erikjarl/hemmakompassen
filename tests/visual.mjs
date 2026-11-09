@@ -3587,9 +3587,14 @@ try{
   assert.equal(await completedPersonality.page.locator('.pf-band').count(),25);
   assert.equal(await completedPersonality.page.locator('.pf-table tbody tr').count(),5);
   assert.equal(await completedPersonality.page.locator('.pf-band-key').count(),1);
-  assert.match(await completedPersonality.page.locator('.pf-chart-description').innerText(),
+  assert.match(await completedPersonality.page.locator('.pf-results > p:first-of-type').innerText(),
+    /amerikansk vuxenreferens, inte svenska normer/,
+    'UX-04: visible result introduction must retain adult reference caution');
+  assert.equal(await completedPersonality.page.locator('.pf-chart-short-note').count(),0,
+    'UX-04: avoid duplicating the adult-reference caveat immediately before the scale');
+  assert.match(await completedPersonality.page.locator('.pf-chart-help .pf-chart-description').textContent(),
     /P≈20.*80 %.*±1 SD.*inte svensk eller tonårsvaliderad norm/,
-    'PF-04: the chart explains that an estimated P20 can also lie within one SD');
+    'PF-04: full P20/SD explanation remains available in the expandable method help');
   assert.equal(await completedPersonality.page.locator('.pf-scale-summary').count(),5);
   assert.ok((await completedPersonality.page.locator('.pf-scale-summary').first().innerText()).includes('modellerade vuxenfördelningen'),
     'PF-04: percentiles describe modeled adult ranking rather than generic average labels');
@@ -3628,6 +3633,22 @@ try{
   const narrowPersonality=await freshContext({viewport:{width:320,height:700},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,personalityComplete:true});
   await narrowPersonality.page.goto(base+'#personlighet',{waitUntil:'load'});
   await narrowPersonality.page.locator('.pf-scale-row').first().waitFor();
+  const firstScalePosition=await narrowPersonality.page.evaluate(()=>{
+    const main=document.querySelector('.live-main');
+    const first=document.querySelector('.pf-results .pf-scale-track');
+    const mainBox=main?.getBoundingClientRect(),firstBox=first?.getBoundingClientRect();
+    return {mainTop:mainBox?.top,mainBottom:mainBox?.bottom,
+      firstTrackTop:firstBox?.top,firstTrackBottom:firstBox?.bottom,
+      chartHelpOpen:document.querySelector('.pf-results .pf-chart-help')?.open,
+      introText:document.querySelector('.pf-intro')?.innerText};
+  });
+  assert.ok(firstScalePosition.firstTrackTop>=firstScalePosition.mainTop&&
+    firstScalePosition.firstTrackBottom<=firstScalePosition.mainBottom,
+    'UX-04: first actual personality scale must be visible without scrolling at 320x700 '+JSON.stringify(firstScalePosition));
+  assert.equal(firstScalePosition.chartHelpOpen,false,
+    'UX-04: long reference explanation is collapsed by default');
+  assert.doesNotMatch(firstScalePosition.introText,/Utforska fem sidor/,
+    'UX-04: finished profile does not repeat questionnaire onboarding');
   await checkOverflow(narrowPersonality.page,'Private personality profile 320px');
   await capture(narrowPersonality.page,'mobile-320-personality-percentiles.png');
   await narrowPersonality.page.locator('.pf-percentile-chart').screenshot({path:path.join(output,'mobile-320-personality-bars.png'),animations:'disabled'});

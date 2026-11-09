@@ -130,9 +130,9 @@ function percentileChart(self,other=null){
   return '<div class="pf-percentile-chart">'+
     '<div class="pf-legend" style="--pf-own:#55d6d2;--pf-other:#f8b55b"><span class="pf-legend-own">Din profil</span>'+
     (other?'<span class="pf-legend-other">Den andras profil</span>':'')+'</div>'+
-    '<p class="pf-chart-description"><strong>Modellberäknad percentil (P≈):</strong> P≈20 innebär lägre placering än ungefär 80 % i en hypotetisk vuxenfördelning, men kan samtidigt ligga inom ±1 SD från medelvärdet. Det är inte svensk eller tonårsvaliderad norm.</p>'+
     rows+
     '<details class="pf-chart-help"><summary>Färgzoner och hur percentilerna ska tolkas</summary>'+
+    '<p class="pf-chart-description"><strong>Modellberäknad percentil (P≈):</strong> P≈20 innebär lägre placering än ungefär 80 % i en hypotetisk vuxenfördelning, men kan samtidigt ligga inom ±1 SD från medelvärdet. Det är inte svensk eller tonårsvaliderad norm.</p>'+
     bandKey+
     '<p>P≈75 betyder att ditt resultat uppskattas ligga högre än cirka 75 % i en hypotetisk normalfördelning med det amerikanska vuxenurvalets medelvärde och standardavvikelse. Det är <strong>inte</strong> en uppmätt percentil i urvalet eller en svensk norm.</p>'+
     '<p>Den gröna mittzonen motsvarar −1 till +1 SD (cirka percentil 16–84), zonerna utanför motsvarar 1–2 SD och de smala ändarna resultat bortom 2 SD. Poängen är diskreta och den svenska översättningen är inte validerad.</p></details></div>';
@@ -372,7 +372,10 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false,
         '<p class="live-muted">Markörerna visar uppskattad percentil jämfört med samma vuxenreferens. Tabellen visar råpoäng, medelvärde och SD. Skillnader är inte bevis för att ni fungerar olika.</p>'+
         '</section>';
     }
-    return heading+'<section class="live-panel pf-results"><h2>Din profil</h2><p>Dina fem skalor visar uppskattad placering jämfört med en amerikansk vuxenreferens, inte svenska normer.</p>'+
+    // The introductory questionnaire instructions are redundant once all 50 answers are done.
+    // Keep the scientific limitations immediately above the chart and in its optional help.
+    const completedHeading='<section class="pf-intro pf-intro-complete"><span class="swipe-eyebrow">LÄR KÄNNA DIG SJÄLV</span><h1>Min personlighet</h1></section>';
+    return completedHeading+'<section class="live-panel pf-results"><h2>Din profil</h2><p>Dina fem skalor jämförs med en amerikansk vuxenreferens, inte svenska normer.</p>'+
       percentileChart(own)+table(own)+(useAiAnalysis?analysisPanel('personality','own',getAiSnapshot()):referenceFeedback(own))+referenceCaveat()+
       '<p class="live-muted">Skalorna bygger på dina svar (10–50). Högt eller lågt är inte i sig bättre eller sämre. Den svenska översättningen behöver prövas vetenskapligt.</p>'+
       '<button type="button" data-pf-action="review">Granska eller ändra mina svar</button>'+exportControls+'</section>'+sharing+comparison+(retests?retests.render():'');
