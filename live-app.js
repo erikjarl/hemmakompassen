@@ -1960,6 +1960,8 @@ async function markSchysstaRead(id){
   if(user?.id!==viewer||session!==sharedSession)return;
   schysstaSaving.delete(id);
   if(error){schysstaMessage='Det gick inte att bekräfta läsmarkeringen. Uppdatera listan för att kontrollera statusen.';render();return;}
+  // A confirmed successful retry must dismiss the previous uncertainty.
+  schysstaMessage='';
   await fetchSchysstaList();
 }
 function validSchysstaReplacementLinks(rows,manualRules){
@@ -2106,6 +2108,9 @@ function inboxView(){
       +(needs.length?'<ul class="schyssta-list">'+needs.map(row=>'<li><p>'+esc(row.body)+'</p><button type="button" class="live-button" data-schyssta-open="'+row.agreement_id+'">Se och svara i Schyssta listan</button></li>').join('')+'</ul>'
         :'<p class="live-muted">Inga regelförslag väntar på ditt svar.</p>')
       +'<h3>Händelser från Schyssta listan'+(schysstaUnreadCount()?' · '+schysstaUnreadCount()+' olästa':'')+'</h3>'
+      // Rule-notice actions can run directly in this inbox, so their feedback
+      // must be announced here instead of only on the separate rules page.
+      +(schysstaMessage?'<p role="status" class="schyssta-feedback">'+esc(schysstaMessage)+'</p>':'')
       +noticeHtml+'<p><a href="#regler">Öppna Schyssta listan</a></p>');
   const activityPanel=!activityNotificationsEnabled?''
     :card('<h2>Gemensamma kort och aktiviteter'
