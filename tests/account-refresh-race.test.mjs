@@ -13,7 +13,7 @@ const deferred = () => {
   return {promise,resolve};
 };
 
-function accountHarness({holdUser=false,holdProfile=false,holdMembers=false}={}) {
+function accountHarness({holdUser=false,holdProfile=false,holdMembers=false,holdNewMembers=false}={}) {
   const nodes=new Map();
   const node=id=>{
     if(!nodes.has(id)){
@@ -21,13 +21,14 @@ function accountHarness({holdUser=false,holdProfile=false,holdMembers=false}={})
         value:'',textContent:'',hidden:false,open:false,
         classList:{toggle(_name,hide){element.hidden=hide;}},
         addEventListener(type,fn){element[type]=fn;},
+        removeAttribute(name){delete element[name];},
         reset(){},focus(){}
       };
       nodes.set(id,element);
     }
     return nodes.get(id);
   };
-  const gates={user:deferred(),profile:deferred(),members:deferred()};
+  const gates={user:deferred(),profile:deferred(),members:deferred(),newMembers:deferred()};
   let current={id:'parent-a',email:'parent-a@example.test'};
   let authEvent;
   let userReads=0,profileReads=0,memberReads=0;
@@ -59,6 +60,7 @@ function accountHarness({holdUser=false,holdProfile=false,holdMembers=false}={})
       const id=current?.id;
       memberReads++;
       if(holdMembers && id==='parent-a') return gates.members.promise;
+      if(holdNewMembers && id==='teen-b') return gates.newMembers.promise;
       return {data:id?[{role:id==='parent-a'?'parent':'teen',display_name:id==='parent-a'?'Förälder A':'Tonåring B'}]:[],error:null};
     }
   };
@@ -120,4 +122,24 @@ test('FUN-01: an old getUser response cannot restore a signed-out account view',
   assert.equal(h.node('logged-in').hidden,true);
   assert.equal(h.node('account').textContent,'');
   assert.equal(h.reads.profile,0,'Stale authentication must not trigger profile access');
+});
+
+test('FUN-01: previous family view is hidden immediately while new account is loading',async()=>{
+  const h=accountHarness({holdNewMembers:true});
+  await tick();await tick();
+  assert.equal(h.node('members').textContent,'Förälder: Förälder A');
+  assert.equal(h.node('family').hidden,false);
+  h.setUser({id:'teen-b',email:'teen-b@example.test'});
+  h.sendAuth('SIGNED_IN');
+  await delay(15);
+  assert.equal(h.node('account').textContent,'Inloggad: teen-b@example.test');
+  assert.equal(h.node('members').textContent,'','Old family text must be hidden during B family read');
+  assert.equal(h.node('display-name').value,'Tonåring B');
+  assert.equal(h.node('family').hidden,true);
+  assert.equal(h.node('waiting').hidden,true);
+  assert.equal(h.node('join-family').hidden,true);
+  h.gates.newMembers.resolve({data:[{role:'teen',display_name:'Tonåring B'}],error:null});
+  await tick();
+  assert.equal(h.node('members').textContent,'Tonåring: Tonåring B');
+  assert.equal(h.node('family').hidden,false);
 });

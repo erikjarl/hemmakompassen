@@ -1,6 +1,6 @@
 # FUN-01-RACE-01 – samtidiga uppdateringar på kontosidan
 
-**Datum:** 9 november 2026 · **Område:** konto, in-/utloggning, kontobyte och familjevy · **Status:** ändring föreslagen för Node/CI-verifiering.
+**Datum:** 9 november 2026 · **Område:** konto, in-/utloggning, kontobyte och familjevy · **Status:** PR #239 mergad till `main`. Syntetisk Node/Chromium och serverade Pages-filer verifierade; faktisk autentiserad tvåkontotestning återstår.
 
 ## Upptäckt vid kodgranskning
 
@@ -25,8 +25,10 @@
 
 ## Spårbarhet
 
-Se PR och CI-länk i `docs/ACTIVE_ROADMAP.md` när dessa är färdigställda.
+[PR #239](https://github.com/erikjarl/hemmakompassen/pull/239) mergad som [`4da9ff6`](https://github.com/erikjarl/hemmakompassen/commit/4da9ff6b99bfd9d448104eba67da9b927520afad) efter [grön CI #42538478572](https://github.com/erikjarl/hemmakompassen/actions/runs/42538478572), 400/400 Node-tester och 77 syntetiska Chromium-skärmbilder.
 
 ## Publicering
 
 GitHub Actions-kontrollen `verify-pages-assets.yml` utökas från tre till fyra serverade filer och byte-jämför även `konto.js` mot `main` efter merge. Det ger ett särskilt **distributionsbevis** för rätt konto-JavaScript på GitHub Pages, men bevisar inte att inloggning, sessioner eller två faktiska konton fungerar.
+
+**Verifierad publicering 9/11:** [Pages-deploy #42538885853](https://github.com/erikjarl/hemmakompassen/actions/runs/42538885853) och [byte-kontroll #42538886790](https://github.com/erikjarl/hemmakompassen/actions/runs/42538886790) godkända för fyra filer inklusive `konto.js`. De första tre försöken hämtade en äldre kontofil, det fjärde bekräftade nya innehållet. Detta är publiceringsbevis, inte live-användartest.

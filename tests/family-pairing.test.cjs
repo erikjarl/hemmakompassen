@@ -29,6 +29,7 @@ test('a singleton account can enter a code and becomes paired after acceptance',
         value: '', textContent: '', hidden: false, disabled: false,
         classList: {toggle(name, value) { if (name === 'hidden') this.owner.hidden = value; }, owner: null},
         addEventListener(type, handler) { this[type] = handler; },
+        removeAttribute(name) { delete this[name]; },
         reset() { this.wasReset = true; }, focus() {}
       });
       elements.get(id).classList.owner = elements.get(id);
@@ -90,6 +91,7 @@ test('a QR invitation stays on the recipient device, pre-fills the code and need
         value:'', textContent:'', src:'', href:'', hidden:false, disabled:false,
         classList:{toggle(name, active) { if(name === 'hidden') current.hidden=active; }},
         addEventListener(name,fn) { this[name]=fn; },
+        removeAttribute(name) { delete this[name]; },
         reset() { this.wasReset=true; }, focus() {}
       };
       elements.set(id,current);
@@ -142,7 +144,7 @@ test('a QR invitation stays on the recipient device, pre-fills the code and need
       const current={
         value:'',textContent:'',hidden:false,disabled:false,
         classList:{toggle(name,active){if(name==='hidden')current.hidden=active;}},
-        addEventListener(name,fn){this[name]=fn;},reset(){},focus(){}
+        addEventListener(name,fn){this[name]=fn;},removeAttribute(name){delete this[name];},reset(){},focus(){}
       };
       recipientElements.set(id,current);
     }
