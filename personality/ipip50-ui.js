@@ -1,9 +1,9 @@
 import {IPIP50_V1} from './ipip50-v1.js';
-import {createPrivateIpipRetests} from './ipip50-retest.js?v=20261109-ipip50-share-deadline1';
+import {createPrivateIpipRetests} from './ipip50-retest.js?v=20261109-private-retest-deadline1';
 import {scoreIPIP50} from './ipip50-scoring.js';
-import {buildIPIP50FamilyInsights} from './ipip50-family-insights.js?v=20261109-ipip50-share-deadline1';
-import {richFamilyReflection} from './ipip50-family-copy.js?v=20261109-ipip50-share-deadline1';
-import {IPIP50_REFERENCE,IPIP50_PERCENTILE_BANDS,approximateReferencePercentile,describeModeledPercentile,referenceLimits,describeReferenceProfile,formatSv} from './ipip50-reference.js?v=20261109-ipip50-share-deadline1';
+import {buildIPIP50FamilyInsights} from './ipip50-family-insights.js?v=20261109-private-retest-deadline1';
+import {richFamilyReflection} from './ipip50-family-copy.js?v=20261109-private-retest-deadline1';
+import {IPIP50_REFERENCE,IPIP50_PERCENTILE_BANDS,approximateReferencePercentile,describeModeledPercentile,referenceLimits,describeReferenceProfile,formatSv} from './ipip50-reference.js?v=20261109-private-retest-deadline1';
 import {loadMyIPIP50Answers,saveMyIPIP50Answer} from './ipip50-storage.js';
 
 const esc=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -241,7 +241,7 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false,
       timer=setTimeout(()=>reject(Object.assign(new Error('IPIP50 request timed out'),{code})),deadlineMs);
     })]).finally(()=>clearTimeout(timer));
   }
-  const retests=isRetestEnabled?createPrivateIpipRetests({db,onRender:repaint,
+  const retests=isRetestEnabled?createPrivateIpipRetests({db,onRender:repaint,requestTimeoutMs,
     renderOwnScores:profile=>percentileChart(profile)+table(profile)+referenceCaveat()}):null;
   function reset(userId=null){
     viewer=userId;sequence++;consentRequest++;answers={};loading=false;loaded=false;loadError='';saving=false;
