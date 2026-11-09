@@ -25,6 +25,12 @@ Detta är **den enda prioriterade arbetskön** för nya `Jobb hk`-pass. Tidigare
 5. **Verifieringsdisciplin:** skilj alltid mellan kodgranskning, syntetisk Chromium/Node, verkligt publicerad sida och *två faktiskt autentiserade konton*. Inga fiktiva PASS, inga ändringar i befintliga testkontons sparade svar utan uttrycklig nödvändighet/överenskommelse, och ingen status 'färdig' utan relevanta faktiska bevis.
 6. Detta beslut gäller även vid kommandot **`Jobb hk`** och vid val av nästa arbete. Återgå till säkerhets-/GDPR-backlog enbart efter nytt explicit prioriteringsbeslut från projektägaren, och alltid före eventuell bred extern lansering när sådana krav är aktuella.
 
+## FBK-01 – ständigt åtkomlig rapportering från samtliga testanvändare (9 november 2026)
+
+| ID | Acceptanskriterier | Status | Nästa steg / verifiering |
+| --- | --- | --- | --- |
+| **FBK-01 – Rapportera buggar, felaktigt innehåll och förbättringsförslag** | Alla registrerade konton räknas tills vidare som testanvändare. En synlig knapp måste finnas på varje huvudmodul och på kontosidan, på dator och mobil, oberoende av roll och parning. Formuläret erbjuder tre kategorier, fritext och valfri önskad ändring, automatisk säker sida/modul-kontext utan privata URL-parametrar, tydlig sparbekräftelse samt fel-/offline-/utloggatläge utan att förlora text. Rapporter sparas i administratörsläsbar Supabase-tabell, **inte** familjeinkorgen eller offentliga GitHub-issues. Webbklienten ska aldrig kunna läsa andra rapporter. | **Pågår – kod + SQL och tester på gren `feat/test-feedback-20261109`; varken drift eller autentiserat inskick verifierat** | [Teknisk beskrivning och manuella acceptanstester](test-feedback.md). Granska PR/Node/Chromium, lägg migration i verklig Supabase, mergea och verifiera publicerade filer, prova inloggad och utloggad från fysisk mobil (inklusive iOS-tangentbord och nedre svepmeny), kontrollera admin-vyn i Table Editor. Vid framtida extern lansering ska definitionen av testanvändare ersättas av medvetet administrerad tillgång, men **inte** nu. |
+
 ## P0 – ny första prioritet: fullständig funktionell inventering och verklig testning
 
 **Komplettering 9 november – utseende är en del av funktionell kvalitet:** `VIS-00` genomförs parallellt med `FUN-00` och ska omfatta hela den faktiska webbplatsen, inte bara tidigare kända UX-03/UX-04-punkter. Synliga layoutfel dokumenteras även när knapparna tekniskt fungerar. Använd funktionen först; rätta därefter visuella brister i prioriterad ordning, utan att tränga undan blockerande funktionsfel.
