@@ -3587,9 +3587,11 @@ try{
   assert.equal(await completedPersonality.page.locator('.pf-band').count(),25);
   assert.equal(await completedPersonality.page.locator('.pf-table tbody tr').count(),5);
   assert.equal(await completedPersonality.page.locator('.pf-band-key').count(),1);
-  assert.match(await completedPersonality.page.locator('.pf-chart-short-note').innerText(),
-    /P≈.*amerikanska vuxna.*inte en svensk eller tonårsvaliderad norm/,
-    'UX-04: chart retains an immediately visible caution before the first scale');
+  assert.match(await completedPersonality.page.locator('.pf-results > p:first-of-type').innerText(),
+    /amerikansk vuxenreferens, inte svenska normer/,
+    'UX-04: visible result introduction must retain adult reference caution');
+  assert.equal(await completedPersonality.page.locator('.pf-chart-short-note').count(),0,
+    'UX-04: avoid duplicating the adult-reference caveat immediately before the scale');
   assert.match(await completedPersonality.page.locator('.pf-chart-help .pf-chart-description').textContent(),
     /P≈20.*80 %.*±1 SD.*inte svensk eller tonårsvaliderad norm/,
     'PF-04: full P20/SD explanation remains available in the expandable method help');
