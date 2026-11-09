@@ -53,3 +53,10 @@ I `tests/feedback-browser.mjs` körs nu samma **riktiga rapportformulär och eve
 Rapportformuläret skiljer nu mellan **verkligt utloggad** (uppmaning att logga in) och **Auth-kontrollen misslyckades** (uttryckligt fel, ingen INSERT, bevarat utkast). Detta återger vad som är känt, utan att anta att användaren har loggat ut.
 
 Testet kortar ned klientens 15-sekunders väntetid **enbart i mockad Chromium**; produktionsgränsen är fortsatt 15 sekunder. Resultaten bevisar inte faktisk nätverksfördröjning, riktiga Supabase-användare, lagring eller fysisk Safari. En verkligt signerad testsändning och en inspekterad rad i Table Editor krävs fortfarande för full FBK-01-verifiering.
+
+
+## FBK-01-KONTO – fullständig syntetisk rapport från kontosidan (9 november 2026)
+
+Kontosidan har nu ett separat **verkligt Chromium-formulärflöde**: 320px-knappen öppnas via tangentbordets Enter, en förbättringsrapport med fritext och frivilligt förslag skickas via mockad inloggad Supabase-klient, exakt en korrekt rapportpayload inspekteras, sparad formulärtext rensas och dialogen stängs och öppnas igen och kan stängas med Escape. Testad konto-URL innehåller en fiktiv `#invite=`-kod, som **inte** får förekomma i rapportens `page_context` eller övrig payload.
+
+Även denna testnivå är **syntetisk**: inget riktigt testkonto, ingen INSERT i live Supabase och ingen fysisk Safari/iOS testas.

@@ -154,7 +154,7 @@ try {
     status:200, contentType:'text/html; charset=utf-8',
     body:'<!doctype html><html lang="sv"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><body>'+accountWidget+'</body></html>'
   }));
-  await accountPage.goto('https://account.test/hk/konto.html');
+  await accountPage.goto('https://account.test/hk/konto.html#invite=FAKE_SECRET_INVITE_123456');
   await accountPage.addStyleTag({content:css});
   const accountButton = accountPage.locator('#hk-feedback-open');
   const accountBox = await accountButton.boundingBox();
@@ -162,6 +162,52 @@ try {
     && accountBox.x + accountBox.width <= 320 && accountBox.y + accountBox.height <= 700-8,
     'Account page report control remains usable at 320px without a bottom nav');
   assert.equal(await accountButton.getAttribute('aria-label'),'Rapportera fel eller innehåll');
+
+  // FBK-01/FUN-01: actual account-page keyboard/form interactions with
+  // synthetic signed-in Auth. Invitation fragments must not leave the browser.
+  await accountPage.addScriptTag({content:js});
+  await accountPage.evaluate(()=>{
+    window.accountFeedbackRows=[];
+    window.HKFeedback.installFeedback({
+      db:{
+        auth:{getUser:async()=>({data:{user:{id:'account-tester'}},error:null})},
+        from:table=>({insert:async row=>{
+          window.accountFeedbackRows.push({table,row});
+          return {error:null};
+        }})
+      }
+    });
+  });
+  await accountButton.focus();
+  await accountPage.keyboard.press('Enter');
+  assert.equal(await accountPage.locator('#hk-feedback-dialog').evaluate(el=>el.open),true,
+    'The account reporter opens from a real keyboard interaction');
+  await accountPage.locator('[name="category"]').selectOption('suggestion');
+  const accountReport='Det vore enklare med en tydligare registreringsguide.';
+  await accountPage.locator('[name="description"]').fill(accountReport);
+  await accountPage.locator('[name="expected"]').fill('Visa en steg-för-steg-guide vid registrering.');
+  await accountPage.locator('button[type=submit]').click();
+  await accountPage.waitForFunction(()=>document.querySelector('#hk-feedback-status').textContent.includes('sparad'));
+  const accountRows=await accountPage.evaluate(()=>window.accountFeedbackRows);
+  assert.equal(accountRows.length,1,'A single account-page submission must create one mock report');
+  assert.equal(accountRows[0].table,'test_feedback');
+  assert.equal(accountRows[0].row.user_id,'account-tester');
+  assert.equal(accountRows[0].row.category,'suggestion');
+  assert.equal(accountRows[0].row.description,accountReport);
+  assert.equal(accountRows[0].row.expected_result,'Visa en steg-för-steg-guide vid registrering.');
+  assert.equal(accountRows[0].row.page_context,'konto.html',
+    'The account invitation hash must never be included in report context');
+  assert.doesNotMatch(JSON.stringify(accountRows),/FAKE_SECRET_INVITE_123456/,
+    'Invitation code must not leak into the mock database payload');
+  assert.equal(await accountPage.locator('[name="description"]').inputValue(),'');
+  await accountPage.locator('#hk-feedback-close').click();
+  assert.equal(await accountPage.locator('#hk-feedback-dialog').evaluate(el=>el.open),false);
+  await accountButton.focus();
+  await accountPage.keyboard.press('Enter');
+  assert.equal(await accountPage.locator('#hk-feedback-dialog').evaluate(el=>el.open),true);
+  await accountPage.keyboard.press('Escape');
+  assert.equal(await accountPage.locator('#hk-feedback-dialog').evaluate(el=>el.open),false,
+    'The dialog can close with Escape after a completed submission');
   await accountPage.close();
   console.log('PASS: 320/390px reporter, keyboard-sized modal, rejected/unknown saves, Auth timeout, retained draft and explicit retry');
 } finally {
