@@ -188,14 +188,21 @@ function sameInboxPair(previous,current,viewer){
       previous.find(m=>m.role===role)?.user_id===current.find(m=>m.role===role)?.user_id);
 }
 let inboxPairCheckBusy=false,inboxPairEpoch=null;
+let inboxPairCheckTask=null,inboxPairCheckViewer=null,inboxPairCheckSession=null;
 async function recheckInboxPair(){
-  if(inboxPairCheckBusy||!user||members.length!==2)return false;
+  if(!user||members.length!==2)return false;
   const viewer=user.id,session=sharedSession,oldMembers=members;
+  // The visible action can occur while a background polling check is pending.
+  // Share the same verified result instead of dropping the user's click.
+  if(inboxPairCheckTask&&inboxPairCheckViewer===viewer&&inboxPairCheckSession===session)
+    return inboxPairCheckTask;
   inboxPairCheckBusy=true;
+  inboxPairCheckViewer=viewer;
+  inboxPairCheckSession=session;
+  const checkTask=(async()=>{
   let result,epoch;
   try{[result,epoch]=await Promise.all([db.rpc('my_family_members'),db.rpc('my_current_inbox_pair_epoch')]);}
   catch(error){result={error};}
-  finally{inboxPairCheckBusy=false;}
   if(user?.id!==viewer||sharedSession!==session)return false;
   if(!result?.error&&sameInboxPair(oldMembers,result.data,viewer)
     &&typeof epoch?.data==='string'&&epoch.data.length>0
@@ -227,7 +234,19 @@ async function recheckInboxPair(){
   members=[];
   render();
   void refresh().catch(showError);
-  return false;
+  return false;  })();
+  inboxPairCheckTask=checkTask;
+  try{return await checkTask;}
+  finally{
+    // An old account's completed request must not unlock the new session's
+    // still-pending pair check.
+    if(inboxPairCheckTask===checkTask){
+      inboxPairCheckTask=null;
+      inboxPairCheckViewer=null;
+      inboxPairCheckSession=null;
+      inboxPairCheckBusy=false;
+    }
+  }
 }
 async function fetchFamilyChatUnread(){
   if(!user||members.length!==2||!inboxPairEpoch){familyChatUnread=0;familyChatUnreadError=!!user&&members.length===2&&!inboxPairEpoch;return;}
