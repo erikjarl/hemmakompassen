@@ -1,7 +1,9 @@
 // Accessible internal-test feedback, shared by the app and account page.
 // No screenshots, personal answers or private chats are attached automatically.
 const CATEGORIES = new Set(['bug', 'content', 'suggestion']);
-const ROUTES = new Set(['hem', 'inkorg', 'swipe', 'insikter', 'personlighet', 'kommunikation', 'regler', 'medlare', 'installningar']);
+// Include every actual route where a tester can open the reporter. Keep an
+// explicit allowlist so arbitrary fragments (including invite tokens) stay out.
+const ROUTES = new Set(['hem', 'inkorg', 'swipe', 'insikter', 'personlighet', 'kommunikation', 'nvc', 'mi-foralder', 'regler', 'medlare', 'installningar']);
 
 function feedbackPageContext(href) {
   const url = new URL(href);
