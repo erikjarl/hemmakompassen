@@ -7,7 +7,7 @@ import {readFileSync} from 'node:fs';
 // real user, saved family message or database write is involved.
 const source=readFileSync(new URL('../live-app.js',import.meta.url),'utf8');
 const begin=source.indexOf('function withLiveLoginDeadline(');
-const end=source.indexOf("document.addEventListener('submit',async e=>{",begin);
+const end=source.indexOf("document.addEventListener('keydown',e=>{",begin);
 assert.ok(begin>=0&&end>begin,'Production login functions are testable');
 assert.match(source,/if\(e\.target\.id!=='live-login'\)return;await submitLiveLogin\(e\)/);
 
@@ -114,7 +114,7 @@ test('FUN-01: stalled post-login refresh is bounded and preserves success distin
  const h=makeHarness({refreshReply:'pending'});
  const pending=h.login(h.event);
  // Resolve Auth, enter refresh, then fire the pending refresh timer.
- await Promise.resolve();await Promise.resolve();await Promise.resolve();
+ for(let i=0;i<10&&h.refreshed===0;i++)await new Promise(resolve=>setImmediate(resolve));
  assert.equal(h.refreshed,1);
  assert.equal(h.button.disabled,true);
  h.fireDeadline();
