@@ -134,6 +134,37 @@ async function verifySchysstaMobileHierarchy(){
           role+' '+width+'px: shared agreements precede pending proposals without hiding them');
         assert.ok(geometry.composeClosed,role+' '+width+'px: optional form collapsed initially');
         assert.ok(geometry.approvedCount>=1,role+' '+width+'px: approved rules still accessible');
+        // UX-03: loading a deep-linked page may set the active tab before
+        // asynchronous family data makes the nav visible. It must end fully
+        // inside the unobscured tab strip, not beneath the feedback button.
+        await page.waitForFunction(()=>{
+          const nav=document.querySelector('#live-mobile-nav');
+          const tab=nav?.querySelector('a[aria-current="page"]');
+          if(!nav||!tab)return false;
+          const n=nav.getBoundingClientRect(),t=tab.getBoundingClientRect();
+          return n.width>0&&t.left>=n.left-1&&t.right<=n.right+1;
+        },null,{timeout:2500}).catch(async()=>{
+          const bounds=await page.evaluate(()=>{
+            const nav=document.querySelector('#live-mobile-nav');
+            const tab=nav?.querySelector('a[aria-current="page"]');
+            const n=nav?.getBoundingClientRect(),t=tab?.getBoundingClientRect();
+            return {route:location.hash,navLeft:n?.left,navRight:n?.right,
+              tabLeft:t?.left,tabRight:t?.right,scrollLeft:nav?.scrollLeft,
+              scrollWidth:nav?.scrollWidth,clientWidth:nav?.clientWidth};
+          });
+          throw new Error(role+' '+width+'px active tab clipped after load: '+JSON.stringify(bounds));
+        });
+        const navBounds=await page.evaluate(()=>{
+          const n=document.querySelector('#live-mobile-nav').getBoundingClientRect();
+          const t=document.querySelector('#live-mobile-nav a[aria-current="page"]').getBoundingClientRect();
+          const b=document.querySelector('#hk-feedback-open')?.getBoundingClientRect();
+          return {navRight:n.right,tabRight:t.right,tabLeft:t.left,reportLeft:b?.left,reportTop:b?.top,tabBottom:t.bottom};
+        });
+        assert.ok(navBounds.tabRight<=navBounds.navRight+1,
+          role+' '+width+'px: active tab is clipped: '+JSON.stringify(navBounds));
+        assert.ok(!navBounds.reportLeft||navBounds.tabRight<=navBounds.reportLeft+1
+          ||navBounds.tabBottom<=navBounds.reportTop,
+          role+' '+width+'px: active tab is behind the report button: '+JSON.stringify(navBounds));
         const jump=page.getByRole('button',{name:'Visa väntande förslag'});
         assert.equal(await jump.count(),1,role+' '+width+'px: a visible pending-action jump exists');
         await jump.click();

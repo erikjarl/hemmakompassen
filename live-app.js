@@ -1,5 +1,5 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261110-fbk-pending-jump1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261110-ux03-visible-tab1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
 import {createAiResultExperience} from './ai-result-ui.js?v=20261109-private-retest-deadline1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
@@ -1717,10 +1717,12 @@ function revealNextSwipeCard(viewer,session,deckId){
   target.focus({preventScroll:true});
 }
 let previousMenuRoute=null;
+let mobileNavUserBrowsing=false,mobileNavEventsInstalled=false;
 function menu(){
   const route=page();
   const routeChanged=route!==previousMenuRoute;
   previousMenuRoute=route;
+  if(routeChanged)mobileNavUserBrowsing=false;
   const unread=schysstaListEnabled&&user&&members.length===2&&!schysstaError?schysstaUnreadCount():0;
   const pending=schysstaListEnabled&&user&&members.length===2&&!schysstaError?schysstaNeedsAnswer().length:0;
   const navItem=([key,label])=>{
@@ -1742,6 +1744,16 @@ function menu(){
   // Preserve the user's scroll position on badge changes, but bring the active
   // destination into view after a route change.
   const mobile=$('live-mobile-nav');
+  if(!mobileNavEventsInstalled){
+    // Do not pull the tab strip back to the active route while someone is
+    // swiping or browsing other tabs. A subsequent route change resets this.
+    mobile.addEventListener('touchstart',()=>{mobileNavUserBrowsing=true;},{passive:true});
+    mobile.addEventListener('wheel',()=>{mobileNavUserBrowsing=true;},{passive:true});
+    mobile.addEventListener('keydown',event=>{
+      if(['ArrowLeft','ArrowRight','Home','End'].includes(event.key))mobileNavUserBrowsing=true;
+    });
+    mobileNavEventsInstalled=true;
+  }
   if(mobile.innerHTML!==html){
     const oldLeft=mobile.scrollLeft;
     const focusedHref=mobile.contains(document.activeElement)
@@ -1750,17 +1762,24 @@ function menu(){
     mobile.scrollLeft=oldLeft;
     if(focusedHref)mobile.querySelector('a[href="'+focusedHref+'"]')?.focus({preventScroll:true});
   }
-  if(routeChanged){
+  // A route can become visible only after asynchronous Auth/role data loads.
+  // Check a clipped active tab again on those renders, not solely when the
+  // hash changes. Respect deliberate finger/keyboard browsing of the strip.
+  if(routeChanged||!mobileNavUserBrowsing){
     const current=mobile.querySelector('a[aria-current="page"]');
     if(current){
-      // Defer until layout, without scrolling the document or content pane.
       requestAnimationFrame(()=>{
-        if(page()!==route)return;
-        // Use viewport-relative rectangles; offsetLeft may be relative to a
-        // distant offsetParent, which misaligns the active tab on mobile.
+        if(page()!==route||mobileNavUserBrowsing||!mobile.isConnected)return;
         const navBox=mobile.getBoundingClientRect(),tabBox=current.getBoundingClientRect();
-        if(tabBox.left<navBox.left+4)mobile.scrollLeft-=navBox.left+4-tabBox.left;
-        else if(tabBox.right>navBox.right-4)mobile.scrollLeft+=tabBox.right-navBox.right+4;
+        if(navBox.width===0||tabBox.width===0)return;
+        // With scroll-snap:proximity, moving only the clipped pixels may snap
+        // straight back to the previous partially hidden tab position.
+        // Advance roughly half a tab farther to cross the next snap midpoint.
+        const snapBias=Math.min(60,tabBox.width/2);
+        if(tabBox.left<navBox.left-1)
+          mobile.scrollLeft-=navBox.left+4-tabBox.left+snapBias;
+        else if(tabBox.right>navBox.right+1)
+          mobile.scrollLeft+=tabBox.right-navBox.right+4+snapBias;
       });
     }
   }
