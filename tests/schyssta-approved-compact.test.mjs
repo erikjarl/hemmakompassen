@@ -71,7 +71,8 @@ test('FBK-02-05: manually expanded rule survives refresh and end-confirmation st
 });
 
 test('FBK-02-05: save feedback is conditional on a fresh confirmed server decision',()=>{
-  assert.match(app,/const refreshed=await fetchSchysstaList\(\);\s*[\s\S]*?if\(!refreshed\|\|user\?\.id!==viewer\|\|sharedSession!==session\|\|schysstaError\)return;\s*const confirmed=/);
+  assert.match(app,/const refreshed=await fetchSchysstaList\(\);[\s\S]*?if\(user\?\.id!==viewer\|\|sharedSession!==session\)return;\s*if\(!refreshed\|\|schysstaError\)\{/);
+  assert.match(app,/Ditt val skickades, men aktuell status kunde inte bekräftas/);
   assert.match(app,/confirmed\?\.own_decision===approved/);
   const html=view({schysstaDecisionFeedback:'Ditt ja är sparat.'});
   assert.match(html,/<p role="status" class="schyssta-feedback">Ditt ja är sparat\.<\/p>/);
@@ -101,7 +102,8 @@ test('FBK-02-05: superseded readback does not falsely confirm an accepted decisi
     return {feedback:state.schysstaDecisionFeedback,renders};
   }
   const stale=await run(false);
-  assert.equal(stale.feedback,'','An abandoned/superseded readback cannot prove success');
+  assert.match(stale.feedback,/kunde inte bekräftas/,'An abandoned/superseded readback must explain uncertainty');
+  assert.doesNotMatch(stale.feedback,/båda godkänt/,'No false server confirmation');
   const fresh=await run(true);
   assert.match(fresh.feedback,/båda godkänt/,'Confirmed readback still gives clear success');
 });

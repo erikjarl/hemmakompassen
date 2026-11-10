@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261110-schyssta-readback1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261110-schyssta-uncertain2';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261110-schyssta-readback1';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261110-schyssta-uncertain2';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261110-schyssta-readback1';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261110-schyssta-uncertain2';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -2319,7 +2319,14 @@ async function decideSchysstaRule(agreementId,approved){
   const refreshed=await fetchSchysstaList();
   // A competing refresh may supersede this read. Never claim that this
   // particular decision was verified from a snapshot we did not receive.
-  if(!refreshed||user?.id!==viewer||sharedSession!==session||schysstaError)return;
+  if(user?.id!==viewer||sharedSession!==session)return;
+  if(!refreshed||schysstaError){
+    // The write succeeded but its readback was superseded or failed. Do not
+    // invite another approval click or claim a decision we cannot verify.
+    schysstaDecisionFeedback='Ditt val skickades, men aktuell status kunde inte bekräftas. Uppdatera listan och kontrollera om beslutet är sparat innan du försöker igen.';
+    if(!schysstaError)render();
+    return;
+  }
   const confirmed=schysstaAllRules().find(row=>row.agreement_id===agreementId);
   schysstaDecisionFeedback=confirmed?.own_decision===approved
     ?(approved?(confirmed.status==='accepted'
