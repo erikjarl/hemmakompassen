@@ -1,5 +1,5 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261110-vis-theme-compact1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261110-fbk-schyssta-hierarchy1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
 import {createAiResultExperience} from './ai-result-ui.js?v=20261109-private-retest-deadline1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
