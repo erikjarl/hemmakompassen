@@ -17,6 +17,13 @@ test('FBK-02-02: normalized NVC text is concise, with exactly 65 words allowed',
  assert.equal(normalizeNvcAiReply(' \tHej\n\n jag   önskar\t lugn.  '),'Hej jag önskar lugn.');
  assert.equal(normalizeNvcAiReply(''.padEnd(601,'x')),null,'600-character cap remains');
  assert.equal(normalizeNvcAiReply(''.padEnd(600,'x')),''.padEnd(600,'x'));
+ for(const unusable of ['...', '?!', '— — —', '  …  ', '123 456']){
+   // Numbers alone are not necessarily useless: only punctuation-only replies
+   // are rejected here, leaving semantic judgment to the user.
+   if(/\p{L}/u.test(unusable))continue;
+   if(/\d/u.test(unusable))continue;
+   assert.equal(normalizeNvcAiReply(unusable),null,'Punctuation-only model text cannot replace draft');
+ }
  for(const input of ['', '  \n ',null,undefined,{},7]){
    assert.equal(normalizeNvcAiReply(input),null,'Invalid or empty text must keep fallback');
  }
