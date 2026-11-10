@@ -216,6 +216,15 @@ export function buildNvcAiPrompt(input={}){
   'Svara bara med den färdiga formuleringen, utan rubrik, förklaring eller följdfråga.\n'+
   'Observation: '+a[0]+'\nKänsla: '+a[1]+'\nBehov: '+a[2]+'\nÖnskemål: '+a[3];
 }
+// The prompt's 65-word limit is not a guarantee: model outputs are untrusted.
+// Reject overlong replies rather than silently truncating a user's requested
+// observation, feeling, need or request mid-sentence.
+export function normalizeNvcAiReply(value){
+ if(typeof value!=='string')return null;
+ const reply=value.trim().replace(/\s+/gu,' ');
+ if(!reply||reply.length>600||reply.split(' ').length>65)return null;
+ return reply;
+}
 export function renderNvcExercise(role='teen'){
  const parent=role==='parent';
  const fields=[
