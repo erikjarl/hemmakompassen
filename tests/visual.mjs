@@ -95,6 +95,39 @@ async function verifyDesktopSidebarBrand(){
       assert.ok(bounds.textRight<=bounds.contentRight+1,
         "Brand crosses sidebar divider at "+width+"px: "+JSON.stringify(bounds));
       assert.equal(bounds.textLines,1,"Wordmark should stay on one line at "+width+"px");
+      // VIS-00/FBK-02-03: the earlier overflow fix switched the brand from
+      // flex to block; the compass circle is a ::before pseudo-element whose
+      // dimensions depend on being a flex item. Verify the real computed
+      // layout, not only the wordmark's text bounding rectangle.
+      const compass=await page.locator(".live-sidebar .live-brand").evaluate(el=>{
+        const brandStyle=getComputedStyle(el),icon=getComputedStyle(el,"::before");
+        return {containerDisplay:brandStyle.display,iconDisplay:icon.display,
+          iconWidth:parseFloat(icon.width),iconHeight:parseFloat(icon.height),
+          content:icon.content};
+      });
+      assert.equal(compass.containerDisplay,"flex",
+        "Desktop brand must preserve its circular compass icon: "+JSON.stringify(compass));
+      assert.equal(compass.iconDisplay,"block",
+        "The compass pseudo-element must be a sized flex item, not an inline zero-size shape");
+      assert.ok(compass.iconWidth>=30&&compass.iconHeight>=30,
+        "The compass must retain its intended visible dimensions: "+JSON.stringify(compass));
+      // Text enlargement is independent of CSS-pixel viewport size. At
+      // larger text, wrap within the sidebar rather than overlap the divider.
+      if(width===821){
+        await page.locator(".live-sidebar .live-brand").evaluate(el=>{el.style.fontSize="34px";});
+        const large=await page.evaluate(()=>{
+          const aside=document.querySelector(".live-sidebar"),brand=aside.querySelector(".live-brand");
+          const side=aside.getBoundingClientRect(),s=getComputedStyle(aside),range=document.createRange();
+          range.selectNodeContents(brand);
+          const rect=range.getBoundingClientRect();
+          return {right:rect.right,limit:side.right-parseFloat(s.paddingRight)-parseFloat(s.borderRightWidth),
+            lines:[...range.getClientRects()].filter(r=>r.width>0).length};
+        });
+        assert.ok(large.right<=large.limit+1,
+          "Zoomed 34px wordmark must stay in desktop sidebar: "+JSON.stringify(large));
+        assert.ok(large.lines>=2,"Enlarged desktop title should wrap visibly: "+JSON.stringify(large));
+        await page.screenshot({path:path.join(output,"desktop-sidebar-brand-zoom-"+width+".png"),animations:"disabled"});
+      }
       await page.screenshot({path:path.join(output,"desktop-sidebar-brand-"+width+".png"),animations:"disabled"});
     }finally{await context.close();}
   }
