@@ -35,7 +35,7 @@ function scenario({allowed=true,moveSession=false,editDraft=false}={}){
   setTimeout,clearTimeout,
   recheckInboxPair:async()=>{events.checks++;if(moveSession)state.sharedSession++;if(editDraft)state.schysstaDraft='Ändrad text';return allowed;},
   db:{rpc:async(name,args)=>{events.calls.push({name,args});return {data:null,error:null};}},
-  fetchSchysstaList:async()=>{events.fetches++;},
+  fetchSchysstaList:async()=>{events.fetches++;},schysstaAllRules:()=>[],schysstaDecisionFeedback:'',
   render:()=>{events.renders++;}
  };
  vm.runInNewContext(chunks.join('\n')+'\n'+names.map(n=>'this.'+n+'='+n+';').join('\n'),state);
