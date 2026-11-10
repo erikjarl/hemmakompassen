@@ -71,7 +71,7 @@ test('FBK-02-05: manually expanded rule survives refresh and end-confirmation st
 });
 
 test('FBK-02-05: save feedback is conditional on a fresh confirmed server decision',()=>{
-  assert.match(app,/await fetchSchysstaList\(\);\s*if\(user\?\.id!==viewer\|\|sharedSession!==session\|\|schysstaError\)return;\s*const confirmed=/);
+  assert.match(app,/const refreshed=await fetchSchysstaList\(\);\s*[\s\S]*?if\(!refreshed\|\|user\?\.id!==viewer\|\|sharedSession!==session\|\|schysstaError\)return;\s*const confirmed=/);
   assert.match(app,/confirmed\?\.own_decision===approved/);
   const html=view({schysstaDecisionFeedback:'Ditt ja är sparat.'});
   assert.match(html,/<p role="status" class="schyssta-feedback">Ditt ja är sparat\.<\/p>/);
