@@ -1432,7 +1432,7 @@ function themeSwipeView(){
   return '<div class="swipe-experience swipe-theme-play swipe-play-view"><header class="swipe-heading">'+
     '<button type="button" class="live-button swipe-theme-back" id="theme-back">← Alla kortlekar</button>'+
     '<span class="swipe-eyebrow">TEMAKORTLEK · PRIVATA SVAR</span><h1>'+esc(deck.title)+'</h1>'+
-    '<p>Svaren är privata och är inga överenskommelser.</p>'+filter+'</header>'+
+    '<p>Svaren är privata och innebär inga överenskommelser.</p>'+filter+'</header>'+
     '<div class="swipe-stage"><div class="swipe-stage-top"><span>'+esc(deck.title)+'</span><span role="status">'+
     (item?ordinal+' / '+visible.length:answered+' / '+visible.length+' sparade')+'</span></div>'+
     '<div class="swipe-track"><div class="swipe-track-fill" style="width:'+Math.round(100*(item?(themeReview?ordinal-1:answered):visible.length)/visible.length)+'%"></div></div>'+
