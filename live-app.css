@@ -645,6 +645,20 @@
 .comm-output:focus{outline:3px solid #f59e0b;outline-offset:2px}
 @media(max-width:620px){.comm-feature-grid,.comm-exercises,.comm-situation-grid{grid-template-columns:1fr}.comm-hero{padding:22px 18px}.comm-actions>*{width:100%;justify-content:center}.comm-exercise summary{padding:15px}}
 
+/* VIS-00 landscape: when the phone is wide but very short, let the
+   first communication tool appear before the fixed bottom navigation.
+   Portrait, desktop, and reduced-motion layouts retain their normal scale. */
+@media (max-width:800px) and (max-height:440px) and (orientation:landscape){
+  .live-main{padding-top:6px}
+  .live-top{margin-bottom:8px;padding:0 0 7px}
+  .comm-toolkit{gap:9px}
+  .comm-hero{padding:8px 14px;border-radius:14px}
+  .comm-hero .comm-kicker{font-size:10px;line-height:1.2;letter-spacing:.07em}
+  .comm-hero h1{font-size:clamp(1.25rem,3vw,1.6rem);line-height:1.1;margin:2px 0 3px}
+  .comm-hero p{font-size:.82rem;line-height:1.25;margin:0}
+  .comm-feature-grid{gap:10px}
+}
+
 /* Cross-links never contain user-generated content or create a new storage channel. */
 .comm-crosslink{max-width:950px;margin:20px auto 30px;padding:18px 20px;border:1px solid #665438;border-radius:16px;background:#24283a;line-height:1.6}
 .comm-crosslink strong{color:#f8c66b}
