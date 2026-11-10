@@ -5433,9 +5433,16 @@ try{
     'Compact theme back control remains visibly identifiable as navigation');
   assert.equal(await unlocked.page.locator('.swipe-theme-play>.swipe-heading>.swipe-eyebrow').isVisible(),false,
     'The redundant theme eyebrow is removed on phones; the heading and privacy explanation remain visible');
-  assert.ok(narrowActions&&narrowNav&&narrowActions.y < narrowNav.y+160,
-    '320px theme Ja/Nej should require considerably less scrolling after reducing the header: '+
+  assert.ok(narrowActions&&narrowNav&&narrowActions.y+narrowActions.height<=narrowNav.y-4,
+    '320x700px theme Ja/Nej must be fully above the fixed bottom navigation, without scrolling: '+
       JSON.stringify({actions:narrowActions,nav:narrowNav}));
+  assert.equal(await unlocked.page.locator('.swipe-theme-play .swipe-importance-status-idle').count(),1,
+    'The idle private-save explanation is kept in the DOM');
+  const ratingAccessibility=await unlocked.page.locator('.swipe-theme-play [data-importance]').evaluate(el=>({
+    hasName:!!el.labels?.length,visible:getComputedStyle(el).display!=='none'
+  }));
+  assert.ok(ratingAccessibility.hasName&&ratingAccessibility.visible,
+    'Importance slider is still labelled and rendered on compact themes');
   await capture(unlocked.page,'mobile-320-theme-choices-compact.png');
   await unlocked.page.setViewportSize({width:390,height:844});
   await unlocked.page.locator('.live-main').evaluate(el=>{el.scrollTop=0;});

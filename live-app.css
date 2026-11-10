@@ -986,6 +986,55 @@
   }
 }
 
+/* VIS-00-08 follow-up: first answer choices should not be buried
+   below the 320x700 phone viewport. Keep the full slider, its labelled
+   thumb and large Ja/Nej targets. Only the idle explanatory sentence and
+   repeated gesture hint are visually tucked away; both remain accessible
+   to assistive technologies, and saving/error status becomes visible. */
+@media(max-width:360px){
+  .swipe-play-view.swipe-theme-play .swipe-category-filter{
+    margin:0;
+    border:0;
+    border-radius:0;
+    padding:0;
+    background:transparent;
+  }
+  .swipe-theme-play .swipe-category-filter summary{
+    display:flex;
+    align-items:center;
+    min-height:44px;
+    padding:0 4px;
+    font-size:13px;
+  }
+  .swipe-theme-play>.swipe-heading{margin-bottom:3px}
+  .swipe-theme-play>.swipe-heading>h1{margin:0 0 2px}
+  .swipe-theme-play>.swipe-heading>p{margin:0 0 3px}
+  .swipe-theme-play .swipe-stage{padding:9px}
+  .swipe-theme-play .swipe-track{margin:5px 0 7px}
+  .swipe-theme-play .swipe-playing-card{padding:9px 10px 8px}
+  .swipe-theme-play .swipe-playing-card h2{
+    margin:3px 0 4px;
+    font-size:1.2rem;
+    line-height:1.18;
+  }
+  .swipe-theme-play .swipe-importance{
+    margin-top:6px;
+    padding:7px 10px 6px;
+  }
+  .swipe-theme-play .swipe-actions{margin:7px 0 3px}
+  .swipe-theme-play .swipe-card-hint,
+  .swipe-theme-play .swipe-importance-status-idle{
+    position:absolute;
+    width:1px;
+    height:1px;
+    padding:0;
+    margin:0;
+    overflow:hidden;
+    white-space:nowrap;
+    clip-path:inset(50%);
+  }
+}
+
 /* VIS-00-13: remove repeated deck labels only on very narrow theme cards.
    Keep category badges when they identify a distinct subcategory. */
 @media(max-width:360px){

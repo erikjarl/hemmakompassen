@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261110-inbox-badge-sources1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261110-theme-choices-first1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
 import {createAiResultExperience} from './ai-result-ui.js?v=20261109-private-retest-deadline1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261110-inbox-badge-sources1';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261110-theme-choices-first1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -517,7 +517,7 @@ function importanceControl(deckId,cardId){
     '<label class="swipe-importance-title" for="swipe-importance-range">Hur viktigt är det här för dig?</label>'+
     '<input id="swipe-importance-range" data-importance data-deck-id="'+esc(deckId)+'" data-card-id="'+esc(cardId)+'" type="range" min="-1" max="1" step="1" value="'+value+'" aria-valuetext="'+esc(importanceValueText(value))+'"'+disabled+'>'+
     '<div class="swipe-importance-scale" aria-hidden="true"><span>Mindre viktigt</span><span>Mycket viktigt</span></div>'+
-    '<span class="swipe-importance-status" data-importance-status role="status">'+esc(status)+'</span>'+
+    '<span class="swipe-importance-status'+(importanceLoadError?'':' swipe-importance-status-idle')+'" data-importance-status role="status">'+esc(status)+'</span>'+
     '</div>';
 }
 function validImportanceCard(deckId,cardId){
@@ -553,7 +553,8 @@ async function saveImportance(deckId,cardId,value,viewer,session){
   while(importancePending.has(key)){
     const next=importancePending.get(key);importancePending.delete(key);
     if(user?.id!==next.viewer||sharedSession!==next.session)break;
-    const status=document.querySelector('[data-importance-status]');if(status)status.textContent='Sparar viktighet…';
+    const status=document.querySelector('[data-importance-status]');
+    if(status){status.classList?.remove?.('swipe-importance-status-idle');status.textContent='Sparar viktighet…';}
     const row={user_id:next.viewer,deck_id:next.deckId,card_id:next.cardId,importance:next.value,updated_at:new Date().toISOString()};
     let error;
     try{({error}=await db.from('swipe_importance').upsert(row,{onConflict:'user_id,deck_id,card_id'}));}
