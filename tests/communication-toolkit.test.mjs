@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {COMMUNICATION_SOURCES,renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from '../communication/toolkit.js';
+import {COMMUNICATION_SOURCES,renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from '../communication/toolkit.js';
 const app=readFileSync(new URL('../live-app.js',import.meta.url),'utf8');
 const builder=readFileSync(new URL('../scripts/build-static.mjs',import.meta.url),'utf8');
 
@@ -72,6 +72,24 @@ test('NVC AI request is explicit, bounded, ephemeral and excludes project contex
   assert.match(app,/useProjectContext:false/,'No family context in AI rewrite');
   assert.match(app,/result\?\.ephemeral!==true/,'Require evidence of no saved chat');
   assert.match(app,/nvcAiEpoch===epoch/,'Stale request cannot overwrite a newer draft');
+});
+
+test('NVC AI waiting states have bounded auth, HTTP and response parsing, without losing the local draft',async()=>{
+ for(const phase of ['auth','fetch','json']){
+  const controller=new AbortController();
+  await assert.rejects(withNvcAiDeadline(new Promise(()=>{}),controller,5),/svarade inte i tid/);
+  assert.equal(controller.signal.aborted,true,phase+' timeout must abort in-flight HTTP');
+ }
+ const controller=new AbortController();
+ assert.equal(await withNvcAiDeadline(Promise.resolve('klar'),controller,100),'klar');
+ assert.equal(controller.signal.aborted,false,'a successful request is not aborted');
+ await assert.rejects(withNvcAiDeadline(Promise.reject(new Error('HTTP 500')),controller,100),/HTTP 500/);
+ assert.equal(controller.signal.aborted,false,'a rejected request preserves its original error');
+ assert.match(app,/withNvcAiDeadline\(db\.auth\.getSession\(\),controller,15000\)/);
+ assert.match(app,/withNvcAiDeadline\(fetch\(c\.aiMediatorUrl,/);
+ assert.match(app,/\}\),controller,30000\)/);
+ assert.match(app,/withNvcAiDeadline\(response\.json\(\)\.catch\(\(\)=>null\),controller,15000\)/);
+ assert.match(app,/if\(!current\(\)\)return/,'stale responses must be ignored');
 });
 
 test('communication content uses its own module, is available on the public build, and has no external data calls',()=>{
