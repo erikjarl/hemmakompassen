@@ -2254,7 +2254,7 @@ function inboxView(){
 async function fetchSchysstaList(){
   const request=++schysstaRequest,viewer=user?.id,session=sharedSession;
   schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];schysstaNotifications=[];schysstaReplacementLinks=[];schysstaHistory=[];schysstaError='';
-  if(!schysstaListEnabled||!viewer||members.length!==2){schysstaLoading=false;if(['regler','inkorg','hem'].includes(page()))render();return;}
+  if(!schysstaListEnabled||!viewer||members.length!==2){schysstaLoading=false;if(['regler','inkorg','hem'].includes(page()))render();return false;}
   schysstaLoading=true;if(['regler','inkorg','hem'].includes(page()))render();
   let results,timeoutHandle;
   try{
@@ -2266,7 +2266,8 @@ async function fetchSchysstaList(){
   }catch(e){
     results=[{error:e},{error:e},{error:e},{error:e},{error:e},{error:e}];
   }finally{clearTimeout(timeoutHandle);}
-  if(request!==schysstaRequest||user?.id!==viewer||sharedSession!==session)return;
+  // A superseded read must not count as confirmation of a preceding write.
+  if(request!==schysstaRequest||user?.id!==viewer||sharedSession!==session)return false;
   schysstaLoading=false;
   if(results.some(result=>result.error)){schysstaError='Schyssta listan kunde inte hämtas. Inga tidigare förslag visas.';}
   else if(!validSchysstaPayload(results[0].data,results[1].data)||!validManualSchysstaPayload(results[2].data,results[1].data)||!validSchysstaNotifications(results[3].data)||!validSchysstaReplacementLinks(results[4].data,results[2].data)||!validSchysstaHistory(results[5].data)){
@@ -2290,6 +2291,7 @@ async function fetchSchysstaList(){
       el?.scrollIntoView({block:'center'});
     });
   }
+  return !schysstaError;
 }
 async function proposeSchysstaRule(cardId){
   if(!schysstaListEnabled||!user||!SCHYSSTA_RULES[cardId]||schysstaSaving.has(cardId))return;
@@ -2314,8 +2316,10 @@ async function decideSchysstaRule(agreementId,approved){
   if(user?.id!==viewer||sharedSession!==session)return;
   schysstaSaving.delete(agreementId);
   if(error){schysstaError='Det gick inte att bekräfta om ditt val sparades. Listan har rensats tills du kontrollerat aktuell status igen.';schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];schysstaNotifications=[];schysstaReplacementLinks=[];schysstaHistory=[];render();return;}
-  await fetchSchysstaList();
-  if(user?.id!==viewer||sharedSession!==session||schysstaError)return;
+  const refreshed=await fetchSchysstaList();
+  // A competing refresh may supersede this read. Never claim that this
+  // particular decision was verified from a snapshot we did not receive.
+  if(!refreshed||user?.id!==viewer||sharedSession!==session||schysstaError)return;
   const confirmed=schysstaAllRules().find(row=>row.agreement_id===agreementId);
   schysstaDecisionFeedback=confirmed?.own_decision===approved
     ?(approved?(confirmed.status==='accepted'
