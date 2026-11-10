@@ -2302,9 +2302,15 @@ async function proposeSchysstaRule(cardId){
   // A response from a former account/family may not release the current
   // session's in-flight action for the same rule card.
   if(user?.id!==viewer||sharedSession!==session)return;
+  if(error){schysstaSaving.delete(cardId);schysstaError='Det gick inte att bekräfta om förslaget sparades. Uppdatera listan för att kontrollera resultatet.';render();return;}
+  const refreshed=await fetchSchysstaList();
+  if(user?.id!==viewer||sharedSession!==session)return;
+  // Prevent a second proposal until the write has had its own readback.
   schysstaSaving.delete(cardId);
-  if(error){schysstaError='Det gick inte att bekräfta om förslaget sparades. Uppdatera listan för att kontrollera resultatet.';render();return;}
-  await fetchSchysstaList();
+  if(!refreshed||schysstaError){
+    schysstaDecisionFeedback='Förslaget skickades, men kunde inte kontrolleras. Uppdatera listan och kontrollera om förslaget redan finns innan du skickar igen.';
+  }
+  render();
 }
 async function decideSchysstaRule(agreementId,approved){
   if(!schysstaListEnabled||!user||!SCHYSSTA_UUID.test(agreementId)||schysstaSaving.has(agreementId))return;
