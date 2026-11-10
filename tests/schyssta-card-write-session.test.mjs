@@ -46,6 +46,41 @@ function harness(){
   }};
 }
 
+test('FBK-02-05: card proposal stays locked during readback and warns when verification fails',async()=>{
+  const h=harness();
+  const readback=deferred();
+  h.state.fetchSchysstaList=async()=>{h.refreshes.push('reload');return readback.promise;};
+  const underway=h.state.propose(deck);
+  await tick();
+  h.gate.resolve({error:null});
+  await tick();
+  assert.equal(h.refreshes.length,1);
+  assert.equal(h.state.schysstaSaving.has(deck),true,'Keep proposal locked through readback');
+  await h.state.propose(deck);
+  assert.equal(h.calls.length,1,'Cannot submit the same proposal twice during readback');
+  readback.resolve(false);
+  await underway;
+  assert.equal(h.state.schysstaSaving.has(deck),false);
+  assert.match(h.state.schysstaDecisionFeedback,/kontrollera om förslaget redan finns/);
+});
+
+test('FBK-02-05: card proposal readback completion does not unlock another session',async()=>{
+  const h=harness();
+  const readback=deferred();
+  h.state.fetchSchysstaList=async()=>{h.refreshes.push('reload');return readback.promise;};
+  const underway=h.state.propose(deck);
+  await tick();
+  h.gate.resolve({error:null});
+  await tick();
+  h.change();
+  h.state.schysstaSaving.add(deck);
+  h.state.schysstaDecisionFeedback='Ny sessionsinfo';
+  readback.resolve(true);
+  await underway;
+  assert.equal(h.state.schysstaSaving.has(deck),true);
+  assert.equal(h.state.schysstaDecisionFeedback,'Ny sessionsinfo');
+});
+
 test('FBK-02-05: decision stays locked while its server readback is pending',async()=>{
   const h=harness();
   const readback=deferred();
