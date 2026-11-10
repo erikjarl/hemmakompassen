@@ -517,7 +517,7 @@ function importanceControl(deckId,cardId){
     '<label class="swipe-importance-title" for="swipe-importance-range">Hur viktigt är det här för dig?</label>'+
     '<input id="swipe-importance-range" data-importance data-deck-id="'+esc(deckId)+'" data-card-id="'+esc(cardId)+'" type="range" min="-1" max="1" step="1" value="'+value+'" aria-valuetext="'+esc(importanceValueText(value))+'"'+disabled+'>'+
     '<div class="swipe-importance-scale" aria-hidden="true"><span>Mindre viktigt</span><span>Mycket viktigt</span></div>'+
-    '<span class="swipe-importance-status" data-importance-status role="status">'+esc(status)+'</span>'+
+    '<span class="swipe-importance-status'+(importanceLoadError?'':' swipe-importance-status-idle')+'" data-importance-status role="status">'+esc(status)+'</span>'+
     '</div>';
 }
 function validImportanceCard(deckId,cardId){
@@ -553,7 +553,8 @@ async function saveImportance(deckId,cardId,value,viewer,session){
   while(importancePending.has(key)){
     const next=importancePending.get(key);importancePending.delete(key);
     if(user?.id!==next.viewer||sharedSession!==next.session)break;
-    const status=document.querySelector('[data-importance-status]');if(status)status.textContent='Sparar viktighet…';
+    const status=document.querySelector('[data-importance-status]');
+    if(status){status.classList?.remove?.('swipe-importance-status-idle');status.textContent='Sparar viktighet…';}
     const row={user_id:next.viewer,deck_id:next.deckId,card_id:next.cardId,importance:next.value,updated_at:new Date().toISOString()};
     let error;
     try{({error}=await db.from('swipe_importance').upsert(row,{onConflict:'user_id,deck_id,card_id'}));}
