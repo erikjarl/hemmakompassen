@@ -2289,7 +2289,7 @@ function schysstaView(){
   const quickActions='<section class="schyssta-quick-actions" aria-label="Översikt och nästa steg">'
     +'<div class="schyssta-quick-state"><strong>'+(needs.length===0?'Inget väntar just nu':needs.length===1?'1 förslag behöver ditt svar':needs.length+' förslag behöver ditt svar')+'</strong>'
     +'<p>'+(needs.length?'Du kan svara direkt på förslagen nedan eller välja Inte nu.':'Du kan föreslå något nytt utan att fatta ett beslut åt den andra.')+'</p>'
-    +(needs.length?'<div class="schyssta-actions schyssta-jump-actions"><button class="schyssta-secondary" type="button" data-schyssta-needs-jump>Visa förslag som behöver mitt svar</button></div>':'')+'</div>'
+    +(needs.length?'<div class="schyssta-actions schyssta-jump-actions"><button class="schyssta-secondary" type="button" data-schyssta-needs-jump>Visa väntande förslag</button></div>':'')+'</div>'
     +(schysstaDraftOpen
       ?'<button class="live-button" type="button" data-schyssta-compose-jump>Fortsätt skriva förslag</button>'
       :'<button class="live-button" type="button" data-schyssta-start>+ Föreslå en regel</button>')
