@@ -82,11 +82,22 @@ try {
     'At 320px the report button occupies reserved navigation space, not page content');
   await page.setViewportSize({width:390,height:844});
 
+  const unloadBlocked = () => page.evaluate(() => {
+    const event = new Event('beforeunload', {cancelable:true});
+    window.dispatchEvent(event);
+    return event.defaultPrevented;
+  });
+  assert.equal(await unloadBlocked(),false,
+    'An empty report must not cause a leave-page confirmation');
   await btn.click();
   assert.equal(await page.locator('#hk-feedback-dialog').evaluate(el=>el.open),true);
   await page.locator('[name="category"]').selectOption('bug');
+  assert.equal(await unloadBlocked(),false,
+    'Selecting only the report category must not cause a leave-page confirmation');
   await page.locator('[name="description"]').fill('Knappen reagerade inte när jag tryckte.');
   await page.locator('[name="expected"]').fill('Knappen ska reagera på första klicket.');
+  assert.equal(await unloadBlocked(),true,
+    'A written report draft triggers the browser unload guard');
   // VIS/FBK-01: a signed-out user can open account in a separate tab
   // without destroying their edited report in the current tab.
   const newTabLink=page.locator('#hk-feedback-form a[href="./konto.html"]');
@@ -101,6 +112,8 @@ try {
   await accountTab.close();
   assert.equal(await page.locator('[name="description"]').inputValue(),'Knappen reagerade inte när jag tryckte.');
   await page.locator('#hk-feedback-close').click();
+  assert.equal(await unloadBlocked(),true,
+    'Closing the dialog still protects its preserved unsent draft');
   await btn.click();
   assert.equal(await page.locator('[name="description"]').inputValue(),'Knappen reagerade inte när jag tryckte.',
     'Dismiss/reopen must not erase an unsent report');
@@ -124,6 +137,8 @@ try {
   assert.equal(rows[0].row.category,'bug');
   assert.equal(rows[0].row.user_id,'test-user-id');
   assert.equal(await page.locator('[name="description"]').inputValue(),'');
+  assert.equal(await unloadBlocked(),false,
+    'Confirmed report submission clears the unload guard');
   await page.locator('#hk-feedback-close').click();
   assert.equal(await page.locator('#hk-feedback-dialog').evaluate(el=>el.open),false);
 
@@ -204,6 +219,8 @@ try {
   assert.equal(await page.locator('[name="description"]').inputValue(),'');
   assert.equal(await page.locator('[name="expected"]').inputValue(),'');
   assert.match(await page.locator('#hk-feedback-status').innerText(),/Utkastet har rensats/);
+  assert.equal(await unloadBlocked(),false,
+    'Explicitly clearing an unsent report removes the unload guard');
   await page.locator('#hk-feedback-close').click();
   await btn.click();
   assert.equal(await page.locator('[name="description"]').inputValue(),'');
@@ -288,6 +305,11 @@ try {
   const accountReport='Det vore enklare med en tydligare registreringsguide.';
   await accountPage.locator('[name="description"]').fill(accountReport);
   await accountPage.locator('[name="expected"]').fill('Visa en steg-för-steg-guide vid registrering.');
+  assert.equal(await accountPage.evaluate(() => {
+    const event=new Event('beforeunload',{cancelable:true});
+    window.dispatchEvent(event);
+    return event.defaultPrevented;
+  }),true,'Unsent account-page report also guards against accidental navigation');
   await accountPage.locator('#hk-feedback-form button[type=submit]').click();
   await accountPage.waitForFunction(()=>document.querySelector('#hk-feedback-status').textContent.includes('sparad'));
   const accountRows=await accountPage.evaluate(()=>window.accountFeedbackRows);

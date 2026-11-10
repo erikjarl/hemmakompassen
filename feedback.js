@@ -49,6 +49,14 @@ function installFeedback({ db }) {
   const submit = form.querySelector('button[type="submit"]');
   const editableFields = [form.elements.category, form.elements.description, form.elements.expected];
   let busy = false;
+  // Keep draft text only in this tab; ask the browser to warn before a
+  // reload, navigation or tab close would erase a non-empty unsent report.
+  // Read live values so confirmed send and explicit clear remove the guard.
+  window.addEventListener?.('beforeunload', event => {
+    if (!form.elements.description.value.trim() && !form.elements.expected.value.trim()) return;
+    event.preventDefault();
+    event.returnValue = '';
+  });
   const setStatus = message => { status.textContent = message; };
   open.addEventListener('click', () => {
     if (busy) return;
