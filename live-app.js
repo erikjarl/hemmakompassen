@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261110-reflection-labels1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261110-inbox-badge-sources1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
 import {createAiResultExperience} from './ai-result-ui.js?v=20261109-private-retest-deadline1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261110-reflection-labels1';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261110-inbox-badge-sources1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -2123,6 +2123,24 @@ function inboxView(){
   if(!user)return '<h1>Inkorg</h1>'+card('<p>Logga in för att läsa dina meddelanden.</p>');
   if(members.length===2&&!inboxPairEpoch)return '<h1>Inkorg</h1>'+card('<h2>Familjekopplingen kunde inte kontrolleras</h2><p>Privata meddelanden visas inte förrän aktuell parning har verifierats.</p><button type="button" class="live-button" id="inbox-retry-pair">Kontrollera igen</button>');
   if(members.length!==2)return '<h1>Inkorg</h1>'+card('<h2>Para ihop era konton</h2><p>Ni behöver vara en förälder och en tonåring i samma familj för att kunna skicka privata meddelanden.</p><a class="live-button" href="./konto.html">Hantera parning</a>');
+  // FBK-02-04: the Inbox badge combines independent, explicit read receipts.
+  // A previously read private chat must not be confused with unread rule events.
+  const unreadMessages=familyChatUnreadError?null:familyChatUnread;
+  const unreadRules=schysstaListEnabled&&!schysstaError?schysstaUnreadCount():0;
+  const unreadActivities=activityNotificationsEnabled&&!activityNotificationsError?activityUnreadCount():0;
+  const unreadTotal=(unreadMessages??0)+unreadRules+unreadActivities;
+  const unreadShortcut=(kind,label,count,unknown=false)=>
+    count>0?'<button type="button" class="schyssta-secondary" data-inbox-unread-jump="'+kind+'">'+label+' · '+count+'</button>'
+      :'<span>'+label+' · '+(unknown?'okänt antal':count)+'</span>';
+  const unreadOverview=unreadTotal>0
+    ?'<section class="live-panel inbox-unread-summary" aria-label="Vad inkorgens olästa gäller">'
+     +'<p><strong>Oläst i inkorgen · '+unreadTotal+'</strong></p>'
+     +'<p class="live-muted">Notissiffran vid Inkorg räknar privata meddelanden, regelhändelser och gemensamma kort. De markeras som lästa var för sig.</p>'
+     +'<div class="inbox-unread-shortcuts">'
+     +unreadShortcut('messages','Privata meddelanden',unreadMessages??0,unreadMessages===null)
+     +unreadShortcut('rules','Regelhändelser',unreadRules,schysstaLoading||!!schysstaError)
+     +unreadShortcut('activities','Gemensamma kort',unreadActivities,activityNotificationsLoading||!!activityNotificationsError)
+     +'</div></section>':'';
   const counterpart=members.find(m=>m.user_id!==user.id);
   const otherName=esc(counterpart?.display_name||(counterpart?.role==='parent'?'Din förälder':'Din tonåring'));
   const messages=familyChatMessages.slice().reverse();
@@ -2138,7 +2156,7 @@ function inboxView(){
       ?'<div class="family-chat-read-controls"><p>'+familyChatUnread+' olästa privata meddelanden. De markeras inte som lästa bara för att du öppnar inkorgen.</p>'+
         '<button type="button" class="schyssta-secondary" data-family-chat-mark-all-read'+(familyChatReadBusy||familyChatLoading?' disabled':'')+'>Markera alla meddelanden som lästa</button></div>'
       :'';
-  const chat=card('<div class="family-chat"><h2>Privata meddelanden med '+otherName+'</h2>'
+  const chat=card('<div class="family-chat"><h2 id="inbox-messages-heading" tabindex="-1">Privata meddelanden med '+otherName+'</h2>'
     +'<p class="live-muted">Bara ni två i den aktuella familjeparningen kan läsa konversationen. Tidigare parningars meddelanden visas inte.</p>'
     +(familyChatError?'<p role="alert">'+esc(familyChatError)+'</p>':'')
     +markAllHtml
@@ -2169,13 +2187,13 @@ function inboxView(){
     :card('<h2>Regelförfrågningar'+(needs.length?' ('+needs.length+')':'')+'</h2>'
       +(needs.length?'<ul class="schyssta-list">'+needs.map(row=>'<li><p>'+esc(row.body)+'</p><button type="button" class="live-button" data-schyssta-open="'+row.agreement_id+'">Se och svara i Schyssta listan</button></li>').join('')+'</ul>'
         :'<p class="live-muted">Inga regelförslag väntar på ditt svar.</p>')
-      +'<h3>Händelser från Schyssta listan'+(schysstaUnreadCount()?' · '+schysstaUnreadCount()+' olästa':'')+'</h3>'
+      +'<h3 id="inbox-rules-heading" tabindex="-1">Händelser från Schyssta listan'+(schysstaUnreadCount()?' · '+schysstaUnreadCount()+' olästa':'')+'</h3>'
       // Rule-notice actions can run directly in this inbox, so their feedback
       // must be announced here instead of only on the separate rules page.
       +(schysstaMessage?'<p role="status" class="schyssta-feedback">'+esc(schysstaMessage)+'</p>':'')
       +noticeHtml+'<p><a href="#regler">Öppna Schyssta listan</a></p>');
   const activityPanel=!activityNotificationsEnabled?''
-    :card('<h2>Gemensamma kort och aktiviteter'
+    :card('<h2 id="inbox-activities-heading" tabindex="-1">Gemensamma kort och aktiviteter'
       +(activityUnreadCount()?' · '+activityUnreadCount()+' olästa':'')+'</h2>'
       +'<p class="live-muted">En avisering visar bara att ett nytt gemensamt kort eller en frivilligt delad förståelse har blivit tillgänglig. Inga privata svar visas här.</p>'
       +(activityNotificationsError?'<p role="alert">'+esc(activityNotificationsError)+'</p>'
@@ -2195,7 +2213,7 @@ function inboxView(){
   return '<h1>Inkorg</h1><p>Här kan ni skriva privata meddelanden, se frivilligt delade gemensamma kort och hantera regelförfrågningar.</p>'
     +'<div class="inbox-refresh-actions"><button type="button" class="schyssta-secondary" id="inbox-refresh-all"'+(inboxRefreshing?' disabled':'')+'>'+(inboxRefreshing?'Uppdaterar hela inkorgen…':'Uppdatera hela inkorgen')+'</button>'
     +(inboxRefreshStatus?'<p role="status" aria-live="polite">'+esc(inboxRefreshStatus)+'</p>':'')+'</div>'
-    +activityPanel+chat+rules;
+    +unreadOverview+activityPanel+chat+rules;
 }
 async function fetchSchysstaList(){
   const request=++schysstaRequest,viewer=user?.id,session=sharedSession;
@@ -2737,6 +2755,13 @@ if(e.target.closest('#home-refresh-notices')&&user&&members.length===2)
   });
 if(e.target.closest('#inbox-retry-pair'))void refresh().catch(showError);
 if(e.target.closest('#inbox-refresh-all'))void refreshWholeInbox();
+const unreadJump=e.target.closest('[data-inbox-unread-jump]');
+if(unreadJump&&page()==='inkorg'){
+  const ids={messages:'inbox-messages-heading',rules:'inbox-rules-heading',activities:'inbox-activities-heading'};
+  const heading=$(ids[unreadJump.dataset.inboxUnreadJump]);
+  if(heading){heading.focus({preventScroll:true});heading.scrollIntoView({block:'start',behavior:'auto'});}
+  return;
+}
 if(e.target.closest('[data-family-chat-refresh]'))void recheckInboxPair().then(valid=>{if(valid)void fetchFamilyChat();});
 if(e.target.closest('[data-family-chat-mark-all-read]'))void markAllFamilyChatRead();
 if(e.target.closest('[data-family-chat-more]'))void recheckInboxPair().then(valid=>{if(valid)void fetchFamilyChat(true);});
