@@ -50,11 +50,14 @@ try {
     // authentication token or stored report is involved.
     const browserSetTimeout = window.setTimeout.bind(window);
     window.setTimeout = (fn, ms, ...args) =>
-      browserSetTimeout(fn, ms === 15000 ? (scenario === 'slowOk' ? 5000 : 30) : ms, ...args);
+      browserSetTimeout(fn, ms === 15000 ? (['slowOk','authSlow'].includes(scenario) ? 5000 : 30) : ms, ...args);
     window.HKFeedback.installFeedback({
       db:{
         auth:{getUser:async()=>{
           if(scenario==='authHang')return new Promise(()=>{});
+          if(scenario==='authSlow')return new Promise(resolve=>{
+            window.finishFeedbackAuth=()=>resolve({data:{user:{id:'test-user-id'}},error:null});
+          });
           if(scenario==='authError')return {data:{user:null},error:{message:'Simulerat nätverksfel'}};
           return {data:{user:signedIn?{id:'test-user-id'}:null},error:null};
         }},
@@ -293,6 +296,24 @@ try {
     'NVC submission must be routed to the actual exercise rather than the generic homepage');
   assert.equal(nvcRows[3].row.category,'content');
   await page.locator('#hk-feedback-close').click();
+
+  // FUN-00/FBK-01: a slow Auth check must not mislabel the submitted
+  // report if the SPA route changes before the eventual INSERT.
+  await page.evaluate(()=>{location.hash='#nvc';window.setFeedbackScenario('authSlow');});
+  await btn.click();
+  await page.locator('[name="category"]').selectOption('bug');
+  await page.locator('[name="description"]').fill('Rapport från NVC med väntande inloggningskontroll.');
+  await page.locator('button[type=submit]').click();
+  await page.waitForFunction(()=>typeof window.finishFeedbackAuth==='function');
+  await page.evaluate(()=>{location.hash='#regler';window.finishFeedbackAuth();});
+  await page.waitForFunction(()=>document.querySelector('#hk-feedback-status').textContent.includes('sparad'));
+  const delayedRows=await page.evaluate(()=>window.testFeedbackRows);
+  assert.equal(delayedRows.length,5,'Delayed Auth yields exactly one report INSERT');
+  assert.equal(delayedRows[4].row.page_context,'index.html#nvc',
+    'Report context stays on the route where the user submitted the draft');
+  assert.equal(await page.locator('[name="description"]').inputValue(),'');
+  await page.locator('#hk-feedback-close').click();
+  await page.evaluate(()=>{window.finishFeedbackAuth=undefined;window.setFeedbackScenario('ok');});
 
   // Account page lacks the swipe-nav; its button must still fit the small viewport.
   const accountPage = await browser.newPage({viewport:{width:320,height:700}});
