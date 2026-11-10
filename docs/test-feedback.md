@@ -71,3 +71,11 @@ Kontosidan har nu ett separat **verkligt Chromium-formulärflöde**: 320px-knapp
 I appdialogen finns även en vanlig länk **Öppna Ditt konto i en ny flik**. Den som behöver logga in kan behålla den ursprungliga fliken och utkastet öppet och återvända efteråt. En faktisk autentiserad cross-tab-inloggning är **inte** verifierad: det automatiserade Chromium-testet kontrollerar popup-länken och att utkastet kvarstår, med mockad Auth för själva rapporten. Laddas den ursprungliga sidan om eller stängs fliken försvinner utkastet, vilket också förklaras i dialogen.
 
 **Syntetiska kontroller:** Node/VM verifierar att knappen finns och återaktiveras efter Auth-timeout; Chromium verifierar kategori, beskrivning och frivilligt fält genom Stäng/öppna/Escape, nytt flikfönster och bevarat utkast efter misslyckad INSERT, uttrycklig Rensa utkast och ren formulärstart efter lyckat inskick. Fysisk Safari, faktisk Auth och live Supabase-INSERT återstår separat.
+
+## FBK-01-UNSAVED-LEAVE-01 – varning vid oavsiktlig omladdning (10 november 2026)
+
+**Funktionslucka före:** Ett oskickat rapportutkast kunde bevaras när dialogen stängdes, men försvann utan varning när användaren laddade om, navigerade bort eller stängde fliken.
+
+**Ändring:** Formuläret registrerar en standardiserad beforeunload-lyssnare som begär webbläsarens inbyggda lämna-sidan-bekräftelse **endast när beskrivning eller frivilligt förslag innehåller icke-blank text** – även om dialogen är stängd eller inskick misslyckats. Val av enbart kategori räknas inte som ett utkast. Efter **Rensa utkast** och bekräftad lyckad inskickning tas spärren automatiskt bort eftersom fälten är tomma. Ingen rapporttext sparas automatiskt i webbläsarlagring.
+
+**Begränsning:** Varningsdialogens utseende, om den visas, och användarens val styrs av webbläsaren. Vissa mobilwebbläsare kan undertrycka den, exempelvis om fliken stängs i bakgrunden. Inget utkast återskapas efter faktisk navigering. Node/VM kontrollerar varningsanrop vid tom/ifylld text; syntetisk Chromium dispatchar beforeunload mot den faktiska klientkoden på både app- och kontosidan och kontrollerar när eventet stoppas. Detta är inte fysisk Safari eller live Auth/Supabase.

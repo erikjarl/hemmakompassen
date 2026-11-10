@@ -9,8 +9,9 @@ const {feedbackPageContext,feedbackPayload}=scope.window.HKFeedback;
 const pendingTimeouts = new Map();
 const clearedTimeouts = [];
 let nextTimeout = 1;
+let onBeforeUnload;
 const timeoutScope = {
-  window: {}, URL,
+  window: {addEventListener(type, handler) { if (type === 'beforeunload') onBeforeUnload = handler; }}, URL,
   setTimeout: callback => { const id = nextTimeout++; pendingTimeouts.set(id, callback); return id; },
   clearTimeout: id => { clearedTimeouts.push(id); pendingTimeouts.delete(id); }
 };
@@ -56,6 +57,17 @@ timeoutScope.window.HKFeedback.installFeedback({
   }
 });
 assert.equal(typeof onSubmit, 'function');
+assert.equal(typeof onBeforeUnload, 'function', 'A real unload handler is installed');
+function unloadingPrevented() {
+  const event = {prevented:false,returnValue:null,preventDefault() {this.prevented=true;}};
+  onBeforeUnload(event);
+  return event.prevented && event.returnValue === '';
+}
+assert.equal(unloadingPrevented(), true, 'A non-empty report draft is protected');
+const originalDraft = fakeForm.elements.description.value;
+fakeForm.elements.description.value = '  ';
+assert.equal(unloadingPrevented(), false, 'Whitespace is not an unsent draft');
+fakeForm.elements.description.value = originalDraft;
 const submission = onSubmit({preventDefault() {}});
 assert.equal(sendButton.disabled, true);
 assert.equal(pendingTimeouts.size, 1);
