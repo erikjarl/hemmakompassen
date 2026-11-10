@@ -2314,12 +2314,14 @@ async function decideSchysstaRule(agreementId,approved){
   let error;try{({error}=await schysstaWriteRpc(db.rpc('set_schyssta_rule_decision',{p_agreement_id:agreementId,p_approved:approved})));}catch(e){error=e;}
   // The current session owns the saving flag and cached decisions.
   if(user?.id!==viewer||sharedSession!==session)return;
-  schysstaSaving.delete(agreementId);
-  if(error){schysstaError='Det gick inte att bekräfta om ditt val sparades. Listan har rensats tills du kontrollerat aktuell status igen.';schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];schysstaNotifications=[];schysstaReplacementLinks=[];schysstaHistory=[];render();return;}
+  if(error){schysstaSaving.delete(agreementId);schysstaError='Det gick inte att bekräfta om ditt val sparades. Listan har rensats tills du kontrollerat aktuell status igen.';schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];schysstaNotifications=[];schysstaReplacementLinks=[];schysstaHistory=[];render();return;}
   const refreshed=await fetchSchysstaList();
   // A competing refresh may supersede this read. Never claim that this
   // particular decision was verified from a snapshot we did not receive.
   if(user?.id!==viewer||sharedSession!==session)return;
+  // Keep this agreement locked until its own server readback has completed,
+  // otherwise a second click can submit the same decision while verification waits.
+  schysstaSaving.delete(agreementId);
   if(!refreshed||schysstaError){
     // The write succeeded but its readback was superseded or failed. Do not
     // invite another approval click or claim a decision we cannot verify.
