@@ -660,7 +660,14 @@
   .comm-hero .comm-kicker{font-size:10px;line-height:1.2;letter-spacing:.07em}
   .comm-hero h1{font-size:clamp(1.25rem,3vw,1.6rem);line-height:1.1;margin:2px 0 3px}
   .comm-hero p{font-size:.82rem;line-height:1.25;margin:0}
-  .comm-feature-grid{gap:10px}
+  /* Full-width feature cards keep headings to a single readable line
+     at 125% text instead of wrapping into the fixed mobile navigation. */
+  .comm-feature-grid{grid-template-columns:minmax(0,1fr);gap:7px}
+  .live-main .comm-feature-grid .comm-feature{padding:9px 13px;gap:4px}
+  .live-main .comm-feature-grid .comm-feature h2{
+    font-size:clamp(1.15rem,3.3vw,1.35rem);
+    line-height:1.18;
+  }
 }
 
 /* Cross-links never contain user-generated content or create a new storage channel. */
