@@ -30,7 +30,7 @@ function harness(remote=[parent,teen],error=null){
     schysstaReplacementLinks:[{agreement_id:'replacement-1'}],
     schysstaHistory:[{agreement_id:'history-1'}],schysstaEndTarget:'rule-1',
     schysstaLoading:true,schysstaError:'old-error',
-    schysstaSaving:new Set(['rule-1']),schysstaPausedIds:new Set(['rule-1']),
+    schysstaSaving:new Set(['rule-1']),schysstaPausedIds:new Set(['rule-1']),schysstaExpandedIds:new Set(['rule-1']),schysstaDecisionFeedback:'old-status',
     schysstaDraft:'Privat text om gammal familj',schysstaDraftOpen:true,
     schysstaDraftKey:'old-key',schysstaEditTarget:'rule-1',
     schysstaSubmitting:true,schysstaMessage:'old-message',schysstaCopyMessage:'old-copy',
