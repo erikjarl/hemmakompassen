@@ -3,7 +3,7 @@ import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261110
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
 import {createAiResultExperience} from './ai-result-ui.js?v=20261110-inbox-verified-empty1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261110-inbox-verified-empty1';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261110-nvc-concise-reply1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -2605,8 +2605,8 @@ async function rewriteNvcWithAi(){
      ? result.error:'AI:n kunde inte skapa en formulering just nu.');
    if(result?.ephemeral!==true||result?.chatId!=null||result?.safetyNotice===true
       ||typeof result?.reply!=='string')throw Error('AI:n kunde inte ge ett vanligt, osparat NVC-utkast.');
-   const reply=result.reply.trim().replace(/\s+/g,' ');
-   if(!reply||reply.length>600)throw Error('AI-svaret blev för långt. Ditt fyrdelade utkast finns kvar.');
+   const reply=normalizeNvcAiReply(result.reply);
+   if(!reply)throw Error('AI-svaret var tomt eller för långt. Ditt fyrdelade utkast finns kvar.');
    // updateCommunicationPreview uses textContent: model output is never trusted HTML.
    updateCommunicationPreview('nvc',reply);
    const note=$('comm-nvc-ai-status');
