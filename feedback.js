@@ -91,6 +91,9 @@ function installFeedback({ db }) {
       description: form.elements.description.value,
       expected: form.elements.expected.value
     };
+    // Capture the reporting page at the user's submit gesture. Auth may be
+    // slow, while another route change can alter location.hash before INSERT.
+    const submittedHref = location.href;
     // Native minlength counts whitespace as text. Validate the trimmed
     // draft before any Auth/network request, so an invalid report receives a
     // useful field error even when the connection is unavailable.
@@ -128,7 +131,7 @@ function installFeedback({ db }) {
         setStatus('Logga in via Ditt konto och försök sedan igen. Din text ligger kvar.');
         return;
       }
-      const payload = feedbackPayload(data.user.id, fields, location.href);
+      const payload = feedbackPayload(data.user.id, fields, submittedHref);
       // Avoid an indefinite disabled form. A deadline cannot determine whether a
       // write succeeded, so never automatically retry a timed-out submission.
       const result = await withFeedbackDeadline(db.from('test_feedback').insert(payload));
