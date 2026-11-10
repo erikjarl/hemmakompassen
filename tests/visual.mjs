@@ -4491,9 +4491,10 @@ try{
       const titleRect=await scaled.page.getByRole('heading',{name:'Verktyg för bättre samtal'}).boundingBox();
       assert.ok(firstRect&&navRect&&titleRect,
         'Landscape communication should expose the hero, first tool and navigation');
-      assert.ok(firstRect.y<navRect.y-5,
-        'On 700x360 landscape with 125% text, at least the first tool must begin above the bottom nav: '+
-          JSON.stringify({tool:firstRect,nav:navRect,title:titleRect}));
+      const firstHeading=await firstTool.locator('h2').boundingBox();
+      assert.ok(firstHeading&&firstHeading.y+firstHeading.height<=navRect.y-5,
+        'On 700x360 landscape with 125% text, the first tool heading must be fully readable above the bottom nav: '+
+          JSON.stringify({heading:firstHeading,tool:firstRect,nav:navRect,title:titleRect}));
       assert.ok(titleRect.y+titleRect.height<=firstRect.y,
         'Compact landscape communication keeps heading readable before the tool list');
     }
