@@ -58,7 +58,7 @@ test('a lost acknowledgement preserves the text and idempotency key across retri
   assert.equal(h.refreshes(),1);
 });
 
-test('FBK-02-04: whitespace-only edits after unknown send keep the retry key',async()=>{
+test('FUN-03: whitespace-only edits after unknown send keep the retry key',async()=>{
   const h=harness();
   h.setRpc(async()=>({data:null,error:{message:'lost acknowledgement'}}));
   await h.state.send();
@@ -79,7 +79,7 @@ test('FBK-02-04: whitespace-only edits after unknown send keep the retry key',as
   assert.equal(h.state.familyChatDraft,'');
 });
 
-test('FBK-02-04: changing the actual outgoing text starts a new request',async()=>{
+test('FUN-03: changing the actual outgoing text starts a new request',async()=>{
   const h=harness();
   h.setRpc(async()=>({data:null,error:{message:'lost acknowledgement'}}));
   await h.state.send();
@@ -146,6 +146,11 @@ test('a reply from a previous signed-in session cannot change the new account',a
   await pending;
   assert.equal(h.state.familyChatDraft,'Ny sessions utkast');
   assert.equal(h.refreshes(),0);
+});
+
+test('FUN-03: inbox textarea input is wired to normalized draft updates',()=>{
+  assert.match(source,/if\(e\.target\.matches\?\.\('#family-chat-body'\)\)\{updateFamilyChatDraft\(e\.target\.value\);return;\}/,
+    'The actual input handler must preserve an uncertain send key when only outer whitespace changes');
 });
 
 test('the inbox composer is locked while pending, not merely its send button',()=>{
