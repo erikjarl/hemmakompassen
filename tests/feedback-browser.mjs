@@ -26,6 +26,19 @@ try {
   await page.goto('https://site.test/hemmakompassen/index.html#kommunikation/plan');
   await page.addStyleTag({content:css});
   await page.addScriptTag({content:js});
+  // FBK-02-02: NVC reports previously lost their route and appeared as
+  // generic index.html; assert all communication subviews map correctly.
+  const contexts=await page.evaluate(()=>{
+    const base='https://site.test/hemmakompassen/index.html';
+    return ['#nvc','#mi-foralder','#kommunikation/plan','#kommunikation/lyssna',
+      '#regler','#unknown','?token=SHOULD_NOT_BE_COPIED#nvc']
+      .map(route=>window.HKFeedback.feedbackPageContext(base+route));
+  });
+  assert.deepEqual(contexts,[
+    'index.html#nvc','index.html#mi-foralder',
+    'index.html#kommunikation','index.html#kommunikation',
+    'index.html#regler','index.html','index.html#nvc'
+  ],'NVC and parent MI reports retain useful safe route context, without query tokens');
   await page.evaluate(()=>{
     window.testFeedbackRows = [];
     window.feedbackInsertAttempts = 0;
@@ -250,6 +263,21 @@ try {
   }
   assert.equal(await page.locator('[name="description"]').inputValue(),'');
   assert.equal((await page.evaluate(()=>window.testFeedbackRows)).length,3);
+  await page.locator('#hk-feedback-close').click();
+
+  // Exercise the real report submit handler on the NVC route, not only the
+  // pure helper. Changing the hash does not authenticate or save app answers.
+  await page.evaluate(()=>{location.hash='#nvc';window.setFeedbackScenario('ok');});
+  await btn.click();
+  await page.locator('[name="category"]').selectOption('content');
+  await page.locator('[name="description"]').fill('NVC-förslaget behöver en språklig förbättring.');
+  await page.locator('#hk-feedback-form button[type=submit]').click();
+  await page.waitForFunction(()=>document.querySelector('#hk-feedback-status').textContent.includes('sparad'));
+  const nvcRows=await page.evaluate(()=>window.testFeedbackRows);
+  assert.equal(nvcRows.length,4,'NVC report creates exactly one mock row');
+  assert.equal(nvcRows[3].row.page_context,'index.html#nvc',
+    'NVC submission must be routed to the actual exercise rather than the generic homepage');
+  assert.equal(nvcRows[3].row.category,'content');
   await page.locator('#hk-feedback-close').click();
 
   // Account page lacks the swipe-nav; its button must still fit the small viewport.
