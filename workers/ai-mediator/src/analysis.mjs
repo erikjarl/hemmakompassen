@@ -95,7 +95,7 @@ export async function loadResultAnalysisInput(env,jwt,userId,role,kind,scope,fet
 const EXERCISE_IDS=['lyssna','pausa','reparera','losning','kontakt','svaart','validera','onskemal','grans'];
 // Require an exact, supported exercise route at the END of each action item.
 // A valid prefix of #kommunikation/kontakt2 or /kontakt-extra is not a link.
-const ROUTE_END_RE=new RegExp('(?:^|\\s)(?:#kommunikation/(?:'+EXERCISE_IDS.join('|')+')|#nvc)
+const ROUTE_END_RE=new RegExp('(?:^|\\s)(?:#kommunikation/(?:'+EXERCISE_IDS.join('|')+')|#nvc)$');
 const FALLBACK_SUGGESTIONS={
   personality:[
     '1. Välj en av dina fem skalor och skriv ned ett vardagsexempel som du känner igen. Prova att återge upplevelsen utan värdering: #kommunikation/validera',
