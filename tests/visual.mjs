@@ -2026,13 +2026,17 @@ async function verifyCommunicationForms(){
       assert.equal(await page.locator('#comm-reflection-form').evaluate(form=>form.checkValidity()),false,
         'FUN-06 reflection requires its three fields');
       await page.locator('#comm-reflection-heard').fill('Jag vill få prata klart');
-      await page.locator('#comm-reflection-meaning').fill('bli lyssnad på');
+      // A noun phrase was previously spliced after "att:", yielding a
+      // broken Swedish sentence. Verify actual form submission in both roles.
+      await page.locator('#comm-reflection-meaning').fill('lugn och privat tid');
       await page.locator('#comm-reflection-check').fill('Har jag förstått dig rätt');
       await page.locator('#comm-reflection-form button[type="submit"]').click();
       const reflection=await page.locator('#comm-reflection-output').innerText();
-      assert.match(reflection,/Jag hörde att du sa: Jag vill få prata klart/);
-      assert.match(reflection,/Jag undrar om det kan vara viktigt för dig att: bli lyssnad på/);
-      assert.match(reflection,/Har jag förstått rätt/);
+      assert.match(reflection,/Det jag hörde: Jag vill få prata klart/);
+      assert.match(reflection,/Min försiktiga gissning om vad som kan vara viktigt: lugn och privat tid/);
+      assert.match(reflection,/Min fråga för att kontrollera om jag förstått: Har jag förstått dig rätt/);
+      assert.doesNotMatch(reflection,/viktigt för dig att:|Jag skulle kunna fråga:/,
+        'The local reflection must not pretend the user-entered noun phrase is a complete sentence');
       await page.locator('[data-comm-copy="reflection"]').click();
       await page.waitForFunction(()=>typeof window.__HK_COMM_COPIED__==='string');
       assert.equal(await page.evaluate(()=>window.__HK_COMM_COPIED__),reflection,'Copies only the generated private reflection');
@@ -4457,8 +4461,8 @@ try{
   await narrow.page.locator('#comm-reflection-form textarea[name="meaning"]').fill('att få prata klart');
   await narrow.page.locator('#comm-reflection-form textarea[name="check"]').fill('Stämmer det att du vill ha mer tid?');
   await narrow.page.locator('#comm-reflection-form button[type="submit"]').click();
-  assert.match(await narrow.page.locator('#comm-reflection-output').innerText(),/Jag hörde att du sa: Jag vill bli lyssnad på/);
-  assert.match(await narrow.page.locator('#comm-reflection-output').innerText(),/Den andra kan rätta mig/);
+  assert.match(await narrow.page.locator('#comm-reflection-output').innerText(),/Det jag hörde: Jag vill bli lyssnad på/);
+  assert.match(await narrow.page.locator('#comm-reflection-output').innerText(),/Den andra kan rätta min gissning/);
   await checkOverflow(narrow.page,'Private reflective listening 320px');
   await capture(narrow.page,'mobile-320-communication-reflection.png');
   await narrow.page.goto(base+'#kommunikation/spegla',{waitUntil:'load'});
