@@ -65,8 +65,14 @@ function unloadingPrevented() {
 }
 assert.equal(unloadingPrevented(), true, 'A non-empty report draft is protected');
 const originalDraft = fakeForm.elements.description.value;
-fakeForm.elements.description.value = '  ';
+fakeForm.elements.description.value = '             ';
 assert.equal(unloadingPrevented(), false, 'Whitespace is not an unsent draft');
+await onSubmit({preventDefault() {}});
+assert.match(statusNode.textContent, /minst 10 tecken/,
+  'Whitespace-only reports are rejected locally before Auth');
+assert.equal(pendingTimeouts.size, 0, 'An invalid draft must not start an Auth request');
+assert.equal(sendButton.disabled, false, 'Local validation never locks the form');
+assert.equal(inserted, 0);
 fakeForm.elements.description.value = originalDraft;
 const submission = onSubmit({preventDefault() {}});
 assert.equal(sendButton.disabled, true);
