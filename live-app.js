@@ -1772,8 +1772,14 @@ function menu(){
         if(page()!==route||mobileNavUserBrowsing||!mobile.isConnected)return;
         const navBox=mobile.getBoundingClientRect(),tabBox=current.getBoundingClientRect();
         if(navBox.width===0||tabBox.width===0)return;
-        if(tabBox.left<navBox.left+4)mobile.scrollLeft-=navBox.left+4-tabBox.left;
-        else if(tabBox.right>navBox.right-4)mobile.scrollLeft+=tabBox.right-navBox.right+4;
+        // With scroll-snap:proximity, moving only the clipped pixels may snap
+        // straight back to the previous partially hidden tab position.
+        // Advance roughly half a tab farther to cross the next snap midpoint.
+        const snapBias=Math.min(60,tabBox.width/2);
+        if(tabBox.left<navBox.left-1)
+          mobile.scrollLeft-=navBox.left+4-tabBox.left+snapBias;
+        else if(tabBox.right>navBox.right+1)
+          mobile.scrollLeft+=tabBox.right-navBox.right+4+snapBias;
       });
     }
   }
