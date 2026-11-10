@@ -155,6 +155,20 @@ try {
   await page.locator('#hk-feedback-close').click();
   assert.equal(await page.locator('#hk-feedback-dialog').evaluate(el=>el.open),false);
 
+  // Native minlength accepts long whitespace, but the app must reject the
+  // trimmed blank report before Auth/INSERT and retain editable inputs.
+  await btn.click();
+  await page.locator('[name="category"]').selectOption('bug');
+  await page.locator('[name="description"]').fill('                  ');
+  await page.locator('button[type=submit]').click();
+  await page.waitForFunction(()=>document.querySelector('#hk-feedback-status').textContent.includes('minst 10 tecken'));
+  assert.equal(await page.evaluate(()=>window.feedbackInsertAttempts),1,
+    'Whitespace-only draft must not create another INSERT');
+  assert.equal(await page.locator('button[type=submit]').isEnabled(),true);
+  assert.equal(await page.locator('[name="description"]').inputValue(),'                  ');
+  await page.locator('#hk-feedback-clear').click();
+  await page.locator('#hk-feedback-close').click();
+
   // FUN-00/FBK-01: real Chromium events for failed writes and unknown timeouts.
   // None of these synthetic failures may clear the report or silently re-send.
   await btn.click();
