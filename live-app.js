@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261110-live-login-timeout1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261110-inbox-verified-empty1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261110-live-login-timeout1';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261110-inbox-verified-empty1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261110-live-login-timeout1';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261110-inbox-verified-empty1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -73,7 +73,7 @@ const ACTIVITY_DECK_LABELS=Object.freeze({
 });
 // Independent of agreement notifications: a current family's private 1:1 conversation.
 let familyChatMessages=[],familyChatUnread=0,familyChatLoading=false,familyChatLoadingOlder=false,
-  familyChatHasMore=false,familyChatError='',familyChatStatus='',familyChatDraft='',
+  familyChatHasMore=false,familyChatHistoryVerified=false,familyChatError='',familyChatStatus='',familyChatDraft='',
   familyChatRequestKey=null,familyChatSending=false,familyChatRequest=0,familyChatCountRequest=0,
   familyChatUnreadError=false,familyChatReadBusy=false;
 let inboxRefreshing=false,inboxRefreshStatus='';
@@ -198,7 +198,7 @@ function validFamilyChatRows(rows){
 function clearFamilyChat(){
   familyChatRequest++;familyChatCountRequest++;
   familyChatMessages=[];familyChatUnread=0;familyChatUnreadError=false;familyChatReadBusy=false;familyChatLoading=false;familyChatLoadingOlder=false;
-  familyChatHasMore=false;familyChatError='';familyChatStatus='';familyChatDraft='';
+  familyChatHasMore=false;familyChatHistoryVerified=false;familyChatError='';familyChatStatus='';familyChatDraft='';
   familyChatRequestKey=null;familyChatSending=false;
   inboxRefreshing=false;inboxRefreshStatus='';
 }
@@ -336,7 +336,7 @@ async function fetchFamilyChat(older=false,{quiet=false,preserveStatus=false}={}
   if(older?(!familyChatHasMore||familyChatLoadingOlder||familyChatLoading):(familyChatLoading||familyChatLoadingOlder))return;
   const viewer=user.id,session=sharedSession,request=++familyChatRequest;
   const oldest=older?familyChatMessages[familyChatMessages.length-1]:null;
-  const previous=quiet?JSON.stringify([familyChatMessages,familyChatHasMore,familyChatError]):null;
+  const previous=quiet?JSON.stringify([familyChatMessages,familyChatHasMore,familyChatError,familyChatHistoryVerified]):null;
   familyChatError='';
   // A confirmed send remains confirmed even when the subsequent read fails.
   // Ordinary deliberate refreshes still clear old, unrelated confirmations.
@@ -358,7 +358,7 @@ async function fetchFamilyChat(older=false,{quiet=false,preserveStatus=false}={}
   if(result?.error||!validFamilyChatRows(result.data)){
     familyChatError='Kunde inte hämta meddelandena. Kontrollera anslutningen och försök igen.';
     if(!older){
-      familyChatMessages=[];familyChatHasMore=false;
+      familyChatMessages=[];familyChatHasMore=false;familyChatHistoryVerified=false;
       // Message loading cannot establish a trusted unread count.
       // Do not present a zero as confirmed until the count RPC succeeds.
       familyChatUnread=0;familyChatUnreadError=true;
@@ -368,11 +368,12 @@ async function fetchFamilyChat(older=false,{quiet=false,preserveStatus=false}={}
       {older,quiet,hasMore:familyChatHasMore});
     familyChatMessages=merged.messages;
     familyChatHasMore=merged.hasMore;
+    if(!older)familyChatHistoryVerified=true;
     // Loading a message page must never create a receipt for pages not viewed.
     // Only the deliberate mark-all action below calls the RPC.
     if(!older&&page()==='inkorg')void fetchFamilyChatUnread();
   }
-  const changed=!quiet||previous!==JSON.stringify([familyChatMessages,familyChatHasMore,familyChatError]);
+  const changed=!quiet||previous!==JSON.stringify([familyChatMessages,familyChatHasMore,familyChatError,familyChatHistoryVerified]);
   if(changed&&page()==='inkorg'&&!familyChatDraft.trim()){
     // Rerendering the paged conversation must not strand keyboard users.
     const hadOlderFocus=older&&document.activeElement?.matches?.('[data-family-chat-more]');
@@ -2143,6 +2144,14 @@ async function refreshWholeInbox(){
     }
   }
 }
+function familyChatEmptyMessage(){
+  // An empty array is not proof of an empty conversation until a successful GET.
+  // The error itself is shown separately as an alert; do not contradict it.
+  if(familyChatError)return null;
+  return familyChatHistoryVerified
+    ?'Inga meddelanden ännu. Skriv det första nedan.'
+    :'Meddelandehistoriken har ännu inte kontrollerats.';
+}
 function inboxView(){
   if(!user)return '<h1>Inkorg</h1>'+card('<p>Logga in för att läsa dina meddelanden.</p>');
   if(members.length===2&&!inboxPairEpoch)return '<h1>Inkorg</h1>'+card('<h2>Familjekopplingen kunde inte kontrolleras</h2><p>Privata meddelanden visas inte förrän aktuell parning har verifierats.</p><button type="button" class="live-button" id="inbox-retry-pair">Kontrollera igen</button>');
@@ -2168,12 +2177,13 @@ function inboxView(){
   const counterpart=members.find(m=>m.user_id!==user.id);
   const otherName=esc(counterpart?.display_name||(counterpart?.role==='parent'?'Din förälder':'Din tonåring'));
   const messages=familyChatMessages.slice().reverse();
+  const emptyMessage=familyChatEmptyMessage();
   const messageList=messages.length?'<ol class="family-chat-messages" aria-label="Er privata konversation">'
     +messages.map(m=>'<li class="family-chat-bubble '+(m.sent_by_me?'family-chat-mine':'family-chat-theirs')+'">'
       +'<p class="family-chat-author">'+(m.sent_by_me?'Du':otherName)+' · <time datetime="'+esc(m.created_at)+'">'+esc(familyChatTimestamp(m.created_at))+'</time></p>'
       +'<p class="family-chat-text">'+esc(m.body)+'</p>'
       +(m.sent_by_me?'<p class="family-chat-receipt">'+(m.read_at?'Läst':'Skickat')+'</p>':'')+'</li>').join('')+'</ol>'
-    :'<p class="live-muted">Inga meddelanden ännu. Skriv det första nedan.</p>';
+    :emptyMessage?'<p class="live-muted">'+esc(emptyMessage)+'</p>':'';
   const markAllHtml=familyChatUnreadError
     ?'<p role="alert">Antalet olästa privata meddelanden kunde inte kontrolleras. Uppdatera konversationen för att försöka igen.</p>'
     :familyChatUnread>0
