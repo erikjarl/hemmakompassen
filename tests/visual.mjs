@@ -2050,9 +2050,9 @@ async function verifyCommunicationForms(){
       await page.locator('#comm-request').fill('prata senare ikväll');
       await page.locator('#comm-nvc-form button[type="submit"]').click();
       const sentence=await page.locator('#comm-nvc-output').innerText();
-      assert.match(sentence,/När vi börjar prata samtidigt känner jag mig stressad/);
-      assert.match(sentence,/Jag behöver lugn och tydlighet/);
-      assert.match(sentence,/Skulle du vilja prata senare ikväll/);
+      assert.match(sentence,/Det jag lade märke till: vi börjar prata samtidigt/);
+      assert.match(sentence,/Mitt behov: lugn och tydlighet/);
+      assert.match(sentence,/Mitt önskemål: prata senare ikväll/);
       await page.evaluate(()=>Object.defineProperty(navigator,'clipboard',{configurable:true,value:{
         writeText:async text=>{window.__HK_COMM_COPIED__=text;}
       }}));
@@ -3884,12 +3884,12 @@ try{
   await m.page.locator('#comm-feeling').fill('mig ledsen');
   await m.page.locator('#comm-need').fill('lugn');
   await m.page.locator('#comm-request').fill('prata efter maten');
-  await m.page.getByRole('button',{name:'Sätt ihop min formulering'}).click();
+  await m.page.getByRole('button',{name:'Visa mina fyra delar'}).click();
   assert.equal(await m.page.locator('#comm-nvc-output').innerText(),
-    'När vi pratar över varandra känner jag mig ledsen. Jag behöver lugn. Skulle du vilja prata efter maten?');
+    'Det jag lade märke till: vi pratar över varandra\nMin känsla: mig ledsen\nMitt behov: lugn\nMitt önskemål: prata efter maten');
   assert.equal(await m.page.evaluate(()=>document.activeElement?.id),'comm-nvc-output','Preview is keyboard focusable');
   await m.page.locator('#comm-observation').fill('<img src=x onerror=alert(1)>');
-  await m.page.getByRole('button',{name:'Sätt ihop min formulering'}).click();
+  await m.page.getByRole('button',{name:'Visa mina fyra delar'}).click();
   assert.match(await m.page.locator('#comm-nvc-output').innerText(),/<img src=x onerror=alert\(1\)>/,'Untrusted draft is shown literally');
   assert.equal(await m.page.locator('#comm-nvc-output img').count(),0,'Draft markup cannot execute');
   await m.page.getByRole('button',{name:'Töm fälten'}).click();
