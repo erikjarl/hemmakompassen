@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261110-ai-nvc-link1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261110-live-login-timeout1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261110-ai-nvc-link1';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261110-live-login-timeout1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261110-ai-nvc-link1';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261110-live-login-timeout1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -2906,6 +2906,44 @@ document.addEventListener('change',e=>{if(e.target.matches?.('#swipe-general-rev
   if(!e.target.matches?.('[data-importance]')||!user)return;
   void saveImportance(e.target.dataset.deckId,e.target.dataset.cardId,Number(e.target.value),user.id,sharedSession);
 });
+// FUN-01: A stalled sign-in or post-login refresh must not leave the form locked.
+// Supabase Auth cannot reliably be cancelled here; a timed-out sign-in result is UNKNOWN.
+function withLiveLoginDeadline(promise,timeoutMs=15000){
+ let timer;
+ return Promise.race([
+  Promise.resolve(promise),
+  new Promise((_,reject)=>{
+   timer=setTimeout(()=>reject(Object.assign(new Error('Login timeout'),{code:'LIVE_LOGIN_TIMEOUT'})),timeoutMs);
+  })
+ ]).finally(()=>clearTimeout(timer));
+}
+async function submitLiveLogin(event){
+ event.preventDefault();
+ const button=event.target.querySelector('button[type="submit"]');
+ if(!button||button.disabled)return;
+ const feedback=$('login-feedback'),password=$('live-password');
+ const email=$('live-email').value.trim();
+ button.disabled=true;
+ feedback.textContent='Loggar in…';
+ try{
+  const response=await withLiveLoginDeadline(db.auth.signInWithPassword({email,password:password.value}));
+  if(!response||response.error)throw response?.error||new Error('Ogiltigt svar från inloggningen');
+  password.value='';
+  try{
+   await withLiveLoginDeadline(refresh());
+  }catch{
+   // The sign-in was confirmed: failing to load the app is not bad credentials.
+   feedback.textContent='Inloggningen lyckades, men kontovyn kunde inte laddas. Prova att uppdatera sidan.';
+  }
+ }catch(error){
+  feedback.textContent=error?.code==='LIVE_LOGIN_TIMEOUT'
+   ?'Inloggningen svarade inte i tid. Det är oklart om den lyckades. Kontrollera kontostatus innan du försöker igen.'
+   :'Kunde inte logga in. Kontrollera e-post och lösenord, eller välj ”Glömt lösenord eller saknar lösenord?”.';
+ }finally{
+  button.disabled=false;
+ }
+}
+
 document.addEventListener('keydown',e=>{
   if(e.target.matches?.('#family-chat-body')&&(e.ctrlKey||e.metaKey)&&e.key==='Enter'){
     e.preventDefault();e.target.closest('form')?.requestSubmit();return;
@@ -2918,7 +2956,7 @@ document.addEventListener('keydown',e=>{
     e.preventDefault();advanceSwipe(e.key==='ArrowRight'?'yes':'no');
   }
 });
-document.addEventListener('submit',async e=>{if(e.target.id==='comm-reflection-form'){e.preventDefault();if(page()!=='kommunikation'||!user)return;const values=Object.fromEntries(new FormData(e.target));const result=buildReflectionPractice(values);updateCommunicationPreview('reflection',result);const output=$('comm-reflection-output');if(output){if(!result)output.textContent='Fyll i alla tre stegen innan du skapar en spegling.';output.focus();}return;}if(e.target.id==='comm-solution-form'){e.preventDefault();if(page()!=='kommunikation'||!user)return;const values=Object.fromEntries(new FormData(e.target));const plan=buildSolutionPlan(values);updateCommunicationPreview('solution',plan);const output=$('comm-solution-output');if(output){if(!plan)output.textContent='Fyll i alla fyra fälten innan du skapar ett utkast.';output.focus();}return;}if(e.target.id==='comm-nvc-form'){e.preventDefault();if(page()!=='nvc'||!user)return;const values=Object.fromEntries(new FormData(e.target));const sentence=buildNvcSentence(values);updateCommunicationPreview('nvc',sentence);const output=$('comm-nvc-output');if(output){if(!sentence)output.textContent='Fyll i alla fyra steg innan du skapar en formulering.';output.focus();}return;}if(e.target.id==='mediator-form'){e.preventDefault();await mediatorExperience.submit();return;}if(e.target.id==='family-chat-form'){e.preventDefault();await sendFamilyChatMessage();return;}if(e.target.id==='schyssta-manual-form'){e.preventDefault();await submitManualSchysstaRule();return;}if(e.target.id!=='live-login')return;e.preventDefault();const b=e.target.querySelector('button');b.disabled=true;const feedback=$('login-feedback');feedback.textContent='Loggar in…';const email=$('live-email').value.trim();try{const {error}=await db.auth.signInWithPassword({email,password:$('live-password').value});if(error)throw error;$('live-password') && ($('live-password').value='');await refresh();}catch(err){feedback.textContent='Kunde inte logga in. Kontrollera e-post och lösenord, eller välj ”Glömt lösenord eller saknar lösenord?”.';}finally{b.disabled=false;}});
+document.addEventListener('submit',async e=>{if(e.target.id==='comm-reflection-form'){e.preventDefault();if(page()!=='kommunikation'||!user)return;const values=Object.fromEntries(new FormData(e.target));const result=buildReflectionPractice(values);updateCommunicationPreview('reflection',result);const output=$('comm-reflection-output');if(output){if(!result)output.textContent='Fyll i alla tre stegen innan du skapar en spegling.';output.focus();}return;}if(e.target.id==='comm-solution-form'){e.preventDefault();if(page()!=='kommunikation'||!user)return;const values=Object.fromEntries(new FormData(e.target));const plan=buildSolutionPlan(values);updateCommunicationPreview('solution',plan);const output=$('comm-solution-output');if(output){if(!plan)output.textContent='Fyll i alla fyra fälten innan du skapar ett utkast.';output.focus();}return;}if(e.target.id==='comm-nvc-form'){e.preventDefault();if(page()!=='nvc'||!user)return;const values=Object.fromEntries(new FormData(e.target));const sentence=buildNvcSentence(values);updateCommunicationPreview('nvc',sentence);const output=$('comm-nvc-output');if(output){if(!sentence)output.textContent='Fyll i alla fyra steg innan du skapar en formulering.';output.focus();}return;}if(e.target.id==='mediator-form'){e.preventDefault();await mediatorExperience.submit();return;}if(e.target.id==='family-chat-form'){e.preventDefault();await sendFamilyChatMessage();return;}if(e.target.id==='schyssta-manual-form'){e.preventDefault();await submitManualSchysstaRule();return;}if(e.target.id!=='live-login')return;await submitLiveLogin(e);});
 window.addEventListener('hashchange',()=>{
   if(page()!=='insikter'){activityInviteError='';insightsRows=[];sharedUnderstandingRows=[];insightsError='';insightsLoading=false;insightsRequest++;}
   if(page()!=='regler'&&page()!=='inkorg'){schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];schysstaNotifications=[];schysstaReplacementLinks=[];schysstaHistory=[];schysstaError='';schysstaLoading=false;schysstaRequest++;}
