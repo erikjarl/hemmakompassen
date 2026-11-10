@@ -173,11 +173,28 @@ export function buildSolutionPlan(input={}){
  if(!problem||!question||!experiment||!followup)return null;
  return 'Jag vill prata om: '+problem+'\nJag vill förstå: '+question+'\nMitt förslag att diskutera: '+experiment+'\nFörslag på uppföljning: '+followup+'\nDetta är bara mitt utkast. Den andra får säga nej eller föreslå något annat.';
 }
-export function buildNvcSentence(input={}){
+// Free-text fields cannot safely be concatenated into one Swedish sentence.
+// This labelled local draft preserves the four NVC parts without inventing grammar.
+function nvcParts(input={}){
+ if(!input || typeof input!=='object'||Array.isArray(input))return null;
  const trim=s=>typeof s==='string'?s.replace(/\s+/g,' ').trim().replace(/[.!?;,:]+$/u,'').slice(0,240):'';
  const a=['observation','feeling','need','request'].map(k=>trim(input[k]));
- if(a.some(s=>!s))return null;
- return 'När '+a[0]+' känner jag '+a[1]+'. Jag behöver '+a[2]+'. Skulle du vilja '+a[3]+'?';
+ return a.some(s=>!s)?null:a;
+}
+export function buildNvcSentence(input={}){
+ const a=nvcParts(input);
+ if(!a)return null;
+ return 'Det jag lade märke till: '+a[0]+'\nMin känsla: '+a[1]+'\nMitt behov: '+a[2]+'\nMitt önskemål: '+a[3];
+}
+// Used only after an explicit AI-button click. No project/family context is included.
+export function buildNvcAiPrompt(input={}){
+ const a=nvcParts(input);
+ if(!a)return null;
+ return 'Skriv EN kort (högst 65 ord), naturlig och grammatiskt korrekt svensk NVC-formulering i jagform. '+
+  'Utgå från observation, känsla, behov och ett konkret, frivilligt önskemål. '+
+  'Rätta ordformer och ordföljd utan att hitta på något om situationen eller lägga till råd. '+
+  'Svara bara med den färdiga formuleringen, utan rubrik, förklaring eller följdfråga.\n'+
+  'Observation: '+a[0]+'\nKänsla: '+a[1]+'\nBehov: '+a[2]+'\nÖnskemål: '+a[3];
 }
 export function renderNvcExercise(role='teen'){
  const parent=role==='parent';
@@ -191,8 +208,11 @@ export function renderNvcExercise(role='teen'){
  '<section class="live-panel"><h2>Från anklagelse till jag-budskap</h2><p><strong>Prova istället för ”Du lyssnar aldrig!”</strong></p><p class="comm-example">'+(parent?'”När vi börjar prata om skärmtid sent känner jag mig stressad. Jag behöver lugn och tydlighet. Skulle du vilja prata om en plan efter middagen?”':'”När du ger råd innan jag har berättat färdigt känner jag mig frustrerad. Jag behöver få säga klart. Skulle du vilja lyssna innan du svarar?”')+'</p>'+
  '<p>En önskan är inte en dold order. Respektera ett nej och var beredd att föreslå en annan väg. Förälderns ansvar för trygghet och omsorg finns kvar.</p></section>'+
  renderCommunicationSafety(role)+
- '<section class="live-panel"><h2>Bygg din egen formulering</h2><p>Texten skapas bara i din webbläsare. Den <strong>sparas inte</strong>, skickas inte till familjemedlemmen och används inte av AI.</p>'+
- '<form id="comm-nvc-form"><div class="comm-fields">'+fields.map(([id,title,hint,placeholder])=>'<label for="comm-'+id+'"><strong>'+e(title)+'</strong><span>'+e(hint)+'</span></label><textarea id="comm-'+id+'" name="'+id+'" rows="2" required maxlength="240" placeholder="'+e(placeholder)+'"></textarea>').join('')+'</div><div class="comm-actions"><button class="live-button" type="submit">Sätt ihop min formulering</button><button class="comm-quiet-button" type="button" data-comm-reset>Töm fälten</button></div></form>'+
- '<p id="comm-nvc-output" class="comm-output" tabindex="-1" role="status" aria-live="polite">Din formulering visas här när du är redo.</p>'+renderCommunicationCopyTools('nvc')+'<p class="live-muted">Läs gärna högt och ändra texten om den låter onaturlig. Den försvinner när du lämnar sidan.</p></section>'+
+ '<section class="live-panel"><h2>Bygg din egen formulering</h2><p>Ditt fyrdelade utkast skapas lokalt i webbläsaren och sparas inte. Vill du få en kort, mer naturlig mening kan du sedan välja <strong>Förbättra språket med AI</strong>. Då skickas just de fyra fälten till AI-tjänsten. Ingen projektinformation hämtas, ingen sparad chatt skapas och inget skickas till familjemedlemmen. Undvik känsliga namn eller detaljer i text som skickas till AI.</p>'+
+ '<form id="comm-nvc-form"><div class="comm-fields">'+fields.map(([id,title,hint,placeholder])=>'<label for="comm-'+id+'"><strong>'+e(title)+'</strong><span>'+e(hint)+'</span></label><textarea id="comm-'+id+'" name="'+id+'" rows="2" required maxlength="240" placeholder="'+e(placeholder)+'"></textarea>').join('')+'</div><div class="comm-actions"><button class="live-button" type="submit">Visa mina fyra delar</button><button class="comm-quiet-button" type="button" data-comm-reset>Töm fälten</button></div></form>'+
+ '<p id="comm-nvc-output" class="comm-output" tabindex="-1" role="status" aria-live="polite">Ditt utkast visas här när du är redo.</p>'+
+ '<div class="comm-actions"><button class="comm-quiet-button" id="comm-nvc-ai" type="button" disabled>Förbättra språket med AI</button></div>'+
+ '<p id="comm-nvc-ai-status" role="status" aria-live="polite"></p>'+
+ renderCommunicationCopyTools('nvc')+'<p class="live-muted">AI-förslaget är bara ett utkast, inte en garanti för en bra formulering. Granska innehållet innan du använder det. Texten försvinner när du lämnar sidan.</p></section>'+
  '<section class="live-panel"><h2>Lyssna med samma fyra steg</h2><p>Pröva en försiktig gissning i stället för att tillskriva den andra motiv: ”Känner du dig frustrerad för att du vill ha mer inflytande?” Fråga om du uppfattat rätt.</p><p>NVC är en modell för samtal, inte en garanti för konfliktlösning eller en kliniskt validerad familjebehandling. <a href="https://www.cnvc.org/about/purpose-of-nvc" target="_blank" rel="noopener noreferrer">Läs mer hos CNVC</a>.</p></section></div>';
 }
