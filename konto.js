@@ -142,7 +142,7 @@ let busy=false;
 async function run(action,{successMessage=null,reportStatus=status}={}){
   if(busy)return;
   busy=true;
-  let active=true;
+  let active=true,actionConfirmed=false,refreshVersionAtStart=null;
   const isCurrent=()=>active;
   // Preserve pre-existing disabled controls (including a pending feedback form).
   // Re-enabling every button after an account action would unlock unrelated UI.
@@ -155,10 +155,37 @@ async function run(action,{successMessage=null,reportStatus=status}={}){
     else status('');
     reportStatus('Arbetar…');
     await withAccountDeadline(action(isCurrent));
-    await refresh();
+    actionConfirmed=true;
+    // The account view performs several sequential reads. Bound the complete
+    // follow-up too, not merely each RPC, so action buttons cannot stay locked
+    // for multiple full per-request deadlines.
+    const updating=refresh();
+    refreshVersionAtStart=refreshVersion;
+    await withAccountDeadline(updating);
     if(successMessage)reportStatus(successMessage);
-  }catch(e){reportStatus(e?.message||'Ett fel inträffade');}
-  finally{active=false;busy=false;buttons.forEach(({button,wasDisabled})=>{button.disabled=wasDisabled;});}
+  }catch(e){
+    // If the overall post-action refresh timed out, prevent its late reply
+    // from changing the view. The timeout can win the race against the
+    // individual read's own deadline; clear previously verified-looking
+    // account and family controls before invalidating the old generation.
+    // Never invalidate a newer Auth-triggered refresh.
+    if(e?.code==='ACCOUNT_TIMEOUT'&&refreshVersionAtStart===refreshVersion){
+      hideUnverifiedFamily();
+      show('logged-in',false);
+      show('logged-out',false);
+      show('invite-notice',false);
+      $('account').textContent='';
+      refreshVersion++;
+    }
+    if(actionConfirmed&&reportStatus===status){
+      // The write was confirmed; a later read failure must not turn a saved
+      // name, sent invitation or accepted pairing into an apparent failed write.
+      const previous=$('status').textContent;
+      const confirmedMessage=previous&&previous!=='Arbetar…'?previous+' ':'';
+      reportStatus(confirmedMessage+
+        'Åtgärden bekräftades, men kontovyn kunde inte uppdateras. Kontrollera kontostatus innan du försöker igen.');
+    }else reportStatus(e?.message||'Ett fel inträffade');
+  }finally{active=false;busy=false;buttons.forEach(({button,wasDisabled})=>{button.disabled=wasDisabled;});}
 }
 $('refresh-account').addEventListener('click',()=>run(async()=>{}, {successMessage:'Kontot har uppdaterats.',reportStatus:refreshStatus}));
 $('email-form').addEventListener('submit',e=>{e.preventDefault();run(async isCurrent=>{
