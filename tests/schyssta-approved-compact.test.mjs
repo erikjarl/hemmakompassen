@@ -107,3 +107,19 @@ test('FBK-02-05: superseded readback does not falsely confirm an accepted decisi
   const fresh=await run(true);
   assert.match(fresh.feedback,/båda godkänt/,'Confirmed readback still gives clear success');
 });
+
+test('FBK-02-05: a failed Schyssta readback displays the uncertain decision in the error panel',()=>{
+  const msg='Ditt val skickades, men aktuell status kunde inte bekräftas.';
+  const html=view({schysstaError:'Schyssta listan kunde inte hämtas.',schysstaDecisionFeedback:msg});
+  assert.match(html,/Kunde inte visa listan/);
+  assert.match(html,/role="alert">Schyssta listan kunde inte hämtas/);
+  assert.match(html,/role="status" class="schyssta-feedback">Ditt val skickades, men aktuell status kunde inte bekräftas/);
+  assert.match(html,/id="schyssta-retry"/);
+  assert.match(app,/schysstaDecisionFeedback='Ditt val skickades,[^']+';\s*render\(\);\s*return;/);
+});
+
+test('FBK-02-05: ordinary Schyssta load error without a decision has no invented success message',()=>{
+  const html=view({schysstaError:'Kan inte hämta.',schysstaDecisionFeedback:''});
+  assert.match(html,/Kunde inte visa listan/);
+  assert.doesNotMatch(html,/class="schyssta-feedback"/);
+});
