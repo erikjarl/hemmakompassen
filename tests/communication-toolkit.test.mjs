@@ -169,10 +169,17 @@ test('private reflection practice is accessible to both roles and never saves te
  assert.equal(buildReflectionPractice({heard:'bara en fråga'}),null);
  assert.equal(buildReflectionPractice({heard:42,meaning:'inflytande',check:'Vad tycker du?'}),null);
  const preview=buildReflectionPractice({heard:'  att du vill få vara ifred  ',meaning:' lugn och privat tid ',check:' har jag förstått rätt? '});
- assert.match(preview,/Jag hörde att du sa: att du vill få vara ifred/);
- assert.match(preview,/Jag undrar om det kan vara viktigt för dig att: lugn och privat tid/);
- assert.match(preview,/den andra kan rätta mig, säga nej eller avstå/i);
- assert.equal(buildReflectionPractice({heard:'H',meaning:'M',check:'x'.repeat(400)}).split('Jag skulle kunna fråga: ')[1].split('\n')[0].length,240);
+ assert.match(preview,/Det jag hörde: att du vill få vara ifred/);
+ assert.match(preview,/Min försiktiga gissning om vad som kan vara viktigt: lugn och privat tid/);
+ assert.match(preview,/Min fråga för att kontrollera om jag förstått: har jag förstått rätt\?/);
+ assert.match(preview,/Den andra kan rätta min gissning, säga nej eller avstå/i);
+ assert.doesNotMatch(preview,/viktigt för dig att:|Jag skulle kunna fråga:/,
+   'Noun phrases and already-formed questions must never be spliced into pseudo-grammatical prose');
+ assert.equal(buildReflectionPractice({heard:'H',meaning:'M',check:'x'.repeat(400)}).split('Min fråga för att kontrollera om jag förstått: ')[1].split('\n')[0].length,240);
+ const nounDraft=buildReflectionPractice({heard:'Att jag vill få mer tid',meaning:'lugn och privat tid',check:'Vad skulle fungera?'});
+ assert.equal(nounDraft.split('\n').length,4,'All three user entries appear exactly once as separately labelled notes');
+ assert.match(nounDraft,/^Det jag hörde: Att jag vill få mer tid\nMin försiktiga gissning om vad som kan vara viktigt: lugn och privat tid\nMin fråga för att kontrollera om jag förstått: Vad skulle fungera\?/);
+ assert.equal(nounDraft.includes('Jag undrar om det kan vara viktigt för dig att: lugn'),false);
  const markup=buildReflectionPractice({heard:'<img src=x onerror=alert(1)>',meaning:'trygghet',check:'kan jag fråga?'});
  assert.match(markup,/<img src=x onerror=alert\(1\)>/);
  assert.match(app,/updateCommunicationPreview\('reflection',result\)/);
