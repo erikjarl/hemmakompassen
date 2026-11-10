@@ -56,6 +56,8 @@ ORDER BY CASE status WHEN 'new' THEN 0 WHEN 'reviewing' THEN 1 ELSE 2 END,
          created_at DESC;
 ```
 
+**10/11 – FBK-02-05: förberedelse för verkligt tvåkontotest.** Läsbaserad ny Supabase-kontroll bekräftar 5 öppna rapporter, samtliga `reviewing`, samt 3 godkända regler med sammanlagt 6 aktuella JA-röster, 2 föreslagna med 2 JA och 1 avvisad utan JA. Ingen äldre versionsröst identifierades. Detta är **inte** ett klienttest och motsäger inte användarens felupplevelse. Ett konkret [återtestprotokoll](fbk02-approval-retest.md) beskriver separat serverstatus, ett enda godkännande, sidbyte, omladdning, ändring av regelversion, kompaktlista samt fysisk mobil och båda rollerna. **Ingen rapportstatus, befintlig regel eller röst ändrad; FBK-02-05 `reviewing`.**
+
 **Köstatus:** Alla fem rapporter har kodåtgärder på `main`, men fortfarande öppna verifieringsluckor; **ingen är administrativt markerad `resolved`**. Rapporternas faktiska status i Supabase är sanningskällan. Fortsätt med riktiga konton, AI-svar och fysisk mobil innan eventuell stängning.
 
 ---
