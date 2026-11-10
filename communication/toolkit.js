@@ -165,7 +165,10 @@ export function buildReflectionPractice(input={}){
  const normalize=value=>typeof value==='string'?value.replace(/\s+/g,' ').trim().slice(0,240):'';
  const [heard,meaning,check]=['heard','meaning','check'].map(key=>normalize(input[key]));
  if(!heard||!meaning||!check)return null;
- return 'Jag hörde att du sa: '+heard+'\nJag undrar om det kan vara viktigt för dig att: '+meaning+'\nHar jag förstått rätt? Jag skulle kunna fråga: '+check+'\nDet här är min försiktiga gissning. Den andra kan rätta mig, säga nej eller avstå från samtalet.';
+ // Free-text answers may be nouns, sentence fragments or complete sentences.
+ // Present the user's three parts as labelled notes, never splice them into
+ // a grammatical claim or invent what the other person meant.
+ return 'Det jag hörde: '+heard+'\nMin försiktiga gissning om vad som kan vara viktigt: '+meaning+'\nMin fråga för att kontrollera om jag förstått: '+check+'\nDen andra kan rätta min gissning, säga nej eller avstå från samtalet.';
 }
 export function buildSolutionPlan(input={}){
  const normalize=value=>typeof value==='string'?value.replace(/\s+/g,' ').trim().slice(0,240):'';
