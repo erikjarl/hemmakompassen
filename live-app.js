@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261110-nvc-ai-explicit1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261110-nvc-ai-deadline1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
 import {createAiResultExperience} from './ai-result-ui.js?v=20261109-private-retest-deadline1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261110-nvc-explicit1';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261110-nvc-ai-deadline1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -2519,15 +2519,15 @@ async function rewriteNvcWithAi(){
  button.disabled=true;
  status.textContent='AI:n arbetar med din formulering…';
  try{
-   const {data,error}=await db.auth.getSession();
+   const {data,error}=await withNvcAiDeadline(db.auth.getSession(),controller,15000);
    if(error||!data?.session?.access_token)throw Error('Logga in igen för att använda AI-funktionen.');
    if(!current())return;
-   const response=await fetch(c.aiMediatorUrl,{
+   const response=await withNvcAiDeadline(fetch(c.aiMediatorUrl,{
      method:'POST',headers:{Authorization:'Bearer '+data.session.access_token,'Content-Type':'application/json'},
      body:JSON.stringify({message:prompt,useProjectContext:false}),
      signal:controller.signal,cache:'no-store',credentials:'omit',referrerPolicy:'no-referrer'
-   });
-   const result=await response.json().catch(()=>null);
+   }),controller,30000);
+   const result=await withNvcAiDeadline(response.json().catch(()=>null),controller,15000);
    if(!current())return;
    if(!response.ok)throw Error(typeof result?.error==='string'&&result.error.length<180
      ? result.error:'AI:n kunde inte skapa en formulering just nu.');
