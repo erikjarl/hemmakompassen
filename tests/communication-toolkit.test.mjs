@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {COMMUNICATION_SOURCES,renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from '../communication/toolkit.js';
+import {COMMUNICATION_SOURCES,renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from '../communication/toolkit.js';
 const app=readFileSync(new URL('../live-app.js',import.meta.url),'utf8');
 const builder=readFileSync(new URL('../scripts/build-static.mjs',import.meta.url),'utf8');
 
@@ -40,15 +40,38 @@ test('NVC builder for both roles has four accessible, required steps and an unsa
   assert.notEqual(parent,teen,'Parent and teen examples are different');
 });
 
-test('NVC generator handles incomplete input, whitespace, punctuation and malicious markup literally',()=>{
+test('NVC local draft never constructs a grammatically broken Swedish sentence',()=>{
   assert.equal(buildNvcSentence({observation:'hej'}),null);
   assert.equal(buildNvcSentence({observation:23,feeling:'orolig',need:'lugn',request:'lyssna'}),null);
   assert.equal(buildNvcSentence({observation:'vi bråkade.',feeling:'mig ledsen',need:'få bli lyssnad på',request:'lyssna färdigt.'}),
-    'När vi bråkade känner jag mig ledsen. Jag behöver få bli lyssnad på. Skulle du vilja lyssna färdigt?');
-  assert.equal(buildNvcSentence({observation:'<img src=x onerror=alert(1)>',feeling:'mig stressad',need:'lugn',request:'prata'}),
-    'När <img src=x onerror=alert(1)> känner jag mig stressad. Jag behöver lugn. Skulle du vilja prata?');
-  assert.match(app,/updateCommunicationPreview\('nvc',sentence\)/,'Submitted sentence enters the plain-text preview helper');
-  assert.match(app,/output\.textContent=ready\?text/,'Preview helper uses textContent and cannot inject HTML');
+    'Det jag lade märke till: vi bråkade\nMin känsla: mig ledsen\nMitt behov: få bli lyssnad på\nMitt önskemål: lyssna färdigt');
+  const malformed={observation:'Erik lyssnade inte när jag pratade',feeling:'Trött och uppblåst',need:'Att Erik ska visa att han lyssnar',request:'Lyssna på mig i två minuter'};
+  const preview=buildNvcSentence(malformed);
+  assert.ok(preview.startsWith('Det jag lade märke till:'),'Not a falsely grammatical När-sentence');
+  assert.doesNotMatch(preview,/När Erik lyssnade inte/);
+  assert.equal(buildNvcSentence({...malformed,observation:'<img src=x onerror=alert(1)>'}).split('\n')[0],
+    'Det jag lade märke till: <img src=x onerror=alert(1)>');
+  assert.match(app,/updateCommunicationPreview\('nvc',sentence\)/,'Submitted local preview uses textContent');
+  assert.match(app,/output\.textContent=ready\?text/,'Preview and AI output are always plain text');
+});
+test('NVC AI request is explicit, bounded, ephemeral and excludes project context',()=>{
+  const example={observation:' Han avslutar min mening! ',feeling:' irriterad ',need:' lyssnande ',request:' låta mig tala klart? '};
+  const prompt=buildNvcAiPrompt(example);
+  assert.ok(prompt.length<2000);
+  assert.match(prompt,/grammatiskt korrekt svensk NVC-formulering/);
+  assert.match(prompt,/Observation: Han avslutar min mening/);
+  assert.match(prompt,/Känsla: irriterad/);
+  assert.equal(buildNvcAiPrompt({observation:'hej'}),null);
+  assert.equal(buildNvcAiPrompt({...example,need:null}),null);
+  assert.equal(buildNvcAiPrompt({...example,observation:'x'.repeat(1500)}).split('Observation: ')[1].split('\n')[0].length,240);
+  const html=renderNvcExercise('teen');
+  assert.match(html,/id="comm-nvc-ai"[^>]*disabled/);
+  assert.match(html,/AI-tjänsten/);
+  assert.match(html,/ingen sparad chatt skapas/);
+  assert.match(app,/if\(e\.target\.closest\('#comm-nvc-ai'\)\)/,'AI requires a click');
+  assert.match(app,/useProjectContext:false/,'No family context in AI rewrite');
+  assert.match(app,/result\?\.ephemeral!==true/,'Require evidence of no saved chat');
+  assert.match(app,/nvcAiEpoch===epoch/,'Stale request cannot overwrite a newer draft');
 });
 
 test('communication content uses its own module, is available on the public build, and has no external data calls',()=>{
