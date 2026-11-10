@@ -46,7 +46,7 @@ function harness(role){
     }),
     fetchSchysstaList:async()=>{refreshed.push('refresh');}
   };
-  vm.runInNewContext(actions+'\nthis.mark=markSchysstaRead;this.withdraw=withdrawSchysstaRule;this.submit=submitManualSchysstaRule;this.propose=proposeSchysstaRule;this.decide=decideSchysstaRule;',state);
+  vm.runInNewContext(actions+'\nthis.mark=markSchysstaRead;this.withdraw=withdrawSchysstaRule;this.submit=submitManualSchysstaRule;this.editDraft=updateSchysstaDraft;this.propose=proposeSchysstaRule;this.decide=decideSchysstaRule;',state);
   return {state,calls,renders,refreshed,timers,
     expire(){
       const entry=[...timers.values()].find(x=>x.ms===15000);
@@ -93,6 +93,46 @@ for(const role of ['parent','teen']){
   });
  }
 }
+test('FUN-03: harmless whitespace edits keep a failed manual proposal retry identity',async()=>{
+ const h=harness('parent');
+ const ongoing=h.state.submit();
+ await step();
+ const firstKey=h.calls[0].args.p_request_key;
+ h.expire();await ongoing;
+ assert.ok(firstKey);
+ assert.equal(h.state.schysstaDraftKey,firstKey);
+ const uncertainMessage=h.state.schysstaMessage;
+ h.state.editDraft('  Vi   lyssnar  klart  innan   vi svarar.  ');
+ assert.equal(h.state.schysstaDraftKey,firstKey,
+   'Whitespace normalization yields the same transmitted proposal');
+ assert.equal(h.state.schysstaMessage,uncertainMessage,
+   'Uncertain-send warning must not disappear on insignificant edits');
+ const retry=h.state.submit();
+ await step();
+ assert.equal(h.calls.length,2);
+ assert.equal(h.calls[1].args.p_request_key,firstKey);
+ assert.equal(h.calls[1].args.p_body,'Vi lyssnar klart innan vi svarar.');
+ h.calls[1].resolve({error:null});
+ await retry;
+ assert.equal(h.state.schysstaDraft,'');
+ h.calls[0].resolve({error:null});
+ await step();
+ assert.equal(h.refreshed.length,1);
+});
+
+test('FUN-03: a changed proposal body starts a new request identity',async()=>{
+ const h=harness('teen');
+ const ongoing=h.state.submit();
+ await step();
+ h.expire();await ongoing;
+ assert.ok(h.state.schysstaDraftKey);
+ h.state.editDraft('Vi pratar klart innan vi svarar.');
+ assert.equal(h.state.schysstaDraftKey,null);
+ assert.equal(h.state.schysstaMessage,'');
+ assert.match(source,/if\(e\.target\.matches\?\.\('#schyssta-body'\)\)\{updateSchysstaDraft\(e\.target\.value\)/,
+   'The real textarea input handler uses normalized draft updates');
+});
+
 test('FUN-03: retrying manual proposal after an unknown receipt reuses its idempotency key',async()=>{
  const h=harness('parent');
  const first=h.state.submit();
