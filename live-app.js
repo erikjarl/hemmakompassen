@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261110-fbk-schyssta-primary2';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261110-nvc-ai-explicit1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
 import {createAiResultExperience} from './ai-result-ui.js?v=20261109-private-retest-deadline1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261107-authoritative-export4';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261110-nvc-explicit1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -2490,6 +2490,67 @@ if(user&&members.length===2){
   else void fetchFamilyChatUnread();
 }
 }
+// FBK-02-02: NVC is local by default. AI rewrites require a fresh user click.
+let nvcAiEpoch=0,nvcAiController=null;
+function cancelNvcAi(){
+ nvcAiEpoch++;
+ nvcAiController?.abort();
+ nvcAiController=null;
+}
+const nvcAiAvailable=()=>c.enableAiMediator===true
+ && typeof c.aiMediatorUrl==='string'
+ && /^https:\/\/[a-z0-9-]+\.erikbertiljarl\.workers\.dev\/api\/ai\/mediate$/.test(c.aiMediatorUrl);
+async function rewriteNvcWithAi(){
+ const form=$('comm-nvc-form'),output=$('comm-nvc-output'),button=$('comm-nvc-ai'),status=$('comm-nvc-ai-status');
+ if(!user||page()!=='nvc'||!nvcAiAvailable()||!form||!output||!button||!status
+   ||button.disabled||output.dataset.commReady!=='true')return;
+ const prompt=buildNvcAiPrompt(Object.fromEntries(new FormData(form)));
+ if(!prompt||prompt.length>2000)return;
+ cancelNvcAi();
+ const epoch=++nvcAiEpoch,controller=new AbortController();
+ nvcAiController=controller;
+ const viewer=user.id,session=sharedSession,original=output.textContent;
+ const current=()=>nvcAiEpoch===epoch && user?.id===viewer
+   && sharedSession===session && page()==='nvc'
+   && $('comm-nvc-form')===form && $('comm-nvc-output')===output
+   && $('comm-nvc-ai')===button && $('comm-nvc-ai-status')===status
+   && output.dataset.commReady==='true' && output.textContent===original
+   && buildNvcAiPrompt(Object.fromEntries(new FormData(form)))===prompt;
+ button.disabled=true;
+ status.textContent='AI:n arbetar med din formulering…';
+ try{
+   const {data,error}=await db.auth.getSession();
+   if(error||!data?.session?.access_token)throw Error('Logga in igen för att använda AI-funktionen.');
+   if(!current())return;
+   const response=await fetch(c.aiMediatorUrl,{
+     method:'POST',headers:{Authorization:'Bearer '+data.session.access_token,'Content-Type':'application/json'},
+     body:JSON.stringify({message:prompt,useProjectContext:false}),
+     signal:controller.signal,cache:'no-store',credentials:'omit',referrerPolicy:'no-referrer'
+   });
+   const result=await response.json().catch(()=>null);
+   if(!current())return;
+   if(!response.ok)throw Error(typeof result?.error==='string'&&result.error.length<180
+     ? result.error:'AI:n kunde inte skapa en formulering just nu.');
+   if(result?.ephemeral!==true||result?.chatId!=null||result?.safetyNotice===true
+      ||typeof result?.reply!=='string')throw Error('AI:n kunde inte ge ett vanligt, osparat NVC-utkast.');
+   const reply=result.reply.trim().replace(/\s+/g,' ');
+   if(!reply||reply.length>600)throw Error('AI-svaret blev för långt. Ditt fyrdelade utkast finns kvar.');
+   // updateCommunicationPreview uses textContent: model output is never trusted HTML.
+   updateCommunicationPreview('nvc',reply);
+   const note=$('comm-nvc-ai-status');
+   if(note)note.textContent='AI-förslag klart. Granska att texten stämmer med det du ville säga.';
+ }catch(error){
+   if(!current())return;
+   status.textContent=(error instanceof Error&&error.message&&!/AbortError/.test(error.name))
+     ?error.message:'AI-förslaget kunde inte skapas. Ditt lokala utkast finns kvar.';
+ }finally{
+   if(nvcAiEpoch===epoch){
+     nvcAiController=null;
+     button.disabled=output.dataset.commReady!=='true'||!nvcAiAvailable();
+   }
+ }
+}
+
 // FUN-06: These three previews are local-only. Copying requires a freshly
 // generated preview; editing or resetting any field invalidates it immediately.
 const COMM_PREVIEW_META={
@@ -2502,9 +2563,15 @@ const COMM_PREVIEW_META={
 };
 function updateCommunicationPreview(kind,text,{reset=false}={}){
  const meta=COMM_PREVIEW_META[kind];if(!meta||page()!==meta.route)return;
+ if(kind==='nvc')cancelNvcAi();
  const output=$(meta.output),copy=$('live-app')?.querySelector('[data-comm-copy="'+kind+'"]');
  if(!output||!copy)return;
  const ready=typeof text==='string'&&text.trim().length>0;
+ if(kind==='nvc'){
+   const aiButton=$('comm-nvc-ai'),aiStatus=$('comm-nvc-ai-status');
+   if(aiButton)aiButton.disabled=!ready||!nvcAiAvailable();
+   if(aiStatus)aiStatus.textContent='';
+ }
  output.textContent=ready?text:reset?meta.idle:'Förhandsgranska igen efter dina ändringar.';
  output.dataset.commReady=ready?'true':'false';
  copy.disabled=!ready;
@@ -2542,6 +2609,7 @@ async function copyCommunicationPreview(kind){
 }
 
 document.addEventListener('click',e=>{
+if(e.target.closest('#comm-nvc-ai')){void rewriteNvcWithAi();return;}
 const commCopy=e.target.closest('[data-comm-copy]');
 if(commCopy){void copyCommunicationPreview(commCopy.dataset.commCopy);return;}
 const commSelect=e.target.closest('[data-comm-select-copy]');
