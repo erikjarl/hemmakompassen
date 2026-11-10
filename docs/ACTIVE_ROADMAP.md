@@ -25,6 +25,35 @@ Detta är **den enda prioriterade arbetskön** för nya `Jobb hk`-pass. Tidigare
 5. **Verifieringsdisciplin:** skilj alltid mellan kodgranskning, syntetisk Chromium/Node, verkligt publicerad sida och *två faktiskt autentiserade konton*. Inga fiktiva PASS, inga ändringar i befintliga testkontons sparade svar utan uttrycklig nödvändighet/överenskommelse, och ingen status 'färdig' utan relevanta faktiska bevis.
 6. Detta beslut gäller även vid kommandot **`Jobb hk`** och vid val av nästa arbete. Återgå till säkerhets-/GDPR-backlog enbart efter nytt explicit prioriteringsbeslut från projektägaren, och alltid före eventuell bred extern lansering när sådana krav är aktuella.
 
+## FBK-02 – rapportinkorg: triagera och åtgärda inskickad testfeedback (10 november 2026)
+
+**Hög prioritet inom FUN-00/VIS-00, stående rutin för varje `Jobb hk`.** Den beständiga rapportinkorgen är **Supabase-projektet Hemmakompassen → `public.test_feedback`**, [öppna Table Editor](https://supabase.com/dashboard/project/bwrcgrbbpumyjfvznlbf/editor). Webbappen kan skicka men inte läsa andras rapporter. GitHubs publika roadmap innehåller **endast avidentifierade ärendesammanfattningar**, aldrig råa rapporttexter, användar-ID:n eller andra privata detaljer. Använd projektansvarigs Supabase-anslutning för att läsa originalen vid arbete. Projektägaren uppger att det för närvarande bara är hen som skickar in dessa testärenden; ändra inte testbehörigheterna enbart av det skälet.
+
+**Rutin vid start av varje `Jobb hk`:** Läs nedanstående kö från den *faktiska* databasen, inte bara tidigare utdrag ur roadmap. Hämta alla öppna poster med `status IN ('new', 'reviewing', 'planned')` med `id, created_at, category, page_context, description, expected_result, status`, sorterade med nya först. Kontrollera även status för äldre ärenden så att ingen rapport tappas bort. För varje saknat ärende: lägg till ett konkret, avidentifierat del-ID här med sida, observerat fel/önskemål, föreslagen reproduktion, prioritet och status. **Prioritera reproducerade användarproblem framför valfria nya funktioner**, men fortsätt följa överordnad FUN-00-prioritet. Utred och åtgärda varje rapport, verifiera faktiskt beteende på relevanta vyer, notera commit/PR, testnivå och kvarstående luckor. Sätt `reviewing` först när granskning inleds, `planned` när en konkret plan finns och `resolved` **först när åtgärden är testad och verifierad**. `closed` utan åtgärd ska alltid motiveras (t.ex. dubblett). Ändra rapportstatus via administrativt Supabase-anrop, inte i användarklienten. **Ingen automatiserad synk mot offentliga GitHub-issues och inga ändringar av befintliga rapporttexter.**
+
+**Verifierad inläsning 10/11:** 3 verkliga rapporter från testkontot Fannyförälder, samtliga `new`. Administrativ läsning är därmed verkligt verifierad, och förekomsten av rapporterna styrker att de har lagrats genom användarflödet; fysisk iOS-/Safari- och fullständig Auth-verifiering enligt FBK-01 är fortfarande separata kontroller.
+
+| ID | Avskalat ärende / reproduktion | Prioritet | Status / nästa steg |
+| --- | --- | --- | --- |
+| **FBK-02-01 – Schyssta listan: informationshierarki på mobil** | Granska mobilvyn `index.html#regler`: många samtidiga rutor och mycket text. Pröva om godkända överenskommelser kan vara tydlig huvudlista medan sekundär information läggs i tillgängliga expanderbara avsnitt. Kontrollera båda rollerna, olika listtillstånd och 320–390 px. | **P1** | **Inte påbörjad** – reproducera, designa kompakt vy, testa att inget avgörande innehåll göms felaktigt. |
+| **FBK-02-02 – NVC: språkfel i förslagsformulering** | Granska kommunikationsverktygets NVC-förslag på `index.html`: fel ordföljd och versalisering samt mekanisk sammansättning av fria fält. Pröva grammatiskt korrekt, mycket kort formulering; utvärdera föreslagen kort AI-omformulering mot deterministisk lösning med hänsyn till kvalitet, nätverksberoende och användartext. Testa även ovanliga inmatningar. | **P1** | **Inte påbörjad** – återge felet, välj metod, verifiera resultatets begriplighet. |
+| **FBK-02-03 – Logotyp överlappar sidomeny på dator** | Kontrollera desktop på `index.html#kommunikation`: logotypen går över sidomenyns avgränsning. Åtgärda överflöd utan att försämra fungerande mobilvy; jämför före/efter vid olika bredder och zoom. | **P1** | **Inte påbörjad** – verifiera verklig desktopgeometri, rätta och regressionstesta. |
+
+**För läsbar kontroll i Supabase SQL Editor (endast SELECT):**
+
+```sql
+SELECT id, created_at, category, page_context, description,
+       expected_result, status
+FROM public.test_feedback
+WHERE status IN ('new', 'reviewing', 'planned')
+ORDER BY CASE status WHEN 'new' THEN 0 WHEN 'reviewing' THEN 1 ELSE 2 END,
+         created_at DESC;
+```
+
+**Köstatus:** Ovanstående tre ärenden har förts in i roadmap, men **inget är ännu åtgärdat eller avklarat** genom denna uppdatering. Tabellen i Supabase är fortsatt sanningskällan för aktuella statusar.
+
+---
+
 ## FBK-01 – ständigt åtkomlig rapportering från samtliga testanvändare (9 november 2026)
 
 | ID | Acceptanskriterier | Status | Nästa steg / verifiering |
