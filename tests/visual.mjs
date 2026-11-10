@@ -58,6 +58,10 @@ async function verifySchysstaMobileHierarchy(){
         {authenticated:true,paired:true,role});
       try{
         await page.goto(base+'#regler',{waitUntil:'load'});
+        // This fixture deliberately returns a forged rule until a controlled retry.
+        await page.getByRole('heading',{name:'Kunde inte visa listan'}).waitFor();
+        await page.evaluate(()=>{window.__HK_SCHYSSTA_CLEAN_RPC__=true;});
+        await page.locator('#schyssta-retry').click();
         const approved=page.locator('[data-schyssta-filter-group="approved"]');
         await approved.locator('.schyssta-list>li').first().waitFor();
         const geometry=await page.evaluate(()=>{
