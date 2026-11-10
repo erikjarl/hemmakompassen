@@ -2467,6 +2467,27 @@ async function verifyPairedTwoRoleExchange(){
       }));
     }
     await teen.page.getByText(/Nytt gemensamt JA · Aktiviteter/).waitFor();
+    // FBK-02-04: private messages may be read while rule/event notifications
+    // still legitimately contribute to the combined mobile Inkorg badge.
+    await teen.page.waitForFunction(()=>{
+      const box=document.querySelector('.inbox-unread-summary');
+      return box?.textContent?.includes('Oläst i inkorgen · 2');
+    });
+    const breakdown=teen.page.locator('.inbox-unread-summary');
+    assert.match(await breakdown.innerText(),/Privata meddelanden · 0/);
+    assert.match(await breakdown.innerText(),/Regelhändelser · 1/);
+    assert.match(await breakdown.innerText(),/Gemensamma kort · 1/);
+    assert.equal(await teen.page.locator('#live-mobile-nav a[href="#inkorg"] .live-nav-count').innerText(),'2',
+      'Mobile badge shows combined unread rule and activity events, not a stale private message');
+    await breakdown.locator('[data-inbox-unread-jump="rules"]').click();
+    assert.equal(await teen.page.locator('#inbox-rules-heading').evaluate(el=>document.activeElement===el),true,
+      'Unread rule shortcut focuses its actual inbox section');
+    assert.equal(fixture.notices[0].read_at,null,'Jumping to rule events does not silently mark them read');
+    await breakdown.locator('[data-inbox-unread-jump="activities"]').click();
+    assert.equal(await teen.page.locator('#inbox-activities-heading').evaluate(el=>document.activeElement===el),true);
+    assert.equal(await teen.page.locator('#family-chat-body').inputValue(),
+      'Det här utkastet får inte skickas.','Unread shortcuts preserve the unsent chat draft');
+    record.push({case:'badge-categories-split-and-focus-shortcuts',passed:true});
     assert.equal(fixture.activityNotices[0].read_at,null,
       'FUN-03: fresh activity notice does not automatically become read');
     assert.equal(fixture.calls.filter(x=>x.role==='teen'&&
@@ -2509,6 +2530,10 @@ async function verifyPairedTwoRoleExchange(){
     await teen.page.locator('[data-schyssta-read]').click();
     await teen.page.waitForFunction(()=>!document.querySelector('[data-schyssta-read]'));
     assert.ok(fixture.notices[0].read_at,'Teen explicitly reads their own notification');
+    await teen.page.waitForFunction(()=>!document.querySelector('#live-mobile-nav a[href="#inkorg"] .live-nav-count'),
+      null,{timeout:2500});
+    assert.equal(await teen.page.locator('.inbox-unread-summary').count(),0,
+      'After confirmed read receipts for all three sources, both badge and explanation disappear');
     assert.equal(await teen.page.getByText('Det gick inte att bekräfta läsmarkeringen').count(),0,
       'Confirmed successful retry removes the obsolete read-receipt warning');
     record.push({case:'rule-notice-read-failure-visible-in-inbox-and-retry-clears',passed:true});
