@@ -222,7 +222,9 @@ export function buildNvcAiPrompt(input={}){
 export function normalizeNvcAiReply(value){
  if(typeof value!=='string')return null;
  const reply=value.trim().replace(/\s+/gu,' ');
- if(!reply||reply.length>600||reply.split(' ').length>65)return null;
+ // A punctuation-only response is not a usable sentence, even if it is short.
+ // Keep the four-part local draft rather than claiming such output is ready.
+ if(!reply||reply.length>600||reply.split(' ').length>65||!/\p{L}/u.test(reply))return null;
  return reply;
 }
 export function renderNvcExercise(role='teen'){
