@@ -17,6 +17,9 @@ test('FBK-02-02: normalized NVC text is concise, with exactly 65 words allowed',
  assert.equal(normalizeNvcAiReply(' \tHej\n\n jag   önskar\t lugn.  '),'Hej jag önskar lugn.');
  assert.equal(normalizeNvcAiReply(''.padEnd(601,'x')),null,'600-character cap remains');
  assert.equal(normalizeNvcAiReply(''.padEnd(600,'x')),''.padEnd(600,'x'));
+ for(const unusable of ['...', '?!', '— — —', '  …  ']){
+   assert.equal(normalizeNvcAiReply(unusable),null,'Punctuation-only model text cannot replace draft');
+ }
  for(const input of ['', '  \n ',null,undefined,{},7]){
    assert.equal(normalizeNvcAiReply(input),null,'Invalid or empty text must keep fallback');
  }
@@ -62,6 +65,15 @@ function harness(role,reply){
 }
 
 for(const role of ['parent','teen']){
+ test('FBK-02-02 '+role+': punctuation-only AI response never replaces local draft',async()=>{
+  const h=harness(role,'...?!'),original=h.output.textContent;
+  await h.run();
+  assert.equal(h.calls,1);
+  assert.equal(h.applied,0);
+  assert.equal(h.output.textContent,original);
+  assert.match(h.status.textContent,/för långt/);
+  assert.equal(h.button.disabled,false);
+ });
  test('FBK-02-02 '+role+': overly wordy but short-character AI text is rejected without deleting local draft',async()=>{
   const sample=Array.from({length:75},()=> 'jag').join(' ');
   assert.ok(sample.length<600,'Reproduces previously accepted long text');
