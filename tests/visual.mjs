@@ -4484,6 +4484,20 @@ try{
     await scaled.page.getByRole('heading',{name:'Verktyg för bättre samtal'}).waitFor();
     await scaled.page.addStyleTag({content:'html{font-size:125%!important}'});
     await checkOverflow(scaled.page,'UX-04 '+label+' communication guidance');
+    if(label==='landscape'){
+      const firstTool=scaled.page.locator('.comm-feature-grid .comm-feature').first();
+      const firstRect=await firstTool.boundingBox();
+      const navRect=await scaled.page.locator('#live-mobile-nav').boundingBox();
+      const titleRect=await scaled.page.getByRole('heading',{name:'Verktyg för bättre samtal'}).boundingBox();
+      assert.ok(firstRect&&navRect&&titleRect,
+        'Landscape communication should expose the hero, first tool and navigation');
+      const firstHeading=await firstTool.locator('h2').boundingBox();
+      assert.ok(firstHeading&&firstHeading.y+firstHeading.height<=navRect.y-5,
+        'On 700x360 landscape with 125% text, the first tool heading must be fully readable above the bottom nav: '+
+          JSON.stringify({heading:firstHeading,tool:firstRect,nav:navRect,title:titleRect}));
+      assert.ok(titleRect.y+titleRect.height<=firstRect.y,
+        'Compact landscape communication keeps heading readable before the tool list');
+    }
     await capture(scaled.page,'mobile-'+label+'-communication.png');
     await scaled.context.close();
   }
