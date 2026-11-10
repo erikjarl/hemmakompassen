@@ -186,6 +186,23 @@ export function buildNvcSentence(input={}){
  if(!a)return null;
  return 'Det jag lade märke till: '+a[0]+'\nMin känsla: '+a[1]+'\nMitt behov: '+a[2]+'\nMitt önskemål: '+a[3];
 }
+// Time-limit a single AI step: Supabase auth, HTTP and JSON parsing may each stall.
+// The controller also cancels the fetch where supported. A timed-out response
+// must never replace the user's local four-part draft.
+export async function withNvcAiDeadline(promise,controller,timeoutMs=30000){
+ let timer;
+ try{
+  return await Promise.race([
+   Promise.resolve(promise),
+   new Promise((_,reject)=>{
+    timer=setTimeout(()=>{
+     controller?.abort();
+     reject(new Error('AI-tjänsten svarade inte i tid. Ditt fyrdelade utkast finns kvar.'));
+    },timeoutMs);
+   })
+  ]);
+ }finally{clearTimeout(timer);}
+}
 // Used only after an explicit AI-button click. No project/family context is included.
 export function buildNvcAiPrompt(input={}){
  const a=nvcParts(input);
