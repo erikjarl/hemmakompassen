@@ -30,7 +30,7 @@ function harness(role='parent'){
     schysstaRequest:0,schysstaSuggestions:[],schysstaRules:[],schysstaManualRules:[],
     schysstaNotifications:[],schysstaReplacementLinks:[],schysstaHistory:[],
     schysstaLoading:false,schysstaError:'',schysstaEndTarget:null,schysstaSaving:new Set(),
-    schysstaPausedIds:new Set(),schysstaDraft:'',schysstaDraftOpen:false,schysstaDraftKey:null,
+    schysstaPausedIds:new Set(),schysstaExpandedIds:new Set(),schysstaDecisionFeedback:'',schysstaDraft:'',schysstaDraftOpen:false,schysstaDraftKey:null,
     schysstaEditTarget:null,schysstaSubmitting:false,schysstaMessage:'',
     schysstaCopyMessage:'',schysstaCopyFallback:false,
     activityNotificationsRequest:0,activityNotifications:[],activityNotificationsError:'',
