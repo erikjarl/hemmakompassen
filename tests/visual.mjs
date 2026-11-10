@@ -134,6 +134,18 @@ async function verifySchysstaMobileHierarchy(){
           role+' '+width+'px: shared agreements precede pending proposals without hiding them');
         assert.ok(geometry.composeClosed,role+' '+width+'px: optional form collapsed initially');
         assert.ok(geometry.approvedCount>=1,role+' '+width+'px: approved rules still accessible');
+        const jump=page.getByRole('button',{name:'Visa väntande förslag'});
+        assert.equal(await jump.count(),1,role+' '+width+'px: a visible pending-action jump exists');
+        await jump.click();
+        const reached=await page.evaluate(()=>{
+          const heading=document.getElementById('schyssta-needs-answer');
+          const scroller=document.querySelector('.live-main');
+          if(!heading||!scroller)return false;
+          const rect=heading.getBoundingClientRect(),view=scroller.getBoundingClientRect();
+          return document.activeElement===heading
+            &&rect.top>=view.top-2&&rect.top<view.bottom-20;
+        });
+        assert.ok(reached,role+' '+width+'px: pending heading is focused and scrolled into view');
         await page.locator('.schyssta-quick-actions [data-schyssta-start]').click();
         await page.locator('#schyssta-body').waitFor({state:'visible'});
         assert.equal(await page.locator('.schyssta-compose-panel').getAttribute('open'),'',
@@ -4982,7 +4994,7 @@ try{
     'Search hides unrelated ongoing proposals without altering server results');
   assert.equal(await paired.page.locator('#schyssta-rule-30000000-0000-4000-8000-000000000001').isVisible(),true,
     'Incoming action cards stay visible while the rules are filtered');
-  assert.match(await paired.page.locator('#schyssta-filter-summary').innerText(),/Visar 1 av/,'Search announces visible result count');
+  assert.match(await paired.page.locator('#schyssta-filter-summary').innerText(),/Visar 1 av.*Förslag som behöver ditt svar visas separat/,'Search counts only filterable lists, not unfiltered pending decisions');
   await search.fill('ord-som-inte-finns');
   assert.equal(await paired.page.locator('.schyssta-no-results:visible').count(),2,'No-match feedback is visible without fabricated rows');
   await search.fill('');

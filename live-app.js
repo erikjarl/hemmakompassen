@@ -1,5 +1,5 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261110-nvc-ai-deadline1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261110-fbk-pending-jump1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
 import {createAiResultExperience} from './ai-result-ui.js?v=20261109-private-retest-deadline1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
@@ -1897,7 +1897,7 @@ function applySchysstaFilters(){
   }
   const summary=root.querySelector('#schyssta-filter-summary');
   if(summary)summary.textContent=phrase||schysstaFilterStatus!=='all'
-    ?'Visar '+shown+' av '+total+' regler och förslag.':'';
+    ?'Visar '+shown+' av '+total+' i de sökbara listorna. Förslag som behöver ditt svar visas separat.':'';
 }
 const schysstaNeedsAnswer=()=>schysstaAllRules().filter(row=>row.status==='proposed'&&!row.proposed_by_me&&row.own_decision===null&&!schysstaPausedIds.has(row.agreement_id)).sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at));
 function validSchysstaNotifications(rows){
@@ -2288,7 +2288,8 @@ function schysstaView(){
   // Place the next action and compose entry before optional guidance.
   const quickActions='<section class="schyssta-quick-actions" aria-label="Översikt och nästa steg">'
     +'<div class="schyssta-quick-state"><strong>'+(needs.length===0?'Inget väntar just nu':needs.length===1?'1 förslag behöver ditt svar':needs.length+' förslag behöver ditt svar')+'</strong>'
-    +'<p>'+(needs.length?'Du kan svara direkt på förslagen nedan eller välja Inte nu.':'Du kan föreslå något nytt utan att fatta ett beslut åt den andra.')+'</p></div>'
+    +'<p>'+(needs.length?'Du kan svara direkt på förslagen nedan eller välja Inte nu.':'Du kan föreslå något nytt utan att fatta ett beslut åt den andra.')+'</p>'
+    +(needs.length?'<div class="schyssta-actions schyssta-jump-actions"><button class="schyssta-secondary" type="button" data-schyssta-needs-jump>Visa väntande förslag</button></div>':'')+'</div>'
     +(schysstaDraftOpen
       ?'<button class="live-button" type="button" data-schyssta-compose-jump>Fortsätt skriva förslag</button>'
       :'<button class="live-button" type="button" data-schyssta-start>+ Föreslå en regel</button>')
@@ -2304,7 +2305,7 @@ function schysstaView(){
     +'<option value="approved"'+(schysstaFilterStatus==='approved'?' selected':'')+'>Bara gemensamt godkända</option>'
     +'<option value="ongoing"'+(schysstaFilterStatus==='ongoing'?' selected':'')+'>Bara pågående förslag</option>'
     +'</select>'
-    +'<p class="live-muted">Förslag som behöver ditt svar visas alltid överst.</p>'
+    +'<p class="live-muted">Sökning och statusfilter gäller listorna med godkända regler och övriga förslag. Förslag som behöver ditt svar visas separat ovanför sökningen.</p>'
     +'<p id="schyssta-filter-summary" role="status" aria-live="polite"></p></div>';
   const suggestionHtml=schysstaSuggestions.length?'<ul class="schyssta-list">'+schysstaSuggestions.map(item=>'<li><p>'+esc(item.body)+'</p><button class="live-button" type="button" data-schyssta-propose="'+esc(item.card_id)+'"'+(schysstaSaving.has(item.card_id)?' disabled':'')+'>Föreslå</button></li>').join('')+'</ul>':'<p class="live-muted">Inga nya gemensamma ja-förslag finns just nu.</p>';
   const firstRuleHint=rules.length===0
@@ -2333,7 +2334,7 @@ function schysstaView(){
       +(schysstaCopyFallback&&approved.length?'<div class="schyssta-copy-manual"><label for="schyssta-copy-fallback">Kopiera aktuella gemensamma regler manuellt</label><textarea id="schyssta-copy-fallback" readonly rows="6" spellcheck="false">'+esc(currentApprovedSchysstaText())+'</textarea><button type="button" class="schyssta-secondary" data-schyssta-select-copy>Markera texten igen</button></div>':''))
     +'<p class="schyssta-no-results live-muted" hidden>Inga gemensamma regler matchar sökningen.</p></div>';
   const needsSection=needs.length
-    ?card('<h2>Behöver ditt svar ('+needs.length+')</h2><p>Nya förslag visas här. Inget blir gemensamt förrän ni båda sagt ja.</p>'+list(needs,''))
+    ?card('<h2 id="schyssta-needs-answer" tabindex="-1">Behöver ditt svar ('+needs.length+')</h2><p>Nya förslag visas här. Inget blir gemensamt förrän ni båda sagt ja.</p>'+list(needs,''))
     :'';
   const composeSection='<details class="schyssta-compose-panel"'+(schysstaDraftOpen||schysstaMessage?' open':'')+'>'
     +'<summary><h2>'+(schysstaEditTarget?'Föreslå ändring av regel':'Skriv ett eget förslag')+'</h2><span>Öppna om du vill skriva eller ändra något.</span></summary>'
@@ -2725,6 +2726,14 @@ if(e.target.closest('[data-schyssta-refresh]')&&!schysstaLoading)void fetchSchys
 if(e.target.closest('[data-schyssta-select-copy]')){const fallback=$('schyssta-copy-fallback');fallback?.focus({preventScroll:true});fallback?.select();return;}
 if(e.target.closest('[data-schyssta-copy]'))void copySchysstaAgreements();
 if(e.target.closest('[data-schyssta-download]'))downloadSchysstaAgreements();
+if(e.target.closest('[data-schyssta-needs-jump]')){
+  if(page()==='regler'){
+    const heading=$('schyssta-needs-answer');
+    heading?.focus({preventScroll:true});
+    heading?.scrollIntoView({block:'start',behavior:'auto'});
+  }
+  return;
+}
 if(e.target.closest('[data-schyssta-start]')){schysstaDraftOpen=true;schysstaEditTarget=null;schysstaDraft='';schysstaDraftKey=null;render();document.getElementById('schyssta-body')?.focus();}
 if(e.target.closest('[data-schyssta-compose-jump]')){const editor=document.getElementById('schyssta-body');editor?.focus();editor?.scrollIntoView({block:'nearest'});}
 if(e.target.closest('#schyssta-compose')){schysstaDraftOpen=!schysstaDraftOpen;if(!schysstaDraftOpen){schysstaEditTarget=null;schysstaDraftKey=null;schysstaDraft='';}schysstaMessage='';render();}

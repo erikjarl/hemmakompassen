@@ -1042,3 +1042,9 @@
   .schyssta-view .schyssta-quick-state p{font-size:12px;line-height:1.35;margin:3px 0 0}
   .schyssta-view .schyssta-quick-counts{font-size:12px;padding-top:5px}
 }
+
+/* FBK-02-01: keep incoming-rule navigation visible without pushing the
+   approved list below the first mobile screen. */
+.schyssta-jump-actions{margin-top:12px}
+.schyssta-jump-actions .schyssta-secondary{max-width:100%;min-height:44px;text-align:left;white-space:normal}
+#schyssta-needs-answer{scroll-margin-top:16px}
