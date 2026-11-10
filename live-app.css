@@ -649,8 +649,12 @@
    first communication tool appear before the fixed bottom navigation.
    Portrait, desktop, and reduced-motion layouts retain their normal scale. */
 @media (max-width:800px) and (max-height:440px) and (orientation:landscape){
+  /* styles.css sets a 38px top padding on all <main> elements;
+     reclaim it for landscape in the actual SPA content element. */
+  .live-main #live-app{padding-top:0}
+  /* Higher specificity than index.html's later inline style rules. */
+  .live-layout .live-main .live-top{margin-bottom:4px;padding-top:0;padding-bottom:4px}
   .live-main{padding-top:6px}
-  .live-top{margin-bottom:8px;padding:0 0 7px}
   .comm-toolkit{gap:9px}
   .comm-hero{padding:8px 14px;border-radius:14px}
   .comm-hero .comm-kicker{font-size:10px;line-height:1.2;letter-spacing:.07em}
