@@ -4494,7 +4494,7 @@ try{
       assert.ok(firstRect.y<navRect.y-5,
         'On 700x360 landscape with 125% text, at least the first tool must begin above the bottom nav: '+
           JSON.stringify({tool:firstRect,nav:navRect,title:titleRect}));
-      assert.ok(titleRect.bottom<=firstRect.y,
+      assert.ok(titleRect.y+titleRect.height<=firstRect.y,
         'Compact landscape communication keeps heading readable before the tool list');
     }
     await capture(scaled.page,'mobile-'+label+'-communication.png');
