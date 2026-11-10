@@ -19,6 +19,56 @@ async function waitForServer(){
   throw new Error("Local HTTP server did not start");
 }
 // FBK-02-03: measure actual rendered wordmark text, not just its CSS box.
+// FBK-02-02: exercise the real NVC UI, opt-in AI request and local fallback.
+async function verifyNvcDraftAi(){
+  for(const role of ['parent','teen']){
+    const {context,page,mediatorCalls,mediatorFixture}=await freshContext(
+      {viewport:{width:role==='parent'?390:320,height:844},isMobile:true,hasTouch:true},
+      {authenticated:true,paired:true,role,aiMediator:true});
+    try{
+      await page.goto(base+'#nvc',{waitUntil:'load'});
+      await page.locator('#comm-nvc-form').waitFor();
+      const aiButton=page.locator('#comm-nvc-ai');
+      assert.equal(await aiButton.isDisabled(),true,role+': AI unavailable before local preview');
+      await page.locator('#comm-observation').fill('Han lyssnade inte när jag pratade');
+      await page.locator('#comm-feeling').fill('Trött och irriterad');
+      await page.locator('#comm-need').fill('Att han visar att han lyssnar');
+      await page.locator('#comm-request').fill('Lyssna på mig i två minuter');
+      await page.getByRole('button',{name:'Visa mina fyra delar'}).click();
+      assert.match(await page.locator('#comm-nvc-output').innerText(),/^Det jag lade märke till:/);
+      assert.equal(mediatorCalls.filter(x=>x.pathname==='/api/ai/mediate').length,0,
+        role+': local preview must make no AI request');
+      await capture(page,'fbk-02-02-nvc-local-'+role+'.png');
+      assert.equal(await aiButton.isEnabled(),true);
+      await aiButton.click();
+      await page.waitForFunction(()=>document.querySelector('#comm-nvc-ai-status')?.textContent?.includes('AI-förslag klart'));
+      assert.match(await page.locator('#comm-nvc-output').innerText(),/^När jag blir avbruten/);
+      const calls=mediatorCalls.filter(x=>x.pathname==='/api/ai/mediate');
+      assert.equal(calls.length,1);
+      assert.equal(calls[0].body.useProjectContext,false);
+      assert.equal(Object.hasOwn(calls[0].body,'chatId'),false);
+      assert.match(calls[0].body.message,/Observation: Han lyssnade inte/);
+      assert.equal(mediatorFixture.chats.length,0,'No persisted chat is created by NVC AI');
+      await capture(page,'fbk-02-02-nvc-ai-'+role+'.png');
+      // Editing invalidates the displayed AI output and disables copying until regenerated.
+      await page.locator('#comm-feeling').fill('Lite ledsen');
+      assert.equal(await page.locator('#comm-nvc-ai').isDisabled(),true);
+      assert.equal(await page.locator('[data-comm-copy="nvc"]').isDisabled(),true);
+      await page.getByRole('button',{name:'Visa mina fyra delar'}).click();
+      const original=await page.locator('#comm-nvc-output').innerText();
+      mediatorFixture.failNextSend=true;
+      await aiButton.click();
+      await page.waitForFunction(()=>document.querySelector('#comm-nvc-ai-status')?.textContent?.includes('Tillfälligt fel'));
+      assert.equal(await page.locator('#comm-nvc-output').innerText(),original,
+        role+': AI error retains the local draft');
+      assert.equal(await aiButton.isEnabled(),true);
+      await page.locator('[data-comm-reset]').click();
+      assert.equal(await aiButton.isDisabled(),true);
+      assert.equal(await page.locator('[data-comm-copy="nvc"]').isDisabled(),true);
+      await checkOverflow(page,'FBK-02-02 NVC '+role);
+    }finally{await context.close();}
+  }
+}
 async function verifyDesktopSidebarBrand(){
   for(const width of [821,1024,1440]){
     const {context,page}=await freshContext({viewport:{width,height:900}},{authenticated:true,paired:true});
@@ -3211,6 +3261,9 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
         if(mediatorFixture.failNextSend){
           mediatorFixture.failNextSend=false;status=503;
           result={error:'Tillfälligt fel vid svar.'};
+        }else if(body?.chatId===undefined&&body?.useProjectContext===false){
+          // NVC opt-in uses the existing Worker in ephemeral (not D1 chat) mode.
+          result={reply:'När jag blir avbruten känner jag mig frustrerad. Jag behöver få tala till punkt. Vill du lyssna tills jag har sagt klart?',chatId:null,ephemeral:true,remainingToday:9};
         }else if(!mediatorFixture.messages.has(body?.chatId)){
           status=404;result={error:'Okänt samtal.'};
         }else{
@@ -3693,6 +3746,7 @@ try{
   await fs.mkdir(output,{recursive:true});
   await waitForServer();
   browser=await chromium.launch({headless:true,...(process.env.CHROMIUM_PATH?{executablePath:process.env.CHROMIUM_PATH}:{})});
+  await verifyNvcDraftAi();
   await verifySchysstaMobileHierarchy();
   await verifyDesktopSidebarBrand();
   const login=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true});
