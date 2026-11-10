@@ -2319,7 +2319,14 @@ async function decideSchysstaRule(agreementId,approved){
   const refreshed=await fetchSchysstaList();
   // A competing refresh may supersede this read. Never claim that this
   // particular decision was verified from a snapshot we did not receive.
-  if(!refreshed||user?.id!==viewer||sharedSession!==session||schysstaError)return;
+  if(user?.id!==viewer||sharedSession!==session)return;
+  if(!refreshed||schysstaError){
+    // The write succeeded but its readback was superseded or failed. Do not
+    // invite another approval click or claim a decision we cannot verify.
+    schysstaDecisionFeedback='Ditt val skickades, men aktuell status kunde inte bekräftas. Uppdatera listan och kontrollera om beslutet är sparat innan du försöker igen.';
+    if(!schysstaError)render();
+    return;
+  }
   const confirmed=schysstaAllRules().find(row=>row.agreement_id===agreementId);
   schysstaDecisionFeedback=confirmed?.own_decision===approved
     ?(approved?(confirmed.status==='accepted'
