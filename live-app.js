@@ -2337,8 +2337,7 @@ function schysstaView(){
     :'';
   const composeSection='<details class="schyssta-compose-panel"'+(schysstaDraftOpen||schysstaMessage?' open':'')+'>'
     +'<summary><h2>'+(schysstaEditTarget?'Föreslå ändring av regel':'Skriv ett eget förslag')+'</h2><span>Öppna om du vill skriva eller ändra något.</span></summary>'
-    +card(formHtml+(schysstaMessage?'<p role="status" class="schyssta-feedback">'+esc(schysstaMessage)+'</p>':'')
-      +(!schysstaDraftOpen?'<button class="schyssta-secondary" type="button" data-schyssta-start>Börja skriva</button>':''))
+    +card(formHtml+(schysstaMessage?'<p role="status" class="schyssta-feedback">'+esc(schysstaMessage)+'</p>':''))
     +'</details>';
   return '<div class="schyssta-view"><header class="schyssta-page-intro"><h1>Schyssta listan</h1><p>Förslag blir gemensamma regler först när båda sagt ja.</p></header>'
     +quickActions
