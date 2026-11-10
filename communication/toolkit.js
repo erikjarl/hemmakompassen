@@ -186,7 +186,7 @@ export function buildNvcSentence(input={}){
  if(!a)return null;
  return 'Det jag lade märke till: '+a[0]+'\nMin känsla: '+a[1]+'\nMitt behov: '+a[2]+'\nMitt önskemål: '+a[3];
 }
-// Time-limit a single AI step: Supabase auth, HTTP and JSON parsing may each stall.
+// Time-limit a single AI step: login, HTTP and JSON parsing may each stall.
 // The controller also cancels the fetch where supported. A timed-out response
 // must never replace the user's local four-part draft.
 export async function withNvcAiDeadline(promise,controller,timeoutMs=30000){
