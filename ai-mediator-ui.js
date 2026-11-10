@@ -314,10 +314,10 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
         + (historyError?'<p role="alert" class="mediator-error">'+h(historyError)+'</p><button type="button" class="mediator-clear" id="mediator-retry-list"'+(sending||loading||deletingChat?' disabled':'')+'>Försök hämta samtal igen</button>':'')
         + (chats.length ? '<div class="mediator-thread-list" role="group" aria-label="Dina samtal">'
            + chats.map(c=>'<button type="button" data-mediator-open="'+h(c.id)+'"'+(c.id===activeChatId?' aria-current="true"':'')+(sending||creatingChat||deletingChat||loading?' disabled':'')+'>'+h(c.title)+'</button>').join('')+'</div>'
-          : '<p>Inga sparade samtal ännu. Skriv nedan så skapas ett privat samtal.</p>')
+          : (loading || historyError ? '' : '<p>Inga sparade samtal ännu. Skriv nedan så skapas ett privat samtal.</p>'))
         + '</section>' : '';
     const messages = turns.length
-      ? '<ol class="mediator-messages" aria-label="Tillfälliga testmeddelanden">'
+      ? '<ol class="mediator-messages" aria-label="' + (historyEnabled ? 'Meddelanden i det sparade privata samtalet' : 'Tillfälliga testmeddelanden') + '">'
         + turns.map(turn => '<li class="mediator-message mediator-message-' + h(turn.role) + '"><strong>'
           + (turn.role === 'user' ? 'Du' : turn.role === 'safety' ? 'Säkerhetsinformation' : 'Samtalsstödet') + '</strong><p>' + (turn.role==='assistant'?renderMediatorInternalLinks(turn.text,h,getViewerRole):h(turn.text)) + '</p></li>').join('')
         + '</ol>'
