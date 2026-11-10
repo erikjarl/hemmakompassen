@@ -83,19 +83,29 @@ test('first render after reset never claims a verified empty list',async()=>{
   assert.doesNotMatch(ui.render(),/Inga sparade samtal ännu/);
 });
 
-test('confirmed create and delete maintain a truthful empty state without GET',async()=>{
+test('create then delete cannot verify a server-wide empty history',async()=>{
+  let listReads=0;
   const fetchImpl=async(url,opts)=>{
     if(url===BASE+'/chats'&&opts.method==='POST')
       return response({chat:{id:CHAT,title:'Nytt samtal'}},201);
     if(url===BASE+'/chats/'+CHAT&&opts.method==='DELETE')
       return response({deleted:true});
+    if(url===BASE+'/chats'&&opts.method==='GET'){
+      listReads++;
+      return response({chats:[]});
+    }
     throw Error('Unexpected request '+opts.method+' '+url);
   };
   const ui=make(fetchImpl);
   assert.equal(ui.getState().historyListVerified,false);
   assert.equal(await ui.createChat(),CHAT);
-  assert.equal(ui.getState().historyListVerified,true);
+  assert.equal(ui.getState().historyListVerified,false);
   assert.doesNotMatch(ui.render(),/Inga sparade samtal ännu/);
   assert.equal(await ui.deleteChat(),true);
+  assert.equal(ui.getState().historyListVerified,false,'Deleting a newly created chat says nothing about other server history');
+  assert.doesNotMatch(ui.render(),/Inga sparade samtal ännu/);
+  assert.equal(await ui.loadList(),true);
+  assert.equal(listReads,1);
+  assert.equal(ui.getState().historyListVerified,true);
   assert.match(ui.render(),/Inga sparade samtal ännu/);
 });

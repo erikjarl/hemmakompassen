@@ -169,7 +169,6 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
       if(!data.chat?.id || !/^[0-9a-f-]{36}$/i.test(data.chat.id))
         throw Error('Samtal kunde inte skapas.');
       chats=[data.chat,...chats];
-      historyListVerified=true; // A confirmed creation also proves the list is no longer empty.
       activeChatId=data.chat.id;
       activeChatReady=true; // Successful creation starts with an intentionally empty transcript.
       turns=[];error='';historyError='';notify();
@@ -233,7 +232,6 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
       await callApi('/chats/'+encodeURIComponent(id),'DELETE',account);
       if(myEpoch!==epoch || account!==userId)return false;
       chats=chats.filter(c=>c.id!==id);
-      historyListVerified=true; // Confirmed deletion can leave a verified empty list.
       activeChatId=null;activeChatReady=false;turns=[];draft='';error='';remaining=null;
       // Once the write is confirmed, normal read-only navigation is safe.
       // openChat synchronously sets loading=true while it fetches the next one.
