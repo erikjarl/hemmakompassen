@@ -91,10 +91,11 @@ export async function loadResultAnalysisInput(env,jwt,userId,role,kind,scope,fet
 }
 
 // Only existing, role-neutral, read-only exercises are allowed in AI suggestions.
+// NVC is an existing standalone exercise at #nvc (not a communication subroute).
 const EXERCISE_IDS=['lyssna','pausa','reparera','losning','kontakt','svaart','validera','onskemal','grans'];
 // Require an exact, supported exercise route at the END of each action item.
 // A valid prefix of #kommunikation/kontakt2 or /kontakt-extra is not a link.
-const ROUTE_END_RE=new RegExp('(?:^|\\s)#kommunikation/(?:'+EXERCISE_IDS.join('|')+')$');
+const ROUTE_END_RE=new RegExp('(?:^|\\s)(?:#kommunikation/(?:'+EXERCISE_IDS.join('|')+')|#nvc)$');
 const FALLBACK_SUGGESTIONS={
   personality:[
     '1. Välj en av dina fem skalor och skriv ned ett vardagsexempel som du känner igen. Prova att återge upplevelsen utan värdering: #kommunikation/validera',
@@ -159,7 +160,7 @@ const COMMON=[
   'Skriv på enkel, naturlig svenska för mottagarens roll. Håll reflektionen kort och konkret.',
   'Använd exakt avsnitten "Reflektion:" och "Förslag:". Skriv under "Förslag:" exakt två eller tre numrerade, genomförbara, frivilliga handlingar. Varje handling anger ett litet första steg utifrån de verifierade resultaten.',
   'STÄLL ALDRIG FRÅGOR UNDER "Förslag:". Inga frågetecken, retoriska frågor, reflektionsfrågor eller vaga uppmaningar att fundera. Eventuell öppen reflektion hör bara hemma under "Reflektion:".',
-  'Avsluta vart och ett av dina numrerade förslag med en relevant befintlig övningslänk som ren hash-route (inte Markdown): #kommunikation/lyssna, #kommunikation/pausa, #kommunikation/reparera, #kommunikation/losning, #kommunikation/kontakt, #kommunikation/svaart, #kommunikation/validera, #kommunikation/onskemal eller #kommunikation/grans. Föreslå aldrig andra länkar eller påhittade funktioner.',
+  'Avsluta vart och ett av dina numrerade förslag med en relevant befintlig övningslänk som ren hash-route (inte Markdown): #kommunikation/lyssna, #kommunikation/pausa, #kommunikation/reparera, #kommunikation/losning, #kommunikation/kontakt, #kommunikation/svaart, #kommunikation/validera, #kommunikation/onskemal, #kommunikation/grans eller #nvc. Föreslå aldrig andra länkar eller påhittade funktioner.',
   'Skilj på vad svaren faktiskt visar och möjliga tolkningar; inga påhittade problem, konflikter, motiv eller diagnoser.',
   'En poäng på 10–50 i IPIP-50 är inte en percentil. Beskriv inte poäng nära mitten, till exempel 30–32/50, som stark tendens. Undvik tvärsäkra omdömen även vid extrema poäng.',
   'Inled inte med tack för att någon svarat, opåkallat beröm eller en värdering av testresultatet.',
