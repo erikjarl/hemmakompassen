@@ -144,8 +144,10 @@ async function run(action,{successMessage=null,reportStatus=status}={}){
   busy=true;
   let active=true;
   const isCurrent=()=>active;
-  const buttons=[...document.querySelectorAll('button')];
-  buttons.forEach(b=>b.disabled=true);
+  // Preserve pre-existing disabled controls (including a pending feedback form).
+  // Re-enabling every button after an account action would unlock unrelated UI.
+  const buttons=[...document.querySelectorAll('button')].map(button=>({button,wasDisabled:button.disabled}));
+  buttons.forEach(({button})=>{button.disabled=true;});
   try{
     // A manual account refresh has its own live region next to the button;
     // other account actions retain their existing form-feedback region.
@@ -156,7 +158,7 @@ async function run(action,{successMessage=null,reportStatus=status}={}){
     await refresh();
     if(successMessage)reportStatus(successMessage);
   }catch(e){reportStatus(e?.message||'Ett fel inträffade');}
-  finally{active=false;busy=false;buttons.forEach(b=>b.disabled=false);}
+  finally{active=false;busy=false;buttons.forEach(({button,wasDisabled})=>{button.disabled=wasDisabled;});}
 }
 $('refresh-account').addEventListener('click',()=>run(async()=>{}, {successMessage:'Kontot har uppdaterats.',reportStatus:refreshStatus}));
 $('email-form').addEventListener('submit',e=>{e.preventDefault();run(async isCurrent=>{
