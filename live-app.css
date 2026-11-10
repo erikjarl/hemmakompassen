@@ -985,3 +985,11 @@
     margin:2px 0 5px;
   }
 }
+
+/* VIS-00-13: remove repeated deck labels only on very narrow theme cards.
+   Keep category badges when they identify a distinct subcategory. */
+@media(max-width:360px){
+  .swipe-theme-play .swipe-stage-top > span:first-child{display:none}
+  .swipe-theme-play .swipe-stage-top{justify-content:flex-end}
+  .swipe-theme-play .swipe-playing-card .swipe-category-duplicate{display:none}
+}
