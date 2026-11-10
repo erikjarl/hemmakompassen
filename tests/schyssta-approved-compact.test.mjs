@@ -76,3 +76,32 @@ test('FBK-02-05: save feedback is conditional on a fresh confirmed server decisi
   const html=view({schysstaDecisionFeedback:'Ditt ja är sparat.'});
   assert.match(html,/<p role="status" class="schyssta-feedback">Ditt ja är sparat\.<\/p>/);
 });
+
+test('FBK-02-05: superseded readback does not falsely confirm an accepted decision',async()=>{
+  const start=app.indexOf('async function decideSchysstaRule(');
+  const end=app.indexOf('function schysstaView(){',start);
+  assert.ok(start>0&&end>start,'Find production decision action');
+  const action=app.slice(start,end);
+  const snapshot={agreement_id:id,status:'accepted',own_decision:true};
+  async function run(refreshed){
+    let renders=0;
+    const state={
+      schysstaListEnabled:true,user:{id:'parent'},sharedSession:1,
+      SCHYSSTA_UUID:/^[a-f0-9-]{36}$/i,schysstaSaving:new Set(),
+      preflightSchysstaWrite:async()=>true,
+      db:{rpc:()=>Promise.resolve({error:null})},
+      schysstaWriteRpc:promise=>promise,
+      fetchSchysstaList:async()=>refreshed,
+      schysstaAllRules:()=>[snapshot],
+      schysstaDecisionFeedback:'',schysstaError:'',
+      render:()=>{renders++;}
+    };
+    runInNewContext(action+'\nthis.decide=decideSchysstaRule;',state);
+    await state.decide(id,true);
+    return {feedback:state.schysstaDecisionFeedback,renders};
+  }
+  const stale=await run(false);
+  assert.equal(stale.feedback,'','An abandoned/superseded readback cannot prove success');
+  const fresh=await run(true);
+  assert.match(fresh.feedback,/båda godkänt/,'Confirmed readback still gives clear success');
+});
