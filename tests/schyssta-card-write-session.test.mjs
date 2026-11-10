@@ -34,7 +34,8 @@ function harness(){
     setTimeout,clearTimeout,
     db:{rpc(name,args){calls.push({name,args});return gate.promise;}},
     render:()=>rendered.push('render'),
-    fetchSchysstaList:async()=>{refreshes.push('reload');}
+    fetchSchysstaList:async()=>{refreshes.push('reload');},
+    schysstaAllRules:()=>state.schysstaRules,schysstaDecisionFeedback:''
   };
   vm.runInNewContext(helper+'\n'+production.slice(start,end)+
     '\nthis.propose=proposeSchysstaRule;this.decide=decideSchysstaRule;',state,
