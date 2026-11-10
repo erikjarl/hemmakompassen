@@ -1129,3 +1129,17 @@
 .inbox-unread-shortcuts{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .inbox-unread-shortcuts button,.inbox-unread-shortcuts span{box-sizing:border-box;min-width:0;max-width:100%;min-height:40px;padding:8px 11px;border:1px solid var(--line2);border-radius:10px;font-size:13px;line-height:1.4;overflow-wrap:anywhere}
 .inbox-unread-shortcuts span{display:inline-flex;align-items:center;color:var(--muted)}
+
+/* FBK-02-05: approved rules are a calm, scannable list.
+   Management and review tools appear only when the person expands a rule. */
+.schyssta-view .schyssta-approved-item{padding:0!important;overflow:hidden}
+.schyssta-approved-details>summary{display:flex;align-items:center;gap:14px;padding:13px 16px;cursor:pointer;list-style:none;min-height:44px;box-sizing:border-box}
+.schyssta-approved-details>summary::-webkit-details-marker{display:none}
+.schyssta-approved-details>summary>p{margin:0;flex:1;min-width:0;font-size:15px;line-height:1.5;overflow-wrap:anywhere;color:#f8f4e9}
+.schyssta-approved-details>summary::after{content:'▸';flex:none;font-size:20px;line-height:1;color:#f4cf91}
+.schyssta-approved-details[open]>summary::after{content:'▾'}
+.schyssta-approved-details>summary:focus-visible{outline:3px solid #f5c16e;outline-offset:-4px;border-radius:11px}
+.schyssta-approved-extra{padding:0 16px 16px;border-top:1px solid #485267}
+.schyssta-approved-extra>.schyssta-status{margin-top:12px}
+.schyssta-approved-extra>.schyssta-actions{margin-top:12px}
+@media(max-width:440px){.schyssta-approved-details>summary{padding:12px 13px;gap:10px}.schyssta-approved-extra{padding:0 13px 13px}}

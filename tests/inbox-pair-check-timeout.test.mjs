@@ -48,7 +48,7 @@ function harness(role='parent'){
     insightsRows:[],sharedUnderstandingRows:[],insightsError:'',insightsLoading:false,
     schysstaRequest:0,schysstaSuggestions:[],schysstaRules:[],
     schysstaManualRules:[],schysstaNotifications:[],schysstaReplacementLinks:[],
-    schysstaHistory:[],schysstaSaving:new Set(),schysstaPausedIds:new Set(),
+    schysstaHistory:[],schysstaSaving:new Set(),schysstaPausedIds:new Set(),schysstaExpandedIds:new Set(),schysstaDecisionFeedback:'',
     schysstaEndTarget:null,schysstaLoading:false,schysstaError:'',
     schysstaDraft:'',schysstaDraftOpen:false,schysstaDraftKey:null,
     schysstaEditTarget:null,schysstaSubmitting:false,schysstaMessage:'',

@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261110-nvc-concise-reply1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261110-schyssta-approved1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261110-nvc-concise-reply1';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261110-schyssta-approved1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261110-nvc-concise-reply1';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261110-schyssta-approved1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -64,6 +64,8 @@ let sharedUnderstandingRows=[],understandingShareError='',understandingSharesAva
 let schysstaSuggestions=[],schysstaRules=[],schysstaManualRules=[],schysstaNotifications=[],schysstaReplacementLinks=[],schysstaHistory=[],schysstaEndTarget=null,schysstaLoading=false,schysstaError='',schysstaRequest=0;
 let schysstaDraft='',schysstaDraftOpen=false,schysstaDraftKey=null,schysstaEditTarget=null,schysstaSubmitting=false,schysstaMessage='',schysstaCopyMessage='',schysstaCopyFallback=false,schysstaFocusId='',schysstaSearch='',schysstaFilterStatus='all';
 const schysstaSaving=new Set();
+const schysstaExpandedIds=new Set();
+let schysstaDecisionFeedback='';
 let activityNotifications=[],activityNotificationsError='',activityNotificationsLoading=false,
   activityNotificationsRequest=0,activityMarkBusy=null,activityFeedback='';
 const ACTIVITY_DECK_LABELS=Object.freeze({
@@ -261,7 +263,7 @@ async function recheckInboxPair(){
     schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];
     schysstaNotifications=[];schysstaReplacementLinks=[];schysstaHistory=[];
     schysstaEndTarget=null;schysstaLoading=false;schysstaError='';
-    schysstaSaving.clear();schysstaPausedIds.clear();
+    schysstaSaving.clear();schysstaPausedIds.clear();schysstaExpandedIds.clear();schysstaDecisionFeedback='';
     schysstaDraft='';schysstaDraftOpen=false;schysstaDraftKey=null;
     schysstaEditTarget=null;schysstaSubmitting=false;schysstaMessage='';schysstaCopyMessage='';schysstaCopyFallback=false;
     activityNotificationsRequest++;
@@ -2306,13 +2308,22 @@ async function decideSchysstaRule(agreementId,approved){
   if(!schysstaListEnabled||!user||!SCHYSSTA_UUID.test(agreementId)||schysstaSaving.has(agreementId))return;
   const viewer=user.id,session=sharedSession;
   if(!await preflightSchysstaWrite(viewer,session)||schysstaSaving.has(agreementId))return;
-  schysstaSaving.add(agreementId);render();
+  schysstaDecisionFeedback='';schysstaSaving.add(agreementId);render();
   let error;try{({error}=await schysstaWriteRpc(db.rpc('set_schyssta_rule_decision',{p_agreement_id:agreementId,p_approved:approved})));}catch(e){error=e;}
   // The current session owns the saving flag and cached decisions.
   if(user?.id!==viewer||sharedSession!==session)return;
   schysstaSaving.delete(agreementId);
   if(error){schysstaError='Det gick inte att bekräfta om ditt val sparades. Listan har rensats tills du kontrollerat aktuell status igen.';schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];schysstaNotifications=[];schysstaReplacementLinks=[];schysstaHistory=[];render();return;}
   await fetchSchysstaList();
+  if(user?.id!==viewer||sharedSession!==session||schysstaError)return;
+  const confirmed=schysstaAllRules().find(row=>row.agreement_id===agreementId);
+  schysstaDecisionFeedback=confirmed?.own_decision===approved
+    ?(approved?(confirmed.status==='accepted'
+      ?'Sparat: ni har båda godkänt regeln. Den finns under Våra överenskommelser.'
+      :'Ditt ja är sparat. Regeln väntar fortfarande på den andra personens ja.')
+      :'Ditt nej är sparat. Förslaget finns bland övriga förslag.')
+    :'Det gick inte att verifiera det senaste beslutet. Uppdatera listan för att kontrollera statusen.';
+  render();
 }
 function schysstaView(){
   if(!schysstaListEnabled)return '<h1>Schyssta listan</h1>'+card('<p>Regelvyn är inte aktiverad i denna miljö.</p>');
@@ -2325,7 +2336,7 @@ function schysstaView(){
     const action=schysstaSaving.has(item.agreement_id);
     const submitButton=(approved,label,style='live-button')=>'<button class="'+style+'" type="button" data-schyssta-decision="'+item.agreement_id+'" data-approved="'+approved+'"'+(action?' disabled':'')+'>'+label+'</button>';
     const decisionActions=item.status==='accepted'
-      ?'<p class="live-muted">Ni har båda godkänt denna överenskommelse.</p>'
+      ?''
       :item.status==='rejected'
       ?'<p class="live-muted">Ni är inte överens om förslaget just nu. Ni kan prata om en annan formulering.</p>'
         +(item.own_decision===false?submitButton(true,'Ändra mitt svar till ja')
@@ -2342,14 +2353,19 @@ function schysstaView(){
       ?'<button class="schyssta-secondary" type="button" data-schyssta-edit="'+item.agreement_id+'">Föreslå ändring</button>'
         +'<button class="schyssta-secondary" type="button" data-schyssta-end="'+item.agreement_id+'">Avsluta överenskommelsen</button>'
       :'';
-    return '<li id="schyssta-rule-'+item.agreement_id+'"><p>'+esc(item.body)+'</p>'
+    const accepted=item.status==='accepted';
+    const open=schysstaExpandedIds.has(item.agreement_id)||schysstaEndTarget===item.agreement_id;
+    const ruleStart=accepted
+      ?'<li id="schyssta-rule-'+item.agreement_id+'" class="schyssta-approved-item"><details class="schyssta-approved-details" data-agreement-id="'+item.agreement_id+'"'+(open?' open':'')+'><summary><p>'+esc(item.body)+'</p></summary><div class="schyssta-approved-extra">'
+      :'<li id="schyssta-rule-'+item.agreement_id+'"><p>'+esc(item.body)+'</p>';
+    return ruleStart
       +'<p class="schyssta-status"><span>'+source+'</span> · <span class="schyssta-status-mark schyssta-status-'+item.status+'" aria-hidden="true"></span><strong>'+statusLabel[item.status]+'</strong> · Ditt val: '
       +(item.own_decision===true?'ja':item.own_decision===false?'nej':'inte lämnat')+'</p>'
       +(source==='Ändringsförslag'&&item.status==='proposed'?'<p class="live-muted">Den tidigare överenskommelsen gäller tills ni båda har godkänt den nya formuleringen.</p>':'')
       +'<div class="schyssta-actions">'+decisionActions+manageActions+'</div>'
       +(item.status==='accepted'?'<details class="schyssta-review"><summary>Hur fungerar den här regeln för oss?</summary><p>Ni kan välja att prata om regeln när det passar båda. Det här är ingen bedömning av vem som gör rätt eller fel.</p><ul><li>Vad har fungerat bra för oss?</li><li>Finns det något som känns svårt eller orättvist?</li><li>Vill vi behålla regeln eller föreslå en ändring?</li></ul></details>':'')
       +(schysstaEndTarget===item.agreement_id?'<div class="schyssta-confirm" role="group" aria-label="Bekräfta avslut"><p>Om du avslutar gäller regeln inte längre som gemensam överenskommelse. Den finns kvar i historiken.</p><button class="live-button" type="button" data-schyssta-end-confirm="'+item.agreement_id+'">Ja, avsluta</button><button class="schyssta-secondary" type="button" id="schyssta-end-cancel">Avbryt</button></div>':'')
-      +'</li>';
+      +(accepted?'</div></details></li>':'</li>');
   };
   const list=(rows,empty)=>rows.length?'<ul class="schyssta-list">'+rows.map(itemHtml).join('')+'</ul>':'<p class="live-muted">'+empty+'</p>';
   const rules=schysstaAllRules(), needs=schysstaNeedsAnswer();
@@ -2413,6 +2429,7 @@ function schysstaView(){
     +'</details>';
   return '<div class="schyssta-view"><header class="schyssta-page-intro"><h1>Schyssta listan</h1><p>Förslag blir gemensamma regler först när båda sagt ja.</p></header>'
     +quickActions
+    +(schysstaDecisionFeedback?'<p role="status" class="schyssta-feedback">'+esc(schysstaDecisionFeedback)+'</p>':'')
     +approvedSection
     +needsSection
     +firstRuleHint
@@ -2461,6 +2478,13 @@ function render(){
   // Inbox can rerender after a remote message or an explicit read action.
   // Preserve the mobile main scroller instead of jumping to the heading.
   // Hash navigation explicitly calls scrollLiveMainTop() after its render.
+  // Keep manually expanded agreements open when notifications or saves rerender the view.
+  const existingRules=page()==='regler'?document.querySelector('.schyssta-view'):null;
+  if(existingRules){
+    const expanded=[...existingRules.querySelectorAll('.schyssta-approved-details[open]')].map(details=>details.dataset.agreementId);
+    schysstaExpandedIds.clear();
+    for(const id of expanded)schysstaExpandedIds.add(id);
+  }
   const focusedPriority=page()==='swipe'?document.activeElement?.closest?.('[data-priority-share]'):null;
   const priorityFocus=focusedPriority?{deck:focusedPriority.dataset.deckId,card:focusedPriority.dataset.cardId}:null;
   // A shared-results refresh or category change must not close an expanded
@@ -2525,7 +2549,7 @@ if(generation!==refreshGeneration)return;
 const {data:{user:u},error}=authResult;if(error&&error.name!=='AuthSessionMissingError')throw error;generalReviewEdit=null;themeReviewEdit=null;user=u;profile=null;members=[];mediatorExperience.reset(u?.id??null);aiResults.reset(u?.id??null);personalityExperience.reset(u?.id??null);swipeAnswers.clear();swipeImportance.clear();importancePending.clear();importanceSaving.clear();importanceAvailable=false;importanceLoadError='';priorityShares.clear();priorityShareSaving.clear();prioritySharesAvailable=false;priorityShareError='';skippedUnderstanding.clear();understandingShares.clear();understandingShareSaving.clear();understandingShareError='';understandingSharesAvailable=false;understandingShareChecking=false;for(const answers of themeAnswers.values())answers.clear();activeThemeDeck=null;themeCategory='all';themeIndex=0;themeReview=false;themeSaveError='';swipeBusy=false;swipeLoadError='';swipeSaveError='';swipeReview=false;swipeSkippedReview=false;swipeIndex=0;sharedMatches=[];sharedPriorities=[];sharedDeckId='general';sharedError='';sharedPriorityError='';sharedLoading=false;sharedSession++;sharedRequest++;activityInviteBusy=false;activityInviteError='';insightsRows=[];sharedUnderstandingRows=[];insightsLoading=false;insightsError='';insightsRequest++;themesUnlocked=false;themesLoading=false;themesError='';themesRequest++;
 inboxPairEpoch=null;
 activityNotificationsRequest++;activityNotifications=[];activityNotificationsError='';activityNotificationsLoading=false;activityMarkBusy=null;activityFeedback='';
-if(typeof schysstaRequest!=='undefined'){schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];schysstaNotifications=[];schysstaReplacementLinks=[];schysstaHistory=[];schysstaEndTarget=null;schysstaLoading=false;schysstaError='';schysstaRequest++;schysstaSaving.clear();schysstaPausedIds.clear();clearFamilyChat();schysstaDraft='';schysstaDraftOpen=false;schysstaDraftKey=null;schysstaEditTarget=null;schysstaSubmitting=false;schysstaMessage='';schysstaCopyMessage='';schysstaCopyFallback=false;schysstaFocusId='';schysstaSearch='';schysstaFilterStatus='all';}
+if(typeof schysstaRequest!=='undefined'){schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];schysstaNotifications=[];schysstaReplacementLinks=[];schysstaHistory=[];schysstaEndTarget=null;schysstaLoading=false;schysstaError='';schysstaRequest++;schysstaSaving.clear();schysstaPausedIds.clear();schysstaExpandedIds.clear();schysstaDecisionFeedback='';clearFamilyChat();schysstaDraft='';schysstaDraftOpen=false;schysstaDraftKey=null;schysstaEditTarget=null;schysstaSubmitting=false;schysstaMessage='';schysstaCopyMessage='';schysstaCopyFallback=false;schysstaFocusId='';schysstaSearch='';schysstaFilterStatus='all';}
 if(user){const viewer=user.id;
 let loaded;
 try{loaded=await Promise.all([db.from('profiles').select('display_name').eq('user_id',viewer).maybeSingle(),db.rpc('my_family_members'),db.from('swipe_answers').select('deck_id,card_id,answer').eq('user_id',viewer),db.from('swipe_skips').select('deck_id,card_id').eq('user_id',viewer),db.from('swipe_importance').select('deck_id,card_id,importance').eq('user_id',viewer),sharedUnderstandingEnabled?db.from('understanding_card_shares').select('deck_id,card_id').eq('user_id',viewer):Promise.resolve({data:[],error:null}),sharedPrioritiesEnabled?db.from('swipe_priority_shares').select('deck_id,card_id').eq('user_id',viewer):Promise.resolve({data:[],error:null}),db.rpc('my_current_inbox_pair_epoch')]);}

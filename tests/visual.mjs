@@ -2564,7 +2564,8 @@ async function verifyPairedTwoRoleExchange(){
     await teen.page.goto(base+'#hem',{waitUntil:'load'});
     await teen.page.goto(base+'#regler',{waitUntil:'load'});
     await teen.page.locator('#schyssta-rule-'+fixture.rules[0].id).waitFor();
-    assert.match(await teen.page.locator('#schyssta-rule-'+fixture.rules[0].id).innerText(),/Godkänd av båda/);
+    assert.equal(await teen.page.locator('#schyssta-rule-'+fixture.rules[0].id+' .schyssta-approved-details > summary').isVisible(),true,
+      'An accepted agreement is visible to the other role even while details are collapsed');
     assert.equal(await teen.page.locator('.schyssta-quick-counts').count(),1);
     record.push({case:'not-now-resume-teen-approve-parent-approve-both-see-accepted',passed:true});
     await checkOverflow(parent.page,'FUN-03 linked parent 390px');
@@ -2711,10 +2712,12 @@ async function verifyPairedRuleRevisionAndHistory(){
     await revisit(parent.page);
     await parent.page.locator('#schyssta-rule-'+originalId)
       .getByRole('button',{name:'Jag godkänner'}).click();
-    await parent.page.locator('#schyssta-rule-'+originalId).getByText('Godkänd av båda').waitFor();
+    await parent.page.locator('#schyssta-rule-'+originalId+' .schyssta-approved-details > summary').waitFor();
+    assert.match(await parent.page.locator('.schyssta-view [role="status"]').allTextContents().then(a=>a.join(' ')),/Sparat: ni har båda godkänt regeln/);
     assert.equal(fixture.rules[0].status,'accepted');
     records.push({case:'initial-rule-acceptance-requires-two-votes',passed:true});
 
+    await parent.page.locator('#schyssta-rule-'+originalId+' .schyssta-approved-details > summary').click();
     await parent.page.locator('#schyssta-rule-'+originalId).locator('[data-schyssta-edit]').click();
     const draft=parent.page.locator('#schyssta-body');
     await draft.waitFor();
@@ -2746,7 +2749,7 @@ async function verifyPairedRuleRevisionAndHistory(){
     await revisit(parent.page);
     await parent.page.locator('#schyssta-rule-'+proposalId)
       .getByRole('button',{name:'Jag godkänner'}).click();
-    await parent.page.locator('#schyssta-rule-'+proposalId).getByText('Godkänd av båda').waitFor();
+    await parent.page.locator('#schyssta-rule-'+proposalId+' .schyssta-approved-details > summary').waitFor();
     assert.equal(proposal.status,'accepted');
     assert.equal(fixture.rules.some(row=>row.id===originalId),false,
       'FUN-03: original no longer active once replacement is accepted by both');
@@ -2755,7 +2758,7 @@ async function verifyPairedRuleRevisionAndHistory(){
     await revisit(teen.page);
     assert.equal(await teen.page.locator('.schyssta-filter-group #schyssta-rule-'+originalId).count(),0,
       'FUN-03: old rule no longer exists in active lists; the archived history entry remains');
-    await teen.page.locator('#schyssta-rule-'+proposalId).getByText('Godkänd av båda').waitFor();
+    await teen.page.locator('#schyssta-rule-'+proposalId+' .schyssta-approved-details > summary').waitFor();
     const archive=teen.page.locator('#schyssta-history');
     await archive.waitFor();
     await archive.locator('summary').click();
@@ -2790,6 +2793,7 @@ async function verifyPairedRuleRevisionAndHistory(){
 
     // Cancel is local only; confirm archives the current rule and removes
     // it from the other account's active list on refresh.
+    await teen.page.locator('#schyssta-rule-'+proposalId+' .schyssta-approved-details > summary').click();
     await teen.page.locator('#schyssta-rule-'+proposalId).locator('[data-schyssta-end]').click();
     await teen.page.getByRole('group',{name:'Bekräfta avslut'}).waitFor();
     await teen.page.getByRole('button',{name:'Avbryt'}).click();
@@ -5031,6 +5035,9 @@ try{
     'An accepted rule does not offer misleading approval or rejection buttons');
   const review=paired.page.locator('#schyssta-rule-30000000-0000-4000-8000-000000000003 .schyssta-review');
   assert.equal(await review.count(),1,'Agreed rules have an optional discussion guide');
+  const acceptedSummary=paired.page.locator('#schyssta-rule-30000000-0000-4000-8000-000000000003 .schyssta-approved-details > summary');
+  assert.equal(await review.locator('summary').isVisible(),false,'Review tools remain hidden until agreed rule is expanded');
+  await acceptedSummary.click();
   await review.locator('summary').click();
   assert.match(await review.innerText(),/Vad har fungerat bra för oss/,'Guide uses open questions, not compliance points');
   await paired.page.evaluate(()=>Object.defineProperty(navigator,'clipboard',{configurable:true,value:{
