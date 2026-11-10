@@ -33,7 +33,7 @@ const clearButton = {disabled: false, addEventListener() {}};
 const statusNode = {textContent: ''};
 const fakeForm = {
   elements: {
-    category: {value: 'bug'}, description: {value: 'Beskrivning av ett riktigt fel'},
+    category: {value: 'bug'}, description: {value: 'Beskrivning av ett riktigt fel', focus() {}},
     expected: {value: ''}
   },
   querySelector: () => sendButton,
