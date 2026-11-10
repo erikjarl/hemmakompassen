@@ -18,6 +18,37 @@ async function waitForServer(){
   }
   throw new Error("Local HTTP server did not start");
 }
+// FBK-02-03: measure actual rendered wordmark text, not just its CSS box.
+async function verifyDesktopSidebarBrand(){
+  for(const width of [821,1024,1440]){
+    const {context,page}=await freshContext({viewport:{width,height:900}},{authenticated:true,paired:true});
+    try{
+      await page.goto(base+"#kommunikation",{waitUntil:"load"});
+      await page.locator(".live-sidebar .live-brand").waitFor({state:"visible"});
+      const bounds=await page.evaluate(()=>{
+        const aside=document.querySelector(".live-sidebar");
+        const brand=aside?.querySelector(".live-brand");
+        if(!aside||!brand)return null;
+        const a=aside.getBoundingClientRect();
+        const s=getComputedStyle(aside);
+        const range=document.createRange();
+        range.selectNodeContents(brand);
+        const text=range.getBoundingClientRect();
+        return {textLeft:text.left,textRight:text.right,
+          contentLeft:a.left+parseFloat(s.paddingLeft),
+          contentRight:a.right-parseFloat(s.paddingRight)-parseFloat(s.borderRightWidth),
+          textLines:[...range.getClientRects()].filter(r=>r.width>0).length};
+      });
+      assert.ok(bounds,"Desktop sidebar wordmark exists at "+width+"px");
+      assert.ok(bounds.textLeft>=bounds.contentLeft-1,
+        "Brand begins outside sidebar content at "+width+"px: "+JSON.stringify(bounds));
+      assert.ok(bounds.textRight<=bounds.contentRight+1,
+        "Brand crosses sidebar divider at "+width+"px: "+JSON.stringify(bounds));
+      assert.equal(bounds.textLines,1,"Wordmark should stay on one line at "+width+"px");
+      await page.screenshot({path:path.join(output,"desktop-sidebar-brand-"+width+".png"),animations:"disabled"});
+    }finally{await context.close();}
+  }
+}
 async function checkOverflow(page,label){
   const widths=await page.evaluate(()=>({document:document.documentElement.scrollWidth,viewport:document.documentElement.clientWidth,visual:window.visualViewport?.width}));
   assert.ok(widths.document<=widths.viewport+2,label+": horizontal overflow "+JSON.stringify(widths));
@@ -3599,6 +3630,7 @@ try{
   await fs.mkdir(output,{recursive:true});
   await waitForServer();
   browser=await chromium.launch({headless:true,...(process.env.CHROMIUM_PATH?{executablePath:process.env.CHROMIUM_PATH}:{})});
+  await verifyDesktopSidebarBrand();
   const login=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true});
   await login.page.locator("#live-login").waitFor();
   assert.match(await login.page.locator("#live-app").innerText(),/Logga in/i,"First visit must show real sign-in");
