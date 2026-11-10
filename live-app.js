@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261110-family-retry1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261110-schyssta-retry1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
 import {createAiResultExperience} from './ai-result-ui.js?v=20261109-private-retest-deadline1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261110-family-retry1';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261110-schyssta-retry1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -2079,6 +2079,18 @@ async function submitManualSchysstaRule(){
   schysstaMessage='Förslaget är skickat. Ni behöver båda godkänna det innan det blir en överenskommelse.';
   await fetchSchysstaList();
 }
+// A failed manual proposal may have committed despite a lost response.
+// Keep its original idempotency key when edits do not change the text sent
+// after whitespace normalization, including multiple inner spaces.
+function updateSchysstaDraft(nextValue){
+  const oldBody=schysstaDraft.trim().replace(/\s+/g,' ');
+  const newDraft=String(nextValue);
+  schysstaDraft=newDraft;
+  if(newDraft.trim().replace(/\s+/g,' ')!==oldBody){
+    schysstaDraftKey=null;
+    schysstaMessage='';
+  }
+}
 // An already-open inbox must have an explicit way to refresh rule notices,
 // activity notices, the chat and its unread badge together. A chat-only
 // refresh does not update the other sections.
@@ -2881,7 +2893,7 @@ const form=e.target.closest?.('form');
 if(form?.id==='comm-reflection-form')updateCommunicationPreview('reflection');
 else if(form?.id==='comm-solution-form')updateCommunicationPreview('solution');
 else if(form?.id==='comm-nvc-form')updateCommunicationPreview('nvc');
-if(e.target.matches?.('#swipe-general-review-search'))filterPrivateGeneralReview();if(e.target.matches?.('#private-theme-review-search')){filterPrivateThemeReview();return;}if(e.target.matches?.('#mediator-input')){mediatorExperience.input(e.target.value);const count=document.getElementById('mediator-char-count');if(count)count.textContent=e.target.value.length+' / 2000 tecken';const send=document.querySelector('#mediator-form button[type="submit"]');if(send)send.disabled=!e.target.value.trim();return;}if(e.target.matches?.('#family-chat-body')){updateFamilyChatDraft(e.target.value);return;}if(e.target.matches?.('#schyssta-search')){schysstaSearch=e.target.value.slice(0,100);applySchysstaFilters();return;}if(e.target.matches?.('#schyssta-body')){schysstaDraft=e.target.value;schysstaDraftKey=null;schysstaMessage='';const preview=document.getElementById('schyssta-preview-text');if(preview)preview.textContent=schysstaDraft.trim()||'Skriv en regel ovan för att förhandsgranska texten.';const count=document.getElementById('schyssta-length');if(count)count.textContent=schysstaDraft.length+' av 500 tecken';return;}if(!e.target.matches?.('[data-importance]'))return;e.target.setAttribute('aria-valuetext',importanceValueText(Number(e.target.value)));});
+if(e.target.matches?.('#swipe-general-review-search'))filterPrivateGeneralReview();if(e.target.matches?.('#private-theme-review-search')){filterPrivateThemeReview();return;}if(e.target.matches?.('#mediator-input')){mediatorExperience.input(e.target.value);const count=document.getElementById('mediator-char-count');if(count)count.textContent=e.target.value.length+' / 2000 tecken';const send=document.querySelector('#mediator-form button[type="submit"]');if(send)send.disabled=!e.target.value.trim();return;}if(e.target.matches?.('#family-chat-body')){updateFamilyChatDraft(e.target.value);return;}if(e.target.matches?.('#schyssta-search')){schysstaSearch=e.target.value.slice(0,100);applySchysstaFilters();return;}if(e.target.matches?.('#schyssta-body')){updateSchysstaDraft(e.target.value);const preview=document.getElementById('schyssta-preview-text');if(preview)preview.textContent=schysstaDraft.trim()||'Skriv en regel ovan för att förhandsgranska texten.';const count=document.getElementById('schyssta-length');if(count)count.textContent=schysstaDraft.length+' av 500 tecken';return;}if(!e.target.matches?.('[data-importance]'))return;e.target.setAttribute('aria-valuetext',importanceValueText(Number(e.target.value)));});
 document.addEventListener('change',e=>{if(e.target.matches?.('#swipe-general-review-answer'))filterPrivateGeneralReview();if(e.target.matches?.('#private-theme-review-answer')){filterPrivateThemeReview();return;}
   if(e.target.matches?.('#mediator-use-context')){mediatorExperience.setProjectContext(e.target.checked);return;}
   if(e.target.matches?.('input[data-pf-answer],input[data-ipip-retest-answer]')){void personalityExperience.handleChange(e.target);return;}
