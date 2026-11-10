@@ -165,9 +165,18 @@ async function run(action,{successMessage=null,reportStatus=status}={}){
     if(successMessage)reportStatus(successMessage);
   }catch(e){
     // If the overall post-action refresh timed out, prevent its late reply
-    // from changing the view. Do not invalidate a newer Auth-triggered refresh.
-    if(e?.code==='ACCOUNT_TIMEOUT'&&refreshVersionAtStart===refreshVersion)
+    // from changing the view. The timeout can win the race against the
+    // individual read's own deadline; clear previously verified-looking
+    // account and family controls before invalidating the old generation.
+    // Never invalidate a newer Auth-triggered refresh.
+    if(e?.code==='ACCOUNT_TIMEOUT'&&refreshVersionAtStart===refreshVersion){
+      hideUnverifiedFamily();
+      show('logged-in',false);
+      show('logged-out',false);
+      show('invite-notice',false);
+      $('account').textContent='';
       refreshVersion++;
+    }
     if(actionConfirmed&&reportStatus===status){
       // The write was confirmed; a later read failure must not turn a saved
       // name, sent invitation or accepted pairing into an apparent failed write.
