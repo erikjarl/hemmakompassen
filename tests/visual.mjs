@@ -4461,8 +4461,8 @@ try{
   await narrow.page.locator('#comm-reflection-form textarea[name="meaning"]').fill('att få prata klart');
   await narrow.page.locator('#comm-reflection-form textarea[name="check"]').fill('Stämmer det att du vill ha mer tid?');
   await narrow.page.locator('#comm-reflection-form button[type="submit"]').click();
-  assert.match(await narrow.page.locator('#comm-reflection-output').innerText(),/Jag hörde att du sa: Jag vill bli lyssnad på/);
-  assert.match(await narrow.page.locator('#comm-reflection-output').innerText(),/Den andra kan rätta mig/);
+  assert.match(await narrow.page.locator('#comm-reflection-output').innerText(),/Det jag hörde: Jag vill bli lyssnad på/);
+  assert.match(await narrow.page.locator('#comm-reflection-output').innerText(),/Den andra kan rätta min gissning/);
   await checkOverflow(narrow.page,'Private reflective listening 320px');
   await capture(narrow.page,'mobile-320-communication-reflection.png');
   await narrow.page.goto(base+'#kommunikation/spegla',{waitUntil:'load'});
