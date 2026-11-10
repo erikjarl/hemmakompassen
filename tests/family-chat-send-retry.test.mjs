@@ -5,7 +5,8 @@ import {readFileSync} from 'node:fs';
 
 const source=readFileSync(new URL('../live-app.js',import.meta.url),'utf8');
 const sendFunction=source.match(/async function sendFamilyChatMessage\(\)\{[\s\S]*?(?=\n\/\/ A local, session-only pause)/)?.[0];
-assert.ok(sendFunction,'Use the real production send function');
+const draftFunction=source.match(/function updateFamilyChatDraft\(nextValue\)\{[\s\S]*?(?=\nasync function sendFamilyChatMessage\(\))/)?.[0];
+assert.ok(sendFunction&&draftFunction,'Use the real production send and draft functions');
 const messageId='71000000-0000-4000-8000-000000000099';
 
 function harness(){
@@ -23,7 +24,7 @@ function harness(){
     db:{rpc:(name,args)=>{calls.push({name,args});return rpc(name,args);}},
     Promise
   };
-  vm.runInNewContext(sendFunction+'\nthis.send=sendFamilyChatMessage;',state);
+  vm.runInNewContext(draftFunction+'\n'+sendFunction+'\nthis.send=sendFamilyChatMessage;this.edit=updateFamilyChatDraft;',state);
   return {state,calls,timers,setRpc:fn=>rpc=fn,renders:()=>renders,refreshes:()=>refreshes};
 }
 
@@ -55,6 +56,41 @@ test('a lost acknowledgement preserves the text and idempotency key across retri
     'The server receives the same key and can deduplicate a retry');
   assert.equal(h.state.familyChatDraft,'');
   assert.equal(h.refreshes(),1);
+});
+
+test('FUN-03: whitespace-only edits after unknown send keep the retry key',async()=>{
+  const h=harness();
+  h.setRpc(async()=>({data:null,error:{message:'lost acknowledgement'}}));
+  await h.state.send();
+  const key=h.state.familyChatRequestKey;
+  const message=h.state.familyChatDraft;
+  assert.ok(key);
+  assert.match(h.state.familyChatStatus,/inte bekräfta/);
+  h.state.edit('  '+message+'  ');
+  assert.equal(h.state.familyChatRequestKey,key,
+    'Trimmed outgoing text is identical and must reuse the same request key');
+  assert.match(h.state.familyChatStatus,/inte bekräfta/,
+    'Keep the uncertain-send warning after an insignificant edit');
+  h.setRpc(async()=>({data:messageId,error:null}));
+  await h.state.send();
+  assert.equal(h.calls[0].args.p_request_key,h.calls[1].args.p_request_key,
+    'A manual retry cannot duplicate a previously committed message after whitespace edits');
+  assert.equal(h.calls[1].args.p_body,'Hej!');
+  assert.equal(h.state.familyChatDraft,'');
+});
+
+test('FUN-03: changing the actual outgoing text starts a new request',async()=>{
+  const h=harness();
+  h.setRpc(async()=>({data:null,error:{message:'lost acknowledgement'}}));
+  await h.state.send();
+  const originalKey=h.state.familyChatRequestKey;
+  h.state.edit('Hej på nytt!');
+  assert.equal(h.state.familyChatRequestKey,null);
+  assert.equal(h.state.familyChatStatus,'');
+  h.setRpc(async()=>({data:messageId,error:null}));
+  await h.state.send();
+  assert.notEqual(h.calls[1].args.p_request_key,originalKey);
+  assert.equal(h.calls[1].args.p_body,'Hej på nytt!');
 });
 
 test('a stalled request times out but preserves a safe retry path',async()=>{
@@ -110,6 +146,11 @@ test('a reply from a previous signed-in session cannot change the new account',a
   await pending;
   assert.equal(h.state.familyChatDraft,'Ny sessions utkast');
   assert.equal(h.refreshes(),0);
+});
+
+test('FUN-03: inbox textarea input is wired to normalized draft updates',()=>{
+  assert.match(source,/if\(e\.target\.matches\?\.\('#family-chat-body'\)\)\{updateFamilyChatDraft\(e\.target\.value\);return;\}/,
+    'The actual input handler must preserve an uncertain send key when only outer whitespace changes');
 });
 
 test('the inbox composer is locked while pending, not merely its send button',()=>{
