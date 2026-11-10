@@ -4,6 +4,7 @@ const escape=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>
 // Only editorially verified communication exercises may become clickable.
 // All other AI text remains escaped; no arbitrary URLs/HTML from the model.
 const ANALYSIS_ROUTE_LABELS=Object.freeze({
+  '#nvc':'Bygg ett jag-budskap med NVC',
   '#kommunikation/lyssna':'Spegla innan du svarar',
   '#kommunikation/pausa':'Pausa och återkom',
   '#kommunikation/reparera':'Reparera efter ett gräl',
@@ -17,7 +18,7 @@ const ANALYSIS_ROUTE_LABELS=Object.freeze({
 export function renderAiAnalysisReply(value){
   // Match an entire route token: never link the valid prefix of an invalid path
   // such as #kommunikation/losning-extra.
-  return escape(value).replace(/#kommunikation\/[a-z]+(?![\p{L}\p{N}_\/?#&=%-])/gu,route=>{
+  return escape(value).replace(/#(?:kommunikation\/[a-z]+|nvc)(?![\p{L}\p{N}_\/?#&=%-])/gu,route=>{
     const label=ANALYSIS_ROUTE_LABELS[route];
     return label?'<a href="'+route+'">'+escape(label)+'</a>':route;
   }).replace(/\n/g,'<br>');

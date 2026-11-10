@@ -78,3 +78,18 @@ test('malformed route tails stay plain text rather than becoming misleading part
  assert.match(valid,/href="#kommunikation\/kontakt"/);
  assert.equal((valid.match(/<a href=/g)||[]).length,3);
 });
+
+
+test('NVC deep-link suggestions become safe clickable routes without partial links',()=>{
+ const valid=renderAiAnalysisReply('Prova #nvc, eller #kommunikation/validera.');
+ assert.match(valid,/href="#nvc">Bygg ett jag-budskap med NVC<\/a>/);
+ assert.match(valid,/href="#kommunikation\/validera"/);
+ assert.equal((valid.match(/<a href=/g)||[]).length,2);
+ for(const invalid of ['#nvc-extra','#nvc/andra','#nvc?step=2','#nvc2','#nvc_more','#nvcå']){
+  const html=renderAiAnalysisReply('Förslag: '+invalid);
+  assert.doesNotMatch(html,/<a href=/,'Do not link the prefix of '+invalid);
+  assert.match(html,/#nvc/);
+ }
+ assert.doesNotMatch(renderAiAnalysisReply('Inte #okand och aldrig <script>'),/<a href=/);
+ assert.match(renderAiAnalysisReply('<img src=x onerror=alert(1)>'),/&lt;img/);
+});
