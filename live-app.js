@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261110-schyssta-uncertain2';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261111-schyssta-errorview1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261110-schyssta-uncertain2';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261111-schyssta-errorview1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261110-schyssta-uncertain2';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261111-schyssta-errorview1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -2324,7 +2324,7 @@ async function decideSchysstaRule(agreementId,approved){
     // The write succeeded but its readback was superseded or failed. Do not
     // invite another approval click or claim a decision we cannot verify.
     schysstaDecisionFeedback='Ditt val skickades, men aktuell status kunde inte bekräftas. Uppdatera listan och kontrollera om beslutet är sparat innan du försöker igen.';
-    if(!schysstaError)render();
+    render();
     return;
   }
   const confirmed=schysstaAllRules().find(row=>row.agreement_id===agreementId);
@@ -2340,7 +2340,7 @@ function schysstaView(){
   if(!schysstaListEnabled)return '<h1>Schyssta listan</h1>'+card('<p>Regelvyn är inte aktiverad i denna miljö.</p>');
   if(members.length!==2)return '<h1>Schyssta listan</h1>'+card('<h2>Koppla först en familjemedlem</h2><p>Listan kräver exakt en parad förälder och tonåring.</p><a class="live-button" href="./konto.html">Hantera familj</a>');
   if(schysstaLoading)return '<h1>Schyssta listan</h1>'+card('<p role="status">Hämtar serververifierade förslag…</p>');
-  if(schysstaError)return '<h1>Schyssta listan</h1>'+card('<h2>Kunde inte visa listan</h2><p role="alert">'+esc(schysstaError)+'</p><button class="live-button" type="button" id="schyssta-retry">Försök igen</button>');
+  if(schysstaError)return '<h1>Schyssta listan</h1>'+card('<h2>Kunde inte visa listan</h2><p role="alert">'+esc(schysstaError)+'</p>'+(schysstaDecisionFeedback?'<p role="status" class="schyssta-feedback">'+esc(schysstaDecisionFeedback)+'</p>':'')+'<button class="live-button" type="button" id="schyssta-retry">Försök igen</button>');
   const statusLabel={proposed:'Väntar på bådas beslut',accepted:'Godkänd av båda',rejected:'Inte gemensamt godkänd'};
   const itemHtml=item=>{
     const source=schysstaReplacementLinks.some(link=>link.agreement_id===item.agreement_id)?'Ändringsförslag':item.source_card_id?'Från Gillaswajpen':'Eget regelförslag';
