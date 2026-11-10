@@ -37,7 +37,7 @@ function harness(){
     insightsRows:[],sharedUnderstandingRows:[],insightsError:'',insightsLoading:false,
     schysstaRequest:0,schysstaSuggestions:[],schysstaRules:[],schysstaManualRules:[],
     schysstaNotifications:[],schysstaReplacementLinks:[],schysstaHistory:[],
-    schysstaSaving:new Set(),schysstaPausedIds:new Set(),schysstaEndTarget:null,
+    schysstaSaving:new Set(),schysstaPausedIds:new Set(),schysstaExpandedIds:new Set(),schysstaDecisionFeedback:'',schysstaEndTarget:null,
     schysstaLoading:false,schysstaError:'',schysstaDraft:'',schysstaDraftOpen:false,
     schysstaDraftKey:null,schysstaEditTarget:null,schysstaSubmitting:false,
     schysstaMessage:'',schysstaCopyMessage:'',schysstaCopyFallback:false,
