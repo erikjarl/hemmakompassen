@@ -46,6 +46,24 @@ function harness(){
   }};
 }
 
+test('FBK-02-05: decision stays locked while its server readback is pending',async()=>{
+  const h=harness();
+  const readback=deferred();
+  h.state.fetchSchysstaList=async()=>{h.refreshes.push('reload');return readback.promise;};
+  const underway=h.state.decide(id,true);
+  await tick();
+  h.gate.resolve({error:null});
+  await tick();
+  assert.equal(h.refreshes.length,1,'Readback has started after a confirmed write');
+  assert.equal(h.state.schysstaSaving.has(id),true,
+    'The agreement must remain locked until its own readback finishes');
+  await h.state.decide(id,true);
+  assert.equal(h.calls.length,1,'Second click must not send another approval');
+  readback.resolve(true);
+  await underway;
+  assert.equal(h.state.schysstaSaving.has(id),false,'Unlock after readback');
+});
+
 for(const action of [
   {name:'propose',key:deck,rpc:'propose_schyssta_rule',run:h=>h.state.propose(deck)},
   {name:'decision',key:id,rpc:'set_schyssta_rule_decision',run:h=>h.state.decide(id,true)}
