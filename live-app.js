@@ -2906,18 +2906,6 @@ document.addEventListener('change',e=>{if(e.target.matches?.('#swipe-general-rev
   if(!e.target.matches?.('[data-importance]')||!user)return;
   void saveImportance(e.target.dataset.deckId,e.target.dataset.cardId,Number(e.target.value),user.id,sharedSession);
 });
-document.addEventListener('keydown',e=>{
-  if(e.target.matches?.('#family-chat-body')&&(e.ctrlKey||e.metaKey)&&e.key==='Enter'){
-    e.preventDefault();e.target.closest('form')?.requestSubmit();return;
-  }
-  // Only an explicitly focused playing card may turn arrows into saved answers.
-  // Other parts of the page retain their native arrow key and scrolling behavior.
-  if(page()==='swipe'&&user&&document.activeElement?.id==='swipe-card'&&e.target===document.activeElement
-    &&!e.altKey&&!e.ctrlKey&&!e.metaKey&&!e.shiftKey&&!e.repeat
-    &&['ArrowLeft','ArrowRight'].includes(e.key)){
-    e.preventDefault();advanceSwipe(e.key==='ArrowRight'?'yes':'no');
-  }
-});
 // FUN-01: A stalled sign-in or post-login refresh must not leave the form locked.
 // Supabase Auth cannot reliably be cancelled here; a timed-out sign-in result is UNKNOWN.
 function withLiveLoginDeadline(promise,timeoutMs=15000){
@@ -2956,6 +2944,18 @@ async function submitLiveLogin(event){
  }
 }
 
+document.addEventListener('keydown',e=>{
+  if(e.target.matches?.('#family-chat-body')&&(e.ctrlKey||e.metaKey)&&e.key==='Enter'){
+    e.preventDefault();e.target.closest('form')?.requestSubmit();return;
+  }
+  // Only an explicitly focused playing card may turn arrows into saved answers.
+  // Other parts of the page retain their native arrow key and scrolling behavior.
+  if(page()==='swipe'&&user&&document.activeElement?.id==='swipe-card'&&e.target===document.activeElement
+    &&!e.altKey&&!e.ctrlKey&&!e.metaKey&&!e.shiftKey&&!e.repeat
+    &&['ArrowLeft','ArrowRight'].includes(e.key)){
+    e.preventDefault();advanceSwipe(e.key==='ArrowRight'?'yes':'no');
+  }
+});
 document.addEventListener('submit',async e=>{if(e.target.id==='comm-reflection-form'){e.preventDefault();if(page()!=='kommunikation'||!user)return;const values=Object.fromEntries(new FormData(e.target));const result=buildReflectionPractice(values);updateCommunicationPreview('reflection',result);const output=$('comm-reflection-output');if(output){if(!result)output.textContent='Fyll i alla tre stegen innan du skapar en spegling.';output.focus();}return;}if(e.target.id==='comm-solution-form'){e.preventDefault();if(page()!=='kommunikation'||!user)return;const values=Object.fromEntries(new FormData(e.target));const plan=buildSolutionPlan(values);updateCommunicationPreview('solution',plan);const output=$('comm-solution-output');if(output){if(!plan)output.textContent='Fyll i alla fyra fälten innan du skapar ett utkast.';output.focus();}return;}if(e.target.id==='comm-nvc-form'){e.preventDefault();if(page()!=='nvc'||!user)return;const values=Object.fromEntries(new FormData(e.target));const sentence=buildNvcSentence(values);updateCommunicationPreview('nvc',sentence);const output=$('comm-nvc-output');if(output){if(!sentence)output.textContent='Fyll i alla fyra steg innan du skapar en formulering.';output.focus();}return;}if(e.target.id==='mediator-form'){e.preventDefault();await mediatorExperience.submit();return;}if(e.target.id==='family-chat-form'){e.preventDefault();await sendFamilyChatMessage();return;}if(e.target.id==='schyssta-manual-form'){e.preventDefault();await submitManualSchysstaRule();return;}if(e.target.id!=='live-login')return;await submitLiveLogin(e);});
 window.addEventListener('hashchange',()=>{
   if(page()!=='insikter'){activityInviteError='';insightsRows=[];sharedUnderstandingRows=[];insightsError='';insightsLoading=false;insightsRequest++;}
