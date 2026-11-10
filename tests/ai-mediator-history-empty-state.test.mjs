@@ -66,3 +66,36 @@ test('saved transcripts get a truthful accessible list label, temporary chats re
   assert.equal(await temporary.submit(),true);
   assert.match(temporary.render(),/<ol class="mediator-messages" aria-label="Tillfälliga testmeddelanden">/);
 });
+
+test('first render after reset never claims a verified empty list',async()=>{
+  const ui=make(async(url,opts)=>{
+    assert.equal(url,BASE+'/chats');
+    assert.equal(opts.method,'GET');
+    return response({chats:[]});
+  });
+  assert.equal(ui.getState().historyListVerified,false);
+  assert.doesNotMatch(ui.render(),/Inga sparade samtal ännu/);
+  assert.equal(await ui.loadList(),true);
+  assert.equal(ui.getState().historyListVerified,true);
+  assert.match(ui.render(),/Inga sparade samtal ännu/);
+  ui.reset('22222222-2222-4222-8222-222222222222');
+  assert.equal(ui.getState().historyListVerified,false);
+  assert.doesNotMatch(ui.render(),/Inga sparade samtal ännu/);
+});
+
+test('confirmed create and delete maintain a truthful empty state without GET',async()=>{
+  const fetchImpl=async(url,opts)=>{
+    if(url===BASE+'/chats'&&opts.method==='POST')
+      return response({chat:{id:CHAT,title:'Nytt samtal'}},201);
+    if(url===BASE+'/chats/'+CHAT&&opts.method==='DELETE')
+      return response({deleted:true});
+    throw Error('Unexpected request '+opts.method+' '+url);
+  };
+  const ui=make(fetchImpl);
+  assert.equal(ui.getState().historyListVerified,false);
+  assert.equal(await ui.createChat(),CHAT);
+  assert.equal(ui.getState().historyListVerified,true);
+  assert.doesNotMatch(ui.render(),/Inga sparade samtal ännu/);
+  assert.equal(await ui.deleteChat(),true);
+  assert.match(ui.render(),/Inga sparade samtal ännu/);
+});

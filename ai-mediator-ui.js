@@ -28,6 +28,7 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
   let loading = false;
   let activeChatReady = false; // Only verified or newly created transcripts can receive new messages.
   let historyError = '';
+  let historyListVerified = false; // A first render is not proof there are no saved chats.
   let contextSections = [];
   let contextError = '';
   let contextLoading = false;
@@ -127,6 +128,7 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
       if (epoch !== epochAtStart || userId !== account || request !== listRequest) return false;
       if (!Array.isArray(data.chats) || data.chats.length > 12) throw new Error('Samtalslistan är ogiltig.');
       chats = data.chats;
+      historyListVerified = true; // Only a successful list GET can confirm empty history.
       unconfirmedChatCreate=false; // Verified read reconciles a timed-out create.
       if (!chats.some(x=>x.id===activeChatId)) activeChatId = chats[0]?.id || null;
       if (activeChatId && !await openChat(activeChatId, true)) return false;
@@ -167,6 +169,7 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
       if(!data.chat?.id || !/^[0-9a-f-]{36}$/i.test(data.chat.id))
         throw Error('Samtal kunde inte skapas.');
       chats=[data.chat,...chats];
+      historyListVerified=true; // A confirmed creation also proves the list is no longer empty.
       activeChatId=data.chat.id;
       activeChatReady=true; // Successful creation starts with an intentionally empty transcript.
       turns=[];error='';historyError='';notify();
@@ -230,6 +233,7 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
       await callApi('/chats/'+encodeURIComponent(id),'DELETE',account);
       if(myEpoch!==epoch || account!==userId)return false;
       chats=chats.filter(c=>c.id!==id);
+      historyListVerified=true; // Confirmed deletion can leave a verified empty list.
       activeChatId=null;activeChatReady=false;turns=[];draft='';error='';remaining=null;
       // Once the write is confirmed, normal read-only navigation is safe.
       // openChat synchronously sets loading=true while it fetches the next one.
@@ -279,6 +283,7 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
     activeChatReady = false;
     loading = false;
     historyError = '';
+    historyListVerified = false;
     contextSections = [];
     contextError = '';
     contextLoading = false;
@@ -314,7 +319,7 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
         + (historyError?'<p role="alert" class="mediator-error">'+h(historyError)+'</p><button type="button" class="mediator-clear" id="mediator-retry-list"'+(sending||loading||deletingChat?' disabled':'')+'>Försök hämta samtal igen</button>':'')
         + (chats.length ? '<div class="mediator-thread-list" role="group" aria-label="Dina samtal">'
            + chats.map(c=>'<button type="button" data-mediator-open="'+h(c.id)+'"'+(c.id===activeChatId?' aria-current="true"':'')+(sending||creatingChat||deletingChat||loading?' disabled':'')+'>'+h(c.title)+'</button>').join('')+'</div>'
-          : (loading || historyError ? '' : '<p>Inga sparade samtal ännu. Skriv nedan så skapas ett privat samtal.</p>'))
+          : (loading || historyError || !historyListVerified ? '' : '<p>Inga sparade samtal ännu. Skriv nedan så skapas ett privat samtal.</p>'))
         + '</section>' : '';
     const messages = turns.length
       ? '<ol class="mediator-messages" aria-label="' + (historyEnabled ? 'Meddelanden i det sparade privata samtalet' : 'Tillfälliga testmeddelanden') + '">'
@@ -430,5 +435,5 @@ export function createAiMediatorExperience({ db, config, escapeHtml, fetchImpl =
     }
   }
   return { render, reset, clear, input, submit, loadList, loadContextStatus, setProjectContext, createChat, openChat, deleteChat,
-    getState: () => ({ userId, sending, creatingChat, deletingChat, unconfirmedChatCreate, draft, error, remaining, turns: turns.map(x => ({ ...x })), chats:chats.map(c=>({...c})),activeChatId,activeChatReady,historyError,contextSections:[...contextSections],contextError,includeProjectContext }) };
+    getState: () => ({ userId, sending, creatingChat, deletingChat, unconfirmedChatCreate, draft, error, remaining, turns: turns.map(x => ({ ...x })), chats:chats.map(c=>({...c})),activeChatId,activeChatReady,historyError,historyListVerified,contextSections:[...contextSections],contextError,includeProjectContext }) };
 }
