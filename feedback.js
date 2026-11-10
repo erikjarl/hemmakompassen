@@ -14,19 +14,22 @@ function feedbackPageContext(href) {
   return ROUTES.has(route) ? 'index.html#' + route : 'index.html';
 }
 
-function feedbackPayload(userId, fields, href) {
+function validateFeedbackFields(fields) {
   const category = String(fields.category || '');
   const description = String(fields.description || '').trim();
   const expected = String(fields.expected || '').trim();
-  if (!userId || !CATEGORIES.has(category) || description.length < 10 || description.length > 2500 || expected.length > 1000) {
+  if (!CATEGORIES.has(category) || description.length < 10 || description.length > 2500 || expected.length > 1000) {
     throw new Error('Välj typ och skriv minst 10 tecken (högst 2 500).');
   }
+  return {category, description, expected_result: expected || null};
+}
+
+function feedbackPayload(userId, fields, href) {
+  if (!userId) throw new Error('Ingen inloggad användare.');
   return {
     user_id: userId,
-    category,
-    page_context: feedbackPageContext(href),
-    description,
-    expected_result: expected || null
+    ...validateFeedbackFields(fields),
+    page_context: feedbackPageContext(href)
   };
 }
 
@@ -88,6 +91,16 @@ function installFeedback({ db }) {
       description: form.elements.description.value,
       expected: form.elements.expected.value
     };
+    // Native minlength counts whitespace as text. Validate the trimmed
+    // draft before any Auth/network request, so an invalid report receives a
+    // useful field error even when the connection is unavailable.
+    try {
+      validateFeedbackFields(fields);
+    } catch (error) {
+      setStatus(error.message);
+      form.elements.description.focus();
+      return;
+    }
     busy = true;
     // Freeze the submitted snapshot: otherwise text entered during the pending
     // request would be silently erased by form.reset() on successful delivery.
