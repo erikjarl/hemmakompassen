@@ -134,7 +134,7 @@ async function verifySchysstaMobileHierarchy(){
           role+' '+width+'px: shared agreements precede pending proposals without hiding them');
         assert.ok(geometry.composeClosed,role+' '+width+'px: optional form collapsed initially');
         assert.ok(geometry.approvedCount>=1,role+' '+width+'px: approved rules still accessible');
-        const jump=page.locator('.schyssta-quick-actions [data-schyssta-needs-jump]');
+        const jump=page.getByRole('button',{name:'Visa väntande förslag'});
         assert.equal(await jump.count(),1,role+' '+width+'px: a visible pending-action jump exists');
         await jump.click();
         const reached=await page.evaluate(()=>{
