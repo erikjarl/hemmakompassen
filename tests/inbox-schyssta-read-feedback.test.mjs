@@ -14,7 +14,7 @@ function chunk(start,end){
 const production=[
  chunk('async function schysstaWriteRpc(operation){','async function markSchysstaRead(id){'),
  chunk('async function markSchysstaRead(id){','function validSchysstaReplacementLinks'),
- chunk('function inboxView(){','async function fetchSchysstaList(){')
+ chunk('function familyChatEmptyMessage(){','async function fetchSchysstaList(){')
 ].join('\n');
 const noticeId='40000000-0000-4000-8000-000000000091';
 const agreementId='30000000-0000-4000-8000-000000000092';
@@ -27,7 +27,7 @@ function harness({role='parent',fail=true,previous=''}={}){
    sharedSession:2,inboxPairEpoch:'epoch-1',
    familyChatDraft:'Privat oskickat utkast',familyChatMessages:[],
    familyChatUnread:0,familyChatUnreadError:false,familyChatLoading:false,
-   familyChatLoadingOlder:false,familyChatHasMore:false,
+   familyChatLoadingOlder:false,familyChatHasMore:false,familyChatHistoryVerified:false,
    familyChatSending:false,familyChatStatus:'',familyChatError:'',
    familyChatReadBusy:false,
    schysstaListEnabled:true,schysstaLoading:false,schysstaError:'',
