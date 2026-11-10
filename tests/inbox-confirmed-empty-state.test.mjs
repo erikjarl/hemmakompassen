@@ -81,3 +81,23 @@ for(const role of ['parent','teen']){
   assert.equal(snapshots.at(-1).verified,true);
  });
 }
+
+for(const role of ['parent','teen']){
+ test('FUN-03 '+role+': invalid response and late former-account reply cannot verify an empty list',async()=>{
+  const {state}=harness(role);
+  state.db.rpc=async()=>({data:{messages:[]},error:null});
+  await state.fetchMessages();
+  assert.equal(state.familyChatHistoryVerified,false,'Invalid payload must not establish an empty list');
+  assert.equal(state.empty(),null);
+
+  let finish;
+  state.db.rpc=()=>new Promise(resolve=>{finish=resolve;});
+  const former=state.fetchMessages();
+  state.reset();
+  state.user={id:'other-'+role};
+  finish({data:[],error:null});
+  await former;
+  assert.equal(state.familyChatHistoryVerified,false,'Late former-account reply cannot mark current inbox as empty');
+  assert.equal(state.familyChatMessages.length,0);
+ });
+}
