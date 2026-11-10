@@ -116,6 +116,9 @@ for (const page of [html,konto]) {
   assert.match(page,/feedback\.css/);
 }
 assert.match(live,/HKFeedback\?\.installFeedback\(\{db\}\)/);
+assert.match(readFileSync(new URL('../feedback.js',import.meta.url),'utf8'),
+  /const submittedHref = location\.href;[\s\S]*feedbackPayload\(data\.user\.id, fields, submittedHref\)/,
+  'Feedback keeps the submit-time route even if Auth is delayed');
 assert.match(readFileSync(new URL('../feedback.js',import.meta.url),'utf8'), /withFeedbackDeadline\(db\.auth\.getUser\(\)\)/);
 assert.match(account,/HKFeedback\?\.installFeedback\(\{db:client\}\)/);
 assert.match(build,/'feedback\.js'/);
