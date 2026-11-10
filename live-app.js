@@ -1,5 +1,5 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261110-vis-theme-compact1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261110-fbk-schyssta-hierarchy1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
 import {createAiResultExperience} from './ai-result-ui.js?v=20261109-private-retest-deadline1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
@@ -2324,26 +2324,36 @@ function schysstaView(){
     +'<button class="live-button" type="submit"'+(schysstaSubmitting?' disabled':'')+'>'+(schysstaSubmitting?'Skickar…':schysstaEditTarget?'Skicka ändringsförslag':'Skicka regelförslag')+'</button>'
     +'<button class="schyssta-secondary" type="button" id="schyssta-compose">Stäng formuläret</button></form>'
     :'<p class="live-muted">Använd knappen Föreslå en regel ovan för att öppna formuläret.</p>';
-  return '<div class="schyssta-view"><header class="schyssta-page-intro"><h1>Schyssta listan</h1><p>Förslag blir gemensamma regler först när båda sagt ja.</p></header>'
-    +quickActions
-    +card('<h2>Behöver ditt svar'+(needs.length?' ('+needs.length+')':'')+'</h2><p>Förslag från den andra personen visas här först.</p>'+list(needs,'Inget väntar just nu. Nya förslag från den andra personen visas här.'))
-    +'<details class="schyssta-page-help"><summary>Så fungerar listan och hur du uppdaterar</summary><p>Här samlar ni sådant ni båda har sagt ja till. Regler kan komma från Gillaswajpen eller skrivas av någon av er. Ni bestämmer var för sig och kan välja Inte nu.</p>'
-    +(viewerRole()==='parent'?'<p>För dig som förälder: beskriv ditt önskemål, ge tonåringen utrymme att säga nej och ta ansvar för att överenskommelsen känns trygg. <a href="#mi-foralder">Läs guiden om motiverande samtal</a>.</p>':'')
-    +'<button class="schyssta-secondary" type="button" data-schyssta-refresh>Uppdatera listan</button></details>'
-    +firstRuleHint
-    +card('<h2>'+(schysstaEditTarget?'Föreslå ändring av regel':'Skriv ett eget förslag')+'</h2>'+formHtml+(schysstaMessage?'<p role="status" class="schyssta-feedback">'+esc(schysstaMessage)+'</p>':''))
-    +searchTools
-    +'<div class="schyssta-filter-group" data-schyssta-filter-group="approved">'
+  // FBK-02-01: put server-confirmed agreements first and hide optional writing
+  // guidance until requested; never hide actionable pending decisions.
+  const approvedSection='<div class="schyssta-filter-group" data-schyssta-filter-group="approved">'
     +card('<h2>Våra överenskommelser</h2>'+list(approved,'Ni har ännu inga regler som båda godkänt.')
       +(approved.length?'<div class="schyssta-actions"><button class="schyssta-secondary" type="button" data-schyssta-copy>Kopiera aktuella regler</button><button class="schyssta-secondary" type="button" data-schyssta-download>Ladda ner som textfil</button></div><p class="live-muted">Textfilen innehåller bara regler som båda har godkänt. Den sparas på din enhet, så hantera den privat.</p>':'')
       +(schysstaCopyMessage?'<p role="status" class="schyssta-feedback">'+esc(schysstaCopyMessage)+'</p>':'')
       +(schysstaCopyFallback&&approved.length?'<div class="schyssta-copy-manual"><label for="schyssta-copy-fallback">Kopiera aktuella gemensamma regler manuellt</label><textarea id="schyssta-copy-fallback" readonly rows="6" spellcheck="false">'+esc(currentApprovedSchysstaText())+'</textarea><button type="button" class="schyssta-secondary" data-schyssta-select-copy>Markera texten igen</button></div>':''))
-    +'<p class="schyssta-no-results live-muted" hidden>Inga gemensamma regler matchar sökningen.</p></div>'
+    +'<p class="schyssta-no-results live-muted" hidden>Inga gemensamma regler matchar sökningen.</p></div>';
+  const needsSection=needs.length
+    ?card('<h2>Behöver ditt svar ('+needs.length+')</h2><p>Förslag från den andra personen visas här först.</p>'+list(needs,''))
+    :'';
+  const composeSection='<details class="schyssta-compose-panel"'+(schysstaDraftOpen||schysstaMessage?' open':'')+'>'
+    +'<summary><h2>'+(schysstaEditTarget?'Föreslå ändring av regel':'Skriv ett eget förslag')+'</h2><span>Öppna om du vill skriva eller ändra något.</span></summary>'
+    +card(formHtml+(schysstaMessage?'<p role="status" class="schyssta-feedback">'+esc(schysstaMessage)+'</p>':''))
+    +'</details>';
+  return '<div class="schyssta-view"><header class="schyssta-page-intro"><h1>Schyssta listan</h1><p>Förslag blir gemensamma regler först när båda sagt ja.</p></header>'
+    +quickActions
+    +needsSection
+    +approvedSection
+    +firstRuleHint
+    +composeSection
+    +searchTools
     +'<div class="schyssta-filter-group" data-schyssta-filter-group="ongoing">'
     +card('<h2>Förslag på gång</h2><p>Här hittar du även förslag där du valt Inte nu. Ett eget skickat förslag kräver också ditt separata godkännande.</p>'+list(ongoing,'Inga andra pågående förslag.'))
     +'<p class="schyssta-no-results live-muted" hidden>Inga pågående förslag matchar sökningen.</p></div>'
     +card('<h2>Gemensamma förslag</h2><p>Här kan bara regler som servern verifierat som JA+JA visas. Ett förslag är inte ett godkännande.</p>'+suggestionHtml)
     +(schysstaHistory.length?'<details class="schyssta-history" id="schyssta-history"><summary>Tidigare överenskommelser ('+schysstaHistory.length+')</summary><ul class="schyssta-list">'+schysstaHistory.map(item=>'<li id="schyssta-rule-'+item.agreement_id+'"><p>'+esc(item.body)+'</p><p class="live-muted">Avslutad överenskommelse</p></li>').join('')+'</ul></details>':'')
+    +'<details class="schyssta-page-help"><summary>Så fungerar listan och hur du uppdaterar</summary><p>Här samlar ni sådant ni båda har sagt ja till. Regler kan komma från Gillaswajpen eller skrivas av någon av er. Ni bestämmer var för sig och kan välja Inte nu.</p>'
+    +(viewerRole()==='parent'?'<p>För dig som förälder: beskriv ditt önskemål, ge tonåringen utrymme att säga nej och ta ansvar för att överenskommelsen känns trygg. <a href="#mi-foralder">Läs guiden om motiverande samtal</a>.</p>':'')
+    +'<button class="schyssta-secondary" type="button" data-schyssta-refresh>Uppdatera listan</button></details>'
     +'</div>';
 }
 function section(key){

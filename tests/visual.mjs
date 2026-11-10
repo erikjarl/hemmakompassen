@@ -49,6 +49,69 @@ async function verifyDesktopSidebarBrand(){
     }finally{await context.close();}
   }
 }
+// FBK-02-01: actual synthetic browser geometry for both roles and compact screens.
+async function verifySchysstaMobileHierarchy(){
+  for(const role of ['parent','teen']){
+    for(const width of [320,390]){
+      const {context,page}=await freshContext(
+        {viewport:{width,height:844},isMobile:true,hasTouch:true},
+        {authenticated:true,paired:true,role});
+      try{
+        await page.goto(base+'#regler',{waitUntil:'load'});
+        // This fixture deliberately returns a forged rule until a controlled retry.
+        await page.getByRole('heading',{name:'Kunde inte visa listan'}).waitFor();
+        await page.evaluate(()=>{window.__HK_SCHYSSTA_CLEAN_RPC__=true;});
+        await page.locator('#schyssta-retry').click();
+        const approved=page.locator('[data-schyssta-filter-group="approved"]');
+        await approved.locator('.schyssta-list>li').first().waitFor();
+        const geometry=await page.evaluate(()=>{
+          const root=document.querySelector('.schyssta-view');
+          const approved=root?.querySelector('[data-schyssta-filter-group="approved"]');
+          const compose=root?.querySelector('.schyssta-compose-panel');
+          const search=root?.querySelector('.schyssta-filter-toolbar');
+          const pending=[...root.querySelectorAll('.live-panel h2')].find(h=>h.textContent.startsWith('Behöver ditt svar'));
+          return {approvedY:approved?.getBoundingClientRect().top,
+            composeY:compose?.getBoundingClientRect().top,
+            searchY:search?.getBoundingClientRect().top,
+            pendingY:pending?.getBoundingClientRect().top,
+            composeClosed:!compose?.open,
+            approvedCount:approved?.querySelectorAll('.schyssta-list>li').length,
+            acceptedText:approved?.querySelector('.schyssta-list>li')?.textContent||''};
+        });
+        assert.ok(geometry.approvedY<geometry.composeY&&geometry.approvedY<geometry.searchY,
+          role+' '+width+'px: agreed rules must precede optional writing/filtering: '+JSON.stringify(geometry));
+        assert.ok(geometry.pendingY<geometry.approvedY,
+          role+' '+width+'px: proposals needing action remain visible before accepted list');
+        assert.ok(geometry.composeClosed,role+' '+width+'px: optional form collapsed initially');
+        assert.ok(geometry.approvedCount>=1,role+' '+width+'px: approved rules still accessible');
+        await page.locator('.schyssta-quick-actions [data-schyssta-start]').click();
+        await page.locator('#schyssta-body').waitFor({state:'visible'});
+        assert.equal(await page.locator('.schyssta-compose-panel').getAttribute('open'),'',
+          role+' '+width+'px: explicit compose action reveals editor');
+        await page.locator('#schyssta-compose').click();
+        assert.equal(await page.locator('.schyssta-compose-panel').getAttribute('open'),null,
+          role+' '+width+'px: close action restores compact view');
+        await checkOverflow(page,'FBK-02-01 '+role+' '+width+'px');
+        // The scrolling surface is .live-main on mobile; reset it for the screenshot.
+        await page.locator('.live-main').evaluate(el=>{el.scrollTop=0;});
+        await capture(page,'fbk-02-01-'+role+'-'+width+'.png');
+      }finally{await context.close();}
+    }
+  }
+  const {context,page}=await freshContext(
+    {viewport:{width:320,height:844},isMobile:true,hasTouch:true},
+    {authenticated:true,paired:true,emptySchyssta:true});
+  try{
+    await page.goto(base+'#regler',{waitUntil:'load'});
+    await page.locator('[data-schyssta-filter-group="approved"]').waitFor();
+    assert.match(await page.locator('[data-schyssta-filter-group="approved"]').innerText(),
+      /Ni har ännu inga regler som båda godkänt/);
+    assert.equal(await page.getByRole('heading',{name:/^Behöver ditt svar/}).count(),0,
+      'No empty decision card when nothing needs an answer');
+    await checkOverflow(page,'FBK-02-01 empty 320px');
+    await capture(page,'fbk-02-01-empty-320.png');
+  }finally{await context.close();}
+}
 async function checkOverflow(page,label){
   const widths=await page.evaluate(()=>({document:document.documentElement.scrollWidth,viewport:document.documentElement.clientWidth,visual:window.visualViewport?.width}));
   assert.ok(widths.document<=widths.viewport+2,label+": horizontal overflow "+JSON.stringify(widths));
@@ -3630,6 +3693,7 @@ try{
   await fs.mkdir(output,{recursive:true});
   await waitForServer();
   browser=await chromium.launch({headless:true,...(process.env.CHROMIUM_PATH?{executablePath:process.env.CHROMIUM_PATH}:{})});
+  await verifySchysstaMobileHierarchy();
   await verifyDesktopSidebarBrand();
   const login=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true});
   await login.page.locator("#live-login").waitFor();
