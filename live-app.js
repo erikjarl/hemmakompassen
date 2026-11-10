@@ -1,5 +1,5 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261110-fbk-schyssta-hierarchy1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261110-fbk-schyssta-primary2';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
 import {createAiResultExperience} from './ai-result-ui.js?v=20261109-private-retest-deadline1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
@@ -2325,7 +2325,7 @@ function schysstaView(){
     +'<button class="schyssta-secondary" type="button" id="schyssta-compose">Stäng formuläret</button></form>'
     :'<p class="live-muted">Använd knappen Föreslå en regel ovan för att öppna formuläret.</p>';
   // FBK-02-01: put server-confirmed agreements first and hide optional writing
-  // guidance until requested; never hide actionable pending decisions.
+  // guidance until requested; keep pending decisions directly after the agreed list.
   const approvedSection='<div class="schyssta-filter-group" data-schyssta-filter-group="approved">'
     +card('<h2>Våra överenskommelser</h2>'+list(approved,'Ni har ännu inga regler som båda godkänt.')
       +(approved.length?'<div class="schyssta-actions"><button class="schyssta-secondary" type="button" data-schyssta-copy>Kopiera aktuella regler</button><button class="schyssta-secondary" type="button" data-schyssta-download>Ladda ner som textfil</button></div><p class="live-muted">Textfilen innehåller bara regler som båda har godkänt. Den sparas på din enhet, så hantera den privat.</p>':'')
@@ -2333,7 +2333,7 @@ function schysstaView(){
       +(schysstaCopyFallback&&approved.length?'<div class="schyssta-copy-manual"><label for="schyssta-copy-fallback">Kopiera aktuella gemensamma regler manuellt</label><textarea id="schyssta-copy-fallback" readonly rows="6" spellcheck="false">'+esc(currentApprovedSchysstaText())+'</textarea><button type="button" class="schyssta-secondary" data-schyssta-select-copy>Markera texten igen</button></div>':''))
     +'<p class="schyssta-no-results live-muted" hidden>Inga gemensamma regler matchar sökningen.</p></div>';
   const needsSection=needs.length
-    ?card('<h2>Behöver ditt svar ('+needs.length+')</h2><p>Förslag från den andra personen visas här först.</p>'+list(needs,''))
+    ?card('<h2>Behöver ditt svar ('+needs.length+')</h2><p>Nya förslag visas här. Inget blir gemensamt förrän ni båda sagt ja.</p>'+list(needs,''))
     :'';
   const composeSection='<details class="schyssta-compose-panel"'+(schysstaDraftOpen||schysstaMessage?' open':'')+'>'
     +'<summary><h2>'+(schysstaEditTarget?'Föreslå ändring av regel':'Skriv ett eget förslag')+'</h2><span>Öppna om du vill skriva eller ändra något.</span></summary>'
@@ -2341,8 +2341,8 @@ function schysstaView(){
     +'</details>';
   return '<div class="schyssta-view"><header class="schyssta-page-intro"><h1>Schyssta listan</h1><p>Förslag blir gemensamma regler först när båda sagt ja.</p></header>'
     +quickActions
-    +needsSection
     +approvedSection
+    +needsSection
     +firstRuleHint
     +composeSection
     +searchTools

@@ -49,7 +49,7 @@ async function verifyDesktopSidebarBrand(){
     }finally{await context.close();}
   }
 }
-// FBK-02-01: actual synthetic browser geometry for both roles and compact screens.
+// FBK-02-01: agreed rules come first; pending requests remain accessible below them.
 async function verifySchysstaMobileHierarchy(){
   for(const role of ['parent','teen']){
     for(const width of [320,390]){
@@ -80,8 +80,8 @@ async function verifySchysstaMobileHierarchy(){
         });
         assert.ok(geometry.approvedY<geometry.composeY&&geometry.approvedY<geometry.searchY,
           role+' '+width+'px: agreed rules must precede optional writing/filtering: '+JSON.stringify(geometry));
-        assert.ok(geometry.pendingY<geometry.approvedY,
-          role+' '+width+'px: proposals needing action remain visible before accepted list');
+        assert.ok(geometry.approvedY<geometry.pendingY,
+          role+' '+width+'px: shared agreements precede pending proposals without hiding them');
         assert.ok(geometry.composeClosed,role+' '+width+'px: optional form collapsed initially');
         assert.ok(geometry.approvedCount>=1,role+' '+width+'px: approved rules still accessible');
         await page.locator('.schyssta-quick-actions [data-schyssta-start]').click();

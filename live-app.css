@@ -1034,3 +1034,11 @@
   .schyssta-compose-panel>summary{padding:13px 15px;flex-wrap:wrap}
   .schyssta-compose-panel>summary>span{margin-left:0;flex:1 1 60%;line-height:1.35}
 }
+
+/* FBK-02-01 follow-up: keep the status strip compact so agreed rules appear sooner. */
+@media(max-width:800px){
+  .schyssta-view .schyssta-quick-actions{padding:10px 13px;gap:7px}
+  .schyssta-view .schyssta-quick-state strong{font-size:1rem}
+  .schyssta-view .schyssta-quick-state p{font-size:12px;line-height:1.35;margin:3px 0 0}
+  .schyssta-view .schyssta-quick-counts{font-size:12px;padding-top:5px}
+}
