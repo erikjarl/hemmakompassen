@@ -11,6 +11,8 @@ body{background:var(--bg);font-family:'DM Sans',system-ui,-apple-system,sans-ser
 h1,h2,h3,.live-brand{font-family:Georgia,'Playfair Display',serif;letter-spacing:-.025em}
 .live-sidebar{background:#11141e;border-right:1px solid #33394d;padding:28px 18px}
 .live-brand{font-weight:600;letter-spacing:-.035em}
+/* FBK-02-03: keep the desktop wordmark within the sidebar's content box. */
+.live-sidebar .live-brand{display:block;max-width:100%;font-size:20px;line-height:1.25;white-space:normal;overflow-wrap:break-word}
 .live-top{border-bottom:1px solid #272c3d;margin-bottom:22px;padding-bottom:22px}
 .live-panel{background:#1e2235;border:1px solid #33394d;border-radius:22px;box-shadow:0 14px 36px rgba(0,0,0,.17)}
 .live-panel h2,.live-panel h3{color:#e2e8f0}
