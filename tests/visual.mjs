@@ -92,6 +92,8 @@ async function verifySchysstaMobileHierarchy(){
         assert.equal(await page.locator('.schyssta-compose-panel').getAttribute('open'),null,
           role+' '+width+'px: close action restores compact view');
         await checkOverflow(page,'FBK-02-01 '+role+' '+width+'px');
+        // The scrolling surface is .live-main on mobile; reset it for the screenshot.
+        await page.locator('.live-main').evaluate(el=>{el.scrollTop=0;});
         await capture(page,'fbk-02-01-'+role+'-'+width+'.png');
       }finally{await context.close();}
     }
