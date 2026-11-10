@@ -5149,6 +5149,22 @@ try{
   await unlocked.page.locator('.live-main').evaluate(el=>{el.scrollTop=0;});
   const narrowActions=await unlocked.page.locator('.swipe-actions').boundingBox();
   const narrowNav=await unlocked.page.locator('#live-mobile-nav').boundingBox();
+  // VIS-00-13: category and deck titles were displayed three times on 320px.
+  // Only the redundant badge disappears; a distinct subcategory remains labelled.
+  assert.equal(await unlocked.page.locator('.swipe-theme-play .swipe-stage-top > span:first-child').isVisible(),false,
+    'Narrow theme cards do not repeat the deck title in the progress row');
+  assert.equal(await unlocked.page.locator('.swipe-theme-play .swipe-playing-card .swipe-category-duplicate').isVisible(),false,
+    'Narrow theme cards do not repeat the same category in the question');
+  assert.match(await unlocked.page.locator('.swipe-theme-play>.swipe-heading>p').innerText(),/privata.*inga överenskommelser/,
+    'Shortened intro still explains private answers and non-binding cards');
+  const narrowRange=await unlocked.page.locator('.swipe-theme-play [data-importance]').boundingBox();
+  const narrowButtons=await unlocked.page.locator('.swipe-theme-play .swipe-choice').all();
+  assert.ok(narrowRange&&narrowRange.width>=140&&narrowRange.height>=24,
+    'The private importance control remains usable in the narrow card');
+  for(const button of narrowButtons){const rect=await button.boundingBox();assert.ok(rect&&rect.height>=44&&rect.width>=105,
+    'Ja/Nej retains at least a 44px high, 105px wide touch target');}
+  assert.ok(narrowActions&&narrowNav&&narrowActions.y<narrowNav.y+130,
+    'Deduplicated narrow theme cards reduce scrolling to Ja/Nej: '+JSON.stringify({actions:narrowActions,nav:narrowNav}));
   const compactBack=unlocked.page.locator('.swipe-theme-back');
   const compactBackStyle=await compactBack.evaluate(el=>({
     height:el.getBoundingClientRect().height,

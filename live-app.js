@@ -1,5 +1,5 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261110-fun05-initial-list1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261110-vis-theme-compact1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
 import {createAiResultExperience} from './ai-result-ui.js?v=20261109-private-retest-deadline1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
@@ -1423,7 +1423,7 @@ function themeSwipeView(){
   const deck=THEME_DECKS.find(d=>d.id===activeThemeDeck);
   if(!deck||!themeAccessAllowed()){activeThemeDeck=null;return swipeView();}
   const answers=themeAnswers.get(deck.id),categories=themeCategories(deck),visible=themeVisibleIndices(deck),item=visible.includes(themeIndex)?deck.cards[themeIndex]:undefined;
-  const itemText=item?cardTextForRole(themeCardModel(deck,themeIndex),viewerRole()):'',answered=visible.filter(index=>answers.has(themeCardId(deck,index))).length,ordinal=visible.indexOf(themeIndex)+1;
+  const itemText=item?cardTextForRole(themeCardModel(deck,themeIndex),viewerRole()):'',cardCategory=item?(themeCardModel(deck,themeIndex)?.category||deck.title):deck.title,answered=visible.filter(index=>answers.has(themeCardId(deck,index))).length,ordinal=visible.indexOf(themeIndex)+1;
   const categoryLabel=themeCategory==='all'?'Alla kategorier':themeCategory;
   // The category selector is a secondary control. Keep it available on every
   // device, but initially collapse it on narrow screens so the question comes first.
@@ -1432,13 +1432,13 @@ function themeSwipeView(){
   return '<div class="swipe-experience swipe-theme-play swipe-play-view"><header class="swipe-heading">'+
     '<button type="button" class="live-button swipe-theme-back" id="theme-back">← Alla kortlekar</button>'+
     '<span class="swipe-eyebrow">TEMAKORTLEK · PRIVATA SVAR</span><h1>'+esc(deck.title)+'</h1>'+
-    '<p>Svara Ja eller Nej. Svaren är privata och inga överenskommelser.</p>'+filter+'</header>'+
+    '<p>Svaren är privata och är inga överenskommelser.</p>'+filter+'</header>'+
     '<div class="swipe-stage"><div class="swipe-stage-top"><span>'+esc(deck.title)+'</span><span role="status">'+
     (item?ordinal+' / '+visible.length:answered+' / '+visible.length+' sparade')+'</span></div>'+
     '<div class="swipe-track"><div class="swipe-track-fill" style="width:'+Math.round(100*(item?(themeReview?ordinal-1:answered):visible.length)/visible.length)+'%"></div></div>'+
     (item?'<div id="swipe-card" class="swipe-playing-card" tabindex="0" aria-label="Temakort '+ordinal+' av '+visible.length+' i '+esc(categoryLabel)+'. Svep höger för ja eller vänster för nej.">'+
       '<span class="swipe-stamp swipe-stamp-no" aria-hidden="true">NEJ</span><span class="swipe-stamp swipe-stamp-yes" aria-hidden="true">JA</span>'+
-      '<span class="swipe-category">'+esc(themeCardModel(deck,themeIndex)?.category||deck.title)+'</span><h2>'+esc(itemText)+'</h2><span class="swipe-card-hint">Dra höger för Ja, vänster för Nej. Med tangentbordet: ← eller →.</span>'+importanceControl(deck.id,themeCardId(deck,themeIndex))+'</div>'+
+      '<span class="swipe-category'+(cardCategory===deck.title?' swipe-category-duplicate':'')+'">'+esc(cardCategory)+'</span><h2>'+esc(itemText)+'</h2><span class="swipe-card-hint">Dra höger för Ja, vänster för Nej. Med tangentbordet: ← eller →.</span>'+importanceControl(deck.id,themeCardId(deck,themeIndex))+'</div>'+
       (themeReviewEdit?.deckId===deck.id&&themeReviewEdit.index===themeIndex?'<button type="button" class="schyssta-secondary" id="theme-review-back">Tillbaka till mina sparade svar</button>':'')+
       '<div class="swipe-actions"><button type="button" class="swipe-choice swipe-no" data-swipe="no" aria-label="Nej">✕ <span>Nej</span></button>'+
       '<button type="button" class="swipe-choice swipe-yes" data-swipe="yes" aria-label="Ja">♥ <span>Ja</span></button></div>'
