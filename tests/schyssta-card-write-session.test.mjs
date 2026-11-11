@@ -298,3 +298,41 @@ test('FBK-02-05: failed card-proposal write does not display a stale saved confi
   assert.equal(h.state.schysstaDecisionFeedback,'');
   assert.ok(h.rendered.length>=2,'Error state must be rendered after failed write');
 });
+
+test('FBK-02-05: actual Schyssta view shows pending decision and proposal labels for both roles',()=>{
+  const begin=production.indexOf('function schysstaView(){');
+  const end=production.indexOf('\nfunction section(key){',begin);
+  assert.ok(begin>=0&&end>begin,'Find actual production Schyssta view');
+  for(const role of ['parent','teen']){
+    const state={
+      schysstaListEnabled:true,members:[{id:'a'},{id:'b'}],
+      schysstaLoading:false,schysstaError:'',schysstaDecisionFeedback:'',
+      schysstaMessage:'',schysstaSearch:'',schysstaFilterStatus:'all',
+      schysstaDraftOpen:false,schysstaDraft:'',schysstaSubmitting:false,
+      schysstaEditTarget:null,schysstaHistory:[],schysstaSuggestions:[],
+      schysstaReplacementLinks:[],schysstaExpandedIds:new Set(),
+      schysstaEndTarget:null,schysstaSaving:new Set([id]),
+      schysstaPausedIds:new Set(),schysstaCopyMessage:'',
+      schysstaCopyFallback:false,profile:{display_name:'Test'},
+      schysstaAllRules:()=>[{agreement_id:id,body:'Vi knackar på dörren',
+        status:'proposed',own_decision:null,source_card_id:null}],
+      schysstaNeedsAnswer:()=>[{agreement_id:id,body:'Vi knackar på dörren',
+        status:'proposed',own_decision:null,source_card_id:null}],
+      card:content=>content,esc:value=>String(value),viewerRole:()=>role,
+      currentApprovedSchysstaText:()=>''
+    };
+    vm.runInNewContext(production.slice(begin,end)+'\nthis.view=schysstaView;',state);
+    const pending=state.view();
+    assert.match(pending,/data-schyssta-decision="75000000-0000-4000-8000-000000000001" data-approved="true" disabled aria-busy="true">Sparar…<\/button>/);
+    assert.doesNotMatch(pending,/data-approved="true"[^>]*>Jag godkänner<\/button>/);
+    state.schysstaSaving.delete(id);
+    const ready=state.view();
+    assert.match(ready,/data-approved="true">Jag godkänner<\/button>/);
+    state.schysstaSuggestions=[{card_id:deck,body:'Vi lyssnar på varandra'}];
+    state.schysstaSaving.add(deck);
+    const proposing=state.view();
+    assert.match(proposing,/data-schyssta-propose="regler-01" disabled aria-busy="true">Skickar…<\/button>/);
+    state.schysstaSaving.delete(deck);
+    assert.match(state.view(),/data-schyssta-propose="regler-01">Föreslå<\/button>/);
+  }
+});
