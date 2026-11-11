@@ -427,3 +427,38 @@ console.log('PASS: all-deck insights gate, A-only sanitizer, B/NO isolation, ses
     assert.ok(theme.lastIndexOf(expression)>overview,
       'All-deck summary precedes secondary control: '+expression);
 }
+
+
+{
+  // The completed all-deck activity lead must use only server-confirmed A matches.
+  const start=script.indexOf('function swipeOverviewView(){');
+  const end=script.indexOf('function scheduleSwipeOverviewRefresh(){',start);
+  assert.ok(start>=0&&end>start,'All-deck overview source is available');
+  const state={
+    sharedInsightsEnabled:true,user:{id:'parent'},
+    members:[{user_id:'parent',role:'parent'},{user_id:'teen',role:'teen'}],
+    swipeOverviewLoading:false,swipeOverviewError:'',
+    swipeOverviewRows:[
+      {deck_id:'aktiviteter',card_id:'a1',answer:true},
+      {deck_id:'general',card_id:'g1',answer:true}
+    ],
+    sharedDeck:id=>id==='aktiviteter'?{cards:[
+      {id:'a1',type:'match',category:'Fritid',parentText:'Fika på stan'}
+    ]}:id==='general'?{cards:[
+      {id:'g1',type:'match',category:'Samtal',parentText:'Prata om böcker'},
+      {id:'secret',type:'understanding',category:'Privat',parentText:'HEMLIGT'}
+    ]}:undefined,
+    viewerRole:()=> 'parent',cardTextForRole:card=>card.parentText,
+    esc:value=>String(value).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+  };
+  vm.runInNewContext(script.slice(start,end)+';this.view=swipeOverviewView;',state);
+  const html=state.view();
+  assert.match(html,/Ni har båda svarat ja till: Fika på stan/,'Activity is named in the summary, not only counted');
+  assert.match(html,/Prata om böcker/,'Other deck matches remain visible');
+  assert.doesNotMatch(html,/HEMLIGT/,'Undisclosed understanding cards are not rendered');
+  state.swipeOverviewRows=[];
+  assert.doesNotMatch(state.view(),/Ni har båda svarat ja till:/,'No activity claims remain after revocation');
+  state.swipeOverviewError='Serverfel';
+  assert.doesNotMatch(state.view(),/Fika på stan/,'Server errors do not expose stale activities');
+}
+console.log('PASS: unified activity lead names confirmed matches only');
