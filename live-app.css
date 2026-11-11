@@ -1143,3 +1143,15 @@
 .schyssta-approved-extra>.schyssta-status{margin-top:12px}
 .schyssta-approved-extra>.schyssta-actions{margin-top:12px}
 @media(max-width:440px){.schyssta-approved-details>summary{padding:12px 13px;gap:10px}.schyssta-approved-extra{padding:0 13px 13px}}
+
+
+/* Compact rule overview: the agreed list is primary; optional tools stay folded. */
+.schyssta-search-panel,.schyssta-extra-panel{margin:14px 0;border:1px solid #575f74;border-radius:14px;background:#1b2231;min-width:0}
+.schyssta-search-panel>summary,.schyssta-extra-panel>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;padding:14px 17px;color:#f5dcac;font-weight:700;line-height:1.45;list-style:none;min-height:44px;box-sizing:border-box}
+.schyssta-search-panel>summary::-webkit-details-marker,.schyssta-extra-panel>summary::-webkit-details-marker{display:none}
+.schyssta-search-panel>summary::after,.schyssta-extra-panel>summary::after{content:'▸';flex:none;font-size:20px;color:#f5c16e}
+.schyssta-search-panel[open]>summary::after,.schyssta-extra-panel[open]>summary::after{content:'▾'}
+.schyssta-search-panel>summary:focus-visible,.schyssta-extra-panel>summary:focus-visible{outline:3px solid #f5c16e;outline-offset:2px;border-radius:12px}
+.schyssta-search-panel>.schyssta-filter-toolbar{margin:0;border:0;border-top:1px solid #575f74;border-radius:0 0 14px 14px}
+.schyssta-extra-panel>.live-panel{margin:0;border:0;border-top:1px solid #575f74;border-radius:0 0 14px 14px;box-shadow:none}
+@media(max-width:490px){.schyssta-search-panel>summary,.schyssta-extra-panel>summary{padding:12px 14px}}
