@@ -348,3 +348,45 @@ test('FBK-02-05: actual Schyssta view shows pending decision and proposal labels
     assert.match(state.view(),/data-schyssta-propose="regler-01">Föreslå<\/button>/);
   }
 });
+
+
+test('FBK-02-05: persisted both-yes snapshot renders compact accepted rule, never prompts for approval again',()=>{
+  const begin=production.indexOf('function schysstaView(){');
+  const end=production.indexOf('\nfunction section(key){',begin);
+  assert.ok(begin>=0&&end>begin,'Find production rule view');
+  for(const role of ['parent','teen']){
+    // Simulate a fresh page readback after both accounts have approved.
+    // The only available actions must be inside expandable management details.
+    const accepted={agreement_id:id,body:'Vi knackar på dörren',
+      status:'accepted',own_decision:true,source_card_id:null};
+    const state={
+      schysstaListEnabled:true,members:[{id:'a'},{id:'b'}],
+      schysstaLoading:false,schysstaError:'',schysstaDecisionFeedback:'',
+      schysstaMessage:'',schysstaSearch:'',schysstaFilterStatus:'all',
+      schysstaDraftOpen:false,schysstaDraft:'',schysstaSubmitting:false,
+      schysstaEditTarget:null,schysstaHistory:[],schysstaSuggestions:[],
+      schysstaReplacementLinks:[],schysstaExpandedIds:new Set(),
+      schysstaEndTarget:null,schysstaSaving:new Set(),
+      schysstaPausedIds:new Set(),schysstaCopyMessage:'',
+      schysstaCopyFallback:false,profile:{display_name:'Test'},
+      schysstaAllRules:()=>[accepted],schysstaNeedsAnswer:()=>[],
+      card:content=>content,esc:value=>String(value),viewerRole:()=>role,
+      currentApprovedSchysstaText:()=>''
+    };
+    vm.runInNewContext(production.slice(begin,end)+'\nthis.view=schysstaView;',state);
+    const compact=state.view();
+    assert.match(compact,/1 gemensam överenskommelse/);
+    assert.match(compact,/Inget väntar just nu/);
+    assert.match(compact,/class="schyssta-approved-item"><details class="schyssta-approved-details"/);
+    assert.match(compact,/Godkänd av båda/);
+    assert.doesNotMatch(compact,/data-schyssta-decision="/,
+      'Both-yes agreement must not present another approval or rejection button');
+    assert.match(compact,/data-schyssta-edit="/);
+    assert.match(compact,/data-schyssta-end="/);
+    assert.doesNotMatch(compact,/class="schyssta-approved-details"[^>]* open/,
+      'Management stays collapsed by default after reload');
+    state.schysstaExpandedIds.add(id);
+    assert.match(state.view(),/class="schyssta-approved-details"[^>]* open/,
+      'Explicit expansion reveals the management area');
+  }
+});
