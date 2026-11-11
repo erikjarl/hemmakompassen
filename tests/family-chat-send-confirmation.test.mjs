@@ -23,7 +23,7 @@ function harness({readError=false}={}){
     inboxPairEpoch:'epoch-1',sharedSession:10,
     familyChatRequest:0,familyChatSending:false,familyChatLoading:false,
     familyChatLoadingOlder:false,familyChatMessages:[],familyChatHasMore:false,
-    familyChatUnread:0,familyChatUnreadError:false,familyChatError:'',
+    familyChatUnread:0,familyChatUnreadError:false,familyChatCountRequest:0,familyChatError:'',
     familyChatStatus:'',familyChatDraft:'Hej!',familyChatRequestKey:null,
     SCHYSSTA_UUID:/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
     crypto:{randomUUID:()=> '81000000-0000-4000-8000-000000000001'},
