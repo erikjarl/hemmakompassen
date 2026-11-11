@@ -44,7 +44,14 @@ function harness(role){
       busy:[...state.schysstaSaving],submitting:state.schysstaSubmitting,
       message:state.schysstaMessage,error:state.schysstaError,draft:state.schysstaDraft
     }),
-    fetchSchysstaList:async()=>{refreshed.push('refresh');}
+    fetchSchysstaList:async()=>{
+      refreshed.push('refresh');
+      const manual=calls.filter(c=>c.name==='propose_manual_schyssta_rule').at(-1);
+      if(manual){
+        state.schysstaManualRules=[{agreement_id:ID,body:'Vi lyssnar klart innan vi svarar.',proposed_by_me:true}];
+      }
+      return true;
+    }
   };
   vm.runInNewContext(actions+'\nthis.mark=markSchysstaRead;this.withdraw=withdrawSchysstaRule;this.submit=submitManualSchysstaRule;this.editDraft=updateSchysstaDraft;this.propose=proposeSchysstaRule;this.decide=decideSchysstaRule;',state);
   return {state,calls,renders,refreshed,timers,
@@ -112,7 +119,7 @@ test('FUN-03: harmless whitespace edits keep a failed manual proposal retry iden
  assert.equal(h.calls.length,2);
  assert.equal(h.calls[1].args.p_request_key,firstKey);
  assert.equal(h.calls[1].args.p_body,'Vi lyssnar klart innan vi svarar.');
- h.calls[1].resolve({error:null});
+ h.calls[1].resolve({data:ID,error:null});
  await retry;
  assert.equal(h.state.schysstaDraft,'');
  h.calls[0].resolve({error:null});
@@ -144,7 +151,7 @@ test('FUN-03: retrying manual proposal after an unknown receipt reuses its idemp
  await step();
  assert.equal(h.calls.length,2);
  assert.equal(h.calls[1].args.p_request_key,firstKey);
- h.calls[1].resolve({error:null});
+ h.calls[1].resolve({data:ID,error:null});
  await retry;
  assert.equal(h.state.schysstaDraft,'');
  assert.equal(h.state.schysstaDraftKey,null);

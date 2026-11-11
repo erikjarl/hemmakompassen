@@ -29,13 +29,19 @@ function scenario({allowed=true,moveSession=false,editDraft=false}={}){
   schysstaSubmitting:false,schysstaLoading:false,schysstaError:'',schysstaMessage:'',
   schysstaDraft:'Vi pratar om våra gemensamma regler',schysstaDraftOpen:true,
   schysstaDraftKey:null,schysstaEditTarget:null,
+  schysstaManualRules:[],schysstaReplacementLinks:[],schysstaNotifications:[],schysstaHistory:[],schysstaRules:[],
   SCHYSSTA_RULES:{'regler-01':'En enkel regel'},
   SCHYSSTA_UUID:/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
   crypto:{randomUUID:()=>ID},
   setTimeout,clearTimeout,
   recheckInboxPair:async()=>{events.checks++;if(moveSession)state.sharedSession++;if(editDraft)state.schysstaDraft='Ändrad text';return allowed;},
-  db:{rpc:async(name,args)=>{events.calls.push({name,args});return {data:null,error:null};}},
-  fetchSchysstaList:async()=>{events.fetches++;},schysstaAllRules:()=>[],schysstaDecisionFeedback:'',
+  db:{rpc:async(name,args)=>{events.calls.push({name,args});return {data:name==='propose_manual_schyssta_rule'?ID:null,error:null};}},
+  fetchSchysstaList:async()=>{
+    events.fetches++;
+    // Successful write is confirmed only after the same UUID and body return.
+    state.schysstaManualRules=[{agreement_id:ID,body:'Vi pratar om våra gemensamma regler',proposed_by_me:true}];
+    return true;
+  },schysstaAllRules:()=>[],schysstaDecisionFeedback:'',
   render:()=>{events.renders++;}
  };
  vm.runInNewContext(chunks.join('\n')+'\n'+names.map(n=>'this.'+n+'='+n+';').join('\n'),state);

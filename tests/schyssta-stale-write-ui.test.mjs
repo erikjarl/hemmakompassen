@@ -31,12 +31,24 @@ function harness(){
     schysstaSaving:new Set(),schysstaMessage:'',schysstaEndTarget:oldId,
     schysstaSubmitting:false,schysstaDraft:'Ett tydligt gammalt regelförslag',
     schysstaDraftOpen:true,schysstaDraftKey:null,schysstaEditTarget:null,
+    schysstaManualRules:[],schysstaReplacementLinks:[],schysstaHistory:[],schysstaDecisionFeedback:'',schysstaRules:[{agreement_id:oldId}],
     SCHYSSTA_UUID:/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i,
     crypto:{randomUUID:()=>oldId},
     preflightSchysstaWrite:async()=>true,
     setTimeout,clearTimeout,
     db:{rpc(name,args){calls.push({name,args});return pending.promise;}},
-    render:()=>renders.push('render'),fetchSchysstaList:async()=>{refreshes.push('list');}
+    schysstaAllRules:()=>state.schysstaRules,
+    render:()=>renders.push('render'),
+    fetchSchysstaList:async()=>{
+      refreshes.push('list');
+      if(calls[0]?.name==='withdraw_schyssta_rule'){
+        state.schysstaRules=[];
+        state.schysstaHistory=[{agreement_id:oldId}];
+      }else if(calls[0]?.name==='propose_manual_schyssta_rule'){
+        state.schysstaManualRules=[{agreement_id:oldId,body:'Ett tydligt gammalt regelförslag',proposed_by_me:true}];
+      }
+      return true;
+    }
   };
   vm.runInNewContext(actions+'\nthis.markRead=markSchysstaRead;this.withdraw=withdrawSchysstaRule;this.submitRule=submitManualSchysstaRule;',state);
   return {state,pending,calls,renders,refreshes};
@@ -125,13 +137,13 @@ test('FUN-03: successful current-session proposal clears draft and refreshes',as
   const h=harness();
   const underway=h.state.submitRule();
   await tick();
-  h.pending.resolve({error:null});
+  h.pending.resolve({data:oldId,error:null});
   await underway;
   assert.equal(h.state.schysstaSubmitting,false);
   assert.equal(h.state.schysstaDraft,'');
   assert.equal(h.state.schysstaDraftKey,null);
   assert.equal(h.state.schysstaDraftOpen,false);
-  assert.match(h.state.schysstaMessage,/Förslaget är skickat/);
+  assert.match(h.state.schysstaMessage,/Förslaget är sparat/);
   assert.equal(h.refreshes.length,1);
 });
 
@@ -153,11 +165,11 @@ test('FUN-03: changing a draft while the proposal is pending must not discard th
   await tick();
   h.state.schysstaDraft='Ett nytt, oskickat utkast efter klicket';
   h.state.schysstaDraftKey=newId; // input event starts a new request identity
-  h.pending.resolve({error:null});
+  h.pending.resolve({data:oldId,error:null});
   await underway;
   assert.equal(h.state.schysstaDraft,'Ett nytt, oskickat utkast efter klicket');
   assert.equal(h.state.schysstaDraftKey,newId);
   assert.equal(h.state.schysstaDraftOpen,true,'Editor should remain open with new work');
-  assert.match(h.state.schysstaMessage,/Förslaget är skickat/);
+  assert.equal(h.state.schysstaMessage,'','Old success must not overwrite newer draft status');
   assert.equal(h.refreshes.length,1);
 });
