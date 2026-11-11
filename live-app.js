@@ -1623,7 +1623,10 @@ async function saveThemeAnswer(direction,index,deckId,viewer,session){
   swipeBusy=false;
   if(returnToReview)reopenThemeReview();
   else{render();revealNextSwipeCard(viewer,session,deckId);}
-  if(members.length===2)void fetchSwipeMatches(deckId);
+  if(members.length===2){
+    void fetchSwipeMatches(deckId);
+    if(themeCardModel(deck,index)?.type==='match')void fetchSwipeOverview();
+  }
 }
 function advanceThemeSwipe(direction){
   const deck=THEME_DECKS.find(d=>d.id===activeThemeDeck);
@@ -1749,6 +1752,9 @@ async function saveSwipeAnswer(direction,index,viewer,session){
   else{render();revealNextSwipeCard(viewer,session,null);}
   if(members.length===2){
     void fetchSwipeMatches('general');
+    // Refresh the server-confirmed all-deck result after a saved A answer,
+    // including corrections from yes to no; never infer sharing locally.
+    if(!isUnderstanding)void fetchSwipeOverview();
     // A parent sees only 21 match cards; a teen can also skip 13 understanding cards.
     if(visibleGeneralIndices().every(i=>swipeAnswers.has(swipeCardId(i))||skippedUnderstanding.has(swipeCardId(i))))void fetchThemeUnlock();
   }
