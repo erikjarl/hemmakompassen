@@ -2061,11 +2061,25 @@ async function withdrawSchysstaRule(id){
   let error;try{({error}=await schysstaWriteRpc(db.rpc('withdraw_schyssta_rule',{p_agreement_id:id})));}catch(e){error=e;}
   // Ignore late responses from a previous family, and keep a newer dialog.
   if(user?.id!==viewer||session!==sharedSession)return;
-  schysstaSaving.delete(id);
   if(schysstaEndTarget===id)schysstaEndTarget=null;
-  if(error){schysstaMessage='Det gick inte att bekräfta om överenskommelsen avslutades. Uppdatera listan för att kontrollera statusen.';render();return;}
-  schysstaMessage='Överenskommelsen är avslutad och finns kvar i historiken.';
-  await fetchSchysstaList();
+  if(error){schysstaSaving.delete(id);schysstaMessage='Det gick inte att bekräfta om överenskommelsen avslutades. Uppdatera listan för att kontrollera statusen.';render();return;}
+  // An accepted write is not yet proof that the agreement was retired.
+  // Hold the action lock through its own list readback, just like approvals.
+  const refreshed=await fetchSchysstaList();
+  if(user?.id!==viewer||sharedSession!==session)return;
+  schysstaSaving.delete(id);
+  const retired=refreshed&&!schysstaError
+    &&!schysstaAllRules().some(rule=>rule.agreement_id===id)
+    &&schysstaHistory.some(rule=>rule.agreement_id===id);
+  if(retired){
+    schysstaDecisionFeedback='';
+    schysstaMessage='Överenskommelsen är avslutad och finns kvar i historiken.';
+  }else{
+    // The error view displays decision feedback, unlike the normal message.
+    schysstaDecisionFeedback='Avslutet skickades, men det gick inte att bekräfta att överenskommelsen är avslutad. Uppdatera listan och kontrollera statusen innan du försöker igen.';
+    schysstaMessage='';
+  }
+  render();
 }
 async function submitManualSchysstaRule(){
   if(!schysstaListEnabled||!user||members.length!==2||schysstaSubmitting||schysstaLoading||schysstaError)return;
