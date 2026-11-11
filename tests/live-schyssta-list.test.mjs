@@ -53,6 +53,13 @@ test('Schyssta listan rejects incomplete, duplicate or contradictory RPC snapsho
   assert.equal(validate([7],[]),false,'Primitive suggestion rows are invalid');
   assert.equal(validate([], [{...rule,source_card_id:undefined,body:undefined}]),false,'Missing rule source ID and body is invalid');
   assert.equal(validate([], [{...rule,source_card_id:42}]),false,'Non-text source ID is invalid');
+  const {created_at:missingTimestamp,...withoutTimestamp}=rule;
+  assert.equal(validate([], [withoutTimestamp]),false,'Missing server timestamp cannot confirm an agreement');
+  const {own_decision:missingVote,...withoutOwnVote}=rule;
+  assert.equal(validate([], [withoutOwnVote]),false,'Missing own vote cannot appear as an unanswered proposal');
+  const {parent_decision:missingParent,...withoutParentVote}=rule;
+  assert.equal(validate([], [withoutParentVote]),false,'Missing parent decision cannot imply pending approval');
+  assert.equal(validate([], [{...rule,extra_field:'unexpected'}]),false,'Unexpected server field rejects the snapshot');
   assert.equal(validate(null,[rule]),false,'Null RPC payload is not a legitimate empty array');
   assert.equal(validate([suggestion],null),false,'Missing agreements cannot imply an empty list');
   assert.equal(validate([suggestion],[{...rule,parent_decision:'yes'}]),false,'Reject invalid decision types');
