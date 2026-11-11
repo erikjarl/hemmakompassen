@@ -325,9 +325,21 @@ test('FBK-02-05: actual Schyssta view shows pending decision and proposal labels
     const pending=state.view();
     assert.match(pending,/data-schyssta-decision="75000000-0000-4000-8000-000000000001" data-approved="true" disabled aria-busy="true">Sparar…<\/button>/);
     assert.doesNotMatch(pending,/data-approved="true"[^>]*>Jag godkänner<\/button>/);
+    assert.match(pending,/data-approved="false" disabled aria-busy="true">Sparar…<\/button>/,
+      'Reject button must also signal the ongoing server operation');
     state.schysstaSaving.delete(id);
     const ready=state.view();
     assert.match(ready,/data-approved="true">Jag godkänner<\/button>/);
+    assert.match(ready,/data-approved="false">Avböj förslaget<\/button>/,
+      'Reject button label must return after the server operation');
+    state.schysstaAllRules=()=>[{agreement_id:id,body:'Vi knackar på dörren',
+      status:'proposed',own_decision:true,source_card_id:null}];
+    state.schysstaNeedsAnswer=()=>[];
+    state.schysstaSaving.add(id);
+    assert.match(state.view(),/data-approved="false" disabled aria-busy="true">Sparar…<\/button>/,
+      'Withdrawal of a previously saved yes must have a pending receipt');
+    state.schysstaSaving.delete(id);
+    assert.match(state.view(),/data-approved="false">Ta tillbaka mitt ja<\/button>/);
     state.schysstaSuggestions=[{card_id:deck,body:'Vi lyssnar på varandra'}];
     state.schysstaSaving.add(deck);
     const proposing=state.view();
