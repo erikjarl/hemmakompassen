@@ -5411,6 +5411,10 @@ try{
   assert.ok(schysstaOrder.headingSize<75,'UX-04: compact Schyssta mobile title');
   assert.ok(schysstaOrder.pendingBeforeHelp&&schysstaOrder.helpClosed,'UX-04: decisions precede optional help');
   const quickState=paired.page.locator('.schyssta-quick-actions');
+  assert.equal(await quickState.evaluate(el=>el.classList.contains('schyssta-quick-actions--secondary')),true,
+    'UX-SL-02: secondary action card is visually subdued when approved agreements exist');
+  assert.equal(await quickState.locator('[data-schyssta-start]').evaluate(el=>getComputedStyle(el).minHeight), '44px',
+    'UX-SL-02: compact secondary action keeps its touch-sized minimum height');
   assert.equal(await quickState.locator('strong').innerText(),loadedRuleCount+' förslag behöver ditt svar',
     'SL-UX-01: first-screen status equals the server-validated pending count');
   assert.equal(await quickState.locator('[data-schyssta-start]').isVisible(),true,
