@@ -224,3 +224,38 @@ test('FBK-02-05: a failed post-write readback never produces a false approval re
   assert.doesNotMatch(h.state.schysstaDecisionFeedback,/Sparat:|Ditt ja är sparat/);
   assert.equal(h.state.schysstaSaving.has(id),false);
 });
+
+test('FBK-02-05: a rejected vote is confirmed only by the matching negative server receipt',async()=>{
+  for(const [rules,expected] of [
+    [[{agreement_id:id,own_decision:false,status:'rejected'}],/Ditt nej är sparat/],
+    [[{agreement_id:id,own_decision:true,status:'proposed'}],/inte att verifiera/],
+    [[{agreement_id:id,own_decision:null,status:'proposed'}],/inte att verifiera/]
+  ]){
+    const h=harness();
+    h.state.fetchSchysstaList=async()=>{h.state.schysstaRules=rules;return true;};
+    const underway=h.state.decide(id,false);
+    await tick();
+    assert.equal(h.calls[0]?.args?.p_approved,false);
+    h.gate.resolve({error:null});
+    await underway;
+    assert.match(h.state.schysstaDecisionFeedback,expected);
+    assert.equal(h.state.schysstaSaving.has(id),false);
+  }
+});
+
+test('FBK-02-05: delayed decision readback from an old session cannot overwrite current account feedback',async()=>{
+  const h=harness();
+  const readback=deferred();
+  h.state.fetchSchysstaList=async()=>readback.promise;
+  const underway=h.state.decide(id,true);
+  await tick();
+  h.gate.resolve({error:null});
+  await tick();
+  h.change();
+  h.state.schysstaSaving.add(id);
+  h.state.schysstaDecisionFeedback='Ny användares besked';
+  readback.resolve(true);
+  await underway;
+  assert.equal(h.state.schysstaSaving.has(id),true);
+  assert.equal(h.state.schysstaDecisionFeedback,'Ny användares besked');
+});
