@@ -4623,10 +4623,10 @@ try{
    const moreDecks=teenReview.page.locator('.swipe-themes > details.swipe-more-decks');
    await moreDecks.locator('summary').waitFor();
    assert.equal(await moreDecks.evaluate(el=>el.open),false,'UX-SW-03 extra decks stay collapsed after completing general cards');
-   assert.equal(await teenReview.page.locator('[data-theme-open]').count(),6,'All six decks remain in the DOM');
-   assert.equal(await teenReview.page.locator('[data-theme-open]:visible').count(),0,'Theme launch buttons do not compete with completed results');
+   assert.equal(await moreDecks.locator('h3').count(),6,'All six locked deck previews remain in the DOM for an unpaired teen');
+   assert.equal(await moreDecks.locator('h3:visible').count(),0,'Extra deck previews do not compete with completed results');
    await moreDecks.locator('summary').click();
-   assert.equal(await teenReview.page.locator('[data-theme-open]:visible').count(),6,'All theme actions become available on user request');
+   assert.equal(await moreDecks.locator('h3:visible').count(),6,'All six locked deck previews become visible on user request');
   assert.match(await teenReview.page.locator('.swipe-finished').innerText(),/34 svar/,'All answers are loaded before review');
   await teenReview.page.locator('.swipe-finished summary').click();
    await teenReview.page.locator('#swipe-restart').click();
