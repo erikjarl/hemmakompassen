@@ -1098,6 +1098,9 @@ async function fetchSwipeOverview({quiet=false}={}){
   }
 }
 function insightsEntry(){
+  // The unified section already offers the same link for an eligible paired viewer.
+  if(sharedInsightsEnabled&&page()==='swipe'&&members.length===2&&
+    members.some(m=>m.user_id===user?.id)&&members.some(m=>m.role==='parent')&&members.some(m=>m.role==='teen'))return '';
   return sharedInsightsEnabled?'<p class="insights-entry"><a class="live-button" href="#insikter">Gemensamma insikter från alla kortlekar →</a></p>':'';
 }
 function swipeAiSignature(deckId){
