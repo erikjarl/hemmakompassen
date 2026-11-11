@@ -37,7 +37,7 @@ function chatHarness(role){
     setTimeout:timer.setTimeout,clearTimeout:timer.clearTimeout,
     recheckInboxPair:async()=>true,
     render:()=>renders.push({busy:state.familyChatReadBusy,status:state.familyChatStatus,unread:state.familyChatUnread}),
-    fetchFamilyChatUnread:async()=>{refreshes.push('count');state.familyChatUnread=0;state.familyChatUnreadError=false;},
+    fetchFamilyChatUnread:async()=>{refreshes.push('count');state.familyChatCountRequest++;state.familyChatUnread=0;state.familyChatUnreadError=false;},
     db:{rpc(name){assert.equal(name,'mark_family_messages_read');const d=deferred();requests.push(d);return d.promise;}}
   };
   vm.runInNewContext(markChat+'\nthis.markRead=markAllFamilyChatRead;',state);
