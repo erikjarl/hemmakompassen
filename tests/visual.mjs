@@ -4640,14 +4640,18 @@ try{
   const skipAgain=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},
     {authenticated:true,role:'teen',preansweredGeneral:true,preansweredSkipped:true});
   await skipAgain.page.goto(base+'#swipe',{waitUntil:'load'});
-  await skipAgain.page.locator('#swipe-review-skipped').waitFor();
-  assert.match(await skipAgain.page.locator('.swipe-finished h2').innerText(),/1 kort kvar/,'Skipped cards are not described as fully answered');
+  await skipAgain.page.locator('.swipe-finished summary').waitFor();
+   await skipAgain.page.locator('.swipe-finished summary').click();
+   await skipAgain.page.locator('#swipe-review-skipped').waitFor();
+  assert.match(await skipAgain.page.locator('.swipe-finished').innerText(),/1 kort kvar/,'Skipped cards are not described as fully answered');
   await skipAgain.page.locator('#swipe-review-skipped').click();
   await skipAgain.page.locator("#swipe-card[aria-label^='Kort 2 av 34']").waitFor();
   assert.equal(await skipAgain.page.locator('.swipe-finished').count(),0);
   await skipAgain.page.locator('#swipe-skip').click();
-  await skipAgain.page.locator('#swipe-review-skipped').waitFor();
-  assert.match(await skipAgain.page.locator('.swipe-finished').innerText(),/1 förståelsekort obesvarade/,'Skipping again leaves the card pending');
+  await skipAgain.page.locator('.swipe-finished summary').waitFor();
+   await skipAgain.page.locator('.swipe-finished summary').click();
+   await skipAgain.page.locator('#swipe-review-skipped').waitFor();
+  assert.match(await skipAgain.page.locator('.swipe-finished').innerText(),/1 kort kvar/,'Skipping again leaves the card pending');
   await skipAgain.page.locator('#swipe-review-skipped').click();
   await skipAgain.page.locator("#swipe-card[aria-label^='Kort 2 av 34']").waitFor();
   await skipAgain.page.getByRole('button',{name:'Ja'}).click();
