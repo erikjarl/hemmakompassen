@@ -186,5 +186,7 @@ test('SL-UX-01: next action, empty state and counts are derived from validated r
  assert.match(app,/data-schyssta-compose-jump/);
  assert.match(app,/editor\?\.focus\(\)/);
  assert.doesNotMatch(app,/För dig som förälder: lyssna före regelförslaget/);
- assert.match(app,/if\(schysstaError\)return '<h1>Schyssta listan<\/h1>'\+card\('<h2>Kunde inte visa listan/);
+ assert.match(app,/if\(schysstaError\)return '<h1>Schyssta listan<\/h1>'\+card\('<h2>'\+/);
+ assert.match(app,/Kunde inte bekräfta åtgärden/);
+ assert.match(app,/Kunde inte visa listan/);
 });

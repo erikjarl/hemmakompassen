@@ -283,3 +283,18 @@ test('FBK-02-05: Schyssta error view distinguishes failed action confirmation fr
   assert.match(fetchError,/Kunde inte visa listan/);
   assert.doesNotMatch(fetchError,/Kunde inte bekräfta åtgärden/);
 });
+
+test('FBK-02-05: failed card-proposal write does not display a stale saved confirmation',async()=>{
+  const h=harness();
+  h.state.schysstaDecisionFeedback='Förra regeln sparades.';
+  const underway=h.state.propose(deck);
+  await tick();
+  assert.equal(h.state.schysstaDecisionFeedback,'');
+  h.gate.resolve({error:{message:'Server unavailable'}});
+  await underway;
+  assert.equal(h.calls.length,1);
+  assert.equal(h.state.schysstaSaving.has(deck),false);
+  assert.match(h.state.schysstaError,/Det gick inte att bekräfta om förslaget sparades/);
+  assert.equal(h.state.schysstaDecisionFeedback,'');
+  assert.ok(h.rendered.length>=2,'Error state must be rendered after failed write');
+});
