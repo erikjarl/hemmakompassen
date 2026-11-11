@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261111-inbox-readback-race1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261111-schyssta-decision-status1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261111-inbox-readback-race1';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261111-schyssta-decision-status1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261111-inbox-readback-race1';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261111-schyssta-decision-status1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -1888,10 +1888,16 @@ function validSchysstaSuggestion(row){
   return Object.hasOwn(SCHYSSTA_RULES,row.card_id)&&SCHYSSTA_RULES[row.card_id]===row.body
     &&Object.keys(row).length===2&&Object.keys(row).every(key=>key==='card_id'||key==='body');
 }
+function validSchysstaDecisionState(row){
+  const parent=row.parent_decision,teen=row.teen_decision;
+  if(row.status==='accepted')return parent===true&&teen===true;
+  if(row.status==='rejected')return parent===false||teen===false;
+  return parent!==false&&teen!==false&&!(parent===true&&teen===true);
+}
 function validSchysstaRule(row){
   if(!row||typeof row!=='object'||Array.isArray(row)||typeof row.source_card_id!=='string'||typeof row.body!=='string'
     ||!Object.hasOwn(SCHYSSTA_RULES,row.source_card_id)
-    ||!SCHYSSTA_UUID.test(row.agreement_id)||SCHYSSTA_RULES[row.source_card_id]!==row.body||!['proposed','accepted','rejected'].includes(row.status))return false;
+    ||!SCHYSSTA_UUID.test(row.agreement_id)||SCHYSSTA_RULES[row.source_card_id]!==row.body||!['proposed','accepted','rejected'].includes(row.status)||!validSchysstaDecisionState(row))return false;
   if(typeof row.proposed_by_me!=='boolean'||![true,false,null].includes(row.own_decision)||![true,false,null].includes(row.parent_decision)||![true,false,null].includes(row.teen_decision))return false;
   const allowed=['agreement_id','source_card_id','body','status','proposed_by_me','own_decision','parent_decision','teen_decision','created_at'];
   // This RPC returns all nine columns. Missing vote/timestamp fields must not
@@ -1919,7 +1925,7 @@ function validManualSchysstaRule(row){
     ||![true,false,null].includes(row.own_decision)
     ||![true,false,null].includes(row.parent_decision)
     ||![true,false,null].includes(row.teen_decision)
-    ||typeof row.created_at!=='string'||Number.isNaN(Date.parse(row.created_at)))return false;
+    ||typeof row.created_at!=='string'||Number.isNaN(Date.parse(row.created_at))||!validSchysstaDecisionState(row))return false;
   const keys=['agreement_id','body','status','agreement_version','proposed_by_me',
     'own_decision','parent_decision','teen_decision','created_at'];
   return Object.keys(row).length===keys.length&&Object.keys(row).every(key=>keys.includes(key));
