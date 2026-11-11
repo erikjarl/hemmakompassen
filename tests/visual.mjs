@@ -2755,9 +2755,8 @@ async function verifyPairedRuleRevisionAndHistory(){
       await acceptedRule.waitFor({state:'visible'});
       assert.equal(await acceptedRule.locator('[data-schyssta-decision]').count(),0,
         'FBK-02-05: '+role+' does not see a second decision prompt for an accepted rule');
-      assert.equal(await member.page.locator(
-        '#schyssta-needs-answer #schyssta-rule-'+originalId).count(),0,
-        'FBK-02-05: '+role+' does not see an accepted rule among pending approvals');
+      assert.equal(await member.page.locator('#schyssta-needs-answer').count(),0,
+        'FBK-02-05: '+role+' has no repeated approval request after both votes');
       assert.equal(fixture.rules.find(rule=>rule.id===originalId)?.status,'accepted',
         'FBK-02-05: reload never changes the shared accepted fixture state');
     }
