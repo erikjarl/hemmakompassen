@@ -4666,6 +4666,23 @@ try{
    const moreDecks=teenReview.page.locator('.swipe-themes > details.swipe-more-decks');
    await moreDecks.locator('summary').waitFor();
    assert.equal(await moreDecks.evaluate(el=>el.open),false,'UX-SW-03 extra decks stay collapsed after completing general cards');
+   const deckChoice=moreDecks.locator(':scope > summary');
+   const deckChoiceAppearance=await deckChoice.evaluate(el=>{
+     const css=getComputedStyle(el),chevron=getComputedStyle(el,'::after');
+     const box=el.getBoundingClientRect();
+     return {height:box.height,fontSize:parseFloat(css.fontSize),minHeight:parseFloat(css.minHeight),
+       cursor:css.cursor,chevron:chevron.content,color:css.color};
+   });
+   assert.ok(deckChoiceAppearance.height>=52&&deckChoiceAppearance.fontSize>=17,
+     'FBK-02-06: next-deck disclosure is a readable, touch-sized mobile option: '+JSON.stringify(deckChoiceAppearance));
+   assert.equal(deckChoiceAppearance.cursor,'pointer','FBK-02-06: disclosure signals interactivity');
+   assert.match(deckChoiceAppearance.chevron,/▸/,'FBK-02-06: closed deck choice has a visible chevron');
+   await deckChoice.focus();
+   assert.equal(await deckChoice.evaluate(el=>document.activeElement===el),true,
+     'FBK-02-06: deck-choice disclosure remains keyboard-focusable');
+   await checkOverflow(teenReview.page,'FBK-02-06 completed swipe extra decks 390px');
+   await capture(teenReview.page,'mobile-swipe-extra-decks-collapsed.png');
+   assert.equal(await moreDecks.evaluate(el=>el.open),false,'FBK-02-06: visual emphasis does not open extra decks by default');
    assert.equal(await moreDecks.locator('h3').count(),6,'All six locked deck previews remain in the DOM for an unpaired teen');
    assert.equal(await moreDecks.locator('h3:visible').count(),0,'Extra deck previews do not compete with completed results');
    await moreDecks.locator('summary').click();
