@@ -236,6 +236,7 @@ test('FBK-02-04: marking chat read waits for authoritative unread count before c
       }},
       fetchFamilyChatUnread:async()=>{
         await pendingReadback;
+        state.familyChatCountRequest++;
         state.familyChatUnreadError=remaining==='error';
         state.familyChatUnread=remaining==='error'?0:remaining;
       },
@@ -251,7 +252,7 @@ test('FBK-02-04: marking chat read waits for authoritative unread count before c
     releaseReadback();
     const confirmed=await action;
     assert.equal(state.familyChatReadBusy,false);
-    assert.equal(state.familyChatCountRequest,1);
+    assert.equal(state.familyChatCountRequest,2);
     if(remaining===0){
       assert.equal(confirmed,true);
       assert.equal(state.familyChatStatus,'Alla meddelanden har markerats som lästa.');
