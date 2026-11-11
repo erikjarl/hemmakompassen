@@ -1165,3 +1165,9 @@
 .swipe-unified-overview{margin-top:12px}
 .swipe-unified-statements{margin:8px 0 0;padding-left:20px;display:grid;gap:8px}
 .swipe-unified-statements li{line-height:1.55;overflow-wrap:anywhere}
+
+/* Completed swipe: preserve older per-deck advice without competing with the unified result. */
+.swipe-secondary-results{margin:14px 0;border:1px solid var(--line);border-radius:12px;padding:10px 14px}
+.swipe-secondary-results>summary{cursor:pointer;font-size:14px;font-weight:600;line-height:1.5;padding:4px 0}
+.swipe-secondary-results>summary:focus-visible{outline:3px solid #f5bb65;outline-offset:3px}
+.swipe-secondary-results[open]>.swipe-results{margin:12px 0 2px}
