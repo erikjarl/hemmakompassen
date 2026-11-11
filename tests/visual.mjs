@@ -5302,6 +5302,9 @@ try{
   await manualRule.waitFor();
   assert.match(await manualRule.innerText(),/Väntar på bådas beslut/,'Manual proposal remains pending');
   assert.match(await manualRule.innerText(),/Ditt val: inte lämnat/,'Submitting never approves own manual proposal');
+  await paired.page.getByRole('heading',{name:/^Behöver ditt svar/}).locator('..').locator('#schyssta-rule-30000000-0000-4000-8000-000000000002').waitFor();
+  assert.match(await paired.page.getByRole('heading',{name:/^Behöver ditt svar/}).innerText(),/\([2-9]\)/,
+    'An own proposal with no decision joins the pending queue along with the incoming proposal');
   await paired.page.getByRole('button',{name:'Föreslå ändring'}).first().click();
   assert.equal(await paired.page.locator('#schyssta-body').inputValue(),'Vi frågar innan vi lånar saker.','Approved text is copied to change editor');
   await paired.page.locator('#schyssta-body').fill('Vi frågar varandra innan vi lånar något.');
