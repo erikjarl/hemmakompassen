@@ -167,6 +167,32 @@ async function verifySchysstaMobileHierarchy(){
           role+' '+width+'px: shared agreements precede pending proposals without hiding them');
         assert.ok(geometry.composeClosed,role+' '+width+'px: optional form collapsed initially');
         assert.ok(geometry.approvedCount>=1,role+' '+width+'px: approved rules still accessible');
+        // UX-SL-02: verify the actual browser layout rather than relying on CSS source.
+        const approvedRow=approved.locator('.schyssta-approved-item').first();
+        const rowStyle=await approvedRow.evaluate(el=>{
+          const css=getComputedStyle(el);
+          const panel=getComputedStyle(el.closest('.live-panel'));
+          return {background:css.backgroundColor,panelBackground:panel.backgroundColor,
+            borderTop:css.borderTopWidth,borderLeft:css.borderLeftWidth,
+            borderRight:css.borderRightWidth,borderRadius:css.borderTopLeftRadius};
+        });
+        assert.equal(rowStyle.background,'rgba(0, 0, 0, 0)',
+          role+' '+width+'px: approved row should not be another filled card');
+        assert.equal(rowStyle.borderLeft,'0px',
+          role+' '+width+'px: approved row should not have a nested left frame');
+        assert.equal(rowStyle.borderRight,'0px',
+          role+' '+width+'px: approved row should not have a nested right frame');
+        assert.equal(rowStyle.borderRadius,'0px',
+          role+' '+width+'px: approved row should not have a card radius');
+        const disclosure=approvedRow.locator('details.schyssta-approved-details');
+        assert.equal(await disclosure.getAttribute('open'),null,
+          role+' '+width+'px: rule administration initially collapsed');
+        assert.equal(await approvedRow.getByRole('button',{name:'Föreslå ändring'}).isVisible(),false,
+          role+' '+width+'px: change control should be hidden until expansion');
+        await disclosure.locator(':scope > summary').click();
+        assert.equal(await approvedRow.getByRole('button',{name:'Föreslå ändring'}).isVisible(),true,
+          role+' '+width+'px: rule administration accessible after expansion');
+        await disclosure.locator(':scope > summary').click();
         // UX-03: loading a deep-linked page may set the active tab before
         // asynchronous family data makes the nav visible. It must end fully
         // inside the unobscured tab strip, not beneath the feedback button.
