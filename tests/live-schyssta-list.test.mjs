@@ -215,3 +215,50 @@ test('FBK-02-04: Inbox nav badge excludes counts from an unverified pair or fail
   assert.match(menu,/const unreadActivities=inboxReady&&activityNotificationsEnabled&&!activityNotificationsError\?activityUnreadCount\(\):0/);
   assert.match(menu,/unread\+unreadMessages\+unreadActivities/);
 });
+
+
+test('FBK-02-04: marking chat read waits for authoritative unread count before confirming',async()=>{
+  const begin=app.indexOf('async function markAllFamilyChatRead(){');
+  const end=app.indexOf('\nfunction updateFamilyChatDraft(',begin);
+  assert.ok(begin>=0&&end>begin,'Find production mark-all implementation');
+  for(const remaining of [0,2,'error']){
+    let releaseReadback;
+    const pendingReadback=new Promise(resolve=>{releaseReadback=resolve;});
+    const state={
+      user:{id:'reader'},members:[{},{}],inboxPairEpoch:'current-pair',
+      familyChatReadBusy:false,familyChatLoading:false,
+      familyChatUnreadError:false,familyChatUnread:3,familyChatStatus:'',
+      familyChatCountRequest:0,sharedSession:1,
+      recheckInboxPair:async()=>true,
+      db:{rpc:async name=>{
+        assert.equal(name,'mark_family_messages_read');
+        return {data:3,error:null};
+      }},
+      fetchFamilyChatUnread:async()=>{
+        await pendingReadback;
+        state.familyChatUnreadError=remaining==='error';
+        state.familyChatUnread=remaining==='error'?0:remaining;
+      },
+      render:()=>{},setTimeout,clearTimeout
+    };
+    runInNewContext(app.slice(begin,end)+'\nthis.markRead=markAllFamilyChatRead;',state);
+    const action=state.markRead();
+    // Let preflight and the write receipt finish before readback is released.
+    await new Promise(resolve=>setImmediate(resolve));
+    assert.equal(state.familyChatReadBusy,true);
+    assert.notEqual(state.familyChatStatus,'Alla meddelanden har markerats som lästa.',
+      'A write receipt alone cannot prove zero unread messages');
+    releaseReadback();
+    const confirmed=await action;
+    assert.equal(state.familyChatReadBusy,false);
+    assert.equal(state.familyChatCountRequest,1);
+    if(remaining===0){
+      assert.equal(confirmed,true);
+      assert.equal(state.familyChatStatus,'Alla meddelanden har markerats som lästa.');
+    }else{
+      assert.equal(confirmed,false);
+      assert.doesNotMatch(state.familyChatStatus,/^Alla meddelanden har markerats som lästa/);
+      assert.match(state.familyChatStatus,remaining==='error'?/kunde inte bekräftas/:/2 olästa/);
+    }
+  }
+});
