@@ -15,8 +15,8 @@ const id='50000000-0000-4000-8000-000000000001';
 const originalId='40000000-0000-4000-8000-000000000002';
 const tick=()=>new Promise(resolve=>setImmediate(resolve));
 function deferred(){let resolve;const promise=new Promise(r=>resolve=r);return {promise,resolve};}
-function harness({edit=false}={}){
- const rpc=deferred(),get=deferred(),calls=[],renders=[];
+function harness({edit=false,delayedPreflight=false}={}){
+ const rpc=deferred(),get=deferred(),calls=[],renders=[],pairChecks=[];
  const state={
    schysstaListEnabled:true,user:{id:'parent'},sharedSession:5,members:[{},{},],
    schysstaSubmitting:false,schysstaLoading:false,schysstaError:'',
@@ -26,14 +26,17 @@ function harness({edit=false}={}){
    schysstaManualRules:[],schysstaReplacementLinks:[],
    SCHYSSTA_UUID:/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
    crypto:{randomUUID:()=> '30000000-0000-4000-8000-000000000003'},
-   preflightSchysstaWrite:async()=>true,
+   preflightSchysstaWrite:()=>{
+     if(!delayedPreflight)return Promise.resolve(true);
+     const next=deferred();pairChecks.push(next);return next.promise;
+   },
    setTimeout,clearTimeout,
    db:{rpc(name,args){calls.push({name,args});return rpc.promise;}},
    fetchSchysstaList:()=>get.promise,
    render:()=>renders.push({message:state.schysstaMessage,submitting:state.schysstaSubmitting})
  };
  vm.runInNewContext(source+'\nthis.submit=submitManualSchysstaRule;',state,{filename:'live-app.js'});
- return {state,rpc,get,calls,renders};
+ return {state,rpc,get,calls,renders,pairChecks};
 }
 for(const mode of ['confirmed','absent','wrong-id','wrong-text','failed-get','bad-uuid']){
  test('FBK-02-05: manual proposal '+mode+' retains draft until exact readback',async()=>{
@@ -182,4 +185,28 @@ test('FBK-02-05: two manual submit clicks before RPC reply send one proposal',as
  assert.equal(h.state.schysstaSubmitting,false);
  assert.equal(h.state.schysstaDraft,'');
  assert.match(h.state.schysstaMessage,/Förslaget är sparat/);
+});
+
+test('FBK-02-05: two clicks during an unresolved pair preflight issue one manual proposal RPC',async()=>{
+ const h=harness({delayedPreflight:true});
+ const first=h.state.submit();
+ const second=h.state.submit();
+ await tick();
+ assert.equal(h.pairChecks.length,2,'Both clicks entered pairing verification');
+ assert.equal(h.calls.length,0,'Neither click may write before pair verification');
+ h.pairChecks[0].resolve(true);
+ h.pairChecks[1].resolve(true);
+ await tick();
+ assert.equal(h.calls.length,1,'Second completed preflight must observe the first submission lock');
+ assert.equal(h.state.schysstaSubmitting,true);
+ h.rpc.resolve({data:id,error:null});
+ await tick();
+ h.state.schysstaManualRules=[{
+   agreement_id:id,body:'Prata lugnt vid matbordet',proposed_by_me:true
+ }];
+ h.get.resolve(true);
+ await Promise.all([first,second]);
+ assert.equal(h.calls.length,1);
+ assert.equal(h.state.schysstaDraft,'');
+ assert.equal(h.state.schysstaSubmitting,false);
 });

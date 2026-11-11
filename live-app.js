@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261111-schyssta-manual-late-feedback3';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261111-schyssta-preflight-doubleclick4';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261111-schyssta-manual-late-feedback3';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261111-schyssta-preflight-doubleclick4';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261111-schyssta-manual-late-feedback3';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261111-schyssta-preflight-doubleclick4';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -2090,7 +2090,7 @@ async function submitManualSchysstaRule(){
   const body=schysstaDraft.trim().replace(/\s+/g,' ');
   if(body.length<5||body.length>500){schysstaMessage='Skriv mellan 5 och 500 tecken.';render();return;}
   const viewer=user.id,session=sharedSession,draftBefore=schysstaDraft,editBefore=schysstaEditTarget;
-  if(!await preflightSchysstaWrite(viewer,session)||schysstaDraft!==draftBefore||schysstaEditTarget!==editBefore||!schysstaDraftOpen)return;
+  if(!await preflightSchysstaWrite(viewer,session)||schysstaSubmitting||schysstaDraft!==draftBefore||schysstaEditTarget!==editBefore||!schysstaDraftOpen)return;
   if(!schysstaDraftKey)schysstaDraftKey=crypto.randomUUID();
   const requestKey=schysstaDraftKey;
   schysstaSubmitting=true;schysstaMessage='Skickar förslaget…';render();
