@@ -1155,3 +1155,13 @@
 .schyssta-search-panel>.schyssta-filter-toolbar{margin:0;border:0;border-top:1px solid #575f74;border-radius:0 0 14px 14px}
 .schyssta-extra-panel>.live-panel{margin:0;border:0;border-top:1px solid #575f74;border-radius:0 0 14px 14px;box-shadow:none}
 @media(max-width:490px){.schyssta-search-panel>summary,.schyssta-extra-panel>summary{padding:12px 14px}}
+
+/* Result-first completed swipe: status and edit controls remain accessible but secondary. */
+.swipe-finished-compact{padding:10px 14px;margin:8px 0;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+.swipe-finished-compact .swipe-finished-status{margin:0;font-size:14px;font-weight:600;line-height:1.45}
+.swipe-finished-compact .swipe-finished-actions{margin:6px 0 0;display:block;text-align:left}
+.swipe-finished-compact .swipe-finished-actions summary{font-size:13px;cursor:pointer}
+.swipe-finished-compact .swipe-finished-actions[open] .live-button{margin:8px 8px 0 0}
+.swipe-unified-overview{margin-top:12px}
+.swipe-unified-statements{margin:8px 0 0;padding-left:20px;display:grid;gap:8px}
+.swipe-unified-statements li{line-height:1.55;overflow-wrap:anywhere}
