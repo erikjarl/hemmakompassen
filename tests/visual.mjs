@@ -4670,10 +4670,10 @@ try{
   const paired=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,paired:true});
   await paired.page.goto(base+"#swipe",{waitUntil:"load"});
   await paired.page.getByRole("heading",{name:"Era gemensamma svar"}).waitFor();
-  await paired.page.locator(".swipe-unified-overview .swipe-unified-list li").first().waitFor();
+  await paired.page.locator(".swipe-unified-overview .swipe-unified-list > li").first().waitFor();
   assert.match(await paired.page.locator(".swipe-unified-overview").innerText(),/3 gemensamma ja-svar/,
     "FUN-SW-02: consolidated result counts only two valid general A matches and one theme A match");
-  assert.equal(await paired.page.locator(".swipe-unified-overview .swipe-unified-list li").count(),2,
+  assert.equal(await paired.page.locator(".swipe-unified-overview .swipe-unified-list > li").count(),2,
     "FUN-SW-02: result groups by category across decks without separate deck cards");
   assert.equal(await paired.page.locator(".swipe-unified-overview a[href='#insikter']").count(),1,
     "FUN-SW-02: expressly shared understanding remains on its own consent-controlled route");
@@ -4756,7 +4756,7 @@ try{
   await paired.page.waitForFunction(()=>document.querySelector('.swipe-results')?.textContent?.includes('Inga gemensamma ja-svar'));
   assert.equal(await paired.page.locator('.swipe-results .swipe-match-list li').count(),0,'Automatic refresh must remove a revoked match');
   await paired.page.waitForFunction(()=>document.querySelector('.swipe-unified-overview')?.textContent?.includes('Inga gemensamma ja-svar'));
-  assert.equal(await paired.page.locator('.swipe-unified-overview .swipe-unified-list li').count(),0,
+  assert.equal(await paired.page.locator('.swipe-unified-overview .swipe-unified-list > li').count(),0,
     'FUN-SW-02: all-deck summary removes revoked matches on focus without displaying stale results');
   await paired.page.locator('.swipe-results').scrollIntoViewIfNeeded();
   await capture(paired.page,'mobile-auto-revoked-match.png');
