@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261111-schyssta-saving-label1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261111-inbox-badge-pair1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261111-schyssta-saving-label1';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261111-inbox-badge-pair1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261111-schyssta-saving-label1';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261111-inbox-badge-pair1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -1738,10 +1738,15 @@ function menu(){
   const routeChanged=route!==previousMenuRoute;
   previousMenuRoute=route;
   if(routeChanged)mobileNavUserBrowsing=false;
-  const unread=schysstaListEnabled&&user&&members.length===2&&!schysstaError?schysstaUnreadCount():0;
+  // Match the inbox's pairing and read-receipt preconditions. Stale counts
+  // from a previous family must never reappear in the navigation badge.
+  const inboxReady=!!user&&members.length===2&&!!inboxPairEpoch;
+  const unread=inboxReady&&schysstaListEnabled&&!schysstaError?schysstaUnreadCount():0;
+  const unreadMessages=inboxReady&&!familyChatUnreadError?familyChatUnread:0;
+  const unreadActivities=inboxReady&&activityNotificationsEnabled&&!activityNotificationsError?activityUnreadCount():0;
   const pending=schysstaListEnabled&&user&&members.length===2&&!schysstaError?schysstaNeedsAnswer().length:0;
   const navItem=([key,label])=>{
-    const count=key==='inkorg'?(unread+familyChatUnread+activityUnreadCount()):key==='regler'?pending:0;
+    const count=key==='inkorg'?(unread+unreadMessages+unreadActivities):key==='regler'?pending:0;
     const descriptor=key==='inkorg'?' olästa meddelanden och aviseringar':' obesvarade regelförslag';
     const aria=count?' aria-label="'+label+', '+count+descriptor+'"':'';
     const badge=count?'<span class="live-nav-count" aria-hidden="true">'+(count>9?'9+':count)+'</span>':'';
