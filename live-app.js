@@ -2057,7 +2057,11 @@ async function withdrawSchysstaRule(id){
   if(!schysstaListEnabled||!user||!SCHYSSTA_UUID.test(id)||schysstaSaving.has(id)||schysstaEndTarget!==id)return;
   const viewer=user.id,session=sharedSession;
   if(!await preflightSchysstaWrite(viewer,session)||schysstaSaving.has(id)||schysstaEndTarget!==id)return;
+  // A previous successful action must not look like confirmation of this one.
+  schysstaMessage='';
+  schysstaDecisionFeedback='';
   schysstaSaving.add(id);
+  render();
   let error;try{({error}=await schysstaWriteRpc(db.rpc('withdraw_schyssta_rule',{p_agreement_id:id})));}catch(e){error=e;}
   // Ignore late responses from a previous family, and keep a newer dialog.
   if(user?.id!==viewer||session!==sharedSession)return;
