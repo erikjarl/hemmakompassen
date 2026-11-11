@@ -2026,9 +2026,14 @@ async function markSchysstaRead(id){
   if(user?.id!==viewer||session!==sharedSession)return;
   schysstaSaving.delete(id);
   if(error){schysstaMessage='Det gick inte att bekräfta läsmarkeringen. Uppdatera listan för att kontrollera statusen.';render();return;}
-  // A confirmed successful retry must dismiss the previous uncertainty.
-  schysstaMessage='';
-  await fetchSchysstaList();
+  // The receipt RPC succeeded; verify the refreshed list before clearing
+  // uncertainty. A failed/superseded read is not proof of a saved read receipt.
+  const refreshed=await fetchSchysstaList();
+  if(user?.id!==viewer||session!==sharedSession)return;
+  schysstaMessage=refreshed&&!schysstaError
+    ?''
+    :'Läsmarkeringen skickades, men aktuell status kunde inte kontrolleras. Uppdatera listan och kontrollera aviseringen innan du försöker igen.';
+  render();
 }
 function validSchysstaReplacementLinks(rows,manualRules){
   return Array.isArray(rows)&&rows.every(row=>row&&typeof row==='object'
