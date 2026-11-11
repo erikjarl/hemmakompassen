@@ -4735,6 +4735,8 @@ try{
     "FUN-SW-02: consolidated result counts only two valid general A matches and one theme A match");
   assert.equal(await paired.page.locator(".swipe-unified-overview .swipe-unified-list > li").count(),2,
     "FUN-SW-02: result groups by category across decks without separate deck cards");
+  assert.equal(await paired.page.locator('.swipe-unified-overview .swipe-unified-next-step').count(),0,
+    'FUN-SW-02: conversation and general YES matches must not produce an invented activity invitation');
   assert.equal(await paired.page.locator(".swipe-unified-overview a[href='#insikter']").count(),1,
     "FUN-SW-02: expressly shared understanding remains on its own consent-controlled route");
   await paired.page.getByRole("heading",{name:"Det ni båda svarat ja till"}).waitFor();
