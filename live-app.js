@@ -2307,9 +2307,10 @@ async function proposeSchysstaRule(cardId){
   if(user?.id!==viewer||sharedSession!==session)return;
   // Prevent a second proposal until the write has had its own readback.
   schysstaSaving.delete(cardId);
-  if(!refreshed||schysstaError){
-    schysstaDecisionFeedback='Förslaget skickades, men kunde inte kontrolleras. Uppdatera listan och kontrollera om förslaget redan finns innan du skickar igen.';
-  }
+  const confirmed=refreshed&&!schysstaError&&schysstaRules.some(row=>row.source_card_id===cardId);
+  schysstaDecisionFeedback=confirmed
+    ?'Förslaget är sparat och finns i Schyssta listan. Ni behöver båda säga ja innan det blir en överenskommelse.'
+    :'Förslaget skickades, men kunde inte bekräftas i den hämtade listan. Uppdatera listan och kontrollera om förslaget redan finns innan du skickar igen.';
   render();
 }
 async function decideSchysstaRule(agreementId,approved){
