@@ -1879,7 +1879,11 @@ function validSchysstaRule(row){
     ||!SCHYSSTA_UUID.test(row.agreement_id)||SCHYSSTA_RULES[row.source_card_id]!==row.body||!['proposed','accepted','rejected'].includes(row.status))return false;
   if(typeof row.proposed_by_me!=='boolean'||![true,false,null].includes(row.own_decision)||![true,false,null].includes(row.parent_decision)||![true,false,null].includes(row.teen_decision))return false;
   const allowed=['agreement_id','source_card_id','body','status','proposed_by_me','own_decision','parent_decision','teen_decision','created_at'];
-  return Object.keys(row).every(key=>allowed.includes(key))&&(!row.created_at||!Number.isNaN(Date.parse(row.created_at)));
+  // This RPC returns all nine columns. Missing vote/timestamp fields must not
+  // masquerade as a valid pending decision after a server readback.
+  return Object.keys(row).length===allowed.length
+    &&Object.keys(row).every(key=>allowed.includes(key))
+    &&typeof row.created_at==='string'&&!Number.isNaN(Date.parse(row.created_at));
 }
 function validSchysstaPayload(suggestions,rules){
   // An unexpected response must not be mistaken for a complete, trustworthy list.
