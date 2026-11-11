@@ -2103,7 +2103,10 @@ async function submitManualSchysstaRule(){
   if(user?.id!==viewer||sharedSession!==session)return;
   if(error||!SCHYSSTA_UUID.test(createdId||'')){
     schysstaSubmitting=false;
-    schysstaMessage='Det gick inte att bekräfta om förslaget skickades. Utkastet finns kvar. Uppdatera listan eller försök igen med samma text.';
+    // A newer draft must not inherit the previous draft's uncertain receipt.
+    const sameDraft=schysstaDraft===draftBefore&&schysstaEditTarget===editBefore&&schysstaDraftKey===requestKey;
+    if(sameDraft)schysstaMessage='Det gick inte att bekräfta om förslaget skickades. Utkastet finns kvar. Uppdatera listan eller försök igen med samma text.';
+    else if(schysstaMessage==='Skickar förslaget…')schysstaMessage='';
     render();return;
   }
   // The successful RPC returns the exact agreement UUID. Check that same
@@ -2117,7 +2120,9 @@ async function submitManualSchysstaRule(){
     &&(!editBefore||schysstaReplacementLinks.some(link=>
       link.agreement_id===createdId&&link.replaces_agreement_id===editBefore));
   if(!confirmed){
-    schysstaMessage='Förslaget skickades, men kunde inte bekräftas i listan. Utkastet finns kvar. Uppdatera listan och kontrollera om det redan finns innan du skickar igen.';
+    const sameDraft=schysstaDraft===draftBefore&&schysstaEditTarget===editBefore&&schysstaDraftKey===requestKey;
+    if(sameDraft)schysstaMessage='Förslaget skickades, men kunde inte bekräftas i listan. Utkastet finns kvar. Uppdatera listan och kontrollera om det redan finns innan du skickar igen.';
+    else if(schysstaMessage==='Skickar förslaget…')schysstaMessage='';
     render();return;
   }
   // Never clear a different draft typed while the original request was pending.
