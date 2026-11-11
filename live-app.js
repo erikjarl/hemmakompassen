@@ -2090,7 +2090,7 @@ async function submitManualSchysstaRule(){
   const body=schysstaDraft.trim().replace(/\s+/g,' ');
   if(body.length<5||body.length>500){schysstaMessage='Skriv mellan 5 och 500 tecken.';render();return;}
   const viewer=user.id,session=sharedSession,draftBefore=schysstaDraft,editBefore=schysstaEditTarget;
-  if(!await preflightSchysstaWrite(viewer,session)||schysstaDraft!==draftBefore||schysstaEditTarget!==editBefore||!schysstaDraftOpen)return;
+  if(!await preflightSchysstaWrite(viewer,session)||schysstaSubmitting||schysstaDraft!==draftBefore||schysstaEditTarget!==editBefore||!schysstaDraftOpen)return;
   if(!schysstaDraftKey)schysstaDraftKey=crypto.randomUUID();
   const requestKey=schysstaDraftKey;
   schysstaSubmitting=true;schysstaMessage='Skickar förslaget…';render();
