@@ -18,7 +18,7 @@ const production=[
 ].join('\n');
 const noticeId='40000000-0000-4000-8000-000000000091';
 const agreementId='30000000-0000-4000-8000-000000000092';
-function harness({role='parent',fail=true,readback=true,previous=''}={}){
+function harness({role='parent',fail=true,readback=true,confirmed=true,previous=''}={}){
  const frames=[],calls=[],reloads=[];
  const state={
    user:{id:role,email:'test@example.invalid'},
@@ -53,7 +53,7 @@ function harness({role='parent',fail=true,readback=true,previous=''}={}){
      return Promise.resolve(fail?{data:null,error:{message:'Synthetic offline'}}:{data:null,error:null});
    }},
    render:()=>{frames.push(state.inboxView());},
-   fetchSchysstaList:async()=>{reloads.push('refresh');state.render();return readback;}
+   fetchSchysstaList:async()=>{reloads.push('refresh');if(readback&&confirmed)state.schysstaNotifications[0].read_at='2026-11-11T00:00:00Z';state.render();return readback;}
  };
  vm.runInNewContext(production+'\nthis.inboxView=inboxView;this.markNotice=markSchysstaRead;',
   state,{filename:'live-app.js'});
@@ -107,4 +107,38 @@ test('FBK-02-04: late readback after account switch must not alter the new inbox
  release(false);
  await pending;
  assert.equal(h.state.schysstaMessage,'Ny sessionsstatus');
+});
+
+test('FBK-02-04: successful server fetch without the specific read receipt remains unconfirmed',async()=>{
+ const h=harness({fail:false,confirmed:false});
+ await h.state.markNotice(noticeId);
+ assert.equal(h.calls.length,1);
+ assert.equal(h.reloads.length,1);
+ assert.equal(h.state.schysstaNotifications[0].read_at,null);
+ assert.match(h.state.schysstaMessage,/inte att bekräfta att aviseringen är läst/);
+ assert.match(h.frames.at(-1),/Läsmarkeringen skickades, men det gick inte att bekräfta/);
+});
+
+test('FBK-02-04: missing notice in a successful server list is not a verified read receipt',async()=>{
+ const h=harness({fail:false,confirmed:false});
+ h.state.fetchSchysstaList=async()=>{h.state.schysstaNotifications=[];return true;};
+ await h.state.markNotice(noticeId);
+ assert.match(h.state.schysstaMessage,/inte att bekräfta att aviseringen är läst/);
+});
+
+test('FBK-02-04: rule-notice read button stays busy until its server readback completes',async()=>{
+ const h=harness({fail:false});
+ let complete;
+ h.state.fetchSchysstaList=()=>new Promise(resolve=>{complete=resolve;});
+ const pending=h.state.markNotice(noticeId);
+ for(let i=0;i<5&&!complete;i++)await new Promise(resolve=>setImmediate(resolve));
+ assert.ok(complete,'Readback starts');
+ assert.equal(h.state.schysstaSaving.has(noticeId),true);
+ await h.state.markNotice(noticeId);
+ assert.equal(h.calls.length,1,'Duplicate click cannot send a second receipt RPC');
+ h.state.schysstaNotifications[0].read_at='2026-11-11T00:00:00Z';
+ complete(true);
+ await pending;
+ assert.equal(h.state.schysstaSaving.has(noticeId),false);
+ assert.equal(h.state.schysstaMessage,'');
 });
