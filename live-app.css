@@ -1181,3 +1181,26 @@
 .swipe-secondary-results>summary{cursor:pointer;font-size:14px;font-weight:600;line-height:1.5;padding:4px 0}
 .swipe-secondary-results>summary:focus-visible{outline:3px solid #f5bb65;outline-offset:3px}
 .swipe-secondary-results[open]>.swipe-results{margin:12px 0 2px}
+
+
+/* FBK-02-01 / UX-SL-02: approved agreements are the content, not cards
+   inside another card. Keep the accessible details/summary and focus ring. */
+.schyssta-view .schyssta-filter-group[data-schyssta-filter-group="approved"] .schyssta-list{
+  gap:0;
+}
+.schyssta-view .schyssta-filter-group[data-schyssta-filter-group="approved"] .schyssta-list>li{
+  background:transparent;
+  border:0;
+  border-bottom:1px solid var(--line2);
+  border-radius:0;
+  box-shadow:none;
+}
+.schyssta-view .schyssta-filter-group[data-schyssta-filter-group="approved"] .schyssta-list>li:last-child{
+  border-bottom:0;
+}
+.schyssta-view .schyssta-filter-group[data-schyssta-filter-group="approved"] .schyssta-approved-details>summary{
+  padding-inline:8px;
+}
+.schyssta-view .schyssta-filter-group[data-schyssta-filter-group="approved"] .schyssta-approved-extra{
+  padding-inline:8px;
+}
