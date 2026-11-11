@@ -75,7 +75,7 @@ test('FBK-02-05: new proposal clears a previous saved receipt before asynchronou
   h.gate.resolve({error:{message:'Network problem'}});
   await underway;
   assert.equal(h.state.schysstaDecisionFeedback,'');
-  assert.match(h.state.schysstaError,/kunde inte bekräfta/);
+  assert.match(h.state.schysstaError,/inte att bekräfta/);
 });
 
 test('FBK-02-05: proposal confirmation requires the submitted card ID in the server list',async()=>{
