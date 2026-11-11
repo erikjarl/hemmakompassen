@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261111-swipe-themes-disclosure1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261111-swipe-unified-overview1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261111-swipe-themes-disclosure1';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261111-swipe-unified-overview1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261111-swipe-themes-disclosure1';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261111-swipe-unified-overview1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -59,6 +59,8 @@ let sharedPollPending=false;
 // Presentation-only selection. It never changes, fetches, or shares answers.
 let sharedMatchFilter={deckId:null,category:null};
 let insightsRows=[],insightsLoading=false,insightsError='',insightsRequest=0;
+// All-deck A snapshot for #swipe, independent from the #insikter route cache.
+let swipeOverviewRows=[],swipeOverviewLoading=false,swipeOverviewError='',swipeOverviewRequest=0;
 let activityInviteBusy=false,activityInviteError='',activityInviteFocus=null;
 let sharedUnderstandingRows=[],understandingShareError='',understandingSharesAvailable=false,understandingShareChecking=false;
 let schysstaSuggestions=[],schysstaRules=[],schysstaManualRules=[],schysstaNotifications=[],schysstaReplacementLinks=[],schysstaHistory=[],schysstaEndTarget=null,schysstaLoading=false,schysstaError='',schysstaRequest=0;
@@ -1045,7 +1047,60 @@ function understandingInsights(){
     ?'<button type="button" class="schyssta-secondary" data-understanding-retry'+(understandingShareChecking?' disabled':'')+'>Kontrollera delningen igen</button>':'';
   return sharedList+'<div class="understanding-consent"><h3>Du bestämmer vad som delas</h3><p>Varje knapp gäller bara det angivna budskapet. Ett delat förståelsekort blir aldrig en A-matchning eller en överenskommelse. Du kan återkalla delningen när som helst.</p>'+error+retry+controls+'</div>';
 }
+function swipeOverviewView(){
+  if(!sharedInsightsEnabled||!user||members.length!==2||!members.some(m=>m.user_id===user.id)||
+     !members.some(m=>m.role==='parent')||!members.some(m=>m.role==='teen'))return '';
+  const title='<section class="live-panel swipe-unified-overview" aria-labelledby="swipe-overview-heading"><span class="swipe-eyebrow">BARA GEMENSAMMA JA-SVAR</span><h2 id="swipe-overview-heading">Det ni har gemensamt – alla kortlekar</h2>';
+  if(swipeOverviewLoading)return title+'<p role="status">Kontrollerar gemensamma svar från alla kortlekar…</p></section>';
+  if(swipeOverviewError)return title+'<p role="alert">'+esc(swipeOverviewError)+'</p><button type="button" class="schyssta-secondary" id="swipe-overview-retry">Försök igen</button></section>';
+  const groups=new Map();
+  for(const row of swipeOverviewRows){
+    const deck=sharedDeck(row.deck_id);
+    const matched=deck?.cards.find(card=>card.id===row.card_id&&card.type==='match');
+    if(row.answer!==true||!matched)continue;
+    const category=matched.category;
+    if(!groups.has(category))groups.set(category,[]);
+    groups.get(category).push({statement:cardTextForRole(matched,viewerRole())});
+  }
+  const count=swipeOverviewRows.length;
+  return title+'<p class="live-muted">'+(count?count+' gemensamma ja-svar från de kortlekar ni har använt.':'Inga gemensamma ja-svar hittades ännu.')+' Bara kort där båda har svarat ja visas. Förståelsekort visas separat när de uttryckligen delas.</p>'+
+    (groups.size?'<ul class="swipe-match-list swipe-unified-list">'+[...groups.entries()].map(([category,items])=>
+      '<li><div><h3>'+esc(category)+' · '+items.length+' gemensamma</h3><p>'+esc(items[0].statement)+
+      (items.length>1?' · och '+(items.length-1)+' till':'')+'</p></div></li>').join('')+'</ul>':'')+
+    '<a href="#insikter" class="insights-back-link">Visa alla gemensamma insikter och delade förståelsekort</a></section>';
+}
+async function fetchSwipeOverview({quiet=false}={}){
+  const viewer=user?.id,session=sharedSession,request=++swipeOverviewRequest;
+  const eligible=sharedInsightsEnabled&&viewer&&members.length===2&&
+    members.some(m=>m.user_id===viewer)&&members.some(m=>m.role==='parent')&&members.some(m=>m.role==='teen')&&page()==='swipe';
+  if(!eligible){swipeOverviewRows=[];swipeOverviewError='';swipeOverviewLoading=false;return;}
+  const previous=JSON.stringify([swipeOverviewRows,swipeOverviewError]);
+  if(!quiet){swipeOverviewRows=[];swipeOverviewError='';swipeOverviewLoading=true;renderKeepingGeneralReview();}
+  try{
+    const responses=await Promise.all(INSIGHT_DECK_IDS.map(deckId=>db.rpc('shared_swipe_matches',{p_deck_id:deckId})));
+    if(request!==swipeOverviewRequest||session!==sharedSession||user?.id!==viewer||page()!=='swipe')return;
+    const rows=[];
+    for(let i=0;i<responses.length;i++){
+      if(responses[i]?.error||!Array.isArray(responses[i]?.data))throw Error('Shared result unavailable');
+      rows.push(...safeInsightMatches(INSIGHT_DECK_IDS[i],responses[i].data));
+    }
+    swipeOverviewRows=rows;
+    swipeOverviewError='';
+  }catch(e){
+    if(request!==swipeOverviewRequest||session!==sharedSession||user?.id!==viewer||page()!=='swipe')return;
+    swipeOverviewRows=[];
+    swipeOverviewError='Gemensamma svar kunde inte kontrolleras. Tidigare resultat visas inte.';
+  }finally{
+    if(request===swipeOverviewRequest&&session===sharedSession&&user?.id===viewer&&page()==='swipe'){
+      swipeOverviewLoading=false;
+      if(!quiet||previous!==JSON.stringify([swipeOverviewRows,swipeOverviewError]))renderKeepingGeneralReview();
+    }
+  }
+}
 function insightsEntry(){
+  // The unified section already offers the same link for an eligible paired viewer.
+  if(sharedInsightsEnabled&&page()==='swipe'&&members.length===2&&
+    members.some(m=>m.user_id===user?.id)&&members.some(m=>m.role==='parent')&&members.some(m=>m.role==='teen'))return '';
   return sharedInsightsEnabled?'<p class="insights-entry"><a class="live-button" href="#insikter">Gemensamma insikter från alla kortlekar →</a></p>':'';
 }
 function swipeAiSignature(deckId){
@@ -1647,7 +1702,7 @@ function reopenGeneralReview(){
    !button.closest('[data-general-review-kind]')?.hidden);
  (selected||search||details?.querySelector('summary'))?.focus({preventScroll:true});
 }
-function swipeView(){if(activeThemeDeck)return themeSwipeView();const total=visibleGeneralIndices().length,answered=visibleGeneralIndices().filter(i=>swipeAnswers.has(swipeCardId(i))).length,item=generalStatement(swipeIndex),isUnderstanding=GENERAL_CARDS[swipeIndex]?.type==='understanding',ordinal=visibleGeneralIndices().indexOf(swipeIndex)+1;if(swipeLoadError)return '<div class="swipe-experience"><header class="swipe-heading"><span class="swipe-eyebrow">UPPTÄCK VARANDRA</span><h1>Gillaswajpen</h1></header>'+card('<h2>Kunde inte hämta dina svar</h2><p role="alert">'+esc(swipeLoadError)+'</p><button class="live-button" type="button" id="swipe-reload">Försök igen</button>')+'</div>';return '<div class="swipe-experience swipe-play-view"><header class="swipe-heading"><span class="swipe-eyebrow">UPPTÄCK VARANDRA</span><h1>Gillaswajpen</h1><p>Vad är viktigt för dig? Utforska korten i din egen takt.</p></header>'+(isUnderstanding?'<p class="swipe-understanding-notice">'+(sharedUnderstandingEnabled?'Förståelsekort: ditt svar förblir privat tills du själv väljer att dela ett ja-svar i <a href="#insikter">Gemensamma insikter</a>. Du kan återkalla delningen när som helst. Inga tidigare svar delas automatiskt.':'Förståelsekort: ditt svar sparas tills vidare privat. Delning med förälder är inte aktiverad här och gamla svar delas aldrig automatiskt.')+'</p>':'')+'<div class="swipe-stage"><div class="swipe-stage-top"><span>ALLMÄNNA KORTLEKEN</span><span role="status">'+(item?ordinal+' / '+total:answered+' svar, '+skippedUnderstanding.size+' överhoppade av '+total)+'</span></div><div class="swipe-track"><div class="swipe-track-fill" style="width:'+Math.round(100*(item?(swipeReview?ordinal-1:answered+skippedUnderstanding.size):total)/total)+'%"></div></div>'+(item?'<div id="swipe-card" class="swipe-playing-card" tabindex="0" aria-label="Kort '+ordinal+' av '+total+'. Svep höger för ja eller vänster för nej."><span class="swipe-stamp swipe-stamp-no" aria-hidden="true">NEJ</span><span class="swipe-stamp swipe-stamp-yes" aria-hidden="true">JA</span><span class="swipe-category">'+esc(item[0])+'</span><h2>'+esc(item[1])+'</h2><span class="swipe-card-hint">Dra höger för Ja, vänster för Nej. Med tangentbordet: ← eller →.</span>'+importanceControl('general',swipeCardId(swipeIndex))+'</div>'+(generalReviewEdit?.index===swipeIndex?'<button type="button" class="schyssta-secondary" id="swipe-general-review-back">Tillbaka till mina svar</button>':'')+'<div class="swipe-actions"><button type="button" class="swipe-choice swipe-no" data-swipe="no" aria-label="Nej">✕ <span>Nej</span></button><button type="button" class="swipe-choice swipe-yes" data-swipe="yes" aria-label="Ja">♥ <span>Ja</span></button></div>'+(isUnderstanding?'<button type="button" id="swipe-skip" class="swipe-skip">Vill inte svara just nu</button>':''):'<div class="swipe-finished"><h2>'+(skippedUnderstanding.size?'Du har '+skippedUnderstanding.size+' kort kvar att svara på':'Alla '+total+' kort besvarade')+'</h2><p>Du har sparat '+answered+' svar'+(skippedUnderstanding.size?' och lämnat '+skippedUnderstanding.size+' förståelsekort obesvarade för tillfället':'')+'. Du kan ändra dina egna svar när du vill.</p>'+'<details class="swipe-finished-actions"><summary>Ändra eller gå igenom svar igen</summary>'+(skippedUnderstanding.size?'<button class="live-button" type="button" id="swipe-review-skipped">Gå till överhoppade kort</button>':'')+'<button class="live-button" type="button" id="swipe-restart">Gå igenom alla kort igen</button></details></div>')+'<p id="swipe-save-status" class="swipe-disclaimer" role="status">'+(swipeSaveError?esc(swipeSaveError):(isUnderstanding?(sharedUnderstandingEnabled?'Ditt svar sparas privat. Ett ja på förståelsekort blir inte delat förrän du själv väljer Dela med min förälder i Gemensamma insikter.':'Ditt svar sparas privat. Förståelsekort delas inte förrän säker delning är aktiverad.'):'Ditt svar sparas privat i ditt konto. Matchningskort visas gemensamt först när båda svarat ja.'))+'</p></div>'+privateSwipeExportControls()+privateGeneralAnswerReview()+swipeResults()+insightsEntry()+themeDecksView(!item)+'</div>';}
+function swipeView(){if(activeThemeDeck)return themeSwipeView();const total=visibleGeneralIndices().length,answered=visibleGeneralIndices().filter(i=>swipeAnswers.has(swipeCardId(i))).length,item=generalStatement(swipeIndex),isUnderstanding=GENERAL_CARDS[swipeIndex]?.type==='understanding',ordinal=visibleGeneralIndices().indexOf(swipeIndex)+1;if(swipeLoadError)return '<div class="swipe-experience"><header class="swipe-heading"><span class="swipe-eyebrow">UPPTÄCK VARANDRA</span><h1>Gillaswajpen</h1></header>'+card('<h2>Kunde inte hämta dina svar</h2><p role="alert">'+esc(swipeLoadError)+'</p><button class="live-button" type="button" id="swipe-reload">Försök igen</button>')+'</div>';return '<div class="swipe-experience swipe-play-view"><header class="swipe-heading"><span class="swipe-eyebrow">UPPTÄCK VARANDRA</span><h1>Gillaswajpen</h1><p>Vad är viktigt för dig? Utforska korten i din egen takt.</p></header>'+(isUnderstanding?'<p class="swipe-understanding-notice">'+(sharedUnderstandingEnabled?'Förståelsekort: ditt svar förblir privat tills du själv väljer att dela ett ja-svar i <a href="#insikter">Gemensamma insikter</a>. Du kan återkalla delningen när som helst. Inga tidigare svar delas automatiskt.':'Förståelsekort: ditt svar sparas tills vidare privat. Delning med förälder är inte aktiverad här och gamla svar delas aldrig automatiskt.')+'</p>':'')+'<div class="swipe-stage"><div class="swipe-stage-top"><span>ALLMÄNNA KORTLEKEN</span><span role="status">'+(item?ordinal+' / '+total:answered+' svar, '+skippedUnderstanding.size+' överhoppade av '+total)+'</span></div><div class="swipe-track"><div class="swipe-track-fill" style="width:'+Math.round(100*(item?(swipeReview?ordinal-1:answered+skippedUnderstanding.size):total)/total)+'%"></div></div>'+(item?'<div id="swipe-card" class="swipe-playing-card" tabindex="0" aria-label="Kort '+ordinal+' av '+total+'. Svep höger för ja eller vänster för nej."><span class="swipe-stamp swipe-stamp-no" aria-hidden="true">NEJ</span><span class="swipe-stamp swipe-stamp-yes" aria-hidden="true">JA</span><span class="swipe-category">'+esc(item[0])+'</span><h2>'+esc(item[1])+'</h2><span class="swipe-card-hint">Dra höger för Ja, vänster för Nej. Med tangentbordet: ← eller →.</span>'+importanceControl('general',swipeCardId(swipeIndex))+'</div>'+(generalReviewEdit?.index===swipeIndex?'<button type="button" class="schyssta-secondary" id="swipe-general-review-back">Tillbaka till mina svar</button>':'')+'<div class="swipe-actions"><button type="button" class="swipe-choice swipe-no" data-swipe="no" aria-label="Nej">✕ <span>Nej</span></button><button type="button" class="swipe-choice swipe-yes" data-swipe="yes" aria-label="Ja">♥ <span>Ja</span></button></div>'+(isUnderstanding?'<button type="button" id="swipe-skip" class="swipe-skip">Vill inte svara just nu</button>':''):'<div class="swipe-finished"><h2>'+(skippedUnderstanding.size?'Du har '+skippedUnderstanding.size+' kort kvar att svara på':'Alla '+total+' kort besvarade')+'</h2><p>Du har sparat '+answered+' svar'+(skippedUnderstanding.size?' och lämnat '+skippedUnderstanding.size+' förståelsekort obesvarade för tillfället':'')+'. Du kan ändra dina egna svar när du vill.</p>'+'<details class="swipe-finished-actions"><summary>Ändra eller gå igenom svar igen</summary>'+(skippedUnderstanding.size?'<button class="live-button" type="button" id="swipe-review-skipped">Gå till överhoppade kort</button>':'')+'<button class="live-button" type="button" id="swipe-restart">Gå igenom alla kort igen</button></details></div>')+'<p id="swipe-save-status" class="swipe-disclaimer" role="status">'+(swipeSaveError?esc(swipeSaveError):(isUnderstanding?(sharedUnderstandingEnabled?'Ditt svar sparas privat. Ett ja på förståelsekort blir inte delat förrän du själv väljer Dela med min förälder i Gemensamma insikter.':'Ditt svar sparas privat. Förståelsekort delas inte förrän säker delning är aktiverad.'):'Ditt svar sparas privat i ditt konto. Matchningskort visas gemensamt först när båda svarat ja.'))+'</p></div>'+privateSwipeExportControls()+privateGeneralAnswerReview()+swipeOverviewView()+swipeResults()+insightsEntry()+themeDecksView(!item)+'</div>';}
 async function saveSwipeAnswer(direction,index,viewer,session){
   // An animated swipe can finish after sign-out or a switch to another account.
   // Never write or render its result in the new user's session.
@@ -2656,7 +2711,7 @@ let authResult;
 try{authResult=await db.auth.getUser();}
 catch(e){if(generation!==refreshGeneration)return;throw e;}
 if(generation!==refreshGeneration)return;
-const {data:{user:u},error}=authResult;if(error&&error.name!=='AuthSessionMissingError')throw error;generalReviewEdit=null;themeReviewEdit=null;user=u;profile=null;members=[];mediatorExperience.reset(u?.id??null);aiResults.reset(u?.id??null);personalityExperience.reset(u?.id??null);swipeAnswers.clear();swipeImportance.clear();importancePending.clear();importanceSaving.clear();importanceAvailable=false;importanceLoadError='';priorityShares.clear();priorityShareSaving.clear();prioritySharesAvailable=false;priorityShareError='';skippedUnderstanding.clear();understandingShares.clear();understandingShareSaving.clear();understandingShareError='';understandingSharesAvailable=false;understandingShareChecking=false;for(const answers of themeAnswers.values())answers.clear();activeThemeDeck=null;themeCategory='all';themeIndex=0;themeReview=false;themeSaveError='';swipeBusy=false;swipeLoadError='';swipeSaveError='';swipeReview=false;swipeSkippedReview=false;swipeIndex=0;sharedMatches=[];sharedPriorities=[];sharedDeckId='general';sharedError='';sharedPriorityError='';sharedLoading=false;sharedSession++;sharedRequest++;activityInviteBusy=false;activityInviteError='';insightsRows=[];sharedUnderstandingRows=[];insightsLoading=false;insightsError='';insightsRequest++;themesUnlocked=false;themesLoading=false;themesError='';themesRequest++;
+const {data:{user:u},error}=authResult;if(error&&error.name!=='AuthSessionMissingError')throw error;generalReviewEdit=null;themeReviewEdit=null;user=u;profile=null;members=[];mediatorExperience.reset(u?.id??null);aiResults.reset(u?.id??null);personalityExperience.reset(u?.id??null);swipeAnswers.clear();swipeImportance.clear();importancePending.clear();importanceSaving.clear();importanceAvailable=false;importanceLoadError='';priorityShares.clear();priorityShareSaving.clear();prioritySharesAvailable=false;priorityShareError='';skippedUnderstanding.clear();understandingShares.clear();understandingShareSaving.clear();understandingShareError='';understandingSharesAvailable=false;understandingShareChecking=false;for(const answers of themeAnswers.values())answers.clear();activeThemeDeck=null;themeCategory='all';themeIndex=0;themeReview=false;themeSaveError='';swipeBusy=false;swipeLoadError='';swipeSaveError='';swipeReview=false;swipeSkippedReview=false;swipeIndex=0;sharedMatches=[];sharedPriorities=[];sharedDeckId='general';sharedError='';sharedPriorityError='';sharedLoading=false;sharedSession++;sharedRequest++;activityInviteBusy=false;activityInviteError='';insightsRows=[];sharedUnderstandingRows=[];insightsLoading=false;insightsError='';insightsRequest++;swipeOverviewRows=[];swipeOverviewError='';swipeOverviewLoading=false;swipeOverviewRequest++;themesUnlocked=false;themesLoading=false;themesError='';themesRequest++;
 inboxPairEpoch=null;
 activityNotificationsRequest++;activityNotifications=[];activityNotificationsError='';activityNotificationsLoading=false;activityMarkBusy=null;activityFeedback='';
 if(typeof schysstaRequest!=='undefined'){schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];schysstaNotifications=[];schysstaReplacementLinks=[];schysstaHistory=[];schysstaEndTarget=null;schysstaLoading=false;schysstaError='';schysstaRequest++;schysstaSaving.clear();schysstaPausedIds.clear();schysstaExpandedIds.clear();schysstaDecisionFeedback='';clearFamilyChat();schysstaDraft='';schysstaDraftOpen=false;schysstaDraftKey=null;schysstaEditTarget=null;schysstaSubmitting=false;schysstaMessage='';schysstaCopyMessage='';schysstaCopyFallback=false;schysstaFocusId='';schysstaSearch='';schysstaFilterStatus='all';}
@@ -2690,6 +2745,7 @@ if(user)void personalityExperience.load(user.id);
 if(user&&page()==='medlare')void mediatorExperience.loadList();
 if(user&&members.length===2){void fetchSwipeMatches('general');void fetchThemeUnlock();void fetchActivityNotifications();}
 if(page()==='insikter')void fetchInsights();
+if(page()==='swipe'&&user&&members.length===2)void fetchSwipeOverview();
 if(typeof fetchSchysstaList==='function'&&schysstaListEnabled&&['regler','inkorg','hem'].includes(page()))void fetchSchysstaList();
 if(user&&members.length===2){
   if(page()==='inkorg')void fetchFamilyChat();
@@ -2914,6 +2970,7 @@ if(e.target.closest('#insights-retry')&&!insightsLoading)
   });
 const inviteActivity=e.target.closest('[data-insight-activity]');
 if(inviteActivity&&['insikter','swipe'].includes(page())&&!activityInviteBusy)void prepareActivityMessage(inviteActivity.dataset.insightActivity);
+if(e.target.closest('#swipe-overview-retry')&&page()==='swipe'&&!swipeOverviewLoading)void fetchSwipeOverview();
 if(e.target.closest('#home-refresh-notices')&&user&&members.length===2)
   void recheckInboxPair().then(valid=>{
     if(!valid||page()!=='hem')return;
@@ -3102,6 +3159,7 @@ document.addEventListener('keydown',e=>{
 });
 document.addEventListener('submit',async e=>{if(e.target.id==='comm-reflection-form'){e.preventDefault();if(page()!=='kommunikation'||!user)return;const values=Object.fromEntries(new FormData(e.target));const result=buildReflectionPractice(values);updateCommunicationPreview('reflection',result);const output=$('comm-reflection-output');if(output){if(!result)output.textContent='Fyll i alla tre stegen innan du skapar en spegling.';output.focus();}return;}if(e.target.id==='comm-solution-form'){e.preventDefault();if(page()!=='kommunikation'||!user)return;const values=Object.fromEntries(new FormData(e.target));const plan=buildSolutionPlan(values);updateCommunicationPreview('solution',plan);const output=$('comm-solution-output');if(output){if(!plan)output.textContent='Fyll i alla fyra fälten innan du skapar ett utkast.';output.focus();}return;}if(e.target.id==='comm-nvc-form'){e.preventDefault();if(page()!=='nvc'||!user)return;const values=Object.fromEntries(new FormData(e.target));const sentence=buildNvcSentence(values);updateCommunicationPreview('nvc',sentence);const output=$('comm-nvc-output');if(output){if(!sentence)output.textContent='Fyll i alla fyra steg innan du skapar en formulering.';output.focus();}return;}if(e.target.id==='mediator-form'){e.preventDefault();await mediatorExperience.submit();return;}if(e.target.id==='family-chat-form'){e.preventDefault();await sendFamilyChatMessage();return;}if(e.target.id==='schyssta-manual-form'){e.preventDefault();await submitManualSchysstaRule();return;}if(e.target.id!=='live-login')return;await submitLiveLogin(e);});
 window.addEventListener('hashchange',()=>{
+  if(page()!=='swipe'){swipeOverviewRows=[];swipeOverviewError='';swipeOverviewLoading=false;swipeOverviewRequest++;}
   if(page()!=='insikter'){activityInviteError='';insightsRows=[];sharedUnderstandingRows=[];insightsError='';insightsLoading=false;insightsRequest++;}
   if(page()!=='regler'&&page()!=='inkorg'){schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];schysstaNotifications=[];schysstaReplacementLinks=[];schysstaHistory=[];schysstaError='';schysstaLoading=false;schysstaRequest++;}
   render();scrollLiveMainTop();
@@ -3120,6 +3178,7 @@ window.addEventListener('hashchange',()=>{
     });
   }
   if(page()==='insikter')void fetchInsights();
+  if(page()==='swipe'&&user&&members.length===2)void fetchSwipeOverview();
   if(page()==='personlighet')void personalityExperience.refreshShared();
   if(page()==='medlare')void mediatorExperience.loadList();
   if(['regler','inkorg','hem'].includes(page()))void fetchSchysstaList();
@@ -3142,12 +3201,14 @@ document.addEventListener('visibilitychange',()=>{
     void fetchActivityNotifications({quiet:true});
 });
 window.addEventListener('online',()=>{
+  if(page()==='swipe'&&user&&members.length===2)void fetchSwipeOverview({quiet:true});
   if(page()==='insikter'&&user&&members.length===2)void fetchInsights({quiet:true});
   if(schysstaListEnabled&&user&&members.length===2&&!schysstaDraftOpen&&!schysstaLoading
      &&schysstaError&&['hem','inkorg','regler'].includes(page()))void fetchSchysstaList();
 });
 window.addEventListener('focus',()=>{
   void pollSharedMatches();
+  if(page()==='swipe'&&user&&members.length===2)void fetchSwipeOverview({quiet:true});
   if(page()==='insikter'&&user&&members.length===2)
     void recheckInboxPair().then(valid=>{if(valid&&page()==='insikter')void fetchInsights({quiet:true});});
   if(page()==='inkorg'&&user&&members.length===2)void recheckInboxPair();
