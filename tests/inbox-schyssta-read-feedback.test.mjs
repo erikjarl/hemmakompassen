@@ -18,7 +18,7 @@ const production=[
 ].join('\n');
 const noticeId='40000000-0000-4000-8000-000000000091';
 const agreementId='30000000-0000-4000-8000-000000000092';
-function harness({role='parent',fail=true,previous=''}={}){
+function harness({role='parent',fail=true,readback=true,previous=''}={}){
  const frames=[],calls=[],reloads=[];
  const state={
    user:{id:role,email:'test@example.invalid'},
@@ -53,7 +53,7 @@ function harness({role='parent',fail=true,previous=''}={}){
      return Promise.resolve(fail?{data:null,error:{message:'Synthetic offline'}}:{data:null,error:null});
    }},
    render:()=>{frames.push(state.inboxView());},
-   fetchSchysstaList:async()=>{reloads.push('refresh');state.render();}
+   fetchSchysstaList:async()=>{reloads.push('refresh');state.render();return readback;}
  };
  vm.runInNewContext(production+'\nthis.inboxView=inboxView;this.markNotice=markSchysstaRead;',
   state,{filename:'live-app.js'});
@@ -82,4 +82,29 @@ test('FUN-03: a successful Schyssta receipt retry clears the old visible failure
  assert.equal(h.state.schysstaMessage,'','Success must dismiss a stale error');
  assert.doesNotMatch(h.frames.at(-1),/Det gick inte att bekräfta läsmarkeringen/);
  assert.equal(h.state.familyChatDraft,'Privat oskickat utkast');
+});
+
+test('FBK-02-04: successful rule-notice RPC with failed list readback shows uncertainty',async()=>{
+ const h=harness({fail:false,readback:false});
+ await h.state.markNotice(noticeId);
+ assert.equal(h.calls.length,1);
+ assert.equal(h.reloads.length,1);
+ assert.match(h.state.schysstaMessage,/status kunde inte kontrolleras/);
+ assert.match(h.frames.at(-1),/Läsmarkeringen skickades, men aktuell status kunde inte kontrolleras/);
+ assert.equal(h.state.familyChatDraft,'Privat oskickat utkast');
+});
+
+test('FBK-02-04: late readback after account switch must not alter the new inbox',async()=>{
+ const h=harness({fail:false});
+ let release;
+ h.state.fetchSchysstaList=()=>new Promise(resolve=>{release=resolve;});
+ const pending=h.state.markNotice(noticeId);
+ for(let i=0;i<5&&!release;i++)await new Promise(resolve=>setImmediate(resolve));
+ assert.ok(release,'Readback is pending');
+ h.state.user={id:'new-viewer'};
+ h.state.sharedSession++;
+ h.state.schysstaMessage='Ny sessionsstatus';
+ release(false);
+ await pending;
+ assert.equal(h.state.schysstaMessage,'Ny sessionsstatus');
 });
