@@ -164,3 +164,22 @@ for(const outcome of ['rpc-failure','readback-failure']){
   assert.equal(h.calls.length,1);
  });
 }
+
+test('FBK-02-05: two manual submit clicks before RPC reply send one proposal',async()=>{
+ const h=harness();
+ const pending=h.state.submit();
+ await tick();
+ assert.equal(h.state.schysstaSubmitting,true,'The first click must lock submission');
+ await h.state.submit();
+ assert.equal(h.calls.length,1,'Second click must not send another write');
+ h.rpc.resolve({data:id,error:null});
+ await tick();
+ h.state.schysstaManualRules=[{
+   agreement_id:id,body:'Prata lugnt vid matbordet',proposed_by_me:true
+ }];
+ h.get.resolve(true);
+ await pending;
+ assert.equal(h.state.schysstaSubmitting,false);
+ assert.equal(h.state.schysstaDraft,'');
+ assert.match(h.state.schysstaMessage,/Förslaget är sparat/);
+});
