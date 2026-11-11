@@ -5402,6 +5402,20 @@ try{
   await paired.page.waitForFunction(()=>window.__HK_READ_NOTICE__?.args?.p_notification_id==='40000000-0000-4000-8000-000000000001');
   await paired.page.waitForFunction(()=>document.querySelector('#live-app')?.textContent?.includes('Händelser från Schyssta listan'));
   assert.equal(await paired.page.getByRole('button',{name:'Markera som läst'}).count(),0,'Read receipt removes unread action without approving the rule');
+  // FBK-02-04: a confirmed rule-notification read receipt must also clear
+  // both navigation badges, not merely hide the button in the inbox.
+  await paired.page.waitForFunction(()=>!document.querySelector('#live-mobile-nav a[href="#inkorg"] .live-nav-count'));
+  assert.equal(await paired.page.locator('#live-desktop-nav a[href="#inkorg"] .live-nav-count').count(),0,
+    'FBK-02-04: desktop inbox badge clears with the confirmed receipt');
+  assert.equal(await paired.page.locator('#live-mobile-nav a[href="#inkorg"] .live-nav-count').count(),0,
+    'FBK-02-04: mobile bottom navigation badge clears with the confirmed receipt');
+  await paired.page.reload({waitUntil:'load'});
+  await paired.page.getByRole('heading',{name:'Inkorg',exact:true}).waitFor();
+  await paired.page.waitForFunction(()=>!document.querySelector('#live-mobile-nav a[href="#inkorg"] .live-nav-count'));
+  assert.equal(await paired.page.locator('#live-desktop-nav a[href="#inkorg"] .live-nav-count').count(),0,
+    'FBK-02-04: desktop badge stays cleared after reloading server receipts');
+  assert.equal(await paired.page.locator('#live-mobile-nav a[href="#inkorg"] .live-nav-count').count(),0,
+    'FBK-02-04: mobile badge stays cleared after reloading server receipts');
 
   await paired.page.getByRole('button',{name:'Se och svara i Schyssta listan'}).first().click();
   await paired.page.getByRole('heading',{name:'Schyssta listan'}).waitFor();
