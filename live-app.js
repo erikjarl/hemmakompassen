@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261111-inbox-readback-count1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261111-inbox-readback-race1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261111-inbox-readback-count1';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261111-inbox-readback-race1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261111-inbox-readback-count1';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261111-inbox-readback-race1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -419,9 +419,16 @@ async function markAllFamilyChatRead(){
   familyChatCountRequest++;
   familyChatStatus='Läsmarkeringen skickades. Kontrollerar återstående olästa meddelanden…';
   render();
+  const readbackRequest=familyChatCountRequest+1;
   await fetchFamilyChatUnread();
   if(user?.id!==viewer||sharedSession!==session)return false;
   familyChatReadBusy=false;
+  // A later count request can supersede this readback. Its still-pending
+  // result must not be treated as a verified receipt for this action.
+  if(familyChatCountRequest!==readbackRequest){
+    familyChatStatus='Läsmarkeringen skickades, men kontrollen ersattes av en ny uppdatering. Kontrollera olästa meddelanden innan du försöker igen.';
+    render();return false;
+  }
   if(familyChatUnreadError){
     familyChatStatus='Läsmarkeringen skickades, men antalet olästa kunde inte bekräftas. Uppdatera konversationen.';
   }else if(familyChatUnread>0){
