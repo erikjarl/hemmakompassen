@@ -6,6 +6,7 @@ import {runInNewContext} from 'node:vm';
 // Exercise the actual production rule view with server-shaped, synthetic data.
 // This does not impersonate either real test account or change saved answers.
 const app=readFileSync(new URL('../live-app.js',import.meta.url),'utf8');
+const css=readFileSync(new URL('../live-app.css',import.meta.url),'utf8');
 const start=app.indexOf('function schysstaView(){');
 const end=app.indexOf('function section(key){',start);
 assert.ok(start>0&&end>start,'Locate the actual Schyssta view implementation');
@@ -122,4 +123,15 @@ test('FBK-02-05: ordinary Schyssta load error without a decision has no invented
   const html=view({schysstaError:'Kan inte hämta.',schysstaDecisionFeedback:''});
   assert.match(html,/Kunde inte visa listan/);
   assert.doesNotMatch(html,/class="schyssta-feedback"/);
+});
+
+test('UX-SL-02: approved agreements render as rows, without secondary framed cards',()=>{
+  const rule=css.match(/\/\* FBK-02-01 \/ UX-SL-02:[\s\S]*$/)?.[0];
+  assert.ok(rule,'Dedicated approved-row layout is available');
+  assert.match(rule,/data-schyssta-filter-group="approved"\] \.schyssta-list>li\s*\{[\s\S]*?background:transparent;[\s\S]*?border:0;[\s\S]*?border-bottom:1px solid/);
+  assert.match(rule,/\.schyssta-list>li:last-child\s*\{\s*border-bottom:0;/);
+  const html=view();
+  assert.match(html,/<details class="schyssta-approved-details"/,'Accessible disclosure remains the primary interaction');
+  assert.match(html,/<summary><p>Vi lyssnar när den andra pratar\.<\/p><\/summary>/);
+  assert.match(html,/Behöver ditt svar \(1\)/,'Pending proposals are not hidden by approved layout');
 });
