@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261111-schyssta-secondary1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261112-inbox-badge-breakdown1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261111-schyssta-secondary1';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261112-inbox-badge-breakdown1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261111-schyssta-secondary1';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261112-inbox-badge-breakdown1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -1879,8 +1879,17 @@ function menu(){
   const pending=schysstaListEnabled&&user&&members.length===2&&!schysstaError?schysstaNeedsAnswer().length:0;
   const navItem=([key,label])=>{
     const count=key==='inkorg'?(unread+unreadMessages+unreadActivities):key==='regler'?pending:0;
-    const descriptor=key==='inkorg'?' olästa meddelanden och aviseringar':' obesvarade regelförslag';
-    const aria=count?' aria-label="'+label+', '+count+descriptor+'"':'';
+    // Make an inbox badge explainable: a read private chat may still leave
+    // unread rule events or activity cards. Keep the same server-backed counts.
+    const inboxParts=[
+      unreadMessages+' privata meddelanden',
+      unread+' regelhändelser',
+      unreadActivities+' gemensamma kort'
+    ];
+    const descriptor=key==='inkorg'
+      ?'Inkorg, '+count+' olästa totalt: '+inboxParts.join(', ')
+      :label+', '+count+' obesvarade regelförslag';
+    const aria=count?' aria-label="'+esc(descriptor)+'" title="'+esc(descriptor)+'"':'';
     const badge=count?'<span class="live-nav-count" aria-hidden="true">'+(count>9?'9+':count)+'</span>':'';
     const active=route===key||(['mi-foralder','nvc'].includes(route)&&key==='kommunikation')||(route==='insikter'&&key==='swipe');
     return '<a href="#'+key+'"'+(active?' aria-current="page"':'')+aria+'>'+label+badge+'</a>';
