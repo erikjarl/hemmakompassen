@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261111-schyssta-complete-row1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261111-inbox-readback-count1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261111-schyssta-complete-row1';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261111-inbox-readback-count1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261111-schyssta-complete-row1';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261111-inbox-readback-count1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -409,20 +409,28 @@ async function markAllFamilyChatRead(){
   }catch(e){result={error:e};}
   finally{clearTimeout(deadline);}
   if(user?.id!==viewer||sharedSession!==session)return false;
-  familyChatReadBusy=false;
   if(result?.error||!Number.isInteger(result?.data)||result.data<0){
+    familyChatReadBusy=false;
     familyChatStatus='Det gick inte att markera meddelandena som lästa. Inga läskvittenser har bekräftats.';
     render();return false;
   }
-  // A count request started before this RPC must not restore the stale badge.
+  // Invalidate any count request started before the write. Its response must
+  // not restore a stale badge, but neither may the write receipt imply zero.
   familyChatCountRequest++;
-  familyChatUnread=0;familyChatUnreadError=false;
-  familyChatStatus='Alla meddelanden har markerats som lästa.';
+  familyChatStatus='Läsmarkeringen skickades. Kontrollerar återstående olästa meddelanden…';
   render();
-  // Another message may have arrived while the receipt RPC was in flight.
-  // Fetch a fresh authoritative count instead of trusting a stale zero.
-  void fetchFamilyChatUnread();
-  return true;
+  await fetchFamilyChatUnread();
+  if(user?.id!==viewer||sharedSession!==session)return false;
+  familyChatReadBusy=false;
+  if(familyChatUnreadError){
+    familyChatStatus='Läsmarkeringen skickades, men antalet olästa kunde inte bekräftas. Uppdatera konversationen.';
+  }else if(familyChatUnread>0){
+    familyChatStatus=familyChatUnread+' olästa meddelanden finns fortfarande. Du kan kontrollera dem i konversationen.';
+  }else{
+    familyChatStatus='Alla meddelanden har markerats som lästa.';
+  }
+  render();
+  return !familyChatUnreadError&&familyChatUnread===0;
 }
 // A retry is keyed by the actual transmitted body (which is trimmed).
 // Whitespace-only editing must not turn an uncertain send into a duplicate.
