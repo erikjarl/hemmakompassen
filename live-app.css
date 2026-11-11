@@ -1259,3 +1259,12 @@
 @media(max-width:430px){
   .swipe-themes .swipe-more-decks>summary{padding:13px 14px}
 }
+
+/* UX-SL-02: once agreements exist, their text remains the visual focal point.
+   Secondary actions stay discoverable and touch-sized without another dominant card. */
+.schyssta-quick-actions--secondary{background:transparent;border-color:var(--line);box-shadow:none;padding:10px 12px}
+.schyssta-quick-actions--secondary .schyssta-quick-state strong{font-size:1rem;color:var(--soft)}
+.schyssta-quick-actions--secondary .schyssta-quick-state p,.schyssta-quick-actions--secondary .schyssta-quick-counts{color:var(--muted)}
+.schyssta-quick-actions--secondary>.live-button{background:var(--card2);border:1px solid var(--line2);box-shadow:none;color:var(--text)}
+.schyssta-quick-actions--secondary>.live-button:hover{background:var(--card3)}
+.schyssta-quick-actions--secondary>.live-button:focus-visible{outline:3px solid var(--accent);outline-offset:3px}

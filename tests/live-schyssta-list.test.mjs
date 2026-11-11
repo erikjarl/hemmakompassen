@@ -185,7 +185,7 @@ test('Inbox has pair-private messages independent of rule decisions',()=>{
 
 
 test('SL-UX-01: next action, empty state and counts are derived from validated rules',()=>{
- assert.match(app,/const quickActions='<section class="schyssta-quick-actions"/);
+ assert.match(app,/const quickActions='<section class="schyssta-quick-actions'\+\(approved\.length\?' schyssta-quick-actions--secondary':''\)/);
  assert.match(app,/needs\.length===0\?'Inget väntar just nu'/);
  assert.match(app,/approved\.length\+' '/);
  assert.match(app,/ongoing\.length\+' '/);
