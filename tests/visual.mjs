@@ -5067,9 +5067,19 @@ try{
   await acceptedSummary.click();
   await review.locator('summary').click();
   assert.match(await review.innerText(),/Vad har fungerat bra för oss/,'Guide uses open questions, not compliance points');
+  // Secondary exports stay collapsed until intentionally requested, even after rerenders.
+  const exportPanel=paired.page.locator('.schyssta-export-panel');
+  assert.equal(await exportPanel.count(),1,'Agreed rules expose one optional export control');
+  assert.equal(await exportPanel.evaluate(el=>el.open),false,'Copy/download tools start collapsed');
+  assert.equal(await exportPanel.getByRole('button',{name:'Kopiera aktuella regler'}).isVisible(),false,
+    'Copy does not compete visually with agreed rules before expansion');
+  const openExport=async()=>{
+    if(!(await exportPanel.evaluate(el=>el.open)))await exportPanel.locator('summary').click();
+  };
   await paired.page.evaluate(()=>Object.defineProperty(navigator,'clipboard',{configurable:true,value:{
     writeText:async text=>{window.__HK_COPIED_RULES__=text;}
   }}));
+  await openExport();
   await paired.page.getByRole('button',{name:'Kopiera aktuella regler'}).click();
   await paired.page.waitForFunction(()=>typeof window.__HK_COPIED_RULES__==='string');
   const exported=await paired.page.evaluate(()=>window.__HK_COPIED_RULES__);
@@ -5079,6 +5089,7 @@ try{
   await paired.page.evaluate(()=>Object.defineProperty(navigator,'clipboard',{configurable:true,value:{
     writeText:async()=>{throw Error('Synthetic clipboard permission denied');}
   }}));
+  await openExport();
   await paired.page.getByRole('button',{name:'Kopiera aktuella regler'}).click();
   const fallback=paired.page.locator('#schyssta-copy-fallback');
   await fallback.waitFor();
@@ -5098,12 +5109,14 @@ try{
   await paired.page.evaluate(()=>Object.defineProperty(navigator,'clipboard',{configurable:true,value:{
     writeText:async text=>{window.__HK_RETRY_COPIED_RULES__=text;}
   }}));
+  await openExport();
   await paired.page.getByRole('button',{name:'Kopiera aktuella regler'}).click();
   await paired.page.waitForFunction(()=>typeof window.__HK_RETRY_COPIED_RULES__==='string');
   assert.equal(await paired.page.locator('#schyssta-copy-fallback').count(),0,
     'Manual fallback disappears after successful clipboard retry');
   assert.match(await paired.page.locator('[data-schyssta-filter-group="approved"] .schyssta-feedback').innerText(),/kopierats/);
   const schysstaDownloadPromise=paired.page.waitForEvent('download');
+  await openExport();
   await paired.page.getByRole('button',{name:'Ladda ner som textfil'}).click();
   const schysstaDownload=await schysstaDownloadPromise;
   assert.equal(schysstaDownload.suggestedFilename(),'schyssta-listan-overenskommelser.txt');
