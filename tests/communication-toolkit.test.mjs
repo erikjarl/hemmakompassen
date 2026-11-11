@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {COMMUNICATION_SOURCES,renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from '../communication/toolkit.js';
+import {COMMUNICATION_SOURCES,renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from '../communication/toolkit.js';
 const app=readFileSync(new URL('../live-app.js',import.meta.url),'utf8');
 const builder=readFileSync(new URL('../scripts/build-static.mjs',import.meta.url),'utf8');
 
@@ -226,4 +226,16 @@ test('all three private preview generators expose accessible copy and manual-sel
  assert.match(app,/if\(!current\(\)\)return/);
  assert.doesNotMatch(source,/\blocalStorage\b|\bsessionStorage\b|\bsupabase\b|\bfetch\s*\(/,
   'The copy controls never gain persistence or remote data access');
+});
+
+test('FBK-02-02: NVC AI rejects labelled fragments and lists, keeping four-part draft available',()=>{
+  assert.equal(normalizeNvcAiReply('Observation: någon avbröt mig\\nKänsla: ledsen'),null);
+  assert.equal(normalizeNvcAiReply('1. Observation: vi pratade\\n2. Känsla: trött'),null);
+  assert.equal(normalizeNvcAiReply('- Jag blev frustrerad\\n- Jag önskar lugn'),null);
+  assert.equal(normalizeNvcAiReply('## Din NVC-formulering\\nNär vi pratar blir jag trött.'),null);
+  const sentence='När vi pratar samtidigt känner jag mig stressad. Jag behöver lugn. Kan vi turas om att prata?';
+  assert.equal(normalizeNvcAiReply(sentence),sentence);
+  assert.equal(normalizeNvcAiReply('Jag behöver lugn och vill be om en paus.'),'Jag behöver lugn och vill be om en paus.');
+  const prompt=buildNvcAiPrompt({observation:'Vi pratar samtidigt',feeling:'stressad',need:'lugn',request:'en paus'});
+  assert.match(prompt,/utan rubriker, fältetiketter, punktlista/);
 });

@@ -213,7 +213,7 @@ export function buildNvcAiPrompt(input={}){
  return 'Skriv EN kort (högst 65 ord), naturlig och grammatiskt korrekt svensk NVC-formulering i jagform. '+
   'Utgå från observation, känsla, behov och ett konkret, frivilligt önskemål. '+
   'Rätta ordformer och ordföljd utan att hitta på något om situationen eller lägga till råd. '+
-  'Svara bara med den färdiga formuleringen, utan rubrik, förklaring eller följdfråga.\n'+
+  'Svara bara med den färdiga formuleringen, utan rubriker, fältetiketter, punktlista, förklaring eller följdfråga.\n'+
   'Observation: '+a[0]+'\nKänsla: '+a[1]+'\nBehov: '+a[2]+'\nÖnskemål: '+a[3];
 }
 // The prompt's 65-word limit is not a guarantee: model outputs are untrusted.
@@ -221,7 +221,11 @@ export function buildNvcAiPrompt(input={}){
 // observation, feeling, need or request mid-sentence.
 export function normalizeNvcAiReply(value){
  if(typeof value!=='string')return null;
- const reply=value.trim().replace(/\s+/gu,' ');
+ const original=value.trim();
+ // Reject field-by-field output and lists: the AI button promises one natural
+ // utterance, not a repeat of the four labelled draft fields.
+ if(/(?:^|\n)\s*(?:#{1,6}\s+|[-*]\s+|\d+[.)]\s+|(?:observation|känsla|behov|önskemål)\s*:)/iu.test(original))return null;
+ const reply=original.replace(/\s+/gu,' ');
  // A punctuation-only response is not a usable sentence, even if it is short.
  // Keep the four-part local draft rather than claiming such output is ready.
  if(!reply||reply.length>600||reply.split(' ').length>65||!/\p{L}/u.test(reply))return null;
