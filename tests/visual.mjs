@@ -189,10 +189,10 @@ async function verifySchysstaMobileHierarchy(){
           role+' '+width+'px: rule administration initially collapsed');
         assert.equal(await approvedRow.getByRole('button',{name:'Föreslå ändring'}).isVisible(),false,
           role+' '+width+'px: change control should be hidden until expansion');
-        await disclosure.locator('summary').click();
+        await disclosure.locator(':scope > summary').click();
         assert.equal(await approvedRow.getByRole('button',{name:'Föreslå ändring'}).isVisible(),true,
           role+' '+width+'px: rule administration accessible after expansion');
-        await disclosure.locator('summary').click();
+        await disclosure.locator(':scope > summary').click();
         // UX-03: loading a deep-linked page may set the active tab before
         // asynchronous family data makes the nav visible. It must end fully
         // inside the unobscured tab strip, not beneath the feedback button.
