@@ -598,7 +598,7 @@ async function captureFunctionalInventory(){
         await page.getByRole('heading',{name:'Kunde inte visa listan'}).waitFor();
         await page.evaluate(()=>{window.__HK_SCHYSSTA_CLEAN_RPC__=true;});
         await page.locator('#schyssta-retry').click();
-        await page.getByRole('heading',{name:'Gemensamma förslag'}).waitFor();
+        await page.getByRole('heading',{name:'Våra överenskommelser'}).waitFor();
         assert.equal(await page.locator('.schyssta-quick-actions [data-schyssta-start]').count(),1,
           'FUN-03: recovered rule view exposes its normal compose action');
       }
@@ -5013,7 +5013,9 @@ try{
   assert.doesNotMatch(await paired.page.locator('.live-main').innerText(),/Falsk text|Okänd privat uppgift/,'Unexpected server rows are never rendered');
   await paired.page.evaluate(()=>{window.__HK_SCHYSSTA_CLEAN_RPC__=true;});
   await paired.page.locator('#schyssta-retry').click();
-  await paired.page.getByRole('heading',{name:'Gemensamma förslag'}).waitFor();
+  await paired.page.getByRole('heading',{name:'Våra överenskommelser'}).waitFor();
+   await paired.page.locator('.schyssta-extra-panel > summary').click();
+   await paired.page.getByRole('heading',{name:'Gemensamma förslag'}).waitFor();
   const schysstaText=await paired.page.locator('.schyssta-view').innerText();
   assert.match(schysstaText,/Vi knackar innan vi går in i varandras rum/,'One allowlisted server suggestion is visible');
   assert.match(schysstaText,/Vi får pausa gräl/,'Existing family proposal is visible');
@@ -5100,6 +5102,7 @@ try{
     'All badges belong to their direct tabs; no More menu remains');
   assert.match(await paired.page.locator('#live-mobile-nav a[href="#regler"]').getAttribute('aria-label'),/2 obesvarade regelförslag/,'Navigation text announces the meaning of the count');
   // Search and status filters never hide incoming requests requiring the user's answer.
+  await paired.page.locator('.schyssta-search-panel > summary').click();
   const search=paired.page.locator('#schyssta-search');
   await search.fill('LÅNAR');
   assert.equal(await paired.page.locator('[data-schyssta-filter-group="approved"] .schyssta-list>li:visible').count(),1,
@@ -5654,7 +5657,7 @@ try{
   assert.equal(await desktopInsights.page.locator('.schyssta-list li').count(),0,'Desktop also rejects the entire malformed Schyssta payload');
   await desktopInsights.page.evaluate(()=>{window.__HK_SCHYSSTA_CLEAN_RPC__=true;});
   await desktopInsights.page.locator('#schyssta-retry').click();
-  await desktopInsights.page.getByRole('heading',{name:'Gemensamma förslag'}).waitFor();
+  await desktopInsights.page.getByRole('heading',{name:'Våra överenskommelser'}).waitFor();
   await checkOverflow(desktopInsights.page,'Desktop Schyssta listan');
   await capture(desktopInsights.page,'desktop-schyssta-list.png');
   await desktopInsights.context.close();
