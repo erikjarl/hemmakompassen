@@ -1061,11 +1061,17 @@ function swipeOverviewView(){
     if(row.answer!==true||!matched)continue;
     const category=matched.category;
     if(!groups.has(category))groups.set(category,[]);
-    groups.get(category).push({statement:cardTextForRole(matched,viewerRole())});
+    groups.get(category).push({statement:cardTextForRole(matched,viewerRole()),activity:row.deck_id==='aktiviteter'});
   }
+  // Put shared activities first regardless of which deck the matching category
+  // originally came from. Keep the server-confirmed match set unchanged.
+  const sortedGroups=[...groups.entries()].sort((a,b)=>
+    Number(b[1].some(item=>item.activity))-Number(a[1].some(item=>item.activity)));
+  const activityMatches=swipeOverviewRows.filter(row=>row.deck_id==='aktiviteter').length;
   const count=swipeOverviewRows.length;
   return title+'<p class="live-muted">'+(count?count+' gemensamma ja-svar från de kortlekar ni har använt.':'Inga gemensamma ja-svar hittades ännu.')+' Bara kort där båda har svarat ja visas. Förståelsekort visas separat när de uttryckligen delas.</p>'+
-    (groups.size?'<ul class="swipe-match-list swipe-unified-list">'+[...groups.entries()].map(([category,items])=>
+    (activityMatches?'<p class="swipe-unified-next-step"><strong>Att göra tillsammans:</strong> Ni har '+activityMatches+' gemensamma ja-svar om aktiviteter. Välj gärna en aktivitet i listan och föreslå en dag att göra den tillsammans. Ett ja är ett intresse, inte en överenskommelse.</p>':'')+
+    (groups.size?'<ul class="swipe-match-list swipe-unified-list">'+sortedGroups.map(([category,items])=>
       '<li><div><h3>'+esc(category)+' · '+items.length+' gemensamma</h3><ul class="swipe-unified-statements">'+items.map(item=>'<li>'+esc(item.statement)+'</li>').join('')+'</ul></div></li>').join('')+'</ul>':'')+
     '<a href="#insikter" class="insights-back-link">Visa alla gemensamma insikter och delade förståelsekort</a></section>';
 }
