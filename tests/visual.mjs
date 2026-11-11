@@ -4737,6 +4737,8 @@ try{
     "FUN-SW-02: result groups by category across decks without separate deck cards");
   assert.equal(await paired.page.locator('.swipe-unified-overview .swipe-unified-next-step').count(),0,
     'FUN-SW-02: conversation and general YES matches must not produce an invented activity invitation');
+  assert.equal(await paired.page.locator(".swipe-unified-overview a[href='#insikter']").count(),1,
+    "FUN-SW-02: expressly shared understanding remains on its own consent-controlled route");
   await paired.page.getByRole("heading",{name:"Det ni båda svarat ja till"}).waitFor();
   await paired.page.locator(".swipe-match-group h4").filter({hasText:"Relationer"}).waitFor();
   assert.equal(await paired.page.locator(".swipe-results .swipe-match-list li").count(),2,"Only catalogued mutual YES cards appear; malicious RPC NO, B and unknown cards are discarded");
