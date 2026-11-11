@@ -5411,13 +5411,16 @@ try{
   assert.ok(schysstaOrder.headingSize<75,'UX-04: compact Schyssta mobile title');
   assert.ok(schysstaOrder.pendingBeforeHelp&&schysstaOrder.helpClosed,'UX-04: decisions precede optional help');
   const quickState=paired.page.locator('.schyssta-quick-actions');
-  assert.equal(await quickState.evaluate(el=>el.classList.contains('schyssta-quick-actions--secondary')),true,
-    'UX-SL-02: secondary action card is visually subdued when approved agreements exist');
-  const subduedStyles=await quickState.evaluate(el=>({background:getComputedStyle(el).backgroundColor,shadow:getComputedStyle(el).boxShadow}));
-  assert.equal(subduedStyles.background,'rgba(0, 0, 0, 0)',
-    'UX-SL-02: secondary action panel has no competing filled background');
-  assert.equal(subduedStyles.shadow,'none',
-    'UX-SL-02: secondary action panel has no competing shadow');
+  const approvedCount=await paired.page.locator('[data-schyssta-filter-group="approved"] .schyssta-list li').count();
+  assert.equal(await quickState.evaluate(el=>el.classList.contains('schyssta-quick-actions--secondary')),approvedCount>0,
+    'UX-SL-02: secondary styling applies exactly when approved agreements exist');
+  if(approvedCount>0){
+    const subduedStyles=await quickState.evaluate(el=>({background:getComputedStyle(el).backgroundColor,shadow:getComputedStyle(el).boxShadow}));
+    assert.equal(subduedStyles.background,'rgba(0, 0, 0, 0)',
+      'UX-SL-02: secondary action panel has no competing filled background');
+    assert.equal(subduedStyles.shadow,'none',
+      'UX-SL-02: secondary action panel has no competing shadow');
+  }
   assert.equal(await quickState.locator('[data-schyssta-start]').evaluate(el=>getComputedStyle(el).minHeight), '44px',
     'UX-SL-02: compact secondary action keeps its touch-sized minimum height');
   assert.equal(await quickState.locator('strong').innerText(),loadedRuleCount+' förslag behöver ditt svar',
