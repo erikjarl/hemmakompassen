@@ -1135,7 +1135,7 @@
 .schyssta-view .schyssta-approved-item{padding:0!important;overflow:hidden}
 .schyssta-approved-details>summary{display:flex;align-items:center;gap:14px;padding:13px 16px;cursor:pointer;list-style:none;min-height:44px;box-sizing:border-box}
 .schyssta-approved-details>summary::-webkit-details-marker{display:none}
-.schyssta-approved-details>summary>p{margin:0;flex:1;min-width:0;font-size:15px;line-height:1.5;overflow-wrap:anywhere;color:#f8f4e9}
+.schyssta-approved-details>summary>p{margin:0;flex:1;min-width:0;font-size:clamp(17px,2.1vw,19px);font-weight:600;line-height:1.5;overflow-wrap:anywhere;color:#f8f4e9}
 .schyssta-approved-details>summary::after{content:'▸';flex:none;font-size:20px;line-height:1;color:#f4cf91}
 .schyssta-approved-details[open]>summary::after{content:'▾'}
 .schyssta-approved-details>summary:focus-visible{outline:3px solid #f5c16e;outline-offset:-4px;border-radius:11px}
