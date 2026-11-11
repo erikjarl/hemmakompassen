@@ -2297,6 +2297,8 @@ async function proposeSchysstaRule(cardId){
   if(!schysstaListEnabled||!user||!SCHYSSTA_RULES[cardId]||schysstaSaving.has(cardId))return;
   const viewer=user.id,session=sharedSession;
   if(!await preflightSchysstaWrite(viewer,session)||schysstaSaving.has(cardId))return;
+  // Feedback from a previous proposal must not look like confirmation of this one.
+  schysstaDecisionFeedback='';
   schysstaSaving.add(cardId);render();
   let error;try{({error}=await schysstaWriteRpc(db.rpc('propose_schyssta_rule',{p_card_id:cardId})));}catch(e){error=e;}
   // A response from a former account/family may not release the current
