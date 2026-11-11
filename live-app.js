@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261111-schyssta-error-heading1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261111-schyssta-saving-label1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261111-schyssta-error-heading1';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261111-schyssta-saving-label1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261111-schyssta-error-heading1';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261111-schyssta-saving-label1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -2410,7 +2410,7 @@ function schysstaView(){
   const itemHtml=item=>{
     const source=schysstaReplacementLinks.some(link=>link.agreement_id===item.agreement_id)?'Ändringsförslag':item.source_card_id?'Från Gillaswajpen':'Eget regelförslag';
     const action=schysstaSaving.has(item.agreement_id);
-    const submitButton=(approved,label,style='live-button')=>'<button class="'+style+'" type="button" data-schyssta-decision="'+item.agreement_id+'" data-approved="'+approved+'"'+(action?' disabled':'')+'>'+label+'</button>';
+    const submitButton=(approved,label,style='live-button')=>'<button class="'+style+'" type="button" data-schyssta-decision="'+item.agreement_id+'" data-approved="'+approved+'"'+(action?' disabled aria-busy="true"':'')+'>'+(action?'Sparar…':label)+'</button>';
     const decisionActions=item.status==='accepted'
       ?''
       :item.status==='rejected'
@@ -2470,7 +2470,7 @@ function schysstaView(){
     +'</select>'
     +'<p class="live-muted">Sökning och statusfilter gäller listorna med godkända regler och övriga förslag. Förslag som behöver ditt svar visas separat ovanför sökningen.</p>'
     +'<p id="schyssta-filter-summary" role="status" aria-live="polite"></p></div>';
-  const suggestionHtml=schysstaSuggestions.length?'<ul class="schyssta-list">'+schysstaSuggestions.map(item=>'<li><p>'+esc(item.body)+'</p><button class="live-button" type="button" data-schyssta-propose="'+esc(item.card_id)+'"'+(schysstaSaving.has(item.card_id)?' disabled':'')+'>Föreslå</button></li>').join('')+'</ul>':'<p class="live-muted">Inga nya gemensamma ja-förslag finns just nu.</p>';
+  const suggestionHtml=schysstaSuggestions.length?'<ul class="schyssta-list">'+schysstaSuggestions.map(item=>'<li><p>'+esc(item.body)+'</p><button class="live-button" type="button" data-schyssta-propose="'+esc(item.card_id)+'"'+(schysstaSaving.has(item.card_id)?' disabled aria-busy="true"':'')+'>'+(schysstaSaving.has(item.card_id)?'Skickar…':'Föreslå')+'</button></li>').join('')+'</ul>':'<p class="live-muted">Inga nya gemensamma ja-förslag finns just nu.</p>';
   const firstRuleHint=rules.length===0
     ?card('<h2>Kom igång tillsammans</h2><p>Ni har inte gjort någon gemensam överenskommelse än. Ni kan skriva ett eget förslag eller hitta idéer i Gillaswajpen.</p><div class="schyssta-actions"><a class="schyssta-secondary" href="#swipe">Hitta idéer i Gillaswajpen</a></div>')
     :'';
