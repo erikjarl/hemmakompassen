@@ -2254,8 +2254,8 @@ function inboxView(){
 async function fetchSchysstaList(){
   const request=++schysstaRequest,viewer=user?.id,session=sharedSession;
   schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];schysstaNotifications=[];schysstaReplacementLinks=[];schysstaHistory=[];schysstaError='';
-  if(!schysstaListEnabled||!viewer||members.length!==2){schysstaLoading=false;if(['regler','inkorg','hem'].includes(page()))render();return false;}
-  schysstaLoading=true;if(['regler','inkorg','hem'].includes(page()))render();
+  if(!schysstaListEnabled||!viewer||members.length!==2){schysstaLoading=false;if(['regler','inkorg','hem'].includes(page()))render();else menu();return false;}
+  schysstaLoading=true;if(['regler','inkorg','hem'].includes(page()))render();else menu();
   let results,timeoutHandle;
   try{
     const pending=Promise.all([db.rpc('shared_schyssta_rule_suggestions'),db.rpc('my_schyssta_rules'),db.rpc('my_manual_schyssta_rules'),db.rpc('my_schyssta_notifications'),db.rpc('my_schyssta_replacement_links'),db.rpc('my_schyssta_rule_history')]);
@@ -2282,7 +2282,7 @@ async function fetchSchysstaList(){
     const pendingIds=new Set(schysstaAllRules().filter(row=>row.status==='proposed'&&row.own_decision===null).map(row=>row.agreement_id));
     for(const id of schysstaPausedIds)if(!pendingIds.has(id))schysstaPausedIds.delete(id);
   }
-  if(['regler','inkorg','hem'].includes(page()))render();
+  if(['regler','inkorg','hem'].includes(page()))render();else menu();
   if(page()==='regler'&&schysstaFocusId){
     const id=schysstaFocusId;schysstaFocusId='';
     requestAnimationFrame(()=>{
