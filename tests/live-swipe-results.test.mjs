@@ -398,3 +398,23 @@ console.log('PASS: all-deck insights gate, A-only sanitizer, B/NO isolation, ses
     'Category belonging only to a private B card must never become an active filter');
   assert.doesNotMatch(invalid,/data-shared-match-filter="Känslor"/);
 }
+
+
+{
+  // A theme still leads with its active question, but displays the same
+  // server-confirmed, all-deck overview before private tools or legacy results.
+  const start=script.indexOf('function themeSwipeView(){');
+  const end=script.indexOf('function reopenThemeReview(){',start);
+  assert.ok(start>=0&&end>start,'Theme view source is available');
+  const theme=script.slice(start,end);
+  const sequence=[
+    "privateSwipeExportControls()",
+    "privateThemeAnswerReview(deck)",
+    "swipeResults(deck.id)"
+  ];
+  const overview=theme.lastIndexOf('swipeOverviewView()');
+  assert.ok(overview>=0,'Theme view renders shared all-deck overview');
+  for(const expression of sequence)
+    assert.ok(theme.lastIndexOf(expression)>overview,
+      'All-deck summary precedes secondary control: '+expression);
+}
