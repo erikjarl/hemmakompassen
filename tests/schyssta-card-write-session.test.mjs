@@ -64,6 +64,20 @@ test('FBK-02-05: card proposal stays locked during readback and warns when verif
   assert.match(h.state.schysstaDecisionFeedback,/kontrollera om förslaget redan finns/);
 });
 
+test('FBK-02-05: new proposal clears a previous saved receipt before asynchronous write',async()=>{
+  const h=harness();
+  h.state.schysstaDecisionFeedback='Förra förslaget är sparat.';
+  const underway=h.state.propose(deck);
+  await tick();
+  assert.equal(h.calls.length,1);
+  assert.equal(h.state.schysstaDecisionFeedback,'',
+    'Old success must not imply that the new proposal has been saved');
+  h.gate.resolve({error:{message:'Network problem'}});
+  await underway;
+  assert.equal(h.state.schysstaDecisionFeedback,'');
+  assert.match(h.state.schysstaError,/kunde inte bekräfta/);
+});
+
 test('FBK-02-05: proposal confirmation requires the submitted card ID in the server list',async()=>{
   for(const [rules,expected] of [
     [[{agreement_id:id,source_card_id:deck}],/Förslaget är sparat/],
