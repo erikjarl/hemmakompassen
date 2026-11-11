@@ -29,7 +29,7 @@ function scenario({allowed=true,moveSession=false,editDraft=false}={}){
   schysstaSubmitting:false,schysstaLoading:false,schysstaError:'',schysstaMessage:'',
   schysstaDraft:'Vi pratar om våra gemensamma regler',schysstaDraftOpen:true,
   schysstaDraftKey:null,schysstaEditTarget:null,
-  schysstaManualRules:[],schysstaReplacementLinks:[],
+  schysstaManualRules:[],schysstaReplacementLinks:[],schysstaNotifications:[],schysstaHistory:[],
   SCHYSSTA_RULES:{'regler-01':'En enkel regel'},
   SCHYSSTA_UUID:/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
   crypto:{randomUUID:()=>ID},
