@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261111-nvc-ai-output-validator1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261111-inbox-chat-load-count1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261111-nvc-ai-output-validator1';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261111-inbox-chat-load-count1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261111-nvc-ai-output-validator1';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261111-inbox-chat-load-count1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -362,7 +362,9 @@ async function fetchFamilyChat(older=false,{quiet=false,preserveStatus=false}={}
     if(!older){
       familyChatMessages=[];familyChatHasMore=false;familyChatHistoryVerified=false;
       // Message loading cannot establish a trusted unread count.
-      // Do not present a zero as confirmed until the count RPC succeeds.
+      // Invalidate a still-pending count RPC, so its older success cannot
+      // restore a misleading navigation badge after the failed history load.
+      familyChatCountRequest++;
       familyChatUnread=0;familyChatUnreadError=true;
     }
   }else{
