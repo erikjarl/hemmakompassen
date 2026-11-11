@@ -120,3 +120,23 @@ test('FBK-02-05: old account readback cannot touch new draft',async()=>{
  assert.equal(h.state.schysstaDraft,'Ny persons utkast');
  assert.equal(h.state.schysstaSubmitting,true);
 });
+
+test('FBK-02-05: rule-list error panel shows failed proposal readback guidance',()=>{
+ const start=app.indexOf('function schysstaView(){');
+ const end=app.indexOf('  const statusLabel=',start);
+ assert.ok(start>=0&&end>start);
+ const earlyView=app.slice(start,end)+'}';
+ const state={
+   schysstaListEnabled:true,members:[{},{}],schysstaLoading:false,
+   schysstaError:'Listan kunde inte hämtas',
+   schysstaMessage:'Förslaget skickades, men kunde inte bekräftas i listan.',
+   schysstaDecisionFeedback:'',
+   card:html=>'<section>'+html+'</section>',
+   esc:value=>String(value).replaceAll('&','&amp;').replaceAll('<','&lt;')
+ };
+ vm.runInNewContext(earlyView+'\nthis.view=schysstaView;',state,{filename:'live-app.js'});
+ const html=state.view();
+ assert.match(html,/Kunde inte visa listan/);
+ assert.match(html,/Förslaget skickades, men kunde inte bekräftas i listan/);
+ assert.match(html,/id="schyssta-retry"/);
+});
