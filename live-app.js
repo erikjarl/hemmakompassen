@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261111-inbox-badge-pair1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261111-schyssta-complete-row1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261111-inbox-badge-pair1';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261111-schyssta-complete-row1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261111-inbox-badge-pair1';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261111-schyssta-complete-row1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -1879,7 +1879,11 @@ function validSchysstaRule(row){
     ||!SCHYSSTA_UUID.test(row.agreement_id)||SCHYSSTA_RULES[row.source_card_id]!==row.body||!['proposed','accepted','rejected'].includes(row.status))return false;
   if(typeof row.proposed_by_me!=='boolean'||![true,false,null].includes(row.own_decision)||![true,false,null].includes(row.parent_decision)||![true,false,null].includes(row.teen_decision))return false;
   const allowed=['agreement_id','source_card_id','body','status','proposed_by_me','own_decision','parent_decision','teen_decision','created_at'];
-  return Object.keys(row).every(key=>allowed.includes(key))&&(!row.created_at||!Number.isNaN(Date.parse(row.created_at)));
+  // This RPC returns all nine columns. Missing vote/timestamp fields must not
+  // masquerade as a valid pending decision after a server readback.
+  return Object.keys(row).length===allowed.length
+    &&Object.keys(row).every(key=>allowed.includes(key))
+    &&typeof row.created_at==='string'&&!Number.isNaN(Date.parse(row.created_at));
 }
 function validSchysstaPayload(suggestions,rules){
   // An unexpected response must not be mistaken for a complete, trustworthy list.
