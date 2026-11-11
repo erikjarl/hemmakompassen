@@ -2769,6 +2769,14 @@ async function verifyPairedRuleRevisionAndHistory(){
     records.push({case:'two-votes-replace-original-and-archive-old-text',passed:true});
 
     // Clipboard denial must show a readable, selectable current rule in teen role too.
+    // Export is deliberately collapsed so the accepted rule remains primary.
+    const teenExportPanel=teen.page.locator('.schyssta-export-panel');
+    assert.equal(await teenExportPanel.count(),1,'Teen sees one optional export control');
+    assert.equal(await teenExportPanel.evaluate(el=>el.open),false,
+      'Teen export starts collapsed after reloading the updated agreements');
+    await teenExportPanel.locator('summary').click();
+    assert.equal(await teenExportPanel.evaluate(el=>el.open),true,
+      'Teen can explicitly reveal clipboard and download actions');
     await teen.page.evaluate(()=>Object.defineProperty(navigator,'clipboard',{configurable:true,value:{
       writeText:async()=>{throw Error('Synthetic denied clipboard');}
     }}));
