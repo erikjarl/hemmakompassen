@@ -4742,7 +4742,7 @@ try{
   // Only synthetic RPC fixture data is changed; no real test answers are written.
   const pairedActivity=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},
     {authenticated:true,paired:true});
-  await pairedActivity.page.addInitScript(()=>{
+  await pairedActivity.page.evaluate(()=>{
     window.__HK_TEST_SHARED_MATCHES__=[
       {deck_id:'aktiviteter',card_id:'aktiviteter-01',answer:true},
       {deck_id:'samtal',card_id:'samtal-01',answer:true},
