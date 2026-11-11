@@ -4627,7 +4627,7 @@ try{
    assert.equal(await moreDecks.locator('h3:visible').count(),0,'Extra deck previews do not compete with completed results');
    await moreDecks.locator('summary').click();
    assert.equal(await moreDecks.locator('h3:visible').count(),6,'All six locked deck previews become visible on user request');
-  assert.match(await teenReview.page.locator('.swipe-finished').innerText(),/34 svar/,'All answers are loaded before review');
+  assert.match(await teenReview.page.locator('.swipe-finished').innerText(),/34 sparade svar/,'All answers are loaded before review');
   await teenReview.page.locator('.swipe-finished summary').click();
    await teenReview.page.locator('#swipe-restart').click();
   await teenReview.page.locator("#swipe-card[aria-label^='Kort 1 av 34']").waitFor();
