@@ -4760,6 +4760,32 @@ try{
     'FUN-SW-02: the activity invitation links to a concrete next step');
   await checkOverflow(pairedActivity.page,'FUN-SW-02 shared activity invitation 390px');
   await capture(pairedActivity.page,'mobile-swipe-activity-invitation.png');
+  // A revoked mutual activity must disappear on the next authoritative
+  // snapshot, while an unrelated confirmed conversation match remains.
+  await pairedActivity.page.evaluate(()=>{
+    window.__HK_TEST_SHARED_MATCHES__=[
+      {deck_id:'aktiviteter',card_id:'aktiviteter-01',answer:false},
+      {deck_id:'samtal',card_id:'samtal-01',answer:true}
+    ];
+  });
+  await pairedActivity.page.goto(base+'#hem',{waitUntil:'load'});
+  await pairedActivity.page.goto(base+'#swipe',{waitUntil:'load'});
+  await pairedActivity.page.locator('.swipe-unified-list > li').first().waitFor();
+  assert.equal(await pairedActivity.page.locator('.swipe-unified-next-step').count(),0,
+    'FUN-SW-02: revoked activity JA+JA must remove the shared invitation');
+  assert.match(await pairedActivity.page.locator('.swipe-unified-overview').innerText(),/1 gemensamma ja-svar/,
+    'FUN-SW-02: revocation keeps only the remaining server-confirmed conversation match');
+  assert.equal(await pairedActivity.page.locator('.swipe-unified-statements > li').count(),1,
+    'FUN-SW-02: revocation removes stale activity text from the unified list');
+  // If the authoritative RPC fails after a valid result, the UI must fail
+  // closed instead of showing the previously suggested activity again.
+  await pairedActivity.page.evaluate(()=>{window.__HK_RPC_UNAVAILABLE__=true;});
+  await pairedActivity.page.goto(base+'#hem',{waitUntil:'load'});
+  await pairedActivity.page.goto(base+'#swipe',{waitUntil:'load'});
+  await pairedActivity.page.locator('.swipe-unified-overview [role="alert"]').waitFor();
+  assert.equal(await pairedActivity.page.locator('.swipe-unified-next-step, .swipe-unified-list > li').count(),0,
+    'FUN-SW-02: RPC failure must not retain stale invitations or shared statements');
+  await checkOverflow(pairedActivity.page,'FUN-SW-02 revoked activity and failed RPC 390px');
   await pairedActivity.context.close();
   assert.equal(await paired.page.locator(".swipe-unified-overview a[href='#insikter']").count(),1,
     "FUN-SW-02: expressly shared understanding remains on its own consent-controlled route");
