@@ -259,3 +259,27 @@ test('FBK-02-05: delayed decision readback from an old session cannot overwrite 
   assert.equal(h.state.schysstaSaving.has(id),true);
   assert.equal(h.state.schysstaDecisionFeedback,'Ny användares besked');
 });
+
+test('FBK-02-05: Schyssta error view distinguishes failed action confirmation from failed list fetch',()=>{
+  const begin=production.indexOf('function schysstaView(){');
+  const end=production.indexOf('\nfunction section(key){',begin);
+  assert.ok(begin>=0&&end>begin,'Find production Schyssta view');
+  const state={
+    schysstaListEnabled:true,members:[{id:'a'},{id:'b'}],
+    schysstaLoading:false,
+    schysstaError:'Det gick inte att bekräfta om ditt val sparades.',
+    schysstaDecisionFeedback:'Kontrollera aktuell status.',
+    schysstaMessage:'',
+    card:content=>content,esc:value=>String(value)
+  };
+  vm.runInNewContext(production.slice(begin,end)+'\nthis.view=schysstaView;',state);
+  const uncertain=state.view();
+  assert.match(uncertain,/Kunde inte bekräfta åtgärden/);
+  assert.match(uncertain,/Kontrollera aktuell status/);
+  assert.match(uncertain,/schyssta-retry/);
+  state.schysstaError='Schyssta listan kunde inte hämtas.';
+  state.schysstaDecisionFeedback='';
+  const fetchError=state.view();
+  assert.match(fetchError,/Kunde inte visa listan/);
+  assert.doesNotMatch(fetchError,/Kunde inte bekräfta åtgärden/);
+});
