@@ -90,7 +90,7 @@ test('FBK-02-04: successful rule-notice RPC with failed list readback shows unce
  assert.equal(h.calls.length,1);
  assert.equal(h.reloads.length,1);
  assert.match(h.state.schysstaMessage,/inte att bekräfta att aviseringen är läst/);
- assert.match(h.frames.at(-1),/Läsmarkeringen skickades, men aktuell status kunde inte kontrolleras/);
+ assert.match(h.frames.at(-1),/Läsmarkeringen skickades, men det gick inte att bekräfta att aviseringen är läst/);
  assert.equal(h.state.familyChatDraft,'Privat oskickat utkast');
 });
 
