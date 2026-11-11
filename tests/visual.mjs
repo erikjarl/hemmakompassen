@@ -5302,6 +5302,9 @@ try{
   await manualRule.waitFor();
   assert.match(await manualRule.innerText(),/Väntar på bådas beslut/,'Manual proposal remains pending');
   assert.match(await manualRule.innerText(),/Ditt val: inte lämnat/,'Submitting never approves own manual proposal');
+  await paired.page.getByRole('heading',{name:/^Behöver ditt svar/}).locator('..').locator('#schyssta-rule-30000000-0000-4000-8000-000000000002').waitFor();
+  assert.match(await paired.page.getByRole('heading',{name:/^Behöver ditt svar/}).innerText(),/\([2-9]\)/,
+    'An own proposal with no decision joins the pending queue along with the incoming proposal');
   await paired.page.getByRole('button',{name:'Föreslå ändring'}).first().click();
   assert.equal(await paired.page.locator('#schyssta-body').inputValue(),'Vi frågar innan vi lånar saker.','Approved text is copied to change editor');
   await paired.page.locator('#schyssta-body').fill('Vi frågar varandra innan vi lånar något.');
@@ -5362,7 +5365,8 @@ try{
 
   const inboxText=await paired.page.locator('#live-app').innerText();
   assert.match(inboxText,/Vi pratar om hur vi delar på sysslorna/,'Inbox shows other member pending manual request');
-  assert.doesNotMatch(inboxText,/Vi planerar veckans sysslor på söndag/,'Inbox does not present sender own proposal as incoming');
+  assert.match(inboxText,/Vi planerar veckans sysslor på söndag/,'An unanswered own proposal also needs a decision and is listed among pending requests');
+  assert.doesNotMatch((await paired.page.locator('.schyssta-unread').allInnerTexts()).join(' '),/Vi planerar veckans sysslor på söndag/,'An own pending proposal is not misrepresented as an unread incoming notification');
   assert.match(inboxText,/Händelser från Schyssta listan · 1 olästa/,'Server inbox shows persisted unread count');
   assert.equal(await paired.page.locator('.schyssta-unread time[datetime]').count(),1,'Notifications display a timestamp from the server');
   assert.match(await paired.page.locator('.schyssta-unread').innerText(),/Från: Provtonåring/,'Inbox identifies only the authorized counterpart');
