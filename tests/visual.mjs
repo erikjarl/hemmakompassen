@@ -2746,6 +2746,22 @@ async function verifyPairedRuleRevisionAndHistory(){
     assert.equal(fixture.rules[0].status,'accepted');
     records.push({case:'initial-rule-acceptance-requires-two-votes',passed:true});
 
+    // FBK-02-05: both roles must retain the accepted rule after a real
+    // document reload; it must not return to the pending approval list.
+    for(const [role,member] of [['parent',parent],['teen',teen]]){
+      await member.page.reload({waitUntil:'load'});
+      const acceptedRule=member.page.locator(
+        '[data-schyssta-filter-group="approved"] #schyssta-rule-'+originalId);
+      await acceptedRule.waitFor({state:'visible'});
+      assert.equal(await acceptedRule.locator('[data-schyssta-decision]').count(),0,
+        'FBK-02-05: '+role+' does not see a second decision prompt for an accepted rule');
+      assert.equal(await member.page.locator('#schyssta-needs-answer').count(),0,
+        'FBK-02-05: '+role+' has no repeated approval request after both votes');
+      assert.equal(fixture.rules.find(rule=>rule.id===originalId)?.status,'accepted',
+        'FBK-02-05: reload never changes the shared accepted fixture state');
+    }
+    records.push({case:'accepted-rule-persists-after-both-role-document-reloads',passed:true});
+
     await parent.page.locator('#schyssta-rule-'+originalId+' .schyssta-approved-details > summary').click();
     await parent.page.locator('#schyssta-rule-'+originalId).locator('[data-schyssta-edit]').click();
     const draft=parent.page.locator('#schyssta-body');
