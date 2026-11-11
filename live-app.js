@@ -2094,18 +2094,38 @@ async function submitManualSchysstaRule(){
   if(!schysstaDraftKey)schysstaDraftKey=crypto.randomUUID();
   const requestKey=schysstaDraftKey;
   schysstaSubmitting=true;schysstaMessage='Skickar förslaget…';render();
-  let error;try{({error}=await schysstaWriteRpc(schysstaEditTarget?db.rpc('propose_schyssta_change',{p_agreement_id:schysstaEditTarget,p_body:body,p_request_key:requestKey}):db.rpc('propose_manual_schyssta_rule',{p_body:body,p_request_key:requestKey})));}
-  catch(e){error=e;}
+  let error,createdId;
+  try{
+    ({data:createdId,error}=await schysstaWriteRpc(editBefore
+      ?db.rpc('propose_schyssta_change',{p_agreement_id:editBefore,p_body:body,p_request_key:requestKey})
+      :db.rpc('propose_manual_schyssta_rule',{p_body:body,p_request_key:requestKey})));
+  }catch(e){error=e;}
+  if(user?.id!==viewer||sharedSession!==session)return;
+  if(error||!SCHYSSTA_UUID.test(createdId||'')){
+    schysstaSubmitting=false;
+    schysstaMessage='Det gick inte att bekräfta om förslaget skickades. Utkastet finns kvar. Uppdatera listan eller försök igen med samma text.';
+    render();return;
+  }
+  // The successful RPC returns the exact agreement UUID. Check that same
+  // agreement in the validated server list before clearing this draft.
+  const refreshed=await fetchSchysstaList();
   if(user?.id!==viewer||sharedSession!==session)return;
   schysstaSubmitting=false;
-  if(error){schysstaMessage='Det gick inte att bekräfta om förslaget skickades. Utkastet finns kvar. Uppdatera listan eller försök igen med samma text.';render();return;}
-  // The editable textarea stays enabled while submitting. If the user has
-  // started a different draft meanwhile, never delete that newer text.
+  const confirmed=refreshed&&!schysstaError
+    &&schysstaManualRules.some(rule=>rule.agreement_id===createdId
+      &&rule.body===body&&rule.proposed_by_me)
+    &&(!editBefore||schysstaReplacementLinks.some(link=>
+      link.agreement_id===createdId&&link.replaces_agreement_id===editBefore));
+  if(!confirmed){
+    schysstaMessage='Förslaget skickades, men kunde inte bekräftas i listan. Utkastet finns kvar. Uppdatera listan och kontrollera om det redan finns innan du skickar igen.';
+    render();return;
+  }
+  // Never clear a different draft typed while the original request was pending.
   if(schysstaDraft===draftBefore&&schysstaEditTarget===editBefore&&schysstaDraftKey===requestKey){
     schysstaDraft='';schysstaDraftKey=null;schysstaEditTarget=null;schysstaDraftOpen=false;
+    schysstaMessage='Förslaget är sparat och syns i Schyssta listan. Ni behöver båda godkänna det innan det blir en överenskommelse.';
   }
-  schysstaMessage='Förslaget är skickat. Ni behöver båda godkänna det innan det blir en överenskommelse.';
-  await fetchSchysstaList();
+  render();
 }
 // A failed manual proposal may have committed despite a lost response.
 // Keep its original idempotency key when edits do not change the text sent
