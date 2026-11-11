@@ -89,3 +89,20 @@ test('FBK-02-05: stale withdrawal readback cannot unlock a new account',async()=
   assert.equal(h.state.schysstaSaving.has(id),true);
   assert.equal(h.state.schysstaMessage,'Ny sessionsinformation');
 });
+
+test('FBK-02-05: new withdrawal clears a stale success before the RPC returns',async()=>{
+  const h=harness();
+  h.state.schysstaMessage='Överenskommelsen är avslutad och finns kvar i historiken.';
+  h.state.schysstaDecisionFeedback='Tidigare bekräftelse';
+  const pending=h.state.withdraw(id);
+  await tick();
+  assert.equal(h.calls.length,1);
+  assert.equal(h.state.schysstaMessage,'');
+  assert.equal(h.state.schysstaDecisionFeedback,'');
+  assert.equal(h.state.schysstaSaving.has(id),true);
+  assert.equal(h.renders.at(-1).message,'','Pending UI cannot claim an old success');
+  h.rpc.resolve({error:{message:'offline'}});
+  await pending;
+  assert.match(h.state.schysstaMessage,/inte att bekräfta/);
+  assert.equal(h.state.schysstaDecisionFeedback,'');
+});
