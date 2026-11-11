@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import {readFileSync} from 'node:fs';
 const script=readFileSync(new URL('../live-app.js',import.meta.url),'utf8');
+const swipeCss=readFileSync(new URL('../live-app.css',import.meta.url),'utf8');
 
 assert.match(script,/db\.rpc\('shared_swipe_matches',\{p_deck_id:deckId\}\)/,'Uses only the reviewed aggregate function for the selected deck');
 assert.match(script,/sharedPrioritiesEnabled[\s\S]*?db\.rpc\('shared_swipe_priorities',\{p_deck_id:deckId\}\)/,'Priority IDs come only from the separately gated aggregate RPC');
@@ -462,3 +463,20 @@ console.log('PASS: all-deck insights gate, A-only sanitizer, B/NO isolation, ses
   assert.doesNotMatch(state.view(),/Fika på stan/,'Server errors do not expose stale activities');
 }
 console.log('PASS: unified activity lead names confirmed matches only');
+
+{
+  // FBK-02-06: the extra decks remain collapsed after finishing general,
+  // but the optional disclosure must now have its own visible affordance.
+  const start=script.indexOf('function themeDecksView(completedGeneral=false){');
+  const end=script.indexOf('function privateThemeAnswerReview(',start);
+  assert.ok(start>=0&&end>start,'Theme deck list source exists');
+  const source=script.slice(start,end);
+  assert.match(source,/swipe-more-decks/); assert.match(source,/Gör fler kortlekar/);
+  assert.doesNotMatch(source,/swipe-more-decks[^;]* open/,'Optional decks stay initially closed');
+  const css=swipeCss.split('/* FBK-02-06 / UX-SW-03:')[1];
+  assert.ok(css,'Discoverable optional deck CSS exists');
+  assert.match(css,/\.swipe-more-decks>summary\s*\{[\s\S]*?font-size:clamp\(17px/);
+  assert.match(css,/\.swipe-more-decks>summary::after\s*\{[\s\S]*?content:'▸'/);
+  assert.match(css,/\.swipe-more-decks>summary:focus-visible\s*\{/);
+}
+console.log('PASS: extra swipe decks stay optional but have prominent disclosure styling');

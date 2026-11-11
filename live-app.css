@@ -1204,3 +1204,58 @@
 .schyssta-view .schyssta-filter-group[data-schyssta-filter-group="approved"] .schyssta-approved-extra{
   padding-inline:8px;
 }
+
+
+/* FBK-02-06 / UX-SW-03: the optional next decks should be discoverable
+   without taking attention away from the shared result above them. */
+.swipe-themes .swipe-more-decks{
+  margin-top:12px;
+  border:1px solid #8b7046;
+  border-radius:14px;
+  background:#262a38;
+  overflow:hidden;
+}
+.swipe-themes .swipe-more-decks>summary{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  box-sizing:border-box;
+  padding:15px 17px;
+  min-height:52px;
+  list-style:none;
+  cursor:pointer;
+  color:#ffda97;
+  font-size:clamp(17px,2.4vw,19px);
+  font-weight:750;
+  line-height:1.35;
+}
+.swipe-themes .swipe-more-decks>summary::-webkit-details-marker{display:none}
+.swipe-themes .swipe-more-decks>summary::after{
+  content:'▸';
+  flex:none;
+  font-size:22px;
+  line-height:1;
+  color:#ffbf60;
+}
+.swipe-themes .swipe-more-decks[open]>summary::after{content:'▾'}
+.swipe-themes .swipe-more-decks>summary:focus-visible{
+  outline:3px solid #f5bb65;
+  outline-offset:-4px;
+  border-radius:12px;
+}
+.swipe-themes .swipe-more-decks[open]{
+  padding-bottom:14px;
+}
+.swipe-themes .swipe-more-decks[open]>summary{
+  border-bottom:1px solid #605947;
+  margin-bottom:12px;
+}
+.swipe-themes .swipe-more-decks>p,
+.swipe-themes .swipe-more-decks>.live-panel{
+  margin-left:14px;
+  margin-right:14px;
+}
+@media(max-width:430px){
+  .swipe-themes .swipe-more-decks>summary{padding:13px 14px}
+}
