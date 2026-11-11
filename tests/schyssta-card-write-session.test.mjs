@@ -194,3 +194,33 @@ for(const action of [
     assert.equal(h.refreshes.length,1);
   });
 }
+
+test('FBK-02-05: a successful readback is not proof of a saved decision unless this agreement has the requested vote',async()=>{
+  for(const [rules,expected] of [
+    [[{agreement_id:id,own_decision:true,status:'proposed'}],/Ditt ja är sparat/],
+    [[{agreement_id:id,own_decision:true,status:'accepted'}],/båda godkänt/],
+    [[{agreement_id:id,own_decision:false,status:'proposed'}],/inte att verifiera/],
+    [[],/inte att verifiera/]
+  ]){
+    const h=harness();
+    h.state.fetchSchysstaList=async()=>{h.state.schysstaRules=rules;return true;};
+    const underway=h.state.decide(id,true);
+    await tick();
+    h.gate.resolve({error:null});
+    await underway;
+    assert.match(h.state.schysstaDecisionFeedback,expected);
+    assert.equal(h.state.schysstaSaving.has(id),false);
+  }
+});
+
+test('FBK-02-05: a failed post-write readback never produces a false approval receipt',async()=>{
+  const h=harness();
+  h.state.fetchSchysstaList=async()=>false;
+  const underway=h.state.decide(id,true);
+  await tick();
+  h.gate.resolve({error:null});
+  await underway;
+  assert.match(h.state.schysstaDecisionFeedback,/kunde inte bekräftas/);
+  assert.doesNotMatch(h.state.schysstaDecisionFeedback,/Sparat:|Ditt ja är sparat/);
+  assert.equal(h.state.schysstaSaving.has(id),false);
+});
