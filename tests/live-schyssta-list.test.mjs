@@ -263,3 +263,30 @@ test('FBK-02-04: marking chat read waits for authoritative unread count before c
     }
   }
 });
+
+
+test('FBK-02-05: only two current yes votes can be displayed as accepted for either rule type',()=>{
+  const start=app.indexOf('const SCHYSSTA_UUID=');
+  const end=app.indexOf('async function fetchSchysstaList()');
+  assert.ok(start>=0&&end>start);
+  const catalog=Object.fromEntries([...app.matchAll(/'(regler-\d{2})':'([^']+)'/g)].map(match=>[match[1],match[2]]));
+  const validators=runInNewContext(app.slice(start,end)+'\n({catalogRule:validSchysstaRule,manualRule:validManualSchysstaRule})',{SCHYSSTA_RULES:catalog});
+  const common={
+    agreement_id:'123e4567-e89b-42d3-a456-426614174000',status:'accepted',
+    proposed_by_me:false,own_decision:true,parent_decision:true,teen_decision:true,
+    created_at:'2026-11-11T08:00:00Z'
+  };
+  const card={...common,source_card_id:'regler-01',body:catalog['regler-01']};
+  const manual={...common,agreement_version:1,body:'Vi kommer överens om en sak i taget.'};
+  for(const [name,validator,rule] of [
+    ['card',validators.catalogRule,card],['manual',validators.manualRule,manual]
+  ]){
+    assert.equal(validator(rule),true,name+' accepts two yes decisions');
+    assert.equal(validator({...rule,parent_decision:null}),false,name+' rejects one yes as accepted');
+    assert.equal(validator({...rule,teen_decision:false}),false,name+' rejects a no as accepted');
+    assert.equal(validator({...rule,status:'proposed'}),false,name+' cannot leave two yes as proposed');
+    assert.equal(validator({...rule,status:'rejected'}),false,name+' cannot reject two yes votes');
+    assert.equal(validator({...rule,status:'proposed',teen_decision:null}),true,name+' accepts one yes pending');
+    assert.equal(validator({...rule,status:'rejected',teen_decision:false}),true,name+' accepts one no rejection');
+  }
+});
