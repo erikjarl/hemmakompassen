@@ -15,7 +15,7 @@ function harness(result={data:1,error:null}){
     familyChatReadBusy:false,familyChatLoading:false,familyChatUnreadError:false,
     familyChatUnread:2,familyChatStatus:'',familyChatCountRequest:3,
     setTimeout,clearTimeout,
-    render:()=>{},recheckInboxPair:async()=>true,fetchFamilyChatUnread:async()=>{unreadRefreshes++;state.familyChatUnread=0;state.familyChatUnreadError=false;},db:{rpc:async name=>{assert.equal(name,'mark_family_messages_read');called++;return remote;}}
+    render:()=>{},recheckInboxPair:async()=>true,fetchFamilyChatUnread:async()=>{unreadRefreshes++;state.familyChatCountRequest++;state.familyChatUnread=0;state.familyChatUnreadError=false;},db:{rpc:async name=>{assert.equal(name,'mark_family_messages_read');called++;return remote;}}
   };
   vm.runInNewContext(action+'\nthis.markRead=markAllFamilyChatRead;',state);
   return {state,setRemote:v=>remote=v,calls:()=>called,refreshes:()=>unreadRefreshes};
@@ -38,7 +38,7 @@ test('server failure preserves unread messages and exposes an honest retry',asyn
   h.setRemote({data:2,error:null});
   assert.equal(await h.state.markRead(),true);
   assert.equal(h.state.familyChatUnread,0);
-  assert.equal(h.state.familyChatCountRequest,4,'Previous unread count queries are invalidated');
+  assert.equal(h.state.familyChatCountRequest,5,'Read receipt invalidates old queries and starts a fresh count');
   assert.equal(h.calls(),2);
   assert.equal(h.refreshes(),1,'Successful read receipt triggers authoritative count refresh');
 });
