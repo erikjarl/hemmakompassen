@@ -2124,6 +2124,10 @@ async function submitManualSchysstaRule(){
   if(schysstaDraft===draftBefore&&schysstaEditTarget===editBefore&&schysstaDraftKey===requestKey){
     schysstaDraft='';schysstaDraftKey=null;schysstaEditTarget=null;schysstaDraftOpen=false;
     schysstaMessage='Förslaget är sparat och syns i Schyssta listan. Ni behöver båda godkänna det innan det blir en överenskommelse.';
+  }else if(schysstaMessage==='Skickar förslaget…'){
+    // A new draft has replaced the submitted one. Do not leave its spinner
+    // text on screen after the old request has completed.
+    schysstaMessage='';
   }
   render();
 }
