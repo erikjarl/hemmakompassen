@@ -1554,7 +1554,7 @@ function themeSwipeView(){
       :'<div class="swipe-finished"><h2>Alla '+visible.length+' kort i '+esc(categoryLabel)+' är sparade</h2><p>Du kan gå igenom urvalet igen och ändra dina egna svar.</p>'+
        '<details><summary>Ändra mina svar</summary><button type="button" class="live-button" id="theme-restart">Gå igenom igen</button></details></div>')+
     '<p id="swipe-save-status" class="swipe-disclaimer" role="status">'+
-    esc(themeSaveError||'Ditt svar sparas privat i ditt konto. Gemensamt visas bara kort där ni båda svarat ja.')+'</p></div>'+privateSwipeExportControls()+privateThemeAnswerReview(deck)+swipeResults(deck.id)+insightsEntry()+'</div>';
+    esc(themeSaveError||'Ditt svar sparas privat i ditt konto. Gemensamt visas bara kort där ni båda svarat ja.')+'</p></div>'+swipeOverviewView()+privateSwipeExportControls()+privateThemeAnswerReview(deck)+swipeResults(deck.id)+insightsEntry()+'</div>';
 }
 // Return to the private themed answer list without losing the original deck position.
 function reopenThemeReview(){
