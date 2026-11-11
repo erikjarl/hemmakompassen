@@ -2024,15 +2024,17 @@ async function markSchysstaRead(id){
   let error;try{({error}=await schysstaWriteRpc(db.rpc('mark_schyssta_notification_read',{p_notification_id:id})));}catch(e){error=e;}
   // Another account/family session owns its own pending actions.
   if(user?.id!==viewer||session!==sharedSession)return;
-  schysstaSaving.delete(id);
-  if(error){schysstaMessage='Det gick inte att bekräfta läsmarkeringen. Uppdatera listan för att kontrollera statusen.';render();return;}
-  // The receipt RPC succeeded; verify the refreshed list before clearing
-  // uncertainty. A failed/superseded read is not proof of a saved read receipt.
+  if(error){schysstaSaving.delete(id);schysstaMessage='Det gick inte att bekräfta läsmarkeringen. Uppdatera listan för att kontrollera statusen.';render();return;}
+  // Keep the notice locked until its own server readback completes, and verify
+  // the specific receipt rather than treating an unrelated successful GET as proof.
   const refreshed=await fetchSchysstaList();
   if(user?.id!==viewer||session!==sharedSession)return;
-  schysstaMessage=refreshed&&!schysstaError
+  schysstaSaving.delete(id);
+  const notice=refreshed&&!schysstaError
+    ?schysstaNotifications.find(item=>item.notification_id===id):null;
+  schysstaMessage=refreshed&&!schysstaError&&notice?.read_at
     ?''
-    :'Läsmarkeringen skickades, men aktuell status kunde inte kontrolleras. Uppdatera listan och kontrollera aviseringen innan du försöker igen.';
+    :'Läsmarkeringen skickades, men det gick inte att bekräfta att aviseringen är läst. Uppdatera listan och kontrollera aviseringen innan du försöker igen.';
   render();
 }
 function validSchysstaReplacementLinks(rows,manualRules){
