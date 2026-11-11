@@ -1313,10 +1313,11 @@ async function verifyAllThemeDeckJourneys(){
       await page.locator('#swipe-card[aria-label^="Temakort '+n+' av 8"]').waitFor();
       await page.locator('[data-swipe="'+(n%2===0?'yes':'no')+'"]').click();
     }
-    await page.getByRole('heading',{name:'Alla 8 kort i Alla kategorier är sparade'}).waitFor();
+    await page.locator('.swipe-finished').getByText('Alla 8 kort i Alla kategorier är sparade').waitFor();
     assert.match(await page.locator('.swipe-private-review summary').innerText(),
       /Visa mina 8 besvarade kort/,'FUN-02 completed deck retains eight private saved answers');
-    await page.locator('#theme-restart').click();
+    await page.locator('.swipe-finished summary').click();
+       await page.locator('#theme-restart').click();
     await page.locator('#swipe-card[aria-label^="Temakort 1 av 8"]').waitFor();
     await page.locator('[data-swipe="yes"]').click(); // previously NO for deck #6
     await page.waitForFunction(()=>window.__HK_SAVED_SWIPE__?.row?.card_id==='forandring-01'
@@ -1341,12 +1342,13 @@ async function verifyAllThemeDeckJourneys(){
         await page.locator('#swipe-card[aria-label^="Temakort '+n+' av '+deck.length+'"]').waitFor();
         await page.locator('[data-swipe="'+(n%2===0?'yes':'no')+'"]').click();
       }
-      await page.getByRole('heading',{name:'Alla '+deck.length+' kort i Alla kategorier är sparade'}).waitFor();
+      await page.locator('.swipe-finished').getByText('Alla '+deck.length+' kort i Alla kategorier är sparade').waitFor();
       assert.match(await page.locator('.swipe-private-review summary').innerText(),
         new RegExp('Visa mina '+deck.length+' besvarade kort'),
         'FUN-02 completed short deck lists every saved private answer');
       await checkOverflow(page,'FUN-02 '+role+' '+deck.id+' completed');
-      await page.locator('#theme-restart').click();
+      await page.locator('.swipe-finished summary').click();
+       await page.locator('#theme-restart').click();
       await page.locator('#swipe-card[aria-label^="Temakort 1 av '+deck.length+'"]').waitFor();
       const changed=deck.initialFirst==='yes'?'no':'yes';
       await page.locator('[data-swipe="'+changed+'"]').click();
@@ -1406,7 +1408,7 @@ async function verifyLongThemeDeckJourneys(){
             assert.equal(saved.options.onConflict,'user_id,deck_id,card_id');
           }
         }
-        await page.getByRole('heading',{name:'Alla 104 kort i Alla kategorier är sparade'}).waitFor();
+        await page.locator('.swipe-finished').getByText('Alla 104 kort i Alla kategorier är sparade').waitFor();
         assert.match(await page.locator('.swipe-private-review summary').innerText(),
           /Visa mina 104 besvarade kort/,'FUN-02 finished long deck shows all saved private answers');
         await checkOverflow(page,'FUN-02 '+role+' '+deck+' completed 104 cards');
@@ -1414,8 +1416,9 @@ async function verifyLongThemeDeckJourneys(){
         assert.match(await page.locator('[data-theme-open="'+deck+'"]').locator('..').innerText(),
           /Din privata status: 104 \/ 104/,'FUN-02 long-deck progress survives leaving the deck');
         await page.locator('[data-theme-open="'+deck+'"]').click();
-        await page.getByRole('heading',{name:'Alla 104 kort i Alla kategorier är sparade'}).waitFor();
-        await page.locator('#theme-restart').click();
+        await page.locator('.swipe-finished').getByText('Alla 104 kort i Alla kategorier är sparade').waitFor();
+        await page.locator('.swipe-finished summary').click();
+       await page.locator('#theme-restart').click();
         await page.locator('#swipe-card[aria-label^="Temakort 1 av 104"]').waitFor();
         await page.locator('[data-swipe="no"]').click(); // initially YES
         await page.waitForFunction(expected=>window.__HK_SAVED_SWIPE__?.row?.card_id===expected
@@ -4616,9 +4619,10 @@ try{
   // The synthetic backend preloads all 34 answers, including a historical private B answer.
   const teenReview=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,role:'teen',preansweredGeneral:true});
   await teenReview.page.goto(base+'#swipe',{waitUntil:'load'});
-  await teenReview.page.locator('#swipe-restart').waitFor();
+  await teenReview.page.locator('.swipe-finished summary').waitFor();
   assert.match(await teenReview.page.locator('.swipe-finished').innerText(),/34 svar/,'All answers are loaded before review');
-  await teenReview.page.locator('#swipe-restart').click();
+  await teenReview.page.locator('.swipe-finished summary').click();
+   await teenReview.page.locator('#swipe-restart').click();
   await teenReview.page.locator("#swipe-card[aria-label^='Kort 1 av 34']").waitFor();
   await teenReview.page.getByRole('button',{name:'Ja'}).click();
   await teenReview.page.locator("#swipe-card[aria-label^='Kort 2 av 34']").waitFor();
