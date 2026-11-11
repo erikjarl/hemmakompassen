@@ -5454,7 +5454,10 @@ try{
   await unlocked.page.locator('.live-main').evaluate(el=>{el.scrollTop=0;});
   assert.equal(await unlocked.page.locator('.swipe-theme-play > .swipe-heading #swipe-export-private').count(),0,
     'Theme export no longer dominates the card intro');
-  assert.equal(await unlocked.page.locator('.swipe-theme-play > .swipe-stage + .swipe-private-export').count(),1);
+  assert.equal(await unlocked.page.locator('.swipe-theme-play > .swipe-private-export').count(),1,
+    'Private export remains accessible below the active theme card');
+  assert.equal(await unlocked.page.locator('.swipe-theme-play > .swipe-unified-overview + .swipe-private-export').count(),1,
+    'Shared all-deck results come before private export within a theme');
   const themeCardRect=await unlocked.page.locator('#swipe-card').boundingBox();
   const themeNavRect=await unlocked.page.locator('#live-mobile-nav').boundingBox();
   assert.ok(themeCardRect && themeNavRect && themeCardRect.y + 100 < themeNavRect.y,
