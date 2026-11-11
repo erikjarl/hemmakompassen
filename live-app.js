@@ -1560,7 +1560,7 @@ function themeSwipeView(){
       :'<div class="swipe-finished"><h2>Alla '+visible.length+' kort i '+esc(categoryLabel)+' är sparade</h2><p>Du kan gå igenom urvalet igen och ändra dina egna svar.</p>'+
        '<details><summary>Ändra mina svar</summary><button type="button" class="live-button" id="theme-restart">Gå igenom igen</button></details></div>')+
     '<p id="swipe-save-status" class="swipe-disclaimer" role="status">'+
-    esc(themeSaveError||'Ditt svar sparas privat i ditt konto. Gemensamt visas bara kort där ni båda svarat ja.')+'</p></div>'+swipeOverviewView()+privateSwipeExportControls()+privateThemeAnswerReview(deck)+swipeResults(deck.id)+insightsEntry()+'</div>';
+    esc(themeSaveError||'Ditt svar sparas privat i ditt konto. Gemensamt visas bara kort där ni båda svarat ja.')+'</p></div>'+swipeOverviewView()+privateSwipeExportControls()+privateThemeAnswerReview(deck)+themeSecondaryResults(deck.id,!item)+insightsEntry()+'</div>';
 }
 // Return to the private themed answer list without losing the original deck position.
 function reopenThemeReview(){
@@ -1734,6 +1734,19 @@ function reopenGeneralReview(){
 }
 // The all-deck shared snapshot is the primary completed result. Keep the
 // legacy per-deck explanation, priority and AI tools accessible on demand.
+function themeSecondaryResults(deckId,completed){
+  const legacy=swipeResults(deckId);
+  // The shared all-deck snapshot is the primary result after finishing a
+  // theme. Keep all legacy tips, priority controls and AI available on demand.
+  // If the shared snapshot is loading or failed, leave the existing result
+  // immediately visible instead of hiding the only usable feedback.
+  const hasUnified=completed&&sharedInsightsEnabled&&!swipeOverviewLoading&&!swipeOverviewError&&
+    user&&members.length===2&&swipeOverviewRows.length>0&&
+    members.some(m=>m.user_id===user.id)&&members.some(m=>m.role==='parent')&&
+    members.some(m=>m.role==='teen');
+  if(!hasUnified)return legacy;
+  return '<details class="swipe-secondary-results"><summary>Fördjupning: råd och detaljer från '+esc(sharedDeck(deckId)?.title||'kortleken')+'</summary>'+legacy+'</details>';
+}
 function swipeSecondaryResults(completed){
   const legacy=swipeResults();
   const hasUnified=completed&&sharedInsightsEnabled&&user&&members.length===2&&

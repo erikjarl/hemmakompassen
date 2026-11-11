@@ -410,8 +410,17 @@ console.log('PASS: all-deck insights gate, A-only sanitizer, B/NO isolation, ses
   const sequence=[
     "privateSwipeExportControls()",
     "privateThemeAnswerReview(deck)",
-    "swipeResults(deck.id)"
+    "themeSecondaryResults(deck.id,!item)"
   ];
+  // Completed themes keep the legacy advice/AI inside the optional
+  // disclosure, without removing it from the DOM or hiding it on failures.
+  const secondaryStart=script.indexOf('function themeSecondaryResults(');
+  const secondaryEnd=script.indexOf('function swipeSecondaryResults(',secondaryStart);
+  assert.ok(secondaryStart>=0&&secondaryEnd>secondaryStart);
+  const secondary=script.slice(secondaryStart,secondaryEnd);
+  assert.match(secondary,/swipeResults\(deckId\)/);
+  assert.match(secondary,/swipe-secondary-results/);
+  assert.match(secondary,/if\(!hasUnified\)return legacy;/);
   const overview=theme.lastIndexOf('swipeOverviewView()');
   assert.ok(overview>=0,'Theme view renders shared all-deck overview');
   for(const expression of sequence)
