@@ -4735,6 +4735,15 @@ try{
     "FUN-SW-02: consolidated result counts only two valid general A matches and one theme A match");
   assert.equal(await paired.page.locator(".swipe-unified-overview .swipe-unified-list > li").count(),2,
     "FUN-SW-02: result groups by category across decks without separate deck cards");
+  const activityNextStep=paired.page.locator('.swipe-unified-overview .swipe-unified-next-step');
+  assert.equal(await activityNextStep.count(),1,
+    'FUN-SW-02: exactly one shared activity recommendation follows the seven-deck overview');
+  assert.match(await activityNextStep.innerText(),/Ni har båda svarat ja till:/,
+    'FUN-SW-02: next-step text is grounded in a reciprocal YES, not an inferred preference');
+  assert.equal(await activityNextStep.locator('a[href="#inkorg"]').count(),1,
+    'FUN-SW-02: activity suggestion provides a voluntary path to make a plan');
+  assert.equal(await paired.page.locator('.swipe-unified-overview .swipe-unified-list li').count()>0,true,
+    'FUN-SW-02: all verified matches remain accessible beyond the short next step');
   assert.equal(await paired.page.locator(".swipe-unified-overview a[href='#insikter']").count(),1,
     "FUN-SW-02: expressly shared understanding remains on its own consent-controlled route");
   await paired.page.getByRole("heading",{name:"Det ni båda svarat ja till"}).waitFor();
