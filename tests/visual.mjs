@@ -4755,6 +4755,9 @@ try{
   await paired.page.evaluate(()=>{window.__HK_TEST_SHARED_MATCHES__=[];window.dispatchEvent(new Event('focus'));});
   await paired.page.waitForFunction(()=>document.querySelector('.swipe-results')?.textContent?.includes('Inga gemensamma ja-svar'));
   assert.equal(await paired.page.locator('.swipe-results .swipe-match-list li').count(),0,'Automatic refresh must remove a revoked match');
+  await paired.page.waitForFunction(()=>document.querySelector('.swipe-unified-overview')?.textContent?.includes('Inga gemensamma ja-svar'));
+  assert.equal(await paired.page.locator('.swipe-unified-overview .swipe-unified-list li').count(),0,
+    'FUN-SW-02: all-deck summary removes revoked matches on focus without displaying stale results');
   await paired.page.locator('.swipe-results').scrollIntoViewIfNeeded();
   await capture(paired.page,'mobile-auto-revoked-match.png');
   await paired.page.evaluate(()=>{delete window.__HK_TEST_SHARED_MATCHES__;window.dispatchEvent(new Event('focus'));});
