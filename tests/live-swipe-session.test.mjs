@@ -20,6 +20,7 @@ function harness({upsert=async()=>({error:null}),rpc=async()=>({error:null})}={}
     nextVisibleAfter:i=>i+1,nextSkippedAfter:i=>3,nextUnanswered:i=>i,
     $:()=>({textContent:''}),render:()=>{calls.renders++;},revealNextSwipeCard:()=>{calls.reveals++;},reopenGeneralReview:()=>{calls.reviewReturns++;},
     fetchSwipeMatches:()=>{calls.matches++;},fetchThemeUnlock:()=>{calls.unlocks++;},
+    scheduleSwipeOverviewRefresh:()=>{calls.overviewRefreshes=(calls.overviewRefreshes||0)+1;},
     db:{
       from:table=>{assert.ok(['swipe_answers','swipe_skips'].includes(table));
        const chain={eq:()=>chain,async maybeSingle(){calls.readbacks++;return {data:null,error:null};}};
@@ -148,7 +149,8 @@ const deferred=()=>{let resolve,reject;const promise=new Promise((ok,no)=>{resol
     swipeBusy:false,swipeLoadError:'',swipeSaveError:'',swipeReview:false,swipeIndex:0,
     sharedMatches:[],sharedPriorities:[],sharedDeckId:'general',sharedError:'',sharedLoading:false,sharedSession:0,sharedRequest:0,
      insightsRows:[],sharedUnderstandingRows:[],insightsLoading:false,insightsError:'',insightsRequest:0,
-     swipeOverviewRows:[],swipeOverviewLoading:false,swipeOverviewError:'',swipeOverviewRequest:0,page:()=> 'hem',
+     swipeOverviewRows:[],swipeOverviewLoading:false,swipeOverviewError:'',swipeOverviewRequest:0,
+     swipeOverviewRefreshTimer:null,clearTimeout:()=>{},page:()=> 'hem',
     themesUnlocked:false,themesLoading:false,themesError:'',themesRequest:0,
     STATEMENTS:[['Relationer','Testkort']],GENERAL_CARDS:[{id:'general-01',type:'match'}],THEME_DECKS:[],
     swipeCardId:()=> 'general-01',nextUnanswered:()=>0,
