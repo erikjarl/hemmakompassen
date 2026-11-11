@@ -2792,6 +2792,15 @@ async function verifyPairedRuleRevisionAndHistory(){
     await capture(teen.page,'fun-03-clipboard-fallback-teen.png');
     records.push({case:'teen-clipboard-denial-selectable-current-rule',passed:true});
 
+    // The clipboard fallback re-renders this view and may collapse optional
+    // export tools again. Reopen them as a user would before downloading.
+    const exportPanelAfterFallback=teen.page.locator('.schyssta-export-panel');
+    await exportPanelAfterFallback.waitFor();
+    if(!(await exportPanelAfterFallback.evaluate(el=>el.open))){
+      await exportPanelAfterFallback.locator('summary').click();
+    }
+    assert.equal(await exportPanelAfterFallback.evaluate(el=>el.open),true,
+      'Teen can access download after clipboard fallback redraw');
     // Export should contain only the CURRENT accepted replacement.
     const download=teen.page.waitForEvent('download');
     await teen.page.getByRole('button',{name:'Ladda ner som textfil'}).click();
