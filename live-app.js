@@ -61,6 +61,7 @@ let sharedMatchFilter={deckId:null,category:null};
 let insightsRows=[],insightsLoading=false,insightsError='',insightsRequest=0;
 // All-deck A snapshot for #swipe, independent from the #insikter route cache.
 let swipeOverviewRows=[],swipeOverviewLoading=false,swipeOverviewError='',swipeOverviewRequest=0;
+let swipeOverviewRefreshTimer=null;
 let activityInviteBusy=false,activityInviteError='',activityInviteFocus=null;
 let sharedUnderstandingRows=[],understandingShareError='',understandingSharesAvailable=false,understandingShareChecking=false;
 let schysstaSuggestions=[],schysstaRules=[],schysstaManualRules=[],schysstaNotifications=[],schysstaReplacementLinks=[],schysstaHistory=[],schysstaEndTarget=null,schysstaLoading=false,schysstaError='',schysstaRequest=0;
@@ -1068,7 +1069,28 @@ function swipeOverviewView(){
       '<li><div><h3>'+esc(category)+' · '+items.length+' gemensamma</h3><ul class="swipe-unified-statements">'+items.map(item=>'<li>'+esc(item.statement)+'</li>').join('')+'</ul></div></li>').join('')+'</ul>':'')+
     '<a href="#insikter" class="insights-back-link">Visa alla gemensamma insikter och delade förståelsekort</a></section>';
 }
+// Multiple quick saved A answers should produce one fresh server snapshot,
+// rather than seven RPCs per answer. Clear stale results immediately and
+// invalidate any older in-flight result, including a revoked match.
+function scheduleSwipeOverviewRefresh(){
+  if(page()!=='swipe'||!user||members.length!==2)return;
+  if(swipeOverviewRefreshTimer!==null)clearTimeout(swipeOverviewRefreshTimer);
+  ++swipeOverviewRequest;
+  swipeOverviewRows=[];
+  swipeOverviewError='';
+  swipeOverviewLoading=true;
+  const viewer=user.id,session=sharedSession;
+  renderKeepingGeneralReview();
+  swipeOverviewRefreshTimer=setTimeout(()=>{
+    swipeOverviewRefreshTimer=null;
+    if(user?.id===viewer&&sharedSession===session&&page()==='swipe')void fetchSwipeOverview();
+  },350);
+}
 async function fetchSwipeOverview({quiet=false}={}){
+  if(swipeOverviewRefreshTimer!==null){
+    clearTimeout(swipeOverviewRefreshTimer);
+    swipeOverviewRefreshTimer=null;
+  }
   const viewer=user?.id,session=sharedSession,request=++swipeOverviewRequest;
   const eligible=sharedInsightsEnabled&&viewer&&members.length===2&&
     members.some(m=>m.user_id===viewer)&&members.some(m=>m.role==='parent')&&members.some(m=>m.role==='teen')&&page()==='swipe';
@@ -1625,7 +1647,7 @@ async function saveThemeAnswer(direction,index,deckId,viewer,session){
   else{render();revealNextSwipeCard(viewer,session,deckId);}
   if(members.length===2){
     void fetchSwipeMatches(deckId);
-    if(themeCardModel(deck,index)?.type==='match')void fetchSwipeOverview();
+    if(themeCardModel(deck,index)?.type==='match')scheduleSwipeOverviewRefresh();
   }
 }
 function advanceThemeSwipe(direction){
@@ -1754,7 +1776,7 @@ async function saveSwipeAnswer(direction,index,viewer,session){
     void fetchSwipeMatches('general');
     // Refresh the server-confirmed all-deck result after a saved A answer,
     // including corrections from yes to no; never infer sharing locally.
-    if(!isUnderstanding)void fetchSwipeOverview();
+    if(!isUnderstanding)scheduleSwipeOverviewRefresh();
     // A parent sees only 21 match cards; a teen can also skip 13 understanding cards.
     if(visibleGeneralIndices().every(i=>swipeAnswers.has(swipeCardId(i))||skippedUnderstanding.has(swipeCardId(i))))void fetchThemeUnlock();
   }
@@ -2726,7 +2748,7 @@ let authResult;
 try{authResult=await db.auth.getUser();}
 catch(e){if(generation!==refreshGeneration)return;throw e;}
 if(generation!==refreshGeneration)return;
-const {data:{user:u},error}=authResult;if(error&&error.name!=='AuthSessionMissingError')throw error;generalReviewEdit=null;themeReviewEdit=null;user=u;profile=null;members=[];mediatorExperience.reset(u?.id??null);aiResults.reset(u?.id??null);personalityExperience.reset(u?.id??null);swipeAnswers.clear();swipeImportance.clear();importancePending.clear();importanceSaving.clear();importanceAvailable=false;importanceLoadError='';priorityShares.clear();priorityShareSaving.clear();prioritySharesAvailable=false;priorityShareError='';skippedUnderstanding.clear();understandingShares.clear();understandingShareSaving.clear();understandingShareError='';understandingSharesAvailable=false;understandingShareChecking=false;for(const answers of themeAnswers.values())answers.clear();activeThemeDeck=null;themeCategory='all';themeIndex=0;themeReview=false;themeSaveError='';swipeBusy=false;swipeLoadError='';swipeSaveError='';swipeReview=false;swipeSkippedReview=false;swipeIndex=0;sharedMatches=[];sharedPriorities=[];sharedDeckId='general';sharedError='';sharedPriorityError='';sharedLoading=false;sharedSession++;sharedRequest++;activityInviteBusy=false;activityInviteError='';insightsRows=[];sharedUnderstandingRows=[];insightsLoading=false;insightsError='';insightsRequest++;swipeOverviewRows=[];swipeOverviewError='';swipeOverviewLoading=false;swipeOverviewRequest++;themesUnlocked=false;themesLoading=false;themesError='';themesRequest++;
+const {data:{user:u},error}=authResult;if(error&&error.name!=='AuthSessionMissingError')throw error;generalReviewEdit=null;themeReviewEdit=null;user=u;profile=null;members=[];mediatorExperience.reset(u?.id??null);aiResults.reset(u?.id??null);personalityExperience.reset(u?.id??null);swipeAnswers.clear();swipeImportance.clear();importancePending.clear();importanceSaving.clear();importanceAvailable=false;importanceLoadError='';priorityShares.clear();priorityShareSaving.clear();prioritySharesAvailable=false;priorityShareError='';skippedUnderstanding.clear();understandingShares.clear();understandingShareSaving.clear();understandingShareError='';understandingSharesAvailable=false;understandingShareChecking=false;for(const answers of themeAnswers.values())answers.clear();activeThemeDeck=null;themeCategory='all';themeIndex=0;themeReview=false;themeSaveError='';swipeBusy=false;swipeLoadError='';swipeSaveError='';swipeReview=false;swipeSkippedReview=false;swipeIndex=0;sharedMatches=[];sharedPriorities=[];sharedDeckId='general';sharedError='';sharedPriorityError='';sharedLoading=false;sharedSession++;sharedRequest++;activityInviteBusy=false;activityInviteError='';insightsRows=[];sharedUnderstandingRows=[];insightsLoading=false;insightsError='';insightsRequest++;if(swipeOverviewRefreshTimer!==null){clearTimeout(swipeOverviewRefreshTimer);swipeOverviewRefreshTimer=null;}swipeOverviewRows=[];swipeOverviewError='';swipeOverviewLoading=false;swipeOverviewRequest++;themesUnlocked=false;themesLoading=false;themesError='';themesRequest++;
 inboxPairEpoch=null;
 activityNotificationsRequest++;activityNotifications=[];activityNotificationsError='';activityNotificationsLoading=false;activityMarkBusy=null;activityFeedback='';
 if(typeof schysstaRequest!=='undefined'){schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];schysstaNotifications=[];schysstaReplacementLinks=[];schysstaHistory=[];schysstaEndTarget=null;schysstaLoading=false;schysstaError='';schysstaRequest++;schysstaSaving.clear();schysstaPausedIds.clear();schysstaExpandedIds.clear();schysstaDecisionFeedback='';clearFamilyChat();schysstaDraft='';schysstaDraftOpen=false;schysstaDraftKey=null;schysstaEditTarget=null;schysstaSubmitting=false;schysstaMessage='';schysstaCopyMessage='';schysstaCopyFallback=false;schysstaFocusId='';schysstaSearch='';schysstaFilterStatus='all';}
@@ -3174,7 +3196,7 @@ document.addEventListener('keydown',e=>{
 });
 document.addEventListener('submit',async e=>{if(e.target.id==='comm-reflection-form'){e.preventDefault();if(page()!=='kommunikation'||!user)return;const values=Object.fromEntries(new FormData(e.target));const result=buildReflectionPractice(values);updateCommunicationPreview('reflection',result);const output=$('comm-reflection-output');if(output){if(!result)output.textContent='Fyll i alla tre stegen innan du skapar en spegling.';output.focus();}return;}if(e.target.id==='comm-solution-form'){e.preventDefault();if(page()!=='kommunikation'||!user)return;const values=Object.fromEntries(new FormData(e.target));const plan=buildSolutionPlan(values);updateCommunicationPreview('solution',plan);const output=$('comm-solution-output');if(output){if(!plan)output.textContent='Fyll i alla fyra fälten innan du skapar ett utkast.';output.focus();}return;}if(e.target.id==='comm-nvc-form'){e.preventDefault();if(page()!=='nvc'||!user)return;const values=Object.fromEntries(new FormData(e.target));const sentence=buildNvcSentence(values);updateCommunicationPreview('nvc',sentence);const output=$('comm-nvc-output');if(output){if(!sentence)output.textContent='Fyll i alla fyra steg innan du skapar en formulering.';output.focus();}return;}if(e.target.id==='mediator-form'){e.preventDefault();await mediatorExperience.submit();return;}if(e.target.id==='family-chat-form'){e.preventDefault();await sendFamilyChatMessage();return;}if(e.target.id==='schyssta-manual-form'){e.preventDefault();await submitManualSchysstaRule();return;}if(e.target.id!=='live-login')return;await submitLiveLogin(e);});
 window.addEventListener('hashchange',()=>{
-  if(page()!=='swipe'){swipeOverviewRows=[];swipeOverviewError='';swipeOverviewLoading=false;swipeOverviewRequest++;}
+  if(page()!=='swipe'){if(swipeOverviewRefreshTimer!==null){clearTimeout(swipeOverviewRefreshTimer);swipeOverviewRefreshTimer=null;}swipeOverviewRows=[];swipeOverviewError='';swipeOverviewLoading=false;swipeOverviewRequest++;}
   if(page()!=='insikter'){activityInviteError='';insightsRows=[];sharedUnderstandingRows=[];insightsError='';insightsLoading=false;insightsRequest++;}
   if(page()!=='regler'&&page()!=='inkorg'){schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];schysstaNotifications=[];schysstaReplacementLinks=[];schysstaHistory=[];schysstaError='';schysstaLoading=false;schysstaRequest++;}
   render();scrollLiveMainTop();
