@@ -409,20 +409,28 @@ async function markAllFamilyChatRead(){
   }catch(e){result={error:e};}
   finally{clearTimeout(deadline);}
   if(user?.id!==viewer||sharedSession!==session)return false;
-  familyChatReadBusy=false;
   if(result?.error||!Number.isInteger(result?.data)||result.data<0){
+    familyChatReadBusy=false;
     familyChatStatus='Det gick inte att markera meddelandena som lästa. Inga läskvittenser har bekräftats.';
     render();return false;
   }
-  // A count request started before this RPC must not restore the stale badge.
+  // Invalidate any count request started before the write. Its response must
+  // not restore a stale badge, but neither may the write receipt imply zero.
   familyChatCountRequest++;
-  familyChatUnread=0;familyChatUnreadError=false;
-  familyChatStatus='Alla meddelanden har markerats som lästa.';
+  familyChatStatus='Läsmarkeringen skickades. Kontrollerar återstående olästa meddelanden…';
   render();
-  // Another message may have arrived while the receipt RPC was in flight.
-  // Fetch a fresh authoritative count instead of trusting a stale zero.
-  void fetchFamilyChatUnread();
-  return true;
+  await fetchFamilyChatUnread();
+  if(user?.id!==viewer||sharedSession!==session)return false;
+  familyChatReadBusy=false;
+  if(familyChatUnreadError){
+    familyChatStatus='Läsmarkeringen skickades, men antalet olästa kunde inte bekräftas. Uppdatera konversationen.';
+  }else if(familyChatUnread>0){
+    familyChatStatus=familyChatUnread+' olästa meddelanden finns fortfarande. Du kan kontrollera dem i konversationen.';
+  }else{
+    familyChatStatus='Alla meddelanden har markerats som lästa.';
+  }
+  render();
+  return !familyChatUnreadError&&familyChatUnread===0;
 }
 // A retry is keyed by the actual transmitted body (which is trimmed).
 // Whitespace-only editing must not turn an uncertain send into a duplicate.
