@@ -269,7 +269,7 @@ test('FBK-02-05: only two current yes votes can be displayed as accepted for eit
   const start=app.indexOf('const SCHYSSTA_UUID=');
   const end=app.indexOf('async function fetchSchysstaList()');
   assert.ok(start>=0&&end>start);
-  const catalog=Object.fromEntries([...app.matchAll(/'(regler-\\d{2})':'([^']+)'/g)].map(match=>[match[1],match[2]]));
+  const catalog=Object.fromEntries([...app.matchAll(/'(regler-\d{2})':'([^']+)'/g)].map(match=>[match[1],match[2]]));
   const validators=runInNewContext(app.slice(start,end)+'\n({catalogRule:validSchysstaRule,manualRule:validManualSchysstaRule})',{SCHYSSTA_RULES:catalog});
   const common={
     agreement_id:'123e4567-e89b-42d3-a456-426614174000',status:'accepted',
