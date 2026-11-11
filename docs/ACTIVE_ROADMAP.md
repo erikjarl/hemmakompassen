@@ -4,6 +4,9 @@
 
 Detta är **den enda prioriterade arbetskön** för nya `Jobb hk`-pass. Tidigare långa [ROADMAP.md](../ROADMAP.md) och [CURRENT_TASKS.md](CURRENT_TASKS.md) är historik, beslut och verifieringslogg – inte parallella öppna checklistor. Uppdatera alltid denna fil när status förändras; länka sedan till PR, commit, CI eller verkligt test. Öppna äldre punkter flyttas hit **bara om de fortfarande kräver en konkret åtgärd**.
 
+
+**12/11 – Jobb hk, nattlig kontroll av status och rapportinkorg:** Direkt läsning med `SELECT` av `public.test_feedback` visar **sex öppna rapporter: en `new` och fem `reviewing`**. Ingen rapportstatus eller något användarsvar har ändrats. GitHub-kontroll bekräftar att både [PR #365](https://github.com/erikjarl/hemmakompassen/pull/365) (nedtonad sekundär åtgärdspanel vid befintliga godkända regler) och [PR #366](https://github.com/erikjarl/hemmakompassen/pull/366) (egna obesvarade regelförslag i beslutskön) nu är **mergade** till `main`, med merge-commits `271a6fa` respektive `6aeb28e`. Detta är verifierad GitHub-merge, **inte** verifiering av faktiskt godkännandeflöde med två autentiserade konton, fysisk Safari eller efter-merge publicering. UX-SL-02/FBK-02-05 kvarstår **Pågår**. Nästa funktionella kontroll: i en separat testmiljö med två verkliga autentiserade roller, följ samma förslag från skapande via separata JA till accepterad regel, ladda om i båda rollerna, försök upprepa ett tidigare godkännande och kontrollera att status, beslutsknappar och inkorg är konsistenta. **Ändra inte befintliga testkontons sparade svar bara för att utföra detta test.**
+
 ## Statussystem
 
 - **Inte påbörjad** – uppgiften saknar verifierad implementation.
