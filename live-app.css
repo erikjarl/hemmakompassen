@@ -1145,6 +1145,16 @@
 @media(max-width:440px){.schyssta-approved-details>summary{padding:12px 13px;gap:10px}.schyssta-approved-extra{padding:0 13px 13px}}
 
 
+/* Export is secondary to reading agreed rules, but remains keyboard accessible. */
+.schyssta-export-panel{margin-top:10px;border-top:1px solid #485267;padding-top:6px}
+.schyssta-export-panel>summary{display:flex;align-items:center;gap:8px;cursor:pointer;min-height:44px;box-sizing:border-box;color:#e7d5b6;font-size:.88rem;font-weight:600;list-style:none}
+.schyssta-export-panel>summary::-webkit-details-marker{display:none}
+.schyssta-export-panel>summary::before{content:'▸';font-size:1.05rem;color:#f5c16e}
+.schyssta-export-panel[open]>summary::before{content:'▾'}
+.schyssta-export-panel>summary:focus-visible{outline:3px solid #f5c16e;outline-offset:2px;border-radius:5px}
+.schyssta-export-panel>.schyssta-actions{margin:4px 0 8px}
+.schyssta-export-panel>.live-muted{margin:4px 0 12px}
+
 /* Compact rule overview: the agreed list is primary; optional tools stay folded. */
 .schyssta-search-panel,.schyssta-extra-panel{margin:14px 0;border:1px solid #575f74;border-radius:14px;background:#1b2231;min-width:0}
 .schyssta-search-panel>summary,.schyssta-extra-panel>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;padding:14px 17px;color:#f5dcac;font-weight:700;line-height:1.45;list-style:none;min-height:44px;box-sizing:border-box}
