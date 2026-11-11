@@ -190,3 +190,11 @@ test('SL-UX-01: next action, empty state and counts are derived from validated r
  assert.match(app,/Kunde inte bekräfta åtgärden/);
  assert.match(app,/Kunde inte visa listan/);
 });
+
+
+test('FBK-02-05: pending rule actions clearly indicate the server write',()=>{
+  assert.match(app,/const submitButton=\(approved,label,style='live-button'\)/);
+  assert.match(app,/action\?'Sparar…':label/);
+  assert.match(app,/schysstaSaving\.has\(item\.card_id\)\?'Skickar…':'Föreslå'/);
+  assert.match(app,/disabled aria-busy="true"/);
+});
