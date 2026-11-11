@@ -198,3 +198,13 @@ test('FBK-02-05: pending rule actions clearly indicate the server write',()=>{
   assert.match(app,/schysstaSaving\.has\(item\.card_id\)\?'Skickar…':'Föreslå'/);
   assert.match(app,/disabled aria-busy="true"/);
 });
+
+
+test('FBK-02-04: Inbox nav badge excludes counts from an unverified pair or failed read',()=>{
+  const menu=app.slice(app.indexOf('function menu(){'),app.indexOf('\nfunction ',app.indexOf('function menu(){')+10));
+  assert.match(menu,/const inboxReady=!!user&&members\.length===2&&!!inboxPairEpoch/);
+  assert.match(menu,/const unread=inboxReady&&schysstaListEnabled&&!schysstaError\?schysstaUnreadCount\(\):0/);
+  assert.match(menu,/const unreadMessages=inboxReady&&!familyChatUnreadError\?familyChatUnread:0/);
+  assert.match(menu,/const unreadActivities=inboxReady&&activityNotificationsEnabled&&!activityNotificationsError\?activityUnreadCount\(\):0/);
+  assert.match(menu,/unread\+unreadMessages\+unreadActivities/);
+});
