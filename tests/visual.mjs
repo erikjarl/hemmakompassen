@@ -4737,6 +4737,30 @@ try{
     "FUN-SW-02: result groups by category across decks without separate deck cards");
   assert.equal(await paired.page.locator('.swipe-unified-overview .swipe-unified-next-step').count(),0,
     'FUN-SW-02: conversation and general YES matches must not produce an invented activity invitation');
+  // Positive complement: an explicitly server-confirmed activity JA+JA must
+  // produce an activity invitation, not just a generic conversation match.
+  // Only synthetic RPC fixture data is changed; no real test answers are written.
+  const pairedActivity=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},
+    {authenticated:true,paired:true});
+  await pairedActivity.page.addInitScript(()=>{
+    window.__HK_TEST_SHARED_MATCHES__=[
+      {deck_id:'aktiviteter',card_id:'aktiviteter-01',answer:true},
+      {deck_id:'samtal',card_id:'samtal-01',answer:true},
+      {deck_id:'aktiviteter',card_id:'aktiviteter-02',answer:false},
+      {deck_id:'general',card_id:'general-02',answer:true}
+    ];
+  });
+  await pairedActivity.page.goto(base+'#swipe',{waitUntil:'load'});
+  await pairedActivity.page.locator('.swipe-unified-next-step').waitFor();
+  assert.match(await pairedActivity.page.locator('.swipe-unified-next-step').innerText(),/Att göra tillsammans:/,
+    'FUN-SW-02: a confirmed activity match produces an explicit shared-activity suggestion');
+  assert.equal(await pairedActivity.page.locator('.swipe-unified-overview .swipe-unified-next-step').count(),1,
+    'FUN-SW-02: unrelated YES and private B/NO rows must not duplicate the activity invitation');
+  assert.equal(await pairedActivity.page.locator('.swipe-unified-next-step a[href="#inkorg"]').count(),1,
+    'FUN-SW-02: the activity invitation links to a concrete next step');
+  await checkOverflow(pairedActivity.page,'FUN-SW-02 shared activity invitation 390px');
+  await capture(pairedActivity.page,'mobile-swipe-activity-invitation.png');
+  await pairedActivity.context.close();
   assert.equal(await paired.page.locator(".swipe-unified-overview a[href='#insikter']").count(),1,
     "FUN-SW-02: expressly shared understanding remains on its own consent-controlled route");
   await paired.page.getByRole("heading",{name:"Det ni båda svarat ja till"}).waitFor();
