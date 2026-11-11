@@ -290,3 +290,18 @@ test('FBK-02-05: only two current yes votes can be displayed as accepted for eit
     assert.equal(validator({...rule,status:'rejected',teen_decision:false}),true,name+' accepts one no rejection');
   }
 });
+
+
+test('FBK-02-01: approved agreements precede secondary actions and optional panels are folded',()=>{
+  const view=app.slice(app.indexOf('function schysstaView(){'),app.indexOf('\nfunction section(key)',app.indexOf('function schysstaView(){')));
+  assert.ok(view.includes("const approvedSection="),'Approved section remains present');
+  assert.match(view,/return '<div class="schyssta-view">/);
+  const returnMarkup=view.slice(view.lastIndexOf("return '<div class=\"schyssta-view\""));
+  assert.ok(returnMarkup.indexOf('+approvedSection')<returnMarkup.indexOf('+quickActions'),'Agreed rules must come first');
+  assert.match(view,/const searchTools='<details class="schyssta-search-panel"/);
+  assert.match(view,/schysstaSearch\.trim\(\)\|\|schysstaFilterStatus!==/);
+  assert.match(view,/<summary>Sök och filtrera regler<\/summary>/);
+  assert.match(returnMarkup,/<details class="schyssta-extra-panel"><summary>Fler förslag från Gillaswajpen/);
+  assert.match(view,/const needsSection=needs\.length/);
+  assert.match(returnMarkup,/\+needsSection/);
+});
