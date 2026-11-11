@@ -4502,7 +4502,7 @@ try{
   assert.match(ownText,/Mitt svar: Överhoppat/,'The teen-only skipped B card is exported as skipped');
   assert.doesNotMatch(ownText,/user_id|family_id|pair_id|synthetic@example\.invalid|Gemensamma möjligheter/,
     'Export does not include account identifiers or shared results');
-  assert.match(await generalReview.page.locator('#swipe-export-status').innerText(),/privata textfil/);
+  await generalReview.page.locator('#swipe-export-status').getByText(/privata textfil/).waitFor();
   // If private importance read failed, never create an incomplete export that looks authoritative.
   const failedImportance=await freshContext(
     {viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},
