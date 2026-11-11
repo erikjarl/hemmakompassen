@@ -4655,7 +4655,7 @@ try{
   await skipAgain.page.locator('#swipe-review-skipped').click();
   await skipAgain.page.locator("#swipe-card[aria-label^='Kort 2 av 34']").waitFor();
   await skipAgain.page.getByRole('button',{name:'Ja'}).click();
-  await skipAgain.page.getByRole('heading',{name:'Alla 34 kort besvarade'}).waitFor();
+  await skipAgain.page.locator('.swipe-finished').getByText('Alla 34 kort besvarade').waitFor();
   assert.equal(await skipAgain.page.locator('#swipe-review-skipped').count(),0,'Completed B card leaves the skipped queue');
   await checkOverflow(skipAgain.page,'Mobile skipped-card revisit');
   await capture(skipAgain.page,'mobile-teen-skipped-revisit.png');
