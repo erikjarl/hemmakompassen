@@ -2596,7 +2596,7 @@ function schysstaView(){
   const ongoing=rules.filter(item=>item.status!=='accepted'&&!needs.includes(item));
   // Only an authorized, fully validated snapshot reaches this view.
   // Place the next action and compose entry before optional guidance.
-  const quickActions='<section class="schyssta-quick-actions" aria-label="Översikt och nästa steg">'
+  const quickActions='<section class="schyssta-quick-actions'+(approved.length?' schyssta-quick-actions--secondary':'')+'" aria-label="Översikt och nästa steg">'
     +'<div class="schyssta-quick-state"><strong>'+(needs.length===0?'Inget väntar just nu':needs.length===1?'1 förslag behöver ditt svar':needs.length+' förslag behöver ditt svar')+'</strong>'
     +'<p>'+(needs.length?'Du kan svara direkt på förslagen nedan eller välja Inte nu.':'Du kan föreslå något nytt utan att fatta ett beslut åt den andra.')+'</p>'
     +(needs.length?'<div class="schyssta-actions schyssta-jump-actions"><button class="schyssta-secondary" type="button" data-schyssta-needs-jump>Visa väntande förslag</button></div>':'')+'</div>'
