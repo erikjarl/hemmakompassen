@@ -2080,7 +2080,7 @@ function applySchysstaFilters(){
   if(summary)summary.textContent=phrase||schysstaFilterStatus!=='all'
     ?'Visar '+shown+' av '+total+' i de sökbara listorna. Förslag som behöver ditt svar visas separat.':'';
 }
-const schysstaNeedsAnswer=()=>schysstaAllRules().filter(row=>row.status==='proposed'&&!row.proposed_by_me&&row.own_decision===null&&!schysstaPausedIds.has(row.agreement_id)).sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at));
+const schysstaNeedsAnswer=()=>schysstaAllRules().filter(row=>row.status==='proposed'&&row.own_decision===null&&!schysstaPausedIds.has(row.agreement_id)).sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at));
 function validSchysstaNotifications(rows){
   const kinds=['rule_proposed','rule_accepted','rule_declined','rule_withdrawn'];
   return Array.isArray(rows)&&rows.every(row=>row&&typeof row==='object'&&!Array.isArray(row)
