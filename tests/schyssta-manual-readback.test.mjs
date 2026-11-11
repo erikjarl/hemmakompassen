@@ -140,3 +140,27 @@ test('FBK-02-05: rule-list error panel shows failed proposal readback guidance',
  assert.match(html,/Förslaget skickades, men kunde inte bekräftas i listan/);
  assert.match(html,/id="schyssta-retry"/);
 });
+
+for(const outcome of ['rpc-failure','readback-failure']){
+ test('FBK-02-05: late '+outcome+' must not overwrite a newer manual draft notice',async()=>{
+  const h=harness();
+  const pending=h.state.submit();
+  await tick();
+  // The user edits the draft while the earlier request is still running.
+  h.state.schysstaDraft='En helt annan överenskommelse';
+  h.state.schysstaDraftKey=null;
+  h.state.schysstaMessage='Nytt utkast pågår';
+  if(outcome==='rpc-failure'){
+   h.rpc.resolve({data:null,error:{message:'offline'}});
+  }else{
+   h.rpc.resolve({data:id,error:null});
+   await tick();
+   h.get.resolve(false);
+  }
+  await pending;
+  assert.equal(h.state.schysstaDraft,'En helt annan överenskommelse');
+  assert.equal(h.state.schysstaMessage,'Nytt utkast pågår');
+  assert.equal(h.state.schysstaSubmitting,false);
+  assert.equal(h.calls.length,1);
+ });
+}
