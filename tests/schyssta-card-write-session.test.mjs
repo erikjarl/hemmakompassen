@@ -64,6 +64,22 @@ test('FBK-02-05: card proposal stays locked during readback and warns when verif
   assert.match(h.state.schysstaDecisionFeedback,/kontrollera om förslaget redan finns/);
 });
 
+test('FBK-02-05: proposal confirmation requires the submitted card ID in the server list',async()=>{
+  for(const [rules,expected] of [
+    [[{agreement_id:id,source_card_id:deck}],/Förslaget är sparat/],
+    [[{agreement_id:id,source_card_id:'annat-kort'}],/kunde inte bekräftas/]
+  ]){
+    const h=harness();
+    h.state.fetchSchysstaList=async()=>{h.state.schysstaRules=rules;return true;};
+    const underway=h.state.propose(deck);
+    await tick();
+    h.gate.resolve({error:null});
+    await underway;
+    assert.match(h.state.schysstaDecisionFeedback,expected);
+    assert.equal(h.state.schysstaSaving.has(deck),false);
+  }
+});
+
 test('FBK-02-05: card proposal readback completion does not unlock another session',async()=>{
   const h=harness();
   const readback=deferred();
