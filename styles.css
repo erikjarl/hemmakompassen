@@ -74,3 +74,13 @@ body:has(.welcome-intro) .mobile-nav{display:none}
 .stamp-no{right:20px;color:#ff9b9b;transform:rotate(12deg)}
 .swipe-card.swipe-yes .stamp-yes,.swipe-card.swipe-no .stamp-no{opacity:1}
 @media(prefers-reduced-motion:reduce){.swipe-card,.swipe-stamp{transition:none!important}}
+
+/* FBK-02-06: make the optional next deck clearly discoverable without
+   competing with the shared result above it. */
+.swipe-more-decks{border:1px solid #b78941;border-radius:16px;background:#292c3c;padding:0;overflow:visible}
+.swipe-more-decks>summary{display:list-item;cursor:pointer;list-style-position:inside;color:#f8c66b;font-weight:700;font-size:clamp(1rem,2.4vw,1.15rem);line-height:1.5;padding:16px 18px}
+.swipe-more-decks>summary:hover{background:#343343}
+.swipe-more-decks>summary:focus-visible{outline:3px solid #f8c66b;outline-offset:3px;border-radius:12px}
+.swipe-more-decks[open]>summary{border-bottom:1px solid #494450}
+.swipe-more-decks>p,.swipe-more-decks>.live-panel,.swipe-more-decks>button{margin-left:16px;margin-right:16px}
+@media(max-width:600px){.swipe-more-decks>summary{padding:15px 14px}.swipe-more-decks>p,.swipe-more-decks>.live-panel,.swipe-more-decks>button{margin-left:12px;margin-right:12px}}
