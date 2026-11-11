@@ -2733,6 +2733,26 @@ async function verifyPairedRuleRevisionAndHistory(){
     assert.equal(fixture.rules[0].status,'proposed');
     assert.deepEqual(fixture.rules[0].decisions,{parent:null,teen:null});
     await revisit(teen.page);
+    // FBK-02-04: the shared synthetic RPC fixture survives a document reload.
+    // A received rule notice must not be counted as unread again after reading.
+    assert.equal(fixture.notices.filter(n=>n.recipient==='teen'&&n.read_at===null).length,1,
+      'FBK-02-04: teen receives exactly one unread rule notice');
+    await teen.page.goto(base+'#inkorg',{waitUntil:'load'});
+    await teen.page.locator('[data-schyssta-read]').click();
+    await teen.page.waitForFunction(()=>!document.querySelector('#live-mobile-nav a[href="#inkorg"] .live-nav-count'));
+    assert.equal(await teen.page.locator('#live-desktop-nav a[href="#inkorg"] .live-nav-count').count(),0,
+      'FBK-02-04: desktop badge disappears after rule notice is marked read');
+    assert.ok(fixture.notices.every(n=>n.recipient!=='teen'||n.read_at!==null),
+      'FBK-02-04: shared fixture stores the explicit read receipt');
+    await teen.page.reload({waitUntil:'load'});
+    await teen.page.getByRole('heading',{name:'Inkorg',exact:true}).waitFor();
+    await teen.page.waitForFunction(()=>!document.querySelector('#live-mobile-nav a[href="#inkorg"] .live-nav-count'));
+    assert.equal(await teen.page.locator('#live-desktop-nav a[href="#inkorg"] .live-nav-count').count(),0,
+      'FBK-02-04: desktop badge stays clear after a full reload');
+    assert.equal(await teen.page.locator('#live-mobile-nav a[href="#inkorg"] .live-nav-count').count(),0,
+      'FBK-02-04: mobile badge stays clear after a full reload');
+    records.push({case:'rule-notification-badge-stays-read-across-reload',passed:true});
+    await revisit(teen.page);
     await teen.page.locator('#schyssta-rule-'+originalId)
       .getByRole('button',{name:'Jag godkänner'}).click();
     await teen.page.waitForFunction(()=>document.querySelector('.schyssta-view')?.textContent?.includes('Ditt val: ja'));
@@ -5409,13 +5429,8 @@ try{
     'FBK-02-04: desktop inbox badge clears with the confirmed receipt');
   assert.equal(await paired.page.locator('#live-mobile-nav a[href="#inkorg"] .live-nav-count').count(),0,
     'FBK-02-04: mobile bottom navigation badge clears with the confirmed receipt');
-  await paired.page.reload({waitUntil:'load'});
-  await paired.page.getByRole('heading',{name:'Inkorg',exact:true}).waitFor();
-  await paired.page.waitForFunction(()=>!document.querySelector('#live-mobile-nav a[href="#inkorg"] .live-nav-count'));
-  assert.equal(await paired.page.locator('#live-desktop-nav a[href="#inkorg"] .live-nav-count').count(),0,
-    'FBK-02-04: desktop badge stays cleared after reloading server receipts');
-  assert.equal(await paired.page.locator('#live-mobile-nav a[href="#inkorg"] .live-nav-count').count(),0,
-    'FBK-02-04: mobile badge stays cleared after reloading server receipts');
+  // The generic inbox fixture lives in the page and resets on reload.
+  // Persistence across reload is covered below by the shared two-role fixture.
 
   await paired.page.getByRole('button',{name:'Se och svara i Schyssta listan'}).first().click();
   await paired.page.getByRole('heading',{name:'Schyssta listan'}).waitFor();
