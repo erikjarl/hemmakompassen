@@ -5733,8 +5733,8 @@ try{
   assert.match(await freshRules.page.locator('.schyssta-view').innerText(),/Ni har inte gjort någon gemensam överenskommelse än/,'Empty paired family has useful onboarding rather than sample data');
   assert.equal(await freshRules.page.locator('.schyssta-quick-actions strong').innerText(),'Inget väntar just nu',
     'SL-UX-01: an empty authorized snapshot has a truthful primary status');
-  assert.match(await freshRules.page.locator('.schyssta-quick-counts').innerText(),/0 gemensamma överenskommelser.*0 andra förslag.*0 avslutade regler/,
-    'SL-UX-01: counts do not invent rules or propose implicit agreements');
+  assert.equal(await freshRules.page.locator('.schyssta-quick-counts').count(),0,
+    'SL-UX-01: empty family does not show a row of redundant zero counts');
 
   assert.equal(await freshRules.page.locator('.schyssta-view .schyssta-list li').count(),0,'Empty family does not show invented rules');
   await freshRules.page.locator('[data-schyssta-start]').click();
