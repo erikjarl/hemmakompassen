@@ -237,6 +237,19 @@ test('all three private preview generators expose accessible copy and manual-sel
   'The copy controls never gain persistence or remote data access');
 });
 
+test('FBK-02-02: rejects evidenced malformed concatenations without rewriting the original input',()=>{
+  const bad='När Erik lyssnade inte när jag pratade känner jag Trött och uppblåst. Jag behöver Att Erik ska lyssna. Skulle du vilja Lyssna på mig?';
+  assert.equal(normalizeNvcAiReply(bad),null);
+  assert.equal(normalizeNvcAiReply('När min vän svarade inte kände jag mig ledsen.'),null);
+  assert.equal(normalizeNvcAiReply('När vi diskuterar saken känner jag Trött och uppblåst.'),null);
+  assert.equal(normalizeNvcAiReply('Jag behöver Att vi pratar lugnt.'),null);
+  for(const acceptable of [
+    'När Erik inte lyssnade när jag pratade kände jag mig ledsen. Kan du lyssna på mig en stund?',
+    'När vi pratar känner jag mig trött. Jag behöver att vi tar en paus.',
+    'Jag behöver lugn och lite tid innan vi fortsätter.'
+  ])assert.equal(normalizeNvcAiReply(acceptable),acceptable);
+});
+
 test('FBK-02-02: NVC AI rejects labelled fragments and lists, keeping four-part draft available',()=>{
   assert.equal(normalizeNvcAiReply('Observation: någon avbröt mig\\nKänsla: ledsen'),null);
   assert.equal(normalizeNvcAiReply('1. Observation: vi pratade\\n2. Känsla: trött'),null);
