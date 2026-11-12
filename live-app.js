@@ -2733,6 +2733,14 @@ function render(){
     schysstaExpandedIds.clear();
     for(const id of expanded)schysstaExpandedIds.add(id);
   }
+  // Preserve an intentionally expanded legacy result when a fresh A snapshot,
+  // AI answer or card save rebuilds the swipe page. Never carry it to another
+  // account, pairing session or deck.
+  const existingSecondary=page()==='swipe'?document.querySelector('.swipe-secondary-results'):null;
+  const expandedSecondary=existingSecondary?.open?{
+    viewer:user?.id,session:sharedSession,deck:activeThemeDeck,
+    focusSummary:document.activeElement===existingSecondary.querySelector('summary')
+  }:null;
   const focusedPriority=page()==='swipe'?document.activeElement?.closest?.('[data-priority-share]'):null;
   const priorityFocus=focusedPriority?{deck:focusedPriority.dataset.deckId,card:focusedPriority.dataset.cardId}:null;
   // A shared-results refresh or category change must not close an expanded
@@ -2755,9 +2763,17 @@ function render(){
   // finishes. Keep the scroll of the active review, not only the input focus.
   const focusedPrivateReview=page()==='swipe'
     ?document.activeElement?.closest?.('#swipe-private-review,#swipe-general-review'):null;
-  const mainScroll=(page()==='inkorg'||priorityFocus||focusedSwipeCard||themeFilterFocus?.target||focusedPrivateReview)
+  const mainScroll=(page()==='inkorg'||priorityFocus||focusedSwipeCard||themeFilterFocus?.target||focusedPrivateReview||expandedSecondary)
     ?document.querySelector('.live-main')?.scrollTop:null;
   menu();$('live-app').innerHTML=user?(page()==='hem'?home():section(page())):login();
+  if(expandedSecondary&&page()==='swipe'&&user?.id===expandedSecondary.viewer
+    &&sharedSession===expandedSecondary.session&&activeThemeDeck===expandedSecondary.deck){
+    const nextSecondary=document.querySelector('.swipe-secondary-results');
+    if(nextSecondary){
+      nextSecondary.open=true;
+      if(expandedSecondary.focusSummary)nextSecondary.querySelector('summary')?.focus({preventScroll:true});
+    }
+  }
   if(expandedThemeCategory!==undefined){
     const nextFilter=$('theme-category')?.closest?.('details');
     if(nextFilter)nextFilter.open=expandedThemeCategory;
