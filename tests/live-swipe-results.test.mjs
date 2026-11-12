@@ -522,6 +522,37 @@ console.log('PASS: unified activity lead names confirmed matches only');
   assert.match(css,/\.swipe-more-decks>summary:focus-visible\s*\{/);
 }
 console.log('PASS: extra swipe decks stay optional but have prominent disclosure styling');
+{
+  // FBK-02-06: progress comes only from current viewer's local saved answers.
+  const start=script.indexOf('function themeDecksView(completedGeneral=false){');
+  const end=script.indexOf('function privateThemeAnswerReview(',start);
+  assert.ok(start>=0&&end>start);
+  const model=[
+    {id:'a',title:'Tema A',cards:[{category:'A'},{category:'A'}]},
+    {id:'b',title:'Tema B',cards:[{category:'B'}]},
+    {id:'c',title:'Tema C',cards:[{category:'C'},{category:'C'}]}
+  ];
+  const state={
+    members:[{user_id:'parent'},{user_id:'teen'}],
+    themesUnlocked:true,themesLoading:false,themesError:'',
+    THEME_DECKS:model,THEME_DECK_MODELS:model,
+    themeAnswers:new Map([['a',new Map([['one',true],['two',true]])],['b',new Map([['one',true]])],['c',new Map()]]),
+    esc:value=>String(value),card:value=>value
+  };
+  vm.runInNewContext(script.slice(start,end)+';this.view=themeDecksView;',state);
+  const html=state.view(true);
+  assert.match(html,/Min progression: 2 av 3 teman påbörjade · 2 klara/);
+  assert.match(html,/Gör fler kortlekar/);
+  assert.match(html,/<details class="swipe-more-decks">/,'Extra decks remain initially closed');
+  state.themeAnswers=new Map([['a',new Map([['one',true],['two',true]])],['b',new Map()],['c',new Map()]]);
+  assert.match(state.view(true),/1 klart/,'Singular completed theme is grammatical');
+  state.themeAnswers=new Map();
+  assert.match(state.view(true),/0 av 3 teman påbörjade/);
+  state.themesUnlocked=false;
+  assert.doesNotMatch(state.view(true),/Min progression:/,'No progress shown in inaccessible family state');
+}
+console.log('PASS: optional decks show only private per-account progress');
+
 
 // The shared results page highlights a concrete activity invitation and
 // editorial tips without creating another oversized competing results card.
