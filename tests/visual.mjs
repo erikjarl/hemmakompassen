@@ -1492,6 +1492,17 @@ async function verifyInsightsTwoRolesAndStates(){
       await page.goto(base+'#insikter',{waitUntil:'load'});
       await page.waitForFunction(()=>document.querySelectorAll('.insights-deck .swipe-match-list li').length===3);
       assert.equal(await page.locator('.insights-deck').count(),2);
+      const deckDisclosure=page.locator('.insights-decks-secondary');
+      assert.equal(await deckDisclosure.getAttribute('open'),null,
+        'Repeated per-deck results start folded behind the unified overview');
+      assert.equal(await page.locator('.insights-deck').first().isVisible(),false,
+        'Repeated deck panels must not crowd the all-deck result');
+      await deckDisclosure.locator('summary').focus();
+      await page.keyboard.press('Enter');
+      assert.equal(await page.locator('.insights-deck').first().isVisible(),true,
+        'Keyboard makes old per-deck details and actions accessible');
+      await page.keyboard.press('Enter');
+      assert.equal(await page.locator('.insights-deck').first().isVisible(),false);
       // VIS-00-03: real shared content appears early, while the precise sharing
       // explanation remains reachable by keyboard instead of dominating mobile.
       const insightsHeader=await page.locator('.insights-heading').boundingBox();
@@ -1548,7 +1559,7 @@ async function verifyInsightsTwoRolesAndStates(){
         window.__HK_TEST_SET_SHARED_B__(['general-02']);
       });
       await page.locator('#insights-retry').click();
-      await page.locator('#insights-deck-aktiviteter').waitFor();
+      await page.locator('#insights-deck-aktiviteter').waitFor({state:'attached'});
       assert.equal(await page.locator('.insights-deck').count(),1);
       assert.equal(await page.locator('.insights-deck .swipe-match-list li').count(),1);
       assert.equal(await page.locator('[data-insight-activity]').count(),1);
@@ -1563,7 +1574,7 @@ async function verifyInsightsTwoRolesAndStates(){
       assert.equal(await page.locator('#insights-understanding').count(),0);
       await page.evaluate(()=>{window.__HK_RPC_UNAVAILABLE__=false;});
       await page.locator('#insights-retry').click();
-      await page.locator('#insights-deck-aktiviteter').waitFor();
+      await page.locator('#insights-deck-aktiviteter').waitFor({state:'attached'});
       assert.equal(await page.locator('.insights-deck .swipe-match-list li').count(),1);
       await checkOverflow(page,'FUN-02 insights '+role+' after retry');
       records.push({role,case:'failed-RPC-clears-and-retry-reloads',passed:true});
@@ -4013,7 +4024,9 @@ try{
     {deck_id:'aktiviteter',card_id:'aktiviteter-01',answer:true}
   ];});
   await activity.page.locator('a[href="#insikter/aktiviteter"]').click();
-  await activity.page.locator('#insights-deck-aktiviteter').waitFor();
+  await activity.page.locator('#insights-deck-aktiviteter').waitFor({state:'attached'});
+  assert.equal(await activity.page.locator('.insights-decks-secondary').getAttribute('open'),'',
+    'A verified inbox deep link expands its target deck inside secondary details');
   await activity.page.waitForFunction(()=>document.activeElement?.id==='insights-deck-aktiviteter');
   assert.equal(await activity.page.evaluate(()=>window.__HK_ACTIVITY_MARK_COUNT__||0),1,
     'Opening the deck does not mark any additional notification read');
@@ -5076,7 +5089,7 @@ try{
   await paired.page.locator('a[href="#insikter"]').click();
   await paired.page.getByRole('heading',{name:'Möjligt att utforska'}).waitFor();
   assert.ok((await paired.page.locator('.live-main').evaluate(el=>el.scrollTop))<=1,'Insights navigation resets the mobile content scroller to its heading');
-  await paired.page.locator('.insights-deck').first().waitFor();
+  await paired.page.locator('.insights-deck').first().waitFor({state:'attached'});
   assert.equal(await paired.page.locator('.insights-deck').count(),2,'Only decks with permitted A JA+JA appear');
   assert.equal(await paired.page.locator('.insights-deck .swipe-match-list li').count(),3,'Two general and one conversation A match, no other rows');
   const insightText=await paired.page.locator('.insights-view').innerText();
@@ -5099,7 +5112,7 @@ try{
     ];
   });
   await paired.page.locator('#insights-retry').click();
-  await paired.page.locator('[data-insight-activity="aktiviteter-01"]').waitFor();
+  await paired.page.locator('[data-insight-activity="aktiviteter-01"]').waitFor({state:'attached'});
   assert.equal(await paired.page.locator('[data-insight-activity]').count(),1,
     'Only the server-verified mutual YES activity gets an invitation action');
   // FUN-02/03-ACTIVITY-PAIR-JOIN-01: an insight refresh may have already
@@ -5109,6 +5122,9 @@ try{
   await paired.page.locator('#insights-retry').click();
   await paired.page.waitForFunction(()=>typeof window.__HK_TEST_RELEASE_PAIR_READ__==='function');
   const raceCta=paired.page.locator('[data-insight-activity="aktiviteter-01"]');
+  // The all-deck overview stays primary: the card-specific invitation is
+  // deliberately available inside the optional per-deck detail disclosure.
+  await paired.page.locator('.insights-decks-secondary>summary').click();
   const sentBefore=await paired.page.evaluate(()=>window.__HK_CHAT_SEND__||null);
   await raceCta.click();
   await paired.page.waitForFunction(()=>
@@ -5144,7 +5160,8 @@ try{
   // NOT-01D: same verified activity CTA is directly reachable in its own
   // finished themed-deck results, not only from the all-deck insights screen.
   await paired.page.evaluate(()=>{location.hash='insikter';});
-  await paired.page.locator('[data-insight-open="aktiviteter"]').waitFor();
+  await paired.page.locator('[data-insight-open="aktiviteter"]').waitFor({state:'attached'});
+  await paired.page.locator('.insights-decks-secondary>summary').click();
   await paired.page.locator('[data-insight-open="aktiviteter"]').click();
   await paired.page.locator('.swipe-secondary-results').waitFor();
   await revealSwipeSecondary(paired.page);
@@ -5169,7 +5186,7 @@ try{
   await capture(paired.page,'mobile-activity-invite-from-deck.png');
   await paired.page.locator('#family-chat-body').fill('');
   await paired.page.evaluate(()=>{delete window.__HK_TEST_SHARED_MATCHES__;location.hash='insikter';});
-  await paired.page.locator('.insights-deck').first().waitFor();
+  await paired.page.locator('.insights-deck').first().waitFor({state:'attached'});
   assert.equal(await paired.page.locator('.insights-deck').count(),2,
     'Returning to normal server matches restores the same permitted cross-deck insights');
 
@@ -5189,7 +5206,8 @@ try{
   assert.equal(await paired.page.locator('.insights-deck').count(),0,'One failed deck RPC clears all previous shared insights');
   await paired.page.evaluate(()=>{window.__HK_RPC_UNAVAILABLE__=false;});
   await paired.page.locator('#insights-retry').click();
-  await paired.page.locator('.insights-deck').first().waitFor();
+  await paired.page.locator('.insights-deck').first().waitFor({state:'attached'});
+  await paired.page.locator('.insights-decks-secondary>summary').click();
   await paired.page.locator('[data-insight-open="samtal"]').click();
   await paired.page.locator("#swipe-card[aria-label^='Temakort 1 av 104']").waitFor();
   await paired.page.locator('#theme-back').click();
@@ -6040,7 +6058,7 @@ try{
   await unavailable.context.close();
   const desktopInsights=await freshContext({viewport:{width:1440,height:900},deviceScaleFactor:1},{authenticated:true,paired:true});
   await desktopInsights.page.goto(base+'#insikter',{waitUntil:'load'});
-  await desktopInsights.page.locator('.insights-deck').first().waitFor();
+  await desktopInsights.page.locator('.insights-deck').first().waitFor({state:'attached'});
   assert.equal(await desktopInsights.page.locator('.insights-deck').count(),2,'Desktop insights also show only permitted A decks');
   await checkOverflow(desktopInsights.page,'Desktop all-deck insights');
   await capture(desktopInsights.page,'desktop-shared-insights.png');

@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261112-swipe-secondary-epoch1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261112-insights-deck-fold1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261112-swipe-secondary-epoch1';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261112-insights-deck-fold1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261112-swipe-secondary-epoch1';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261112-insights-deck-fold1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -1257,11 +1257,16 @@ function insightsView(){
   const stillShared=requested==='forstaelse'?sharedUnderstandingRows.length>0:byDeck.has(requested);
   const missingTargetNotice=requested&&!stillShared
     ?'<p id="insights-target-unavailable" tabindex="-1" role="status">Den här insikten är inte längre tillgänglig eller delad. Du kan se andra gemensamma insikter nedan.</p>':'';
+  // Keep the shared all-deck overview primary. Open the legacy per-deck
+  // details automatically only for a verified deep link (e.g. an inbox notice).
+  const deckDetails=sections?'<details class="insights-decks-secondary"'+
+    (requested&&byDeck.has(requested)?' open':'')+'><summary>Visa detaljer per kortlek · '+byDeck.size+'</summary>'+
+    sections+'</details>':'';
   return title+missingTargetNotice+'<section class="live-panel" aria-labelledby="insights-a-heading"><h2 id="insights-a-heading">Möjligt att utforska</h2>'+
     '<p class="insights-main-intro">Här visas bara det ni båda sagt ja till. Det är möjligheter, inte överenskommelser.</p>'+ 
     '<details class="insights-method"><summary>Hur visas insikterna?</summary><p>Endast serververifierade JA+JA på A-kort visas här. För aktiviteter kan du öppna ett frivilligt meddelandeutkast, utan att något skickas automatiskt.</p></details>'+
     (activityInviteError?'<p role="alert">'+esc(activityInviteError)+'</p>':'')+
-    (sections?sharedFactOverview(overviewGroups,'Gemensamt i alla kortlekar'): '')+(sections||empty)+
+    (sections?sharedFactOverview(overviewGroups,'Gemensamt i alla kortlekar'): '')+(deckDetails||empty)+
     (aiResultEnabled&&insightsAiSignature()?aiResults.panel('swipe','all',insightsAiSignature()):'')+'</section>'+
     '<section id="insights-understanding" tabindex="-1" class="live-panel" aria-labelledby="insights-b-heading"><h2 id="insights-b-heading">'+
     (viewerRole()==='parent'?'Så här funkar min tonåring':'Så här funkar jag')+
