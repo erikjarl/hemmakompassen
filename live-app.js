@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261112-insights-deck-fold1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261112-insights-epoch-guard1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261112-insights-deck-fold1';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261112-insights-epoch-guard1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261112-insights-deck-fold1';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261112-insights-epoch-guard1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -1215,6 +1215,9 @@ function insightsView(){
   if(!sharedInsightsEnabled)return title+card('<h2>Insiktsytan förbereds</h2><p>Den aktiveras först efter säker serververifiering med två konton.</p>')+'</div>';
   if(!user||members.length!==2||!members.some(m=>m.user_id===user.id)||!members.some(m=>m.role==='parent')||!members.some(m=>m.role==='teen'))
     return title+card('<h2>Gemensamma insikter</h2><p>Koppla ihop en förälder och en tonåring för att se sådant ni båda aktivt har valt.</p>')+'</div>';
+  // A cached pair membership list does not prove consent still belongs to
+  // the currently verified family epoch. Never render earlier shared cards.
+  if(!inboxPairEpoch)return title+card('<p role="status">Kontrollerar familjekopplingen innan gemensamma insikter visas…</p>')+'</div>';
   if(insightsLoading)return title+card('<p role="status">Kontrollerar era gemensamma ja-svar säkert…</p>')+'</div>';
   if(insightsError)return title+card('<h2>Gemensamma insikter</h2><p role="alert">'+esc(insightsError)+'</p><button type="button" class="live-button" id="insights-retry">Försök igen</button>')+'</div>';
   const byDeck=new Map();
@@ -1281,7 +1284,7 @@ async function fetchInsights({quiet=false}={}){
   // server-verified display until a new all-deck snapshot is confirmed.
   // Failure clears BOTH A and B results, rather than retaining stale data.
   if(!quiet){insightsRows=[];sharedUnderstandingRows=[];insightsError='';insightsLoading=false;}
-  if(!sharedInsightsEnabled||!viewer||(page()==='inkorg'&&!inboxPairEpoch)||members.length!==2||!members.some(m=>m.user_id===viewer)||
+  if(!sharedInsightsEnabled||!viewer||!inboxPairEpoch||members.length!==2||!members.some(m=>m.user_id===viewer)||
      !members.some(m=>m.role==='parent')||!members.some(m=>m.role==='teen')||
      !['insikter','inkorg'].includes(page())){
     insightsRows=[];sharedUnderstandingRows=[];insightsError='';insightsLoading=false;render();return;

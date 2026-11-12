@@ -12,7 +12,7 @@ function harness({serverRows=[{deck_id:'aktiviteter',card_id:'aktiviteter-01',an
   const state={
     user:{id:'current'},sharedSession:3,page:()=> source,
     members:[{user_id:'current',role:'parent'},{user_id:'other',role:'teen'}],
-    sharedInsightsEnabled:true,insightsLoading:false,insightsError:'',
+    inboxPairEpoch:'verified-pair-1',sharedInsightsEnabled:true,insightsLoading:false,insightsError:'',
     sharedDeckId:activeDeck,sharedLoading:false,sharedError:'',
     sharedMatches:deckRows??[{deck_id:'aktiviteter',card_id:'aktiviteter-01',answer:true}],
     insightsRows:currentRows??[{deck_id:'aktiviteter',card_id:'aktiviteter-01',answer:true}],
@@ -119,7 +119,7 @@ test('actual insights view renders activity CTA only for verified activity match
   const state={
     user:{id:'viewer'},
     members:[{user_id:'viewer',role:'teen'},{user_id:'other',role:'parent'}],
-    sharedInsightsEnabled:true,insightsLoading:false,insightsError:'',
+    inboxPairEpoch:'verified-pair-1',sharedInsightsEnabled:true,insightsLoading:false,insightsError:'',
     insightTargetFromHash:()=>null,location:{hash:'#insikter'},
     activityInviteBusy:false,activityInviteError:'',
     insightsRows:[{deck_id:'aktiviteter',card_id:'aktiviteter-09',answer:true}],

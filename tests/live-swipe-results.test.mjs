@@ -334,7 +334,7 @@ assert.throws(()=>insightState.sanitize('general',null),/Invalid shared results/
   assert.ok(viewSource,'Cross-deck view is available for a synthetic DOM-independent test');
   const state={
     user:{id:'viewer'},members:[{user_id:'viewer',role:'parent'},{user_id:'partner',role:'teen'}],
-    sharedInsightsEnabled:true,insightsLoading:false,insightsError:'',aiResultEnabled:true,
+    inboxPairEpoch:'verified-pair-1',sharedInsightsEnabled:true,insightsLoading:false,insightsError:'',aiResultEnabled:true,
     insightTargetFromHash:()=>null,location:{hash:'#insikter'},
     activityInviteBusy:false,activityInviteError:'',
     sharedUnderstandingRows:[],insightsRows:[
