@@ -1274,7 +1274,7 @@ async function fetchInsights({quiet=false}={}){
   // server-verified display until a new all-deck snapshot is confirmed.
   // Failure clears BOTH A and B results, rather than retaining stale data.
   if(!quiet){insightsRows=[];sharedUnderstandingRows=[];insightsError='';insightsLoading=false;}
-  if(!sharedInsightsEnabled||!viewer||!inboxPairEpoch||members.length!==2||!members.some(m=>m.user_id===viewer)||
+  if(!sharedInsightsEnabled||!viewer||(page()==='inkorg'&&!inboxPairEpoch)||members.length!==2||!members.some(m=>m.user_id===viewer)||
      !members.some(m=>m.role==='parent')||!members.some(m=>m.role==='teen')||
      !['insikter','inkorg'].includes(page())){
     insightsRows=[];sharedUnderstandingRows=[];insightsError='';insightsLoading=false;render();return;
@@ -2425,13 +2425,14 @@ async function refreshWholeInbox(){
       if(!activityNotificationsLoading)pending.push(fetchActivityNotifications());
       else skipped.push('aktivitetsaviseringar');
     }
-    if(sharedInsightsEnabled){
+    if(typeof sharedInsightsEnabled!=='undefined'&&sharedInsightsEnabled){
       if(!insightsLoading)pending.push(fetchInsights());
       else skipped.push('gemensamma insikter');
     }
     await Promise.all(pending);
     if(viewer!==user?.id||session!==sharedSession||page()!=='inkorg')return;
-    inboxRefreshStatus=familyChatError||familyChatUnreadError||schysstaError||activityNotificationsError||insightsError
+    inboxRefreshStatus=familyChatError||familyChatUnreadError||schysstaError||activityNotificationsError||
+      (typeof insightsError!=='undefined'&&insightsError)
       ?'Vissa delar av inkorgen kunde inte uppdateras. Kontrollera felmeddelandena och försök igen.'
       :skipped.length
         ?'Vissa delar hämtades redan i bakgrunden ('+skipped.join(', ')+'). Kontrollera resultatet och uppdatera inkorgen igen vid behov.'
