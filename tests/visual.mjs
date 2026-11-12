@@ -5074,6 +5074,8 @@ try{
     {authenticated:true,paired:true,role:'teen',privateImportance:true,priorityFeature:false}
   );
   await teenPriority.page.goto(base+'#swipe',{waitUntil:'load'});
+  await teenPriority.page.locator('.swipe-secondary-results').waitFor();
+  await revealSwipeSecondary(teenPriority.page);
   await teenPriority.page.locator('.swipe-private-priority').waitFor();
   const privatePreview=await teenPriority.page.locator('.swipe-private-priority').innerText();
   assert.match(privatePreview,/Mina viktigaste gemensamma ja-svar/);
@@ -5093,6 +5095,8 @@ try{
     {authenticated:true,paired:true,role:'teen',privateImportance:true,priorityFeature:true}
   );
   await teenPriorityConsent.page.goto(base+'#swipe',{waitUntil:'load'});
+  await teenPriorityConsent.page.locator('.swipe-secondary-results').waitFor();
+  await revealSwipeSecondary(teenPriorityConsent.page);
   const sharePriority=teenPriorityConsent.page.locator('[data-priority-share][data-card-id="general-01"]');
   await sharePriority.waitFor();
   assert.equal(await sharePriority.getAttribute('aria-pressed'),'false','Private +1 starts unshared without explicit consent');
