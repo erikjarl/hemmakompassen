@@ -109,7 +109,7 @@ console.log('PASS: real desktop and mobile menu render known, partial and unknow
   calls.render=0;calls.menu=0;
   route='hem';
   await env.refresh({quiet:false});
-  assert.equal(calls.render,1,'Home badge settles after unchanged activity result');
+  assert.equal(calls.render,0,'Home retains its verified badge for an unchanged activity result');
   calls.render=0;calls.menu=0;
   route='inkorg';
   await env.refresh({quiet:true});
