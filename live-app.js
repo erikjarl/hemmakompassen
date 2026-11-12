@@ -3049,7 +3049,7 @@ async function rewriteNvcWithAi(){
    if(result?.ephemeral!==true||result?.chatId!=null||result?.safetyNotice===true
       ||typeof result?.reply!=='string')throw Error('AI:n kunde inte ge ett vanligt, osparat NVC-utkast.');
    const reply=normalizeNvcAiReply(result.reply);
-   if(!reply)throw Error('AI-svaret var tomt eller för långt. Ditt fyrdelade utkast finns kvar.');
+   if(!reply)throw Error('AI-svaret gick inte att använda som en tydlig formulering. Ditt fyrdelade utkast finns kvar.');
    // updateCommunicationPreview uses textContent: model output is never trusted HTML.
    updateCommunicationPreview('nvc',reply);
    const note=$('comm-nvc-ai-status');
