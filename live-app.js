@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261112-notification-load-settle3';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261112-unified-understanding4';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261112-notification-load-settle3';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261112-unified-understanding4';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261112-notification-load-settle3';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261112-unified-understanding4';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -60,7 +60,7 @@ let sharedPollPending=false;
 let sharedMatchFilter={deckId:null,category:null};
 let insightsRows=[],insightsLoading=false,insightsError='',insightsRequest=0;
 // All-deck A snapshot for #swipe, independent from the #insikter route cache.
-let swipeOverviewRows=[],swipeOverviewLoading=false,swipeOverviewError='',swipeOverviewRequest=0;
+let swipeOverviewRows=[],swipeOverviewUnderstandingRows=[],swipeOverviewLoading=false,swipeOverviewError='',swipeOverviewRequest=0;
 let swipeOverviewRefreshTimer=null;
 let activityInviteBusy=false,activityInviteError='',activityInviteFocus=null;
 let sharedUnderstandingRows=[],understandingShareError='',understandingSharesAvailable=false,understandingShareChecking=false;
@@ -266,6 +266,12 @@ async function recheckInboxPair(){
     sharedRequest++;insightsRequest++;
     sharedMatches=[];sharedPriorities=[];sharedError='';sharedPriorityError='';sharedLoading=false;
     insightsRows=[];sharedUnderstandingRows=[];insightsError='';insightsLoading=false;
+    // Some isolated pair-check unit harnesses deliberately omit the swipe
+    // route. The real application always owns this state; keep it guarded
+    // when invalidating the active family epoch.
+    if(typeof swipeOverviewRequest!=='undefined'){
+      swipeOverviewRequest++;swipeOverviewRows=[];swipeOverviewUnderstandingRows=[];swipeOverviewError='';swipeOverviewLoading=false;
+    }
     // Family rules, notices and pending actions are scoped to this same pair.
     // Their old cached contents must not outlive a revoked/unknown pairing.
     schysstaRequest++;
@@ -1062,7 +1068,7 @@ function formatMatchedActivities(statements){
 function swipeOverviewView(){
   if(!sharedInsightsEnabled||!user||members.length!==2||!members.some(m=>m.user_id===user.id)||
      !members.some(m=>m.role==='parent')||!members.some(m=>m.role==='teen'))return '';
-  const title='<section class="live-panel swipe-unified-overview" aria-labelledby="swipe-overview-heading"><span class="swipe-eyebrow">BARA GEMENSAMMA JA-SVAR</span><h2 id="swipe-overview-heading">Det ni har gemensamt – alla kortlekar</h2>';
+  const title='<section class="live-panel swipe-unified-overview" aria-labelledby="swipe-overview-heading"><span class="swipe-eyebrow">GEMENSAMT OCH FRIVILLIGT DELAT</span><h2 id="swipe-overview-heading">Det ni har gemensamt – alla kortlekar</h2>';
   if(swipeOverviewLoading)return title+'<p role="status">Kontrollerar gemensamma svar från alla kortlekar…</p></section>';
   if(swipeOverviewError)return title+'<p role="alert">'+esc(swipeOverviewError)+'</p><button type="button" class="schyssta-secondary" id="swipe-overview-retry">Försök igen</button></section>';
   const groups=new Map();
@@ -1101,11 +1107,22 @@ function swipeOverviewView(){
   const advicePreview=[...new Set(sortedGroups.flatMap(([,items])=>
     items.map(item=>firstSentence(item.advice)).filter(Boolean)))].slice(0,2);
   const count=[...groups.values()].reduce((sum,items)=>sum+items.length,0);
-  return title+'<p class="live-muted">'+(count?count+' '+(count===1?'gemensamt ja-svar':'gemensamma ja-svar')+' från de kortlekar ni har använt.':'Inga gemensamma ja-svar hittades ännu.')+' Bara kort där båda har svarat ja visas. Förståelsekort visas separat när de uttryckligen delas.</p>'+
+  // Shared B messages remain a separate, clearly labelled part of the same
+  // overview. Only validated, currently server-shared understanding IDs enter.
+  const sharedUnderstanding=sharedUnderstandingEnabled
+    ?safeSharedUnderstanding(swipeOverviewUnderstandingRows):[];
+  const understandingPanel=sharedUnderstanding.length
+    ?'<section class="swipe-unified-understanding" aria-labelledby="swipe-unified-understanding-heading">'+
+      '<h3 id="swipe-unified-understanding-heading">'+(viewerRole()==='parent'?'Så här funkar min tonåring':'Så här funkar jag')+'</h3>'+
+      '<p class="live-muted">Frivilligt delade förståelsekort – inte gemensamma ja-svar eller överenskommelser.</p>'+
+      '<ul class="swipe-unified-statements">'+sharedUnderstanding.map(card=>'<li>'+esc(cardTextForRole(card,viewerRole()))+'</li>').join('')+'</ul></section>'
+    :'';
+  return title+'<p class="live-muted">'+(count?count+' '+(count===1?'gemensamt ja-svar':'gemensamma ja-svar')+' från de kortlekar ni har använt.':'Inga gemensamma ja-svar hittades ännu.')+' Bara kort där båda har svarat ja räknas som matchningar. Frivilligt delade förståelsekort visas i ett eget avsnitt nedan.</p>'+
     (activityMatches?'<p class="swipe-unified-next-step"><strong>Att göra tillsammans:</strong> Ni har båda visat intresse för '+activityPreview+activityMore+'. Välj gärna en aktivitet i listan och föreslå en dag att göra den tillsammans. Ett ja är ett intresse, inte en överenskommelse. <a href="#inkorg">Öppna Inkorgen och föreslå en tid</a>.</p>'+activityDetails:'')+
     (advicePreview.length?'<section class="swipe-unified-advice" aria-label="Redaktionella råd utifrån era gemensamma svar"><h3>Små steg att prova</h3>'+advicePreview.map(advice=>'<p>'+esc(advice)+'</p>').join('')+'<p class="live-muted">Förskrivna förslag utifrån era gemensamma ja-svar, inte AI och inte individuella bedömningar.</p></section>':'')+
     (groups.size?'<ul class="swipe-match-list swipe-unified-list">'+sortedGroups.map(([category,items])=>
       '<li><div><h3>'+esc(category)+' · '+items.length+' '+(items.length===1?'gemensamt':'gemensamma')+'</h3><ul class="swipe-unified-statements">'+items.map(item=>'<li>'+esc(item.statement)+'</li>').join('')+'</ul></div></li>').join('')+'</ul>':'')+
+    understandingPanel+
     '<a href="#insikter" class="insights-back-link">Visa alla gemensamma insikter och delade förståelsekort</a></section>';
 }
 // Multiple quick saved A answers should produce one fresh server snapshot,
@@ -1116,6 +1133,7 @@ function scheduleSwipeOverviewRefresh(){
   if(swipeOverviewRefreshTimer!==null)clearTimeout(swipeOverviewRefreshTimer);
   ++swipeOverviewRequest;
   swipeOverviewRows=[];
+  swipeOverviewUnderstandingRows=[];
   swipeOverviewError='';
   swipeOverviewLoading=true;
   const viewer=user.id,session=sharedSession;
@@ -1133,27 +1151,35 @@ async function fetchSwipeOverview({quiet=false}={}){
   const viewer=user?.id,session=sharedSession,request=++swipeOverviewRequest;
   const eligible=sharedInsightsEnabled&&viewer&&members.length===2&&
     members.some(m=>m.user_id===viewer)&&members.some(m=>m.role==='parent')&&members.some(m=>m.role==='teen')&&page()==='swipe';
-  if(!eligible){swipeOverviewRows=[];swipeOverviewError='';swipeOverviewLoading=false;return;}
-  const previous=JSON.stringify([swipeOverviewRows,swipeOverviewError]);
-  if(!quiet){swipeOverviewRows=[];swipeOverviewError='';swipeOverviewLoading=true;renderKeepingGeneralReview();}
+  if(!eligible){swipeOverviewRows=[];swipeOverviewUnderstandingRows=[];swipeOverviewError='';swipeOverviewLoading=false;return;}
+  const previous=JSON.stringify([swipeOverviewRows,swipeOverviewUnderstandingRows,swipeOverviewError]);
+  if(!quiet){swipeOverviewRows=[];swipeOverviewUnderstandingRows=[];swipeOverviewError='';swipeOverviewLoading=true;renderKeepingGeneralReview();}
   try{
-    const responses=await Promise.all(INSIGHT_DECK_IDS.map(deckId=>db.rpc('shared_swipe_matches',{p_deck_id:deckId})));
+    const [responses,understandingResponse]=await Promise.all([
+      Promise.all(INSIGHT_DECK_IDS.map(deckId=>db.rpc('shared_swipe_matches',{p_deck_id:deckId}))),
+      sharedUnderstandingEnabled?db.rpc('shared_understanding_cards'):Promise.resolve({data:[],error:null})
+    ]);
     if(request!==swipeOverviewRequest||session!==sharedSession||user?.id!==viewer||page()!=='swipe')return;
     const rows=[];
     for(let i=0;i<responses.length;i++){
       if(responses[i]?.error||!Array.isArray(responses[i]?.data))throw Error('Shared result unavailable');
       rows.push(...safeInsightMatches(INSIGHT_DECK_IDS[i],responses[i].data));
     }
+    if(understandingResponse?.error||!Array.isArray(understandingResponse?.data))throw Error('Shared B result unavailable');
+    const verifiedUnderstanding=safeSharedUnderstanding(understandingResponse.data)
+      .map(card=>({deck_id:'general',card_id:card.id}));
     swipeOverviewRows=rows;
+    swipeOverviewUnderstandingRows=verifiedUnderstanding;
     swipeOverviewError='';
   }catch(e){
     if(request!==swipeOverviewRequest||session!==sharedSession||user?.id!==viewer||page()!=='swipe')return;
     swipeOverviewRows=[];
+    swipeOverviewUnderstandingRows=[];
     swipeOverviewError='Gemensamma svar kunde inte kontrolleras. Tidigare resultat visas inte.';
   }finally{
     if(request===swipeOverviewRequest&&session===sharedSession&&user?.id===viewer&&page()==='swipe'){
       swipeOverviewLoading=false;
-      if(!quiet||previous!==JSON.stringify([swipeOverviewRows,swipeOverviewError]))renderKeepingGeneralReview();
+      if(!quiet||previous!==JSON.stringify([swipeOverviewRows,swipeOverviewUnderstandingRows,swipeOverviewError]))renderKeepingGeneralReview();
     }
   }
 }
@@ -2864,7 +2890,7 @@ let authResult;
 try{authResult=await db.auth.getUser();}
 catch(e){if(generation!==refreshGeneration)return;throw e;}
 if(generation!==refreshGeneration)return;
-const {data:{user:u},error}=authResult;if(error&&error.name!=='AuthSessionMissingError')throw error;generalReviewEdit=null;themeReviewEdit=null;user=u;profile=null;members=[];mediatorExperience.reset(u?.id??null);aiResults.reset(u?.id??null);personalityExperience.reset(u?.id??null);swipeAnswers.clear();swipeImportance.clear();importancePending.clear();importanceSaving.clear();importanceAvailable=false;importanceLoadError='';priorityShares.clear();priorityShareSaving.clear();prioritySharesAvailable=false;priorityShareError='';skippedUnderstanding.clear();understandingShares.clear();understandingShareSaving.clear();understandingShareError='';understandingSharesAvailable=false;understandingShareChecking=false;for(const answers of themeAnswers.values())answers.clear();activeThemeDeck=null;themeCategory='all';themeIndex=0;themeReview=false;themeSaveError='';swipeBusy=false;swipeLoadError='';swipeSaveError='';swipeExportStatus='';swipeReview=false;swipeSkippedReview=false;swipeIndex=0;sharedMatches=[];sharedPriorities=[];sharedDeckId='general';sharedError='';sharedPriorityError='';sharedLoading=false;sharedSession++;sharedRequest++;activityInviteBusy=false;activityInviteError='';insightsRows=[];sharedUnderstandingRows=[];insightsLoading=false;insightsError='';insightsRequest++;if(swipeOverviewRefreshTimer!==null){clearTimeout(swipeOverviewRefreshTimer);swipeOverviewRefreshTimer=null;}swipeOverviewRows=[];swipeOverviewError='';swipeOverviewLoading=false;swipeOverviewRequest++;themesUnlocked=false;themesLoading=false;themesError='';themesRequest++;
+const {data:{user:u},error}=authResult;if(error&&error.name!=='AuthSessionMissingError')throw error;generalReviewEdit=null;themeReviewEdit=null;user=u;profile=null;members=[];mediatorExperience.reset(u?.id??null);aiResults.reset(u?.id??null);personalityExperience.reset(u?.id??null);swipeAnswers.clear();swipeImportance.clear();importancePending.clear();importanceSaving.clear();importanceAvailable=false;importanceLoadError='';priorityShares.clear();priorityShareSaving.clear();prioritySharesAvailable=false;priorityShareError='';skippedUnderstanding.clear();understandingShares.clear();understandingShareSaving.clear();understandingShareError='';understandingSharesAvailable=false;understandingShareChecking=false;for(const answers of themeAnswers.values())answers.clear();activeThemeDeck=null;themeCategory='all';themeIndex=0;themeReview=false;themeSaveError='';swipeBusy=false;swipeLoadError='';swipeSaveError='';swipeExportStatus='';swipeReview=false;swipeSkippedReview=false;swipeIndex=0;sharedMatches=[];sharedPriorities=[];sharedDeckId='general';sharedError='';sharedPriorityError='';sharedLoading=false;sharedSession++;sharedRequest++;activityInviteBusy=false;activityInviteError='';insightsRows=[];sharedUnderstandingRows=[];insightsLoading=false;insightsError='';insightsRequest++;if(swipeOverviewRefreshTimer!==null){clearTimeout(swipeOverviewRefreshTimer);swipeOverviewRefreshTimer=null;}swipeOverviewRows=[];swipeOverviewUnderstandingRows=[];swipeOverviewError='';swipeOverviewLoading=false;swipeOverviewRequest++;themesUnlocked=false;themesLoading=false;themesError='';themesRequest++;
 inboxPairEpoch=null;
 activityNotificationsRequest++;activityNotifications=[];activityNotificationsError='';activityNotificationsLoading=false;activityMarkBusy=null;activityFeedback='';
 if(typeof schysstaRequest!=='undefined'){schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];schysstaNotifications=[];schysstaReplacementLinks=[];schysstaHistory=[];schysstaEndTarget=null;schysstaLoading=false;schysstaError='';schysstaRequest++;schysstaSaving.clear();schysstaPausedIds.clear();schysstaExpandedIds.clear();schysstaDecisionFeedback='';clearFamilyChat();schysstaDraft='';schysstaDraftOpen=false;schysstaDraftKey=null;schysstaEditTarget=null;schysstaSubmitting=false;schysstaMessage='';schysstaCopyMessage='';schysstaCopyFallback=false;schysstaFocusId='';schysstaSearch='';schysstaFilterStatus='all';}
@@ -3312,7 +3338,7 @@ document.addEventListener('keydown',e=>{
 });
 document.addEventListener('submit',async e=>{if(e.target.id==='comm-reflection-form'){e.preventDefault();if(page()!=='kommunikation'||!user)return;const values=Object.fromEntries(new FormData(e.target));const result=buildReflectionPractice(values);updateCommunicationPreview('reflection',result);const output=$('comm-reflection-output');if(output){if(!result)output.textContent='Fyll i alla tre stegen innan du skapar en spegling.';output.focus();}return;}if(e.target.id==='comm-solution-form'){e.preventDefault();if(page()!=='kommunikation'||!user)return;const values=Object.fromEntries(new FormData(e.target));const plan=buildSolutionPlan(values);updateCommunicationPreview('solution',plan);const output=$('comm-solution-output');if(output){if(!plan)output.textContent='Fyll i alla fyra fälten innan du skapar ett utkast.';output.focus();}return;}if(e.target.id==='comm-nvc-form'){e.preventDefault();if(page()!=='nvc'||!user)return;const values=Object.fromEntries(new FormData(e.target));const sentence=buildNvcSentence(values);updateCommunicationPreview('nvc',sentence);const output=$('comm-nvc-output');if(output){if(!sentence)output.textContent='Fyll i alla fyra steg innan du skapar en formulering.';output.focus();}return;}if(e.target.id==='mediator-form'){e.preventDefault();await mediatorExperience.submit();return;}if(e.target.id==='family-chat-form'){e.preventDefault();await sendFamilyChatMessage();return;}if(e.target.id==='schyssta-manual-form'){e.preventDefault();await submitManualSchysstaRule();return;}if(e.target.id!=='live-login')return;await submitLiveLogin(e);});
 window.addEventListener('hashchange',()=>{
-  if(page()!=='swipe'){if(swipeOverviewRefreshTimer!==null){clearTimeout(swipeOverviewRefreshTimer);swipeOverviewRefreshTimer=null;}swipeOverviewRows=[];swipeOverviewError='';swipeOverviewLoading=false;swipeOverviewRequest++;}
+  if(page()!=='swipe'){if(swipeOverviewRefreshTimer!==null){clearTimeout(swipeOverviewRefreshTimer);swipeOverviewRefreshTimer=null;}swipeOverviewRows=[];swipeOverviewUnderstandingRows=[];swipeOverviewError='';swipeOverviewLoading=false;swipeOverviewRequest++;}
   if(page()!=='insikter'){activityInviteError='';insightsRows=[];sharedUnderstandingRows=[];insightsError='';insightsLoading=false;insightsRequest++;}
   if(page()!=='regler'&&page()!=='inkorg'){schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];schysstaNotifications=[];schysstaReplacementLinks=[];schysstaHistory=[];schysstaError='';schysstaLoading=false;schysstaRequest++;}
   render();scrollLiveMainTop();
@@ -3354,14 +3380,16 @@ document.addEventListener('visibilitychange',()=>{
     void fetchActivityNotifications({quiet:true});
 });
 window.addEventListener('online',()=>{
-  if(page()==='swipe'&&user&&members.length===2)void fetchSwipeOverview({quiet:true});
+  if(page()==='swipe'&&user&&members.length===2)
+    void recheckInboxPair().then(valid=>{if(valid&&page()==='swipe')void fetchSwipeOverview({quiet:true});});
   if(page()==='insikter'&&user&&members.length===2)void fetchInsights({quiet:true});
   if(schysstaListEnabled&&user&&members.length===2&&!schysstaDraftOpen&&!schysstaLoading
      &&schysstaError&&['hem','inkorg','regler'].includes(page()))void fetchSchysstaList();
 });
 window.addEventListener('focus',()=>{
   void pollSharedMatches();
-  if(page()==='swipe'&&user&&members.length===2)void fetchSwipeOverview({quiet:true});
+  if(page()==='swipe'&&user&&members.length===2)
+    void recheckInboxPair().then(valid=>{if(valid&&page()==='swipe')void fetchSwipeOverview({quiet:true});});
   if(page()==='insikter'&&user&&members.length===2)
     void recheckInboxPair().then(valid=>{if(valid&&page()==='insikter')void fetchInsights({quiet:true});});
   if(page()==='inkorg'&&user&&members.length===2)void recheckInboxPair();
@@ -3386,8 +3414,11 @@ window.setInterval(()=>{
 },15000);
 window.setInterval(()=>void pollSharedMatches(),SHARED_POLL_INTERVAL_MS);
 window.setInterval(()=>{
-  if(!document.hidden&&page()==='insikter'&&user&&members.length===2)
+  if(document.hidden||!user||members.length!==2)return;
+  if(page()==='insikter')
     void recheckInboxPair().then(valid=>{if(valid&&page()==='insikter')void fetchInsights({quiet:true});});
+  else if(page()==='swipe'&&sharedUnderstandingEnabled)
+    void recheckInboxPair().then(valid=>{if(valid&&page()==='swipe')void fetchSwipeOverview({quiet:true});});
 },INSIGHTS_CONSENT_REFRESH_MS);
 // If the other family member withdraws consent, remove their profile on the next check.
 window.setInterval(()=>{if(!document.hidden&&page()==='personlighet'&&user)void personalityExperience.refreshShared();},15000);
