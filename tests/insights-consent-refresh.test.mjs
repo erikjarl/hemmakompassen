@@ -15,7 +15,7 @@ function harness(){
   const renders=[];
   const state={
     user:{id:'viewer'},members:[{user_id:'viewer',role:'parent'},{user_id:'other',role:'teen'}],
-    sharedSession:1,insightsRequest:0,insightsRows:[A],sharedUnderstandingRows:[B],insightsError:'',
+    inboxPairEpoch:'verified-pair-1',sharedSession:1,insightsRequest:0,insightsRows:[A],sharedUnderstandingRows:[B],insightsError:'',
     insightsLoading:false,sharedInsightsEnabled:true,sharedUnderstandingEnabled:true,INSIGHT_DECK_IDS:['general'],
     page:()=> 'insikter',render:()=>renders.push('render'),focusInsightTarget:()=>false,
     safeInsightMatches:(_,data)=>data,
