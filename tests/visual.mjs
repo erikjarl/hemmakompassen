@@ -89,7 +89,7 @@ async function verifyDesktopSidebarBrand(){
         const a=aside.getBoundingClientRect();
         const s=getComputedStyle(aside);
         const range=document.createRange();
-        range.selectNodeContents(brand);
+        range.selectNodeContents(brand.querySelector('.live-brand-text')||brand);
         const text=range.getBoundingClientRect();
         return {textLeft:text.left,textRight:text.right,
           contentLeft:a.left+parseFloat(s.paddingLeft),
@@ -125,7 +125,7 @@ async function verifyDesktopSidebarBrand(){
         const large=await page.evaluate(()=>{
           const aside=document.querySelector(".live-sidebar"),brand=aside.querySelector(".live-brand");
           const side=aside.getBoundingClientRect(),s=getComputedStyle(aside),range=document.createRange();
-          range.selectNodeContents(brand);
+          range.selectNodeContents(brand.querySelector('.live-brand-text')||brand);
           const rect=range.getBoundingClientRect();
           return {right:rect.right,limit:side.right-parseFloat(s.paddingRight)-parseFloat(s.borderRightWidth),
             lines:[...range.getClientRects()].filter(r=>r.width>0).length};

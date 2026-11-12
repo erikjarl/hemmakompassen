@@ -49,6 +49,9 @@
 
 /* Midnight Haven: subtle forest, compass mark and mobile iconography */
 .live-brand{display:inline-flex;align-items:center;gap:12px}
+/* Keep icon and wordmark in separate shrinkable flex items on desktop. */
+.live-sidebar .live-brand::before{flex:0 0 38px;box-sizing:content-box}
+.live-sidebar .live-brand-text{min-width:0;overflow-wrap:anywhere}
 .live-brand::before{content:"";width:38px;height:38px;flex:none;border:2px solid #c58a30;border-radius:50%;background:radial-gradient(circle at center,#f5a623 0 4px,transparent 5px);box-shadow:0 0 0 1px #b67d271f,0 0 22px #c58a3010}
 .home-hero{position:relative;isolation:isolate;overflow:hidden;min-height:340px;display:flex;align-items:center;border:1px solid #3e4257;border-radius:28px;margin-bottom:30px;padding:clamp(28px,5vw,54px);background:linear-gradient(90deg,#111522ed 0%,#121827b9 64%,#11152288),url("./landscape.svg") center 62%/cover no-repeat;box-shadow:0 24px 50px #0003}
 .home-hero-inner{position:relative;z-index:2;max-width:740px}
