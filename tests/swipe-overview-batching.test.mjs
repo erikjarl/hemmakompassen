@@ -15,7 +15,7 @@ function setup(){
   let timerId=0,rpcCount=0,renderCount=0,route='swipe';
   let deferred=null;
   const factory=new Function('env',`
-    let user={id:'parent'},sharedSession=1,swipeOverviewRows=[{card_id:'old'}],
+    let user={id:'parent'},sharedSession=1,inboxPairEpoch='verified-pair-1',swipeOverviewRows=[{card_id:'old'}],
       swipeOverviewUnderstandingRows=[],swipeOverviewError='',swipeOverviewLoading=false,swipeOverviewRequest=0,
       swipeOverviewRefreshTimer=null;
     const members=[{user_id:'parent',role:'parent'},{user_id:'teen',role:'teen'}];
