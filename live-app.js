@@ -266,7 +266,12 @@ async function recheckInboxPair(){
     sharedRequest++;insightsRequest++;
     sharedMatches=[];sharedPriorities=[];sharedError='';sharedPriorityError='';sharedLoading=false;
     insightsRows=[];sharedUnderstandingRows=[];insightsError='';insightsLoading=false;
-    swipeOverviewRequest++;swipeOverviewRows=[];swipeOverviewUnderstandingRows=[];swipeOverviewError='';swipeOverviewLoading=false;
+    // Some isolated pair-check unit harnesses deliberately omit the swipe
+    // route. The real application always owns this state; keep it guarded
+    // when invalidating the active family epoch.
+    if(typeof swipeOverviewRequest!=='undefined'){
+      swipeOverviewRequest++;swipeOverviewRows=[];swipeOverviewUnderstandingRows=[];swipeOverviewError='';swipeOverviewLoading=false;
+    }
     // Family rules, notices and pending actions are scoped to this same pair.
     // Their old cached contents must not outlive a revoked/unknown pairing.
     schysstaRequest++;
@@ -1113,7 +1118,7 @@ function swipeOverviewView(){
       '<ul class="swipe-unified-statements">'+sharedUnderstanding.map(card=>'<li>'+esc(cardTextForRole(card,viewerRole()))+'</li>').join('')+'</ul>'+
       '<a href="#insikter" class="insights-back-link">Hantera och se delningen i Gemensamma insikter</a></section>'
     :'';
-  return title+'<p class="live-muted">'+(count?count+' '+(count===1?'gemensamt ja-svar':'gemensamma ja-svar')+' från de kortlekar ni har använt.':'Inga gemensamma ja-svar hittades ännu.')+' Bara kort där båda har svarat ja visas. Förståelsekort visas separat när de uttryckligen delas.</p>'+
+  return title+'<p class="live-muted">'+(count?count+' '+(count===1?'gemensamt ja-svar':'gemensamma ja-svar')+' från de kortlekar ni har använt.':'Inga gemensamma ja-svar hittades ännu.')+' Bara kort där båda har svarat ja räknas som matchningar. Frivilligt delade förståelsekort visas i ett eget avsnitt nedan.</p>'+
     (activityMatches?'<p class="swipe-unified-next-step"><strong>Att göra tillsammans:</strong> Ni har båda visat intresse för '+activityPreview+activityMore+'. Välj gärna en aktivitet i listan och föreslå en dag att göra den tillsammans. Ett ja är ett intresse, inte en överenskommelse. <a href="#inkorg">Öppna Inkorgen och föreslå en tid</a>.</p>'+activityDetails:'')+
     (advicePreview.length?'<section class="swipe-unified-advice" aria-label="Redaktionella råd utifrån era gemensamma svar"><h3>Små steg att prova</h3>'+advicePreview.map(advice=>'<p>'+esc(advice)+'</p>').join('')+'<p class="live-muted">Förskrivna förslag utifrån era gemensamma ja-svar, inte AI och inte individuella bedömningar.</p></section>':'')+
     (groups.size?'<ul class="swipe-match-list swipe-unified-list">'+sortedGroups.map(([category,items])=>
