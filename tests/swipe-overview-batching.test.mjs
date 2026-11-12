@@ -16,10 +16,11 @@ function setup(){
   let deferred=null;
   const factory=new Function('env',`
     let user={id:'parent'},sharedSession=1,swipeOverviewRows=[{card_id:'old'}],
-      swipeOverviewError='',swipeOverviewLoading=false,swipeOverviewRequest=0,
+      swipeOverviewUnderstandingRows=[],swipeOverviewError='',swipeOverviewLoading=false,swipeOverviewRequest=0,
       swipeOverviewRefreshTimer=null;
     const members=[{user_id:'parent',role:'parent'},{user_id:'teen',role:'teen'}];
-    const sharedInsightsEnabled=true;
+    const sharedInsightsEnabled=true,sharedUnderstandingEnabled=false;
+    const safeSharedUnderstanding=()=>[];
     const INSIGHT_DECK_IDS=['general','one','two','three','four','five','six'];
     const page=()=>env.route();
     const renderKeepingGeneralReview=()=>env.render();
