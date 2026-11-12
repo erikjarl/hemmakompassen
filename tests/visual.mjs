@@ -4839,6 +4839,34 @@ try{
     'FUN-SW-02: the activity invitation links to a concrete next step');
   await checkOverflow(pairedActivity.page,'FUN-SW-02 shared activity invitation 390px');
   await capture(pairedActivity.page,'mobile-swipe-activity-invitation.png');
+  // FUN-SW-02: a long all-deck activity set remains complete in the detail
+  // list, but the first mobile paragraph contains only three distinct examples.
+  // No real Supabase user answers are changed by this browser fixture.
+  await pairedActivity.page.evaluate(()=>{
+    window.__HK_TEST_SHARED_MATCHES__=[
+      ...[1,2,3,4,5].map(n=>({
+        deck_id:'aktiviteter',card_id:'aktiviteter-0'+n,answer:true
+      })),
+      {deck_id:'samtal',card_id:'samtal-01',answer:true}
+    ];
+  });
+  await pairedActivity.page.goto(base+'#hem',{waitUntil:'load'});
+  await pairedActivity.page.goto(base+'#swipe',{waitUntil:'load'});
+  await pairedActivity.page.locator('.swipe-unified-next-step').waitFor();
+  for(const width of [320,390,430]){
+    await pairedActivity.page.setViewportSize({width,height:844});
+    const invitation=await pairedActivity.page.locator('.swipe-unified-next-step').innerText();
+    assert.match(invitation,/2 andra aktiviteter/,
+      'FUN-SW-02: '+width+'px invitation counts additional activities');
+    assert.equal(await pairedActivity.page.locator('.swipe-unified-statements > li').count(),6,
+      'FUN-SW-02: '+width+'px full match list retains five activities and one conversation');
+    const fourth=await pairedActivity.page.locator('.swipe-unified-statements > li').nth(3).innerText();
+    assert.ok(!invitation.includes(fourth),
+      'FUN-SW-02: '+width+'px fourth activity belongs in details, not lead');
+    await checkOverflow(pairedActivity.page,'FUN-SW-02 five activities '+width+'px');
+    await capture(pairedActivity.page,'mobile-swipe-five-activities-'+width+'.png');
+  }
+  await pairedActivity.page.setViewportSize({width:390,height:844});
   // A revoked mutual activity must disappear on the next authoritative
   // snapshot, while an unrelated confirmed conversation match remains.
   await pairedActivity.page.evaluate(()=>{
