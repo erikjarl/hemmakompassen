@@ -2625,7 +2625,10 @@ async function verifyPairedTwoRoleExchange(){
     await teen.page.locator('#schyssta-rule-'+fixture.rules[0].id).waitFor();
     assert.equal(await teen.page.locator('#schyssta-rule-'+fixture.rules[0].id+' .schyssta-approved-details > summary').isVisible(),true,
       'An accepted agreement is visible to the other role even while details are collapsed');
-    assert.equal(await teen.page.locator('.schyssta-quick-counts').count(),1);
+    assert.equal(await teen.page.locator('.schyssta-quick-counts').count(),0,
+      'An accepted agreement is already shown prominently; no redundant counts when no other rules remain');
+    assert.equal(await teen.page.locator('#schyssta-rule-'+fixture.rules[0].id+' [data-schyssta-decision]').count(),0,
+      'Accepted rules must not ask either person to approve again');
     record.push({case:'not-now-resume-teen-approve-parent-approve-both-see-accepted',passed:true});
     await checkOverflow(parent.page,'FUN-03 linked parent 390px');
     await checkOverflow(teen.page,'FUN-03 linked teen 320px');
