@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261112-compact-theme-list1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261112-approved-rules-flat1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261112-compact-theme-list1';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261112-approved-rules-flat1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261112-compact-theme-list1';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261112-approved-rules-flat1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -2802,7 +2802,7 @@ function schysstaView(){
     :'<p class="live-muted">Använd knappen Föreslå en regel ovan för att öppna formuläret.</p>';
   // FBK-02-01: put server-confirmed agreements first and hide optional writing
   // guidance until requested; keep pending decisions directly after the agreed list.
-  const approvedSection='<div class="schyssta-filter-group" data-schyssta-filter-group="approved">'
+  const approvedSection='<div class="schyssta-filter-group'+(approved.length?' schyssta-approved-present':'')+'" data-schyssta-filter-group="approved">'
     +card('<h2>Våra överenskommelser</h2>'+list(approved,'Ni har ännu inga regler som båda godkänt.')
       +(approved.length?'<details class="schyssta-export-panel"><summary>Kopiera eller spara överenskommelser</summary><div class="schyssta-actions"><button class="schyssta-secondary" type="button" data-schyssta-copy>Kopiera aktuella regler</button><button class="schyssta-secondary" type="button" data-schyssta-download>Ladda ner som textfil</button></div><p class="live-muted">Textfilen innehåller bara regler som båda har godkänt. Den sparas på din enhet, så hantera den privat.</p></details>':'')
       +(schysstaCopyMessage?'<p role="status" class="schyssta-feedback">'+esc(schysstaCopyMessage)+'</p>':'')
