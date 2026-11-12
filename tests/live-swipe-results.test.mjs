@@ -518,7 +518,8 @@ console.log('PASS: unified activity lead names confirmed matches only');
   const css=swipeCss.split('/* FBK-02-06 / UX-SW-03:')[1];
   assert.ok(css,'Discoverable optional deck CSS exists');
   assert.match(css,/\.swipe-more-decks>summary\s*\{[\s\S]*?font-size:clamp\(17px/);
-  assert.match(css,/\.swipe-more-decks>summary::after\s*\{[\s\S]*?content:'▸'/);
+  assert.match(css,/\.swipe-more-decks>summary::after\s*\{[\s\S]*?content:'Visa teman  ▾'/);
+  assert.match(css,/\.swipe-more-decks\[open\]>summary::after\{content:'Dölj teman  ▴'\}/);
   assert.match(css,/\.swipe-more-decks>summary:focus-visible\s*\{/);
 }
 console.log('PASS: extra swipe decks stay optional but have prominent disclosure styling');

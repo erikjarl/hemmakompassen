@@ -4791,7 +4791,7 @@ try{
    assert.ok(deckChoiceAppearance.height>=52&&deckChoiceAppearance.fontSize>=17,
      'FBK-02-06: next-deck disclosure is a readable, touch-sized mobile option: '+JSON.stringify(deckChoiceAppearance));
    assert.equal(deckChoiceAppearance.cursor,'pointer','FBK-02-06: disclosure signals interactivity');
-   assert.match(deckChoiceAppearance.chevron,/▸/,'FBK-02-06: closed deck choice has a visible chevron');
+   assert.match(deckChoiceAppearance.chevron,/Visa teman.*▾/,'FBK-02-06: closed deck choice visibly explains how to open the themes');
    await deckChoice.focus();
    assert.equal(await deckChoice.evaluate(el=>document.activeElement===el),true,
      'FBK-02-06: deck-choice disclosure remains keyboard-focusable');
