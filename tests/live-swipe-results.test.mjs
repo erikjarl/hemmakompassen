@@ -463,6 +463,29 @@ console.log('PASS: all-deck insights gate, A-only sanitizer, B/NO isolation, ses
   assert.match(html,/Lyssna färdigt innan ni svarar/,'Other deck supplies one suggestion to unified advice');
   assert.match(html,/Förskrivna förslag/,'The advice identifies its editorial origin');
   assert.doesNotMatch(html,/HEMLIGT/,'Undisclosed understanding cards are not rendered');
+  state.sharedDeck=id=>id==='aktiviteter'?{cards:[
+    {id:'a1',type:'match',category:'Fritid',parentText:'Fika på stan'},
+    {id:'a2',type:'match',category:'Fritid',parentText:'Spela fotboll'},
+    {id:'a3',type:'match',category:'Fritid',parentText:'Gå på museum'},
+    {id:'a4',type:'match',category:'Fritid',parentText:'Bowla'},
+    {id:'a5',type:'match',category:'Fritid',parentText:'Cykla'}
+  ]}:undefined;
+  state.swipeOverviewRows=[
+    {deck_id:'aktiviteter',card_id:'a1',answer:true},
+    {deck_id:'aktiviteter',card_id:'a2',answer:true},
+    {deck_id:'aktiviteter',card_id:'a3',answer:true},
+    {deck_id:'aktiviteter',card_id:'a4',answer:true},
+    {deck_id:'aktiviteter',card_id:'a5',answer:true}
+  ];
+  const many=state.view();
+  const lead=many.split('<p class="swipe-unified-next-step">')[1]?.split('</p>')[0]||'';
+  assert.match(lead,/Fika på stan/,'First activity appears in invitation');
+  assert.match(lead,/2 andra aktiviteter/,'Remaining confirmed activities are counted');
+  assert.doesNotMatch(lead,/Bowla|Cykla/,'Long activity sets do not flood the invitation');
+  assert.match(many,/Bowla/,'Fourth activity remains in detailed results');
+  assert.match(many,/Cykla/,'Fifth activity remains in detailed results');
+  state.swipeOverviewRows=state.swipeOverviewRows.slice(0,4);
+  assert.match(state.view(),/en annan aktivitet/,'Singular remaining activity is idiomatic');
   state.swipeOverviewRows=[];
   assert.doesNotMatch(state.view(),/Ni har båda visat intresse för/,'No activity claims remain after revocation');
   assert.doesNotMatch(state.view(),/Föreslå en konkret dag tillsammans/,'No editorial advice survives revocation');

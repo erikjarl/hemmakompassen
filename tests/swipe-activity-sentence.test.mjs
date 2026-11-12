@@ -29,7 +29,9 @@ test('only confirmed activity match statements feed the primary invitation',()=>
   assert.match(view,/if\(row\.answer!==true\|\|!matched\)continue/);
   assert.match(view,/activity:row\.deck_id==='aktiviteter'/);
   assert.match(view,/\.filter\(item=>item\.activity\)\.map\(item=>item\.statement\)/);
-  assert.match(view,/esc\(formatMatchedActivities\(activityStatements\)\)/);
+  assert.match(view,/esc\(formatMatchedActivities\(activityStatements\.slice\(0,3\)\)\)/);
   assert.match(view,/activityMatches\?'<p class="swipe-unified-next-step">/);
-  assert.doesNotMatch(view,/activityStatements\.slice\(0,3\)/);
+  assert.match(view,/activityStatements\.slice\(0,3\)/);
+  assert.match(view,/remainingActivities>0/);
+  assert.match(view,/activityPreview\+activityMore/);
 });
