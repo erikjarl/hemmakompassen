@@ -2802,7 +2802,7 @@ function schysstaView(){
     :'<p class="live-muted">Använd knappen Föreslå en regel ovan för att öppna formuläret.</p>';
   // FBK-02-01: put server-confirmed agreements first and hide optional writing
   // guidance until requested; keep pending decisions directly after the agreed list.
-  const approvedSection='<div class="schyssta-filter-group" data-schyssta-filter-group="approved">'
+  const approvedSection='<div class="schyssta-filter-group'+(approved.length?' schyssta-approved-present':'')+'" data-schyssta-filter-group="approved">'
     +card('<h2>Våra överenskommelser</h2>'+list(approved,'Ni har ännu inga regler som båda godkänt.')
       +(approved.length?'<details class="schyssta-export-panel"><summary>Kopiera eller spara överenskommelser</summary><div class="schyssta-actions"><button class="schyssta-secondary" type="button" data-schyssta-copy>Kopiera aktuella regler</button><button class="schyssta-secondary" type="button" data-schyssta-download>Ladda ner som textfil</button></div><p class="live-muted">Textfilen innehåller bara regler som båda har godkänt. Den sparas på din enhet, så hantera den privat.</p></details>':'')
       +(schysstaCopyMessage?'<p role="status" class="schyssta-feedback">'+esc(schysstaCopyMessage)+'</p>':'')
