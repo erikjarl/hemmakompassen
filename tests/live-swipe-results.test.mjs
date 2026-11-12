@@ -451,7 +451,7 @@ console.log('PASS: all-deck insights gate, A-only sanitizer, B/NO isolation, ses
       {id:'g1',type:'match',category:'Samtal',parentText:'Prata om böcker'},
       {id:'secret',type:'understanding',category:'Privat',parentText:'HEMLIGT'}
     ]}:undefined,
-    viewerRole:()=> 'parent',cardTextForRole:card=>card.parentText,
+    viewerRole:()=> 'parent',cardTextForRole:card=>state.viewerRole()==='teen'?(card.teenText??card.parentText):card.parentText,
     ADVICE_BY_KEY:{activity:'Föreslå en konkret dag tillsammans.',conversation:'Lyssna färdigt innan ni svarar.'},
     adviceKeyForCard:card=>card.id==='a1'?'activity':'conversation',
     firstSentence:value=>String(value||'').split('.')[0]+'.',
