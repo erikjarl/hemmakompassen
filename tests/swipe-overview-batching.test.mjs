@@ -35,6 +35,7 @@ function setup(){
       state:()=>({rows:swipeOverviewRows,loading:swipeOverviewLoading,
         request:swipeOverviewRequest,error:swipeOverviewError}),
       changeSession:()=>{sharedSession++},
+      changeEpoch:epoch=>{inboxPairEpoch=epoch},
       changeUser:id=>{user={id}},
     };
   `);
@@ -104,4 +105,16 @@ test('a failed deck RPC hides the whole shared snapshot',async()=>{
   assert.equal(s.api.state().rows.length,0);
   assert.match(s.api.state().error,/kunde inte kontrolleras/i);
   assert.equal(s.api.state().loading,false);
+});
+
+
+test('an in-flight server response is discarded after the family pair epoch changes',async()=>{
+  const s=setup(),pending=[];
+  s.setDeferred(deck=>new Promise(resolve=>pending.push({deck,resolve})));
+  void s.api.fetch();
+  assert.equal(s.rpcCount,7);
+  s.api.changeEpoch('different-family-pair');
+  pending.splice(0).forEach(p=>p.resolve({data:[{card_id:'from-old-pair',answer:true}]}));
+  await s.flush();
+  assert.deepEqual(s.api.state().rows,[]);
 });
