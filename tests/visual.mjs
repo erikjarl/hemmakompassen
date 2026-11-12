@@ -4913,6 +4913,24 @@ try{
     const fourth=await pairedActivity.page.locator('.swipe-unified-statements > li').nth(3).innerText();
     assert.ok(!invitation.includes(fourth),
       'FUN-SW-02: '+width+'px fourth activity belongs in details, not lead');
+    const allActivities=pairedActivity.page.locator('.swipe-unified-activities');
+    await allActivities.locator(':scope > summary').waitFor();
+    assert.equal(await allActivities.evaluate(el=>el.open),false,
+      'FUN-SW-02: '+width+'px all-activity list stays collapsed by default');
+    assert.match(await allActivities.locator(':scope > summary').innerText(),/Visa alla 5 gemensamma aktiviteter/,
+      'FUN-SW-02: '+width+'px disclosure names the full verified count');
+    assert.equal(await allActivities.locator('li').count(),5,
+      'FUN-SW-02: '+width+'px the complete server-confirmed activity set is present');
+    assert.equal(await allActivities.locator('li:visible').count(),0,
+      'FUN-SW-02: '+width+'px secondary activities do not crowd the initial view');
+    await allActivities.locator(':scope > summary').click();
+    assert.equal(await allActivities.locator('li:visible').count(),5,
+      'FUN-SW-02: '+width+'px all shared activities become visible on request');
+    await checkOverflow(pairedActivity.page,'FUN-SW-02 expanded activities '+width+'px');
+    await capture(pairedActivity.page,'mobile-swipe-all-activities-expanded-'+width+'.png');
+    await allActivities.locator(':scope > summary').click();
+    assert.equal(await allActivities.evaluate(el=>el.open),false,
+      'FUN-SW-02: '+width+'px activities can collapse again');
     await checkOverflow(pairedActivity.page,'FUN-SW-02 five activities '+width+'px');
     await capture(pairedActivity.page,'mobile-swipe-five-activities-'+width+'.png');
   }
@@ -4930,6 +4948,8 @@ try{
   await pairedActivity.page.locator('.swipe-unified-list > li').first().waitFor();
   assert.equal(await pairedActivity.page.locator('.swipe-unified-next-step').count(),0,
     'FUN-SW-02: revoked activity JA+JA must remove the shared invitation');
+  assert.equal(await pairedActivity.page.locator('.swipe-unified-activities').count(),0,
+    'FUN-SW-02: revoked activity must also disappear from the optional complete list');
   assert.match(await pairedActivity.page.locator('.swipe-unified-overview').innerText(),/1 gemensamt ja-svar/,
     'FUN-SW-02: revocation keeps only the remaining server-confirmed conversation match');
   assert.equal(await pairedActivity.page.locator('.swipe-unified-statements > li').count(),1,
