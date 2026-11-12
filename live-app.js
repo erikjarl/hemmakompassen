@@ -2543,6 +2543,7 @@ function inboxView(){
   return '<h1>Inkorg</h1><p>Här kan ni skriva privata meddelanden, se frivilligt delade gemensamma kort och hantera regelförfrågningar.</p>'
     +'<div class="inbox-refresh-actions"><button type="button" class="schyssta-secondary" id="inbox-refresh-all"'+(inboxRefreshing?' disabled':'')+'>'+(inboxRefreshing?'Uppdaterar hela inkorgen…':'Uppdatera hela inkorgen')+'</button>'
     +(inboxRefreshStatus?'<p role="status" aria-live="polite">'+esc(inboxRefreshStatus)+'</p>':'')+'</div>'
+    +(sharedInsightsEnabled?'<section class="live-panel inbox-insights-shortcut" aria-labelledby="inbox-insights-heading"><h2 id="inbox-insights-heading">Gemensamma insikter och AI-reflektion</h2><p class="live-muted">Utforska era serververifierade gemensamma svar och frivilligt delade förståelsekort. Om AI-reflektion finns visas den där, inte i privata meddelanden.</p><a class="live-button" href="#insikter">Visa gemensamma insikter och reflektion</a></section>':'')
     +unreadOverview+activityPanel+chat+rules;
 }
 async function fetchSchysstaList(){

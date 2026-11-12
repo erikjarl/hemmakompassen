@@ -36,6 +36,7 @@ function harness({role='parent',fail=true,readback=true,confirmed=true,previous=
      kind:'rule_proposed',body:'Prata efter skolan',read_at:null,created_at:'2026-11-09T07:00:00Z'}],
    schysstaSuggestions:[],schysstaRules:[],schysstaManualRules:[],
    schysstaReplacementLinks:[],schysstaHistory:[],
+   sharedInsightsEnabled:true,
    activityNotificationsEnabled:false,activityNotificationsLoading:false,
    activityNotificationsError:'',activityUnreadCount:()=>0,
    inboxRefreshing:false,inboxRefreshStatus:'',
