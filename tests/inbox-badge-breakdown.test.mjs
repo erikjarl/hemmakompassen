@@ -5,13 +5,15 @@ import {readFileSync} from 'node:fs';
 const source=readFileSync(new URL('../live-app.js',import.meta.url),'utf8');
 const menu=source.slice(source.indexOf('function menu(){'),source.indexOf('function menu(){')+4000);
 
-test('inkorgens menymarkering förklarar de tre olästa kategorierna',()=>{
-  assert.match(menu,/const unreadMessages=inboxReady&&!familyChatUnreadError\?familyChatUnread:0/);
-  assert.match(menu,/const unreadActivities=inboxReady&&activityNotificationsEnabled/);
-  assert.match(menu,/const count=key==='inkorg'\?\(unread\+unreadMessages\+unreadActivities\)/);
-  assert.match(menu,/unreadMessages\+' privata meddelanden'/);
-  assert.match(menu,/unread\+' regelhändelser'/);
-  assert.match(menu,/unreadActivities\+' gemensamma kort'/);
+test('inkorgens menymarkering förklarar kända och okända kategorier',()=>{
+  const helper=source.slice(source.indexOf('function inboxNavUnreadState(){'),source.indexOf('function menu(){'));
+  assert.match(helper,/const ready=!!user&&members\.length===2&&!!inboxPairEpoch/);
+  assert.match(helper,/familyChatUnreadError\?null:familyChatUnread/);
+  assert.match(helper,/schysstaLoading\|\|schysstaError\?null:schysstaUnreadCount\(\)/);
+  assert.match(helper,/activityNotificationsLoading\|\|activityNotificationsError\?null:activityUnreadCount\(\)/);
+  assert.match(menu,/const unreadState=inboxNavUnreadState\(\)/);
+  assert.match(menu,/const badgeText=unknown\?/);
+  assert.match(menu,/okänt antal/);
   assert.match(menu,/aria-label="'\+esc\(descriptor\)\+'" title="'\+esc\(descriptor\)/);
-  assert.match(menu,/count>9\?'9\+':count/);
+  assert.match(menu,/const html=nav\.map\(navItem\)\.join\(''\)/);
 });
