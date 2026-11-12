@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261112-singular-results4';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261112-private-theme-progress5';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261112-singular-results4';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261112-private-theme-progress5';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261112-singular-results4';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261112-private-theme-progress5';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -1429,14 +1429,22 @@ async function fetchThemeUnlock(){
 }
 function themeDecksView(completedGeneral=false){
   const unlocked=members.length===2&&themesUnlocked&&!themesLoading&&!themesError;
+  // Show only this viewer's saved theme progress, never a partner's answers.
+  const startedThemes=unlocked?THEME_DECKS.filter(deck=>(themeAnswers.get(deck.id)?.size||0)>0).length:0;
+  const completedThemes=unlocked?THEME_DECKS.filter(deck=>
+    (themeAnswers.get(deck.id)?.size||0)===deck.cards.length).length:0;
+  const progress=unlocked
+    ?'Min progression: '+startedThemes+' av '+THEME_DECKS.length+' teman påbörjade'+
+      (completedThemes?' · '+completedThemes+' '+(completedThemes===1?'klart':'klara'):'')
+    :'Utforska '+THEME_DECKS.length+' teman tillsammans';
   const status=unlocked
     ?'Utforska kortlekarna i egen takt. Gemensamma ja kan visas direkt, även om kortlekarna inte är färdigspelade.'
     :'Koppla ihop en förälder och en tonåring för att öppna kortlekarna. Dina egna svar förblir privata.';
   return '<section class="swipe-themes" aria-labelledby="swipe-themes-heading">'+
-    (completedGeneral?'<details class="swipe-more-decks"><summary id="swipe-themes-heading"><span class="swipe-more-decks-label"><span class="swipe-more-decks-icon" aria-hidden="true">✦</span><span><strong>Gör fler kortlekar</strong><small>Utforska '+THEME_DECKS.length+' teman tillsammans</small></span></span></summary>':'<h2 id="swipe-themes-heading">Fler kortlekar</h2>')+
+    (completedGeneral?'<details class="swipe-more-decks"><summary id="swipe-themes-heading"><span class="swipe-more-decks-label"><span class="swipe-more-decks-icon" aria-hidden="true">✦</span><span><strong>Gör fler kortlekar</strong><small>'+esc(progress)+'</small></span></span></summary>':'<h2 id="swipe-themes-heading">Fler kortlekar</h2>')+
     '<p class="live-muted" role="status">'+esc(status)+'</p>'+
     THEME_DECKS.map(deck=>card(unlocked
-      ?'<details><summary><strong>'+esc(deck.title)+'</strong> · '+deck.cards.length+' kort</summary><p class="live-muted">Ämnen: '+esc([...new Set(THEME_DECK_MODELS.find(model=>model.id===deck.id).cards.map(item=>item.category))].join(' · '))+'</p></details><p class="live-muted">Din privata status: '+themeAnswers.get(deck.id).size+' / '+deck.cards.length+' kort</p><button type="button" class="live-button" data-theme-open="'+esc(deck.id)+'">'+(themeAnswers.get(deck.id).size===deck.cards.length?'Visa och ändra svar':'Öppna kortleken')+'</button>'
+      ?'<details><summary><strong>'+esc(deck.title)+'</strong> · '+deck.cards.length+' kort</summary><p class="live-muted">Ämnen: '+esc([...new Set(THEME_DECK_MODELS.find(model=>model.id===deck.id).cards.map(item=>item.category))].join(' · '))+'</p></details><p class="live-muted">Din privata status: '+(themeAnswers.get(deck.id)?.size||0)+' / '+deck.cards.length+' kort</p><button type="button" class="live-button" data-theme-open="'+esc(deck.id)+'">'+((themeAnswers.get(deck.id)?.size||0)===deck.cards.length?'Visa och ändra svar':'Öppna kortleken')+'</button>'
       :'<h3>'+esc(deck.title)+'</h3><p class="live-muted">Tillgänglig efter säker familjeparning.</p>'
     )).join('')+
     (themesError?'<button type="button" class="live-button" id="retry-theme-unlock">Kontrollera igen</button>':'')+
