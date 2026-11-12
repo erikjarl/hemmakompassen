@@ -266,6 +266,7 @@ async function recheckInboxPair(){
     sharedRequest++;insightsRequest++;
     sharedMatches=[];sharedPriorities=[];sharedError='';sharedPriorityError='';sharedLoading=false;
     insightsRows=[];sharedUnderstandingRows=[];insightsError='';insightsLoading=false;
+    swipeOverviewRequest++;swipeOverviewRows=[];swipeOverviewUnderstandingRows=[];swipeOverviewError='';swipeOverviewLoading=false;
     // Family rules, notices and pending actions are scoped to this same pair.
     // Their old cached contents must not outlive a revoked/unknown pairing.
     schysstaRequest++;
@@ -1062,7 +1063,7 @@ function formatMatchedActivities(statements){
 function swipeOverviewView(){
   if(!sharedInsightsEnabled||!user||members.length!==2||!members.some(m=>m.user_id===user.id)||
      !members.some(m=>m.role==='parent')||!members.some(m=>m.role==='teen'))return '';
-  const title='<section class="live-panel swipe-unified-overview" aria-labelledby="swipe-overview-heading"><span class="swipe-eyebrow">BARA GEMENSAMMA JA-SVAR</span><h2 id="swipe-overview-heading">Det ni har gemensamt – alla kortlekar</h2>';
+  const title='<section class="live-panel swipe-unified-overview" aria-labelledby="swipe-overview-heading"><span class="swipe-eyebrow">GEMENSAMT OCH FRIVILLIGT DELAT</span><h2 id="swipe-overview-heading">Det ni har gemensamt – alla kortlekar</h2>';
   if(swipeOverviewLoading)return title+'<p role="status">Kontrollerar gemensamma svar från alla kortlekar…</p></section>';
   if(swipeOverviewError)return title+'<p role="alert">'+esc(swipeOverviewError)+'</p><button type="button" class="schyssta-secondary" id="swipe-overview-retry">Försök igen</button></section>';
   const groups=new Map();
@@ -3375,14 +3376,16 @@ document.addEventListener('visibilitychange',()=>{
     void fetchActivityNotifications({quiet:true});
 });
 window.addEventListener('online',()=>{
-  if(page()==='swipe'&&user&&members.length===2)void fetchSwipeOverview({quiet:true});
+  if(page()==='swipe'&&user&&members.length===2)
+    void recheckInboxPair().then(valid=>{if(valid&&page()==='swipe')void fetchSwipeOverview({quiet:true});});
   if(page()==='insikter'&&user&&members.length===2)void fetchInsights({quiet:true});
   if(schysstaListEnabled&&user&&members.length===2&&!schysstaDraftOpen&&!schysstaLoading
      &&schysstaError&&['hem','inkorg','regler'].includes(page()))void fetchSchysstaList();
 });
 window.addEventListener('focus',()=>{
   void pollSharedMatches();
-  if(page()==='swipe'&&user&&members.length===2)void fetchSwipeOverview({quiet:true});
+  if(page()==='swipe'&&user&&members.length===2)
+    void recheckInboxPair().then(valid=>{if(valid&&page()==='swipe')void fetchSwipeOverview({quiet:true});});
   if(page()==='insikter'&&user&&members.length===2)
     void recheckInboxPair().then(valid=>{if(valid&&page()==='insikter')void fetchInsights({quiet:true});});
   if(page()==='inkorg'&&user&&members.length===2)void recheckInboxPair();
@@ -3407,8 +3410,11 @@ window.setInterval(()=>{
 },15000);
 window.setInterval(()=>void pollSharedMatches(),SHARED_POLL_INTERVAL_MS);
 window.setInterval(()=>{
-  if(!document.hidden&&page()==='insikter'&&user&&members.length===2)
+  if(document.hidden||!user||members.length!==2)return;
+  if(page()==='insikter')
     void recheckInboxPair().then(valid=>{if(valid&&page()==='insikter')void fetchInsights({quiet:true});});
+  else if(page()==='swipe'&&sharedUnderstandingEnabled)
+    void recheckInboxPair().then(valid=>{if(valid&&page()==='swipe')void fetchSwipeOverview({quiet:true});});
 },INSIGHTS_CONSENT_REFRESH_MS);
 // If the other family member withdraws consent, remove their profile on the next check.
 window.setInterval(()=>{if(!document.hidden&&page()==='personlighet'&&user)void personalityExperience.refreshShared();},15000);
