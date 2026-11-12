@@ -53,7 +53,7 @@ const aiResults=createAiResultExperience({db,config:c,onRender:()=>{
 const personalityExperience=createPersonalityExperience({db,isSharingEnabled:personalitySharingEnabled,isRetestEnabled:c.enablePrivateRetests===true,
   useAiAnalysis:aiResultEnabled,analysisPanel:(kind,scope,signature)=>aiResults.panel(kind,scope,signature),
   onRender:()=>{if(user&&page()==='personlighet')render();}});
-let swipeIndex=0,swipeBusy=false,swipeReview=false,swipeLoadError='',swipeSaveError='';
+let swipeIndex=0,swipeBusy=false,swipeReview=false,swipeLoadError='',swipeSaveError='',swipeExportStatus='';
 let sharedMatches=[],sharedPriorities=[],sharedDeckId='general',sharedError='',sharedPriorityError='',sharedLoading=false,sharedSession=0,sharedRequest=0;
 let sharedPollPending=false;
 // Presentation-only selection. It never changes, fetches, or shares answers.
@@ -1525,24 +1525,25 @@ function privateSwipeExportText(rows){
 }
 function downloadPrivateSwipeAnswers(){
  const rows=privateSwipeExportRows(),status=$('swipe-export-status');
- if(!rows){if(status)status.textContent=importanceSaving.size||importancePending.size||swipeBusy
+ const setStatus=message=>{swipeExportStatus=message;if(status)status.textContent=message;};
+ if(!rows){setStatus(importanceSaving.size||importancePending.size||swipeBusy
   ?'Vänta tills dina senaste svar och viktighetsskattningar har sparats innan du laddar ner filen.'
-  :'Alla dina privata svar och viktighetsskattningar kunde inte hämtas. Uppdatera sidan och försök igen.';return;}
- if(!rows.length){if(status)status.textContent='Du har ännu inga sparade svar eller viktighetsskattningar att exportera.';return;}
+  :'Alla dina privata svar och viktighetsskattningar kunde inte hämtas. Uppdatera sidan och försök igen.');return;}
+ if(!rows.length){setStatus('Du har ännu inga sparade svar eller viktighetsskattningar att exportera.');return;}
  try{
   const blob=new Blob(['\uFEFF',privateSwipeExportText(rows)],{type:'text/plain;charset=utf-8'});
   const url=URL.createObjectURL(blob),link=document.createElement('a');
   link.href=url;link.download='mina-gillaswajp-svar.txt';link.style.display='none';
   document.body.appendChild(link);
-  try{link.click();if(status)status.textContent='Din privata textfil har förberetts. Förvara den säkert på din enhet.';}
+  try{link.click();setStatus('Din privata textfil har förberetts. Förvara den säkert på din enhet.');}
   finally{link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
- }catch(e){if(status)status.textContent='Det gick inte att skapa filen. Inga svar har ändrats.';}
+ }catch(e){setStatus('Det gick inte att skapa filen. Inga svar har ändrats.');}
 }
 function privateSwipeExportControls(){
  return '<section class="swipe-private-export" aria-label="Privat export av mina svar">'+
   '<button type="button" class="schyssta-secondary" id="swipe-export-private">Ladda ner mina egna svar</button>'+
   '<p class="live-muted">En privat textfil med dina inlästa svar, eventuella överhoppningar och viktighetsskattningar. Inga svar från den andra personen eller gemensamma resultat följer med. Filen sparas på din enhet.</p>'+
-  '<p id="swipe-export-status" role="status" aria-live="polite"></p></section>';
+  '<p id="swipe-export-status" role="status" aria-live="polite">'+esc(swipeExportStatus)+'</p></section>';
 }
 function themeSwipeView(){
   const deck=THEME_DECKS.find(d=>d.id===activeThemeDeck);
@@ -2810,7 +2811,7 @@ let authResult;
 try{authResult=await db.auth.getUser();}
 catch(e){if(generation!==refreshGeneration)return;throw e;}
 if(generation!==refreshGeneration)return;
-const {data:{user:u},error}=authResult;if(error&&error.name!=='AuthSessionMissingError')throw error;generalReviewEdit=null;themeReviewEdit=null;user=u;profile=null;members=[];mediatorExperience.reset(u?.id??null);aiResults.reset(u?.id??null);personalityExperience.reset(u?.id??null);swipeAnswers.clear();swipeImportance.clear();importancePending.clear();importanceSaving.clear();importanceAvailable=false;importanceLoadError='';priorityShares.clear();priorityShareSaving.clear();prioritySharesAvailable=false;priorityShareError='';skippedUnderstanding.clear();understandingShares.clear();understandingShareSaving.clear();understandingShareError='';understandingSharesAvailable=false;understandingShareChecking=false;for(const answers of themeAnswers.values())answers.clear();activeThemeDeck=null;themeCategory='all';themeIndex=0;themeReview=false;themeSaveError='';swipeBusy=false;swipeLoadError='';swipeSaveError='';swipeReview=false;swipeSkippedReview=false;swipeIndex=0;sharedMatches=[];sharedPriorities=[];sharedDeckId='general';sharedError='';sharedPriorityError='';sharedLoading=false;sharedSession++;sharedRequest++;activityInviteBusy=false;activityInviteError='';insightsRows=[];sharedUnderstandingRows=[];insightsLoading=false;insightsError='';insightsRequest++;if(swipeOverviewRefreshTimer!==null){clearTimeout(swipeOverviewRefreshTimer);swipeOverviewRefreshTimer=null;}swipeOverviewRows=[];swipeOverviewError='';swipeOverviewLoading=false;swipeOverviewRequest++;themesUnlocked=false;themesLoading=false;themesError='';themesRequest++;
+const {data:{user:u},error}=authResult;if(error&&error.name!=='AuthSessionMissingError')throw error;generalReviewEdit=null;themeReviewEdit=null;user=u;profile=null;members=[];mediatorExperience.reset(u?.id??null);aiResults.reset(u?.id??null);personalityExperience.reset(u?.id??null);swipeAnswers.clear();swipeImportance.clear();importancePending.clear();importanceSaving.clear();importanceAvailable=false;importanceLoadError='';priorityShares.clear();priorityShareSaving.clear();prioritySharesAvailable=false;priorityShareError='';skippedUnderstanding.clear();understandingShares.clear();understandingShareSaving.clear();understandingShareError='';understandingSharesAvailable=false;understandingShareChecking=false;for(const answers of themeAnswers.values())answers.clear();activeThemeDeck=null;themeCategory='all';themeIndex=0;themeReview=false;themeSaveError='';swipeBusy=false;swipeLoadError='';swipeSaveError='';swipeExportStatus='';swipeReview=false;swipeSkippedReview=false;swipeIndex=0;sharedMatches=[];sharedPriorities=[];sharedDeckId='general';sharedError='';sharedPriorityError='';sharedLoading=false;sharedSession++;sharedRequest++;activityInviteBusy=false;activityInviteError='';insightsRows=[];sharedUnderstandingRows=[];insightsLoading=false;insightsError='';insightsRequest++;if(swipeOverviewRefreshTimer!==null){clearTimeout(swipeOverviewRefreshTimer);swipeOverviewRefreshTimer=null;}swipeOverviewRows=[];swipeOverviewError='';swipeOverviewLoading=false;swipeOverviewRequest++;themesUnlocked=false;themesLoading=false;themesError='';themesRequest++;
 inboxPairEpoch=null;
 activityNotificationsRequest++;activityNotifications=[];activityNotificationsError='';activityNotificationsLoading=false;activityMarkBusy=null;activityFeedback='';
 if(typeof schysstaRequest!=='undefined'){schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];schysstaNotifications=[];schysstaReplacementLinks=[];schysstaHistory=[];schysstaEndTarget=null;schysstaLoading=false;schysstaError='';schysstaRequest++;schysstaSaving.clear();schysstaPausedIds.clear();schysstaExpandedIds.clear();schysstaDecisionFeedback='';clearFamilyChat();schysstaDraft='';schysstaDraftOpen=false;schysstaDraftKey=null;schysstaEditTarget=null;schysstaSubmitting=false;schysstaMessage='';schysstaCopyMessage='';schysstaCopyFallback=false;schysstaFocusId='';schysstaSearch='';schysstaFilterStatus='all';}
