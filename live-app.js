@@ -266,6 +266,9 @@ async function recheckInboxPair(){
     sharedRequest++;insightsRequest++;
     sharedMatches=[];sharedPriorities=[];sharedError='';sharedPriorityError='';sharedLoading=false;
     insightsRows=[];sharedUnderstandingRows=[];insightsError='';insightsLoading=false;
+    // Revoke the prior pair's analysis immediately, even if its old request
+    // finishes later. The next pair must get a fresh server-verified basis.
+    if(typeof aiResults!=='undefined')aiResults.invalidate('swipe','all');
     // Some isolated pair-check unit harnesses deliberately omit the swipe
     // route. The real application always owns this state; keep it guarded
     // when invalidating the active family epoch.
@@ -1197,8 +1200,12 @@ function swipeAiSignature(deckId){
   return allowed.length?JSON.stringify([user.id,viewerRole(),deckId,allowed,sharedPriorities]):null;
 }
 function insightsAiSignature(){
-  if(!user||insightsLoading||insightsError||(!insightsRows.length&&!sharedUnderstandingRows.length))return null;
-  return JSON.stringify([user.id,viewerRole(),insightsRows,sharedUnderstandingEnabled?sharedUnderstandingRows:[]]);
+  // An otherwise identical set of answers from another family must never
+  // reuse a reflection generated for a previous pair.
+  if(!user||!inboxPairEpoch||insightsLoading||insightsError||
+     (!insightsRows.length&&!sharedUnderstandingRows.length))return null;
+  return JSON.stringify([user.id,viewerRole(),sharedSession,inboxPairEpoch,
+    insightsRows,sharedUnderstandingEnabled?sharedUnderstandingRows:[]]);
 }
 function insightsView(){
   const title='<div class="swipe-experience insights-view"><header class="swipe-heading insights-heading"><span class="swipe-eyebrow">ENDAST REDAN DELADE SVAR</span><h1>Era gemensamma insikter</h1><p>Utforska det ni båda valt att dela. Fortsätt gärna swajpa i er egen takt.</p><a class="insights-back-link" href="#swipe">← Till Gillaswajpen</a></header>';
