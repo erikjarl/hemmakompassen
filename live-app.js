@@ -2425,9 +2425,13 @@ async function refreshWholeInbox(){
       if(!activityNotificationsLoading)pending.push(fetchActivityNotifications());
       else skipped.push('aktivitetsaviseringar');
     }
+    if(sharedInsightsEnabled){
+      if(!insightsLoading)pending.push(fetchInsights());
+      else skipped.push('gemensamma insikter');
+    }
     await Promise.all(pending);
     if(viewer!==user?.id||session!==sharedSession||page()!=='inkorg')return;
-    inboxRefreshStatus=familyChatError||familyChatUnreadError||schysstaError||activityNotificationsError
+    inboxRefreshStatus=familyChatError||familyChatUnreadError||schysstaError||activityNotificationsError||insightsError
       ?'Vissa delar av inkorgen kunde inte uppdateras. Kontrollera felmeddelandena och försök igen.'
       :skipped.length
         ?'Vissa delar hämtades redan i bakgrunden ('+skipped.join(', ')+'). Kontrollera resultatet och uppdatera inkorgen igen vid behov.'
@@ -3392,7 +3396,8 @@ document.addEventListener('visibilitychange',()=>{
   if(document.hidden)return;
   void pollSharedMatches();
   if(page()==='personlighet')void personalityExperience.refreshShared();
-  if(page()==='insikter'&&user&&members.length===2)void fetchInsights({quiet:true});
+  if(['insikter','inkorg'].includes(page())&&user&&members.length===2)
+    void recheckInboxPair().then(valid=>{if(valid&&['insikter','inkorg'].includes(page()))void fetchInsights({quiet:true});});
   // Refresh the family's inbox after returning to the tab, without overwriting a draft.
   if(schysstaListEnabled&&user&&members.length===2&&!schysstaLoading&&!schysstaDraftOpen
     &&['hem','inkorg'].includes(page()))void fetchSchysstaList();
@@ -3412,8 +3417,8 @@ window.addEventListener('focus',()=>{
   void pollSharedMatches();
   if(page()==='swipe'&&user&&members.length===2)
     void recheckInboxPair().then(valid=>{if(valid&&page()==='swipe')void fetchSwipeOverview({quiet:true});});
-  if(page()==='insikter'&&user&&members.length===2)
-    void recheckInboxPair().then(valid=>{if(valid&&page()==='insikter')void fetchInsights({quiet:true});});
+  if(['insikter','inkorg'].includes(page())&&user&&members.length===2)
+    void recheckInboxPair().then(valid=>{if(valid&&['insikter','inkorg'].includes(page()))void fetchInsights({quiet:true});});
   if(page()==='inkorg'&&user&&members.length===2)void recheckInboxPair();
   if(page()==='regler'&&user&&members.length===2)
     void recheckInboxPair().then(valid=>{if(valid&&page()==='regler'&&!schysstaDraftOpen&&!schysstaLoading)void fetchSchysstaList();});
@@ -3437,8 +3442,8 @@ window.setInterval(()=>{
 window.setInterval(()=>void pollSharedMatches(),SHARED_POLL_INTERVAL_MS);
 window.setInterval(()=>{
   if(document.hidden||!user||members.length!==2)return;
-  if(page()==='insikter')
-    void recheckInboxPair().then(valid=>{if(valid&&page()==='insikter')void fetchInsights({quiet:true});});
+  if(['insikter','inkorg'].includes(page()))
+    void recheckInboxPair().then(valid=>{if(valid&&['insikter','inkorg'].includes(page()))void fetchInsights({quiet:true});});
   else if(page()==='swipe'&&sharedUnderstandingEnabled)
     void recheckInboxPair().then(valid=>{if(valid&&page()==='swipe')void fetchSwipeOverview({quiet:true});});
 },INSIGHTS_CONSENT_REFRESH_MS);
