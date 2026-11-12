@@ -2604,9 +2604,7 @@ function inboxView(){
             +esc(n.notification_id)+'"'+(activityMarkBusy?' disabled':'')+'>Markera som läst</button>':'')
           +'</div></li>').join('')+'</ul>'
         :(!activityNotificationsLoading&&!activityNotificationsError?'<p class="live-muted">Inga nya aviseringar just nu.</p>':'')));
-  return '<h1>Inkorg</h1><p>Här kan ni skriva privata meddelanden, se frivilligt delade gemensamma kort och hantera regelförfrågningar.</p>'
-    +'<div class="inbox-refresh-actions"><button type="button" class="schyssta-secondary" id="inbox-refresh-all"'+(inboxRefreshing?' disabled':'')+'>'+(inboxRefreshing?'Uppdaterar hela inkorgen…':'Uppdatera hela inkorgen')+'</button>'
-    +(inboxRefreshStatus?'<p role="status" aria-live="polite">'+esc(inboxRefreshStatus)+'</p>':'')+'</div>'
+  return '<h1>Inkorg</h1>'
     +(sharedInsightsEnabled?'<section class="live-panel inbox-insights-shortcut" aria-labelledby="inbox-insights-heading"><h2 id="inbox-insights-heading">Era gemensamma insikter och AI-reflektion</h2>'
       +(typeof aiResultEnabled!=='undefined'&&aiResultEnabled
         ?(insightsLoading?'<p role="status">Kontrollerar aktuella delade svar…</p>'
@@ -2615,6 +2613,10 @@ function inboxView(){
           :'<p class="live-muted">Ingen gemensam AI-reflektion är tillgänglig ännu. Ni kan utforska fler kort tillsammans.</p>')
         :'<p class="live-muted">Se era serververifierade gemensamma svar och frivilligt delade förståelsekort.</p>')
       +'<p><a href="#insikter">Visa alla gemensamma insikter och delningar</a></p></section>':'')
+
+    +'<p class="live-muted">Här kan ni skriva privata meddelanden, se frivilligt delade gemensamma kort och hantera regelförfrågningar.</p>'
+    +'<div class="inbox-refresh-actions"><button type="button" class="schyssta-secondary" id="inbox-refresh-all"'+(inboxRefreshing?' disabled':'')+'>'+(inboxRefreshing?'Uppdaterar hela inkorgen…':'Uppdatera hela inkorgen')+'</button>'
+    +(inboxRefreshStatus?'<p role="status" aria-live="polite">'+esc(inboxRefreshStatus)+'</p>':'')+'</div>'
     +unreadOverview+activityPanel+chat+rules;
 }
 // Keep an in-progress chat editor intact while the top AI panel changes.
