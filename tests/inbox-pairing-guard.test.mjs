@@ -150,6 +150,6 @@ assert.match(script,/else if\(page\(\)==='hem'\)\{\s*void recheckInboxPair\(\)\.
   'Home 15-second poll must check exact pairing before reading unread badge');
 assert.match(script,/if\(await recheckInboxPair\(\)\)await fetchSwipeMatches\(deckId,\{quiet:true\}\)/,
   'Shared swipe polling must check membership and epoch before shared result fetch');
-assert.match(script,/void recheckInboxPair\(\)\.then\(valid=>\{if\(valid&&page\(\)==='insikter'\)void fetchInsights\(\{quiet:true\}\);\}\)/,
+assert.match(script,/void recheckInboxPair\(\)\.then\(valid=>\{if\(valid&&\['insikter','inkorg'\]\.includes\(page\(\)\)\)void fetchInsights\(\{quiet:true\}\);\}\)/,
   'Shared insights focus and periodic polling must verify membership and epoch first');
 console.log('PASS: current pair guard blocks remote unpair, role/partner switches, errors and stale network responses');

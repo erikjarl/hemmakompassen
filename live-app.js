@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261112-unified-understanding4';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261112-inbox-inline-ai1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261112-unified-understanding4';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261112-inbox-inline-ai1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261112-unified-understanding4';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261112-inbox-inline-ai1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -48,6 +48,7 @@ const mediatorExperience=createAiMediatorExperience({db,config:c,escapeHtml:esc,
 const aiResults=createAiResultExperience({db,config:c,onRender:()=>{
   if(!user)return;
   if(page()==='swipe')renderKeepingGeneralReview();
+  else if(page()==='inkorg')patchInboxInsightsPanel();
   else if(['personlighet','insikter'].includes(page()))render();
 }});
 const personalityExperience=createPersonalityExperience({db,isSharingEnabled:personalitySharingEnabled,isRetestEnabled:c.enablePrivateRetests===true,
@@ -1273,18 +1274,22 @@ async function fetchInsights({quiet=false}={}){
   // server-verified display until a new all-deck snapshot is confirmed.
   // Failure clears BOTH A and B results, rather than retaining stale data.
   if(!quiet){insightsRows=[];sharedUnderstandingRows=[];insightsError='';insightsLoading=false;}
-  if(!sharedInsightsEnabled||!viewer||members.length!==2||!members.some(m=>m.user_id===viewer)||
-     !members.some(m=>m.role==='parent')||!members.some(m=>m.role==='teen')||page()!=='insikter'){
+  if(!sharedInsightsEnabled||!viewer||(page()==='inkorg'&&!inboxPairEpoch)||members.length!==2||!members.some(m=>m.user_id===viewer)||
+     !members.some(m=>m.role==='parent')||!members.some(m=>m.role==='teen')||
+     !['insikter','inkorg'].includes(page())){
     insightsRows=[];sharedUnderstandingRows=[];insightsError='';insightsLoading=false;render();return;
   }
   insightsLoading=true;
-  if(!quiet)render();
+  if(page()==='inkorg')patchInboxInsightsPanel();
+  else if(!quiet)render();
   try{
+    if(page()==='inkorg'&&!await recheckInboxPair())return;
     const [responses,understandingResponse]=await Promise.all([
       Promise.all(INSIGHT_DECK_IDS.map(deckId=>db.rpc('shared_swipe_matches',{p_deck_id:deckId}))),
       sharedUnderstandingEnabled?db.rpc('shared_understanding_cards'):Promise.resolve({data:[],error:null})
     ]);
-    if(request!==insightsRequest||session!==sharedSession||user?.id!==viewer||page()!=='insikter')return;
+    if(request!==insightsRequest||session!==sharedSession||user?.id!==viewer||
+       !['insikter','inkorg'].includes(page()))return;
     const safe=[];
     for(let i=0;i<INSIGHT_DECK_IDS.length;i++){
       const {data,error}=responses[i]||{};
@@ -1295,16 +1300,23 @@ async function fetchInsights({quiet=false}={}){
     if(understandingResponse?.error||!Array.isArray(understandingResponse?.data))throw Error('Shared understanding RPC unavailable');
     sharedUnderstandingRows=safeSharedUnderstanding(understandingResponse.data).map(card=>({deck_id:'general',card_id:card.id}));
   }catch(e){
-    if(request!==insightsRequest||session!==sharedSession||user?.id!==viewer||page()!=='insikter')return;
+    if(request!==insightsRequest||session!==sharedSession||user?.id!==viewer||
+       !['insikter','inkorg'].includes(page()))return;
     insightsRows=[];
     sharedUnderstandingRows=[];
     insightsError='Gemensamma insikter är inte tillgängliga just nu. Inga tidigare resultat visas.';
   }finally{
-    if(request===insightsRequest&&session===sharedSession&&user?.id===viewer&&page()==='insikter'){
+    if(request===insightsRequest&&session===sharedSession&&user?.id===viewer&&
+       ['insikter','inkorg'].includes(page())){
       insightsLoading=false;
       // Same data: avoid unnecessary rerenders, scroll jumps and AI requests.
       // Changed/revoked sharing creates a different analysis signature.
-      if(!quiet||previousSnapshot!==JSON.stringify([insightsRows,sharedUnderstandingRows,insightsError]))render();
+      if(page()==='inkorg'){
+        // Replace only the reflection section: no chat scroll, focus or draft
+        // can be destroyed by an asynchronous analysis or consent refresh.
+        patchInboxInsightsPanel();
+        if(!insightsError&&insightsAiSignature())queueMicrotask(autoAnalyze);
+      }else if(!quiet||previousSnapshot!==JSON.stringify([insightsRows,sharedUnderstandingRows,insightsError]))render();
       // Focus once on an intentional deep-link load; quiet consent refreshes never steal focus.
       if(!quiet&&!insightsError)focusInsightTarget();
     }
@@ -2418,9 +2430,14 @@ async function refreshWholeInbox(){
       if(!activityNotificationsLoading)pending.push(fetchActivityNotifications());
       else skipped.push('aktivitetsaviseringar');
     }
+    if(typeof sharedInsightsEnabled!=='undefined'&&sharedInsightsEnabled){
+      if(!insightsLoading)pending.push(fetchInsights());
+      else skipped.push('gemensamma insikter');
+    }
     await Promise.all(pending);
     if(viewer!==user?.id||session!==sharedSession||page()!=='inkorg')return;
-    inboxRefreshStatus=familyChatError||familyChatUnreadError||schysstaError||activityNotificationsError
+    inboxRefreshStatus=familyChatError||familyChatUnreadError||schysstaError||activityNotificationsError||
+      (typeof insightsError!=='undefined'&&insightsError)
       ?'Vissa delar av inkorgen kunde inte uppdateras. Kontrollera felmeddelandena och försök igen.'
       :skipped.length
         ?'Vissa delar hämtades redan i bakgrunden ('+skipped.join(', ')+'). Kontrollera resultatet och uppdatera inkorgen igen vid behov.'
@@ -2550,8 +2567,26 @@ function inboxView(){
   return '<h1>Inkorg</h1><p>Här kan ni skriva privata meddelanden, se frivilligt delade gemensamma kort och hantera regelförfrågningar.</p>'
     +'<div class="inbox-refresh-actions"><button type="button" class="schyssta-secondary" id="inbox-refresh-all"'+(inboxRefreshing?' disabled':'')+'>'+(inboxRefreshing?'Uppdaterar hela inkorgen…':'Uppdatera hela inkorgen')+'</button>'
     +(inboxRefreshStatus?'<p role="status" aria-live="polite">'+esc(inboxRefreshStatus)+'</p>':'')+'</div>'
-    +(sharedInsightsEnabled?'<section class="live-panel inbox-insights-shortcut" aria-labelledby="inbox-insights-heading"><h2 id="inbox-insights-heading">Gemensamma insikter och AI-reflektion</h2><p class="live-muted">Utforska era serververifierade gemensamma svar och frivilligt delade förståelsekort. Om AI-reflektion finns visas den där, inte i privata meddelanden.</p><a class="live-button" href="#insikter">Visa gemensamma insikter och reflektion</a></section>':'')
+    +(sharedInsightsEnabled?'<section class="live-panel inbox-insights-shortcut" aria-labelledby="inbox-insights-heading"><h2 id="inbox-insights-heading">Era gemensamma insikter och AI-reflektion</h2>'
+      +(typeof aiResultEnabled!=='undefined'&&aiResultEnabled
+        ?(insightsLoading?'<p role="status">Kontrollerar aktuella delade svar…</p>'
+          :insightsError?'<p role="alert">'+esc(insightsError)+'</p>'
+          :insightsAiSignature()?aiResults.panel('swipe','all',insightsAiSignature())
+          :'<p class="live-muted">Ingen gemensam AI-reflektion är tillgänglig ännu. Ni kan utforska fler kort tillsammans.</p>')
+        :'<p class="live-muted">Se era serververifierade gemensamma svar och frivilligt delade förståelsekort.</p>')
+      +'<p><a href="#insikter">Visa alla gemensamma insikter och delningar</a></p></section>':'')
     +unreadOverview+activityPanel+chat+rules;
+}
+// Keep an in-progress chat editor intact while the top AI panel changes.
+// Construct the panel from the SAME guarded inbox view used for full renders.
+function patchInboxInsightsPanel(){
+  if(page()!=='inkorg'||typeof document==='undefined')return;
+  const current=document.querySelector('.inbox-insights-shortcut');
+  if(!current)return;
+  const fragment=document.createElement('div');
+  fragment.innerHTML=inboxView();
+  const updated=fragment.querySelector('.inbox-insights-shortcut');
+  if(updated)current.replaceWith(updated);
 }
 async function fetchSchysstaList(){
   const request=++schysstaRequest,viewer=user?.id,session=sharedSession;
@@ -2804,7 +2839,7 @@ function autoAnalyze(){
     const deckId=activeThemeDeck||'general';
     const signature=swipeAiSignature(deckId);
     if(signature)void aiResults.ensure('swipe',deckId,signature);
-  }else if(page()==='insikter'&&sharedInsightsEnabled){
+  }else if(['insikter','inkorg'].includes(page())&&sharedInsightsEnabled){
     const signature=insightsAiSignature();
     if(signature)void aiResults.ensure('swipe','all',signature);
   }
@@ -2931,7 +2966,7 @@ if(user)openCommunicationSkill($('live-app'),communicationSkillFromHash(location
 if(user)void personalityExperience.load(user.id);
 if(user&&page()==='medlare')void mediatorExperience.loadList();
 if(user&&members.length===2){void fetchSwipeMatches('general');void fetchThemeUnlock();void fetchActivityNotifications();}
-if(page()==='insikter')void fetchInsights();
+if(['insikter','inkorg'].includes(page()))void fetchInsights();
 if(page()==='swipe'&&user&&members.length===2)void fetchSwipeOverview();
 if(typeof fetchSchysstaList==='function'&&schysstaListEnabled&&['regler','inkorg','hem'].includes(page()))void fetchSchysstaList();
 if(user&&members.length===2){
@@ -3364,7 +3399,7 @@ window.addEventListener('hashchange',()=>{
       input.scrollIntoView({block:'center'});
     });
   }
-  if(page()==='insikter')void fetchInsights();
+  if(['insikter','inkorg'].includes(page()))void fetchInsights();
   if(page()==='swipe'&&user&&members.length===2)void fetchSwipeOverview();
   if(page()==='personlighet')void personalityExperience.refreshShared();
   if(page()==='medlare')void mediatorExperience.loadList();
@@ -3378,7 +3413,8 @@ document.addEventListener('visibilitychange',()=>{
   if(document.hidden)return;
   void pollSharedMatches();
   if(page()==='personlighet')void personalityExperience.refreshShared();
-  if(page()==='insikter'&&user&&members.length===2)void fetchInsights({quiet:true});
+  if(['insikter','inkorg'].includes(page())&&user&&members.length===2)
+    void recheckInboxPair().then(valid=>{if(valid&&['insikter','inkorg'].includes(page()))void fetchInsights({quiet:true});});
   // Refresh the family's inbox after returning to the tab, without overwriting a draft.
   if(schysstaListEnabled&&user&&members.length===2&&!schysstaLoading&&!schysstaDraftOpen
     &&['hem','inkorg'].includes(page()))void fetchSchysstaList();
@@ -3398,8 +3434,8 @@ window.addEventListener('focus',()=>{
   void pollSharedMatches();
   if(page()==='swipe'&&user&&members.length===2)
     void recheckInboxPair().then(valid=>{if(valid&&page()==='swipe')void fetchSwipeOverview({quiet:true});});
-  if(page()==='insikter'&&user&&members.length===2)
-    void recheckInboxPair().then(valid=>{if(valid&&page()==='insikter')void fetchInsights({quiet:true});});
+  if(['insikter','inkorg'].includes(page())&&user&&members.length===2)
+    void recheckInboxPair().then(valid=>{if(valid&&['insikter','inkorg'].includes(page()))void fetchInsights({quiet:true});});
   if(page()==='inkorg'&&user&&members.length===2)void recheckInboxPair();
   if(page()==='regler'&&user&&members.length===2)
     void recheckInboxPair().then(valid=>{if(valid&&page()==='regler'&&!schysstaDraftOpen&&!schysstaLoading)void fetchSchysstaList();});
@@ -3423,8 +3459,8 @@ window.setInterval(()=>{
 window.setInterval(()=>void pollSharedMatches(),SHARED_POLL_INTERVAL_MS);
 window.setInterval(()=>{
   if(document.hidden||!user||members.length!==2)return;
-  if(page()==='insikter')
-    void recheckInboxPair().then(valid=>{if(valid&&page()==='insikter')void fetchInsights({quiet:true});});
+  if(['insikter','inkorg'].includes(page()))
+    void recheckInboxPair().then(valid=>{if(valid&&['insikter','inkorg'].includes(page()))void fetchInsights({quiet:true});});
   else if(page()==='swipe'&&sharedUnderstandingEnabled)
     void recheckInboxPair().then(valid=>{if(valid&&page()==='swipe')void fetchSwipeOverview({quiet:true});});
 },INSIGHTS_CONSENT_REFRESH_MS);
