@@ -4864,6 +4864,15 @@ try{
     "FUN-SW-02: consolidated result counts only two valid general A matches and one theme A match");
   assert.equal(await paired.page.locator(".swipe-unified-overview .swipe-unified-list > li").count(),2,
     "FUN-SW-02: result groups by category across decks without separate deck cards");
+  const sharedB=paired.page.locator('.swipe-unified-overview .swipe-unified-understanding');
+  await sharedB.waitFor();
+  assert.match(await sharedB.innerText(),/Så här funkar min tonåring/,
+    'FUN-SW-02: parent sees explicitly shared B messages in the unified overview');
+  assert.match(await sharedB.innerText(),/Tonåringen vill få prata färdigt innan du kommer med råd/,
+    'FUN-SW-02: parent sees reviewed, role-specific B wording only');
+  assert.doesNotMatch(await sharedB.innerText(),/Jag vill helst prata färdigt innan någon kommer med råd/,
+    'FUN-SW-02: teen-private B wording is not shown to parent');
+  await checkOverflow(paired.page,'FUN-SW-02 parent combined A+B 390px');
   assert.equal(await paired.page.locator('.swipe-unified-overview .swipe-unified-next-step').count(),0,
     'FUN-SW-02: conversation and general YES matches must not produce an invented activity invitation');
   // Positive complement: an explicitly server-confirmed activity JA+JA must
@@ -4908,9 +4917,9 @@ try{
     const invitation=await pairedActivity.page.locator('.swipe-unified-next-step').innerText();
     assert.match(invitation,/2 andra aktiviteter/,
       'FUN-SW-02: '+width+'px invitation counts additional activities');
-    assert.equal(await pairedActivity.page.locator('.swipe-unified-statements > li').count(),6,
+    assert.equal(await pairedActivity.page.locator('.swipe-unified-list .swipe-unified-statements > li').count(),6,
       'FUN-SW-02: '+width+'px full match list retains five activities and one conversation');
-    const fourth=await pairedActivity.page.locator('.swipe-unified-statements > li').nth(3).innerText();
+    const fourth=await pairedActivity.page.locator('.swipe-unified-list .swipe-unified-statements > li').nth(3).innerText();
     assert.ok(!invitation.includes(fourth),
       'FUN-SW-02: '+width+'px fourth activity belongs in details, not lead');
     const allActivities=pairedActivity.page.locator('.swipe-unified-activities');
@@ -4952,7 +4961,7 @@ try{
     'FUN-SW-02: revoked activity must also disappear from the optional complete list');
   assert.match(await pairedActivity.page.locator('.swipe-unified-overview').innerText(),/1 gemensamt ja-svar/,
     'FUN-SW-02: revocation keeps only the remaining server-confirmed conversation match');
-  assert.equal(await pairedActivity.page.locator('.swipe-unified-statements > li').count(),1,
+  assert.equal(await pairedActivity.page.locator('.swipe-unified-list .swipe-unified-statements > li').count(),1,
     'FUN-SW-02: revocation removes stale activity text from the unified list');
   // If the authoritative RPC fails after a valid result, the UI must fail
   // closed instead of showing the previously suggested activity again.
