@@ -11,6 +11,13 @@ let browser;
 const errors=[];
 const captureRecords=[];
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+// Legacy per-deck results are optional when a confirmed cross-deck summary exists.
+// Open them deliberately for browser checks of the older advice and controls.
+async function revealSwipeSecondary(page){
+  const details=page.locator('.swipe-secondary-results');
+  if(await details.count()&&!(await details.evaluate(el=>el.open)))
+    await details.locator(':scope > summary').click();
+}
 async function waitForServer(){
   for(let i=0;i<50;i++){
     try{const r=await fetch(base);if(r.ok)return;}catch{}
@@ -3653,6 +3660,8 @@ async function verifyAiReflectionRetryAndRoutes(){
         'Model link opens the intended existing listening exercise');
       records.push({role,step:'personality: listening exercise deeplink',status:'PASS'});
       await m.page.goto(base+'#swipe',{waitUntil:'load'});
+      await m.page.locator('.swipe-secondary-results').waitFor();
+      await revealSwipeSecondary(m.page);
       const swipe=m.page.locator('.swipe-results .ai-result-panel');
       await swipe.locator('.ai-result-prose').waitFor();
       assert.deepEqual(m.aiRequests.at(-1),{kind:'swipe',scope:'general'});
@@ -3727,6 +3736,8 @@ async function verifyAiReflectionRetryAndRoutes(){
       await m.page.locator('[data-swipe="yes"]').click();
       const themeReview=m.page.locator('#swipe-private-review');
       await themeReview.locator('details > summary').waitFor();
+      await m.page.locator('.swipe-secondary-results').waitFor();
+      await revealSwipeSecondary(m.page);
       const themePanel=m.page.locator('.swipe-results .ai-result-panel');
       await themePanel.locator('.ai-result-prose').waitFor();
       assert.ok(m.aiRequests.some(request=>request.kind==='swipe'&&request.scope==='samtal'),
@@ -4783,8 +4794,9 @@ try{
   await skipAgain.context.close();
   const paired=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,paired:true});
   await paired.page.goto(base+"#swipe",{waitUntil:"load"});
-  await paired.page.getByRole("heading",{name:"Era gemensamma svar"}).waitFor();
   await paired.page.locator(".swipe-unified-overview .swipe-unified-list > li").first().waitFor();
+  await paired.page.locator('.swipe-secondary-results').waitFor();
+  await revealSwipeSecondary(paired.page);
   assert.match(await paired.page.locator(".swipe-unified-overview").innerText(),/3 gemensamma ja-svar/,
     "FUN-SW-02: consolidated result counts only two valid general A matches and one theme A match");
   assert.equal(await paired.page.locator(".swipe-unified-overview .swipe-unified-list > li").count(),2,
@@ -5004,6 +5016,8 @@ try{
   await paired.page.evaluate(()=>{location.hash='insikter';});
   await paired.page.locator('[data-insight-open="aktiviteter"]').waitFor();
   await paired.page.locator('[data-insight-open="aktiviteter"]').click();
+  await paired.page.locator('.swipe-secondary-results').waitFor();
+  await revealSwipeSecondary(paired.page);
   await paired.page.locator('.swipe-results [data-insight-activity="aktiviteter-01"]').waitFor();
   assert.equal(await paired.page.locator('.swipe-results [data-insight-activity]').count(),1,
     'No NO or B card in the activity deck may create a shared invitation button');
@@ -5049,7 +5063,8 @@ try{
   await paired.page.locator('[data-insight-open="samtal"]').click();
   await paired.page.locator("#swipe-card[aria-label^='Temakort 1 av 104']").waitFor();
   await paired.page.locator('#theme-back').click();
-  await paired.page.getByRole('heading',{name:'Era gemensamma svar'}).waitFor();
+  await paired.page.locator('.swipe-secondary-results').waitFor();
+  await revealSwipeSecondary(paired.page);
 
   // SW-03A: the teenager alone sees own high-ranked, server-verifiable A YES.
   // Keep the future shared priority feature off: no private importance may
@@ -5059,6 +5074,8 @@ try{
     {authenticated:true,paired:true,role:'teen',privateImportance:true,priorityFeature:false}
   );
   await teenPriority.page.goto(base+'#swipe',{waitUntil:'load'});
+  await teenPriority.page.locator('.swipe-secondary-results').waitFor();
+  await revealSwipeSecondary(teenPriority.page);
   await teenPriority.page.locator('.swipe-private-priority').waitFor();
   const privatePreview=await teenPriority.page.locator('.swipe-private-priority').innerText();
   assert.match(privatePreview,/Mina viktigaste gemensamma ja-svar/);
@@ -5078,6 +5095,8 @@ try{
     {authenticated:true,paired:true,role:'teen',privateImportance:true,priorityFeature:true}
   );
   await teenPriorityConsent.page.goto(base+'#swipe',{waitUntil:'load'});
+  await teenPriorityConsent.page.locator('.swipe-secondary-results').waitFor();
+  await revealSwipeSecondary(teenPriorityConsent.page);
   const sharePriority=teenPriorityConsent.page.locator('[data-priority-share][data-card-id="general-01"]');
   await sharePriority.waitFor();
   assert.equal(await sharePriority.getAttribute('aria-pressed'),'false','Private +1 starts unshared without explicit consent');
@@ -5120,6 +5139,8 @@ try{
     {authenticated:true,paired:true,role:'parent',privateImportance:true,priorityFeature:true}
   );
   await parentPriority.page.goto(base+'#swipe',{waitUntil:'load'});
+  await parentPriority.page.locator('.swipe-secondary-results').waitFor();
+  await revealSwipeSecondary(parentPriority.page);
   await parentPriority.page.locator('.swipe-results .swipe-match-list li').first().waitFor();
   assert.equal(await parentPriority.page.locator('.swipe-private-priority').count(),0,
     'Private teen priorities never appear in parent results even when staging flag is on');
@@ -5176,9 +5197,13 @@ try{
   // general answers but may already explore a theme and see only mutual YES.
   await paired.page.locator('[data-theme-open="samtal"]').click();
   await paired.page.locator("#swipe-card[aria-label^='Temakort 1 av 104']").waitFor();
+  await paired.page.locator('.swipe-secondary-results').waitFor();
+  await revealSwipeSecondary(paired.page);
   await paired.page.locator(".swipe-results .swipe-match-list li").first().waitFor();
   assert.equal(await paired.page.locator(".swipe-results .swipe-match-list li").count(),1,"An unfinished theme shows only its verified mutual YES, not NO or other-deck answers");
   await paired.page.locator("#theme-back").click();
+  await paired.page.locator('.swipe-secondary-results').waitFor();
+  await revealSwipeSecondary(paired.page);
   await paired.page.locator(".swipe-results .swipe-match-list li").first().waitFor();
   assert.ok((await paired.page.locator('.swipe-summary-overview li').count())>=1,'Authorized A advice renders a compact icon overview');
   assert.equal(await paired.page.locator('.swipe-summary-overview svg[aria-hidden="true"]').count(),await paired.page.locator('.swipe-summary-overview li').count(),'Every overview topic has one decorative SVG and a text heading');
@@ -5512,7 +5537,8 @@ try{
     'UX-04: refresh remains available after expanding the help');
   await capture(paired.page,'mobile-schyssta-list.png');
   await paired.page.goto(base+'#swipe',{waitUntil:'load'});
-  await paired.page.getByRole('heading',{name:'Era gemensamma svar'}).waitFor();
+  await paired.page.locator('.swipe-secondary-results').waitFor();
+  await revealSwipeSecondary(paired.page);
   await paired.page.evaluate(()=>{window.__HK_RPC_UNAVAILABLE__=true;});
   await paired.page.getByRole("button",{name:"Uppdatera gemensamma svar"}).click();
   await paired.page.locator(".swipe-results [role='alert']").waitFor();
@@ -5614,6 +5640,8 @@ try{
   await unpairedInbox.context.close();
   const pairedTeen=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,paired:true,role:"teen"});
   await pairedTeen.page.goto(base+"#swipe",{waitUntil:"load"});
+  await pairedTeen.page.locator('.swipe-secondary-results').waitFor();
+  await revealSwipeSecondary(pairedTeen.page);
   const teenSummary=await pairedTeen.page.locator(".swipe-results").innerText();
   assert.match(teenSummary,/Gemensamma möjligheter – tonåring/,"The teen sees teen-specific wording");
   assert.match(await pairedTeen.page.locator('.swipe-summary-details').textContent(),/Välj gärna själv vad du vill börja prata om/,"The expanded teen prompt is derived from mutual YES only");
@@ -5726,6 +5754,8 @@ try{
   await unlocked.page.locator("#swipe-card").scrollIntoViewIfNeeded();
   await capture(unlocked.page,"mobile-theme-card.png");
   assert.match(await unlocked.page.locator("#swipe-card").innerText(),/Vad som varit roligt den senaste veckan/);
+  await unlocked.page.locator('.swipe-secondary-results').waitFor();
+  await revealSwipeSecondary(unlocked.page);
   await unlocked.page.getByRole('heading',{name:'Era gemensamma svar · Samtalsämnen'}).waitFor();
   const themeSharedText=await unlocked.page.locator('.swipe-results').innerText();
   assert.match(themeSharedText,/Vad som varit roligt den senaste veckan/,'Mutual theme YES is displayed inside its deck');
@@ -5939,6 +5969,8 @@ try{
   await checkOverflow(aiView.page,'AI personality result 390px');
   await capture(aiView.page,'mobile-ai-personality-result.png');
   await aiView.page.goto(base+'#swipe',{waitUntil:'load'});
+  await aiView.page.locator('.swipe-secondary-results').waitFor();
+  await revealSwipeSecondary(aiView.page);
   await aiView.page.locator('.swipe-results .ai-result-panel .ai-result-prose').waitFor();
   await aiView.page.locator('.live-main').evaluate(el=>{el.scrollTop=0;});
   assert.equal(await aiView.page.locator('.swipe-play-view > .swipe-heading #swipe-export-private').count(),0);

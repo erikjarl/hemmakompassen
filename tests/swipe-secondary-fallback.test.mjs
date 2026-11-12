@@ -31,8 +31,18 @@ test('loading, error or zero matches preserve accessible older results',()=>{
     assert.equal(render(changes),legacy,JSON.stringify(changes));
   }
 });
-test('incomplete deck or unpaired viewer do not hide the only usable results',()=>{
-  assert.equal(render({completed:false}),legacy);
+test('incomplete deck still prioritises a verified all-deck summary',()=>{
+  const html=render({completed:false});
+  assert.match(html,/<details class="swipe-secondary-results">/);
+  assert.match(html,/Tidigare gemensamt resultat/);
+  assert.doesNotMatch(html,/<details class="swipe-secondary-results" open/);
+});
+test('incomplete deck exposes fallback while loading, failing or empty',()=>{
+  for(const changes of [{loading:true},{error:'Tillfälligt fel'},{rows:[]}]){
+    assert.equal(render({completed:false,...changes}),legacy);
+  }
+});
+test('unpaired viewer or disabled sharing never collapses local results',()=>{
   assert.equal(render({paired:false}),legacy);
   assert.equal(render({enabled:false}),legacy);
 });

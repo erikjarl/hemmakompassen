@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261112-swipe-fallback1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261112-swipe-summary-focus1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261112-swipe-fallback1';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261112-swipe-summary-focus1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261112-swipe-fallback1';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261112-swipe-summary-focus1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -53,7 +53,7 @@ const aiResults=createAiResultExperience({db,config:c,onRender:()=>{
 const personalityExperience=createPersonalityExperience({db,isSharingEnabled:personalitySharingEnabled,isRetestEnabled:c.enablePrivateRetests===true,
   useAiAnalysis:aiResultEnabled,analysisPanel:(kind,scope,signature)=>aiResults.panel(kind,scope,signature),
   onRender:()=>{if(user&&page()==='personlighet')render();}});
-let swipeIndex=0,swipeBusy=false,swipeReview=false,swipeLoadError='',swipeSaveError='';
+let swipeIndex=0,swipeBusy=false,swipeReview=false,swipeLoadError='',swipeSaveError='',swipeExportStatus='';
 let sharedMatches=[],sharedPriorities=[],sharedDeckId='general',sharedError='',sharedPriorityError='',sharedLoading=false,sharedSession=0,sharedRequest=0;
 let sharedPollPending=false;
 // Presentation-only selection. It never changes, fetches, or shares answers.
@@ -1525,24 +1525,25 @@ function privateSwipeExportText(rows){
 }
 function downloadPrivateSwipeAnswers(){
  const rows=privateSwipeExportRows(),status=$('swipe-export-status');
- if(!rows){if(status)status.textContent=importanceSaving.size||importancePending.size||swipeBusy
+ const setStatus=message=>{swipeExportStatus=message;if(status)status.textContent=message;};
+ if(!rows){setStatus(importanceSaving.size||importancePending.size||swipeBusy
   ?'Vänta tills dina senaste svar och viktighetsskattningar har sparats innan du laddar ner filen.'
-  :'Alla dina privata svar och viktighetsskattningar kunde inte hämtas. Uppdatera sidan och försök igen.';return;}
- if(!rows.length){if(status)status.textContent='Du har ännu inga sparade svar eller viktighetsskattningar att exportera.';return;}
+  :'Alla dina privata svar och viktighetsskattningar kunde inte hämtas. Uppdatera sidan och försök igen.');return;}
+ if(!rows.length){setStatus('Du har ännu inga sparade svar eller viktighetsskattningar att exportera.');return;}
  try{
   const blob=new Blob(['\uFEFF',privateSwipeExportText(rows)],{type:'text/plain;charset=utf-8'});
   const url=URL.createObjectURL(blob),link=document.createElement('a');
   link.href=url;link.download='mina-gillaswajp-svar.txt';link.style.display='none';
   document.body.appendChild(link);
-  try{link.click();if(status)status.textContent='Din privata textfil har förberetts. Förvara den säkert på din enhet.';}
+  try{link.click();setStatus('Din privata textfil har förberetts. Förvara den säkert på din enhet.');}
   finally{link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
- }catch(e){if(status)status.textContent='Det gick inte att skapa filen. Inga svar har ändrats.';}
+ }catch(e){setStatus('Det gick inte att skapa filen. Inga svar har ändrats.');}
 }
 function privateSwipeExportControls(){
  return '<section class="swipe-private-export" aria-label="Privat export av mina svar">'+
   '<button type="button" class="schyssta-secondary" id="swipe-export-private">Ladda ner mina egna svar</button>'+
   '<p class="live-muted">En privat textfil med dina inlästa svar, eventuella överhoppningar och viktighetsskattningar. Inga svar från den andra personen eller gemensamma resultat följer med. Filen sparas på din enhet.</p>'+
-  '<p id="swipe-export-status" role="status" aria-live="polite"></p></section>';
+  '<p id="swipe-export-status" role="status" aria-live="polite">'+esc(swipeExportStatus)+'</p></section>';
 }
 function themeSwipeView(){
   const deck=THEME_DECKS.find(d=>d.id===activeThemeDeck);
@@ -1746,11 +1747,11 @@ function reopenGeneralReview(){
 // legacy per-deck explanation, priority and AI tools accessible on demand.
 function themeSecondaryResults(deckId,completed){
   const legacy=swipeResults(deckId);
-  // The shared all-deck snapshot is the primary result after finishing a
-  // theme. Keep all legacy tips, priority controls and AI available on demand.
+  // When an authoritative all-deck summary exists, keep per-deck tips,
+  // priorities and AI accessible on demand even before the deck is finished.
   // If the shared snapshot is loading or failed, leave the existing result
   // immediately visible instead of hiding the only usable feedback.
-  const hasUnified=completed&&sharedInsightsEnabled&&!swipeOverviewLoading&&!swipeOverviewError&&
+  const hasUnified=sharedInsightsEnabled&&!swipeOverviewLoading&&!swipeOverviewError&&
     user&&members.length===2&&swipeOverviewRows.length>0&&
     members.some(m=>m.user_id===user.id)&&members.some(m=>m.role==='parent')&&
     members.some(m=>m.role==='teen');
@@ -1759,9 +1760,9 @@ function themeSecondaryResults(deckId,completed){
 }
 function swipeSecondaryResults(completed){
   const legacy=swipeResults();
-  // Keep the existing result visible when the all-deck overview is
-  // loading or unavailable, just as the themed-deck fallback does.
-  const hasUnified=completed&&sharedInsightsEnabled&&!swipeOverviewLoading&&!swipeOverviewError&&
+  // A working all-deck summary is primary throughout the swipe journey;
+  // keep legacy results visible if the all-deck snapshot is unavailable.
+  const hasUnified=sharedInsightsEnabled&&!swipeOverviewLoading&&!swipeOverviewError&&
     swipeOverviewRows.length>0&&user&&members.length===2&&
     members.some(m=>m.user_id===user.id)&&members.some(m=>m.role==='parent')&&
     members.some(m=>m.role==='teen');
@@ -2733,6 +2734,14 @@ function render(){
     schysstaExpandedIds.clear();
     for(const id of expanded)schysstaExpandedIds.add(id);
   }
+  // Preserve an intentionally expanded legacy result when a fresh A snapshot,
+  // AI answer or card save rebuilds the swipe page. Never carry it to another
+  // account, pairing session or deck.
+  const existingSecondary=page()==='swipe'?document.querySelector('.swipe-secondary-results'):null;
+  const expandedSecondary=existingSecondary?.open?{
+    viewer:user?.id,session:sharedSession,deck:activeThemeDeck,
+    focusSummary:document.activeElement===existingSecondary.querySelector('summary')
+  }:null;
   const focusedPriority=page()==='swipe'?document.activeElement?.closest?.('[data-priority-share]'):null;
   const priorityFocus=focusedPriority?{deck:focusedPriority.dataset.deckId,card:focusedPriority.dataset.cardId}:null;
   // A shared-results refresh or category change must not close an expanded
@@ -2755,9 +2764,17 @@ function render(){
   // finishes. Keep the scroll of the active review, not only the input focus.
   const focusedPrivateReview=page()==='swipe'
     ?document.activeElement?.closest?.('#swipe-private-review,#swipe-general-review'):null;
-  const mainScroll=(page()==='inkorg'||priorityFocus||focusedSwipeCard||themeFilterFocus?.target||focusedPrivateReview)
+  const mainScroll=(page()==='inkorg'||priorityFocus||focusedSwipeCard||themeFilterFocus?.target||focusedPrivateReview||expandedSecondary)
     ?document.querySelector('.live-main')?.scrollTop:null;
   menu();$('live-app').innerHTML=user?(page()==='hem'?home():section(page())):login();
+  if(expandedSecondary&&page()==='swipe'&&user?.id===expandedSecondary.viewer
+    &&sharedSession===expandedSecondary.session&&activeThemeDeck===expandedSecondary.deck){
+    const nextSecondary=document.querySelector('.swipe-secondary-results');
+    if(nextSecondary){
+      nextSecondary.open=true;
+      if(expandedSecondary.focusSummary)nextSecondary.querySelector('summary')?.focus({preventScroll:true});
+    }
+  }
   if(expandedThemeCategory!==undefined){
     const nextFilter=$('theme-category')?.closest?.('details');
     if(nextFilter)nextFilter.open=expandedThemeCategory;
@@ -2794,7 +2811,7 @@ let authResult;
 try{authResult=await db.auth.getUser();}
 catch(e){if(generation!==refreshGeneration)return;throw e;}
 if(generation!==refreshGeneration)return;
-const {data:{user:u},error}=authResult;if(error&&error.name!=='AuthSessionMissingError')throw error;generalReviewEdit=null;themeReviewEdit=null;user=u;profile=null;members=[];mediatorExperience.reset(u?.id??null);aiResults.reset(u?.id??null);personalityExperience.reset(u?.id??null);swipeAnswers.clear();swipeImportance.clear();importancePending.clear();importanceSaving.clear();importanceAvailable=false;importanceLoadError='';priorityShares.clear();priorityShareSaving.clear();prioritySharesAvailable=false;priorityShareError='';skippedUnderstanding.clear();understandingShares.clear();understandingShareSaving.clear();understandingShareError='';understandingSharesAvailable=false;understandingShareChecking=false;for(const answers of themeAnswers.values())answers.clear();activeThemeDeck=null;themeCategory='all';themeIndex=0;themeReview=false;themeSaveError='';swipeBusy=false;swipeLoadError='';swipeSaveError='';swipeReview=false;swipeSkippedReview=false;swipeIndex=0;sharedMatches=[];sharedPriorities=[];sharedDeckId='general';sharedError='';sharedPriorityError='';sharedLoading=false;sharedSession++;sharedRequest++;activityInviteBusy=false;activityInviteError='';insightsRows=[];sharedUnderstandingRows=[];insightsLoading=false;insightsError='';insightsRequest++;if(swipeOverviewRefreshTimer!==null){clearTimeout(swipeOverviewRefreshTimer);swipeOverviewRefreshTimer=null;}swipeOverviewRows=[];swipeOverviewError='';swipeOverviewLoading=false;swipeOverviewRequest++;themesUnlocked=false;themesLoading=false;themesError='';themesRequest++;
+const {data:{user:u},error}=authResult;if(error&&error.name!=='AuthSessionMissingError')throw error;generalReviewEdit=null;themeReviewEdit=null;user=u;profile=null;members=[];mediatorExperience.reset(u?.id??null);aiResults.reset(u?.id??null);personalityExperience.reset(u?.id??null);swipeAnswers.clear();swipeImportance.clear();importancePending.clear();importanceSaving.clear();importanceAvailable=false;importanceLoadError='';priorityShares.clear();priorityShareSaving.clear();prioritySharesAvailable=false;priorityShareError='';skippedUnderstanding.clear();understandingShares.clear();understandingShareSaving.clear();understandingShareError='';understandingSharesAvailable=false;understandingShareChecking=false;for(const answers of themeAnswers.values())answers.clear();activeThemeDeck=null;themeCategory='all';themeIndex=0;themeReview=false;themeSaveError='';swipeBusy=false;swipeLoadError='';swipeSaveError='';swipeExportStatus='';swipeReview=false;swipeSkippedReview=false;swipeIndex=0;sharedMatches=[];sharedPriorities=[];sharedDeckId='general';sharedError='';sharedPriorityError='';sharedLoading=false;sharedSession++;sharedRequest++;activityInviteBusy=false;activityInviteError='';insightsRows=[];sharedUnderstandingRows=[];insightsLoading=false;insightsError='';insightsRequest++;if(swipeOverviewRefreshTimer!==null){clearTimeout(swipeOverviewRefreshTimer);swipeOverviewRefreshTimer=null;}swipeOverviewRows=[];swipeOverviewError='';swipeOverviewLoading=false;swipeOverviewRequest++;themesUnlocked=false;themesLoading=false;themesError='';themesRequest++;
 inboxPairEpoch=null;
 activityNotificationsRequest++;activityNotifications=[];activityNotificationsError='';activityNotificationsLoading=false;activityMarkBusy=null;activityFeedback='';
 if(typeof schysstaRequest!=='undefined'){schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];schysstaNotifications=[];schysstaReplacementLinks=[];schysstaHistory=[];schysstaEndTarget=null;schysstaLoading=false;schysstaError='';schysstaRequest++;schysstaSaving.clear();schysstaPausedIds.clear();schysstaExpandedIds.clear();schysstaDecisionFeedback='';clearFamilyChat();schysstaDraft='';schysstaDraftOpen=false;schysstaDraftKey=null;schysstaEditTarget=null;schysstaSubmitting=false;schysstaMessage='';schysstaCopyMessage='';schysstaCopyFallback=false;schysstaFocusId='';schysstaSearch='';schysstaFilterStatus='all';}
