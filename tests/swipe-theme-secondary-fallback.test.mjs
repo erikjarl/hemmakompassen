@@ -11,7 +11,7 @@ const production=source.slice(start,end);
 const legacy='<section class="theme-old-result">Tidigare temaresultat</section>';
 function render({completed=false,loading=false,error='',rows=[{deck_id:'samtal',card_id:'samtal-01',answer:true}],paired=true}={}){
  const state={
-  sharedInsightsEnabled:true,swipeOverviewLoading:loading,
+  inboxPairEpoch:'verified-fixture-pair',sharedInsightsEnabled:true,swipeOverviewLoading:loading,
   swipeOverviewError:error,swipeOverviewRows:rows,user:{id:'parent'},
   members:paired?[{user_id:'parent',role:'parent'},{user_id:'teen',role:'teen'}]:[],
   swipeResults:()=>legacy,sharedDeck:()=>({title:'Samtalsämnen'}),

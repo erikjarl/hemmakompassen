@@ -12,7 +12,7 @@ const legacy='<section id="existing-result">Tidigare gemensamt resultat</section
 
 function render({completed=true,loading=false,error='',rows=[{deck_id:'general',card_id:'general-01',answer:true}],paired=true,enabled=true}={}){
   const state={
-    sharedInsightsEnabled:enabled,swipeOverviewLoading:loading,swipeOverviewError:error,
+    inboxPairEpoch:'verified-fixture-pair',sharedInsightsEnabled:enabled,swipeOverviewLoading:loading,swipeOverviewError:error,
     swipeOverviewRows:rows,user:{id:'parent'},
     members:paired?[{user_id:'parent',role:'parent'},{user_id:'teen',role:'teen'}]:[],
     swipeResults:()=>legacy

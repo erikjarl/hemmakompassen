@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261112-swipe-pair-epoch1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261112-swipe-secondary-epoch1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261112-swipe-pair-epoch1';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261112-swipe-secondary-epoch1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261112-swipe-pair-epoch1';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261112-swipe-secondary-epoch1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -1829,7 +1829,7 @@ function themeSecondaryResults(deckId,completed){
   // priorities and AI accessible on demand even before the deck is finished.
   // If the shared snapshot is loading or failed, leave the existing result
   // immediately visible instead of hiding the only usable feedback.
-  const hasUnified=sharedInsightsEnabled&&!swipeOverviewLoading&&!swipeOverviewError&&
+  const hasUnified=sharedInsightsEnabled&&!!inboxPairEpoch&&!swipeOverviewLoading&&!swipeOverviewError&&
     user&&members.length===2&&swipeOverviewRows.length>0&&
     members.some(m=>m.user_id===user.id)&&members.some(m=>m.role==='parent')&&
     members.some(m=>m.role==='teen');
@@ -1840,7 +1840,7 @@ function swipeSecondaryResults(completed){
   const legacy=swipeResults();
   // A working all-deck summary is primary throughout the swipe journey;
   // keep legacy results visible if the all-deck snapshot is unavailable.
-  const hasUnified=sharedInsightsEnabled&&!swipeOverviewLoading&&!swipeOverviewError&&
+  const hasUnified=sharedInsightsEnabled&&!!inboxPairEpoch&&!swipeOverviewLoading&&!swipeOverviewError&&
     swipeOverviewRows.length>0&&user&&members.length===2&&
     members.some(m=>m.user_id===user.id)&&members.some(m=>m.role==='parent')&&
     members.some(m=>m.role==='teen');
