@@ -30,3 +30,21 @@ test('readability roadmap and standing workflow instruction are present',async()
   assert.match(roadmap,/två autentiserade konton/);
   assert.match(agents,/## Stående rutin: läsbarhet och tydlighet \(UX-READ-01\)/);
 });
+
+test('Schyssta listan keeps approved rules primary without redundant quick-action text',async()=>{
+  const app=await read('live-app.js');
+  const start=app.indexOf('function schysstaView(){');
+  const end=app.indexOf('\nfunction ',start+25);
+  assert.ok(start>=0&&end>start);
+  const view=app.slice(start,end);
+  const quick=view.slice(view.indexOf('const quickActions='),view.indexOf('const searchTools='));
+  assert.match(quick,/needs\.length\?'<p>Välj ett svar nedan eller Inte nu\.<\/p>':''/);
+  assert.match(quick,/ongoing\.length\|\|schysstaHistory\.length/);
+  assert.doesNotMatch(quick,/schyssta-quick-counts[^\n]*approved\.length/);
+  assert.match(quick,/data-schyssta-needs-jump/);
+  assert.match(quick,/data-schyssta-start/);
+  assert.match(view,/const approvedSection=/);
+  assert.match(view,/approvedSection\s*\+quickActions/);
+  assert.match(view,/item\.status==='accepted'/);
+  assert.match(view,/schyssta-approved-details/);
+});
