@@ -48,7 +48,7 @@ const mediatorExperience=createAiMediatorExperience({db,config:c,escapeHtml:esc,
 const aiResults=createAiResultExperience({db,config:c,onRender:()=>{
   if(!user)return;
   if(page()==='swipe')renderKeepingGeneralReview();
-  else if(page()==='inkorg'){if(!familyChatDraft.trim())render();}
+  else if(page()==='inkorg')patchInboxInsightsPanel();
   else if(['personlighet','insikter'].includes(page()))render();
 }});
 const personalityExperience=createPersonalityExperience({db,isSharingEnabled:personalitySharingEnabled,isRetestEnabled:c.enablePrivateRetests===true,
@@ -1280,7 +1280,8 @@ async function fetchInsights({quiet=false}={}){
     insightsRows=[];sharedUnderstandingRows=[];insightsError='';insightsLoading=false;render();return;
   }
   insightsLoading=true;
-  if(!quiet&&!(page()==='inkorg'&&familyChatDraft.trim()))render();
+  if(page()==='inkorg')patchInboxInsightsPanel();
+  else if(!quiet)render();
   try{
     if(page()==='inkorg'&&!await recheckInboxPair())return;
     const [responses,understandingResponse]=await Promise.all([
@@ -1310,8 +1311,12 @@ async function fetchInsights({quiet=false}={}){
       insightsLoading=false;
       // Same data: avoid unnecessary rerenders, scroll jumps and AI requests.
       // Changed/revoked sharing creates a different analysis signature.
-      if((!quiet||previousSnapshot!==JSON.stringify([insightsRows,sharedUnderstandingRows,insightsError]))&&
-         !(page()==='inkorg'&&familyChatDraft.trim()))render();
+      if(page()==='inkorg'){
+        // Replace only the reflection section: no chat scroll, focus or draft
+        // can be destroyed by an asynchronous analysis or consent refresh.
+        patchInboxInsightsPanel();
+        if(!insightsError&&insightsAiSignature())queueMicrotask(autoAnalyze);
+      }else if(!quiet||previousSnapshot!==JSON.stringify([insightsRows,sharedUnderstandingRows,insightsError]))render();
       // Focus once on an intentional deep-link load; quiet consent refreshes never steal focus.
       if(!quiet&&!insightsError)focusInsightTarget();
     }
@@ -2571,6 +2576,17 @@ function inboxView(){
         :'<p class="live-muted">Se era serververifierade gemensamma svar och frivilligt delade förståelsekort.</p>')
       +'<p><a href="#insikter">Visa alla gemensamma insikter och delningar</a></p></section>':'')
     +unreadOverview+activityPanel+chat+rules;
+}
+// Keep an in-progress chat editor intact while the top AI panel changes.
+// Construct the panel from the SAME guarded inbox view used for full renders.
+function patchInboxInsightsPanel(){
+  if(page()!=='inkorg'||typeof document==='undefined')return;
+  const current=document.querySelector('.inbox-insights-shortcut');
+  if(!current)return;
+  const fragment=document.createElement('div');
+  fragment.innerHTML=inboxView();
+  const updated=fragment.querySelector('.inbox-insights-shortcut');
+  if(updated)current.replaceWith(updated);
 }
 async function fetchSchysstaList(){
   const request=++schysstaRequest,viewer=user?.id,session=sharedSession;
