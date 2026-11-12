@@ -143,9 +143,14 @@ async function fetchActivityNotifications({quiet=false,forceRender=false}={}){
     activityNotifications=result.data;activityNotificationsError='';activityFeedback='';
   }
   if(previous===JSON.stringify([activityNotifications,activityNotificationsError])){
-    // Even an unchanged empty result must dismiss the foreground loading view.
-    // Quiet background checks should remain render-free to preserve focus/scroll.
-    if(!quiet&&page()==='inkorg'&&!activityNotifications.length&&(!familyChatDraft.trim()||forceRender))render();
+    // Even an unchanged *nonempty* result must finish a foreground loading
+    // state. Otherwise Inbox can keep showing an unknown '?' badge although
+    // the successful RPC has restored a known unread count. Quiet background
+    // checks stay render-free to preserve the reader's focus and scroll.
+    if(!quiet){
+      if(['hem','inkorg'].includes(page())&&(page()!=='inkorg'||!familyChatDraft.trim()||forceRender))render();
+      else menu();
+    }
     return;
   }
   if(['hem','inkorg'].includes(page())&&(page()!=='inkorg'||!familyChatDraft.trim()||forceRender))render();
