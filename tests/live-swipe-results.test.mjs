@@ -484,10 +484,19 @@ console.log('PASS: all-deck insights gate, A-only sanitizer, B/NO isolation, ses
   assert.doesNotMatch(lead,/Bowla|Cykla/,'Long activity sets do not flood the invitation');
   assert.match(many,/Bowla/,'Fourth activity remains in detailed results');
   assert.match(many,/Cykla/,'Fifth activity remains in detailed results');
+  const allActivities=many.match(/<details class="swipe-unified-activities">([\s\S]*?)<\/details>/)?.[1]||'';
+  assert.match(allActivities,/<summary>Visa alla 5 gemensamma aktiviteter<\/summary>/,
+    'All shared activities have one optional, clearly named disclosure');
+  for(const activity of ['Fika på stan','Spela fotboll','Gå på museum','Bowla','Cykla'])
+    assert.match(allActivities,new RegExp('<li>'+activity+'<\\/li>'),
+      'Every confirmed activity is grouped together: '+activity);
+  assert.match(many,/<details class="swipe-unified-activities">/,
+    'Complete activity list remains collapsed until requested');
   state.swipeOverviewRows=state.swipeOverviewRows.slice(0,4);
   assert.match(state.view(),/en annan aktivitet/,'Singular remaining activity is idiomatic');
   state.swipeOverviewRows=[{deck_id:'aktiviteter',card_id:'a1',answer:true}];
   const singular=state.view();
+  assert.doesNotMatch(singular,/swipe-unified-activities/,'One activity does not need duplicate disclosure');
   assert.match(singular,/1 gemensamt ja-svar från de kortlekar/, 'One shared result uses Swedish singular');
   assert.match(singular,/Fritid · 1 gemensamt/, 'One item in category uses singular');
   assert.doesNotMatch(singular,/1 gemensamma/, 'Singular state has no incorrect plural');
@@ -499,6 +508,7 @@ console.log('PASS: all-deck insights gate, A-only sanitizer, B/NO isolation, ses
   assert.match(plural,/2 gemensamma ja-svar från de kortlekar/, 'Two shared results use Swedish plural');
   assert.match(plural,/Fritid · 2 gemensamma/, 'Two items in category use plural');
   state.swipeOverviewRows=[];
+  assert.doesNotMatch(state.view(),/swipe-unified-activities/,'Revoked activities disappear from disclosure');
   assert.doesNotMatch(state.view(),/Ni har båda visat intresse för/,'No activity claims remain after revocation');
   assert.doesNotMatch(state.view(),/Föreslå en konkret dag tillsammans/,'No editorial advice survives revocation');
   state.swipeOverviewError='Serverfel';
