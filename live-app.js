@@ -1746,11 +1746,11 @@ function reopenGeneralReview(){
 // legacy per-deck explanation, priority and AI tools accessible on demand.
 function themeSecondaryResults(deckId,completed){
   const legacy=swipeResults(deckId);
-  // The shared all-deck snapshot is the primary result after finishing a
-  // theme. Keep all legacy tips, priority controls and AI available on demand.
+  // When an authoritative all-deck summary exists, keep per-deck tips,
+  // priorities and AI accessible on demand even before the deck is finished.
   // If the shared snapshot is loading or failed, leave the existing result
   // immediately visible instead of hiding the only usable feedback.
-  const hasUnified=completed&&sharedInsightsEnabled&&!swipeOverviewLoading&&!swipeOverviewError&&
+  const hasUnified=sharedInsightsEnabled&&!swipeOverviewLoading&&!swipeOverviewError&&
     user&&members.length===2&&swipeOverviewRows.length>0&&
     members.some(m=>m.user_id===user.id)&&members.some(m=>m.role==='parent')&&
     members.some(m=>m.role==='teen');
@@ -1759,9 +1759,9 @@ function themeSecondaryResults(deckId,completed){
 }
 function swipeSecondaryResults(completed){
   const legacy=swipeResults();
-  // Keep the existing result visible when the all-deck overview is
-  // loading or unavailable, just as the themed-deck fallback does.
-  const hasUnified=completed&&sharedInsightsEnabled&&!swipeOverviewLoading&&!swipeOverviewError&&
+  // A working all-deck summary is primary throughout the swipe journey;
+  // keep legacy results visible if the all-deck snapshot is unavailable.
+  const hasUnified=sharedInsightsEnabled&&!swipeOverviewLoading&&!swipeOverviewError&&
     swipeOverviewRows.length>0&&user&&members.length===2&&
     members.some(m=>m.user_id===user.id)&&members.some(m=>m.role==='parent')&&
     members.some(m=>m.role==='teen');
