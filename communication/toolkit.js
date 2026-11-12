@@ -232,6 +232,12 @@ export function normalizeNvcAiReply(value){
  // A punctuation-only response is not a usable sentence, even if it is short.
  // Keep the four-part local draft rather than claiming such output is ready.
  if(!reply||reply.length>600||reply.split(' ').length>65||!/\p{L}/u.test(reply))return null;
+ // FBK-02-02: an AI can still echo field fragments as a superficially complete
+ // sentence. These narrow, evidenced patterns flag malformed Swedish without
+ // pretending that a regex can assess grammar in general.
+ if(/\bNär\s+[\p{L}]+\s+(?:lyssnade|svarade|pratade|förstod|gjorde|ville|kunde|hörde|hade|var|blev)\s+inte\b/iu.test(reply)||
+    /\bkänner jag\s+[A-ZÅÄÖ][a-zåäö]+\b/u.test(reply)||
+    /\bJag behöver\s+Att\b/u.test(reply))return null;
  return reply;
 }
 export function renderNvcExercise(role='teen'){
