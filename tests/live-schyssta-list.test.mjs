@@ -207,15 +207,19 @@ test('FBK-02-05: pending rule actions clearly indicate the server write',()=>{
 });
 
 
-test('FBK-02-04: Inbox nav badge excludes counts from an unverified pair or failed read',()=>{
-  const menu=app.slice(app.indexOf('function menu(){'),app.indexOf('\nfunction ',app.indexOf('function menu(){')+10));
-  assert.match(menu,/const inboxReady=!!user&&members\.length===2&&!!inboxPairEpoch/);
-  assert.match(menu,/const unread=inboxReady&&schysstaListEnabled&&!schysstaError\?schysstaUnreadCount\(\):0/);
-  assert.match(menu,/const unreadMessages=inboxReady&&!familyChatUnreadError\?familyChatUnread:0/);
-  assert.match(menu,/const unreadActivities=inboxReady&&activityNotificationsEnabled&&!activityNotificationsError\?activityUnreadCount\(\):0/);
-  assert.match(menu,/unread\+unreadMessages\+unreadActivities/);
+test('FBK-02-04: Inbox nav badge excludes unverified pairs and labels failed reads unknown',()=>{
+  const begin=app.indexOf('function inboxNavUnreadState(){');
+  const end=app.indexOf('function menu(){',begin);
+  const helper=app.slice(begin,end);
+  const menu=app.slice(end,app.indexOf('\nfunction ',end+10));
+  assert.match(helper,/const ready=!!user&&members\.length===2&&!!inboxPairEpoch/);
+  assert.match(helper,/if\(!ready\)return \{total:0,unknown:false,parts:\[0,0,0\]\}/);
+  assert.match(helper,/familyChatUnreadError\?null:familyChatUnread/);
+  assert.match(helper,/schysstaLoading\|\|schysstaError\?null:schysstaUnreadCount\(\)/);
+  assert.match(helper,/activityNotificationsLoading\|\|activityNotificationsError\?null:activityUnreadCount\(\)/);
+  assert.match(menu,/const unreadState=inboxNavUnreadState\(\)/);
+  assert.match(menu,/const unknown=isInbox&&unreadState\.unknown/);
 });
-
 
 test('FBK-02-04: marking chat read waits for authoritative unread count before confirming',async()=>{
   const begin=app.indexOf('async function markAllFamilyChatRead(){');
