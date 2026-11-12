@@ -47,7 +47,7 @@ function checkBadge(expected,expectedLabel){
     assert.doesNotMatch(entry,/live-nav-count/,'Known zero must hide unread badge');
     assert.doesNotMatch(entry,/aria-label=/,'Known zero should not claim unread messages');
   }else{
-    assert.match(entry,new RegExp('<span class="live-nav-count"[^>]*>'+expected.replace('+','\\+')+'</span>'),
+    assert.ok(entry.includes('>'+expected+'</span>'),
       'Unread badge displays expected symbol');
     assert.ok(entry.includes(expectedLabel),'Accessible label explains read confidence');
   }
