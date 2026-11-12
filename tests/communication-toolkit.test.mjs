@@ -34,6 +34,11 @@ test('NVC builder for both roles has four accessible, required steps and an unsa
     assert.match(page,/data-comm-reset/);
     assert.match(page,/required maxlength="240"/);
     assert.match(page,/sparas inte/);
+    assert.match(page,/Du behöver inte själv få delarna att bilda en grammatisk mening/);
+    assert.match(page,/AI-knappen kan sedan göra ett sammanhängande språkförslag/);
+    assert.match(page,/placeholder="frustrerad"/);
+    assert.doesNotMatch(page,/placeholder="mig frustrerad"/);
+    assert.match(page,/Skriv känslan med ett eller några ord/);
     assert.match(page,/href="#kommunikation"/);
     assert.doesNotMatch(page,/onclick=|onerror=/i);
   }
