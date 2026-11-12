@@ -1,9 +1,9 @@
 import {IPIP50_V1} from './ipip50-v1.js';
-import {createPrivateIpipRetests} from './ipip50-retest.js?v=20261113-home-clarity1';
+import {createPrivateIpipRetests} from './ipip50-retest.js?v=20261113-personality-clarity1';
 import {scoreIPIP50} from './ipip50-scoring.js';
-import {buildIPIP50FamilyInsights} from './ipip50-family-insights.js?v=20261113-home-clarity1';
-import {richFamilyReflection} from './ipip50-family-copy.js?v=20261113-home-clarity1';
-import {IPIP50_REFERENCE,IPIP50_PERCENTILE_BANDS,approximateReferencePercentile,describeModeledPercentile,referenceLimits,describeReferenceProfile,formatSv} from './ipip50-reference.js?v=20261113-home-clarity1';
+import {buildIPIP50FamilyInsights} from './ipip50-family-insights.js?v=20261113-personality-clarity1';
+import {richFamilyReflection} from './ipip50-family-copy.js?v=20261113-personality-clarity1';
+import {IPIP50_REFERENCE,IPIP50_PERCENTILE_BANDS,approximateReferencePercentile,describeModeledPercentile,referenceLimits,describeReferenceProfile,formatSv} from './ipip50-reference.js?v=20261113-personality-clarity1';
 import {loadMyIPIP50Answers,saveMyIPIP50Answer} from './ipip50-storage.js';
 
 const esc=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -368,7 +368,7 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false,
       const reflections=useAiAnalysis?'':familyReflectionPanel(parentProfile,teenProfile,role);
       comparison='<section class="live-panel pf-comparison"><h2>Våra profiler</h2><p>Två självskattningar jämförda med samma amerikanska vuxenreferens. Placeringarna är uppskattningar, inte svenska normer.</p>'+
         
-        percentileChart(own,other)+reflections+table(own,other)+(useAiAnalysis?'':referenceFeedback(other,'Den andras'))+referenceCaveat()+
+        percentileChart(own,other)+reflections+(useAiAnalysis?'':referenceFeedback(other,'Den andras'))+table(own,other)+referenceCaveat()+
         '<p class="live-muted">Markörerna visar uppskattad percentil jämfört med samma vuxenreferens. Tabellen visar råpoäng, medelvärde och SD. Skillnader är inte bevis för att ni fungerar olika.</p>'+
         '</section>';
     }
@@ -376,7 +376,7 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false,
     // Keep the scientific limitations immediately above the chart and in its optional help.
     const completedHeading='<section class="pf-intro pf-intro-complete"><span class="swipe-eyebrow">LÄR KÄNNA DIG SJÄLV</span><h1>Min personlighet</h1></section>';
     return completedHeading+'<section class="live-panel pf-results"><h2>Din profil</h2><p>Dina fem skalor jämförs med en amerikansk vuxenreferens, inte svenska normer.</p>'+
-      percentileChart(own)+table(own)+(useAiAnalysis?analysisPanel('personality','own',getAiSnapshot()):referenceFeedback(own))+referenceCaveat()+
+      percentileChart(own)+(useAiAnalysis?analysisPanel('personality','own',getAiSnapshot()):referenceFeedback(own))+table(own)+referenceCaveat()+
       '<p class="live-muted">Skalorna bygger på dina svar (10–50). Högt eller lågt är inte i sig bättre eller sämre. Den svenska översättningen behöver prövas vetenskapligt.</p>'+
       '<button type="button" data-pf-action="review">Granska eller ändra mina svar</button>'+exportControls+'</section>'+sharing+comparison+(retests?retests.render():'');
   }
