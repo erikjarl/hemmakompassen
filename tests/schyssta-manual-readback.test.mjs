@@ -126,7 +126,7 @@ test('FBK-02-05: old account readback cannot touch new draft',async()=>{
 
 test('FBK-02-05: rule-list error panel shows failed proposal readback guidance',()=>{
  const start=app.indexOf('function schysstaView(){');
- const end=app.indexOf('  const statusLabel=',start);
+ const end=app.indexOf('  const schysstaDecisionStatus=',start);
  assert.ok(start>=0&&end>start);
  const earlyView=app.slice(start,end)+'}';
  const state={
