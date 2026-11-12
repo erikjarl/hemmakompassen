@@ -111,7 +111,12 @@ async function fetchActivityNotifications({quiet=false,forceRender=false}={}){
   }
   const previous=JSON.stringify([activityNotifications,activityNotificationsError]);
   activityNotificationsLoading=true;
-  if(!quiet&&page()==='inkorg'&&(!familyChatDraft.trim()||forceRender))render();
+  // Existing notices are already usable. Avoid flashing a transient unknown
+  // unread count for a routine foreground refresh that may return the exact
+  // same snapshot. Empty inboxes and explicit refreshes still show progress.
+  const showedLoading=!quiet&&page()==='inkorg'&&
+    (!familyChatDraft.trim()||forceRender)&&(!activityNotifications.length||forceRender);
+  if(showedLoading)render();
   let result,timeout;
   try{
     result=await Promise.race([
@@ -143,14 +148,10 @@ async function fetchActivityNotifications({quiet=false,forceRender=false}={}){
     activityNotifications=result.data;activityNotificationsError='';activityFeedback='';
   }
   if(previous===JSON.stringify([activityNotifications,activityNotificationsError])){
-    // Even an unchanged *nonempty* result must finish a foreground loading
-    // state. Otherwise Inbox can keep showing an unknown '?' badge although
-    // the successful RPC has restored a known unread count. Quiet background
-    // checks stay render-free to preserve the reader's focus and scroll.
-    if(!quiet){
-      if(['hem','inkorg'].includes(page())&&(page()!=='inkorg'||!familyChatDraft.trim()||forceRender))render();
-      else menu();
-    }
+    // A loading view must always be dismissed, even when the server returns
+    // the same zero or nonzero result. An unchanged routine refresh with
+    // already-visible notices never showed loading, so leave focus alone.
+    if(showedLoading)render();
     return;
   }
   if(['hem','inkorg'].includes(page())&&(page()!=='inkorg'||!familyChatDraft.trim()||forceRender))render();
