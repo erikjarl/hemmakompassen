@@ -22,7 +22,7 @@ test('completed personal profile puts interpretation before technical score tabl
 test('paired profile comparison puts reflection ahead of detailed score table',()=>{
   const start=source.indexOf("comparison='<section class=\"live-panel pf-comparison\"");
   assert.ok(start>=0,'paired comparison section exists');
-  const end=source.indexOf("+'</section>';",start);
+  const end=source.indexOf('    // The introductory questionnaire instructions',start);
   assert.ok(end>start);
   const section=source.slice(start,end);
   const chart=section.indexOf('percentileChart(own,other)');
