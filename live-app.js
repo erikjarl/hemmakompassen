@@ -1759,7 +1759,10 @@ function themeSecondaryResults(deckId,completed){
 }
 function swipeSecondaryResults(completed){
   const legacy=swipeResults();
-  const hasUnified=completed&&sharedInsightsEnabled&&user&&members.length===2&&
+  // Keep the existing result visible when the all-deck overview is
+  // loading or unavailable, just as the themed-deck fallback does.
+  const hasUnified=completed&&sharedInsightsEnabled&&!swipeOverviewLoading&&!swipeOverviewError&&
+    swipeOverviewRows.length>0&&user&&members.length===2&&
     members.some(m=>m.user_id===user.id)&&members.some(m=>m.role==='parent')&&
     members.some(m=>m.role==='teen');
   if(!hasUnified)return legacy;
