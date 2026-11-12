@@ -4880,7 +4880,7 @@ try{
   await pairedActivity.page.locator('.swipe-unified-list > li').first().waitFor();
   assert.equal(await pairedActivity.page.locator('.swipe-unified-next-step').count(),0,
     'FUN-SW-02: revoked activity JA+JA must remove the shared invitation');
-  assert.match(await pairedActivity.page.locator('.swipe-unified-overview').innerText(),/1 gemensamma ja-svar/,
+  assert.match(await pairedActivity.page.locator('.swipe-unified-overview').innerText(),/1 gemensamt ja-svar/,
     'FUN-SW-02: revocation keeps only the remaining server-confirmed conversation match');
   assert.equal(await pairedActivity.page.locator('.swipe-unified-statements > li').count(),1,
     'FUN-SW-02: revocation removes stale activity text from the unified list');
