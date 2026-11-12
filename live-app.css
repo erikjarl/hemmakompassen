@@ -1230,6 +1230,11 @@
   font-weight:750;
   line-height:1.35;
 }
+.swipe-themes .swipe-more-decks>summary:hover{background:#343140}
+.swipe-themes .swipe-more-decks-label{display:inline-flex;align-items:center;gap:13px;min-width:0}
+.swipe-themes .swipe-more-decks-label strong{display:block;font:inherit}
+.swipe-themes .swipe-more-decks-label small{display:block;margin-top:3px;font-size:13px;font-weight:500;line-height:1.3;color:#e9d1a9}
+.swipe-themes .swipe-more-decks-icon{display:inline-grid;place-items:center;flex:none;width:37px;height:37px;border-radius:11px;background:#644523;color:#ffe4ad;font-size:23px;line-height:1}
 .swipe-themes .swipe-more-decks>summary::-webkit-details-marker{display:none}
 .swipe-themes .swipe-more-decks>summary::after{
   content:'▸';
