@@ -450,15 +450,22 @@ console.log('PASS: all-deck insights gate, A-only sanitizer, B/NO isolation, ses
       {id:'secret',type:'understanding',category:'Privat',parentText:'HEMLIGT'}
     ]}:undefined,
     viewerRole:()=> 'parent',cardTextForRole:card=>card.parentText,
+    ADVICE_BY_KEY:{activity:'Föreslå en konkret dag tillsammans.',conversation:'Lyssna färdigt innan ni svarar.'},
+    adviceKeyForCard:card=>card.id==='a1'?'activity':'conversation',
+    firstSentence:value=>String(value||'').split('.')[0]+'.',
     esc:value=>String(value).replace(/&/g,'&amp;').replace(/</g,'&lt;')
   };
   vm.runInNewContext(script.slice(start,end)+';this.view=swipeOverviewView;',state);
   const html=state.view();
   assert.match(html,/Ni har båda visat intresse för Fika på stan/,'Activity is named in the summary, not only counted');
   assert.match(html,/Prata om böcker/,'Other deck matches remain visible');
+  assert.match(html,/Föreslå en konkret dag tillsammans/,'Shared activity supplies a reviewed suggestion');
+  assert.match(html,/Lyssna färdigt innan ni svarar/,'Other deck supplies one suggestion to unified advice');
+  assert.match(html,/Förskrivna förslag/,'The advice identifies its editorial origin');
   assert.doesNotMatch(html,/HEMLIGT/,'Undisclosed understanding cards are not rendered');
   state.swipeOverviewRows=[];
   assert.doesNotMatch(state.view(),/Ni har båda visat intresse för/,'No activity claims remain after revocation');
+  assert.doesNotMatch(state.view(),/Föreslå en konkret dag tillsammans/,'No editorial advice survives revocation');
   state.swipeOverviewError='Serverfel';
   assert.doesNotMatch(state.view(),/Fika på stan/,'Server errors do not expose stale activities');
 }
