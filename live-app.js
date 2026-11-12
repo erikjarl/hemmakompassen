@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261112-nvc-grammar-guard1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261112-activity-readback1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261112-nvc-grammar-guard1';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261112-activity-readback1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261112-nvc-grammar-guard1';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261112-activity-readback1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -180,8 +180,8 @@ async function markActivityNotificationRead(notificationId){
   if(members.length!==2||!activityNotificationsEnabled||pair!==activityPairSignature()){
     activityMarkBusy=null;return;
   }
-  activityMarkBusy=null;
   if(result?.error){
+    activityMarkBusy=null;
     activityFeedback='Det gick inte att bekräfta läsmarkeringen. Uppdatera aviseringarna.';
     // An unconfirmed write must never be treated as a confirmed unread count.
     activityNotificationsError=activityFeedback;
@@ -192,8 +192,20 @@ async function markActivityNotificationRead(notificationId){
     else menu();
     return;
   }
-  // Recheck server state, rather than optimistically removing the unread badge.
+  // Hold the action lock through the authoritative readback. A successful
+  // write RPC alone is not evidence that this exact receipt is now read.
   await fetchActivityNotifications({forceRender:true});
+  if(viewer!==user?.id||session!==sharedSession||pair!==activityPairSignature())return;
+  activityMarkBusy=null;
+  if(!activityNotificationsError){
+    const confirmed=activityNotifications.some(n=>
+      n.notification_id===notificationId&&n.read_at!==null);
+    if(!confirmed){
+      activityFeedback='Läsmarkeringen skickades, men det gick inte att bekräfta att just denna avisering är läst. Uppdatera aviseringarna innan du försöker igen.';
+    }
+  }
+  if(page()==='inkorg')render();
+  else menu();
 }
 const familyChatTimestamp=timestamp=>new Intl.DateTimeFormat('sv-SE',{dateStyle:'medium',timeStyle:'short'}).format(new Date(timestamp));
 function validFamilyChatRows(rows){
@@ -2579,6 +2591,7 @@ function inboxView(){
       +'<p class="live-muted">En avisering visar bara att ett nytt gemensamt kort eller en frivilligt delad förståelse har blivit tillgänglig. Inga privata svar visas här.</p>'
       +(activityNotificationsError?'<p role="alert">'+esc(activityNotificationsError)+'</p>'
         +'<button type="button" class="schyssta-secondary" data-activity-refresh>Försök igen</button>':'')
+      +(!activityNotificationsError&&activityFeedback?'<p role="status" class="schyssta-feedback">'+esc(activityFeedback)+'</p>':'')
       +(activityNotificationsLoading&&!activityNotifications.length?'<p role="status">Hämtar aviseringar…</p>':'')
       +(activityNotifications.length?'<ul class="schyssta-list">'
         +activityNotifications.map(n=>'<li class="'+(n.read_at===null?'schyssta-unread':'')+'">'
