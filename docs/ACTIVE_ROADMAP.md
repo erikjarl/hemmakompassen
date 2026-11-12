@@ -2,6 +2,9 @@
 
 **Senast prioriterad:** 12 november 2026 · **Gäller för:** internt testprojekt med två testkonton · **Ansvarig arbetsrutin:** [AGENTS.md](../AGENTS.md)
 
+
+**13/11 – Jobb hk, UX-READ-01 startsidans begriplighet (arbetsgren):** I `home()` förenklas texten före parning: »VÄNTAR PÅ DIN MOTPART« ersätts av »KOPPLA IHOP ERA KONTON«, och introduktionen anger att konton behöver kopplas ihop för att visa gemensamma svar. Den tekniska statusraden »Familjemedlemskap hämtat från Supabase« tas bort när paret är kopplat, utan att ändra antalet kopplade medlemmar, inkommande aviseringar eller sparade svar. Utforska-kortens länkar får beskrivande text (»Öppna [funktion]«) istället för sex likadana »Öppna«. Resursversion uppdaterad. **Ännu inte verifierat:** CI, merge, verkliga två konton, fysisk Safari, Pages-version och upplevd begriplighet. Läsbaserad Supabase-kontroll: **7 öppna rapporter (2 `new`, 5 `reviewing`)**. Inga rapporter eller användarsvar ändrade. UX-READ-01/FBK-02 står kvar öppna.
+
 ## UX-READ-01 – hela Hemmakompassen ska vara lätt att läsa och förstå (stående P1)
 
 **Mål:** Förälder och tonåring ska snabbt hitta det viktigaste på varje sida, förstå vad informationen betyder och veta vad nästa rimliga steg är. Färre konkurrerande knappar, mindre redundant text och mer tydlig information utan att gömma säkerhetskritisk information eller ge sken av att privata svar är delade. Tillämpas på **alla sidor och nya funktioner**, inte bara Gillaswajpen.
