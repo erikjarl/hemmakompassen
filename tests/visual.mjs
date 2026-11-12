@@ -1559,7 +1559,7 @@ async function verifyInsightsTwoRolesAndStates(){
         window.__HK_TEST_SET_SHARED_B__(['general-02']);
       });
       await page.locator('#insights-retry').click();
-      await page.locator('#insights-deck-aktiviteter').waitFor();
+      await page.locator('#insights-deck-aktiviteter').waitFor({state:'attached'});
       assert.equal(await page.locator('.insights-deck').count(),1);
       assert.equal(await page.locator('.insights-deck .swipe-match-list li').count(),1);
       assert.equal(await page.locator('[data-insight-activity]').count(),1);
@@ -1574,7 +1574,7 @@ async function verifyInsightsTwoRolesAndStates(){
       assert.equal(await page.locator('#insights-understanding').count(),0);
       await page.evaluate(()=>{window.__HK_RPC_UNAVAILABLE__=false;});
       await page.locator('#insights-retry').click();
-      await page.locator('#insights-deck-aktiviteter').waitFor();
+      await page.locator('#insights-deck-aktiviteter').waitFor({state:'attached'});
       assert.equal(await page.locator('.insights-deck .swipe-match-list li').count(),1);
       await checkOverflow(page,'FUN-02 insights '+role+' after retry');
       records.push({role,case:'failed-RPC-clears-and-retry-reloads',passed:true});
@@ -4024,7 +4024,7 @@ try{
     {deck_id:'aktiviteter',card_id:'aktiviteter-01',answer:true}
   ];});
   await activity.page.locator('a[href="#insikter/aktiviteter"]').click();
-  await activity.page.locator('#insights-deck-aktiviteter').waitFor();
+  await activity.page.locator('#insights-deck-aktiviteter').waitFor({state:'attached'});
   assert.equal(await activity.page.locator('.insights-decks-secondary').getAttribute('open'),'',
     'A verified inbox deep link expands its target deck inside secondary details');
   await activity.page.waitForFunction(()=>document.activeElement?.id==='insights-deck-aktiviteter');
@@ -5089,7 +5089,7 @@ try{
   await paired.page.locator('a[href="#insikter"]').click();
   await paired.page.getByRole('heading',{name:'Möjligt att utforska'}).waitFor();
   assert.ok((await paired.page.locator('.live-main').evaluate(el=>el.scrollTop))<=1,'Insights navigation resets the mobile content scroller to its heading');
-  await paired.page.locator('.insights-deck').first().waitFor();
+  await paired.page.locator('.insights-deck').first().waitFor({state:'attached'});
   assert.equal(await paired.page.locator('.insights-deck').count(),2,'Only decks with permitted A JA+JA appear');
   assert.equal(await paired.page.locator('.insights-deck .swipe-match-list li').count(),3,'Two general and one conversation A match, no other rows');
   const insightText=await paired.page.locator('.insights-view').innerText();
@@ -5160,7 +5160,8 @@ try{
   // NOT-01D: same verified activity CTA is directly reachable in its own
   // finished themed-deck results, not only from the all-deck insights screen.
   await paired.page.evaluate(()=>{location.hash='insikter';});
-  await paired.page.locator('[data-insight-open="aktiviteter"]').waitFor();
+  await paired.page.locator('[data-insight-open="aktiviteter"]').waitFor({state:'attached'});
+  await paired.page.locator('.insights-decks-secondary>summary').click();
   await paired.page.locator('[data-insight-open="aktiviteter"]').click();
   await paired.page.locator('.swipe-secondary-results').waitFor();
   await revealSwipeSecondary(paired.page);
@@ -5185,7 +5186,7 @@ try{
   await capture(paired.page,'mobile-activity-invite-from-deck.png');
   await paired.page.locator('#family-chat-body').fill('');
   await paired.page.evaluate(()=>{delete window.__HK_TEST_SHARED_MATCHES__;location.hash='insikter';});
-  await paired.page.locator('.insights-deck').first().waitFor();
+  await paired.page.locator('.insights-deck').first().waitFor({state:'attached'});
   assert.equal(await paired.page.locator('.insights-deck').count(),2,
     'Returning to normal server matches restores the same permitted cross-deck insights');
 
@@ -5205,7 +5206,8 @@ try{
   assert.equal(await paired.page.locator('.insights-deck').count(),0,'One failed deck RPC clears all previous shared insights');
   await paired.page.evaluate(()=>{window.__HK_RPC_UNAVAILABLE__=false;});
   await paired.page.locator('#insights-retry').click();
-  await paired.page.locator('.insights-deck').first().waitFor();
+  await paired.page.locator('.insights-deck').first().waitFor({state:'attached'});
+  await paired.page.locator('.insights-decks-secondary>summary').click();
   await paired.page.locator('[data-insight-open="samtal"]').click();
   await paired.page.locator("#swipe-card[aria-label^='Temakort 1 av 104']").waitFor();
   await paired.page.locator('#theme-back').click();
