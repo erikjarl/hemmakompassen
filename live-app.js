@@ -1526,7 +1526,7 @@ function themeDecksView(completedGeneral=false){
     :'Koppla ihop en förälder och en tonåring för att öppna kortlekarna. Dina egna svar förblir privata.';
   return '<section class="swipe-themes" aria-labelledby="swipe-themes-heading">'+
     (completedGeneral?'<details class="swipe-more-decks"><summary id="swipe-themes-heading"><span class="swipe-more-decks-label"><span class="swipe-more-decks-icon" aria-hidden="true">✦</span><span><strong>Gör fler kortlekar</strong><small>'+esc(progress)+'</small></span></span></summary>':'<h2 id="swipe-themes-heading">Fler kortlekar</h2>')+
-    '<p class="live-muted"'+(completedGeneral?'':' role="status"')+'>'+esc(status)+'</p>'+
+    ((!completedGeneral||!unlocked)?'<p class="live-muted" role="status">'+esc(status)+'</p>':'')+
     (completedGeneral
       ?'<ul class="swipe-theme-compact-list">'+THEME_DECKS.map(deck=>{
         const saved=unlocked?(themeAnswers.get(deck.id)?.size||0):0;
