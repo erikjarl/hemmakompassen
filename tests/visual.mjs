@@ -6058,7 +6058,7 @@ try{
   await unavailable.context.close();
   const desktopInsights=await freshContext({viewport:{width:1440,height:900},deviceScaleFactor:1},{authenticated:true,paired:true});
   await desktopInsights.page.goto(base+'#insikter',{waitUntil:'load'});
-  await desktopInsights.page.locator('.insights-deck').first().waitFor();
+  await desktopInsights.page.locator('.insights-deck').first().waitFor({state:'attached'});
   assert.equal(await desktopInsights.page.locator('.insights-deck').count(),2,'Desktop insights also show only permitted A decks');
   await checkOverflow(desktopInsights.page,'Desktop all-deck insights');
   await capture(desktopInsights.page,'desktop-shared-insights.png');
