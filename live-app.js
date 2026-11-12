@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261112-activity-preview3';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261112-singular-results4';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261112-activity-preview3';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261112-singular-results4';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261112-activity-preview3';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261112-singular-results4';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -1089,11 +1089,11 @@ function swipeOverviewView(){
   const advicePreview=[...new Set(sortedGroups.flatMap(([,items])=>
     items.map(item=>firstSentence(item.advice)).filter(Boolean)))].slice(0,2);
   const count=[...groups.values()].reduce((sum,items)=>sum+items.length,0);
-  return title+'<p class="live-muted">'+(count?count+' gemensamma ja-svar från de kortlekar ni har använt.':'Inga gemensamma ja-svar hittades ännu.')+' Bara kort där båda har svarat ja visas. Förståelsekort visas separat när de uttryckligen delas.</p>'+
+  return title+'<p class="live-muted">'+(count?count+' '+(count===1?'gemensamt ja-svar':'gemensamma ja-svar')+' från de kortlekar ni har använt.':'Inga gemensamma ja-svar hittades ännu.')+' Bara kort där båda har svarat ja visas. Förståelsekort visas separat när de uttryckligen delas.</p>'+
     (activityMatches?'<p class="swipe-unified-next-step"><strong>Att göra tillsammans:</strong> Ni har båda visat intresse för '+activityPreview+activityMore+'. Välj gärna en aktivitet i listan och föreslå en dag att göra den tillsammans. Ett ja är ett intresse, inte en överenskommelse. <a href="#inkorg">Öppna Inkorgen och föreslå en tid</a>.</p>':'')+
     (advicePreview.length?'<section class="swipe-unified-advice" aria-label="Redaktionella råd utifrån era gemensamma svar"><h3>Små steg att prova</h3>'+advicePreview.map(advice=>'<p>'+esc(advice)+'</p>').join('')+'<p class="live-muted">Förskrivna förslag utifrån era gemensamma ja-svar, inte AI och inte individuella bedömningar.</p></section>':'')+
     (groups.size?'<ul class="swipe-match-list swipe-unified-list">'+sortedGroups.map(([category,items])=>
-      '<li><div><h3>'+esc(category)+' · '+items.length+' gemensamma</h3><ul class="swipe-unified-statements">'+items.map(item=>'<li>'+esc(item.statement)+'</li>').join('')+'</ul></div></li>').join('')+'</ul>':'')+
+      '<li><div><h3>'+esc(category)+' · '+items.length+' '+(items.length===1?'gemensamt':'gemensamma')+'</h3><ul class="swipe-unified-statements">'+items.map(item=>'<li>'+esc(item.statement)+'</li>').join('')+'</ul></div></li>').join('')+'</ul>':'')+
     '<a href="#insikter" class="insights-back-link">Visa alla gemensamma insikter och delade förståelsekort</a></section>';
 }
 // Multiple quick saved A answers should produce one fresh server snapshot,
