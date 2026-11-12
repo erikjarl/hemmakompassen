@@ -2716,7 +2716,11 @@ function schysstaView(){
   if(members.length!==2)return '<h1>Schyssta listan</h1>'+card('<h2>Koppla först en familjemedlem</h2><p>Listan kräver exakt en parad förälder och tonåring.</p><a class="live-button" href="./konto.html">Hantera familj</a>');
   if(schysstaLoading)return '<h1>Schyssta listan</h1>'+card('<p role="status">Hämtar serververifierade förslag…</p>');
   if(schysstaError)return '<h1>Schyssta listan</h1>'+card('<h2>'+(schysstaError.startsWith('Det gick inte att bekräfta')?'Kunde inte bekräfta åtgärden':'Kunde inte visa listan')+'</h2><p role="alert">'+esc(schysstaError)+'</p>'+(schysstaDecisionFeedback?'<p role="status" class="schyssta-feedback">'+esc(schysstaDecisionFeedback)+'</p>':'')+(schysstaMessage?'<p role="status" class="schyssta-feedback">'+esc(schysstaMessage)+'</p>':'')+'<button class="live-button" type="button" id="schyssta-retry">Försök igen</button>');
-  const statusLabel={proposed:'Väntar på bådas beslut',accepted:'Godkänd av båda',rejected:'Inte gemensamt godkänd'};
+  const schysstaDecisionStatus=item=>item.status==='accepted'?'Godkänd av båda'
+    :item.status==='rejected'?'Inte gemensamt godkänd'
+    :item.own_decision===true?'Du har godkänt – väntar på den andra'
+    :item.own_decision===false?'Du har avböjt förslaget'
+    :'Väntar på ditt beslut';
   const itemHtml=item=>{
     const source=schysstaReplacementLinks.some(link=>link.agreement_id===item.agreement_id)?'Ändringsförslag':item.source_card_id?'Från Gillaswajpen':'Eget regelförslag';
     const action=schysstaSaving.has(item.agreement_id);
@@ -2745,7 +2749,7 @@ function schysstaView(){
       ?'<li id="schyssta-rule-'+item.agreement_id+'" class="schyssta-approved-item"><details class="schyssta-approved-details" data-agreement-id="'+item.agreement_id+'"'+(open?' open':'')+'><summary><p>'+esc(item.body)+'</p></summary><div class="schyssta-approved-extra">'
       :'<li id="schyssta-rule-'+item.agreement_id+'"><p>'+esc(item.body)+'</p>';
     return ruleStart
-      +'<p class="schyssta-status"><span>'+source+'</span> · <span class="schyssta-status-mark schyssta-status-'+item.status+'" aria-hidden="true"></span><strong>'+statusLabel[item.status]+'</strong> · Ditt val: '
+      +'<p class="schyssta-status"><span>'+source+'</span> · <span class="schyssta-status-mark schyssta-status-'+item.status+'" aria-hidden="true"></span><strong>'+schysstaDecisionStatus(item)+'</strong> · Ditt val: '
       +(item.own_decision===true?'ja':item.own_decision===false?'nej':'inte lämnat')+'</p>'
       +(source==='Ändringsförslag'&&item.status==='proposed'?'<p class="live-muted">Den tidigare överenskommelsen gäller tills ni båda har godkänt den nya formuleringen.</p>':'')
       +(item.status==='proposed'&&item.proposed_by_me&&item.own_decision===null
