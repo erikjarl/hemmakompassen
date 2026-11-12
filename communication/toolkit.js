@@ -235,7 +235,7 @@ export function normalizeNvcAiReply(value){
  // FBK-02-02: an AI can still echo field fragments as a superficially complete
  // sentence. These narrow, evidenced patterns flag malformed Swedish without
  // pretending that a regex can assess grammar in general.
- if(/\bNär\s+[\p{L}]+\s+(?:lyssnade|svarade|pratade|förstod|gjorde|ville|kunde|hörde|hade|var|blev)\s+inte\b/iu.test(reply)||
+ if(/\bNär\s+(?:[\p{L}]+\s+){1,3}(?:lyssnade|svarade|pratade|förstod|gjorde|ville|kunde|hörde|hade|var|blev)\s+inte\b/iu.test(reply)||
     /\bkänner jag\s+[A-ZÅÄÖ][a-zåäö]+\b/u.test(reply)||
     /\bJag behöver\s+Att\b/u.test(reply))return null;
  return reply;
