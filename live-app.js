@@ -1110,8 +1110,13 @@ function swipeOverviewView(){
     :'';
   // Reuse reviewed editorial advice only for current server-confirmed mutual YES cards.
   // Do not infer anything from private answers or understanding cards.
-  const advicePreview=[...new Set(sortedGroups.flatMap(([,items])=>
-    items.map(item=>firstSentence(item.advice)).filter(Boolean)))].slice(0,2);
+  const allAdvice=[...new Set(sortedGroups.flatMap(([,items])=>
+    items.map(item=>firstSentence(item.advice)).filter(Boolean)))];
+  const advicePreview=allAdvice.slice(0,2);
+  const moreAdvice=allAdvice.length>2
+    ?'<details class="swipe-unified-extra-advice"><summary>Visa '+(allAdvice.length-2)+' fler råd från era gemensamma svar</summary><ul>'+
+      allAdvice.slice(2).map(advice=>'<li>'+esc(advice)+'</li>').join('')+'</ul></details>'
+    :'';
   const count=[...groups.values()].reduce((sum,items)=>sum+items.length,0);
   // Shared B messages remain a separate, clearly labelled part of the same
   // overview. Only validated, currently server-shared understanding IDs enter.
@@ -1125,7 +1130,7 @@ function swipeOverviewView(){
     :'';
   return title+'<p class="live-muted">'+(count?count+' '+(count===1?'gemensamt ja-svar':'gemensamma ja-svar')+' från de kortlekar ni har använt.':'Inga gemensamma ja-svar hittades ännu.')+' Bara kort där båda har svarat ja räknas som matchningar. Frivilligt delade förståelsekort visas i ett eget avsnitt nedan.</p>'+
     (activityMatches?'<p class="swipe-unified-next-step"><strong>Att göra tillsammans:</strong> Ni har båda visat intresse för '+activityPreview+activityMore+'. Välj gärna en aktivitet i listan och föreslå en dag att göra den tillsammans. Ett ja är ett intresse, inte en överenskommelse. <a href="#inkorg">Öppna Inkorgen och föreslå en tid</a>.</p>'+activityDetails:'')+
-    (advicePreview.length?'<section class="swipe-unified-advice" aria-label="Redaktionella råd utifrån era gemensamma svar"><h3>Små steg att prova</h3>'+advicePreview.map(advice=>'<p>'+esc(advice)+'</p>').join('')+'<p class="live-muted">Förskrivna förslag utifrån era gemensamma ja-svar, inte AI och inte individuella bedömningar.</p></section>':'')+
+    (advicePreview.length?'<section class="swipe-unified-advice" aria-label="Redaktionella råd utifrån era gemensamma svar"><h3>Små steg att prova</h3>'+advicePreview.map(advice=>'<p>'+esc(advice)+'</p>').join('')+moreAdvice+'<p class="live-muted">Förskrivna förslag utifrån era gemensamma ja-svar, inte AI och inte individuella bedömningar.</p></section>':'')+
     (groups.size?'<ul class="swipe-match-list swipe-unified-list">'+sortedGroups.map(([category,items])=>
       '<li><div><h3>'+esc(category)+' · '+items.length+' '+(items.length===1?'gemensamt':'gemensamma')+'</h3><ul class="swipe-unified-statements">'+items.map(item=>'<li>'+esc(item.statement)+'</li>').join('')+'</ul></div></li>').join('')+'</ul>':'')+
     understandingPanel+
