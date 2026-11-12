@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261112-inbox-inline-ai1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261112-swipe-pair-epoch1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261112-inbox-inline-ai1';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261112-swipe-pair-epoch1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261112-inbox-inline-ai1';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261112-swipe-pair-epoch1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -1072,6 +1072,8 @@ function formatMatchedActivities(statements){
 function swipeOverviewView(){
   if(!sharedInsightsEnabled||!user||members.length!==2||!members.some(m=>m.user_id===user.id)||
      !members.some(m=>m.role==='parent')||!members.some(m=>m.role==='teen'))return '';
+  // Membership from an older session is not proof of the current family pair.
+  if(!inboxPairEpoch)return '<section class="live-panel swipe-unified-overview"><p role="status">Kontrollerar familjekopplingen innan gemensamma svar visas…</p></section>';
   const title='<section class="live-panel swipe-unified-overview" aria-labelledby="swipe-overview-heading"><span class="swipe-eyebrow">GEMENSAMT OCH FRIVILLIGT DELAT</span><h2 id="swipe-overview-heading">Det ni har gemensamt – alla kortlekar</h2>';
   if(swipeOverviewLoading)return title+'<p role="status">Kontrollerar gemensamma svar från alla kortlekar…</p></section>';
   if(swipeOverviewError)return title+'<p role="alert">'+esc(swipeOverviewError)+'</p><button type="button" class="schyssta-secondary" id="swipe-overview-retry">Försök igen</button></section>';
@@ -1152,8 +1154,8 @@ async function fetchSwipeOverview({quiet=false}={}){
     clearTimeout(swipeOverviewRefreshTimer);
     swipeOverviewRefreshTimer=null;
   }
-  const viewer=user?.id,session=sharedSession,request=++swipeOverviewRequest;
-  const eligible=sharedInsightsEnabled&&viewer&&members.length===2&&
+  const viewer=user?.id,session=sharedSession,pairEpoch=inboxPairEpoch,request=++swipeOverviewRequest;
+  const eligible=sharedInsightsEnabled&&!!pairEpoch&&viewer&&members.length===2&&
     members.some(m=>m.user_id===viewer)&&members.some(m=>m.role==='parent')&&members.some(m=>m.role==='teen')&&page()==='swipe';
   if(!eligible){swipeOverviewRows=[];swipeOverviewUnderstandingRows=[];swipeOverviewError='';swipeOverviewLoading=false;return;}
   const previous=JSON.stringify([swipeOverviewRows,swipeOverviewUnderstandingRows,swipeOverviewError]);
@@ -1163,7 +1165,7 @@ async function fetchSwipeOverview({quiet=false}={}){
       Promise.all(INSIGHT_DECK_IDS.map(deckId=>db.rpc('shared_swipe_matches',{p_deck_id:deckId}))),
       sharedUnderstandingEnabled?db.rpc('shared_understanding_cards'):Promise.resolve({data:[],error:null})
     ]);
-    if(request!==swipeOverviewRequest||session!==sharedSession||user?.id!==viewer||page()!=='swipe')return;
+    if(request!==swipeOverviewRequest||session!==sharedSession||inboxPairEpoch!==pairEpoch||user?.id!==viewer||page()!=='swipe')return;
     const rows=[];
     for(let i=0;i<responses.length;i++){
       if(responses[i]?.error||!Array.isArray(responses[i]?.data))throw Error('Shared result unavailable');
@@ -1176,7 +1178,7 @@ async function fetchSwipeOverview({quiet=false}={}){
     swipeOverviewUnderstandingRows=verifiedUnderstanding;
     swipeOverviewError='';
   }catch(e){
-    if(request!==swipeOverviewRequest||session!==sharedSession||user?.id!==viewer||page()!=='swipe')return;
+    if(request!==swipeOverviewRequest||session!==sharedSession||inboxPairEpoch!==pairEpoch||user?.id!==viewer||page()!=='swipe')return;
     swipeOverviewRows=[];
     swipeOverviewUnderstandingRows=[];
     swipeOverviewError='Gemensamma svar kunde inte kontrolleras. Tidigare resultat visas inte.';
