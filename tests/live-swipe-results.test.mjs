@@ -436,7 +436,7 @@ console.log('PASS: all-deck insights gate, A-only sanitizer, B/NO isolation, ses
   const end=script.indexOf('function scheduleSwipeOverviewRefresh(){',start);
   assert.ok(start>=0&&end>start,'All-deck overview source is available');
   const state={
-    sharedInsightsEnabled:true,user:{id:'parent'},
+    sharedInsightsEnabled:true,user:{id:'parent'},inboxPairEpoch:'verified-pair-1',
     members:[{user_id:'parent',role:'parent'},{user_id:'teen',role:'teen'}],
     swipeOverviewLoading:false,swipeOverviewError:'',
     sharedUnderstandingEnabled:false,swipeOverviewUnderstandingRows:[],
