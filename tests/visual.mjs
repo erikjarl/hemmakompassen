@@ -2594,6 +2594,10 @@ async function verifyPairedTwoRoleExchange(){
     await outgoing.waitFor();
     assert.match(await outgoing.innerText(),/Ditt val: inte lämnat/,
       'Parent sees their original proposal still awaiting their own explicit vote');
+    assert.match(await outgoing.innerText(),/Du skickade det här förslaget, men har ännu inte godkänt det/,
+      'Own unanswered proposal explains why proposing is not the same as approving');
+    assert.equal(await incoming.locator('.schyssta-own-proposal-note').count(),0,
+      'The recipient never sees the proposer-specific clarification');
     await outgoing.getByRole('button',{name:'Jag godkänner'}).click();
     await parent.page.waitForFunction(()=>document.querySelector('.schyssta-view')?.textContent?.includes('Godkänd av båda'));
     assert.equal(fixture.rules[0].status,'accepted');
