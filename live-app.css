@@ -1366,3 +1366,27 @@
 .schyssta-quick-actions--secondary>.live-button{background:var(--card2);border:1px solid var(--line2);box-shadow:none;color:var(--text)}
 .schyssta-quick-actions--secondary>.live-button:hover{background:var(--card3)}
 .schyssta-quick-actions--secondary>.live-button:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+
+/* UX-SL-02: approved agreements are the primary readable list, not a card
+   wrapped in a second heavy panel. Empty/error states retain existing cards. */
+.schyssta-view .schyssta-approved-present>.live-panel{
+  padding:0;
+  border:0;
+  border-radius:0;
+  box-shadow:none;
+  background:transparent;
+}
+.schyssta-view .schyssta-approved-present>.live-panel>h2{
+  margin:0 0 10px;
+  color:#ffe0a5;
+}
+.schyssta-view .schyssta-approved-present .schyssta-list{
+  margin-top:0;
+  border-top:1px solid var(--line2);
+}
+.schyssta-view .schyssta-approved-present .schyssta-approved-details>summary{
+  padding-block:14px;
+}
+@media(max-width:430px){
+  .schyssta-view .schyssta-approved-present>.live-panel{padding:0}
+}
