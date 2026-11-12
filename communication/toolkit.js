@@ -212,7 +212,10 @@ export function buildNvcAiPrompt(input={}){
  if(!a)return null;
  return 'Skriv EN kort (högst 65 ord), naturlig och grammatiskt korrekt svensk NVC-formulering i jagform. '+
   'Utgå från observation, känsla, behov och ett konkret, frivilligt önskemål. '+
-  'Rätta ordformer och ordföljd utan att hitta på något om situationen eller lägga till råd. '+
+  'Skriv om råa fältanteckningar till idiomatisk svenska: anpassa meningsbyggnad, pronomen, verb och böjningar. '+
+  'Klistra aldrig bara ihop fälten efter orden ”När”, ”känner jag”, ”Jag behöver” eller ”Skulle du vilja”. '+
+  'Om ett fält redan är en hel mening, väv in dess innebörd utan att dubblera inledningen. '+
+  'Behåll användarens avsedda innebörd, även om orden är ovanliga. Hitta inte på händelser, känslor, behov eller råd. '+
   'Svara bara med den färdiga formuleringen, utan rubriker, fältetiketter, punktlista, förklaring eller följdfråga.\n'+
   'Observation: '+a[0]+'\nKänsla: '+a[1]+'\nBehov: '+a[2]+'\nÖnskemål: '+a[3];
 }
