@@ -375,7 +375,8 @@ test('FBK-02-05: persisted both-yes snapshot renders compact accepted rule, neve
     };
     vm.runInNewContext(production.slice(begin,end)+'\nthis.view=schysstaView;',state);
     const compact=state.view();
-    assert.match(compact,/1 gemensam överenskommelse/);
+    assert.match(compact,/<h2>Våra överenskommelser<\/h2>/);
+    assert.match(compact,/Vi knackar på dörren/);
     assert.match(compact,/Inget väntar just nu/);
     assert.match(compact,/class="schyssta-approved-item"><details class="schyssta-approved-details"/);
     assert.match(compact,/Godkänd av båda/);

@@ -2787,14 +2787,15 @@ function schysstaView(){
   // Place the next action and compose entry before optional guidance.
   const quickActions='<section class="schyssta-quick-actions'+(approved.length?' schyssta-quick-actions--secondary':'')+'" aria-label="Översikt och nästa steg">'
     +'<div class="schyssta-quick-state"><strong>'+(needs.length===0?'Inget väntar just nu':needs.length===1?'1 förslag behöver ditt svar':needs.length+' förslag behöver ditt svar')+'</strong>'
-    +'<p>'+(needs.length?'Du kan svara direkt på förslagen nedan eller välja Inte nu.':'Du kan föreslå något nytt utan att fatta ett beslut åt den andra.')+'</p>'
+    +(needs.length?'<p>Välj ett svar nedan eller Inte nu.</p>':'')
     +(needs.length?'<div class="schyssta-actions schyssta-jump-actions"><button class="schyssta-secondary" type="button" data-schyssta-needs-jump>Visa väntande förslag</button></div>':'')+'</div>'
     +(schysstaDraftOpen
       ?'<button class="live-button" type="button" data-schyssta-compose-jump>Fortsätt skriva förslag</button>'
       :'<button class="live-button" type="button" data-schyssta-start>+ Föreslå en regel</button>')
-    +'<p class="schyssta-quick-counts">'+approved.length+' '+(approved.length===1?'gemensam överenskommelse':'gemensamma överenskommelser')
-    +' · '+ongoing.length+' '+(ongoing.length===1?'annat förslag':'andra förslag')
-    +' · '+schysstaHistory.length+' '+(schysstaHistory.length===1?'avslutad regel':'avslutade regler')+'</p></section>';
+    +(ongoing.length||schysstaHistory.length
+      ?'<p class="schyssta-quick-counts">'+ongoing.length+' '+(ongoing.length===1?'annat förslag':'andra förslag')
+        +' · '+schysstaHistory.length+' '+(schysstaHistory.length===1?'avslutad regel':'avslutade regler')+'</p>'
+      :'')+'</section>';
   const searchTools='<details class="schyssta-search-panel"'+(schysstaSearch.trim()||schysstaFilterStatus!=='all'?' open':'')+'><summary>Sök och filtrera regler</summary><div class="schyssta-filter-toolbar" role="search" aria-label="Sök bland aktuella regler och förslag">'
     +'<label for="schyssta-search">Sök bland era regler och förslag</label>'
     +'<input type="search" id="schyssta-search" maxlength="100" autocomplete="off" placeholder="Skriv ett ord i regeln…" value="'+esc(schysstaSearch)+'">'
