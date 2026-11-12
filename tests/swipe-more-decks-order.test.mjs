@@ -10,8 +10,10 @@ const view=app.slice(start,end);
 const decks=app.slice(app.indexOf('function themeDecksView('),app.indexOf('// A private, read-only overview',app.indexOf('function themeDecksView(')));
 
 test('finished general deck shows the next-deck disclosure ahead of secondary results',()=>{
-  assert.match(view,/\(item\?'':themeDecksView\(true\)\)\+privateGeneralAnswerReview\(\)\+swipeSecondaryResults\(!item\)/);
-  assert.match(view,/:swipeOverviewView\(\)\+privateSwipeExportControls\(\)\)/);
+  assert.match(view,/:swipeOverviewView\(\)\+themeDecksView\(true\)\+privateSwipeExportControls\(\)\)/,
+    'The completed deck presents the next-deck action before private export');
+  assert.match(view,/\+privateGeneralAnswerReview\(\)\+swipeSecondaryResults\(!item\)/,
+    'Optional next decks precede private review and legacy results');
   assert.match(decks,/completedGeneral\?'<details class="swipe-more-decks"><summary id="swipe-themes-heading">/);
   assert.match(decks,/swipe-more-decks-icon" aria-hidden="true"/);
   assert.match(decks,/<strong>Gör fler kortlekar<\/strong>/);
