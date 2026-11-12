@@ -71,7 +71,7 @@ for(const role of ['parent','teen']){
   assert.equal(h.calls,1);
   assert.equal(h.applied,0);
   assert.equal(h.output.textContent,original);
-  assert.match(h.status.textContent,/för långt/);
+  assert.match(h.status.textContent,/gick inte att använda/);
   assert.equal(h.button.disabled,false);
  });
  test('FBK-02-02 '+role+': overly wordy but short-character AI text is rejected without deleting local draft',async()=>{
@@ -82,7 +82,7 @@ for(const role of ['parent','teen']){
   assert.equal(h.calls,1);
   assert.equal(h.applied,0,'No generated text may replace local draft');
   assert.equal(h.output.textContent,original);
-  assert.match(h.status.textContent,/för långt/);
+  assert.match(h.status.textContent,/gick inte att använda/);
   assert.equal(h.button.disabled,false,'Allow a deliberate retry after rejected response');
   assert.match(buildNvcAiPrompt(h.form.fields),/högst 65 ord/);
  });
