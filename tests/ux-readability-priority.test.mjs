@@ -24,7 +24,7 @@ test('completed theme chooser keeps primary action visible without redundant hel
 test('readability roadmap and standing workflow instruction are present',async()=>{
   const [roadmap,agents]=await Promise.all([read('docs/ACTIVE_ROADMAP.md'),read('AGENTS.md')]);
   assert.match(roadmap,/## UX-READ-01/);
-  assert.match(roadmap,/Informationhierarki/);
+  assert.match(roadmap,/Informationshierarki/);
   assert.match(roadmap,/Språkgranskning/);
   assert.match(roadmap,/Visuell läsbarhet/);
   assert.match(roadmap,/två autentiserade konton/);
