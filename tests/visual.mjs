@@ -2758,6 +2758,24 @@ async function verifyPairedRuleRevisionAndHistory(){
     await teen.page.waitForFunction(()=>document.querySelector('.schyssta-view')?.textContent?.includes('Ditt val: ja'));
     assert.equal(fixture.rules[0].status,'proposed',
       'FUN-03: one signature is not a mutually accepted agreement');
+    // FBK-02-05: simulate a stale click from a previously rendered button.
+    // A confirmed YES must not issue a second decision RPC for the same rule.
+    const votesBeforeRepeat=fixture.calls.filter(call=>
+      call.role==='teen'&&call.name==='set_schyssta_rule_decision').length;
+    await teen.page.evaluate(id=>{
+      const stale=document.createElement('button');
+      stale.type='button';
+      stale.dataset.schysstaDecision=id;
+      stale.dataset.approved='true';
+      document.body.appendChild(stale);
+      stale.click();
+      stale.remove();
+    },originalId);
+    await teen.page.waitForTimeout(350);
+    assert.equal(fixture.calls.filter(call=>
+      call.role==='teen'&&call.name==='set_schyssta_rule_decision').length,
+      votesBeforeRepeat,'FBK-02-05: stale duplicate YES must not reach the RPC');
+    records.push({case:'repeated-stale-yes-does-not-resubmit-vote',passed:true});
     await revisit(parent.page);
     await parent.page.locator('#schyssta-rule-'+originalId)
       .getByRole('button',{name:'Jag godkänner'}).click();
