@@ -59,6 +59,10 @@ test('NVC AI request is explicit, bounded, ephemeral and excludes project contex
   const prompt=buildNvcAiPrompt(example);
   assert.ok(prompt.length<2000);
   assert.match(prompt,/grammatiskt korrekt svensk NVC-formulering/);
+  assert.match(prompt,/idiomatisk svenska/);
+  assert.match(prompt,/Klistra aldrig bara ihop fälten/);
+  assert.match(prompt,/utan att dubblera inledningen/);
+  assert.match(prompt,/Hitta inte på händelser, känslor, behov eller råd/);
   assert.match(prompt,/Observation: Han avslutar min mening/);
   assert.match(prompt,/Känsla: irriterad/);
   assert.equal(buildNvcAiPrompt({observation:'hej'}),null);
