@@ -12,7 +12,7 @@ test('FBK-02-07: shared reflection shortcut is offered before inbox notices',()=
   assert.ok(inbox.indexOf('sharedInsightsEnabled?')<link,'Feature flag controls the shortcut');
   assert.ok(link<inbox.lastIndexOf('+unreadOverview+activityPanel+chat+rules'),
     'Link appears before notification/chat/rule sections');
-  assert.match(inbox,/href=\\"#insikter\\"/);
+  assert.ok(inbox.includes('href="#insikter"'));
 });
 
 test('FBK-02-07: existing pairing guard precedes shared shortcut',()=>{
