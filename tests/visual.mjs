@@ -4758,12 +4758,25 @@ try{
       const disclosure=own.page.locator('.swipe-more-decks');
       assert.equal(await disclosure.evaluate(el=>el.open),false,
         'FBK-02-06: result remains visually primary for '+role);
+      const actionText=()=>summary.evaluate(el=>getComputedStyle(el,'::after').content);
+      assert.match(await actionText(),/Visa teman.*▾/,
+        'FBK-02-06: closed '+role+' at '+width+'px shows a clear action');
       await checkOverflow(own.page,'FBK-02-06 own-progress collapsed '+role+' '+width+'px');
       await capture(own.page,'mobile-extra-decks-private-progress-'+role+'-'+width+'.png');
       await summary.click();
+      assert.equal(await disclosure.evaluate(el=>el.open),true,
+        'FBK-02-06: disclosure opens when '+role+' activates it');
+      assert.match(await actionText(),/Dölj teman.*▴/,
+        'FBK-02-06: open '+role+' at '+width+'px offers an explicit close action');
       assert.equal(await disclosure.locator('[data-theme-open]').count(),6,
         'FBK-02-06: all six theme actions are available to paired '+role);
       await checkOverflow(own.page,'FBK-02-06 own-progress expanded '+role+' '+width+'px');
+      await summary.click();
+      assert.equal(await disclosure.evaluate(el=>el.open),false,
+        'FBK-02-06: '+role+' can collapse secondary decks again');
+      assert.match(await actionText(),/Visa teman.*▾/,
+        'FBK-02-06: closed label resets correctly for '+role);
+      await checkOverflow(own.page,'FBK-02-06 own-progress collapsed-again '+role+' '+width+'px');
     }finally{await own.context.close();}
   }
   const teenReview=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,role:'teen',preansweredGeneral:true});
