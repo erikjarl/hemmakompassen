@@ -2938,11 +2938,11 @@ async function verifyPairedRuleRevisionAndHistory(){
   console.log('FUN-03 rule replacement/history: '+records.length+' two-role synthetic scenarios passed.');
 }
 
-async function freshContext(options,{authenticated=false,paired=false,role="parent",unlocked=false,unlockUnavailable=false,priorityUnavailable=false,priorityFeature=true,privateImportance=false,importanceReadFailure=false,preansweredGeneral=false,preansweredSkipped=false,emptySchyssta=false,homeUnreadFailure=false,personalityComplete=false,personalitySharing=false,personalityPartnerShared=false,privateRetests=false,aiMediator=false,aiAnalyses=false,activityNotifications=false,preloadedRetestHistory=false,pairFixture=null}={}){
+async function freshContext(options,{authenticated=false,paired=false,role="parent",unlocked=false,unlockUnavailable=false,priorityUnavailable=false,priorityFeature=true,privateImportance=false,importanceReadFailure=false,preansweredGeneral=false,preansweredThemeProgress=false,preansweredSkipped=false,emptySchyssta=false,homeUnreadFailure=false,personalityComplete=false,personalitySharing=false,personalityPartnerShared=false,privateRetests=false,aiMediator=false,aiAnalyses=false,activityNotifications=false,preloadedRetestHistory=false,pairFixture=null}={}){
   if(pairFixture && typeof pairFixture.rpc!=='function')throw new Error('Invalid linked fixture');
   const context=await browser.newContext({...options,locale:"sv-SE",reducedMotion:"reduce"});
   if(pairFixture)await context.exposeBinding('__HK_TEST_PAIR_RPC__',(_source,name,args)=>pairFixture.rpc(role,name,args));
-  await context.addInitScript(value=>{window.__HK_TEST_USER__=value.user;window.__HK_TEST_PAIRED__=value.paired;window.__HK_TEST_ROLE__=value.role;window.__HK_TEST_UNLOCKED__=value.unlocked;window.__HK_UNLOCK_RPC_UNAVAILABLE__=value.unlockUnavailable;window.__HK_PRIORITY_RPC_UNAVAILABLE__=value.priorityUnavailable;window.__HK_PRIORITISED_TEEN__=value.privateImportance;window.__HK_IMPORTANCE_READ_FAIL__=value.importanceReadFailure;window.__HK_PREANSWERED_GENERAL__=value.preansweredGeneral;window.__HK_PREANSWERED_SKIPPED__=value.preansweredSkipped;window.__HK_SCHYSSTA_EMPTY__=value.emptySchyssta;window.__HK_HOME_UNREAD_FAILURE__=value.homeUnreadFailure;window.__HK_TEST_PERSONALITY_DONE__=value.personalityComplete;window.__HK_TEST_PERSONALITY_PARTNER_SHARED__=value.personalityPartnerShared;window.__HK_TEST_RETEST_HISTORY_TWO__=value.preloadedRetestHistory;},{preloadedRetestHistory,personalityPartnerShared,personalityComplete,emptySchyssta,homeUnreadFailure,preansweredGeneral,preansweredSkipped,user:authenticated?{id:role==="teen"?"10000000-0000-0000-0000-000000000002":"10000000-0000-0000-0000-000000000001",email:"synthetic@example.invalid"}:null,paired,role,unlocked,unlockUnavailable,priorityUnavailable,privateImportance,importanceReadFailure});
+  await context.addInitScript(value=>{window.__HK_TEST_USER__=value.user;window.__HK_TEST_PAIRED__=value.paired;window.__HK_TEST_ROLE__=value.role;window.__HK_TEST_UNLOCKED__=value.unlocked;window.__HK_UNLOCK_RPC_UNAVAILABLE__=value.unlockUnavailable;window.__HK_PRIORITY_RPC_UNAVAILABLE__=value.priorityUnavailable;window.__HK_PRIORITISED_TEEN__=value.privateImportance;window.__HK_IMPORTANCE_READ_FAIL__=value.importanceReadFailure;window.__HK_PREANSWERED_GENERAL__=value.preansweredGeneral;window.__HK_PREANSWERED_THEME_PROGRESS__=value.preansweredThemeProgress;window.__HK_PREANSWERED_SKIPPED__=value.preansweredSkipped;window.__HK_SCHYSSTA_EMPTY__=value.emptySchyssta;window.__HK_HOME_UNREAD_FAILURE__=value.homeUnreadFailure;window.__HK_TEST_PERSONALITY_DONE__=value.personalityComplete;window.__HK_TEST_PERSONALITY_PARTNER_SHARED__=value.personalityPartnerShared;window.__HK_TEST_RETEST_HISTORY_TWO__=value.preloadedRetestHistory;},{preloadedRetestHistory,personalityPartnerShared,personalityComplete,emptySchyssta,homeUnreadFailure,preansweredGeneral,preansweredThemeProgress,preansweredSkipped,user:authenticated?{id:role==="teen"?"10000000-0000-0000-0000-000000000002":"10000000-0000-0000-0000-000000000001",email:"synthetic@example.invalid"}:null,paired,role,unlocked,unlockUnavailable,priorityUnavailable,privateImportance,importanceReadFailure});
   await context.route(base+"backend-config.js*",route=>route.fulfill({
     contentType:"application/javascript",
     body:"window.HEMMAKOMPASSEN_BACKEND=Object.freeze({supabaseUrl:'https://synthetic.invalid',supabasePublishableKey:'synthetic',enableSharedPriorities:"+String(priorityFeature)+",enableSharedPolling:true,enableSharedInsights:true,enableSharedUnderstanding:true,enableSchysstaList:true,enableActivityNotifications:"+String(activityNotifications)+",enablePersonalitySharing:"+String(personalitySharing)+",enablePrivateRetests:"+String(privateRetests)+",enableAiMediator:"+String(aiMediator||aiAnalyses)+",enableAiHistory:"+String(aiMediator||aiAnalyses)+",enableAiResultAnalyses:"+String(aiAnalyses)+",aiMediatorUrl:'https://hemmakompassen-ai-medlare.erikbertiljarl.workers.dev/api/ai/mediate'});"
@@ -2953,6 +2953,14 @@ async function freshContext(options,{authenticated=false,paired=false,role="pare
       export function createClient(){
         const current=()=>window.__HK_TEST_USER__;
         const answers=new Map(window.__HK_PREANSWERED_GENERAL__?Array.from({length:34},(_,i)=>{const id='general-'+String(i+1).padStart(2,'0');return [id,{deck_id:'general',card_id:id,answer:true}]}):window.__HK_TEST_PAIRED__?[['general-01',{deck_id:'general',card_id:'general-01',answer:true}],['general-02',{deck_id:'general',card_id:'general-02',answer:false}]]:[]);
+        // Private, synthetic A answers differ by role. Never write real accounts.
+        if(window.__HK_PREANSWERED_THEME_PROGRESS__){
+          const decks=window.__HK_TEST_ROLE__==='parent'?['aktiviteter','samtal']:['aktiviteter'];
+          for(const deckId of decks){
+            const cardId=deckId+'-01';
+            answers.set(cardId,{deck_id:deckId,card_id:cardId,answer:true});
+          }
+        }
         const personalityAnswers=new Map(window.__HK_TEST_PERSONALITY_DONE__?Array.from({length:50},(_,i)=>['ipip50-'+String(i+1).padStart(3,'0'),3]):[]);
         let personalityConsent=false;
         const retestAttempts=window.__HK_TEST_RETEST_HISTORY_TWO__?[
@@ -4729,6 +4737,35 @@ try{
   await soloTeen.context.close();
   // Regression: reviewing a fully answered teen deck must NOT finish after skipping B card #2.
   // The synthetic backend preloads all 34 answers, including a historical private B answer.
+  // FBK-02-06: the actual mobile view must report the viewer's own saved
+  // theme progress. Parent and teen have different synthetic answers, never a
+  // shared progress count. No real session or Supabase data is touched.
+  for(const role of ['parent','teen']){
+    const width=role==='parent'?320:390;
+    const own=await freshContext({viewport:{width,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},
+      {authenticated:true,paired:true,role,preansweredGeneral:true,preansweredThemeProgress:true});
+    try{
+      await own.page.goto(base+'#swipe',{waitUntil:'load'});
+      const summary=own.page.locator('.swipe-more-decks > summary');
+      await summary.waitFor();
+      const expected=role==='parent'?'2 av 6 teman påbörjade':'1 av 6 teman påbörjade';
+      await own.page.waitForFunction(value=>
+        document.querySelector('.swipe-more-decks > summary small')?.textContent?.includes(value),expected);
+      const label=await summary.innerText();
+      assert.match(label,/Gör fler kortlekar/,'FBK-02-06: clear next-decks label '+role);
+      assert.ok(label.includes(expected),'FBK-02-06: current '+role+' sees own theme progress');
+      assert.doesNotMatch(label,/teman klara|teman klart/,'FBK-02-06: partial decks are not called complete');
+      const disclosure=own.page.locator('.swipe-more-decks');
+      assert.equal(await disclosure.evaluate(el=>el.open),false,
+        'FBK-02-06: result remains visually primary for '+role);
+      await checkOverflow(own.page,'FBK-02-06 own-progress collapsed '+role+' '+width+'px');
+      await capture(own.page,'mobile-extra-decks-private-progress-'+role+'-'+width+'.png');
+      await summary.click();
+      assert.equal(await disclosure.locator('[data-theme-open]').count(),6,
+        'FBK-02-06: all six theme actions are available to paired '+role);
+      await checkOverflow(own.page,'FBK-02-06 own-progress expanded '+role+' '+width+'px');
+    }finally{await own.context.close();}
+  }
   const teenReview=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true,role:'teen',preansweredGeneral:true});
   await teenReview.page.goto(base+'#swipe',{waitUntil:'load'});
   await teenReview.page.locator('.swipe-finished summary').waitFor();
