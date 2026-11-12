@@ -237,16 +237,16 @@ export function normalizeNvcAiReply(value){
 export function renderNvcExercise(role='teen'){
  const parent=role==='parent';
  const fields=[
-  ['observation','1. Vad hände?','Beskriv något man kan se eller höra, utan ”alltid” eller tolkningar.','vi börjar diskutera medan jag gör läxor'],
-  ['feeling','2. Vad känner jag?','Till exempel frustrerad, rädd, ledsen eller lättad.','mig frustrerad'],
-  ['need','3. Vad behöver jag?','Exempelvis lugn, inflytande, trygghet eller tydlighet.','lugn och tid att förklara'],
-  ['request','4. Vad vill jag be om?','En konkret, genomförbar handling som går att säga nej till.','prata i tio minuter i kväll']
+  ['observation','1. Vad hände?','Beskriv vad någon gjorde eller sade, utan att tolka varför. Skriv med egna ord – det behöver inte bli en färdig mening.','Vi började prata om skärmtid mitt under läxorna'],
+  ['feeling','2. Vad känner jag?','Skriv känslan med ett eller några ord. Exempelvis frustrerad, orolig eller lättad.','frustrerad'],
+  ['need','3. Vad behöver jag?','Beskriv ett behov, inte vad den andra personen måste göra. Exempelvis lugn, inflytande eller tydlighet.','lugn och tid att förklara'],
+  ['request','4. Vad vill jag be om?','Föreslå en konkret handling eller tidpunkt. Lämna utrymme för att säga nej eller föreslå något annat.','prata i tio minuter i kväll']
  ];
  return '<div class="comm-toolkit comm-nvc"><nav aria-label="Tillbaka till kommunikationsråd"><a href="#kommunikation">← Alla samtalsverktyg</a></nav><header class="comm-hero"><p class="comm-kicker">För båda</p><h1>Nonviolent Communication</h1><p>Fyra steg: observation, känsla, behov och ett konkret önskemål. Det handlar om kontakt – inte om att vinna diskussionen.</p></header>'+
  '<section class="live-panel"><h2>Från anklagelse till jag-budskap</h2><p><strong>Prova istället för ”Du lyssnar aldrig!”</strong></p><p class="comm-example">'+(parent?'”När vi börjar prata om skärmtid sent känner jag mig stressad. Jag behöver lugn och tydlighet. Skulle du vilja prata om en plan efter middagen?”':'”När du ger råd innan jag har berättat färdigt känner jag mig frustrerad. Jag behöver få säga klart. Skulle du vilja lyssna innan du svarar?”')+'</p>'+
  '<p>En önskan är inte en dold order. Respektera ett nej och var beredd att föreslå en annan väg. Förälderns ansvar för trygghet och omsorg finns kvar.</p></section>'+
  renderCommunicationSafety(role)+
- '<section class="live-panel"><h2>Bygg din egen formulering</h2><p>Ditt fyrdelade utkast skapas lokalt i webbläsaren och sparas inte. Vill du få en kort, mer naturlig mening kan du sedan välja <strong>Förbättra språket med AI</strong>. Då skickas just de fyra fälten till AI-tjänsten. Ingen projektinformation hämtas, ingen sparad chatt skapas och inget skickas till familjemedlemmen. Undvik känsliga namn eller detaljer i text som skickas till AI.</p>'+
+ '<section class="live-panel"><h2>Bygg din egen formulering</h2><p>Skriv kort i varje fält, precis som du skulle anteckna. Du behöver inte själv få delarna att bilda en grammatisk mening. Den första knappen visar dina fyra delar var för sig; AI-knappen kan sedan göra ett sammanhängande språkförslag.</p><p>Ditt fyrdelade utkast skapas lokalt i webbläsaren och sparas inte. Vill du få en kort, mer naturlig mening kan du sedan välja <strong>Förbättra språket med AI</strong>. Då skickas just de fyra fälten till AI-tjänsten. Ingen projektinformation hämtas, ingen sparad chatt skapas och inget skickas till familjemedlemmen. Undvik känsliga namn eller detaljer i text som skickas till AI.</p>'+
  '<form id="comm-nvc-form"><div class="comm-fields">'+fields.map(([id,title,hint,placeholder])=>'<label for="comm-'+id+'"><strong>'+e(title)+'</strong><span>'+e(hint)+'</span></label><textarea id="comm-'+id+'" name="'+id+'" rows="2" required maxlength="240" placeholder="'+e(placeholder)+'"></textarea>').join('')+'</div><div class="comm-actions"><button class="live-button" type="submit">Visa mina fyra delar</button><button class="comm-quiet-button" type="button" data-comm-reset>Töm fälten</button></div></form>'+
  '<p id="comm-nvc-output" class="comm-output" tabindex="-1" role="status" aria-live="polite">Ditt utkast visas här när du är redo.</p>'+
  '<div class="comm-actions"><button class="comm-quiet-button" id="comm-nvc-ai" type="button" disabled>Förbättra språket med AI</button></div>'+
