@@ -1492,6 +1492,17 @@ async function verifyInsightsTwoRolesAndStates(){
       await page.goto(base+'#insikter',{waitUntil:'load'});
       await page.waitForFunction(()=>document.querySelectorAll('.insights-deck .swipe-match-list li').length===3);
       assert.equal(await page.locator('.insights-deck').count(),2);
+      const deckDisclosure=page.locator('.insights-decks-secondary');
+      assert.equal(await deckDisclosure.getAttribute('open'),null,
+        'Repeated per-deck results start folded behind the unified overview');
+      assert.equal(await page.locator('.insights-deck').first().isVisible(),false,
+        'Repeated deck panels must not crowd the all-deck result');
+      await deckDisclosure.locator('summary').focus();
+      await page.keyboard.press('Enter');
+      assert.equal(await page.locator('.insights-deck').first().isVisible(),true,
+        'Keyboard makes old per-deck details and actions accessible');
+      await page.keyboard.press('Enter');
+      assert.equal(await page.locator('.insights-deck').first().isVisible(),false);
       // VIS-00-03: real shared content appears early, while the precise sharing
       // explanation remains reachable by keyboard instead of dominating mobile.
       const insightsHeader=await page.locator('.insights-heading').boundingBox();
@@ -4014,6 +4025,8 @@ try{
   ];});
   await activity.page.locator('a[href="#insikter/aktiviteter"]').click();
   await activity.page.locator('#insights-deck-aktiviteter').waitFor();
+  assert.equal(await activity.page.locator('.insights-decks-secondary').getAttribute('open'),'',
+    'A verified inbox deep link expands its target deck inside secondary details');
   await activity.page.waitForFunction(()=>document.activeElement?.id==='insights-deck-aktiviteter');
   assert.equal(await activity.page.evaluate(()=>window.__HK_ACTIVITY_MARK_COUNT__||0),1,
     'Opening the deck does not mark any additional notification read');
