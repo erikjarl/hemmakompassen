@@ -41,7 +41,7 @@ function scenario({allowed=true,moveSession=false,editDraft=false}={}){
     // Successful write is confirmed only after the same UUID and body return.
     state.schysstaManualRules=[{agreement_id:ID,body:'Vi pratar om våra gemensamma regler',proposed_by_me:true}];
     return true;
-  },schysstaAllRules:()=>[],schysstaDecisionFeedback:'',
+  },schysstaAllRules:()=>[{agreement_id:ID,status:'proposed',own_decision:null}],schysstaDecisionFeedback:'',
   render:()=>{events.renders++;}
  };
  vm.runInNewContext(chunks.join('\n')+'\n'+names.map(n=>'this.'+n+'='+n+';').join('\n'),state);

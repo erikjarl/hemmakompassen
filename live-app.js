@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261112-inbox-badge-breakdown1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261112-schyssta-duplicate-vote1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261112-inbox-badge-breakdown1';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261112-schyssta-duplicate-vote1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261112-inbox-badge-breakdown1';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261112-schyssta-duplicate-vote1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -2529,6 +2529,11 @@ async function decideSchysstaRule(agreementId,approved){
   if(!schysstaListEnabled||!user||!SCHYSSTA_UUID.test(agreementId)||schysstaSaving.has(agreementId))return;
   const viewer=user.id,session=sharedSession;
   if(!await preflightSchysstaWrite(viewer,session)||schysstaSaving.has(agreementId))return;
+  // A stale click or a repeated event must not submit a decision already
+  // confirmed in the current server snapshot. Changing one's existing answer
+  // is still allowed; accepted rules cannot be voted on again.
+  const currentRule=schysstaAllRules().find(row=>row.agreement_id===agreementId);
+  if(!currentRule||currentRule.status==='accepted'||currentRule.own_decision===approved)return;
   schysstaDecisionFeedback='';schysstaSaving.add(agreementId);render();
   let error;try{({error}=await schysstaWriteRpc(db.rpc('set_schyssta_rule_decision',{p_agreement_id:agreementId,p_approved:approved})));}catch(e){error=e;}
   // The current session owns the saving flag and cached decisions.

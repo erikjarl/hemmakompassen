@@ -84,8 +84,8 @@ test('FBK-02-05: superseded readback does not falsely confirm an accepted decisi
   const end=app.indexOf('function schysstaView(){',start);
   assert.ok(start>0&&end>start,'Find production decision action');
   const action=app.slice(start,end);
-  const snapshot={agreement_id:id,status:'accepted',own_decision:true};
   async function run(refreshed){
+    const snapshot={agreement_id:id,status:'proposed',own_decision:null};
     let renders=0;
     const state={
       schysstaListEnabled:true,user:{id:'parent'},sharedSession:1,
@@ -93,7 +93,7 @@ test('FBK-02-05: superseded readback does not falsely confirm an accepted decisi
       preflightSchysstaWrite:async()=>true,
       db:{rpc:()=>Promise.resolve({error:null})},
       schysstaWriteRpc:promise=>promise,
-      fetchSchysstaList:async()=>refreshed,
+      fetchSchysstaList:async()=>{snapshot.status='accepted';snapshot.own_decision=true;return refreshed;},
       schysstaAllRules:()=>[snapshot],
       schysstaDecisionFeedback:'',schysstaError:'',
       render:()=>{renders++;}
