@@ -478,7 +478,7 @@ console.log('PASS: all-deck insights gate, A-only sanitizer, B/NO isolation, ses
     {deck_id:'aktiviteter',card_id:'a5',answer:true}
   ];
   const many=state.view();
-  const lead=many.match(/<p class="swipe-unified-next-step">([\\s\\S]*?)<\\/p>/)?.[1]||'';
+  const lead=many.split('<p class="swipe-unified-next-step">')[1]?.split('</p>')[0]||'';
   assert.match(lead,/Fika på stan/,'First activity appears in invitation');
   assert.match(lead,/2 andra aktiviteter/,'Remaining confirmed activities are counted');
   assert.doesNotMatch(lead,/Bowla|Cykla/,'Long activity sets do not flood the invitation');
