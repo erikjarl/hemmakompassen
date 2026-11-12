@@ -183,6 +183,14 @@ async function verifySchysstaMobileHierarchy(){
             borderTop:css.borderTopWidth,borderLeft:css.borderLeftWidth,
             borderRight:css.borderRightWidth,borderRadius:css.borderTopLeftRadius};
         });
+        assert.equal(await approved.evaluate(el=>el.classList.contains('schyssta-approved-present')),true,
+          role+' '+width+'px: accepted list uses the simplified layout');
+        const panelStyle=await approved.locator(':scope > .live-panel').evaluate(el=>{
+          const css=getComputedStyle(el);
+          return {background:css.backgroundColor,border:css.borderTopWidth,shadow:css.boxShadow,padding:css.paddingLeft};
+        });
+        assert.deepEqual(panelStyle,{background:'rgba(0, 0, 0, 0)',border:'0px',shadow:'none',padding:'0px'},
+          role+' '+width+'px: agreements are a flat list without outer card framing');
         assert.equal(rowStyle.background,'rgba(0, 0, 0, 0)',
           role+' '+width+'px: approved row should not be another filled card');
         assert.equal(rowStyle.borderLeft,'0px',
