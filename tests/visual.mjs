@@ -4873,6 +4873,14 @@ try{
   assert.doesNotMatch(await sharedB.innerText(),/Jag vill helst prata färdigt innan någon kommer med råd/,
     'FUN-SW-02: teen-private B wording is not shown to parent');
   await checkOverflow(paired.page,'FUN-SW-02 parent combined A+B 390px');
+  // Revoking B in another tab must remove it from #swipe without changing A.
+  await paired.page.evaluate(()=>{window.__HK_TEST_SET_SHARED_B__([]);window.dispatchEvent(new Event('focus'));});
+  await paired.page.waitForFunction(()=>!document.querySelector('.swipe-unified-understanding'));
+  assert.match(await paired.page.locator('.swipe-unified-overview').innerText(),/3 gemensamma ja-svar/,
+    'B revocation does not erase independent mutual YES matches');
+  await paired.page.evaluate(()=>{window.__HK_TEST_SET_SHARED_B__(['general-02']);window.dispatchEvent(new Event('focus'));});
+  await sharedB.waitFor();
+  await capture(paired.page,'mobile-unified-shared-understanding-parent.png');
   assert.equal(await paired.page.locator('.swipe-unified-overview .swipe-unified-next-step').count(),0,
     'FUN-SW-02: conversation and general YES matches must not produce an invented activity invitation');
   // Positive complement: an explicitly server-confirmed activity JA+JA must
@@ -4971,10 +4979,12 @@ try{
   await pairedActivity.page.locator('.swipe-unified-overview [role="alert"]').waitFor();
   assert.equal(await pairedActivity.page.locator('.swipe-unified-next-step, .swipe-unified-list > li').count(),0,
     'FUN-SW-02: RPC failure must not retain stale invitations or shared statements');
+  assert.equal(await pairedActivity.page.locator('.swipe-unified-understanding').count(),0,
+    'FUN-SW-02: a failed snapshot cannot retain previously shared B content');
   await checkOverflow(pairedActivity.page,'FUN-SW-02 revoked activity and failed RPC 390px');
   await pairedActivity.context.close();
   assert.equal(await paired.page.locator(".swipe-unified-overview a[href='#insikter']").count(),1,
-    "FUN-SW-02: expressly shared understanding remains on its own consent-controlled route");
+    "FUN-SW-02: shared understanding remains manageable on its consent-controlled route");
   await paired.page.getByRole("heading",{name:"Det ni båda svarat ja till"}).waitFor();
   await paired.page.locator(".swipe-match-group h4").filter({hasText:"Relationer"}).waitFor();
   assert.equal(await paired.page.locator(".swipe-results .swipe-match-list li").count(),2,"Only catalogued mutual YES cards appear; malicious RPC NO, B and unknown cards are discarded");
