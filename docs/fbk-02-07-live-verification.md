@@ -21,6 +21,17 @@ Verifiera att AI-reflektionen visas högt upp på `index.html#inkorg` för en fa
 | L9 | Safari på fysisk mobil; 320/390px och förstorad text | Läsbar text, ingen horisontell overflow, användbar scroll och fokus | Enhet/OS, skärmbilder |
 | L10 | Kontrollera publicerade Pages-filer efter merge till `main` | Version i serverad HTML och versionssatta skript motsvarar avsedd release | HTTP-status, versionssträng, hämtningstid |
 
+## Bedömningskriterier för synlighet och integritet (12 november)
+
+Detta är **acceptanskriterier inför verklig testning**, inte utförda PASS-kontroller:
+
+1. På mobil ska inkorgens AI-reflektion vara synlig i innehållets första huvudsektion utan att användaren måste följa länken *Visa gemensamma insikter*. Om analyserade kort saknas ska den istället visa ett korrekt tom-/laddnings-/felläge, aldrig en tidigare familjs analys.
+2. Vid både 320 och 390 px ska kontrollanten dokumentera ordningen mellan reflektion, inkorgsaviseringar och privat chatt samt om användaren kan nå chattens skrivruta med normal scroll. Ta skärmbild både före och efter eventuell laddning; en skärmbild av endast sidans överdel styrker inte att chatten fortfarande fungerar.
+3. Kontrollera i nätverkspanel att innehållet hämtas för aktuell parnings-/delningsepok och att inget fördröjt svar från tidigare konto/parning visas efter byte. Ingen privat B-text får inkluderas utan frivillig delning.
+4. AI-reflektionens synlighet och innehållets kvalitet är två skilda resultat: synlig placering kan få PASS samtidigt som faktiskt AI-svar, språk eller samtyckesvillkor får FAIL/BLOCKERAD. Markera inte hela FBK-02-07 löst enbart på grund av en godkänd skärmbild.
+
+**Datakontroll 12/11, läsbehörighet:** SELECT i Supabase bekräftade två `new` och fem `reviewing` bland öppna `public.test_feedback`-poster. De två nya gäller reflektionens placering i inkorgen och tydlig ingång till fler Gillaswajp-kortlekar. Detta är en inventering, inte autentiserad UI-verifiering. Ingen status eller användardata ändrades.
+
 ## Resultatredovisning
 
 För varje rad: datum, miljö, faktisk åtgärd, observerat resultat, **PASS/FAIL/BLOCKERAD/EJ KÖRD**, begränsning, fel-ID och bevislänk. Redovisa tydligt om enbart källkod, mockad browser eller verkliga konton har verifierats. Kopiera aldrig identifierande eller privata rapportuppgifter till GitHub. Ändra `public.test_feedback.status` först efter verifierad lösning och dokumenterad triage enligt FBK-02.
