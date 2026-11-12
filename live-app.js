@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261112-schyssta-empty2';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261112-inbox-unread-unknown1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261112-schyssta-empty2';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261112-inbox-unread-unknown1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261112-schyssta-empty2';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261112-inbox-unread-unknown1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -2382,20 +2382,26 @@ function inboxView(){
   // FBK-02-04: the Inbox badge combines independent, explicit read receipts.
   // A previously read private chat must not be confused with unread rule events.
   const unreadMessages=familyChatUnreadError?null:familyChatUnread;
-  const unreadRules=schysstaListEnabled&&!schysstaError?schysstaUnreadCount():0;
-  const unreadActivities=activityNotificationsEnabled&&!activityNotificationsError?activityUnreadCount():0;
-  const unreadTotal=(unreadMessages??0)+unreadRules+unreadActivities;
-  const unreadShortcut=(kind,label,count,unknown=false)=>
-    count>0?'<button type="button" class="schyssta-secondary" data-inbox-unread-jump="'+kind+'">'+label+' · '+count+'</button>'
-      :'<span>'+label+' · '+(unknown?'okänt antal':count)+'</span>';
-  const unreadOverview=unreadTotal>0
+  const unreadRules=schysstaListEnabled?(schysstaLoading||schysstaError?null:schysstaUnreadCount()):0;
+  const unreadActivities=activityNotificationsEnabled
+    ?(activityNotificationsLoading||activityNotificationsError?null:activityUnreadCount()):0;
+  const unreadUnknown=[unreadMessages,unreadRules,unreadActivities].some(value=>value===null);
+  const unreadTotal=(unreadMessages??0)+(unreadRules??0)+(unreadActivities??0);
+  const unreadShortcut=(kind,label,count)=>
+    count===null?'<span>'+label+' · okänt antal</span>'
+    :count>0?'<button type="button" class="schyssta-secondary" data-inbox-unread-jump="'+kind+'">'+label+' · '+count+'</button>'
+      :'<span>'+label+' · 0</span>';
+  const unreadOverview=unreadTotal>0||unreadUnknown
     ?'<section class="live-panel inbox-unread-summary" aria-label="Vad inkorgens olästa gäller">'
-     +'<p><strong>Oläst i inkorgen · '+unreadTotal+'</strong></p>'
+     +'<p><strong>'+(unreadUnknown
+       ?(unreadTotal>0?'Minst '+unreadTotal+' olästa i inkorgen':'Oläst antal kan inte kontrolleras')
+       :'Oläst i inkorgen · '+unreadTotal)+'</strong></p>'
      +'<p class="live-muted">Notissiffran vid Inkorg räknar privata meddelanden, regelhändelser och gemensamma kort. De markeras som lästa var för sig.</p>'
+     +(unreadUnknown?'<p role="status">Alla kategorier kunde inte kontrolleras. Använd Uppdatera hela inkorgen ovan för att försöka igen.</p>':'')
      +'<div class="inbox-unread-shortcuts">'
-     +unreadShortcut('messages','Privata meddelanden',unreadMessages??0,unreadMessages===null)
-     +unreadShortcut('rules','Regelhändelser',unreadRules,schysstaLoading||!!schysstaError)
-     +unreadShortcut('activities','Gemensamma kort',unreadActivities,activityNotificationsLoading||!!activityNotificationsError)
+     +unreadShortcut('messages','Privata meddelanden',unreadMessages)
+     +unreadShortcut('rules','Regelhändelser',unreadRules)
+     +unreadShortcut('activities','Gemensamma kort',unreadActivities)
      +'</div></section>':'';
   const counterpart=members.find(m=>m.user_id!==user.id);
   const otherName=esc(counterpart?.display_name||(counterpart?.role==='parent'?'Din förälder':'Din tonåring'));
