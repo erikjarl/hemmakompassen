@@ -1115,8 +1115,7 @@ function swipeOverviewView(){
     ?'<section class="swipe-unified-understanding" aria-labelledby="swipe-unified-understanding-heading">'+
       '<h3 id="swipe-unified-understanding-heading">'+(viewerRole()==='parent'?'Så här funkar min tonåring':'Så här funkar jag')+'</h3>'+
       '<p class="live-muted">Frivilligt delade förståelsekort – inte gemensamma ja-svar eller överenskommelser.</p>'+
-      '<ul class="swipe-unified-statements">'+sharedUnderstanding.map(card=>'<li>'+esc(cardTextForRole(card,viewerRole()))+'</li>').join('')+'</ul>'+
-      '<a href="#insikter" class="insights-back-link">Hantera och se delningen i Gemensamma insikter</a></section>'
+      '<ul class="swipe-unified-statements">'+sharedUnderstanding.map(card=>'<li>'+esc(cardTextForRole(card,viewerRole()))+'</li>').join('')+'</ul></section>'
     :'';
   return title+'<p class="live-muted">'+(count?count+' '+(count===1?'gemensamt ja-svar':'gemensamma ja-svar')+' från de kortlekar ni har använt.':'Inga gemensamma ja-svar hittades ännu.')+' Bara kort där båda har svarat ja räknas som matchningar. Frivilligt delade förståelsekort visas i ett eget avsnitt nedan.</p>'+
     (activityMatches?'<p class="swipe-unified-next-step"><strong>Att göra tillsammans:</strong> Ni har båda visat intresse för '+activityPreview+activityMore+'. Välj gärna en aktivitet i listan och föreslå en dag att göra den tillsammans. Ett ja är ett intresse, inte en överenskommelse. <a href="#inkorg">Öppna Inkorgen och föreslå en tid</a>.</p>'+activityDetails:'')+
