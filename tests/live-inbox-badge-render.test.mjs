@@ -101,8 +101,11 @@ console.log('PASS: real desktop and mobile menu render known, partial and unknow
   vm.runInNewContext(script.slice(start,end)+';this.refresh=fetchActivityNotifications;',env);
   await env.refresh({quiet:false});
   assert.equal(env.activityNotificationsLoading,false,'Foreground refresh has completed');
+  assert.equal(calls.render,0,
+    'Existing notices do not flash an unknown badge for an unchanged foreground refresh');
+  await env.refresh({quiet:false,forceRender:true});
   assert.equal(calls.render,2,
-    'Inbox redraws both the loading indicator and the unchanged successful result');
+    'An explicit refresh shows progress and then restores the known unchanged count');
   calls.render=0;calls.menu=0;
   route='hem';
   await env.refresh({quiet:false});
@@ -116,6 +119,6 @@ console.log('PASS: real desktop and mobile menu render known, partial and unknow
   env.familyChatDraft='Ett oskickat utkast';
   await env.refresh({quiet:false});
   assert.equal(calls.render,0,'Foreground refresh preserves an unsent message draft');
-  assert.equal(calls.menu,1,'Navigation still settles when an unsent draft blocks full render');
+  assert.equal(calls.menu,0,'An unchanged result leaves the draft and known badge untouched');
 }
 console.log('PASS: unchanged activity notifications clear transient unknown badge without disturbing drafts');
