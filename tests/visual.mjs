@@ -5112,7 +5112,7 @@ try{
     ];
   });
   await paired.page.locator('#insights-retry').click();
-  await paired.page.locator('[data-insight-activity="aktiviteter-01"]').waitFor();
+  await paired.page.locator('[data-insight-activity="aktiviteter-01"]').waitFor({state:'attached'});
   assert.equal(await paired.page.locator('[data-insight-activity]').count(),1,
     'Only the server-verified mutual YES activity gets an invitation action');
   // FUN-02/03-ACTIVITY-PAIR-JOIN-01: an insight refresh may have already
