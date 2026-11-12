@@ -26,3 +26,11 @@ Verifiera att AI-reflektionen visas högt upp på `index.html#inkorg` för en fa
 För varje rad: datum, miljö, faktisk åtgärd, observerat resultat, **PASS/FAIL/BLOCKERAD/EJ KÖRD**, begränsning, fel-ID och bevislänk. Redovisa tydligt om enbart källkod, mockad browser eller verkliga konton har verifierats. Kopiera aldrig identifierande eller privata rapportuppgifter till GitHub. Ändra `public.test_feedback.status` först efter verifierad lösning och dokumenterad triage enligt FBK-02.
 
 **Aktuell verifiering:** Alla L1–L10 = **EJ KÖRDA** i detta protokoll. Att testplanen finns betyder inte att rapporten har lösts.
+
+## Kontrolljournal – 2026-11-12 (separat Jobb hk-pass)
+
+- **L10 – BLOCKERAD (inte PASS):** försök att hämta den publicerade `https://erikjarl.github.io/hemmakompassen/index.html` via extern webbåtkomst gav otillgänglig resurs; separat HTTPS-försök från körmiljön misslyckades med DNS-upplösning. Ingen serverad HTML, version eller HTTP-status kunde därför verifieras. Detta är en åtkomstbegränsning i testmiljön, inte belägg för driftfel på webbplatsen.
+- **Supabase-feedback – läsbaserat verifierad:** `public.test_feedback` innehåller fortsatt 7 öppna rapporter: 2 `new`, 5 `reviewing`, 0 `planned`. De två `new` hör till `#inkorg` (12/11) och `#swipe` (11/11). Ingen status eller privat rapporttext ändrad.
+- **L1–L9 – EJ KÖRDA:** ingen autentiserad dubbelkontosession eller fysisk Safari fanns att verifiera. L10 kräver en miljö med fungerande åtkomst till Pages innan dess versionskrav kan godkännas.
+
+**Slutsats:** FBK-02-07 förblir öppen. Inget produktions-/kontotest får markeras slutfört utifrån denna kontrolljournal.
