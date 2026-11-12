@@ -9,7 +9,7 @@ function chunk(start,end){
   return source.slice(a,b);
 }
 const inbox=chunk('function inboxView(){','async function fetchSchysstaList(){');
-const fetchInsights=chunk('async function fetchInsights({quiet=false}={}){','function focusInsightTarget');
+const fetchInsights=chunk('async function fetchInsights({quiet=false}={}){','async function prepareActivityMessage');
 const navigation=chunk("window.addEventListener('hashchange',()=>{","document.addEventListener('visibilitychange',()=>{");
 
 test('FBK-02-07: paired inbox places generated reflection ahead of other messages',()=>{
