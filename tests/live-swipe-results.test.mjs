@@ -487,3 +487,19 @@ console.log('PASS: unified activity lead names confirmed matches only');
   assert.match(css,/\.swipe-more-decks>summary:focus-visible\s*\{/);
 }
 console.log('PASS: extra swipe decks stay optional but have prominent disclosure styling');
+
+// The shared results page highlights a concrete activity invitation and
+// editorial tips without creating another oversized competing results card.
+{
+  const activity=swipeCss.match(/\.swipe-unified-next-step\s*\{([^}]+)\}/)?.[1];
+  const advice=swipeCss.match(/\.swipe-unified-advice\s*\{([^}]+)\}/)?.[1];
+  assert.ok(activity&&advice,'Unified result has explicit activity and advice styling');
+  assert.match(activity,/border-left:3px/,'Activity invitation has a restrained visible accent');
+  assert.match(activity,/overflow-wrap:anywhere/,'Long shared activity names wrap safely');
+  assert.match(advice,/min-width:0/,'Editorial tips shrink inside mobile content');
+  assert.match(swipeCss,/\.swipe-unified-advice>p\.live-muted\s*\{/,
+    'Editorial attribution remains visibly secondary');
+  assert.match(swipeCss,/@media\(max-width:440px\)\s*\{\s*\.swipe-unified-next-step/,
+    'Compact mobile layout is defined for the activity lead');
+}
+console.log('PASS: shared next step and editorial tips have compact mobile layout');
