@@ -4735,6 +4735,15 @@ try{
    const moreDecks=teenReview.page.locator('.swipe-themes > details.swipe-more-decks');
    await moreDecks.locator('summary').waitFor();
    assert.equal(await moreDecks.evaluate(el=>el.open),false,'UX-SW-03 extra decks stay collapsed after completing general cards');
+   const nextStepOrder=await teenReview.page.evaluate(()=>{
+     const choices=document.querySelector('.swipe-themes .swipe-more-decks');
+     const exportBox=document.querySelector('.swipe-private-export');
+     const finished=document.querySelector('.swipe-finished');
+     return {afterFinish:!!(finished&&choices&&(finished.compareDocumentPosition(choices)&Node.DOCUMENT_POSITION_FOLLOWING)),
+       beforeExport:!!(choices&&exportBox&&(choices.compareDocumentPosition(exportBox)&Node.DOCUMENT_POSITION_FOLLOWING))};
+   });
+   assert.deepEqual(nextStepOrder,{afterFinish:true,beforeExport:true},
+     'FBK-02-06: optional next decks must precede secondary private export after finishing general');
    const deckChoice=moreDecks.locator(':scope > summary');
    const deckChoiceAppearance=await deckChoice.evaluate(el=>{
      const css=getComputedStyle(el),chevron=getComputedStyle(el,'::after');
