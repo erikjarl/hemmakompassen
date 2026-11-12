@@ -4783,6 +4783,12 @@ try{
         'FBK-02-06: open '+role+' at '+width+'px offers an explicit close action');
       assert.equal(await disclosure.locator('[data-theme-open]').count(),6,
         'FBK-02-06: all six theme actions are available to paired '+role);
+      assert.equal(await disclosure.locator('.swipe-theme-compact-item').count(),6,
+        'UX-SW-03: completed decks render as six concise rows, not full panels');
+      assert.equal(await disclosure.locator('.swipe-theme-compact-list > .live-panel').count(),0,
+        'UX-SW-03: completed deck rows must not contain large panel cards');
+      assert.equal(await disclosure.locator('.swipe-theme-compact-item .live-button').count(),6,
+        'UX-SW-03: all next-step buttons remain directly actionable');
       await checkOverflow(own.page,'FBK-02-06 own-progress expanded '+role+' '+width+'px');
       await summary.click();
       assert.equal(await disclosure.evaluate(el=>el.open),false,
@@ -4824,10 +4830,11 @@ try{
    await checkOverflow(teenReview.page,'FBK-02-06 completed swipe extra decks 390px');
    await capture(teenReview.page,'mobile-swipe-extra-decks-collapsed.png');
    assert.equal(await moreDecks.evaluate(el=>el.open),false,'FBK-02-06: visual emphasis does not open extra decks by default');
-   assert.equal(await moreDecks.locator('h3').count(),6,'All six locked deck previews remain in the DOM for an unpaired teen');
-   assert.equal(await moreDecks.locator('h3:visible').count(),0,'Extra deck previews do not compete with completed results');
+   assert.equal(await moreDecks.locator('.swipe-theme-compact-item').count(),6,'All six locked deck choices remain in the DOM for an unpaired teen');
+   assert.equal(await moreDecks.locator('.swipe-theme-compact-item:visible').count(),0,'Extra deck choices do not compete with completed results');
    await moreDecks.locator('summary').click();
-   assert.equal(await moreDecks.locator('h3:visible').count(),6,'All six locked deck previews become visible on user request');
+   assert.equal(await moreDecks.locator('.swipe-theme-compact-item:visible').count(),6,'All six locked choices become visible on request');
+   assert.equal(await moreDecks.locator('[data-theme-open]').count(),0,'Unpaired user cannot open a locked theme');
   assert.match(await teenReview.page.locator('.swipe-finished').innerText(),/34 sparade svar/,'All answers are loaded before review');
   await teenReview.page.locator('.swipe-finished summary').click();
    await teenReview.page.locator('#swipe-restart').click();

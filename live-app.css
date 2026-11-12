@@ -1323,6 +1323,41 @@
   .swipe-themes .swipe-more-decks>summary{padding:13px 14px}
 }
 
+/* UX-SW-03: after the all-deck result, six optional themes are concise rows
+   instead of six competing panels; the active swipe layout is unchanged. */
+.swipe-theme-compact-list{
+  margin:10px 14px 0;
+  padding:0;
+  list-style:none;
+  border:1px solid var(--line);
+  border-radius:12px;
+  overflow:hidden;
+}
+.swipe-theme-compact-item{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:10px 13px;
+  border-bottom:1px solid var(--line);
+}
+.swipe-theme-compact-item:last-child{border-bottom:0}
+.swipe-theme-compact-item>div{min-width:0;flex:1}
+.swipe-theme-compact-item strong{display:block;line-height:1.4;overflow-wrap:anywhere}
+.swipe-theme-compact-item .live-muted{display:block;margin-top:3px;font-size:.83rem;line-height:1.35}
+.swipe-theme-compact-item>.live-button{
+  flex:none;
+  min-height:44px;
+  padding:8px 12px;
+  width:auto;
+  max-width:42%;
+  font-size:.9rem;
+}
+@media(max-width:370px){
+ .swipe-theme-compact-item{gap:8px;padding:10px}
+ .swipe-theme-compact-item>.live-button{padding:8px 10px;font-size:.84rem}
+}
+
 /* UX-SL-02: once agreements exist, their text remains the visual focal point.
    Secondary actions stay discoverable and touch-sized without another dominant card. */
 .schyssta-quick-actions--secondary{background:transparent;border-color:var(--line);box-shadow:none;padding:10px 12px}
