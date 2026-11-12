@@ -1881,32 +1881,42 @@ function revealNextSwipeCard(viewer,session,deckId){
 }
 let previousMenuRoute=null;
 let mobileNavUserBrowsing=false,mobileNavEventsInstalled=false;
+// Keep the navigation badge consistent with the inbox's three independent
+// read receipts: an unavailable category is unknown, not an empty category.
+function inboxNavUnreadState(){
+  const ready=!!user&&members.length===2&&!!inboxPairEpoch;
+  if(!ready)return {total:0,unknown:false,parts:[0,0,0]};
+  const parts=[
+    familyChatUnreadError?null:familyChatUnread,
+    schysstaListEnabled?(schysstaLoading||schysstaError?null:schysstaUnreadCount()):0,
+    activityNotificationsEnabled
+      ?(activityNotificationsLoading||activityNotificationsError?null:activityUnreadCount()):0
+  ];
+  return {total:parts.reduce((sum,value)=>sum+(value??0),0),
+    unknown:parts.some(value=>value===null),parts};
+}
 function menu(){
   const route=page();
   const routeChanged=route!==previousMenuRoute;
   previousMenuRoute=route;
   if(routeChanged)mobileNavUserBrowsing=false;
-  // Match the inbox's pairing and read-receipt preconditions. Stale counts
-  // from a previous family must never reappear in the navigation badge.
-  const inboxReady=!!user&&members.length===2&&!!inboxPairEpoch;
-  const unread=inboxReady&&schysstaListEnabled&&!schysstaError?schysstaUnreadCount():0;
-  const unreadMessages=inboxReady&&!familyChatUnreadError?familyChatUnread:0;
-  const unreadActivities=inboxReady&&activityNotificationsEnabled&&!activityNotificationsError?activityUnreadCount():0;
+  const unreadState=inboxNavUnreadState();
   const pending=schysstaListEnabled&&user&&members.length===2&&!schysstaError?schysstaNeedsAnswer().length:0;
   const navItem=([key,label])=>{
-    const count=key==='inkorg'?(unread+unreadMessages+unreadActivities):key==='regler'?pending:0;
-    // Make an inbox badge explainable: a read private chat may still leave
-    // unread rule events or activity cards. Keep the same server-backed counts.
-    const inboxParts=[
-      unreadMessages+' privata meddelanden',
-      unread+' regelhändelser',
-      unreadActivities+' gemensamma kort'
-    ];
-    const descriptor=key==='inkorg'
-      ?'Inkorg, '+count+' olästa totalt: '+inboxParts.join(', ')
+    const isInbox=key==='inkorg';
+    const count=isInbox?unreadState.total:key==='regler'?pending:0;
+    const unknown=isInbox&&unreadState.unknown;
+    const badgeText=unknown?(count?(count>9?'9+':count+'+'):'?'):(count>9?'9+':String(count));
+    // Name each category; a missing response must never be presented as zero.
+    const inboxParts=unreadState.parts.map((value,index)=>
+      (value===null?'okänt antal':String(value))+' '+
+      ['privata meddelanden','regelhändelser','gemensamma kort'][index]);
+    const descriptor=isInbox
+      ?'Inkorg, '+(unknown?(count?'minst '+count+' olästa':'okänt antal olästa'):count+' olästa totalt')+
+        ': '+inboxParts.join(', ')
       :label+', '+count+' obesvarade regelförslag';
-    const aria=count?' aria-label="'+esc(descriptor)+'" title="'+esc(descriptor)+'"':'';
-    const badge=count?'<span class="live-nav-count" aria-hidden="true">'+(count>9?'9+':count)+'</span>':'';
+    const aria=count||unknown?' aria-label="'+esc(descriptor)+'" title="'+esc(descriptor)+'"':'';
+    const badge=count||unknown?'<span class="live-nav-count" aria-hidden="true">'+badgeText+'</span>':'';
     const active=route===key||(['mi-foralder','nvc'].includes(route)&&key==='kommunikation')||(route==='insikter'&&key==='swipe');
     return '<a href="#'+key+'"'+(active?' aria-current="page"':'')+aria+'>'+label+badge+'</a>';
   };
