@@ -432,13 +432,15 @@ console.log('PASS: all-deck insights gate, A-only sanitizer, B/NO isolation, ses
 
 {
   // The completed all-deck activity lead must use only server-confirmed A matches.
-  const start=script.indexOf('function formatMatchedActivities(');
+  const start=script.indexOf('function safeSharedUnderstanding(');
   const end=script.indexOf('function scheduleSwipeOverviewRefresh(){',start);
   assert.ok(start>=0&&end>start,'All-deck overview source is available');
   const state={
     sharedInsightsEnabled:true,user:{id:'parent'},
     members:[{user_id:'parent',role:'parent'},{user_id:'teen',role:'teen'}],
     swipeOverviewLoading:false,swipeOverviewError:'',
+    sharedUnderstandingEnabled:false,swipeOverviewUnderstandingRows:[],
+    GENERAL_CARDS:[{id:'general-02',type:'understanding',parentText:'Tonåringen vill prata färdigt',teenText:'Jag vill prata färdigt'}],
     swipeOverviewRows:[
       {deck_id:'aktiviteter',card_id:'a1',answer:true},
       {deck_id:'general',card_id:'g1',answer:true}
@@ -463,6 +465,32 @@ console.log('PASS: all-deck insights gate, A-only sanitizer, B/NO isolation, ses
   assert.match(html,/Lyssna färdigt innan ni svarar/,'Other deck supplies one suggestion to unified advice');
   assert.match(html,/Förskrivna förslag/,'The advice identifies its editorial origin');
   assert.doesNotMatch(html,/HEMLIGT/,'Undisclosed understanding cards are not rendered');
+  // Only server-confirmed B shares appear, clearly separated from A results.
+  // Unknown IDs, A-card IDs, and unshared B cards never become visible.
+  state.sharedUnderstandingEnabled=true;
+  state.swipeOverviewUnderstandingRows=[
+    {deck_id:'general',card_id:'general-02'},
+    {deck_id:'general',card_id:'general-02'},
+    {deck_id:'general',card_id:'g1'},
+    {deck_id:'general',card_id:'hidden'},
+    {deck_id:'other',card_id:'general-02'}
+  ];
+  const parentB=state.view();
+  assert.match(parentB,/Så här funkar min tonåring/,'Parent sees a clearly labelled shared-B section');
+  assert.match(parentB,/Tonåringen vill prata färdigt/,'Approved B card reaches the combined summary');
+  assert.equal((parentB.match(/<li>Tonåringen vill prata färdigt<\/li>/g)||[]).length,1,
+    'Duplicate shared B rows are deduplicated by the catalog');
+  assert.doesNotMatch(parentB,/HEMLIGT|hidden/,'Unshared or unknown B cards cannot leak');
+  assert.match(parentB,/1 gemensamt ja-svar|2 gemensamma ja-svar/,
+    'Shared understanding never inflates the mutual YES count');
+  state.viewerRole=()=> 'teen';
+  assert.match(state.view(),/Så här funkar jag/,'Teen sees their own perspective label');
+  assert.match(state.view(),/Jag vill prata färdigt/,'Teen sees original B wording');
+  state.swipeOverviewUnderstandingRows=[];
+  assert.doesNotMatch(state.view(),/swipe-unified-understanding/,
+    'Revoked B sharing immediately disappears from the unified overview');
+  state.sharedUnderstandingEnabled=false;
+  state.viewerRole=()=> 'parent';
   state.sharedDeck=id=>id==='aktiviteter'?{cards:[
     {id:'a1',type:'match',category:'Fritid',parentText:'Fika på stan'},
     {id:'a2',type:'match',category:'Fritid',parentText:'Spela fotboll'},
