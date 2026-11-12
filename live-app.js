@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261112-schyssta-duplicate-vote1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261112-swipe-activity-sentence1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261112-schyssta-duplicate-vote1';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261112-swipe-activity-sentence1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261112-schyssta-duplicate-vote1';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261112-swipe-activity-sentence1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -1048,6 +1048,11 @@ function understandingInsights(){
     ?'<button type="button" class="schyssta-secondary" data-understanding-retry'+(understandingShareChecking?' disabled':'')+'>Kontrollera delningen igen</button>':'';
   return sharedList+'<div class="understanding-consent"><h3>Du bestämmer vad som delas</h3><p>Varje knapp gäller bara det angivna budskapet. Ett delat förståelsekort blir aldrig en A-matchning eller en överenskommelse. Du kan återkalla delningen när som helst.</p>'+error+retry+controls+'</div>';
 }
+// Format only server-confirmed shared activity titles; no private answers here.
+function formatMatchedActivities(statements){
+  return new Intl.ListFormat('sv-SE',{style:'long',type:'conjunction'})
+    .format([...new Set(statements)]);
+}
 function swipeOverviewView(){
   if(!sharedInsightsEnabled||!user||members.length!==2||!members.some(m=>m.user_id===user.id)||
      !members.some(m=>m.role==='parent')||!members.some(m=>m.role==='teen'))return '';
@@ -1067,13 +1072,15 @@ function swipeOverviewView(){
   // originally came from. Keep the server-confirmed match set unchanged.
   const sortedGroups=[...groups.entries()].sort((a,b)=>
     Number(b[1].some(item=>item.activity))-Number(a[1].some(item=>item.activity)));
-  const activityStatements=[...groups.values()].flat().filter(item=>item.activity).map(item=>item.statement);
-  const activityMatches=activityStatements.length;
-  const activityPreview=activityStatements.slice(0,3).map(statement=>esc(statement)).join(', ')+
-    (activityMatches>3?' och '+(activityMatches-3)+' till i listan nedan':'');
+  // A concise Swedish sentence about the mutual activities, rather than a
+  // mechanically truncated comma list. Keep the individual cards below.
+  const activityStatements=[...groups.values()].flat()
+    .filter(item=>item.activity).map(item=>item.statement);
+  const activityMatches=new Set(activityStatements).size;
+  const activityPreview=esc(formatMatchedActivities(activityStatements));
   const count=swipeOverviewRows.length;
   return title+'<p class="live-muted">'+(count?count+' gemensamma ja-svar från de kortlekar ni har använt.':'Inga gemensamma ja-svar hittades ännu.')+' Bara kort där båda har svarat ja visas. Förståelsekort visas separat när de uttryckligen delas.</p>'+
-    (activityMatches?'<p class="swipe-unified-next-step"><strong>Att göra tillsammans:</strong> Ni har båda svarat ja till: '+activityPreview+'. Välj gärna en aktivitet i listan och föreslå en dag att göra den tillsammans. Ett ja är ett intresse, inte en överenskommelse. <a href="#inkorg">Öppna Inkorgen och föreslå en tid</a>.</p>':'')+
+    (activityMatches?'<p class="swipe-unified-next-step"><strong>Att göra tillsammans:</strong> Ni har båda visat intresse för '+activityPreview+'. Välj gärna en aktivitet i listan och föreslå en dag att göra den tillsammans. Ett ja är ett intresse, inte en överenskommelse. <a href="#inkorg">Öppna Inkorgen och föreslå en tid</a>.</p>':'')+
     (groups.size?'<ul class="swipe-match-list swipe-unified-list">'+sortedGroups.map(([category,items])=>
       '<li><div><h3>'+esc(category)+' · '+items.length+' gemensamma</h3><ul class="swipe-unified-statements">'+items.map(item=>'<li>'+esc(item.statement)+'</li>').join('')+'</ul></div></li>').join('')+'</ul>':'')+
     '<a href="#insikter" class="insights-back-link">Visa alla gemensamma insikter och delade förståelsekort</a></section>';

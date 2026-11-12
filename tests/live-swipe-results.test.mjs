@@ -432,7 +432,7 @@ console.log('PASS: all-deck insights gate, A-only sanitizer, B/NO isolation, ses
 
 {
   // The completed all-deck activity lead must use only server-confirmed A matches.
-  const start=script.indexOf('function swipeOverviewView(){');
+  const start=script.indexOf('function formatMatchedActivities(');
   const end=script.indexOf('function scheduleSwipeOverviewRefresh(){',start);
   assert.ok(start>=0&&end>start,'All-deck overview source is available');
   const state={
@@ -454,11 +454,11 @@ console.log('PASS: all-deck insights gate, A-only sanitizer, B/NO isolation, ses
   };
   vm.runInNewContext(script.slice(start,end)+';this.view=swipeOverviewView;',state);
   const html=state.view();
-  assert.match(html,/Ni har båda svarat ja till: Fika på stan/,'Activity is named in the summary, not only counted');
+  assert.match(html,/Ni har båda visat intresse för Fika på stan/,'Activity is named in the summary, not only counted');
   assert.match(html,/Prata om böcker/,'Other deck matches remain visible');
   assert.doesNotMatch(html,/HEMLIGT/,'Undisclosed understanding cards are not rendered');
   state.swipeOverviewRows=[];
-  assert.doesNotMatch(state.view(),/Ni har båda svarat ja till:/,'No activity claims remain after revocation');
+  assert.doesNotMatch(state.view(),/Ni har båda visat intresse för/,'No activity claims remain after revocation');
   state.swipeOverviewError='Serverfel';
   assert.doesNotMatch(state.view(),/Fika på stan/,'Server errors do not expose stale activities');
 }
