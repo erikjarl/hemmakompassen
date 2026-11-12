@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261112-unified-activities2';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261112-notification-load-settle3';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261112-unified-activities2';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261112-notification-load-settle3';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261112-unified-activities2';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261112-notification-load-settle3';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -111,7 +111,12 @@ async function fetchActivityNotifications({quiet=false,forceRender=false}={}){
   }
   const previous=JSON.stringify([activityNotifications,activityNotificationsError]);
   activityNotificationsLoading=true;
-  if(!quiet&&page()==='inkorg'&&(!familyChatDraft.trim()||forceRender))render();
+  // Existing notices are already usable. Avoid flashing a transient unknown
+  // unread count for a routine foreground refresh that may return the exact
+  // same snapshot. Empty inboxes and explicit refreshes still show progress.
+  const showedLoading=!quiet&&page()==='inkorg'&&
+    (!familyChatDraft.trim()||forceRender)&&(!activityNotifications.length||forceRender);
+  if(showedLoading)render();
   let result,timeout;
   try{
     result=await Promise.race([
@@ -143,9 +148,10 @@ async function fetchActivityNotifications({quiet=false,forceRender=false}={}){
     activityNotifications=result.data;activityNotificationsError='';activityFeedback='';
   }
   if(previous===JSON.stringify([activityNotifications,activityNotificationsError])){
-    // Even an unchanged empty result must dismiss the foreground loading view.
-    // Quiet background checks should remain render-free to preserve focus/scroll.
-    if(!quiet&&page()==='inkorg'&&!activityNotifications.length&&(!familyChatDraft.trim()||forceRender))render();
+    // A loading view must always be dismissed, even when the server returns
+    // the same zero or nonzero result. An unchanged routine refresh with
+    // already-visible notices never showed loading, so leave focus alone.
+    if(showedLoading)render();
     return;
   }
   if(['hem','inkorg'].includes(page())&&(page()!=='inkorg'||!familyChatDraft.trim()||forceRender))render();

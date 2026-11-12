@@ -70,9 +70,8 @@ test('FUN-03: unchanged nonempty results do not force a redundant foreground rer
   const h=harness({initial});
   h.setReply({data:initial,error:null});
   await h.state.load();
-  assert.deepEqual(h.renders.map(frame=>frame.loading),[true],
-    'Existing notices have no empty-state spinner, so avoid interrupting focus with another render');
-  assert.equal(h.renders[0].empty,false);
+  assert.deepEqual(h.renders.map(frame=>frame.loading),[],
+    'Existing notices keep their verified count without flashing a transient loading/unknown badge');
   assert.equal(h.state.activityNotificationsLoading,false);
 });
 

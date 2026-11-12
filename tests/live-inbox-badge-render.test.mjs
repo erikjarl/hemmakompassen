@@ -68,3 +68,57 @@ state.activityNotificationsError='';
 state.user=null;
 checkBadge(null);
 console.log('PASS: real desktop and mobile menu render known, partial and unknown unread badges');
+
+
+// FBK-02-04: after an explicit refresh, an unchanged nonempty activity result
+// still has to redraw the completed (known) unread state. A previous early
+// return left the navigation at '?' following the foreground loading render.
+{
+  const start=script.indexOf('async function fetchActivityNotifications(');
+  const end=script.indexOf('async function markActivityNotificationRead(',start);
+  assert.ok(start>=0&&end>start,'Real notification refresh source is available');
+  const notices=[{notification_id:'unchanged',read_at:null}];
+  const calls={render:0,menu:0};
+  let route='inkorg',draft='';
+  const env={
+    activityNotificationsRequest:0,
+    user:{id:'parent'},sharedSession:5,
+    activityPairSignature:()=> 'pair-5',
+    activityNotificationsEnabled:true,
+    members:[{user_id:'parent'},{user_id:'teen'}],
+    activityNotifications:notices,
+    activityNotificationsError:'',
+    activityNotificationsLoading:false,
+    activityFeedback:'',
+    familyChatDraft:'',
+    page:()=>route,
+    render:()=>{calls.render++;},
+    menu:()=>{calls.menu++;},
+    validActivityNotifications:rows=>Array.isArray(rows),
+    db:{rpc:async()=>({data:notices,error:null})},
+    setTimeout,clearTimeout
+  };
+  vm.runInNewContext(script.slice(start,end)+';this.refresh=fetchActivityNotifications;',env);
+  await env.refresh({quiet:false});
+  assert.equal(env.activityNotificationsLoading,false,'Foreground refresh has completed');
+  assert.equal(calls.render,0,
+    'Existing notices do not flash an unknown badge for an unchanged foreground refresh');
+  await env.refresh({quiet:false,forceRender:true});
+  assert.equal(calls.render,2,
+    'An explicit refresh shows progress and then restores the known unchanged count');
+  calls.render=0;calls.menu=0;
+  route='hem';
+  await env.refresh({quiet:false});
+  assert.equal(calls.render,0,'Home retains its verified badge for an unchanged activity result');
+  calls.render=0;calls.menu=0;
+  route='inkorg';
+  await env.refresh({quiet:true});
+  assert.equal(calls.render,0,'Quiet background refresh does not disturb chat focus');
+  assert.equal(calls.menu,0,'Quiet background refresh does not redraw navigation');
+  calls.render=0;calls.menu=0;
+  env.familyChatDraft='Ett oskickat utkast';
+  await env.refresh({quiet:false});
+  assert.equal(calls.render,0,'Foreground refresh preserves an unsent message draft');
+  assert.equal(calls.menu,0,'An unchanged result leaves the draft and known badge untouched');
+}
+console.log('PASS: unchanged activity notifications clear transient unknown badge without disturbing drafts');
