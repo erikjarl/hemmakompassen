@@ -11,7 +11,7 @@ const decks=app.slice(app.indexOf('function themeDecksView('),app.indexOf('// A 
 
 test('finished general deck shows the next-deck disclosure ahead of secondary results',()=>{
   assert.match(view,/\(item\?'':themeDecksView\(true\)\)\+privateGeneralAnswerReview\(\)\+swipeSecondaryResults\(!item\)/);
-  assert.match(view,/\+swipeOverviewView\(\)\+privateSwipeExportControls\(\)/);
+  assert.match(view,/:swipeOverviewView\(\)\+privateSwipeExportControls\(\)\)/);
   assert.match(decks,/completedGeneral\?'<details class="swipe-more-decks"><summary id="swipe-themes-heading">Gör fler kortlekar<\/summary>'/);
   assert.match(decks,/\(completedGeneral\?'<\/details>':''\)/);
 });
