@@ -5122,6 +5122,9 @@ try{
   await paired.page.locator('#insights-retry').click();
   await paired.page.waitForFunction(()=>typeof window.__HK_TEST_RELEASE_PAIR_READ__==='function');
   const raceCta=paired.page.locator('[data-insight-activity="aktiviteter-01"]');
+  // The all-deck overview stays primary: the card-specific invitation is
+  // deliberately available inside the optional per-deck detail disclosure.
+  await paired.page.locator('.insights-decks-secondary>summary').click();
   const sentBefore=await paired.page.evaluate(()=>window.__HK_CHAT_SEND__||null);
   await raceCta.click();
   await paired.page.waitForFunction(()=>
