@@ -2529,6 +2529,11 @@ async function decideSchysstaRule(agreementId,approved){
   if(!schysstaListEnabled||!user||!SCHYSSTA_UUID.test(agreementId)||schysstaSaving.has(agreementId))return;
   const viewer=user.id,session=sharedSession;
   if(!await preflightSchysstaWrite(viewer,session)||schysstaSaving.has(agreementId))return;
+  // A stale click or a repeated event must not submit a decision already
+  // confirmed in the current server snapshot. Changing one's existing answer
+  // is still allowed; accepted rules cannot be voted on again.
+  const currentRule=schysstaAllRules().find(row=>row.agreement_id===agreementId);
+  if(!currentRule||currentRule.status==='accepted'||currentRule.own_decision===approved)return;
   schysstaDecisionFeedback='';schysstaSaving.add(agreementId);render();
   let error;try{({error}=await schysstaWriteRpc(db.rpc('set_schyssta_rule_decision',{p_agreement_id:agreementId,p_approved:approved})));}catch(e){error=e;}
   // The current session owns the saving flag and cached decisions.
