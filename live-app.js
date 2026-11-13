@@ -153,6 +153,7 @@ async function fetchActivityNotifications({quiet=false,forceRender=false}={}){
     // the same zero or nonzero result. An unchanged routine refresh with
     // already-visible notices never showed loading, so leave focus alone.
     if(showedLoading)render();
+    else menu(); // A concurrent render may have shown '?' while this read was pending.
     return;
   }
   if(['hem','inkorg'].includes(page())&&(page()!=='inkorg'||!familyChatDraft.trim()||forceRender))render();
