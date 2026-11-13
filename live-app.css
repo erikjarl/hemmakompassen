@@ -1264,6 +1264,11 @@
 }
 
 
+/* FBK-02-06: accessible shortcut near the completed general deck result. */
+.swipe-heading .swipe-more-decks-shortcut{margin-top:12px;background:#f7bd61;color:#1c1720;border:1px solid #e6a13d;min-height:48px}
+.swipe-heading .swipe-more-decks-shortcut:hover{background:#ffd18a}
+.swipe-heading .swipe-more-decks-shortcut:focus-visible{outline:3px solid #fff2c8;outline-offset:3px}
+
 /* FBK-02-06 / UX-SW-03: the optional next decks should be discoverable
    without taking attention away from the shared result above them. */
 .swipe-themes .swipe-more-decks{
