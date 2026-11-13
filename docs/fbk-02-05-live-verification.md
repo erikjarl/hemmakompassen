@@ -35,6 +35,42 @@ En testare upplevde att samma regel behövde godkännas flera gånger. Det önsk
 - Vid avvikelse: spara intern felsökningsinformation om nätverksanrop, serverkvittens, tidpunkt och resultat före/efter omladdning i en åtkomstbegränsad plats, aldrig i ett offentligt issue.
 - Markera rapporten löst **endast** om verklig reproduktion/verifiering stöder det och testaren kan bekräfta att det observerade felet inte kvarstår. Om felet inte kan reproduceras: dokumentera detta som *inte reproducerat*, inte *bevisat löst*.
 
+## Återupprepbar, läsbaserad datakontroll
+
+Kör följande SQL som enbart använder `SELECT` för en aggregerad lägesbild. Frågan lämnar **inte ut regeltexter, användar-ID, familje-ID eller datum**. Den skiljer lagrad status från verklig UI-beteende; noll avvikelser kan inte bevisa att testaren aldrig behövt godkänna igen.
+
+```sql
+WITH counts AS (
+  SELECT a.id, a.status,
+    count(v.user_id) FILTER (
+      WHERE v.agreement_version = a.agreement_version AND v.approved IS TRUE
+    ) AS current_yes,
+    count(v.user_id) FILTER (
+      WHERE v.agreement_version <> a.agreement_version
+    ) AS stale_votes,
+    count(v.user_id) FILTER (
+      WHERE v.user_id NOT IN (a.paired_parent_id, a.paired_teen_id)
+    ) AS outside_pair_votes
+  FROM public.agreements a
+  LEFT JOIN public.agreement_approvals v ON v.agreement_id = a.id
+  GROUP BY a.id, a.status, a.agreement_version
+)
+SELECT status, count(*) AS rules,
+  count(*) FILTER (
+    WHERE status = 'accepted' AND current_yes <> 2
+  ) AS accepted_without_two_yes,
+  count(*) FILTER (
+    WHERE status = 'proposed' AND current_yes = 2
+  ) AS proposed_with_two_yes,
+  coalesce(sum(stale_votes), 0) AS stale_version_votes,
+  coalesce(sum(outside_pair_votes), 0) AS votes_from_outside_pair
+FROM counts
+GROUP BY status
+ORDER BY status;
+```
+
+**Läsbaserad kontroll 13 november 2026:** tre `accepted` (två aktuella JA var), två `proposed` (ett aktuellt JA var), en `rejected`; noll accepterade utan två JA, noll föreslagna med två JA, noll föråldrade röster och noll röster utanför regelns parningssnapshot. En separat aggregerad kontroll av `agreement_approvals` gav nio röster, varav noll saknade giltig regel. Dessa siffror är en ögonblicksbild och kan förändras. För att hitta intermittenta problem behövs autentiserade tester med nätverksspår och serverkvittens.
+
 ## Nuvarande automatiserade skydd
 
 `tests/visual.mjs` innehåller redan ett syntetiskt tvårollsflöde för ett godkännande från vardera parten, spärr mot återupprepat JA samt verifiering efter `page.reload` att båda ser den accepterade regeln och saknar nya beslutsknappar. Mobilhierarkin för accepterade regler kontrolleras i både 320 och 390 px. Dessa tester ska behållas; detta protokoll kompletterar dem med ett separat autentiserat end-to-end-test.
