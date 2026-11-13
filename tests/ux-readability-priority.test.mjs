@@ -48,3 +48,20 @@ test('Schyssta listan keeps approved rules primary without redundant quick-actio
   assert.match(view,/item\.status==='accepted'/);
   assert.match(view,/schyssta-approved-details/);
 });
+
+
+test('Schyssta optional suggestions and getting-started card do not crowd existing decisions',async()=>{
+  const app=await read('live-app.js');
+  const start=app.indexOf('function schysstaView(){');
+  const end=app.indexOf('\nfunction ',start+25);
+  assert.ok(start>=0&&end>start);
+  const view=app.slice(start,end);
+  assert.match(view,/const firstRuleHint=rules\.length===0&&needs\.length===0&&ongoing\.length===0/,
+    'Getting-started help must not compete with existing rule proposals');
+  assert.match(view,/\+\(schysstaSuggestions\.length\?'<details class="schyssta-extra-panel">/,
+    'An empty optional suggestion section should not occupy the default mobile flow');
+  assert.match(view,/approvedSection\s*\+quickActions\s*\+\(schysstaDecisionFeedback/,
+    'Approved agreements remain first and pending actions remain visible');
+  assert.match(view,/\+needsSection\s*\+firstRuleHint\s*\+composeSection/,
+    'Pending approvals still appear before optional compose controls');
+});
