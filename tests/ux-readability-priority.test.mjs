@@ -178,3 +178,17 @@ test('inbox renders shared AI reflections before secondary inbox sections',async
   assert.match(returned,/insightsError\?'<p role="alert">/,
     'Keep a visible error state when the shared-results read fails');
 });
+
+test('inbox heading only promises AI reflection when the AI feature is enabled',async()=>{
+  const app=await read('live-app.js');
+  const start=app.indexOf('function inboxView(){');
+  const end=app.indexOf('\n// Keep an in-progress chat editor intact',start);
+  assert.ok(start>=0&&end>start,'Inbox view must exist');
+  const inbox=app.slice(start,end);
+  assert.match(inbox,/Era gemensamma insikter'\+\(typeof aiResultEnabled!=='undefined'&&aiResultEnabled\?' och AI-reflektion':''\)\+'/,
+    'Heading must not promise AI when the AI analysis feature is disabled');
+  assert.match(inbox,/aiResults\.panel\('swipe','all',insightsAiSignature\(\)\)/,
+    'Enabled AI still renders a verified shared reflection');
+  assert.match(inbox,/Visa alla gemensamma insikter och delningar/,
+    'Shared insights link remains available with either feature state');
+});
