@@ -5705,10 +5705,15 @@ try{
   assert.match(await paired.page.locator('.family-chat-read-controls').innerText(),/De markeras inte som lästa bara för att du öppnar inkorgen/);
   await paired.page.evaluate(()=>{window.__HK_MARK_READ_FAIL__=true;});
   await paired.page.getByRole('button',{name:'Markera alla meddelanden som lästa'}).click();
-  await paired.page.getByText(/Inga läskvittenser har bekräftats/).waitFor();
-  assert.equal(await paired.page.evaluate(()=>window.__HK_MARK_CHAT_READ__||0),0,'A failed mark-all must not invent a read receipt');
-  assert.equal(await paired.page.getByRole('button',{name:'Markera alla meddelanden som lästa'}).count(),1,'Read retry remains possible');
+  await paired.page.getByText(/Antalet olästa är okänt/).waitFor();
+  assert.equal(await paired.page.evaluate(()=>window.__HK_MARK_CHAT_READ__||0),0,'An uncertain mark-all must not invent a read receipt');
+  assert.equal(await paired.page.getByRole('button',{name:'Markera alla meddelanden som lästa'}).count(),0,
+    'Unknown unread count disables blind read retry until another server check');
+  // The old count may be stale after a lost acknowledgement. Recheck the
+  // current pair and the actual unread count before offering a retry.
   await paired.page.evaluate(()=>{window.__HK_MARK_READ_FAIL__=false;});
+  await paired.page.locator('[data-family-chat-refresh]').click();
+  await paired.page.getByRole('button',{name:'Markera alla meddelanden som lästa'}).waitFor();
   await paired.page.getByRole('button',{name:'Markera alla meddelanden som lästa'}).click();
   await paired.page.waitForFunction(()=>window.__HK_MARK_CHAT_READ__>0);
   await paired.page.getByText('Alla meddelanden har markerats som lästa.').waitFor();
