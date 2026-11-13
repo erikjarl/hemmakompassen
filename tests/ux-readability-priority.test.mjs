@@ -25,6 +25,20 @@ test('completed theme chooser keeps primary action visible without redundant hel
   assert.match(view,/Din privata status/,'Unfinished theme view still identifies own answers');
 });
 
+test('locked theme decks explain the next step without technical pairing jargon',async()=>{
+  const app=await read('live-app.js');
+  const start=app.indexOf('function themeDecksView(completedGeneral=false){');
+  const end=app.indexOf('\nfunction privateThemeAnswerReview(',start);
+  assert.ok(start>=0&&end>start,'Theme deck view must exist');
+  const view=app.slice(start,end);
+  assert.match(view,/Para ihop era konton för att öppna kortleken\./,
+    'Locked deck rows explain what the viewer can do next');
+  assert.doesNotMatch(view,/Tillgänglig efter säker familjeparning/,
+    'Avoid technical pairing jargon in the short locked-state label');
+  assert.match(view,/Dina egna svar förblir privata/,
+    'Keep the existing privacy information in the longer explanation');
+});
+
 test('readability roadmap and standing workflow instruction are present',async()=>{
   const [roadmap,agents]=await Promise.all([read('docs/ACTIVE_ROADMAP.md'),read('AGENTS.md')]);
   assert.match(roadmap,/## UX-READ-01/);

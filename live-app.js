@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261113-chat-unread-unknown1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261113-theme-pairing-readable1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261113-chat-unread-unknown1';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261113-theme-pairing-readable1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261113-chat-unread-unknown1';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261113-theme-pairing-readable1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -1540,7 +1540,7 @@ function themeDecksView(completedGeneral=false){
         const saved=unlocked?(themeAnswers.get(deck.id)?.size||0):0;
         const progress=unlocked
           ?saved+' av '+deck.cards.length+' kort besvarade'
-          :'Tillgänglig efter säker familjeparning.';
+          :'Para ihop era konton för att öppna kortleken.';
         const actionTitle=saved===deck.cards.length?'Visa svar':saved?'Fortsätt':'Börja';
         const action=unlocked
           ?'<button type="button" class="live-button" data-theme-open="'+esc(deck.id)+'" aria-label="'+esc(actionTitle+' – '+deck.title)+'">'+
@@ -1550,7 +1550,7 @@ function themeDecksView(completedGeneral=false){
       }).join('')+'</ul>'
       :THEME_DECKS.map(deck=>card(unlocked
         ?'<details><summary><strong>'+esc(deck.title)+'</strong> · '+deck.cards.length+' kort</summary><p class="live-muted">Ämnen: '+esc([...new Set(THEME_DECK_MODELS.find(model=>model.id===deck.id).cards.map(item=>item.category))].join(' · '))+'</p></details><p class="live-muted">Din privata status: '+(themeAnswers.get(deck.id)?.size||0)+' / '+deck.cards.length+' kort</p><button type="button" class="live-button" data-theme-open="'+esc(deck.id)+'">'+((themeAnswers.get(deck.id)?.size||0)===deck.cards.length?'Visa och ändra svar':'Öppna kortleken')+'</button>'
-        :'<h3>'+esc(deck.title)+'</h3><p class="live-muted">Tillgänglig efter säker familjeparning.</p>'
+        :'<h3>'+esc(deck.title)+'</h3><p class="live-muted">Para ihop era konton för att öppna kortleken.</p>'
       )).join(''))+
     (themesError?'<button type="button" class="live-button" id="retry-theme-unlock">Kontrollera igen</button>':'')+
     (completedGeneral?'</details>':'')+'</section>';
