@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261113-home-neutral-rule1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261113-inbox-retry-direction1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261113-home-neutral-rule1';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261113-inbox-retry-direction1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261113-home-neutral-rule1';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261113-inbox-retry-direction1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -2529,7 +2529,7 @@ function inboxView(){
        ?(unreadTotal>0?'Minst '+unreadTotal+' olästa i inkorgen':'Oläst antal kan inte kontrolleras')
        :'Oläst i inkorgen · '+unreadTotal)+'</strong></p>'
      +'<p class="live-muted">Notissiffran vid Inkorg räknar privata meddelanden, regelhändelser och gemensamma kort. De markeras som lästa var för sig.</p>'
-     +(unreadUnknown?'<p role="status">Alla kategorier kunde inte kontrolleras. Använd Uppdatera hela inkorgen ovan för att försöka igen.</p>':'')
+     +(unreadUnknown?'<p role="status">Alla kategorier kunde inte kontrolleras. Välj Uppdatera hela inkorgen längre ned för att försöka igen.</p>':'')
      +'<div class="inbox-unread-shortcuts">'
      +unreadShortcut('messages','Privata meddelanden',unreadMessages)
      +unreadShortcut('rules','Regelhändelser',unreadRules)
