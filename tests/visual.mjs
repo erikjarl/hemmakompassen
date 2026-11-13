@@ -2333,7 +2333,7 @@ async function verifyCommunicationForms(){
 // Chromium contexts. No Supabase credentials, production replies or live users.
 function makeTwoRoleFamilyFixture(){
   const messages=[],tokens=new Map(),rules=[],notices=[],activityNotices=[],replacementLinks=[],ruleHistory=[],calls=[];
-  let failedSendAcknowledgement=false,failedOlderPage=false,failedActivityRead=false,failedRuleNoticeRead=false,nextRuleId=200;
+  let failedSendAcknowledgement=false,failedOlderPage=false,failedActivityRead=false,lostActivityReadAcknowledgement=false,failedRuleNoticeRead=false,nextRuleId=200;
   let holdRuleReadRole=null,heldRuleRead=null,failRuleReadRole=null;
   let holdMessageReadRole=null,heldMessageRead=null;
   const other=role=>role==='parent'?'teen':'parent';
@@ -2362,7 +2362,9 @@ function makeTwoRoleFamilyFixture(){
       if(failedActivityRead){failedActivityRead=false;return {data:null,error:{message:'synthetic activity receipt unavailable'}};}
       const n=activityNotices.find(n=>n.recipient===role&&n.notification_id===args.p_notification_id);
       if(!n)return {data:null,error:{message:'unknown synthetic activity notice'}};
-      n.read_at='2026-11-01T13:03:00Z';return ok(null);
+      n.read_at='2026-11-01T13:03:00Z';
+      if(lostActivityReadAcknowledgement){lostActivityReadAcknowledgement=false;return {data:null,error:{message:'synthetic lost post-commit acknowledgement'}};}
+      return ok(null);
     }
     if(name==='my_family_unread_message_count')
       return ok(messages.filter(m=>m.sender!==role&&m.read_at===null).length);
@@ -2474,6 +2476,7 @@ function makeTwoRoleFamilyFixture(){
     loseNextSendAcknowledgement(){failedSendAcknowledgement=true;},
     failNextOlderPage(){failedOlderPage=true;},
     failNextActivityRead(){failedActivityRead=true;},
+    loseNextActivityReadAcknowledgement(){lostActivityReadAcknowledgement=true;},
     failNextRuleNoticeRead(){failedRuleNoticeRead=true;},
     failNextRuleRead(role){failRuleReadRole=role;},
     holdNextRuleRead(role){holdRuleReadRole=role;},
@@ -2663,13 +2666,13 @@ async function verifyPairedTwoRoleExchange(){
     // remains open. Retry fetch is also an explicit UI action.
     fixture.failNextActivityRead();
     await teen.page.locator('[data-activity-read]').click();
-    await teen.page.getByRole('alert').filter({hasText:'Det gick inte att bekräfta läsmarkeringen'}).waitFor();
+    await teen.page.getByRole('status').filter({hasText:'En ny serverkontroll visar att aviseringen fortfarande är oläst'}).waitFor();
     assert.equal(fixture.activityNotices[0].read_at,null,
       'FUN-03: failed receipt never invents a read acknowledgement');
     assert.equal(await teen.page.locator('#family-chat-body').inputValue(),
       'Det här utkastet får inte skickas.','FUN-03: explicit read error preserves unsent draft');
-    await teen.page.locator('[data-activity-refresh]').click();
-    await teen.page.locator('[data-activity-read]').waitFor();
+    assert.equal(await teen.page.locator('[data-activity-read]').count(),1,
+      'FUN-03: confirmed unread notice remains actionable without another refresh');
     assert.equal(await teen.page.locator('#family-chat-body').inputValue(),
       'Det här utkastet får inte skickas.','FUN-03: explicit notice retry preserves unsent draft');
     await teen.page.locator('[data-activity-read]').click();
@@ -2678,7 +2681,31 @@ async function verifyPairedTwoRoleExchange(){
       'FUN-03: activity notification is marked read only after explicit click');
     assert.equal(await teen.page.locator('#family-chat-body').inputValue(),
       'Det här utkastet får inte skickas.','FUN-03: completed explicit receipt preserves unsent draft');
-    record.push({case:'failed-activity-read-visible-retry-and-success-with-unsent-draft',passed:true});
+    record.push({case:'failed-activity-read-readback-and-retry-with-unsent-draft',passed:true});
+    // A write may succeed while its acknowledgement is lost. This must show
+    // the server-confirmed read receipt, not an erroneous unread badge.
+    fixture.activityNotices.push({
+      notification_id:'73000000-0000-4000-8000-000000000121',
+      event_kind:'mutual_match',deck_id:'aktiviteter',read_at:null,
+      updated_at:'2026-11-01T13:04:00Z',recipient:'teen'
+    });
+    // The targeted refresh button exists only on error; after a verified
+    // unread/read receipt use the regular full-inbox refresh.
+    await teen.page.locator('#inbox-refresh-all').click();
+    await teen.page.getByText('Inkorgen är uppdaterad.').waitFor();
+    await teen.page.waitForFunction(()=>document.querySelectorAll('[data-activity-read]').length===1);
+    fixture.loseNextActivityReadAcknowledgement();
+    await teen.page.locator('[data-activity-read]').click();
+    await teen.page.getByRole('status').filter({
+      hasText:'En ny serverkontroll visar att aviseringen är läst'
+    }).waitFor();
+    assert.equal(await teen.page.locator('[data-activity-read]').count(),0,
+      'FBK-02-04: readback of post-commit lost acknowledgement removes unread action');
+    assert.ok(fixture.activityNotices[1].read_at,
+      'FBK-02-04: synthetic server actually committed before response was lost');
+    assert.equal(await teen.page.locator('#family-chat-body').inputValue(),
+      'Det här utkastet får inte skickas.','Lost activity receipt preserves unsent private draft');
+    record.push({case:'lost-activity-read-acknowledgement-verified-with-readback',passed:true});
     assert.equal(fixture.notices[0].read_at,null,'Opening inbox does not silently mark rule notice read');
     // Verify actual DOM feedback after the rule-notice read fails, not merely
     // the internal message state or the separate Schyssta page.
