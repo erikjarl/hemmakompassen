@@ -20,7 +20,9 @@ test('completed theme chooser keeps primary action visible without redundant hel
   assert.match(view,/Koppla ihop en förälder och en tonåring/,
     'Unpaired viewer must still get an explanation');
   assert.match(view,/swipe-theme-compact-list/,'Theme choices remain available');
-  assert.match(view,/Din privata status/,'Own answer progress is still clearly identified');
+  assert.match(view,/Här visas bara dina egna svar/,'Privacy disclosure remains visible above compact rows');
+  assert.match(view,/kort besvarade/,'Rows explain completed answers in everyday language');
+  assert.match(view,/Din privata status/,'Unfinished theme view still identifies own answers');
 });
 
 test('readability roadmap and standing workflow instruction are present',async()=>{
