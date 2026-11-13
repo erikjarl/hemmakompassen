@@ -2856,6 +2856,23 @@ async function verifyPairedRuleRevisionAndHistory(){
       call.role==='teen'&&call.name==='set_schyssta_rule_decision').length,
       votesBeforeRepeat,'FBK-02-05: stale duplicate YES must not reach the RPC');
     records.push({case:'repeated-stale-yes-does-not-resubmit-vote',passed:true});
+    // FBK-02-05: the intermediate state (my YES, other person not yet voted)
+    // must survive a full reload; the same person must not be offered JA again.
+    await teen.page.reload({waitUntil:'load'});
+    const waitingOnOther=teen.page.locator('#schyssta-rule-'+originalId);
+    await waitingOnOther.waitFor();
+    assert.match(await waitingOnOther.innerText(),/Du har godkänt – väntar på den andra/);
+    assert.match(await waitingOnOther.innerText(),/Ditt val: ja/);
+    assert.equal(await waitingOnOther.getByRole('button',{name:'Jag godkänner'}).count(),0,
+      'FBK-02-05: saved one-sided YES never becomes a fresh approval prompt on reload');
+    assert.equal(await waitingOnOther.getByRole('button',{name:'Ta tillbaka mitt ja'}).count(),1,
+      'FBK-02-05: the user can intentionally change their saved vote');
+    assert.equal(fixture.rules.find(rule=>rule.id===originalId)?.status,'proposed',
+      'FBK-02-05: one saved YES does not silently accept the agreement');
+    assert.equal(fixture.calls.filter(call=>
+      call.role==='teen'&&call.name==='set_schyssta_rule_decision').length,
+      votesBeforeRepeat,'FBK-02-05: reload and status check never emit a second approval RPC');
+    records.push({case:'single-yes-remains-confirmed-after-teen-reload',passed:true});
     await revisit(parent.page);
     await parent.page.locator('#schyssta-rule-'+originalId)
       .getByRole('button',{name:'Jag godkänner'}).click();
