@@ -2529,7 +2529,7 @@ function inboxView(){
        ?(unreadTotal>0?'Minst '+unreadTotal+' olästa i inkorgen':'Oläst antal kan inte kontrolleras')
        :'Oläst i inkorgen · '+unreadTotal)+'</strong></p>'
      +'<p class="live-muted">Notissiffran vid Inkorg räknar privata meddelanden, regelhändelser och gemensamma kort. De markeras som lästa var för sig.</p>'
-     +(unreadUnknown?'<p role="status">Alla kategorier kunde inte kontrolleras. Välj Uppdatera hela inkorgen längre ned för att försöka igen.</p>':'')
+     +(unreadUnknown?'<p role="status">Alla kategorier kunde inte kontrolleras. Välj Uppdatera hela inkorgen ovanför för att försöka igen.</p>':'')
      +'<div class="inbox-unread-shortcuts">'
      +unreadShortcut('messages','Privata meddelanden',unreadMessages)
      +unreadShortcut('rules','Regelhändelser',unreadRules)
