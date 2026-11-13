@@ -28,6 +28,19 @@ En testare upplevde att samma regel behövde godkännas flera gånger. Det önsk
 | 7 | Om testmiljön tillåter: simulera ett enskilt nätverksavbrott före serverkvittens på en **annan** neutral testregel. | UI får inte påstå att ett okvitterat JA är säkert sparat. Vid återanslutning ska aktuell serverstatus visas och användaren få en tydlig handlingsväg. |
 | 8 | Kontrollera originalregeln efter eventuellt ändringsförslag. | Den ursprungliga accepterade regeln ska fortsatt gälla tills eventuell ersättning fått två aktuella JA. |
 
+## Särskilt regressionsfall: förslagsställaren godkänner först
+
+Detta kompletterar huvudflödets steg 1–5. Ett skickat förslag är **inte automatiskt ett eget JA**.
+
+1. Föräldern skapar ett nytt neutralt förslag. Kontrollera att det tydligt framgår att föräldern själv också måste välja **Jag godkänner** och att regeln ännu inte är accepterad.
+2. Föräldern väljer **Jag godkänner** en gång. Kontrollera en bekräftad serverskrivning och att UI visar **Du har godkänt – väntar på den andra**. Registrera inte ny röst vid extra klick eller vid att vyn uppdateras.
+3. Ladda om förälderns sida helt. Kontrollera att samma ensidiga JA visas och att **Jag godkänner** inte återkommer för just den regelversionen. Kontrollera att **Ta tillbaka mitt ja** är synlig och möjlig att använda, men aktivera den inte i detta scenario.
+4. Ladda om tonåringens separata autentiserade session. Kontrollera att tonåringen fortfarande kan godkänna och att regeln inte redovisas som gemensamt accepterad före tonåringens JA.
+5. Tonåringen godkänner en gång. Ladda om **båda** sessionerna och kontrollera gemensamt accepterad status, två aktuella JA och frånvaro av upprepad beslutsbegäran.
+6. Upprepa med rollerna omvända, så att tonåringen föreslår regeln och godkänner först. Registrera resultat separat för vardera ordningen.
+
+Vid varje steg: skilj **synlig UI-text**, **antal beslutsskrivningar** och **serveråterläst version/status** åt i protokollet. Ett korrekt UI utan kontrollerad serverkvittens räcker inte för att stänga FBK-02-05. Dokumentera testmiljön och resultaten internt utan personuppgifter eller regeltext.
+
 ## Verifiera data utan att röja testarnas information
 
 - För varje testregelversion: jämför serverns status med de **aktuella** besluten från båda familjemedlemmarna, utan att klistra in identifierare eller innehåll i ett offentligt ärende.
