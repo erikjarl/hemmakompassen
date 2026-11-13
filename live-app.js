@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261113-insights-next-step1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261113-home-pending-readable1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261113-insights-next-step1';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261113-home-pending-readable1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261113-insights-next-step1';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261113-home-pending-readable1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -2134,7 +2134,7 @@ const unread=schysstaListEnabled?schysstaUnreadCount():0;
 const needs=schysstaListEnabled&&!schysstaLoading&&!schysstaError?schysstaNeedsAnswer().length:0;
 const pendingLoading=schysstaListEnabled&&members.length===2&&schysstaLoading
   ?card('<p role="status" class="live-muted">Kontrollerar väntande regelförslag…</p>'):'';
-const pendingBanner=needs?card('<h2>Behöver ditt svar · '+needs+' förslag</h2><p>Det finns regelförslag som behöver ditt svar. Du kan också svara senare.</p><a class="live-button" href="#regler">Ta ställning i Schyssta listan</a>'):'';
+const pendingBanner=needs?card('<h2>Regelförslag väntar · '+needs+'</h2><p>Du kan svara nu eller senare.</p><a class="live-button" href="#regler">Ta ställning i Schyssta listan</a>'):'';
 const activityUnread=activityNotificationsEnabled?activityUnreadCount():0;
 const totalUnread=unread+familyChatUnread+activityUnread;
 const incompleteNoticeCheck=members.length===2&&(!!schysstaError||familyChatUnreadError
