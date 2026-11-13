@@ -4437,7 +4437,7 @@ try{
     {authenticated:true,paired:true}
   );
   await homeUnpaired.page.goto(base+'#hem',{waitUntil:'load'});
-  await homeUnpaired.page.getByRole('heading',{name:/^Inkorgen · (?:minst )?\d+ olästa$/}).waitFor();
+  await homeUnpaired.page.getByRole('heading',{name:/^Inkorgen · (?:minst )?\d+ oläst(?:a)?$/}).waitFor();
   await homeUnpaired.page.evaluate(()=>{
     window.__HK_TEST_PAIRED__=false;
     window.dispatchEvent(new Event('focus'));
@@ -5800,7 +5800,7 @@ try{
   assert.match(await paired.page.locator('.schyssta-unread').innerText(),/Från: Provtonåring/,'Inbox identifies only the authorized counterpart');
   // The home screen surfaces the latest personal inbox alert ahead of general family information.
   await paired.page.goto(base+'#hem',{waitUntil:'load'});
-  await paired.page.getByRole('heading',{name:'Inkorgen · 1 olästa'}).waitFor();
+  await paired.page.getByRole('heading',{name:'Inkorgen · 1 oläst'}).waitFor();
   assert.ok(await paired.page.locator('#live-app').evaluate(el=>{
     const actions=el.querySelector('.home-next-actions'),hero=el.querySelector('.home-hero');
     return !!actions&&!!hero&&!!(actions.compareDocumentPosition(hero)&Node.DOCUMENT_POSITION_FOLLOWING);
