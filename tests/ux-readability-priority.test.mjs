@@ -122,7 +122,7 @@ test('one-sided Schyssta approval remains distinct from a joint agreement',async
   assert.match(statuses,/:'Väntar på ditt beslut'/);
   assert.match(decisions,/const decisionActions=item\.status==='accepted'\s*\?''/,
     'Already accepted agreements must not request another decision');
-  assert.match(decisions,/item\.own_decision===true\s*\?'<p class="live-muted">Du har sagt ja\.[\s\S]*?submitButton\(false,'Ta tillbaka mitt ja'/,
+  assert.match(decisions,/item\.own_decision===true\s*\?'<p class="live-muted">Den andra personen behöver också godkänna samma förslag\.<\/p>'\+submitButton\(false,'Ta tillbaka mitt ja'/,
     'One-sided yes must offer retraction rather than a second approval');
   assert.match(decisions,/:submitButton\(true,'Jag godkänner'\)/,
     'Unanswered proposals must retain explicit approval');
