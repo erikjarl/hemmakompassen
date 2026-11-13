@@ -4924,6 +4924,12 @@ try{
       const disclosure=own.page.locator('.swipe-more-decks');
       assert.equal(await disclosure.evaluate(el=>el.open),false,
         'FBK-02-06: result remains visually primary for '+role);
+      const quickChoice=own.page.getByRole('button',{name:'Gör fler kortlekar – välj tema'});
+      assert.equal(await quickChoice.count(),1,'FBK-02-06: a direct next-deck choice appears near the completed results');
+      await quickChoice.click();
+      assert.equal(await disclosure.evaluate(el=>el.open),true,'FBK-02-06: shortcut expands the theme deck selector');
+      assert.equal(await summary.evaluate(el=>document.activeElement===el),true,'FBK-02-06: shortcut gives keyboard focus to the expanded selector');
+      await disclosure.evaluate(el=>{el.open=false;});
       const actionText=()=>summary.evaluate(el=>getComputedStyle(el,'::after').content);
       assert.match(await actionText(),/Visa teman.*▾/,
         'FBK-02-06: closed '+role+' at '+width+'px shows a clear action');
