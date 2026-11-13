@@ -2608,7 +2608,7 @@ function inboxView(){
           +'</div></li>').join('')+'</ul>'
         :(!activityNotificationsLoading&&!activityNotificationsError?'<p class="live-muted">Inga nya aviseringar just nu.</p>':'')));
   return '<h1>Inkorg</h1>'
-    +(sharedInsightsEnabled?'<section class="live-panel inbox-insights-shortcut" aria-labelledby="inbox-insights-heading"><h2 id="inbox-insights-heading">Era gemensamma insikter och AI-reflektion</h2>'
+    +(sharedInsightsEnabled?'<section class="live-panel inbox-insights-shortcut" aria-labelledby="inbox-insights-heading"><h2 id="inbox-insights-heading">Era gemensamma insikter</h2>'
       +(typeof aiResultEnabled!=='undefined'&&aiResultEnabled
         ?(insightsLoading?'<p role="status">Kontrollerar aktuella delade svar…</p>'
           :insightsError?'<p role="alert">'+esc(insightsError)+'</p>'
