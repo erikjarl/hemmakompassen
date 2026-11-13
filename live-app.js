@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261113-home-unread-grammar1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261113-inbox-unread-grammar1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261113-home-unread-grammar1';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261113-inbox-unread-grammar1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261113-home-unread-grammar1';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261113-inbox-unread-grammar1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -2032,7 +2032,7 @@ function menu(){
       (value===null?'okänt antal':String(value))+' '+
       ['privata meddelanden','regelhändelser','gemensamma kort'][index]);
     const descriptor=isInbox
-      ?'Inkorg, '+(unknown?(count?'minst '+count+' olästa':'okänt antal olästa'):count+' olästa totalt')+
+      ?'Inkorg, '+(unknown?(count?'minst '+count+(count===1?' oläst':' olästa'):'okänt antal olästa'):count+(count===1?' oläst totalt':' olästa totalt'))+
         ': '+inboxParts.join(', ')
       :label+', '+count+' obesvarade regelförslag';
     const aria=count||unknown?' aria-label="'+esc(descriptor)+'" title="'+esc(descriptor)+'"':'';
@@ -2604,14 +2604,14 @@ function inboxView(){
     :card('<h2>Regelförfrågningar'+(needs.length?' ('+needs.length+')':'')+'</h2>'
       +(needs.length?'<ul class="schyssta-list">'+needs.map(row=>'<li><p>'+esc(row.body)+'</p><button type="button" class="live-button" data-schyssta-open="'+row.agreement_id+'">Se och svara i Schyssta listan</button></li>').join('')+'</ul>'
         :'<p class="live-muted">Inga regelförslag väntar på ditt svar.</p>')
-      +'<h3 id="inbox-rules-heading" tabindex="-1">Händelser från Schyssta listan'+(schysstaUnreadCount()?' · '+schysstaUnreadCount()+' olästa':'')+'</h3>'
+      +'<h3 id="inbox-rules-heading" tabindex="-1">Händelser från Schyssta listan'+(schysstaUnreadCount()?' · '+schysstaUnreadCount()+(schysstaUnreadCount()===1?' oläst':' olästa'):'')+'</h3>'
       // Rule-notice actions can run directly in this inbox, so their feedback
       // must be announced here instead of only on the separate rules page.
       +(schysstaMessage?'<p role="status" class="schyssta-feedback">'+esc(schysstaMessage)+'</p>':'')
       +noticeHtml+'<p><a href="#regler">Öppna Schyssta listan</a></p>');
   const activityPanel=!activityNotificationsEnabled?''
     :card('<h2 id="inbox-activities-heading" tabindex="-1">Gemensamma kort och aktiviteter'
-      +(unreadActivities===null?' · oläst antal okänt':unreadActivities>0?' · '+unreadActivities+' olästa':'')+'</h2>'
+      +(unreadActivities===null?' · oläst antal okänt':unreadActivities>0?' · '+unreadActivities+(unreadActivities===1?' oläst':' olästa'):'')+'</h2>'
       +'<p class="live-muted">En avisering visar bara att ett nytt gemensamt kort eller en frivilligt delad förståelse har blivit tillgänglig. Inga privata svar visas här.</p>'
       +(activityNotificationsError?'<p role="alert">'+esc(activityNotificationsError)+'</p>'
         +'<button type="button" class="schyssta-secondary" data-activity-refresh>Försök igen</button>':'')
