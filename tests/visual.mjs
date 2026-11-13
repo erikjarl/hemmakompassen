@@ -76,6 +76,47 @@ async function verifyNvcDraftAi(){
     }finally{await context.close();}
   }
 }
+// FBK-02-07: visible AI/shared-insights entry belongs directly below the
+// Inbox heading, not behind a secondary navigation shortcut.
+async function verifyInboxInsightsPriority(){
+  for(const role of ['parent','teen']){
+    for(const width of [320,390]){
+      const {context,page}=await freshContext(
+        {viewport:{width,height:844},isMobile:true,hasTouch:true},
+        {authenticated:true,paired:true,role,aiMediator:true,aiAnalyses:true}
+      );
+      try{
+        await page.goto(base+'#inkorg',{waitUntil:'load'});
+        const panel=page.locator('.inbox-insights-shortcut');
+        await panel.waitFor({state:'visible'});
+        const geometry=await page.evaluate(()=>{
+          const main=document.querySelector('#live-app');
+          const title=main?.querySelector('h1');
+          const insight=main?.querySelector('.inbox-insights-shortcut');
+          const refresh=main?.querySelector('.inbox-refresh-actions');
+          const chat=main?.querySelector('.family-chat');
+          const a=insight?.getBoundingClientRect();
+          return {heading: title?.textContent?.trim(),
+            headingY:title?.getBoundingClientRect().top,
+            panelY:a?.top,panelLeft:a?.left,panelRight:a?.right,
+            refreshY:refresh?.getBoundingClientRect().top,
+            chatY:chat?.getBoundingClientRect().top,
+            viewport:document.documentElement.clientWidth};
+        });
+        assert.equal(geometry.heading,'Inkorg');
+        assert.ok(geometry.headingY<geometry.panelY
+          &&geometry.panelY<geometry.refreshY,
+          'FBK-02-07: shared insight is first in Inbox at '+role+' '+width+'px: '+JSON.stringify(geometry));
+        if(geometry.chatY!==undefined)assert.ok(geometry.panelY<geometry.chatY,
+          'FBK-02-07: AI/shared result precedes chat at '+role+' '+width+'px');
+        assert.ok(geometry.panelLeft>=-1&&geometry.panelRight<=geometry.viewport+1,
+          'FBK-02-07: insights panel must fit mobile viewport: '+JSON.stringify(geometry));
+        await checkOverflow(page,'FBK-02-07 inbox insights '+role+' '+width+'px');
+        await capture(page,'fbk-02-07-inbox-insights-'+role+'-'+width+'.png');
+      }finally{await context.close();}
+    }
+  }
+}
 async function verifyDesktopSidebarBrand(){
   for(const width of [821,1024,1440]){
     const {context,page}=await freshContext({viewport:{width,height:900}},{authenticated:true,paired:true});
@@ -4002,6 +4043,7 @@ try{
   browser=await chromium.launch({headless:true,...(process.env.CHROMIUM_PATH?{executablePath:process.env.CHROMIUM_PATH}:{})});
   await verifyNvcDraftAi();
   await verifySchysstaMobileHierarchy();
+  await verifyInboxInsightsPriority();
   await verifyDesktopSidebarBrand();
   const login=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true});
   await login.page.locator("#live-login").waitFor();
