@@ -39,6 +39,18 @@ test('locked theme decks explain the next step without technical pairing jargon'
     'Keep the existing privacy information in the longer explanation');
 });
 
+test('unpaired theme decks offer a direct account pairing link only when needed',async()=>{
+  const app=await read('live-app.js');
+  const start=app.indexOf('function themeDecksView(completedGeneral=false){');
+  const end=app.indexOf('\nfunction privateThemeAnswerReview(',start);
+  assert.ok(start>=0&&end>start,'Theme deck view must exist');
+  const view=app.slice(start,end);
+  assert.ok(view.includes(`!unlocked&&members.length!==2?'<p><a class="live-button" href="./konto.html">Para ihop konton</a></p>':''`),
+    'Only unpaired users get the direct account pairing action');
+  assert.match(view,/Dina egna svar förblir privata/);
+  assert.match(view,/id="retry-theme-unlock"/,'Existing unlock error retry remains available');
+});
+
 test('readability roadmap and standing workflow instruction are present',async()=>{
   const [roadmap,agents]=await Promise.all([read('docs/ACTIVE_ROADMAP.md'),read('AGENTS.md')]);
   assert.match(roadmap,/## UX-READ-01/);
