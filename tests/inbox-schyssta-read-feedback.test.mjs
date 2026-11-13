@@ -61,17 +61,17 @@ function harness({role='parent',fail=true,readback=true,confirmed=true,previous=
  return {state,frames,calls,reloads};
 }
 for(const role of ['parent','teen']){
- test('FUN-03: '+role+' sees a failed Schyssta notification read inside inbox, not only on rules page',async()=>{
+ test('FUN-03: '+role+' sees a server-verified Schyssta receipt after a lost write acknowledgement',async()=>{
    const h=harness({role});
    assert.match(h.state.inboxView(),/data-schyssta-read=/);
    await h.state.markNotice(noticeId);
    assert.equal(h.calls.length,1);
    assert.equal(h.state.schysstaSaving.size,0);
-   assert.match(h.state.schysstaMessage,/inte att bekräfta läsmarkeringen/);
-   assert.match(h.frames.at(-1),/role="(?:status|alert)"[^>]*>Det gick inte att bekräfta läsmarkeringen/,
-     'The actual inbox HTML must expose the error close to rule notices');
+   assert.match(h.state.schysstaMessage,/serverkontroll visar att aviseringen är läst/);
+   assert.match(h.frames.at(-1),/role="(?:status|alert)"[^>]*>En ny serverkontroll visar att aviseringen är läst/,
+     'The inbox must show the verified server result, not the lost write acknowledgement');
    assert.equal(h.state.familyChatDraft,'Privat oskickat utkast');
-   assert.equal(h.reloads.length,0,'No success reload after a failed receipt');
+   assert.equal(h.reloads.length,1,'An uncertain receipt triggers one authoritative readback');
  });
 }
 test('FUN-03: a successful Schyssta receipt retry clears the old visible failure',async()=>{
