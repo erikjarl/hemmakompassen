@@ -2689,7 +2689,10 @@ async function verifyPairedTwoRoleExchange(){
       event_kind:'mutual_match',deck_id:'aktiviteter',read_at:null,
       updated_at:'2026-11-01T13:04:00Z',recipient:'teen'
     });
-    await teen.page.locator('[data-activity-refresh]').click();
+    // The targeted refresh button exists only on error; after a verified
+    // unread/read receipt use the regular full-inbox refresh.
+    await teen.page.locator('#inbox-refresh-all').click();
+    await teen.page.getByText('Inkorgen är uppdaterad.').waitFor();
     await teen.page.waitForFunction(()=>document.querySelectorAll('[data-activity-read]').length===1);
     fixture.loseNextActivityReadAcknowledgement();
     await teen.page.locator('[data-activity-read]').click();
