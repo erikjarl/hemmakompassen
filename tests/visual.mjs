@@ -4053,14 +4053,14 @@ try{
   const m=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},{authenticated:true});
   await m.page.getByRole("heading",{name:/Hej[ ,]+Provförälder/}).waitFor();
   assert.match(await m.page.locator("#live-app").innerText(),/Din familj/i);
-  const invitationBox=await m.page.getByRole("link",{name:"Hantera familj och inbjudningar"}).boundingBox();
+  const invitationBox=await m.page.getByRole("link",{name:"Bjud in den andra familjemedlemmen"}).boundingBox();
   const familyHeadingBox=await m.page.getByRole("heading",{name:"Din familj"}).boundingBox();
   const welcomeBox=await m.page.locator(".home-hero").boundingBox();
   assert.ok(invitationBox&&familyHeadingBox&&welcomeBox&&familyHeadingBox.y<welcomeBox.y,
     "NOT-02: unpaired family invitation must be above the decorative welcome hero");
   assert.ok(invitationBox.y+invitationBox.height<740,
     "NOT-02: family invitation stays above the fixed mobile navigation without scrolling");
-  assert.equal(await m.page.getByRole("link",{name:"Hantera familj och inbjudningar"}).getAttribute("href"),"./konto.html");
+  assert.equal(await m.page.getByRole("link",{name:"Bjud in den andra familjemedlemmen"}).getAttribute("href"),"./konto.html");
   await checkOverflow(m.page,"Mobile homepage");
   assert.equal(await m.page.locator('.home-next-actions').count(),0,
     'NOT-02: no empty action overview when there is nothing verified to do');
