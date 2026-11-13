@@ -2637,7 +2637,7 @@ async function verifyPairedTwoRoleExchange(){
     // still legitimately contribute to the combined mobile Inkorg badge.
     await teen.page.waitForFunction(()=>{
       const box=document.querySelector('.inbox-unread-summary');
-      return box?.textContent?.includes('Oläst i inkorgen · 2');
+      return box?.textContent?.includes('2 olästa i inkorgen');
     });
     const breakdown=teen.page.locator('.inbox-unread-summary');
     assert.match(await breakdown.innerText(),/Privata meddelanden · 0/);
@@ -5819,7 +5819,7 @@ try{
   assert.match(inboxText,/Vi planerar veckans sysslor på söndag/,'An unanswered own proposal also needs a decision and is listed among pending requests');
   assert.doesNotMatch((await paired.page.locator('.schyssta-unread').allInnerTexts()).join(' '),/Vi planerar veckans sysslor på söndag/,'An own pending proposal is not misrepresented as an unread incoming notification');
   assert.match(inboxText,/Händelser från Schyssta listan · 1 oläst(?!a)/,'Server inbox shows the correct singular unread count');
-  assert.match(inboxText,/Minst 1 oläst i inkorgen|Oläst i inkorgen · 1/,'The inbox overview uses a verified count without an incorrect singular plural form');
+  assert.match(inboxText,/Minst 1 oläst i inkorgen|1 oläst i inkorgen/,'The inbox overview uses a verified count without an incorrect singular plural form');
   assert.equal(await paired.page.locator('.schyssta-unread time[datetime]').count(),1,'Notifications display a timestamp from the server');
   assert.match(await paired.page.locator('.schyssta-unread').innerText(),/Från: Provtonåring/,'Inbox identifies only the authorized counterpart');
   // The home screen surfaces the latest personal inbox alert ahead of general family information.
