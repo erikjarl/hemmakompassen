@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261113-inbox-unknown-unread1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261113-inbox-ai-heading1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261113-inbox-unknown-unread1';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261113-inbox-ai-heading1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261113-inbox-unknown-unread1';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261113-inbox-ai-heading1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -2608,7 +2608,7 @@ function inboxView(){
           +'</div></li>').join('')+'</ul>'
         :(!activityNotificationsLoading&&!activityNotificationsError?'<p class="live-muted">Inga nya aviseringar just nu.</p>':'')));
   return '<h1>Inkorg</h1>'
-    +(sharedInsightsEnabled?'<section class="live-panel inbox-insights-shortcut" aria-labelledby="inbox-insights-heading"><h2 id="inbox-insights-heading">Era gemensamma insikter och AI-reflektion</h2>'
+    +(sharedInsightsEnabled?'<section class="live-panel inbox-insights-shortcut" aria-labelledby="inbox-insights-heading"><h2 id="inbox-insights-heading">Era gemensamma insikter'+(typeof aiResultEnabled!=='undefined'&&aiResultEnabled?' och AI-reflektion':'')+'</h2>'
       +(typeof aiResultEnabled!=='undefined'&&aiResultEnabled
         ?(insightsLoading?'<p role="status">Kontrollerar aktuella delade svar…</p>'
           :insightsError?'<p role="alert">'+esc(insightsError)+'</p>'
