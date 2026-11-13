@@ -1394,8 +1394,19 @@ async function verifyUnpairedThemePairingLink(){
         const disclosure=chooser.locator('.swipe-more-decks');
         assert.equal(await disclosure.evaluate(el=>el.open),false,
           'Finished general deck keeps secondary theme choices collapsed');
-        await disclosure.locator(':scope > summary').click();
       }
+      // FBK-02: discover the next decks at the top even while a card is active.
+      const shortcut=page.getByRole('button',{name:'Gör fler kortlekar – välj tema'});
+      await shortcut.waitFor({state:'visible'});
+      if(!completed)assert.equal(await page.locator('#swipe-card').isVisible(),true,
+        'Shortcut must be offered during the general deck, not only after completion');
+      await shortcut.click();
+      await page.waitForFunction(()=>{
+        const heading=document.querySelector('#swipe-themes-heading');
+        return heading===document.activeElement;
+      });
+      if(completed)assert.equal(await chooser.locator('.swipe-more-decks').evaluate(el=>el.open),true,
+        'Shortcut expands the completed-deck chooser');
       const link=chooser.getByRole('link',{name:'Para ihop konton'});
       await link.waitFor({state:'visible'});
       assert.equal(await link.count(),1,
