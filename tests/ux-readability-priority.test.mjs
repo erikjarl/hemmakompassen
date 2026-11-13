@@ -81,3 +81,16 @@ test('home pending-rule message does not assume who proposed the rule',async()=>
   assert.match(home,/schysstaNeedsAnswer\(\)\.length/,'Only pending decisions should trigger the banner');
   assert.match(home,/href="#regler"/,'Link to the rule decision remains available');
 });
+
+test('inbox error guidance points to the real refresh control below the unread summary',async()=>{
+  const app=await read('live-app.js');
+  const start=app.indexOf('function inboxView(){');
+  const end=app.indexOf('\n// Keep an in-progress chat editor intact',start);
+  assert.ok(start>=0&&end>start,'Inbox view must exist');
+  const inbox=app.slice(start,end);
+  assert.match(inbox,/Välj Uppdatera hela inkorgen längre ned för att försöka igen/);
+  assert.doesNotMatch(inbox,/Uppdatera hela inkorgen ovan/);
+  assert.ok(inbox.indexOf('const unreadOverview=')<inbox.indexOf('class="inbox-refresh-actions"'),
+    'Refresh button is rendered after the unread overview, not above it');
+  assert.match(inbox,/id="inbox-refresh-all"/,'The retry action remains present');
+});
