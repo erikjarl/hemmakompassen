@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261113-theme-pairing-link1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261113-schyssta-receipt-recheck1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261113-theme-pairing-link1';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261113-schyssta-receipt-recheck1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261113-theme-pairing-link1';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261113-schyssta-receipt-recheck1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -2326,7 +2326,21 @@ async function markSchysstaRead(id){
   let error;try{({error}=await schysstaWriteRpc(db.rpc('mark_schyssta_notification_read',{p_notification_id:id})));}catch(e){error=e;}
   // Another account/family session owns its own pending actions.
   if(user?.id!==viewer||session!==sharedSession)return;
-  if(error){schysstaSaving.delete(id);schysstaMessage='Det gick inte att bekräfta läsmarkeringen. Uppdatera listan för att kontrollera statusen.';render();return;}
+  if(error){
+    // The write may have committed even when its acknowledgement was lost.
+    // Re-read this exact notice before showing the cached unread badge again.
+    const refreshed=await fetchSchysstaList();
+    if(user?.id!==viewer||session!==sharedSession)return;
+    schysstaSaving.delete(id);
+    const notice=refreshed&&!schysstaError
+      ?schysstaNotifications.find(item=>item.notification_id===id):null;
+    schysstaMessage=notice?.read_at
+      ?'En ny serverkontroll visar att aviseringen är läst.'
+      :notice&&notice.read_at===null
+        ?'En ny serverkontroll visar att aviseringen fortfarande är oläst. Du kan försöka igen.'
+        :'Läsmarkeringen kunde inte bekräftas. Kontrollera aviseringarna igen innan du försöker igen.';
+    render();return;
+  }
   // Keep the notice locked until its own server readback completes, and verify
   // the specific receipt rather than treating an unrelated successful GET as proof.
   const refreshed=await fetchSchysstaList();
