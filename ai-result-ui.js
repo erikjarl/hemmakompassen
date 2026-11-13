@@ -118,7 +118,7 @@ export function createAiResultExperience({db,config,fetchImpl=fetch,onRender=()=
     const title=kind==='personality'?'AI-reflektion om din personlighetsprofil':'AI-reflektion om era gemensamma svar';
     const status=item?.status||'loading';
     const body=status==='ready'
-      ?'<p class="ai-result-prose">'+renderAiAnalysisReply(item.reply)+'</p><details><summary>Vilket underlag användes?</summary><p>'+
+      ?'<p class="ai-result-prose">'+renderAiAnalysisReply(item.reply)+'</p><details><summary>Vad bygger reflektionen på?</summary><p>'+
          escape(item.basis)+'</p></details>'
       :status==='empty'
         ?'<p>Det finns ännu inget färdigt, behörigt resultat att analysera.</p>'
@@ -128,7 +128,7 @@ export function createAiResultExperience({db,config,fetchImpl=fetch,onRender=()=
     return '<section class="ai-result-panel" aria-label="'+escape(title)+'">'+
       '<span class="swipe-summary-label">AI-GENERERAD REFLEKTION · INTERN TESTVERSION</span>'+
       '<h3>'+escape(title)+'</h3>'+
-      '<p class="live-muted">Genereras automatiskt från serverkontrollerade resultat. En AI kan ha fel och tolkningen är inte en diagnos eller en bedömning av relationens orsaker.</p>'+
+      '<p class="live-muted">AI:n skriver utifrån resultat som kontrollerats på servern. Den kan ha fel. Texten är ingen diagnos och visar inte varför er relation fungerar som den gör.</p>'+
       body+(status==='ready'?'<p class="ai-result-resources">Fler frivilliga övningar: '+(kind==='personality'
         ?'<a href="#kommunikation/validera">Bekräfta utan att hålla med</a> eller <a href="#nvc">bygg ett jag-budskap med NVC</a>'
         :'<a href="#kommunikation/losning">Hitta en gemensam lösning</a> eller <a href="#kommunikation/kontakt">prova fem minuter kontakt</a>')+
