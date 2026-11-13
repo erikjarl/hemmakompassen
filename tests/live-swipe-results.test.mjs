@@ -580,7 +580,7 @@ console.log('PASS: extra swipe decks stay optional but have prominent disclosure
   };
   vm.runInNewContext(script.slice(start,end)+';this.view=themeDecksView;',state);
   const html=state.view(true);
-  assert.match(html,/Min progression: 2 av 3 teman påbörjade · 2 klara/);
+  assert.match(html,/2 av 3 teman påbörjade · 2 klara/,'Finished-deck text keeps the precise count without a redundant prefix');
   assert.match(html,/Gör fler kortlekar/);
   assert.match(html,/<details class="swipe-more-decks">/,'Extra decks remain initially closed');
   state.themeAnswers=new Map([['a',new Map([['one',true],['two',true]])],['b',new Map()],['c',new Map()]]);
