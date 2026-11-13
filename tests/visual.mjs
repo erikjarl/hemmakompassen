@@ -99,6 +99,9 @@ async function verifyInboxInsightsPriority(){
           role+' '+width+'px: insights link must lead to shared results');
         assert.equal(await insightsLink.isVisible(),true,
           role+' '+width+'px: shared results action must be visible');
+        await insightsLink.focus();
+        assert.equal(await insightsLink.evaluate(el=>document.activeElement===el),true,
+          role+' '+width+'px: shared results action must be keyboard-focusable');
         const geometry=await page.evaluate(()=>{
           const main=document.querySelector('#live-app');
           const title=main?.querySelector('h1');
