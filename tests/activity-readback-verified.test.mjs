@@ -65,11 +65,13 @@ test('successful RPC with unread server readback shows explicit uncertainty',asy
   assert.ok(h.context.renders>=1,'warning must be rendered in inbox');
 });
 
-test('failed receipt does not optimistically clear unread notices',async()=>{
+test('failed receipt rechecks and preserves server-confirmed unread notices',async()=>{
   const h=harness({rpcError:new Error('network')});
   await h.mark();
-  assert.equal(h.context.activityNotifications.length,0);
-  assert.match(h.context.activityNotificationsError,/inte att bekräfta/);
+  assert.equal(h.context.activityNotifications.length,1);
+  assert.equal(h.context.activityNotifications[0].read_at,null);
+  assert.equal(h.context.activityNotificationsError,'');
+  assert.match(h.context.activityFeedback,/fortfarande är oläst/);
   assert.equal(h.context.activityMarkBusy,null);
 });
 
