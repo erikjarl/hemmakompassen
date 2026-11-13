@@ -5795,7 +5795,7 @@ try{
   assert.match(inboxText,/Vi pratar om hur vi delar på sysslorna/,'Inbox shows other member pending manual request');
   assert.match(inboxText,/Vi planerar veckans sysslor på söndag/,'An unanswered own proposal also needs a decision and is listed among pending requests');
   assert.doesNotMatch((await paired.page.locator('.schyssta-unread').allInnerTexts()).join(' '),/Vi planerar veckans sysslor på söndag/,'An own pending proposal is not misrepresented as an unread incoming notification');
-  assert.match(inboxText,/Händelser från Schyssta listan · 1 olästa/,'Server inbox shows persisted unread count');
+  assert.match(inboxText,/Händelser från Schyssta listan · 1 oläst(?!a)/,'Server inbox shows the correct singular unread count');
   assert.equal(await paired.page.locator('.schyssta-unread time[datetime]').count(),1,'Notifications display a timestamp from the server');
   assert.match(await paired.page.locator('.schyssta-unread').innerText(),/Från: Provtonåring/,'Inbox identifies only the authorized counterpart');
   // The home screen surfaces the latest personal inbox alert ahead of general family information.
