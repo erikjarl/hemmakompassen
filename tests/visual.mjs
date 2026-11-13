@@ -1345,6 +1345,53 @@ async function verifyImportanceWriteAckBrowser(){
 // FUN-02: actually open, answer and resume EVERY theme deck for both synthetic
 // roles. Finishes one short deck to exercise completion and revisiting saved cards.
 // This never requests or writes live Supabase data.
+// FBK-02-06 / UX-READ-01: use actual Chromium navigation, not just source text.
+// No real accounts or stored answers are accessed by these synthetic fixtures.
+async function verifyUnpairedThemePairingLink(){
+  for(const completed of [false,true]){
+    const width=completed?320:390;
+    const {page,context}=await freshContext(
+      {viewport:{width,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true},
+      {authenticated:true,paired:false,role:'teen',preansweredGeneral:completed}
+    );
+    try{
+      await page.goto(base+'#swipe',{waitUntil:'load'});
+      const chooser=page.locator('.swipe-themes');
+      await chooser.waitFor();
+      if(completed){
+        const disclosure=chooser.locator('.swipe-more-decks');
+        assert.equal(await disclosure.evaluate(el=>el.open),false,
+          'Finished general deck keeps secondary theme choices collapsed');
+        await disclosure.locator(':scope > summary').click();
+      }
+      const link=chooser.getByRole('link',{name:'Para ihop konton'});
+      await link.waitFor({state:'visible'});
+      assert.equal(await link.count(),1,
+        'Only one account-pairing action should appear in the locked theme section');
+      assert.equal(await link.getAttribute('href'),'./konto.html');
+      await checkOverflow(page,'FBK-02-06 unpaired theme decks '+width+'px');
+      await link.click();
+      await page.waitForURL(url=>url.pathname.endsWith('/konto.html'));
+      assert.ok(page.url().endsWith('/konto.html'),
+        'The locked-theme action navigates to the existing account page');
+    }finally{await context.close();}
+  }
+  // Pairing and a temporary unlocking failure are different states.
+  const paired=await freshContext(
+    {viewport:{width:390,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true},
+    {authenticated:true,paired:true,role:'parent',unlocked:true,preansweredGeneral:true}
+  );
+  try{
+    await paired.page.goto(base+'#swipe',{waitUntil:'load'});
+    await paired.page.locator('.swipe-more-decks > summary').waitFor();
+    await paired.page.locator('.swipe-more-decks > summary').click();
+    assert.equal(await paired.page.getByRole('link',{name:'Para ihop konton'}).count(),0,
+      'An already-paired family must not be prompted to pair again');
+    await paired.page.locator('[data-theme-open]').first().waitFor();
+  }finally{await paired.context.close();}
+  console.log('PASS: unpaired theme pairing links navigate in both general-deck states');
+}
+
 async function verifyAllThemeDeckJourneys(){
   const decks=[
     {id:'samtal',length:104},{id:'aktiviteter',length:104},
@@ -6323,6 +6370,7 @@ try{
   await verifySwipeAnswerWriteRecheck();
   await verifyImportancePendingAnswerFeedback();
   await verifyImportanceWriteAckBrowser();
+  await verifyUnpairedThemePairingLink();
   await verifyAllThemeDeckJourneys();
   await verifyInsightsTwoRolesAndStates();
   await verifyIpip50WriteAckBrowser();
