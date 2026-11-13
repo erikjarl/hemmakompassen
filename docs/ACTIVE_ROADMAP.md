@@ -1,5 +1,8 @@
 # Hemmakompassen – aktiv roadmap
 
+**13/11 – Jobb hk, UX-READ-01 AI-reflektionens begriplighet (arbetsgren):** I AI-resultatens panel har underlagets expanderbara rubrik fått den tydligare texten »Vad bygger reflektionen på?«. Den generella begränsningen skrivs i korta meningar: AI:n använder serverkontrollerade resultat, kan ha fel, ger ingen diagnos och fastställer inte relationens orsaker. Inga dataflöden, delningskontroller, promptar, användarsvar eller samtycken ändras. Ny Node-regression kontrollerar tydlig information om underlag och begränsningar. Versionsparametrar uppdaterade i huvudmodul, IPIP-importer och HTML. **Kod på arbetsgren; CI, merge, faktisk Pages-servering, två autentiserade konton, fysisk Safari och upplevd förståelse är inte verifierade.** Supabase SELECT: 7 öppna rapporter (2 `new`, 5 `reviewing`); inga rapporter ändrade. UX-READ-01/FBK-02 fortsatt öppna.
+
+
 **Senast prioriterad:** 12 november 2026 · **Gäller för:** internt testprojekt med två testkonton · **Ansvarig arbetsrutin:** [AGENTS.md](../AGENTS.md)
 
 
