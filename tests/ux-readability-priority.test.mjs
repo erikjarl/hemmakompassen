@@ -51,6 +51,10 @@ test('Schyssta listan keeps approved rules primary without redundant quick-actio
   assert.match(view,/approvedSection\s*\+quickActions/);
   assert.match(view,/item\.status==='accepted'/);
   assert.match(view,/schyssta-approved-details/);
+  assert.match(view,/item\.status==='accepted'\?'':' · Ditt val: '/,
+    'A jointly approved rule must not repeat the already implied personal yes');
+  assert.match(view,/item\.own_decision===true\?'ja':item\.own_decision===false\?'nej':'inte lämnat'/,
+    'Pending or declined proposals must retain the viewer-specific vote');
 });
 
 
