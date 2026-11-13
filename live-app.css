@@ -1414,3 +1414,6 @@
 @media(max-width:430px){
   .schyssta-view .schyssta-filter-group.schyssta-approved-present[data-schyssta-filter-group="approved"]>.live-panel{padding:0}
 }
+
+/* UX-READ-01: guide toward expandable approved rules without another card. */
+.schyssta-approved-hint{margin:0 0 8px;color:var(--soft);font-size:.9rem;line-height:1.5}

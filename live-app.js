@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261113-nvc-inline-labels1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261113-schyssta-disclosure1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261113-nvc-inline-labels1';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261113-schyssta-disclosure1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261113-nvc-inline-labels1';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261113-schyssta-disclosure1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -2891,6 +2891,7 @@ function schysstaView(){
     +card(formHtml+(schysstaMessage?'<p role="status" class="schyssta-feedback">'+esc(schysstaMessage)+'</p>':''))
     +'</details>';
   return '<div class="schyssta-view"><header class="schyssta-page-intro"><h1>Schyssta listan</h1><p>Förslag blir gemensamma regler först när båda sagt ja.</p></header>'
+    +(approved.length?'<p class="schyssta-approved-hint">Öppna en överenskommelse för att se detaljer eller föreslå en ändring.</p>':'')
     +approvedSection
     +quickActions
     +(schysstaDecisionFeedback?'<p role="status" class="schyssta-feedback">'+esc(schysstaDecisionFeedback)+'</p>':'')
