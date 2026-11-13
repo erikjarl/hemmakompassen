@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261113-deck-action-names1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261113-theme-quiet-rows1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261113-deck-action-names1';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261113-theme-quiet-rows1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261113-deck-action-names1';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261113-theme-quiet-rows1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -1528,10 +1528,11 @@ function themeDecksView(completedGeneral=false){
     (completedGeneral?'<details class="swipe-more-decks"><summary id="swipe-themes-heading"><span class="swipe-more-decks-label"><span class="swipe-more-decks-icon" aria-hidden="true">✦</span><span><strong>Gör fler kortlekar</strong><small>'+esc(progress)+'</small></span></span></summary>':'<h2 id="swipe-themes-heading">Fler kortlekar</h2>')+
     ((!completedGeneral||!unlocked)?'<p class="live-muted" role="status">'+esc(status)+'</p>':'')+
     (completedGeneral
-      ?'<ul class="swipe-theme-compact-list">'+THEME_DECKS.map(deck=>{
+      ?(unlocked?'<p class="live-muted swipe-theme-privacy-note">Här visas bara dina egna svar.</p>':'')+
+        '<ul class="swipe-theme-compact-list">'+THEME_DECKS.map(deck=>{
         const saved=unlocked?(themeAnswers.get(deck.id)?.size||0):0;
         const progress=unlocked
-          ?'Din privata status: '+saved+' / '+deck.cards.length+' kort'
+          ?saved+' av '+deck.cards.length+' kort besvarade'
           :'Tillgänglig efter säker familjeparning.';
         const actionTitle=saved===deck.cards.length?'Visa svar':saved?'Fortsätt':'Börja';
         const action=unlocked
