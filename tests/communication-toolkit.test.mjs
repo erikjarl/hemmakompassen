@@ -34,6 +34,14 @@ test('NVC builder for both roles has four accessible, required steps and an unsa
     assert.match(page,/data-comm-reset/);
     assert.match(page,/required maxlength="240"/);
     assert.match(page,/sparas inte/);
+    assert.match(page,/id="comm-nvc-ai-privacy"/);
+    assert.match(page,/id="comm-nvc-ai"[^>]*aria-describedby="comm-nvc-ai-privacy"/);
+    assert.match(page,/Ingen projektinformation hämtas och ingen sparad chatt skapas/);
+    assert.match(page,/men inte till din familjemedlem/);
+    assert.ok(page.indexOf('id="comm-nvc-ai-privacy"')>page.indexOf('id="comm-nvc-output"'),
+      'Privacy explanation belongs beside the optional AI action, after the local preview');
+    assert.ok(page.indexOf('id="comm-nvc-ai-privacy"')<page.indexOf('id="comm-nvc-ai"'),
+      'Privacy explanation must precede the AI button');
     assert.match(page,/Du behöver inte själv få delarna att bilda en grammatisk mening/);
     assert.match(page,/AI-knappen kan sedan göra ett sammanhängande språkförslag/);
     assert.match(page,/placeholder="frustrerad"/);
