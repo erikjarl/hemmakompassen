@@ -89,6 +89,16 @@ async function verifyInboxInsightsPriority(){
         await page.goto(base+'#inkorg',{waitUntil:'load'});
         const panel=page.locator('.inbox-insights-shortcut');
         await panel.waitFor({state:'visible'});
+        // FBK-02-07 / UX-READ-01: the result must be understandable and reachable,
+        // not only visually placed above the rest of the inbox.
+        const heading=panel.getByRole('heading',{name:'Era gemensamma insikter och AI-reflektion'});
+        assert.equal(await heading.count(),1,role+' '+width+'px: clear AI-reflection heading');
+        const insightsLink=panel.getByRole('link',{name:'Visa alla gemensamma insikter och delningar'});
+        assert.equal(await insightsLink.count(),1,role+' '+width+'px: one visible insights action');
+        assert.equal(await insightsLink.getAttribute('href'),'#insikter',
+          role+' '+width+'px: insights link must lead to shared results');
+        assert.equal(await insightsLink.isVisible(),true,
+          role+' '+width+'px: shared results action must be visible');
         const geometry=await page.evaluate(()=>{
           const main=document.querySelector('#live-app');
           const title=main?.querySelector('h1');
@@ -113,6 +123,10 @@ async function verifyInboxInsightsPriority(){
           'FBK-02-07: insights panel must fit mobile viewport: '+JSON.stringify(geometry));
         await checkOverflow(page,'FBK-02-07 inbox insights '+role+' '+width+'px');
         await capture(page,'fbk-02-07-inbox-insights-'+role+'-'+width+'.png');
+        await insightsLink.click();
+        await page.waitForURL(/#insikter$/);
+        assert.equal(new URL(page.url()).hash,'#insikter',
+          role+' '+width+'px: insights action navigates to shared results');
       }finally{await context.close();}
     }
   }
