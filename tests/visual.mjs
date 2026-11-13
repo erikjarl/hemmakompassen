@@ -4884,6 +4884,17 @@ try{
         'UX-SW-03: completed deck rows must not contain large panel cards');
       assert.equal(await disclosure.locator('.swipe-theme-compact-item .live-button').count(),6,
         'UX-SW-03: all next-step buttons remain directly actionable');
+      const namedDeckActions=await disclosure.locator('.swipe-theme-compact-item').evaluateAll(rows=>
+        rows.map(row=>({title:row.querySelector('strong')?.textContent?.trim(),
+          visual:row.querySelector('button')?.textContent?.trim(),
+          accessible:row.querySelector('button')?.getAttribute('aria-label')})));
+      assert.equal(namedDeckActions.length,6);
+      for(const deck of namedDeckActions){
+        assert.ok(deck.title&&deck.visual&&deck.accessible,
+          'UX-READ-01: every action needs a real visible label and named deck');
+        assert.equal(deck.accessible,deck.visual+' – '+deck.title,
+          'UX-READ-01: screen reader must distinguish the six deck actions');
+      }
       await checkOverflow(own.page,'FBK-02-06 own-progress expanded '+role+' '+width+'px');
       await summary.click();
       assert.equal(await disclosure.evaluate(el=>el.open),false,
