@@ -2808,7 +2808,7 @@ function schysstaView(){
     +'<p class="live-muted">Sökning och statusfilter gäller listorna med godkända regler och övriga förslag. Förslag som behöver ditt svar visas separat ovanför sökningen.</p>'
     +'<p id="schyssta-filter-summary" role="status" aria-live="polite"></p></div></details>';
   const suggestionHtml=schysstaSuggestions.length?'<ul class="schyssta-list">'+schysstaSuggestions.map(item=>'<li><p>'+esc(item.body)+'</p><button class="live-button" type="button" data-schyssta-propose="'+esc(item.card_id)+'"'+(schysstaSaving.has(item.card_id)?' disabled aria-busy="true"':'')+'>'+(schysstaSaving.has(item.card_id)?'Skickar…':'Föreslå')+'</button></li>').join('')+'</ul>':'<p class="live-muted">Inga nya gemensamma ja-förslag finns just nu.</p>';
-  const firstRuleHint=rules.length===0
+  const firstRuleHint=rules.length===0&&needs.length===0&&ongoing.length===0
     ?card('<h2>Kom igång tillsammans</h2><p>Ni har inte gjort någon gemensam överenskommelse än. Ni kan skriva ett eget förslag eller hitta idéer i Gillaswajpen.</p><div class="schyssta-actions"><a class="schyssta-secondary" href="#swipe">Hitta idéer i Gillaswajpen</a></div>')
     :'';
   const formHtml=schysstaDraftOpen?'<form id="schyssta-manual-form" class="schyssta-compose">'
@@ -2855,8 +2855,8 @@ function schysstaView(){
         +card('<h2>Förslag på gång</h2><p>Här hittar du även förslag där du valt Inte nu. Ett eget skickat förslag kräver också ditt separata godkännande.</p>'+list(ongoing,'Inga andra pågående förslag.'))
         +'<p class="schyssta-no-results live-muted" hidden>Inga pågående förslag matchar sökningen.</p></div>'
       :'')
-    +'<details class="schyssta-extra-panel"><summary>Fler förslag från Gillaswajpen ('+schysstaSuggestions.length+')</summary>'
-    +card('<h2>Gemensamma förslag</h2><p>Här kan bara regler som servern verifierat som JA+JA visas. Ett förslag är inte ett godkännande.</p>'+suggestionHtml)+'</details>'
+    +(schysstaSuggestions.length?'<details class="schyssta-extra-panel"><summary>Fler förslag från Gillaswajpen ('+schysstaSuggestions.length+')</summary>'
+    +card('<h2>Gemensamma förslag</h2><p>Här kan bara regler som servern verifierat som JA+JA visas. Ett förslag är inte ett godkännande.</p>'+suggestionHtml)+'</details>':'')
     +(schysstaHistory.length?'<details class="schyssta-history" id="schyssta-history"><summary>Tidigare överenskommelser ('+schysstaHistory.length+')</summary><ul class="schyssta-list">'+schysstaHistory.map(item=>'<li id="schyssta-rule-'+item.agreement_id+'"><p>'+esc(item.body)+'</p><p class="live-muted">Avslutad överenskommelse</p></li>').join('')+'</ul></details>':'')
     +'<details class="schyssta-page-help"><summary>Så fungerar listan och hur du uppdaterar</summary><p>Här samlar ni sådant ni båda har sagt ja till. Regler kan komma från Gillaswajpen eller skrivas av någon av er. Ni bestämmer var för sig och kan välja Inte nu.</p>'
     +(viewerRole()==='parent'?'<p>För dig som förälder: beskriv ditt önskemål, ge tonåringen utrymme att säga nej och ta ansvar för att överenskommelsen känns trygg. <a href="#mi-foralder">Läs guiden om motiverande samtal</a>.</p>':'')
