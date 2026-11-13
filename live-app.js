@@ -2771,8 +2771,8 @@ function schysstaView(){
       ?'<li id="schyssta-rule-'+item.agreement_id+'" class="schyssta-approved-item"><details class="schyssta-approved-details" data-agreement-id="'+item.agreement_id+'"'+(open?' open':'')+'><summary><p>'+esc(item.body)+'</p></summary><div class="schyssta-approved-extra">'
       :'<li id="schyssta-rule-'+item.agreement_id+'"><p>'+esc(item.body)+'</p>';
     return ruleStart
-      +'<p class="schyssta-status"><span>'+source+'</span> · <span class="schyssta-status-mark schyssta-status-'+item.status+'" aria-hidden="true"></span><strong>'+schysstaDecisionStatus(item)+'</strong> · Ditt val: '
-      +(item.own_decision===true?'ja':item.own_decision===false?'nej':'inte lämnat')+'</p>'
+      +'<p class="schyssta-status"><span>'+source+'</span> · <span class="schyssta-status-mark schyssta-status-'+item.status+'" aria-hidden="true"></span><strong>'+schysstaDecisionStatus(item)+'</strong>'
+      +(item.status==='accepted'?'':' · Ditt val: '+(item.own_decision===true?'ja':item.own_decision===false?'nej':'inte lämnat'))+'</p>'
       +(source==='Ändringsförslag'&&item.status==='proposed'?'<p class="live-muted">Den tidigare överenskommelsen gäller tills ni båda har godkänt den nya formuleringen.</p>':'')
       +(item.status==='proposed'&&item.proposed_by_me&&item.own_decision===null
         ?'<p class="schyssta-own-proposal-note">Du skickade det här förslaget, men har ännu inte godkänt det. Tryck Jag godkänner om du fortfarande står bakom formuleringen. Den andra personen behöver också säga ja.</p>':'')
