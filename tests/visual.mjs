@@ -5756,6 +5756,17 @@ try{
   const loadedHomeHeadings=await paired.page.getByRole('heading',{name:/^Behöver ditt svar/}).allTextContents();
   const loadedHomeCount=Number(loadedHomeHeadings[0]?.match(/(\d+) förslag/)?.[1]||0);
   assert.equal(loadedHomeCount,loadedRuleCount,'NOT-02: home and Schyssta rule view have the same pending count');
+  // UX-READ-01 / FBK-02-05: a proposal made by the viewer also requires
+  // a separate decision; the home banner must not assume the other person
+  // created every pending rule.
+  const homePendingBanner=paired.page.locator('.home-next-actions .live-panel')
+    .filter({has:paired.page.getByRole('heading',{name:/^Behöver ditt svar/})});
+  assert.equal(await homePendingBanner.count(),1,
+    'Home must show one consolidated pending-rule action');
+  assert.match(await homePendingBanner.innerText(),/Det finns regelförslag som behöver ditt svar/);
+  assert.doesNotMatch(await homePendingBanner.innerText(),/Den andra personen väntar på ditt beslut/);
+  assert.equal(await homePendingBanner.getByRole('link',{name:'Ta ställning i Schyssta listan'}).getAttribute('href'),'#regler',
+    'Neutral home guidance still links directly to pending rule decisions');
   const loadedNavCount=await paired.page.locator('#live-mobile-nav a[href="#regler"] .live-nav-count').textContent();
   assert.equal(Number(loadedNavCount),loadedRuleCount,'NOT-02: mobile rule badge agrees with both views');
   await paired.page.goto(base+'#regler',{waitUntil:'load'});
