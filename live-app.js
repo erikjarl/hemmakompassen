@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261113-theme-pairing-readable1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261113-theme-pairing-link1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261113-theme-pairing-readable1';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261113-theme-pairing-link1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261113-theme-pairing-readable1';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261113-theme-pairing-link1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -1534,6 +1534,7 @@ function themeDecksView(completedGeneral=false){
   return '<section class="swipe-themes" aria-labelledby="swipe-themes-heading">'+
     (completedGeneral?'<details class="swipe-more-decks"><summary id="swipe-themes-heading"><span class="swipe-more-decks-label"><span class="swipe-more-decks-icon" aria-hidden="true">✦</span><span><strong>Gör fler kortlekar</strong><small>'+esc(progress)+'</small></span></span></summary>':'<h2 id="swipe-themes-heading">Fler kortlekar</h2>')+
     ((!completedGeneral||!unlocked)?'<p class="live-muted" role="status">'+esc(status)+'</p>':'')+
+    (!unlocked&&members.length!==2?'<p><a class="live-button" href="./konto.html">Para ihop konton</a></p>':'')+
     (completedGeneral
       ?(unlocked?'<p class="live-muted swipe-theme-privacy-note">Här visas bara dina egna svar.</p>':'')+
         '<ul class="swipe-theme-compact-list">'+THEME_DECKS.map(deck=>{
