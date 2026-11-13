@@ -228,6 +228,9 @@ export function normalizeNvcAiReply(value){
  // Reject field-by-field output and lists: the AI button promises one natural
  // utterance, not a repeat of the four labelled draft fields.
  if(/(?:^|\n)\s*(?:#{1,6}\s+|[-*]\s+|\d+[.)]\s+|(?:observation|känsla|behov|önskemål)\s*:)/iu.test(original))return null;
+ // AI sometimes returns all four field labels on one line. These are still
+ // raw form fields, not the short natural sentence promised to the user.
+ if(/\b(?:observation|känsla|behov|önskemål)\s*:/iu.test(original))return null;
  const reply=original.replace(/\s+/gu,' ');
  // A punctuation-only response is not a usable sentence, even if it is short.
  // Keep the four-part local draft rather than claiming such output is ready.
