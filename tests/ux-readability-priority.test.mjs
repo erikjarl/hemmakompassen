@@ -185,7 +185,7 @@ test('inbox heading only promises AI reflection when the AI feature is enabled',
   const end=app.indexOf('\n// Keep an in-progress chat editor intact',start);
   assert.ok(start>=0&&end>start,'Inbox view must exist');
   const inbox=app.slice(start,end);
-  assert.match(inbox,/Era gemensamma insikter'\+\(aiResultEnabled\?' och AI-reflektion':''\)\+'/,
+  assert.match(inbox,/Era gemensamma insikter'\+\(typeof aiResultEnabled!=='undefined'&&aiResultEnabled\?' och AI-reflektion':''\)\+'/,
     'Heading must not promise AI when the AI analysis feature is disabled');
   assert.match(inbox,/aiResults\.panel\('swipe','all',insightsAiSignature\(\)\)/,
     'Enabled AI still renders a verified shared reflection');
