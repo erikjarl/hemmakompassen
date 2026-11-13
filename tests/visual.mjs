@@ -215,6 +215,8 @@ async function verifySchysstaMobileHierarchy(){
           role+' '+width+'px: shared agreements precede pending proposals without hiding them');
         assert.ok(geometry.composeClosed,role+' '+width+'px: optional form collapsed initially');
         assert.ok(geometry.approvedCount>=1,role+' '+width+'px: approved rules still accessible');
+        assert.equal(await page.getByRole('heading',{name:'Kom igång tillsammans'}).count(),0,
+          role+' '+width+'px: onboarding must not compete with waiting decisions');
         // UX-SL-02: verify the actual browser layout rather than relying on CSS source.
         const approvedRow=approved.locator('.schyssta-approved-item').first();
         const rowStyle=await approvedRow.evaluate(el=>{
@@ -316,6 +318,10 @@ async function verifySchysstaMobileHierarchy(){
       /Ni har ännu inga regler som båda godkänt/);
     assert.equal(await page.getByRole('heading',{name:/^Behöver ditt svar/}).count(),0,
       'No empty decision card when nothing needs an answer');
+    assert.equal(await page.locator('.schyssta-extra-panel').count(),0,
+      'An empty family must not show an expandable zero-suggestion panel');
+    assert.equal(await page.getByRole('heading',{name:'Kom igång tillsammans'}).count(),1,
+      'Empty family still gets its primary getting-started guidance');
     await checkOverflow(page,'FBK-02-01 empty 320px');
     await capture(page,'fbk-02-01-empty-320.png');
   }finally{await context.close();}
