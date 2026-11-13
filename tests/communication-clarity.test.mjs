@@ -20,3 +20,15 @@ test('communication overview offers plain Swedish titles and a next step to both
   assert.match(teen,/Din röst är viktig/);
   assert.doesNotMatch(teen,/Lyssna utan att styra \(MI\)/);
 });
+
+test('communication overview starts with one understandable next step',()=>{
+  for(const role of ['parent','teen']){
+    const html=renderCommunicationToolkit(role);
+    assert.match(html,/Börja med att välja en situation/);
+    assert.match(html,/Vad händer just nu\?/);
+    assert.doesNotMatch(html,/<a href="#kommunikation\/spegla">Öva på att spegla någon<\/a> ·/);
+    assert.match(html,/data-comm-open="lyssna"/);
+    assert.match(html,/href="#kommunikation\/plan"/);
+    assert.match(html,/När samtal inte känns trygga/);
+  }
+});
