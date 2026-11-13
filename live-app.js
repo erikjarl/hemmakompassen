@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261113-nvc-readable1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261113-chat-unread-unknown1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261113-nvc-readable1';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261113-chat-unread-unknown1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261113-nvc-readable1';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261113-chat-unread-unknown1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -445,7 +445,13 @@ async function markAllFamilyChatRead(){
   if(user?.id!==viewer||sharedSession!==session)return false;
   if(result?.error||!Number.isInteger(result?.data)||result.data<0){
     familyChatReadBusy=false;
-    familyChatStatus='Det gick inte att markera meddelandena som lästa. Inga läskvittenser har bekräftats.';
+    // A write can commit even when its acknowledgement is lost. Invalidate
+    // any older count request and never keep displaying its stale number as
+    // a verified unread badge until a fresh server read succeeds.
+    familyChatCountRequest++;
+    familyChatUnread=0;
+    familyChatUnreadError=true;
+    familyChatStatus='Det gick inte att bekräfta läsmarkeringen. Antalet olästa är okänt. Uppdatera konversationen för att kontrollera statusen innan du försöker igen.';
     render();return false;
   }
   // Invalidate any count request started before the write. Its response must

@@ -53,12 +53,17 @@ for(const role of ['parent','teen']){
     h.timer.expire();
     assert.equal(await pending,false);
     assert.equal(h.state.familyChatReadBusy,false);
-    assert.equal(h.state.familyChatUnread,2,'Unconfirmed receipt does not change unread count');
-    assert.equal(h.state.familyChatCountRequest,3,'Unconfirmed receipt does not invalidate older count checks as success');
-    assert.match(h.state.familyChatStatus,/Inga läskvittenser har bekräftats/);
+    assert.equal(h.state.familyChatUnread,0,'Unconfirmed receipt invalidates stale count; this is not a confirmed zero');
+    assert.equal(h.state.familyChatUnreadError,true,'The badge must show unknown, not a stale number');
+    assert.equal(h.state.familyChatCountRequest,4,'Old in-flight count checks must be invalidated');
+    assert.match(h.state.familyChatStatus,/Antalet olästa är okänt/);
     assert.equal(h.timer.timers.size,0,'Timeout timer cleaned up after rejection');
     assert.equal(h.refreshes.length,0,'No success readback is launched after uncertain RPC');
-    // The same control can recover with a later deliberate retry.
+    assert.equal(await h.state.markRead(),false,'A blind retry remains blocked until server count is rechecked');
+    assert.equal(h.requests.length,1);
+    // After an explicit successful server check still finds unread messages,
+    // the same control can recover with a later deliberate retry.
+    h.state.familyChatUnread=2;h.state.familyChatUnreadError=false;
     const retry=h.state.markRead();
     await new Promise(resolve=>setImmediate(resolve));
     assert.equal(h.requests.length,2);
