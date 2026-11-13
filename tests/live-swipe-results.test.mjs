@@ -582,6 +582,11 @@ console.log('PASS: extra swipe decks stay optional but have prominent disclosure
   const html=state.view(true);
   assert.match(html,/2 av 3 teman påbörjade · 2 klara/,'Finished-deck text keeps the precise count without a redundant prefix');
   assert.match(html,/Gör fler kortlekar/);
+  assert.match(html,/Här visas bara dina egna svar/,'Compact theme list has one clear privacy note');
+  assert.match(html,/2 av 2 kort besvarade/,'Completed theme shows a plain-language count');
+  assert.match(html,/0 av 2 kort besvarade/,'Unstarted theme is visible and understandable');
+  assert.doesNotMatch(html,/Din privata status:/,'Compact results avoid repetitive technical prefixes');
+
   assert.match(html,/aria-label="Visa svar – Tema A"/,
     'Screen reader hears the named deck even though visible button just says Visa svar');
   assert.match(html,/aria-label="Visa svar – Tema B"/);
