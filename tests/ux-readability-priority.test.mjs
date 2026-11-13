@@ -152,3 +152,29 @@ test('inbox shared activity heading never displays an unverified unread count',a
   assert.doesNotMatch(activity,/activityUnreadCount\(\)\?' · '/,
     'Do not fall back to a stale count while the server result is unknown');
 });
+
+test('inbox renders shared AI reflections before secondary inbox sections',async()=>{
+  const app=await read('live-app.js');
+  const start=app.indexOf('function inboxView(){');
+  const end=app.indexOf('// Keep an in-progress chat editor intact',start);
+  assert.ok(start>=0&&end>start,'Inbox rendering must exist');
+  const view=app.slice(start,end);
+  const returned=view.slice(view.lastIndexOf("  return '<h1>Inkorg</h1>'"));
+  const firstPanel=returned.indexOf('inbox-insights-shortcut');
+  const reflection=returned.indexOf("aiResults.panel('swipe','all',insightsAiSignature())");
+  const mainLink=returned.indexOf('Visa alla gemensamma insikter och delningar');
+  const refresh=returned.indexOf('inbox-refresh-actions');
+  const rest=returned.indexOf('+unreadOverview+activityPanel+chat+rules');
+  assert.ok(firstPanel>0&&reflection>firstPanel&&mainLink>reflection,
+    'The top shared-insights panel must include guarded AI reflections and a direct insights link');
+  assert.ok(refresh>mainLink&&rest>refresh,
+    'Shared AI and insights should be above refresh, unread, messages and rule events');
+  assert.match(returned,/sharedInsightsEnabled\?'<section/,
+    'Do not expose the panel when shared-insights functionality is disabled');
+  assert.match(returned,/insightsAiSignature\(\)\?aiResults\.panel/,
+    'Do not display an analysis without a current verified shared-results signature');
+  assert.match(returned,/insightsLoading\?'<p role="status">/,
+    'Keep the loading state explicit instead of implying an available AI result');
+  assert.match(returned,/insightsError\?'<p role="alert">/,
+    'Keep a visible error state when the shared-results read fails');
+});
