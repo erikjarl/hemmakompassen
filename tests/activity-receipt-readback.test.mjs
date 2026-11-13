@@ -79,14 +79,34 @@ test('activity read receipt: failed readback is unknown and not a success',async
   assert.equal(context.activityNotifications.length,0);
 });
 
-test('activity read receipt: unacknowledged write clears stale badge and reports uncertainty',async()=>{
-  const {context,calls,mark}=harness({write:{data:null,error:new Error('offline')}});
+test('activity read receipt: lost acknowledgement is confirmed by server readback',async()=>{
+  const {context,calls,mark}=harness({write:{data:null,error:new Error('lost acknowledgement')}});
   await mark();
-  assert.deepEqual(calls.map(call=>call[0]),['mark_activity_notification_read']);
-  assert.match(context.activityFeedback,/inte att bekräfta läsmarkeringen/);
+  assert.deepEqual(calls.map(call=>call[0]),['mark_activity_notification_read','authoritative-readback']);
+  assert.match(context.activityFeedback,/serverkontroll visar att aviseringen är läst/);
+  assert.ok(context.activityNotifications[0].read_at);
+  assert.equal(context.activityNotificationsError,'');
+  assert.equal(context.activityMarkBusy,null);
+  await mark();
+  assert.equal(calls.filter(call=>call[0]==='mark_activity_notification_read').length,1);
+});
+
+test('activity read receipt: rejected write leaves confirmed unread actionable',async()=>{
+  const {context,calls,mark}=harness({write:{data:null,error:new Error('rejected')},readback:'unread'});
+  await mark();
+  assert.deepEqual(calls.map(call=>call[0]),['mark_activity_notification_read','authoritative-readback']);
+  assert.match(context.activityFeedback,/fortfarande är oläst/);
+  assert.equal(context.activityNotifications[0].read_at,null);
+  assert.equal(context.activityNotificationsError,'');
+  assert.equal(context.activityMarkBusy,null);
+});
+
+test('activity read receipt: failed error readback remains unknown',async()=>{
+  const {context,mark}=harness({write:{data:null,error:new Error('lost')},readback:'error'});
+  await mark();
   assert.equal(context.activityNotifications.length,0);
   assert.ok(context.activityNotificationsError);
-  assert.equal(context.activityMarkBusy,null);
+  assert.match(context.activityFeedback,/kunde inte bekräftas/);
 });
 
 test('activity read receipt: only unread notices may be marked',async()=>{
