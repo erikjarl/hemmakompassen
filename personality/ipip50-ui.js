@@ -1,9 +1,9 @@
 import {IPIP50_V1} from './ipip50-v1.js';
-import {createPrivateIpipRetests} from './ipip50-retest.js?v=20261113-theme-shortcut1';
+import {createPrivateIpipRetests} from './ipip50-retest.js?v=20261113-inbox-readable2';
 import {scoreIPIP50} from './ipip50-scoring.js';
-import {buildIPIP50FamilyInsights} from './ipip50-family-insights.js?v=20261113-theme-shortcut1';
-import {richFamilyReflection} from './ipip50-family-copy.js?v=20261113-theme-shortcut1';
-import {IPIP50_REFERENCE,IPIP50_PERCENTILE_BANDS,approximateReferencePercentile,describeModeledPercentile,referenceLimits,describeReferenceProfile,formatSv} from './ipip50-reference.js?v=20261113-theme-shortcut1';
+import {buildIPIP50FamilyInsights} from './ipip50-family-insights.js?v=20261113-inbox-readable2';
+import {richFamilyReflection} from './ipip50-family-copy.js?v=20261113-inbox-readable2';
+import {IPIP50_REFERENCE,IPIP50_PERCENTILE_BANDS,approximateReferencePercentile,describeModeledPercentile,referenceLimits,describeReferenceProfile,formatSv} from './ipip50-reference.js?v=20261113-inbox-readable2';
 import {loadMyIPIP50Answers,saveMyIPIP50Answer} from './ipip50-storage.js';
 
 const esc=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
