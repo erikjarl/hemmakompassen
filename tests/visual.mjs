@@ -2888,6 +2888,11 @@ async function verifyPairedRuleRevisionAndHistory(){
       const acceptedRule=member.page.locator(
         '[data-schyssta-filter-group="approved"] #schyssta-rule-'+originalId);
       await acceptedRule.waitFor({state:'visible'});
+      const acceptedStatus=await acceptedRule.locator('.schyssta-status').innerText();
+      assert.match(acceptedStatus,/Godkänd av båda/,
+        'UX-READ-01: '+role+' sees a clearly accepted agreement after reload');
+      assert.doesNotMatch(acceptedStatus,/Ditt val:/,
+        'UX-READ-01: '+role+' does not see a redundant personal vote on an accepted agreement');
       assert.equal(await acceptedRule.locator('[data-schyssta-decision]').count(),0,
         'FBK-02-05: '+role+' does not see a second decision prompt for an accepted rule');
       assert.equal(await member.page.locator('#schyssta-needs-answer').count(),0,
