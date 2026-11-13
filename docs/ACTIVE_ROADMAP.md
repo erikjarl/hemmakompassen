@@ -1,5 +1,22 @@
 # Hemmakompassen – aktiv roadmap
 
+## Snabböversikt – 13 november 2026
+
+**Syfte:** Hitta nästa genomförbara arbete utan att behöva läsa hela ändringshistoriken. Detaljer, acceptanskriterier och verifieringslogg finns längre ned i **den här filen**; sammanfattningen är ingen ny parallell arbetskö.
+
+| Prioritet | Nästa steg | Verifieringskrav |
+| --- | --- | --- |
+| **P0 · FUN-00–06** | Fortsätt verklig funktionsinventering och tvårollstester av kritiska flöden (inloggning, parning, Gillaswajpen, Schyssta listan och Inkorg). Arbeta vidare med genomförbara P1-uppgifter när autentiserad testning är blockerad. | Verkliga testkonton, kontobyte, omladdning och dokumenterat utfall; skilj från syntetiska testfixturer. |
+| **P1 · FBK-02** | Triagera öppna testarrapporter i Supabase vid **varje** `Jobb hk`. Fokusera bland annat på kvarstående olästmarkeringar, Schyssta-beslut och hur användarna hittar AI-reflektionen och fler kortlekar. | Läs rapporter utan att sprida personuppgifter. Håll öppna tills respektive fel/upplevelse är reproducerat och verkligt verifierat. |
+| **P1 · UX-READ-01** | Ta en konkret vy i taget: primärt resultat först, tydlig nästa handling, kort svenska, bibehållen sekretess- och felinformation. Fortsätt med hem/dashboard, personlighet och övriga vyer efter pågående arbete i Gillaswajpen, Schyssta listan och Inkorgen. | Automatiska funktionstester, mobil 320/390 px, tangentbord och helst autentiserat uppgiftstest. |
+| **P1 · Drift/verifiering** | Bekräfta att mergad `main` faktiskt serveras via Pages; undersök möjligheten till fysisk Safari-testning. | Dokumentera källa, tidpunkt och vad som faktiskt kontrollerats. |
+
+**Senast lästa rapportläge:** 13/11, `SELECT` i `public.test_feedback`: **7 öppna** (2 `new`, 5 `reviewing`); inga rapportstatusar eller användarsvar ändrade vid denna kontroll. Detta är en ögonblicksbild, inte ett löfte om att antalet förblir oförändrat.
+
+**Senast dokumenterad produktionsbaslinje:** PR [#456](https://github.com/erikjarl/hemmakompassen/pull/456) mergad och grön enligt verifieringsloggen nedan. Autentiserad dubbelkontoverifiering, fysisk Safari och serverad Pages-version har **inte** styrkts av den kontrollen.
+
+---
+
 **13/11 – Jobb hk, PR #456 grön och mergad (FBK-02-05 / UX-READ-01):** [PR #456](https://github.com/erikjarl/hemmakompassen/pull/456) passerade hela [UI browser smoke tests #43469448177](https://github.com/erikjarl/hemmakompassen/actions/runs/43469448177) (`success`) efter att ett föråldrat testkontrakt för felkvittens uppdaterats. Nu gör `decideSchysstaRule()` en läsbaserad återkontroll av det specifika beslutet efter osäker skrivkvittens. Ett faktiskt sparat ensidigt ja, ett gemensamt accepterat förslag, ett sparat nej eller ett obekräftat beslut får skilda, begripliga meddelanden utan automatisk omsändning. Fem nya exekverbara Node-VM-testfall täcker sparat gemensamt ja, eget ja, oregistrerat ja, misslyckad återläsning och kontobyte; äldre timeout-test verifierar att ett osäkert godkännande inte skickas igen. Mergad till `main` som [`efde67c`](https://github.com/erikjarl/hemmakompassen/commit/efde67c9e30582a8d67d08405d5a8820aa7be311). `live-app.js`, `index.html`, `personality/ipip50-ui.js` och nya testfilen återlästa från `main`; cacheversion `20261113-rule-decision-recheck1` synkroniserad. Supabase `public.test_feedback` read-only: fortfarande 7 öppna rapporter (2 `new`, 5 `reviewing`), inga sparade användarposter eller rapportstatusar ändrade. **Förklarar och minskar ett konkret fall där godkännandet kan framstå som osparat men bevisar inte att rapporten om upprepade godkännanden i verklig användning är helt löst. Autentiserat tvåkontotest, fysisk Safari och separat verifierad serverad Pages-version saknas fortfarande.** FBK-02-05 och UX-READ-01 öppna.
 
 
