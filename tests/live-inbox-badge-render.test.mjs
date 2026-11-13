@@ -114,11 +114,11 @@ console.log('PASS: real desktop and mobile menu render known, partial and unknow
   route='inkorg';
   await env.refresh({quiet:true});
   assert.equal(calls.render,0,'Quiet background refresh does not disturb chat focus');
-  assert.equal(calls.menu,0,'Quiet background refresh does not redraw navigation');
+  assert.equal(calls.menu,1,'Quiet background refresh restores a verified badge without redrawing the page');
   calls.render=0;calls.menu=0;
   env.familyChatDraft='Ett oskickat utkast';
   await env.refresh({quiet:false});
   assert.equal(calls.render,0,'Foreground refresh preserves an unsent message draft');
-  assert.equal(calls.menu,0,'An unchanged result leaves the draft and known badge untouched');
+  assert.equal(calls.menu,1,'An unchanged result synchronizes the badge while preserving the draft');
 }
 console.log('PASS: unchanged activity notifications clear transient unknown badge without disturbing drafts');
