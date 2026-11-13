@@ -93,11 +93,16 @@ for(const role of ['parent','teen']){
     h.expire();
     await ongoing;
     assert.equal(h.timers.size,0,'The finished operation must clean up its deadline timer');
-    assert.equal(h.refreshed.length,0,'Unknown receipt must not follow the success path');
+    // Only notification receipts are reconciled by a read-only server query
+    // after a lost write acknowledgement; this is not a confirmed write.
+    const expectedRefreshes=action.rpc==='mark_schyssta_notification_read'?1:0;
+    assert.equal(h.refreshed.length,expectedRefreshes,
+      'Uncertain writes may recheck notices, but must not confirm unrelated writes');
     action.after(h);
     h.calls[0].resolve({error:null});
     await step();
-    assert.equal(h.refreshed.length,0,'Late success from timed-out call cannot overwrite the UI');
+    assert.equal(h.refreshed.length,expectedRefreshes,
+      'Late success from a timed-out write must not trigger duplicate readback');
   });
  }
 }
