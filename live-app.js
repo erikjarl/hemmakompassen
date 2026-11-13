@@ -2589,7 +2589,7 @@ function inboxView(){
       +noticeHtml+'<p><a href="#regler">Öppna Schyssta listan</a></p>');
   const activityPanel=!activityNotificationsEnabled?''
     :card('<h2 id="inbox-activities-heading" tabindex="-1">Gemensamma kort och aktiviteter'
-      +(unreadActivities===null?' · oläst antal kontrolleras':unreadActivities>0?' · '+unreadActivities+' olästa':'')+'</h2>'
+      +(unreadActivities===null?' · oläst antal okänt':unreadActivities>0?' · '+unreadActivities+' olästa':'')+'</h2>'
       +'<p class="live-muted">En avisering visar bara att ett nytt gemensamt kort eller en frivilligt delad förståelse har blivit tillgänglig. Inga privata svar visas här.</p>'
       +(activityNotificationsError?'<p role="alert">'+esc(activityNotificationsError)+'</p>'
         +'<button type="button" class="schyssta-secondary" data-activity-refresh>Försök igen</button>':'')
