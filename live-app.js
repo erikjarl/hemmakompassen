@@ -445,7 +445,13 @@ async function markAllFamilyChatRead(){
   if(user?.id!==viewer||sharedSession!==session)return false;
   if(result?.error||!Number.isInteger(result?.data)||result.data<0){
     familyChatReadBusy=false;
-    familyChatStatus='Det gick inte att markera meddelandena som lästa. Inga läskvittenser har bekräftats.';
+    // A write can commit even when its acknowledgement is lost. Invalidate
+    // any older count request and never keep displaying its stale number as
+    // a verified unread badge until a fresh server read succeeds.
+    familyChatCountRequest++;
+    familyChatUnread=0;
+    familyChatUnreadError=true;
+    familyChatStatus='Det gick inte att bekräfta läsmarkeringen. Antalet olästa är okänt. Uppdatera konversationen för att kontrollera statusen innan du försöker igen.';
     render();return false;
   }
   // Invalidate any count request started before the write. Its response must
