@@ -4855,6 +4855,22 @@ try{
         'FBK-02-06: closed '+role+' at '+width+'px shows a clear action');
       await checkOverflow(own.page,'FBK-02-06 own-progress collapsed '+role+' '+width+'px');
       await capture(own.page,'mobile-extra-decks-private-progress-'+role+'-'+width+'.png');
+      // UX-READ-01 / FBK-02-06: this prominent next step must work without
+      // touch or mouse, including the native Enter and Space summary actions.
+      await summary.focus();
+      assert.equal(await summary.evaluate(el=>document.activeElement===el),true,
+        'FBK-02-06: next-deck disclosure is keyboard focusable at '+width+'px');
+      await own.page.keyboard.press('Enter');
+      assert.equal(await disclosure.evaluate(el=>el.open),true,
+        'FBK-02-06: Enter opens next decks for '+role);
+      assert.equal(await disclosure.locator('[data-theme-open]').count(),6,
+        'FBK-02-06: keyboard-opened chooser exposes all six deck actions');
+      await own.page.keyboard.press('Space');
+      assert.equal(await disclosure.evaluate(el=>el.open),false,
+        'FBK-02-06: Space closes next decks for '+role);
+      assert.equal(await summary.evaluate(el=>document.activeElement===el),true,
+        'FBK-02-06: keyboard toggle keeps focus on next-step heading');
+      await checkOverflow(own.page,'FBK-02-06 keyboard disclosure '+role+' '+width+'px');
       await summary.click();
       assert.equal(await disclosure.evaluate(el=>el.open),true,
         'FBK-02-06: disclosure opens when '+role+' activates it');
