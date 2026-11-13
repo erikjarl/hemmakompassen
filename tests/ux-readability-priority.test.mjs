@@ -103,3 +103,27 @@ test('Schyssta manual proposal explains that the author must separately approve'
   assert.match(app,/Du skickade det här förslaget, men har ännu inte godkänt det/);
   assert.match(app,/Ni behöver båda|Regeln gäller först när ni båda har sagt ja/);
 });
+
+test('one-sided Schyssta approval remains distinct from a joint agreement',async()=>{
+  const app=await read('live-app.js');
+  const start=app.indexOf('function schysstaView(){');
+  const end=app.indexOf('\nfunction ',start+25);
+  assert.ok(start>=0&&end>start,'Schyssta listan must exist');
+  const view=app.slice(start,end);
+  const statusStart=view.indexOf('const schysstaDecisionStatus=');
+  const actionsStart=view.indexOf('const decisionActions=');
+  const manageStart=view.indexOf('const manageActions=');
+  assert.ok(statusStart>=0&&actionsStart>statusStart&&manageStart>actionsStart,
+    'Status and approval controls must remain separately defined');
+  const statuses=view.slice(statusStart,view.indexOf('const itemHtml=',statusStart));
+  const decisions=view.slice(actionsStart,manageStart);
+  assert.match(statuses,/item\.status==='accepted'\?'Godkänd av båda'/);
+  assert.match(statuses,/item\.own_decision===true\?'Du har godkänt – väntar på den andra'/);
+  assert.match(statuses,/:'Väntar på ditt beslut'/);
+  assert.match(decisions,/const decisionActions=item\.status==='accepted'\s*\?''/,
+    'Already accepted agreements must not request another decision');
+  assert.match(decisions,/item\.own_decision===true\s*\?'<p class="live-muted">Du har sagt ja\.[\s\S]*?submitButton\(false,'Ta tillbaka mitt ja'/,
+    'One-sided yes must offer retraction rather than a second approval');
+  assert.match(decisions,/:submitButton\(true,'Jag godkänner'\)/,
+    'Unanswered proposals must retain explicit approval');
+});
