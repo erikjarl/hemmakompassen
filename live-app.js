@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261113-inbox-retry-direction1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261113-schyssta-own-vote1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261113-inbox-retry-direction1';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261113-schyssta-own-vote1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261113-inbox-retry-direction1';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261113-schyssta-own-vote1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -2422,7 +2422,7 @@ async function submitManualSchysstaRule(){
   // Never clear a different draft typed while the original request was pending.
   if(schysstaDraft===draftBefore&&schysstaEditTarget===editBefore&&schysstaDraftKey===requestKey){
     schysstaDraft='';schysstaDraftKey=null;schysstaEditTarget=null;schysstaDraftOpen=false;
-    schysstaMessage='Förslaget är sparat och syns i Schyssta listan. Ni behöver båda godkänna det innan det blir en överenskommelse.';
+    schysstaMessage='Förslaget är sparat. Även du behöver trycka Jag godkänner i listan. Regeln gäller först när ni båda har sagt ja.';
   }else if(schysstaMessage==='Skickar förslaget…'){
     // A new draft has replaced the submitted one. Do not leave its spinner
     // text on screen after the old request has completed.
@@ -2818,7 +2818,7 @@ function schysstaView(){
     +'<textarea id="schyssta-body" name="rule" rows="3" minlength="5" maxlength="500" required placeholder="Vi knackar innan vi går in i varandras rum…" aria-describedby="schyssta-length schyssta-description">'+esc(schysstaDraft)+'</textarea>'
     +'<p id="schyssta-length" class="live-muted" aria-live="off">'+schysstaDraft.length+' av 500 tecken</p>'
     +'<div class="schyssta-preview" aria-label="Förhandsgranskning av regelförslag"><strong>Så här ser förslaget ut</strong><p class="live-muted">Från: '+esc(profile?.display_name||'Du')+' · Till den andra familjemedlemmen</p><p id="schyssta-preview-text">'+esc(schysstaDraft.trim()||'Skriv en regel ovan för att förhandsgranska texten.')+'</p><p class="live-muted">Förslag – ännu inte godkänt av båda</p></div>'
-    +'<p id="schyssta-description" class="live-muted">Skriv ett konkret förslag. Det skickas till den andra personen, men blir en överenskommelse först när ni båda sagt ja.</p>'
+    +'<p id="schyssta-description" class="live-muted">Skicka ett konkret förslag. Sedan behöver även du trycka Jag godkänner. Regeln gäller först när ni båda har sagt ja.</p>'
     +'<details class="schyssta-tips"><summary>Tips för en tydlig och rättvis överenskommelse</summary>'
     +'<p>Beskriv helst vad ni vill göra, snarare än vad den andra ska sluta med.</p>'
     +'<ul><li>När ska regeln gälla?</li><li>Vad betyder den i praktiken för var och en?</li><li>När vill ni prata om hur den fungerar?</li></ul>'

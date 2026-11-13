@@ -73,7 +73,7 @@ test('manual Schyssta proposals and inbox are backed by the installed authentica
   assert.match(app,/data-schyssta-open/);
   assert.match(app,/function inboxView\(\)/);
   assert.match(app,/schysstaNeedsAnswer/);
-  assert.match(app,/Ni behöver båda godkänna det innan det blir en överenskommelse/);
+  assert.match(app,/Förslaget är sparat\. Även du behöver trycka Jag godkänner i listan/);
   assert.match(app,/Ditt val: /);
 });
 
