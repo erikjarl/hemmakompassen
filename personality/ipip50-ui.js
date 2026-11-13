@@ -1,9 +1,9 @@
 import {IPIP50_V1} from './ipip50-v1.js';
-import {createPrivateIpipRetests} from './ipip50-retest.js?v=20261113-schyssta-disclosure1';
+import {createPrivateIpipRetests} from './ipip50-retest.js?v=20261113-personality-clarity1';
 import {scoreIPIP50} from './ipip50-scoring.js';
-import {buildIPIP50FamilyInsights} from './ipip50-family-insights.js?v=20261113-schyssta-disclosure1';
-import {richFamilyReflection} from './ipip50-family-copy.js?v=20261113-schyssta-disclosure1';
-import {IPIP50_REFERENCE,IPIP50_PERCENTILE_BANDS,approximateReferencePercentile,describeModeledPercentile,referenceLimits,describeReferenceProfile,formatSv} from './ipip50-reference.js?v=20261113-schyssta-disclosure1';
+import {buildIPIP50FamilyInsights} from './ipip50-family-insights.js?v=20261113-personality-clarity1';
+import {richFamilyReflection} from './ipip50-family-copy.js?v=20261113-personality-clarity1';
+import {IPIP50_REFERENCE,IPIP50_PERCENTILE_BANDS,approximateReferencePercentile,describeModeledPercentile,referenceLimits,describeReferenceProfile,formatSv} from './ipip50-reference.js?v=20261113-personality-clarity1';
 import {loadMyIPIP50Answers,saveMyIPIP50Answer} from './ipip50-storage.js';
 
 const esc=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -337,11 +337,12 @@ export function createPersonalityExperience({db,onRender,isSharingEnabled=false,
     }
     if(!complete){
       return heading+'<section class="live-panel pf-overview"><h2>'+(count?'Fortsätt där du slutade':'Börja med 50 påståenden')+'</h2>'+
-        '<p>Du svarar på 50 korta påståenden, ett i taget. Välj det som bäst beskriver hur du brukar vara. Du kan pausa, gå tillbaka och ändra svar. Det finns ingen tidsgräns.</p>'+
+        '<p>Svara på 50 påståenden om hur du brukar vara. Du kan pausa och ändra dina svar när du vill.</p>'+
+        '<p><strong>'+count+' av 50</strong> besvarade.</p><div class="pf-progress"><span style="width:'+Math.round(count/50*100)+'%"></span></div>'+
+        '<button type="button" class="live-button" data-pf-action="start">'+(count?'Fortsätt testet':'Börja testet')+'</button>'+
         '<p>Det här är en preliminär svensk version av IPIP-50, inte ett normerat eller diagnostiskt test. Varken föräldern eller tonåringen får automatiskt se den andras svar eller resultat.</p>'+
         (useAiAnalysis?'<p><strong>AI-återkoppling:</strong> När du har besvarat alla frågor skapas automatiskt en reflekterande text från dina fem summerade poäng. De enskilda frågesvaren skickas inte till språkmodellen. En eventuell jämförelse bygger endast på bådas aktiva delningssamtycke.</p>':'')+
-        '<p><strong>'+count+' av 50</strong> besvarade.</p><div class="pf-progress"><span style="width:'+Math.round(count/50*100)+'%"></span></div>'+
-        '<button type="button" class="live-button" data-pf-action="start">'+(count?'Fortsätt testet':'Börja testet')+'</button>'+exportControls+'</section>';
+        exportControls+'</section>';
     }
     const own=result;
     let other=null,role=viewerRole;
