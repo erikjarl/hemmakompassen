@@ -36,6 +36,18 @@ En testare har rapporterat att navigeringens olästmarkering kan finnas kvar eft
 - Kontrollera om märkningen försvinner efter helt ny session. Ett enstaka försvinnande utan verifierad serverstatus är inte bevis för grundorsaken.
 - Markera **FBK-02-04 fortsatt öppen** tills verkliga konton och motsvarande serverstatus visar att felet är reproducerat/åtgärdat, samt den rapporterande testaren kunnat bedöma förbättringen.
 
+## Särskild kontroll efter PR #451: utebliven läskvittens för privat chatt
+
+Den nyligen mergade klientändringen visar okänt olästantal när kvittens för `mark_family_messages_read` saknas. Denna presentationsförbättring behöver skiljas från ett lyckat eller misslyckat serveranrop.
+
+1. Med en separat testkonversation och utan att ändra gamla meddelanden: notera först serverbekräftat antal olästa privata meddelanden och menyindikatorn i en autentiserad roll.
+2. Vid ett **kontrollerat** fel där kvittensen för markera-som-läst inte når klienten: kontrollera att en gammal siffra inte presenteras som verifierad och att användaren instrueras att uppdatera konversationen. Detta är ett särskilt syntetiskt scenario; det får inte framkallas genom att ändra riktiga befintliga meddelanden.
+3. Försök inte upprepa lässkrivningen från den osäkra vyn direkt. Använd den synliga uppdateringshandlingen först och kontrollera att den faktiskt genomför en ny serverläsning innan knappen åter blir aktiv.
+4. Kontrollera **två separata utfall** efter uppdatering: (a) servern har registrerat läst och menyn visar bekräftad nolla för chattkategorin; (b) servern har inte registrerat läst och korrekt olästantal visas. En misslyckad uppdatering måste behålla okänd status – inte låtsas noll.
+5. Växla mellan mobilens nedre meny och desktopmenyn och gör full omladdning i samma autentiserade roll. Kontrollera att okända respektive verifierade antal inte förväxlas med aktiviteternas eller reglernas olästa poster.
+
+**Godkänt kriterium:** I båda utfallen överensstämmer visningen med en ny verifierad serverläsning. **Bevisnivå:** PR #451:s syntetiska tester är gröna enligt roadmapen, men dessa steg är ännu inte genomförda med autentiserade tvåkontosessioner; rapport FBK-02-04 förblir öppen.
+
 ## Avgränsning
 
 Detta dokument är ett genomförbart manuellt testprotokoll, **inte** ett utfört autentiserat end-to-end-test. Det innebär ingen ändring i produktionskod, sparade läskvittenser, feedbackstatusar eller befintliga användarsvar.
