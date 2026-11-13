@@ -106,7 +106,8 @@ test('home pending-rule message does not assume who proposed the rule',async()=>
   const end=app.indexOf('\nconst SCHYSSTA_UUID=',start);
   assert.ok(start>=0&&end>start,'Home section must exist');
   const home=app.slice(start,end);
-  assert.match(home,/Det finns regelförslag som behöver ditt svar/);
+  assert.match(home,/Regelförslag väntar · '\+needs/,'The heading displays the number of pending rule decisions');
+  assert.match(home,/Du kan svara nu eller senare\./,'The short message offers a choice without assuming a proposer');
   assert.doesNotMatch(home,/Den andra personen väntar på ditt beslut/);
   assert.match(home,/schysstaNeedsAnswer\(\)\.length/,'Only pending decisions should trigger the banner');
   assert.match(home,/href="#regler"/,'Link to the rule decision remains available');
