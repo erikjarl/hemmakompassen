@@ -2891,7 +2891,7 @@ function schysstaView(){
     +card(formHtml+(schysstaMessage?'<p role="status" class="schyssta-feedback">'+esc(schysstaMessage)+'</p>':''))
     +'</details>';
   return '<div class="schyssta-view"><header class="schyssta-page-intro"><h1>Schyssta listan</h1><p>Förslag blir gemensamma regler först när båda sagt ja.</p></header>'
-    +(approved.length?'<p class="schyssta-approved-hint">Tryck på en överenskommelse för att se detaljer eller föreslå en ändring.</p>':'')
+    +(approved.length?'<p class="schyssta-approved-hint">Öppna en överenskommelse för att se detaljer eller föreslå en ändring.</p>':'')
     +approvedSection
     +quickActions
     +(schysstaDecisionFeedback?'<p role="status" class="schyssta-feedback">'+esc(schysstaDecisionFeedback)+'</p>':'')
