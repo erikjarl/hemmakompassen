@@ -31,14 +31,21 @@ test('loading inbox cannot claim a receipt; only explicit read button does',()=>
 test('server failure preserves unread messages and exposes an honest retry',async()=>{
   const h=harness({data:null,error:{message:'offline'}});
   assert.equal(await h.state.markRead(),false);
-  assert.equal(h.state.familyChatUnread,2);
+  assert.equal(h.state.familyChatUnread,0,'Stale unread count must not be displayed as confirmed');
+  assert.equal(h.state.familyChatUnreadError,true);
   assert.equal(h.state.familyChatReadBusy,false);
-  assert.match(h.state.familyChatStatus,/Inga läskvittenser har bekräftats/);
+  assert.match(h.state.familyChatStatus,/Antalet olästa är okänt/);
+  assert.equal(h.state.familyChatCountRequest,4,'Old count requests are invalidated on uncertain write');
   assert.equal(h.calls(),1);
+  // Explicitly check the server again before any retry: an uncertain write
+  // might already have committed and must never cause a blind duplicate click.
+  assert.equal(await h.state.markRead(),false);
+  assert.equal(h.calls(),1,'Unknown status blocks blind retry');
+  h.state.familyChatUnread=2;h.state.familyChatUnreadError=false;
   h.setRemote({data:2,error:null});
   assert.equal(await h.state.markRead(),true);
   assert.equal(h.state.familyChatUnread,0);
-  assert.equal(h.state.familyChatCountRequest,5,'Read receipt invalidates old queries and starts a fresh count');
+  assert.equal(h.state.familyChatCountRequest,6,'A confirmed retry invalidates previous checks and reads fresh count');
   assert.equal(h.calls(),2);
   assert.equal(h.refreshes(),1,'Successful read receipt triggers authoritative count refresh');
 });
