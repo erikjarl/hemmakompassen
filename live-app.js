@@ -2570,7 +2570,7 @@ function inboxView(){
   const markAllHtml=familyChatUnreadError
     ?'<p role="alert">Antalet olästa privata meddelanden kunde inte kontrolleras. Uppdatera konversationen för att försöka igen.</p>'
     :familyChatUnread>0
-      ?'<div class="family-chat-read-controls"><p>'+familyChatUnread+(familyChatUnread===1?' oläst privat meddelande. Det markeras inte som läst':' olästa privata meddelanden. De markeras inte som lästa') bara för att du öppnar inkorgen.</p>'+
+      ?'<div class="family-chat-read-controls"><p>'+familyChatUnread+(familyChatUnread===1?' oläst privat meddelande. Det markeras inte som läst':' olästa privata meddelanden. De markeras inte som lästa')+' bara för att du öppnar inkorgen.</p>'+
         '<button type="button" class="schyssta-secondary" data-family-chat-mark-all-read'+(familyChatReadBusy||familyChatLoading?' disabled':'')+'>Markera alla meddelanden som lästa</button></div>'
       :'';
   const chat=card('<div class="family-chat"><h2 id="inbox-messages-heading" tabindex="-1">Privata meddelanden med '+otherName+'</h2>'
