@@ -2754,7 +2754,7 @@ function schysstaView(){
         +(item.own_decision===false?submitButton(true,'Ändra mitt svar till ja')
           :item.own_decision===true?submitButton(false,'Ta tillbaka mitt ja','schyssta-secondary'):'')
       :item.own_decision===true
-      ?'<p class="live-muted">Du har sagt ja. Den andra personen behöver också säga ja till samma text.</p>'+submitButton(false,'Ta tillbaka mitt ja','schyssta-secondary')
+      ?'<p class="live-muted">Den andra personen behöver också godkänna samma förslag.</p>'+submitButton(false,'Ta tillbaka mitt ja','schyssta-secondary')
       :item.own_decision===false
       ?'<p class="live-muted">Du har avböjt detta förslag. Du kan ändra ditt svar.</p>'+submitButton(true,'Ändra till ja')
       :submitButton(true,'Jag godkänner')+submitButton(false,'Avböj förslaget','schyssta-secondary')
