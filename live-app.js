@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261113-swipe-progress-plain1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261113-deck-action-names1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261113-swipe-progress-plain1';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261113-deck-action-names1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261113-swipe-progress-plain1';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261113-deck-action-names1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -1533,9 +1533,10 @@ function themeDecksView(completedGeneral=false){
         const progress=unlocked
           ?'Din privata status: '+saved+' / '+deck.cards.length+' kort'
           :'Tillgänglig efter säker familjeparning.';
+        const actionTitle=saved===deck.cards.length?'Visa svar':saved?'Fortsätt':'Börja';
         const action=unlocked
-          ?'<button type="button" class="live-button" data-theme-open="'+esc(deck.id)+'">'+
-            (saved===deck.cards.length?'Visa svar':saved?'Fortsätt':'Börja')+'</button>'
+          ?'<button type="button" class="live-button" data-theme-open="'+esc(deck.id)+'" aria-label="'+esc(actionTitle+' – '+deck.title)+'">'+
+            actionTitle+'</button>'
           :'';
         return '<li class="swipe-theme-compact-item"><div><strong>'+esc(deck.title)+'</strong><span class="live-muted">'+esc(progress)+'</span></div>'+action+'</li>';
       }).join('')+'</ul>'
