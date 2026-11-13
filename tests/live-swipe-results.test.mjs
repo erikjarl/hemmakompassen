@@ -582,6 +582,13 @@ console.log('PASS: extra swipe decks stay optional but have prominent disclosure
   const html=state.view(true);
   assert.match(html,/2 av 3 teman påbörjade · 2 klara/,'Finished-deck text keeps the precise count without a redundant prefix');
   assert.match(html,/Gör fler kortlekar/);
+  assert.match(html,/aria-label="Visa svar – Tema A"/,
+    'Screen reader hears the named deck even though visible button just says Visa svar');
+  assert.match(html,/aria-label="Visa svar – Tema B"/);
+  assert.match(html,/aria-label="Börja – Tema C"/,
+    'Screen reader distinguishes an unstarted theme from other decks');
+  assert.equal((html.match(/aria-label="/g)||[]).length,3,
+    'All three fixture deck actions are described independently');
   assert.match(html,/<details class="swipe-more-decks">/,'Extra decks remain initially closed');
   state.themeAnswers=new Map([['a',new Map([['one',true],['two',true]])],['b',new Map()],['c',new Map()]]);
   assert.match(state.view(true),/1 klart/,'Singular completed theme is grammatical');
