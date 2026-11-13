@@ -1540,7 +1540,7 @@ function themeDecksView(completedGeneral=false){
         const saved=unlocked?(themeAnswers.get(deck.id)?.size||0):0;
         const progress=unlocked
           ?saved+' av '+deck.cards.length+' kort besvarade'
-          :'Tillgänglig efter säker familjeparning.';
+          :'Para ihop era konton för att öppna kortleken.';
         const actionTitle=saved===deck.cards.length?'Visa svar':saved?'Fortsätt':'Börja';
         const action=unlocked
           ?'<button type="button" class="live-button" data-theme-open="'+esc(deck.id)+'" aria-label="'+esc(actionTitle+' – '+deck.title)+'">'+
