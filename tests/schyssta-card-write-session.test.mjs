@@ -176,10 +176,15 @@ for(const action of [
     h.gate.resolve({error:{message:'network unavailable'}});
     await current;
     assert.equal(h.state.schysstaSaving.has(action.key),false);
-    assert.match(h.state.schysstaError,/inte att bekräfta om/);
-    assert.equal(h.refreshes.length,0);
     if(action.name==='decision'){
-      assert.equal(h.state.schysstaRules.length,0,'Unconfirmed decision clears the obsolete list');
+      assert.equal(h.refreshes.length,1,'Uncertain decision triggers read-only verification');
+      assert.match(h.state.schysstaDecisionFeedback,/kunde inte bekräftas/,
+        'An unavailable decision readback must never claim a saved vote');
+      assert.equal(h.state.schysstaRules.length,1,
+        'The test fixture retains its rule when the readback does not return a snapshot');
+    }else{
+      assert.match(h.state.schysstaError,/inte att bekräfta om/);
+      assert.equal(h.refreshes.length,0);
     }
   });
 
