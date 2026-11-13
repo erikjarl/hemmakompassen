@@ -69,3 +69,15 @@ test('Schyssta optional suggestions and getting-started card do not crowd existi
   assert.match(view,/\+needsSection\s*\+firstRuleHint\s*\+composeSection/,
     'Pending approvals still appear before optional compose controls');
 });
+
+test('home pending-rule message does not assume who proposed the rule',async()=>{
+  const app=await read('live-app.js');
+  const start=app.indexOf('function home(){');
+  const end=app.indexOf('\nconst SCHYSSTA_UUID=',start);
+  assert.ok(start>=0&&end>start,'Home section must exist');
+  const home=app.slice(start,end);
+  assert.match(home,/Det finns regelförslag som behöver ditt svar/);
+  assert.doesNotMatch(home,/Den andra personen väntar på ditt beslut/);
+  assert.match(home,/schysstaNeedsAnswer\(\)\.length/,'Only pending decisions should trigger the banner');
+  assert.match(home,/href="#regler"/,'Link to the rule decision remains available');
+});
