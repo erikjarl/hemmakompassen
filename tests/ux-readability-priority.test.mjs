@@ -13,6 +13,8 @@ test('completed theme chooser keeps primary action visible without redundant hel
   assert.match(view,/completedGeneral\?'<details class="swipe-more-decks">/,
     'Completed deck should keep the prominent expandable action');
   assert.match(view,/Gör fler kortlekar/);
+  assert.doesNotMatch(view,/Min progression:/,'Do not repeat abstract progress jargon under the next-decks heading');
+  assert.match(view,/\?startedThemes\+' av '\+THEME_DECKS\.length\+' teman påbörjade'/,'Concise private deck progress still shows the count');
   assert.match(view,/\(\(!completedGeneral\|\|!unlocked\)\?'<p class="live-muted" role="status">'\+esc\(status\)\+'<\/p>':''\)\+/,
     'Redundant help is hidden after completion for an already paired viewer');
   assert.match(view,/Koppla ihop en förälder och en tonåring/,

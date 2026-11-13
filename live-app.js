@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261113-schyssta-quiet-empty1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261113-swipe-progress-plain1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261113-schyssta-quiet-empty1';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261113-swipe-progress-plain1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261113-schyssta-quiet-empty1';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261113-swipe-progress-plain1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -1518,7 +1518,7 @@ function themeDecksView(completedGeneral=false){
   const completedThemes=unlocked?THEME_DECKS.filter(deck=>
     (themeAnswers.get(deck.id)?.size||0)===deck.cards.length).length:0;
   const progress=unlocked
-    ?'Min progression: '+startedThemes+' av '+THEME_DECKS.length+' teman påbörjade'+
+    ?startedThemes+' av '+THEME_DECKS.length+' teman påbörjade'+
       (completedThemes?' · '+completedThemes+' '+(completedThemes===1?'klart':'klara'):'')
     :'Utforska '+THEME_DECKS.length+' teman tillsammans';
   const status=unlocked
