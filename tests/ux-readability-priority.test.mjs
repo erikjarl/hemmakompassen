@@ -135,3 +135,20 @@ test('one-sided Schyssta approval remains distinct from a joint agreement',async
   assert.match(decisions,/:submitButton\(true,'Jag godkänner'\)/,
     'Unanswered proposals must retain explicit approval');
 });
+
+test('inbox shared activity heading never displays an unverified unread count',async()=>{
+  const app=await read('live-app.js');
+  const start=app.indexOf('function inboxView(){');
+  const end=app.indexOf('// Keep an in-progress chat editor intact',start);
+  assert.ok(start>=0&&end>start,'Inbox rendering must exist');
+  const view=app.slice(start,end);
+  assert.match(view,/const unreadActivities=activityNotificationsEnabled\s*\?\(activityNotificationsLoading\|\|activityNotificationsError\?null:activityUnreadCount\(\)\):0/,
+    'Loading or failed server reads must produce an unknown unread count');
+  const activity=view.slice(view.indexOf('const activityPanel='),view.indexOf('  return \'<h1>Inkorg</h1>\''));
+  assert.match(activity,/unreadActivities===null\?' · oläst antal okänt'/,
+    'The section heading must identify an unverified unread count');
+  assert.match(activity,/unreadActivities>0\?' · '\+unreadActivities\+' olästa'/,
+    'Only a verified positive count may be displayed as a number');
+  assert.doesNotMatch(activity,/activityUnreadCount\(\)\?' · '/,
+    'Do not fall back to a stale count while the server result is unknown');
+});
