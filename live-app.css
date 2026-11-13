@@ -1326,7 +1326,20 @@
   margin-right:14px;
 }
 @media(max-width:430px){
-  .swipe-themes .swipe-more-decks>summary{padding:13px 14px}
+  /* At 320px, keep the choice and its disclosure action readable instead
+     of forcing two unshrinkable labels into one row. */
+  .swipe-themes .swipe-more-decks>summary{
+    padding:13px 14px;
+    flex-wrap:wrap;
+    align-items:flex-start;
+  }
+  .swipe-themes .swipe-more-decks-label{
+    flex:1 1 170px;
+    min-width:0;
+  }
+  .swipe-themes .swipe-more-decks>summary::after{
+    margin-left:auto;
+  }
 }
 
 /* UX-SW-03: after the all-deck result, six optional themes are concise rows
