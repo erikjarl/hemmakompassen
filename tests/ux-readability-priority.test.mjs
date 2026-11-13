@@ -94,3 +94,12 @@ test('inbox error guidance points to the real refresh control below the unread s
     'Refresh button is rendered after the unread overview, not above it');
   assert.match(inbox,/id="inbox-refresh-all"/,'The retry action remains present');
 });
+
+test('Schyssta manual proposal explains that the author must separately approve',async()=>{
+  const app=await read('live-app.js');
+  assert.match(app,/Skicka ett konkret förslag\. Sedan behöver även du trycka Jag godkänner/);
+  assert.match(app,/Förslaget är sparat\. Även du behöver trycka Jag godkänner i listan/);
+  assert.match(app,/item\.proposed_by_me&&item\.own_decision===null/);
+  assert.match(app,/Du skickade det här förslaget, men har ännu inte godkänt det/);
+  assert.match(app,/Ni behöver båda|Regeln gäller först när ni båda har sagt ja/);
+});
