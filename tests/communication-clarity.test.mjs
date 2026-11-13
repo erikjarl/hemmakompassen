@@ -28,7 +28,7 @@ test('communication overview starts with one understandable next step',()=>{
     assert.match(html,/Vad händer just nu\?/);
     assert.doesNotMatch(html,/<a href="#kommunikation\/spegla">Öva på att spegla någon<\/a> ·/);
     assert.match(html,/data-comm-open="lyssna"/);
-    assert.match(html,/href="#kommunikation\/plan"/);
+    assert.match(html,/id="comm-reflection-form"/);
     assert.match(html,/När samtal inte känns trygga/);
   }
 });
