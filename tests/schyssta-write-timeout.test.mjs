@@ -77,7 +77,7 @@ const variants=[
   {name:'accept decision',run:h=>h.state.decide(ID,true),rpc:'set_schyssta_rule_decision',
     after:h=>{assert.equal(h.state.schysstaSaving.has(ID),false);assert.equal(h.state.schysstaRules.length,0);assert.match(h.state.schysstaError,/inte att bekräfta/i);}},
   {name:'withdraw accepted agreement',run:h=>h.state.withdraw(ID),rpc:'withdraw_schyssta_rule',
-    after:h=>{assert.equal(h.state.schysstaSaving.has(ID),false);assert.match(h.state.schysstaMessage,/inte att bekräfta/i);}},
+    after:h=>{assert.equal(h.state.schysstaSaving.has(ID),false);assert.match(h.state.schysstaMessage,/kunde inte bekräftas/i);}},
   {name:'mark notice read',run:h=>h.state.mark(ID),rpc:'mark_schyssta_notification_read',
     after:h=>{assert.equal(h.state.schysstaSaving.has(ID),false);assert.match(h.state.schysstaMessage,/inte att bekräfta/i);}}
 ];
