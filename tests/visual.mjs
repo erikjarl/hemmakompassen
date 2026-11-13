@@ -232,6 +232,21 @@ async function verifySchysstaMobileHierarchy(){
           role+' '+width+'px: shared agreements precede pending proposals without hiding them');
         assert.ok(geometry.composeClosed,role+' '+width+'px: optional form collapsed initially');
         assert.ok(geometry.approvedCount>=1,role+' '+width+'px: approved rules still accessible');
+        // UX-READ-01: the new hint must remain readable and lead to a working disclosure.
+        const hint=page.locator('.schyssta-approved-hint');
+        assert.equal(await hint.count(),1,role+' '+width+'px: one guidance line before approved rules');
+        assert.match(await hint.innerText(),/Öppna en överenskommelse.*föreslå en ändring/,
+          role+' '+width+'px: the next action is explained in plain Swedish');
+        const hintBounds=await hint.evaluate(el=>{
+          const r=el.getBoundingClientRect();
+          const a=el.nextElementSibling?.getBoundingClientRect();
+          return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,
+            nextTop:a?.top,viewport:document.documentElement.clientWidth};
+        });
+        assert.ok(hintBounds.left>=-1&&hintBounds.right<=hintBounds.viewport+1,
+          role+' '+width+'px: the hint must not overflow the viewport: '+JSON.stringify(hintBounds));
+        assert.ok(hintBounds.bottom<=hintBounds.nextTop+1,
+          role+' '+width+'px: guidance comes immediately before approved agreements');
         assert.equal(await page.getByRole('heading',{name:'Kom igång tillsammans'}).count(),0,
           role+' '+width+'px: onboarding must not compete with waiting decisions');
         // UX-SL-02: verify the actual browser layout rather than relying on CSS source.
