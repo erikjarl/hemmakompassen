@@ -28,8 +28,8 @@ test('completed general deck shows six compact rows and private statuses with di
   assert.match(html,/<details class="swipe-more-decks">/);
   assert.equal((html.match(/class="swipe-theme-compact-item"/g)||[]).length,6);
   assert.equal((html.match(/data-theme-open=/g)||[]).length,6);
-  assert.match(html,/Din privata status: 1 \/ 4 kort/);
-  assert.match(html,/Din privata status: 4 \/ 4 kort/);
+  assert.match(html,/1 av 4 kort besvarade/);
+  assert.match(html,/4 av 4 kort besvarade/);
   assert.match(html,/>Fortsätt<\/button>/);
   assert.match(html,/>Visa svar<\/button>/);
   assert.match(html,/>Börja<\/button>/);
