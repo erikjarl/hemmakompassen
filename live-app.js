@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261113-schyssta-receipt-recheck1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261113-rule-decision-recheck1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261113-schyssta-receipt-recheck1';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261113-rule-decision-recheck1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261113-schyssta-receipt-recheck1';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261113-rule-decision-recheck1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -2731,7 +2731,24 @@ async function decideSchysstaRule(agreementId,approved){
   let error;try{({error}=await schysstaWriteRpc(db.rpc('set_schyssta_rule_decision',{p_agreement_id:agreementId,p_approved:approved})));}catch(e){error=e;}
   // The current session owns the saving flag and cached decisions.
   if(user?.id!==viewer||sharedSession!==session)return;
-  if(error){schysstaSaving.delete(agreementId);schysstaError='Det gick inte att bekräfta om ditt val sparades. Listan har rensats tills du kontrollerat aktuell status igen.';schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];schysstaNotifications=[];schysstaReplacementLinks=[];schysstaHistory=[];render();return;}
+  if(error){
+    // An acknowledgement can be lost after the server stored the decision.
+    // Re-read the exact rule before asking the viewer to decide again.
+    const refreshed=await fetchSchysstaList();
+    if(user?.id!==viewer||sharedSession!==session)return;
+    schysstaSaving.delete(agreementId);
+    const verified=refreshed&&!schysstaError
+      ?schysstaAllRules().find(row=>row.agreement_id===agreementId):null;
+    schysstaDecisionFeedback=verified?.own_decision===approved
+      ?(approved?(verified.status==='accepted'
+        ?'En ny serverkontroll visar att ni båda har godkänt regeln.'
+        :'En ny serverkontroll visar att ditt ja är sparat. Väntar på den andra personen.')
+        :'En ny serverkontroll visar att ditt nej är sparat.')
+      :verified
+        ?'En ny serverkontroll kunde inte bekräfta ditt senaste val. Kontrollera regelns aktuella status innan du försöker igen.'
+        :'Ditt senaste val kunde inte bekräftas. Uppdatera listan och kontrollera statusen innan du försöker igen.';
+    render();return;
+  }
   const refreshed=await fetchSchysstaList();
   // A competing refresh may supersede this read. Never claim that this
   // particular decision was verified from a snapshot we did not receive.
