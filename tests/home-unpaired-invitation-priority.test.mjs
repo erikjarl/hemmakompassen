@@ -32,7 +32,7 @@ test('NOT-02/UX-04: singleton family invitation appears before the long welcome 
   const hero=html.indexOf('<section class="home-hero">');
   assert.ok(invitation>=0&&hero>=0,'Both family action and established visual identity must remain');
   assert.ok(invitation<hero,'The next action, handling family invitation, should be above the welcome hero');
-  assert.match(html,/href="\.\/konto\.html">Hantera familj och inbjudningar<\/a>/);
+  assert.match(html,/href="\.\/konto\.html">Bjud in den andra familjemedlemmen<\/a>/);
   assert.match(html,/href="#swipe">Utforska Gillaswajpen/);
 });
 
@@ -40,7 +40,7 @@ test('NOT-02/UX-04: accounts without any family also get the pairing CTA first',
   const html=homeFor([]);
   assert.ok(html.indexOf('<h2>Din familj</h2>')<html.indexOf('<section class="home-hero">'));
   assert.match(html,/Ingen familj är kopplad ännu/);
-  assert.match(html,/Hantera familj och inbjudningar/);
+  assert.match(html,/Koppla ditt konto till en familj/);
 });
 
 test('NOT-02/UX-04: a completed pair keeps the welcome hero first and family summary after',()=>{
