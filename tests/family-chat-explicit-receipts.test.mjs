@@ -25,7 +25,8 @@ test('loading inbox cannot claim a receipt; only explicit read button does',()=>
   assert.doesNotMatch(loader,/db\.rpc\('mark_family_messages_read'\)/);
   assert.match(loader,/void fetchFamilyChatUnread\(\)/);
   assert.match(source,/data-family-chat-mark-all-read/);
-  assert.match(source,/De markeras inte som lästa bara för att du öppnar inkorgen/);
+  assert.match(source,/familyChatUnread===1\?' oläst privat meddelande\. Det markeras inte som läst'/,'One unread message uses singular language without automatic read');
+  assert.match(source,/' olästa privata meddelanden\. De markeras inte som lästa'/,'Several unread messages retain explicit read guidance');
 });
 
 test('server failure preserves unread messages and exposes an honest retry',async()=>{

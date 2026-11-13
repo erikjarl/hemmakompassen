@@ -13,7 +13,7 @@ test('inbox unread overview does not misrepresent unknown notification counts as
  assert.match(inbox,/activityNotificationsLoading\|\|activityNotificationsError\?null:activityUnreadCount\(\)/);
  assert.match(inbox,/unreadUnknown=\[unreadMessages,unreadRules,unreadActivities\]\.some\(value=>value===null\)/);
  assert.match(inbox,/unreadTotal>0\|\|unreadUnknown/);
- assert.match(inbox,/Minst '\+unreadTotal\+' olästa i inkorgen/);
+ assert.match(inbox,/Minst '\+unreadTotal\+\(unreadTotal===1\?' oläst':' olästa'\)\+' i inkorgen'/);
  assert.match(inbox,/Oläst antal kan inte kontrolleras/);
  assert.match(inbox,/Alla kategorier kunde inte kontrolleras/);
  assert.match(inbox,/unreadShortcut\('rules','Regelhändelser',unreadRules\)/);

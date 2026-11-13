@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261113-inbox-unread-grammar1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261113-inbox-count-summary1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261113-inbox-unread-grammar1';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261113-inbox-count-summary1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261113-inbox-unread-grammar1';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261113-inbox-count-summary1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -2548,7 +2548,7 @@ function inboxView(){
   const unreadOverview=unreadTotal>0||unreadUnknown
     ?'<section class="live-panel inbox-unread-summary" aria-label="Vad inkorgens olästa gäller">'
      +'<p><strong>'+(unreadUnknown
-       ?(unreadTotal>0?'Minst '+unreadTotal+' olästa i inkorgen':'Oläst antal kan inte kontrolleras')
+       ?(unreadTotal>0?'Minst '+unreadTotal+(unreadTotal===1?' oläst':' olästa')+' i inkorgen':'Oläst antal kan inte kontrolleras')
        :'Oläst i inkorgen · '+unreadTotal)+'</strong></p>'
      +'<p class="live-muted">Notissiffran vid Inkorg räknar privata meddelanden, regelhändelser och gemensamma kort. De markeras som lästa var för sig.</p>'
      +(unreadUnknown?'<p role="status">Alla kategorier kunde inte kontrolleras. Välj Uppdatera hela inkorgen ovanför för att försöka igen.</p>':'')
@@ -2570,7 +2570,7 @@ function inboxView(){
   const markAllHtml=familyChatUnreadError
     ?'<p role="alert">Antalet olästa privata meddelanden kunde inte kontrolleras. Uppdatera konversationen för att försöka igen.</p>'
     :familyChatUnread>0
-      ?'<div class="family-chat-read-controls"><p>'+familyChatUnread+' olästa privata meddelanden. De markeras inte som lästa bara för att du öppnar inkorgen.</p>'+
+      ?'<div class="family-chat-read-controls"><p>'+familyChatUnread+(familyChatUnread===1?' oläst privat meddelande. Det markeras inte som läst':' olästa privata meddelanden. De markeras inte som lästa')+' bara för att du öppnar inkorgen.</p>'+
         '<button type="button" class="schyssta-secondary" data-family-chat-mark-all-read'+(familyChatReadBusy||familyChatLoading?' disabled':'')+'>Markera alla meddelanden som lästa</button></div>'
       :'';
   const chat=card('<div class="family-chat"><h2 id="inbox-messages-heading" tabindex="-1">Privata meddelanden med '+otherName+'</h2>'

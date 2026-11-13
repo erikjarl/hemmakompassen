@@ -5749,7 +5749,7 @@ try{
     'Received chat message is rendered as coming from counterpart');
   assert.equal(await paired.page.evaluate(()=>window.__HK_MARK_CHAT_READ__||0),0,'Opening the inbox must never create a read receipt');
   await paired.page.getByRole('button',{name:'Markera alla meddelanden som lästa'}).waitFor();
-  assert.match(await paired.page.locator('.family-chat-read-controls').innerText(),/De markeras inte som lästa bara för att du öppnar inkorgen/);
+  assert.match(await paired.page.locator('.family-chat-read-controls').innerText(),/1 oläst privat meddelande\. Det markeras inte som läst bara för att du öppnar inkorgen/);
   await paired.page.evaluate(()=>{window.__HK_MARK_READ_FAIL__=true;});
   await paired.page.getByRole('button',{name:'Markera alla meddelanden som lästa'}).click();
   await paired.page.getByText(/Antalet olästa är okänt/).waitFor();
@@ -5796,6 +5796,7 @@ try{
   assert.match(inboxText,/Vi planerar veckans sysslor på söndag/,'An unanswered own proposal also needs a decision and is listed among pending requests');
   assert.doesNotMatch((await paired.page.locator('.schyssta-unread').allInnerTexts()).join(' '),/Vi planerar veckans sysslor på söndag/,'An own pending proposal is not misrepresented as an unread incoming notification');
   assert.match(inboxText,/Händelser från Schyssta listan · 1 oläst(?!a)/,'Server inbox shows the correct singular unread count');
+  assert.match(inboxText,/Minst 1 oläst i inkorgen|Oläst i inkorgen · 1/,'The inbox overview uses a verified count without an incorrect singular plural form');
   assert.equal(await paired.page.locator('.schyssta-unread time[datetime]').count(),1,'Notifications display a timestamp from the server');
   assert.match(await paired.page.locator('.schyssta-unread').innerText(),/Från: Provtonåring/,'Inbox identifies only the authorized counterpart');
   // The home screen surfaces the latest personal inbox alert ahead of general family information.
