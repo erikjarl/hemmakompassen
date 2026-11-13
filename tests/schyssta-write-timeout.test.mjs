@@ -75,7 +75,7 @@ const variants=[
   {name:'rule-card proposal',run:h=>h.state.propose(RULE),rpc:'propose_schyssta_rule',
     after:h=>{assert.equal(h.state.schysstaSaving.has(RULE),false);assert.match(h.state.schysstaError,/inte att bekräfta/i);}},
   {name:'accept decision',run:h=>h.state.decide(ID,true),rpc:'set_schyssta_rule_decision',
-    after:h=>{assert.equal(h.state.schysstaSaving.has(ID),false);assert.equal(h.state.schysstaRules.length,0);assert.match(h.state.schysstaError,/inte att bekräfta/i);}},
+    after:h=>{assert.equal(h.state.schysstaSaving.has(ID),false);assert.equal(h.state.schysstaRules.length,1);assert.match(h.state.schysstaDecisionFeedback,/kunde inte bekräfta ditt senaste val/i);}},
   {name:'withdraw accepted agreement',run:h=>h.state.withdraw(ID),rpc:'withdraw_schyssta_rule',
     after:h=>{assert.equal(h.state.schysstaSaving.has(ID),false);assert.match(h.state.schysstaMessage,/inte att bekräfta/i);}},
   {name:'mark notice read',run:h=>h.state.mark(ID),rpc:'mark_schyssta_notification_read',
@@ -93,11 +93,11 @@ for(const role of ['parent','teen']){
     h.expire();
     await ongoing;
     assert.equal(h.timers.size,0,'The finished operation must clean up its deadline timer');
-    // Only notification receipts are reconciled by a read-only server query
-    // after a lost write acknowledgement; this is not a confirmed write.
-    const expectedRefreshes=action.rpc==='mark_schyssta_notification_read'?1:0;
+    // Rule decisions and notification receipts now reconcile against the server
+    // after a lost write acknowledgement; a readback is not a successful write.
+    const expectedRefreshes=['mark_schyssta_notification_read','set_schyssta_rule_decision'].includes(action.rpc)?1:0;
     assert.equal(h.refreshed.length,expectedRefreshes,
-      'Uncertain writes may recheck notices, but must not confirm unrelated writes');
+      'Uncertain decisions and notices may recheck without repeating the write');
     action.after(h);
     h.calls[0].resolve({error:null});
     await step();
