@@ -5832,17 +5832,17 @@ try{
   await paired.page.goto(base+'#hem',{waitUntil:'load'});
   await paired.page.getByRole('heading',{name:/^Hej /}).waitFor();
   await paired.page.waitForFunction(()=>!document.querySelector('#live-app')?.textContent?.includes('Kontrollerar väntande regelförslag'));
-  const loadedHomeHeadings=await paired.page.getByRole('heading',{name:/^Behöver ditt svar/}).allTextContents();
-  const loadedHomeCount=Number(loadedHomeHeadings[0]?.match(/(\d+) förslag/)?.[1]||0);
+  const loadedHomeHeadings=await paired.page.getByRole('heading',{name:/^Regelförslag väntar/}).allTextContents();
+  const loadedHomeCount=Number(loadedHomeHeadings[0]?.match(/Regelförslag väntar · (\d+)/)?.[1]||0);
   assert.equal(loadedHomeCount,loadedRuleCount,'NOT-02: home and Schyssta rule view have the same pending count');
   // UX-READ-01 / FBK-02-05: a proposal made by the viewer also requires
   // a separate decision; the home banner must not assume the other person
   // created every pending rule.
   const homePendingBanner=paired.page.locator('.home-next-actions .live-panel')
-    .filter({has:paired.page.getByRole('heading',{name:/^Behöver ditt svar/})});
+    .filter({has:paired.page.getByRole('heading',{name:/^Regelförslag väntar/})});
   assert.equal(await homePendingBanner.count(),1,
     'Home must show one consolidated pending-rule action');
-  assert.match(await homePendingBanner.innerText(),/Det finns regelförslag som behöver ditt svar/);
+  assert.match(await homePendingBanner.innerText(),/Du kan svara nu eller senare\./);
   assert.doesNotMatch(await homePendingBanner.innerText(),/Den andra personen väntar på ditt beslut/);
   assert.equal(await homePendingBanner.getByRole('link',{name:'Ta ställning i Schyssta listan'}).getAttribute('href'),'#regler',
     'Neutral home guidance still links directly to pending rule decisions');
