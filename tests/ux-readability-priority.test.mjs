@@ -92,10 +92,14 @@ test('inbox error guidance points to the real refresh control below the unread s
   const end=app.indexOf('\n// Keep an in-progress chat editor intact',start);
   assert.ok(start>=0&&end>start,'Inbox view must exist');
   const inbox=app.slice(start,end);
-  assert.match(inbox,/Välj Uppdatera hela inkorgen längre ned för att försöka igen/);
-  assert.doesNotMatch(inbox,/Uppdatera hela inkorgen ovan/);
-  assert.ok(inbox.indexOf('const unreadOverview=')<inbox.indexOf('class="inbox-refresh-actions"'),
-    'Refresh button is rendered after the unread overview, not above it');
+  assert.match(inbox,/Välj Uppdatera hela inkorgen ovanför för att försöka igen/);
+  assert.doesNotMatch(inbox,/Uppdatera hela inkorgen längre ned/);
+  const renderedReturn=inbox.slice(inbox.lastIndexOf("  return '<h1>Inkorg</h1>'"));
+  assert.ok(renderedReturn.length>0,'Inbox return markup must exist');
+  assert.ok(renderedReturn.indexOf('class="inbox-refresh-actions"')>=0,
+    'Refresh actions must be present in the rendered return markup');
+  assert.ok(renderedReturn.indexOf('class="inbox-refresh-actions"')<renderedReturn.indexOf('+unreadOverview'),
+    'Refresh button is rendered above the unread overview, regardless of declaration order');
   assert.match(inbox,/id="inbox-refresh-all"/,'The retry action remains present');
 });
 
