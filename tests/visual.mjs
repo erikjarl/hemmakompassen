@@ -1736,6 +1736,25 @@ async function verifyIpip50WriteAckBrowser(){
    try{
     const page=m.page;
     await page.goto(base+'#personlighet',{waitUntil:'load'});
+    // UX-READ-01: next action should be prominent before scientific/privacy detail.
+    const overview=page.locator('.pf-overview');
+    const introLayout=await overview.evaluate(el=>{
+      const button=el.querySelector('[data-pf-action="start"]');
+      const paragraphs=[...el.querySelectorAll('p')];
+      const privacy=paragraphs.find(p=>p.textContent.includes('inte ett normerat eller diagnostiskt test'));
+      const progress=paragraphs.find(p=>p.textContent.includes('av 50'));
+      if(!button||!privacy||!progress)return null;
+      const b=button.getBoundingClientRect(),p=privacy.getBoundingClientRect(),q=progress.getBoundingClientRect();
+      return {buttonTop:b.top,privacyTop:p.top,progressTop:q.top,
+        buttonRight:b.right,viewport:document.documentElement.clientWidth};
+    });
+    assert.ok(introLayout&&introLayout.progressTop<introLayout.buttonTop&&
+      introLayout.buttonTop<introLayout.privacyTop,
+      role+' '+width+'px: progress and start must precede the visible limitations: '+JSON.stringify(introLayout));
+    assert.ok(introLayout.buttonRight<=introLayout.viewport+1,
+      role+' '+width+'px: start button must not overflow viewport');
+    assert.match(await overview.innerText(),/Varken föräldern eller tonåringen får automatiskt se den andras svar eller resultat/,
+      role+' '+width+'px: privacy disclosure must stay visible');
     await page.getByRole('button',{name:'Börja testet'}).click();
     await page.getByText('Fråga 1 av 50').waitFor();
     await page.evaluate(scenario=>{
