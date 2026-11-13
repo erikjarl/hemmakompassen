@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261113-inbox-readable2';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261113-activity-readback1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261113-inbox-readable2';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261113-activity-readback1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261113-inbox-readable2';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261113-activity-readback1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -182,13 +182,22 @@ async function markActivityNotificationRead(notificationId){
     activityMarkBusy=null;return;
   }
   if(result?.error){
+    // The server may have committed the read despite a lost acknowledgement.
+    // Keep the action locked while re-reading the specific notification.
+    await fetchActivityNotifications({forceRender:true});
+    if(viewer!==user?.id||session!==sharedSession||pair!==activityPairSignature())return;
     activityMarkBusy=null;
-    activityFeedback='Det gick inte att bekräfta läsmarkeringen. Uppdatera aviseringarna.';
-    // An unconfirmed write must never be treated as a confirmed unread count.
-    activityNotificationsError=activityFeedback;
-    activityNotifications=[];
-    // This is a deliberate user action. Show the failed receipt even when
-    // there is an unsent chat draft; render() restores familyChatDraft.
+    const notice=!activityNotificationsError
+      ?activityNotifications.find(n=>n.notification_id===notificationId):null;
+    if(notice?.read_at){
+      activityFeedback='En ny serverkontroll visar att aviseringen är läst.';
+    }else if(notice&&notice.read_at===null){
+      activityFeedback='En ny serverkontroll visar att aviseringen fortfarande är oläst. Du kan försöka igen.';
+    }else{
+      activityFeedback='Läsmarkeringen kunde inte bekräftas. Uppdatera aviseringarna innan du försöker igen.';
+      activityNotificationsError=activityFeedback;
+      activityNotifications=[];
+    }
     if(page()==='inkorg')render();
     else menu();
     return;
