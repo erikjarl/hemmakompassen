@@ -2888,8 +2888,18 @@ async function verifyPairedRuleRevisionAndHistory(){
       const acceptedRule=member.page.locator(
         '[data-schyssta-filter-group="approved"] #schyssta-rule-'+originalId);
       await acceptedRule.waitFor({state:'visible'});
+      const approvedDetails=acceptedRule.locator('.schyssta-approved-details');
+      assert.equal(await approvedDetails.evaluate(el=>el.open),false,
+        'UX-READ-01: '+role+' starts with a compact collapsed approved rule');
+      await approvedDetails.locator('summary').click();
+      const acceptedStatus=await acceptedRule.locator('.schyssta-status').innerText();
+      assert.match(acceptedStatus,/Godkänd av båda/,
+        'UX-READ-01: '+role+' sees confirmed acceptance when details are opened');
+      assert.doesNotMatch(acceptedStatus,/Ditt val:/,
+        'UX-READ-01: '+role+' sees no redundant personal vote on an accepted agreement');
       assert.equal(await acceptedRule.locator('[data-schyssta-decision]').count(),0,
         'FBK-02-05: '+role+' does not see a second decision prompt for an accepted rule');
+      await approvedDetails.locator('summary').click();
       assert.equal(await member.page.locator('#schyssta-needs-answer').count(),0,
         'FBK-02-05: '+role+' has no repeated approval request after both votes');
       assert.equal(fixture.rules.find(rule=>rule.id===originalId)?.status,'accepted',
