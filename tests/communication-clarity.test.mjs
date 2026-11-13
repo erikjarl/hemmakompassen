@@ -26,7 +26,7 @@ test('communication overview starts with one understandable next step',()=>{
     const html=renderCommunicationToolkit(role);
     assert.match(html,/Börja med att välja en situation/);
     assert.match(html,/Vad händer just nu\?/);
-    assert.doesNotMatch(html,/<a href="#kommunikation\/spegla">Öva på att spegla någon<\/a> ·/);
+    assert.match(html,/<details class="comm-hero-more"><summary>Fler sätt att börja<\/summary>/);\n    assert.match(html,/href="#kommunikation\/spegla"/);
     assert.match(html,/data-comm-open="lyssna"/);
     assert.match(html,/id="comm-reflection-form"/);
     assert.match(html,/När samtal inte känns trygga/);
