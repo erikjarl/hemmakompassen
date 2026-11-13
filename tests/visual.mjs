@@ -4880,6 +4880,15 @@ try{
         'FBK-02-06: all six theme actions are available to paired '+role);
       assert.equal(await disclosure.locator('.swipe-theme-compact-item').count(),6,
         'UX-SW-03: completed decks render as six concise rows, not full panels');
+      const privacyNote=disclosure.locator('.swipe-theme-privacy-note');
+      assert.equal(await privacyNote.count(),1,'UX-READ-01: show one privacy explanation above six theme rows');
+      assert.match(await privacyNote.innerText(),/Här visas bara dina egna svar/);
+      const compactProgress=await disclosure.locator('.swipe-theme-compact-item .live-muted').allTextContents();
+      assert.equal(compactProgress.length,6);
+      for(const line of compactProgress){
+        assert.match(line,/^\d+ av \d+ kort besvarade$/,'UX-READ-01: each row uses short, explicit progress');
+      }
+
       assert.equal(await disclosure.locator('.swipe-theme-compact-list > .live-panel').count(),0,
         'UX-SW-03: completed deck rows must not contain large panel cards');
       assert.equal(await disclosure.locator('.swipe-theme-compact-item .live-button').count(),6,
