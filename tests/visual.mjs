@@ -2686,11 +2686,11 @@ async function verifyPairedTwoRoleExchange(){
     // the server-confirmed read receipt, not an erroneous unread badge.
     fixture.activityNotices.push({
       notification_id:'73000000-0000-4000-8000-000000000121',
-      deck_id:'activities',event_kind:'shared_match',body:'Ett andra gemensamt testkort',
-      created_at:'2026-11-01T13:04:00Z',read_at:null,recipient:'teen'
+      event_kind:'mutual_match',deck_id:'aktiviteter',read_at:null,
+      updated_at:'2026-11-01T13:04:00Z',recipient:'teen'
     });
     await teen.page.locator('[data-activity-refresh]').click();
-    await teen.page.getByText('Ett andra gemensamt testkort').waitFor();
+    await teen.page.waitForFunction(()=>document.querySelectorAll('[data-activity-read]').length===1);
     fixture.loseNextActivityReadAcknowledgement();
     await teen.page.locator('[data-activity-read]').click();
     await teen.page.getByRole('status').filter({
