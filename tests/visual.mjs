@@ -4779,6 +4779,26 @@ try{
       assert.match(label,/Gör fler kortlekar/,'FBK-02-06: clear next-decks label '+role);
       assert.ok(label.includes(expected),'FBK-02-06: current '+role+' sees own theme progress');
       assert.doesNotMatch(label,/teman klara|teman klart/,'FBK-02-06: partial decks are not called complete');
+      // Measure actual browser geometry: a stylesheet rule alone does not prove
+      // the visible title stays within the disclosure at narrow viewport widths.
+      const chooserGeometry=await summary.evaluate(el=>{
+        const bounds=el.getBoundingClientRect();
+        const label=el.querySelector('.swipe-more-decks-label');
+        const labelBounds=label?.getBoundingClientRect();
+        return {
+          summaryWidth:el.clientWidth,summaryScrollWidth:el.scrollWidth,
+          summaryLeft:bounds.left,summaryRight:bounds.right,
+          labelLeft:labelBounds?.left,labelRight:labelBounds?.right,
+          flexWrap:getComputedStyle(el).flexWrap
+        };
+      });
+      assert.equal(chooserGeometry.flexWrap,width<=430?'wrap':'nowrap',
+        'FBK-02-06: mobile disclosure must wrap only when space is tight');
+      assert.ok(chooserGeometry.summaryScrollWidth<=chooserGeometry.summaryWidth+1,
+        'FBK-02-06: the disclosure must not overflow horizontally at '+width+'px: '+JSON.stringify(chooserGeometry));
+      assert.ok(chooserGeometry.labelLeft>=chooserGeometry.summaryLeft-1
+        &&chooserGeometry.labelRight<=chooserGeometry.summaryRight+1,
+        'FBK-02-06: visible theme title must remain inside the disclosure at '+width+'px: '+JSON.stringify(chooserGeometry));
       const disclosure=own.page.locator('.swipe-more-decks');
       assert.equal(await disclosure.evaluate(el=>el.open),false,
         'FBK-02-06: result remains visually primary for '+role);
