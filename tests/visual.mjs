@@ -2668,7 +2668,7 @@ async function verifyPairedTwoRoleExchange(){
     fixture.failNextRuleNoticeRead();
     await teen.page.locator('[data-schyssta-read]').click();
     await teen.page.getByRole('status').filter({
-      hasText:'Det gick inte att bekräfta läsmarkeringen'
+      hasText:'En ny serverkontroll visar att aviseringen fortfarande är oläst'
     }).waitFor();
     assert.equal(fixture.notices[0].read_at,null,
       'FUN-03: an unacknowledged rule notice cannot be treated as read');
@@ -2683,7 +2683,7 @@ async function verifyPairedTwoRoleExchange(){
       null,{timeout:2500});
     assert.equal(await teen.page.locator('.inbox-unread-summary').count(),0,
       'After confirmed read receipts for all three sources, both badge and explanation disappear');
-    assert.equal(await teen.page.getByText('Det gick inte att bekräfta läsmarkeringen').count(),0,
+    assert.equal(await teen.page.getByText('En ny serverkontroll visar att aviseringen fortfarande är oläst').count(),0,
       'Confirmed successful retry removes the obsolete read-receipt warning');
     record.push({case:'rule-notice-read-failure-visible-in-inbox-and-retry-clears',passed:true});
     await teen.page.locator('[data-schyssta-open]').first().click();
