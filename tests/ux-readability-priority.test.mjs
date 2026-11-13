@@ -174,7 +174,7 @@ test('inbox shared activity heading never displays an unverified unread count',a
   const activity=view.slice(view.indexOf('const activityPanel='),view.indexOf('  return \'<h1>Inkorg</h1>\''));
   assert.match(activity,/unreadActivities===null\?' · oläst antal okänt'/,
     'The section heading must identify an unverified unread count');
-  assert.match(activity,/unreadActivities>0\?' · '\+unreadActivities\+' olästa'/,
+  assert.match(activity,/unreadActivities>0\?' · '\+unreadActivities\+\(unreadActivities===1\?' oläst':' olästa'\)/,
     'Only a verified positive count may be displayed as a number');
   assert.doesNotMatch(activity,/activityUnreadCount\(\)\?' · '/,
     'Do not fall back to a stale count while the server result is unknown');
