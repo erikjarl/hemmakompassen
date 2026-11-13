@@ -21,7 +21,7 @@ function fixture(reply){
       assert.equal(name,'mark_family_messages_read');
       return reply;
     }},
-    renderCalls:0,render(){this.renderCalls++;},
+    renderCalls:0,render:()=>{ctx.renderCalls++;},
     setTimeout,clearTimeout,
     fetchFamilyChatUnread:async()=>{},
   };
