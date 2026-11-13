@@ -87,7 +87,7 @@ test('FUN-03: timed-out activity notification receipt releases busy state and re
     render:()=>renders.push({busy:state.activityMarkBusy,error:state.activityNotificationsError}),
     menu:()=>{},
     setTimeout:timer.setTimeout,clearTimeout:timer.clearTimeout,
-    fetchActivityNotifications:async()=>{refreshes.push('refresh');},
+    fetchActivityNotifications:async()=>{refreshes.push('refresh');state.activityNotifications=[];state.activityNotificationsError='Aviseringar kunde inte hämtas';},
     db:{rpc(name){assert.equal(name,'mark_activity_notification_read');const d=deferred();requests.push(d);return d.promise;}}
   };
   vm.runInNewContext(markNotice+'\nthis.markNotice=markActivityNotificationRead;',state);
@@ -97,11 +97,11 @@ test('FUN-03: timed-out activity notification receipt releases busy state and re
   timer.expire();
   await pending;
   assert.equal(state.activityMarkBusy,null);
-  assert.match(state.activityNotificationsError,/inte att bekräfta läsmarkeringen/i);
+  assert.match(state.activityNotificationsError,/Läsmarkeringen kunde inte bekräftas/i);
   assert.equal(state.activityNotifications.length,0,'Unknown receipt must not leave a guessed unread badge');
-  assert.equal(refreshes.length,0,'Do not treat timeout as success');
+  assert.equal(refreshes.length,1,'Timeout triggers a read-only check, not a second write');
   assert.equal(timer.timers.size,0);
   requests[0].resolve({data:true,error:null});
   await Promise.resolve();
-  assert.equal(refreshes.length,0,'Late response cannot trigger a false success');
+  assert.equal(refreshes.length,1,'Late response cannot trigger another read or a false success');
 });
