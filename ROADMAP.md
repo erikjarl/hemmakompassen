@@ -3,6 +3,12 @@
 > **ARKIV / HISTORIK:** Detta dokument innehåller äldre beslut, genomförda leveranser och ursprungliga krav. Öppna checkboxar här är inte en tillförlitlig aktuell arbetskö och kan vara historiskt överspelade. Den **enda prioriterade och uppdaterade arbetskön** är [docs/ACTIVE_ROADMAP.md](docs/ACTIVE_ROADMAP.md). Använd den för alla nya `Jobb hk`-pass. Äldre uppgifter förs dit endast efter kontroll av faktisk kod och verifiering.
 
 
+## 14 november 2026 – DES-01 – ny design prioriterad
+
+- [ ] **P0/design:** omfattande visuell redesign enligt [aktuella arbetskön](docs/ACTIVE_ROADMAP.md) och den detaljerade [DES-01-designspecifikationen](docs/design/DES-01-2026-11-14.md), med färgkoder och delmål 01A–H. Referensbild: [docs/design/references/hemmakompassen-2026-11-14.jpg](docs/design/references/hemmakompassen-2026-11-14.jpg). Bildfilens GitHub-uppladdning ska verifieras innan länken räknas som fungerande. Denna historikpost utgör **inte** en andra prioriterad arbetskö.
+- [ ] **Genomförande/testning kvar:** hela appens utseende, men ingen ändring av faktisk funktionalitet eller sekretess. Före/efter-jämförelse på mobila och breda skärmar samt CI och autentiserad tvåkontoverifiering.
+
+
 ## 7 november 2026 – NOT-01B: exakta djuplänkar från Inkorg (PR #128)
 
 - [x] **I utvecklingsgren:** servervaliderade aktivitetsaviseringar öppnar avsnittet för rätt kortlek i Gemensamma insikter, med egen länk för uttryckligt delade B-förståelsekort. Hashmål vitlistas; en borttagen matchning eller återkallad delning visas inte på nytt. Inga automatiska läskvitton vid navigering.
