@@ -18,6 +18,9 @@
 
 ---
 
+**14/11 – Jobb hk, DES-01D fortsättning / PR #480 under test:** [PR #480](https://github.com/erikjarl/hemmakompassen/pull/480) gör endast villkorliga `home-next-actions`-paneler ljusa med creme, mörk text, olivfärgad knapp och fokusmarkering. Den verifierade åtgärdsordningen (NOT-02), dynamiska aviseringar, länkdestinationer, datalagring, integritet och mobilmenyn ska förbli oförändrade. Cacheversioner samordnade mellan `index.html`, `live-app.js` och `personality/ipip50-ui.js`; `tests/des01d-home-next-actions.test.mjs` bevakar kontrast, styling-scope och cachekoppling. **PR-kod är inte detsamma som verifierad CI, merge eller serverad publicering.** Rapportinkorgen kontrollerad med läsbaserad SQL: fortsatt 7 öppna (2 `new`, 5 `reviewing`); rapporterna har inte ändrats. Fysisk Safari och verkliga tvåkontotester återstår.
+
+
 **14/11 – Jobb hk, DES-01D PR #479 grön och mergad:** Den korrigerade [UI browser smoke tests #43645308252](https://github.com/erikjarl/hemmakompassen/actions/runs/43645308252) avslutades med `success` för PR-head `1b0d2148`; därefter squash-mergades [PR #479](https://github.com/erikjarl/hemmakompassen/pull/479) till `main` som [`a28f108`](https://github.com/erikjarl/hemmakompassen/commit/a28f1081953e5f327b96fa17bd6a79ff44e3adae). Första avgränsade varma ljusa startsidesheron ingår nu i `main` med synkroniserade modul-cacheversioner och syntetiska Chromium-färgassertioner. **Detta är inte hela DES-01, och inte verifiering av publicerad Pages/Cloudflare-version, fysisk Safari eller verkliga tvåkontoflöden.** Supabase `public.test_feedback` läst med `SELECT` även detta pass: 7 öppna (2 `new`, 5 `reviewing`). De två nya gäller AI-reflektionens placering i Inkorgen samt tydligare ingång till fler kortlekar; äldre rapporter rör bland annat godkännanden i Schyssta listan, olästindikator och mobilbegriplighet. Rapporter och användardata oförändrade.
 
 
