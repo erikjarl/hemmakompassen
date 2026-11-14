@@ -1522,3 +1522,49 @@
   .home-module-cards { grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr)); gap:11px; }
   .home-module-cards > .live-panel { padding:16px 18px; }
 }
+
+/* DES-01C: warm desktop navigation shell, isolated from the swipeable mobile nav. */
+@media (min-width:801px) {
+  body .live-layout .live-sidebar {
+    background:#f8f2ea;
+    border-right:1px solid #d9d1c5;
+    box-sizing:border-box;
+    color:#302b26;
+  }
+  body .live-sidebar .live-brand {
+    color:#302b26;
+    max-width:100%;
+    min-width:0;
+    overflow-wrap:anywhere;
+  }
+  body .live-sidebar .live-brand-text {
+    min-width:0;
+    overflow-wrap:anywhere;
+  }
+  body .live-sidebar .live-brand::before {
+    border-color:#b68128;
+    background:radial-gradient(circle at center,#b68128 0 4px,transparent 5px);
+    box-shadow:0 0 0 1px rgb(182 129 40 / 16%);
+  }
+  body .live-sidebar .live-pill { color:#665e54; }
+  body .live-sidebar #live-desktop-nav a {
+    color:#394627;
+    border:1px solid transparent;
+    border-radius:13px;
+    min-height:44px;
+    box-sizing:border-box;
+    overflow-wrap:anywhere;
+  }
+  body .live-sidebar #live-desktop-nav a:hover { background:#e5e7db; }
+  body .live-sidebar #live-desktop-nav a[aria-current=page] {
+    color:#302b26;
+    background:#e5e7db;
+    border-color:#a6a892;
+    font-weight:700;
+  }
+  body .live-sidebar #live-desktop-nav a:focus-visible {
+    outline:3px solid #314f60;
+    outline-offset:2px;
+  }
+  body .live-sidebar #live-desktop-nav a::before { color:#515b32; }
+}
