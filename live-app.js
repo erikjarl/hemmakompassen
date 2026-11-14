@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261114-des01d-warm-actions2';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261115-des01d-module-cards1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261114-des01d-warm-actions2';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261115-des01d-module-cards1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261114-des01d-warm-actions2';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261115-des01d-module-cards1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -2161,7 +2161,7 @@ const familyCard=card('<h2>Din familj</h2><p>'+roster+'</p>'+(members.length===2
 const welcomeHero='<section class="home-hero"><div class="home-hero-inner"><span class="home-kicker">✦ '+(members.length>1?'ERT GEMENSAMMA RUM':'KOPPLA IHOP ERA KONTON')+'</span><h1>Hej '+esc(name)+'.<em>'+(members.length===2?'Välkommen till ert rum.':'Välkommen till ditt rum.')+'</em></h1><p>'+(members.length>1?'Ett rum för att förstå varandra bättre, ett steg i taget.':'Ni behöver koppla ihop era konton för att se era gemensamma svar. Du kan redan nu utforska Gillaswajpen.')+'</p><a class="home-hero-link" href="#swipe">Utforska Gillaswajpen <span aria-hidden="true">→</span></a></div><div class="home-orbit" aria-hidden="true"><span></span></div></section>';
 // Before pairing, make the next useful action (family invitation) the first card.
 // A connected pair still sees its shared welcome hero first.
-return actionSection+(members.length===2?welcomeHero+familyCard:familyCard+welcomeHero)+'<h2>Utforska Hemmakompassen</h2><div class="live-cards">'+nav.slice(1,7).map(([key,label])=>card('<h3>'+esc(label)+'</h3><p class="live-muted">'+esc(members.length!==2&&['inkorg','regler'].includes(key)?'Koppla ihop era konton för att använda funktionen.':HOME_MODULE_INTROS[key])+'</p><a href="#'+key+'">Öppna '+esc(label)+' →</a>')).join('')+'</div>';
+return actionSection+(members.length===2?welcomeHero+familyCard:familyCard+welcomeHero)+'<h2>Utforska Hemmakompassen</h2><div class="live-cards home-module-cards">'+nav.slice(1,7).map(([key,label])=>card('<h3>'+esc(label)+'</h3><p class="live-muted">'+esc(members.length!==2&&['inkorg','regler'].includes(key)?'Koppla ihop era konton för att använda funktionen.':HOME_MODULE_INTROS[key])+'</p><a href="#'+key+'">Öppna '+esc(label)+' →</a>')).join('')+'</div>';
 }
 const SCHYSSTA_UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 function validSchysstaSuggestion(row){
