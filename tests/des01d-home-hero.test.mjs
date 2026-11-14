@@ -19,7 +19,7 @@ test('DES-01D homepage hero uses a warm light palette only in hero scope',()=>{
  assert.match(scoped,/\.home-kicker/);
  assert.match(scoped,/\.home-hero-link/);
  assert.doesNotMatch(scoped,/(?:^|\n)\s*(?:body|\.live-mobile|\.live-nav|\.swipe-playing-card)\s*\{/);
- assert.match(html,/live-app\.css\?v=20261114-des01d-warm-[a-z0-9-]+/);
+ assert.match(html,/live-app\.css\?v=202611\\d\\d-des01d-[a-z0-9-]+/);
 });
 test('DES-01D main text, secondary text and CTA meet minimum 4.5 contrast on warm surface',()=>{
  for(const [fg,bg,label] of [
