@@ -29,7 +29,8 @@ test('DES-01D homepage next actions use scoped warm surfaces and accessible CTA'
   assert.ok(contrast('fff9f1','515b32')>=4.5);
 });
 test('DES-01D cache revision is coordinated with module imports',()=>{
-  const version='20261114-des01d-warm-actions2';
+  const version=html.match(/live-app\.css\?v=(202611\d\d-des01d-[a-z0-9-]+)/)?.[1];
+  assert.ok(version,'DES-01D stylesheet has a version');
   assert.ok(html.includes('live-app.css?v='+version));
   assert.ok(html.includes('live-app.js?v='+version));
   assert.ok(live.includes('ipip50-ui.js?v='+version));
