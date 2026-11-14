@@ -1417,3 +1417,34 @@
 
 /* UX-READ-01: guide toward expandable approved rules without another card. */
 .schyssta-approved-hint{margin:0 0 8px;color:var(--soft);font-size:.9rem;line-height:1.5}
+
+/* DES-01D: first warm, light surface within the existing dark app shell.
+   Only the homepage hero changes; real account and notification content stays dynamic. */
+.home-hero {
+  color: #302b26;
+  border-color: #d9d1c5;
+  background:
+    radial-gradient(ellipse at 88% 12%, #f4d7c5 0%, transparent 42%),
+    radial-gradient(ellipse at 78% 94%, #e5e7db 0%, transparent 52%),
+    linear-gradient(125deg, #fff9f1 0%, #f8f2ea 100%);
+  box-shadow: 0 16px 38px rgb(35 29 20 / 10%);
+}
+.home-hero h1,
+.home-hero h1 em { color: #302b26; }
+.home-hero h1 em { font-style: italic; color: #515b32; }
+.home-hero p { color: #665e54; }
+.home-kicker {
+  color: #394627;
+  background: #e5e7db;
+  border-color: #a6a892;
+}
+.home-hero-link { color: #394627; text-underline-offset: .2em; }
+.home-hero-link:focus-visible { outline: 3px solid #314f60; outline-offset: 3px; }
+.home-orbit {
+  border-color: rgb(102 111 63 / 20%);
+  box-shadow: 0 0 0 42px rgb(102 111 63 / 5%), 0 0 0 86px rgb(175 103 76 / 4%);
+}
+.home-orbit span { background: #666f3f; box-shadow: 0 0 20px rgb(102 111 63 / 20%); }
+@media (max-width: 800px) {
+  .home-hero { background-position: center; }
+}

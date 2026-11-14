@@ -4308,6 +4308,19 @@ try{
   assert.ok(invitationBox.y+invitationBox.height<740,
     "NOT-02: family invitation stays above the fixed mobile navigation without scrolling");
   assert.equal(await m.page.getByRole("link",{name:"Bjud in den andra familjemedlemmen"}).getAttribute("href"),"./konto.html");
+  // DES-01D: assert actual browser-computed colors as well as layout.
+  // The visual theme is scoped to the homepage, not the mobile navigation.
+  const lightHero=await m.page.locator('.home-hero').evaluate(el=>{
+    const heading=el.querySelector('h1');
+    const action=el.querySelector('.home-hero-link');
+    const css=getComputedStyle(el),headCss=getComputedStyle(heading),actionCss=getComputedStyle(action);
+    return {color:css.color,background:css.backgroundImage,
+      headingColor:headCss.color,actionColor:actionCss.color};
+  });
+  assert.equal(lightHero.color,'rgb(48, 43, 38)','DES-01D hero text is dark on light background');
+  assert.equal(lightHero.headingColor,'rgb(48, 43, 38)','DES-01D title contrast');
+  assert.equal(lightHero.actionColor,'rgb(57, 70, 39)','DES-01D action contrast');
+  assert.match(lightHero.background,/radial-gradient/,'DES-01D warm gradient rendered');
   await checkOverflow(m.page,"Mobile homepage");
   assert.equal(await m.page.locator('.home-next-actions').count(),0,
     'NOT-02: no empty action overview when there is nothing verified to do');
