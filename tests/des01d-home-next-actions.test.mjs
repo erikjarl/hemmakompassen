@@ -6,7 +6,9 @@ const css=readFileSync(new URL('../live-app.css',import.meta.url),'utf8');
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const live=readFileSync(new URL('../live-app.js',import.meta.url),'utf8');
 const personality=readFileSync(new URL('../personality/ipip50-ui.js',import.meta.url),'utf8');
-const section=css.slice(css.lastIndexOf('/* DES-01D / UX-READ-01: verified next steps'));
+const start=css.lastIndexOf('/* DES-01D / UX-READ-01: verified next steps');
+const end=css.indexOf('/* DES-01D: warm module tiles',start);
+const section=css.slice(start,end>=0?end:undefined);
 
 test('DES-01D homepage next actions use scoped warm surfaces and accessible CTA',()=>{
   assert.ok(section.includes('.home-next-actions > .live-panel'));
