@@ -18,6 +18,9 @@
 
 ---
 
+**15/11 – Jobb hk, DES-01D modulkort PR #481:** [PR #481](https://github.com/erikjarl/hemmakompassen/pull/481) inför scoped `.home-module-cards` på startsidans befintliga sex navigationskort. Ljusa creme/salvia/persika-ytor, läsbar mörk text, fokusmarkering och mobilanpassning; befintliga länkar, roller, ordning och funktionell logik oförändrade. Tillhörande färgkontrast- och scope-test samt samordnade cacheversioner har lagts till. Äldre versionslåsta testsignaturer i DES-01D har gjorts versionsoberoende. **CI/merge/publicerad Pages-version ska inte antas förrän de faktiskt bekräftats.** Supabase `public.test_feedback` läst read-only under detta pass: fortsatt 7 öppna (2 `new`, 5 `reviewing`); inga statusar eller användarsvar ändrade. Fysisk Safari och verkliga tvåkontotester återstår.
+
+
 **14/11 – Jobb hk, DES-01D ljusa nästa-steg-kort levererade:** [PR #480](https://github.com/erikjarl/hemmakompassen/pull/480) passerade [full UI browser CI #43650587839](https://github.com/erikjarl/hemmakompassen/actions/runs/43650587839) (`success`) efter rättning av en tidigare versionslåst testassertion, och squash-mergades som [`554a431`](https://github.com/erikjarl/hemmakompassen/commit/554a4312e4559ec5f573fabe6f797dfe73fddba1). Villkorade åtgärdskort på startsidan är nu ljusa cremefärgade med läsbar mörk text, olivknapp och tydlig fokusmarkering. Node-kontroller för tokenkontrast och scope samt full browser-svit godkända; detta **innebär inte** att verkliga två konton, fysisk Safari eller publicerad Cloudflare/GitHub Pages har kontrollerats. Befintlig prioritet, aviseringar, länkar och mobilmeny lämnades funktionellt oförändrade. Supabase feedback kontrollerades read-only: 7 öppna (2 nya, 5 under granskning); ingen rapportstatus eller användardata ändrad. Nästa DES-01: fortsatt visuellt arbete på dashboard/modulkort och skal, med skärmbilds-/rollverifiering.
 
 
