@@ -1,0 +1,144 @@
+/* DES-01B: shared candidate tokens and first scoped deployment (account page).
+   This file intentionally does NOT alter app pages or behavioral states. */
+:root {
+  --hk-bg: #f8f2ea;
+  --hk-surface: #fff9f1;
+  --hk-surface-alt: #ece4d6;
+  --hk-ink: #302b26;
+  --hk-muted: #665e54;
+  --hk-olive: #666f3f;
+  --hk-sage: #a6a892;
+  --hk-sage-pale: #e5e7db;
+  --hk-peach: #f7dccf;
+  --hk-rose: #f4d7c5;
+  --hk-terracotta: #af674c;
+  --hk-honey: #e9b865;
+  --hk-gold: #b68128;
+  --hk-border: #d9d1c5;
+  --hk-focus: #314f60;
+}
+
+/* Scoped account-page light theme: preserve existing forms, ids and JS hooks. */
+body.hk-light-account {
+  color-scheme: light;
+  background: var(--hk-bg);
+  color: var(--hk-ink);
+}
+body.hk-light-account h1,
+body.hk-light-account h2 {
+  color: var(--hk-ink);
+}
+body.hk-light-account p,
+body.hk-light-account small {
+  color: var(--hk-muted);
+}
+body.hk-light-account a {
+  color: #394627;
+  text-decoration: underline;
+  text-underline-offset: .18em;
+}
+body.hk-light-account .account-toolbar {
+  background: var(--hk-bg);
+  border-color: var(--hk-border);
+}
+body.hk-light-account > main {
+  background: var(--hk-surface);
+  border: 1px solid var(--hk-border);
+  border-radius: 22px;
+  box-shadow: 0 18px 46px rgb(63 47 27 / 7%);
+}
+body.hk-light-account #logged-out > details {
+  background: var(--hk-surface-alt);
+  border: 1px solid var(--hk-border);
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+body.hk-light-account #logged-out > details[open] {
+  background: var(--hk-surface);
+}
+body.hk-light-account summary {
+  color: var(--hk-ink);
+  font-weight: 700;
+  cursor: pointer;
+  padding-block: 5px;
+}
+body.hk-light-account :is(input, select, textarea) {
+  color: var(--hk-ink);
+  background: #fffdf9;
+  border: 1px solid #948a7b;
+  border-radius: 11px;
+  min-height: 44px;
+}
+body.hk-light-account :is(input, select, textarea):disabled {
+  background: var(--hk-surface-alt);
+  opacity: .7;
+}
+body.hk-light-account :is(button, input[type=submit]) {
+  min-height: 44px;
+  border: 1px solid #4c5831;
+  border-radius: 11px;
+  background: var(--hk-olive);
+  color: #fff9f1;
+  font-weight: 700;
+}
+body.hk-light-account :is(button, input[type=submit]):hover:not(:disabled) {
+  background: #4a562e;
+}
+body.hk-light-account :is(button, input[type=submit]):disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+body.hk-light-account :focus-visible {
+  outline: 3px solid var(--hk-focus);
+  outline-offset: 3px;
+}
+body.hk-light-account #status,
+body.hk-light-account #refresh-account-status {
+  overflow-wrap: anywhere;
+  color: var(--hk-ink);
+}
+body.hk-light-account .pairing-qr {
+  background: var(--hk-sage-pale);
+  border-color: var(--hk-border);
+}
+body.hk-light-account .pairing-qr figcaption {
+  color: var(--hk-ink);
+}
+/* Feedback remains a separate reusable component; scope its light styling to account only. */
+body.hk-light-account .hk-feedback-open {
+  background: var(--hk-olive);
+  border-color: #4c5831;
+  color: #fff9f1;
+}
+body.hk-light-account .hk-feedback-dialog {
+  color-scheme: light;
+  background: var(--hk-surface);
+  color: var(--hk-ink);
+  border-color: var(--hk-border);
+  box-shadow: 0 22px 60px rgb(48 43 38 / 25%);
+}
+body.hk-light-account .hk-feedback-dialog :is(select, textarea) {
+  background: #fffdf9;
+  color: var(--hk-ink);
+  border-color: #948a7b;
+}
+body.hk-light-account .hk-feedback-dialog .hk-feedback-note,
+body.hk-light-account .hk-feedback-dialog p {
+  color: var(--hk-muted);
+}
+body.hk-light-account .hk-feedback-dialog button[type=submit] {
+  background: var(--hk-olive);
+  border-color: #4c5831;
+  color: #fff9f1;
+}
+body.hk-light-account .hk-feedback-dialog button[type=button] {
+  background: var(--hk-surface-alt);
+  border-color: #948a7b;
+  color: var(--hk-ink);
+}
+@media (max-width: 580px) {
+  body.hk-light-account > main { border-radius: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  body.hk-light-account { scroll-behavior: auto; }
+}
