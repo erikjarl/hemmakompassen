@@ -18,6 +18,9 @@
 
 ---
 
+**14/11 – Jobb hk, DES-01D ljusa nästa-steg-kort levererade:** [PR #480](https://github.com/erikjarl/hemmakompassen/pull/480) passerade [full UI browser CI #43650587839](https://github.com/erikjarl/hemmakompassen/actions/runs/43650587839) (`success`) efter rättning av en tidigare versionslåst testassertion, och squash-mergades som [`554a431`](https://github.com/erikjarl/hemmakompassen/commit/554a4312e4559ec5f573fabe6f797dfe73fddba1). Villkorade åtgärdskort på startsidan är nu ljusa cremefärgade med läsbar mörk text, olivknapp och tydlig fokusmarkering. Node-kontroller för tokenkontrast och scope samt full browser-svit godkända; detta **innebär inte** att verkliga två konton, fysisk Safari eller publicerad Cloudflare/GitHub Pages har kontrollerats. Befintlig prioritet, aviseringar, länkar och mobilmeny lämnades funktionellt oförändrade. Supabase feedback kontrollerades read-only: 7 öppna (2 nya, 5 under granskning); ingen rapportstatus eller användardata ändrad. Nästa DES-01: fortsatt visuellt arbete på dashboard/modulkort och skal, med skärmbilds-/rollverifiering.
+
+
 **14/11 – Jobb hk, DES-01D fortsättning / PR #480 under test:** [PR #480](https://github.com/erikjarl/hemmakompassen/pull/480) gör endast villkorliga `home-next-actions`-paneler ljusa med creme, mörk text, olivfärgad knapp och fokusmarkering. Den verifierade åtgärdsordningen (NOT-02), dynamiska aviseringar, länkdestinationer, datalagring, integritet och mobilmenyn ska förbli oförändrade. Cacheversioner samordnade mellan `index.html`, `live-app.js` och `personality/ipip50-ui.js`; `tests/des01d-home-next-actions.test.mjs` bevakar kontrast, styling-scope och cachekoppling. **PR-kod är inte detsamma som verifierad CI, merge eller serverad publicering.** Rapportinkorgen kontrollerad med läsbaserad SQL: fortsatt 7 öppna (2 `new`, 5 `reviewing`); rapporterna har inte ändrats. Fysisk Safari och verkliga tvåkontotester återstår.
 
 
