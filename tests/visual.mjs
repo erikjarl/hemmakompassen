@@ -522,6 +522,42 @@ async function testAccountBrowserJourney(){
   assert.equal((await page.locator('#status').innerText()).trim(),'','The invitation is not a transient form result');
   assert.equal(await page.locator('#logged-in:not(.hidden)').count(),0);
   await checkOverflow(page,'FUN-01 account logged out');
+  // DES-01B: computed CSS, not only presence of class names. The light theme
+  // must remain readable and free from viewport overflow on the real account DOM.
+  for(const width of [320,390,768,1280]){
+    await page.setViewportSize({width,height:844});
+    await checkOverflow(page,'DES-01B account '+width+'px');
+    const theme=await page.evaluate(()=>{
+      const color=el=>getComputedStyle(el).color;
+      const bg=el=>getComputedStyle(el).backgroundColor;
+      const body=document.body,main=document.querySelector('body > main');
+      const button=document.querySelector('#email-form button[type="submit"]');
+      const input=document.querySelector('#email');
+      return {
+        bodyBackground:bg(body),mainBackground:bg(main),
+        mainText:color(main),buttonBackground:bg(button),buttonText:color(button),
+        inputBackground:bg(input),inputText:color(input),
+        buttonHeight:button.getBoundingClientRect().height,
+        inputHeight:input.getBoundingClientRect().height
+      };
+    });
+    assert.equal(theme.bodyBackground,'rgb(248, 242, 234)',
+      'DES-01B warm ivory background at '+width+'px');
+    assert.equal(theme.mainBackground,'rgb(255, 249, 241)',
+      'DES-01B cream panel background at '+width+'px');
+    assert.equal(theme.buttonBackground,'rgb(102, 111, 63)',
+      'DES-01B olive primary action at '+width+'px');
+    assert.equal(theme.buttonText,'rgb(255, 249, 241)',
+      'DES-01B readable action foreground at '+width+'px');
+    assert.equal(theme.inputText,'rgb(48, 43, 38)',
+      'DES-01B readable form input text at '+width+'px');
+    assert.ok(theme.buttonHeight>=44&&theme.inputHeight>=44,
+      'DES-01B primary action and input touch height at '+width+'px: '+JSON.stringify(theme));
+    if(width===320||width===390){
+      await capture(page,'des-01b-account-light-'+width+'.png');
+    }
+  }
+  await page.setViewportSize({width:390,height:844});
   // VIS-00: make the first actual sign-in controls visible on a mobile screen.
   // This is a real layout measurement, but still a synthetic Auth session.
   const firstFold=await page.evaluate(()=>{
