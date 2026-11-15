@@ -18,6 +18,9 @@
 
 ---
 
+**15/11 – Jobb hk, PR #481 mergad / DES-01C desktop-sidomeny i PR #482:** [PR #481](https://github.com/erikjarl/hemmakompassen/pull/481) klarade full [UI-browser-CI #43654397557](https://github.com/erikjarl/hemmakompassen/actions/runs/43654397557) (`success`) och squash-mergades som [`18e5600`](https://github.com/erikjarl/hemmakompassen/commit/18e56002c49cc0e1b30f5e6c3f849f64d3743f30): startsidans sex dynamiska modulkort har nu ljusa, färgkodade ytor. Nästa begränsade DES-01C-steg i [PR #482](https://github.com/erikjarl/hemmakompassen/pull/482) gör datorns sidomeny varm/ljus med markerat aktivt val och synligt fokus, men lämnar den horisontellt svepbara mobilmenyn och appens funktionella logik orörda. Tester för kontrast, desktop-avgränsning och samordnad cacheversion tillagda. **CI/merge för #482 och faktisk serverad version måste verifieras separat.** `public.test_feedback` lästes read-only: 7 öppna (2 `new`, 5 `reviewing`), bland annat kvarstående Schyssta-beslut/olästindikator samt önskemål om AI-reflektion och fler kortlekar. Ingen rapport eller användardata modifierad. Fysisk Safari och autentiserade tvåkontoflöden kvarstår.
+
+
 **15/11 – Jobb hk, DES-01D modulkort PR #481:** [PR #481](https://github.com/erikjarl/hemmakompassen/pull/481) inför scoped `.home-module-cards` på startsidans befintliga sex navigationskort. Ljusa creme/salvia/persika-ytor, läsbar mörk text, fokusmarkering och mobilanpassning; befintliga länkar, roller, ordning och funktionell logik oförändrade. Tillhörande färgkontrast- och scope-test samt samordnade cacheversioner har lagts till. Äldre versionslåsta testsignaturer i DES-01D har gjorts versionsoberoende. **CI/merge/publicerad Pages-version ska inte antas förrän de faktiskt bekräftats.** Supabase `public.test_feedback` läst read-only under detta pass: fortsatt 7 öppna (2 `new`, 5 `reviewing`); inga statusar eller användarsvar ändrade. Fysisk Safari och verkliga tvåkontotester återstår.
 
 
