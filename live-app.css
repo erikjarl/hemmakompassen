@@ -2513,3 +2513,51 @@ body .live-layout .live-main .live-top :is(.live-brand,#account-link):focus-visi
     padding:6px 8px;
   }
 }
+
+/* DES-01D: make the whole authenticated homepage a warm, unified canvas.
+   Scope by the dynamically rendered home hero, not route state or user role.
+   Other modules, sign-in, and their dark semantic/status surfaces stay unchanged. */
+body .live-layout .live-main:has(#live-app > .home-hero) {
+  background:#f8f2ea;
+}
+body .live-layout #live-app:has(> .home-hero) > h2 {
+  color:#302b26;
+  font-size:clamp(1.5rem,3vw,2rem);
+  line-height:1.25;
+  margin:26px 0 16px;
+}
+body .live-layout #live-app:has(> .home-hero) > .live-panel {
+  background:#fff9f1;
+  color:#302b26;
+  border:1px solid #d9d1c5;
+  border-radius:20px;
+  box-shadow:0 8px 24px rgb(48 43 38 / 8%);
+}
+body .live-layout #live-app:has(> .home-hero) > .live-panel h2 {
+  color:#302b26;
+}
+body .live-layout #live-app:has(> .home-hero) > .live-panel p,
+body .live-layout #live-app:has(> .home-hero) > .live-panel .live-muted {
+  color:#665e54;
+  line-height:1.55;
+}
+body .live-layout #live-app:has(> .home-hero) > .live-panel .live-button {
+  min-height:44px;
+  background:#666f3f;
+  color:#fff9f1;
+  border:1px solid #4c5831;
+  text-align:center;
+  overflow-wrap:anywhere;
+}
+body .live-layout #live-app:has(> .home-hero) > .live-panel .live-button:hover {
+  background:#4c5831;
+}
+body .live-layout #live-app:has(> .home-hero) > .live-panel .live-button:focus-visible {
+  outline:3px solid #314f60;
+  outline-offset:3px;
+}
+@media (max-width:390px) {
+  body .live-layout #live-app:has(> .home-hero) > .live-panel .live-button {
+    width:100%;
+  }
+}

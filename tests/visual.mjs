@@ -134,6 +134,53 @@ async function verifyInboxInsightsPriority(){
     }
   }
 }
+async function verifyWarmHomeCanvas(){
+  // DES-01D: a real Chromium layout/computed-style check with synthetic accounts.
+  // Do not treat this as a genuine paired-user acceptance test.
+  for(const item of [
+    {width:320,role:'parent'},
+    {width:390,role:'teen'},
+    {width:768,role:'parent'},
+    {width:1280,role:'teen'}
+  ]){
+    const {context,page}=await freshContext(
+      {viewport:{width:item.width,height:844}},
+      {authenticated:true,paired:true,role:item.role});
+    try{
+      await page.goto(base+'#hem',{waitUntil:'load'});
+      await page.locator('#live-app > .home-hero').waitFor({state:'visible'});
+      const actual=await page.evaluate(()=>{
+        const main=document.querySelector('.live-main');
+        const home=document.querySelector('#live-app');
+        const family=[...home.children].find(el=>el.matches('.live-panel'));
+        const section=[...home.children].find(el=>el.matches('h2'));
+        const action=family?.querySelector('.live-button');
+        return {
+          canvas:main?getComputedStyle(main).backgroundColor:null,
+          family:family?getComputedStyle(family).backgroundColor:null,
+          familyText:family?getComputedStyle(family).color:null,
+          sectionText:section?getComputedStyle(section).color:null,
+          action:action?getComputedStyle(action).backgroundColor:null,
+          hasHero:!!home.querySelector(':scope > .home-hero')
+        };
+      });
+      assert.deepEqual(actual,{
+        canvas:'rgb(248, 242, 234)',
+        family:'rgb(255, 249, 241)',
+        familyText:'rgb(48, 43, 38)',
+        sectionText:'rgb(48, 43, 38)',
+        action:'rgb(102, 111, 63)',
+        hasHero:true
+      },'DES-01D warm home contrast and hierarchy '+item.width+' '+item.role);
+      await checkOverflow(page,'DES-01D warm home '+item.width+' '+item.role);
+      await page.screenshot({
+        path:path.join(output,'des01d-warm-home-'+item.width+'-'+item.role+'.png'),
+        animations:'disabled'
+      });
+    }finally{await context.close();}
+  }
+}
+
 async function verifyDesktopSidebarBrand(){
   for(const width of [821,1024,1440]){
     const {context,page}=await freshContext({viewport:{width,height:900}},{authenticated:true,paired:true});
@@ -4250,6 +4297,7 @@ try{
   await verifySchysstaMobileHierarchy();
   await verifyInboxInsightsPriority();
   await verifyDesktopSidebarBrand();
+  await verifyWarmHomeCanvas();
   const login=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true});
   await login.page.locator("#live-login").waitFor();
   assert.match(await login.page.locator("#live-app").innerText(),/Logga in/i,"First visit must show real sign-in");
