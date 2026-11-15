@@ -18,6 +18,9 @@
 
 ---
 
+**15/11 – Jobb hk, DES-01E frågekort i [PR #484](https://github.com/erikjarl/hemmakompassen/pull/484):** Första avgränsade ljust creme/oliv-färgade Gillaswajp-steget på arbetsgren. Endast CSS för `.swipe-play-view` (scen, frågekort, kategorietikett, privat prioriteringsreglage och fokus), oförändrade svarsalternativ, sveplogik, sparning och delning. Cacheversion synkad mellan HTML och importer, nytt Node-kontrakt i `tests/des01e-swipe-stage.test.mjs`. **CI, merge, autentiserade tvåkontotester, fysisk Safari och serverad Pages-version återstår att verifiera.** Supabase `public.test_feedback` kontrollerad läsbaserat: 7 öppna (2 `new`, 5 `reviewing`), inga rapportstatusar eller användarsvar ändrade. UX-READ-01: den viktigaste frågan är fortsatt huvudfokus; verkligt användartest av begriplighet saknas.
+
+
 **15/11 – Jobb hk, DES-01C mobilmeny levererad:** [PR #483](https://github.com/erikjarl/hemmakompassen/pull/483) klarade full [UI browser smoke tests #43656837380](https://github.com/erikjarl/hemmakompassen/actions/runs/43656837380) (`success`) för head `1fbdbd9` och squash-mergades till `main` som [`e228779`](https://github.com/erikjarl/hemmakompassen/commit/e22877941d541774c3815eeb0a6881d477251c92). Mobilmenyn får ljus creme/oliv/salvia-stil med aktiv flik och fokus; horisontell scroll/snap och befintliga destinationer lämnades orörda enligt PR-diffen. Ändringen är godkänd i automatiserad CI, men fysisk Safari, inloggade tvåkontoflöden och byteverifiering av serverad Pages-version har **inte** kontrollerats i detta pass. Supabase `public.test_feedback` kontrollerades read-only: fortsatt **7 öppna** (2 `new`, 5 `reviewing`), inga statusar eller användarsvar ändrade. Nästa steg: DES-01 resterande vyer och mobil/skärmbildstest mot referensen; fortsätt FBK-02 och UX-READ-01.
 
 
