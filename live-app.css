@@ -2315,3 +2315,59 @@
     outline-offset:3px;
   }
 }
+
+/* DES-01E: warm light completed-deck chooser and optional theme rows.
+   Pure presentation; retain existing disclosure, progress and deck restrictions. */
+.swipe-heading .swipe-more-decks-shortcut {
+  background:#666f3f;
+  color:#fff9f1;
+  border:1px solid #4c5831;
+}
+.swipe-heading .swipe-more-decks-shortcut:hover{background:#4c5831}
+.swipe-heading .swipe-more-decks-shortcut:focus-visible{
+  outline:3px solid #314f60;
+  outline-offset:3px;
+}
+.swipe-themes .swipe-more-decks{
+  border-color:#d9d1c5;
+  background:#fff9f1;
+  color:#302b26;
+}
+.swipe-themes .swipe-more-decks>summary{
+  color:#302b26;
+}
+.swipe-themes .swipe-more-decks>summary:hover{background:#e5e7db}
+.swipe-themes .swipe-more-decks-label small{color:#665e54}
+.swipe-themes .swipe-more-decks-icon{
+  background:#e5e7db;
+  color:#394627;
+}
+.swipe-themes .swipe-more-decks>summary::after{
+  background:#666f3f;
+  color:#fff9f1;
+}
+.swipe-themes .swipe-more-decks>summary:focus-visible{
+  outline:3px solid #314f60;
+}
+.swipe-themes .swipe-more-decks[open]>summary{
+  border-bottom-color:#d9d1c5;
+}
+.swipe-themes .swipe-more-decks .swipe-theme-compact-list{
+  border-color:#d9d1c5;
+  background:#fffdf9;
+}
+.swipe-themes .swipe-more-decks .swipe-theme-compact-item{
+  border-bottom-color:#d9d1c5;
+  color:#302b26;
+}
+.swipe-themes .swipe-more-decks .swipe-theme-compact-item .live-muted{
+  color:#665e54;
+}
+.swipe-themes .swipe-more-decks .swipe-theme-compact-item>.live-button{
+  background:#666f3f;
+  color:#fff9f1;
+}
+.swipe-themes .swipe-more-decks .swipe-theme-compact-item>.live-button:focus-visible{
+  outline:3px solid #314f60;
+  outline-offset:2px;
+}
