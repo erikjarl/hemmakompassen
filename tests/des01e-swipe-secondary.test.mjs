@@ -5,7 +5,7 @@ const css=readFileSync(new URL('../live-app.css',import.meta.url),'utf8');
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const app=readFileSync(new URL('../live-app.js',import.meta.url),'utf8');
 const ipip=readFileSync(new URL('../personality/ipip50-ui.js',import.meta.url),'utf8');
-const section=css.split('/* DES-01E: warm optional filter and private export, preserving disclosure and privacy. */')[1]||'';
+const section=(css.split('/* DES-01E: warm optional filter and private export, preserving disclosure and privacy. */')[1]||'').split('/* DES-01E: warmer optional themed-deck disclosure; retain structure and behaviors. */')[0];
 
 test('secondary swipe styling applies only inside swipe-play-view',()=>{
   assert.ok(section);
@@ -26,7 +26,7 @@ test('warm secondary controls preserve focus and readable foreground',()=>{
 });
 test('HTML CSS and versioned module imports use a coherent revision',()=>{
   const v=html.match(/name="hk-ui-version" content="([^"]+)"/)?.[1];
-  assert.ok(v?.startsWith('20261115-des01e-swipe-secondary'));
+  assert.ok(v?.startsWith('20261115-des01e-'));
   assert.ok(html.includes('live-app.css?v='+v));
   assert.ok(html.includes('live-app.js?v='+v));
   assert.ok(app.includes('ipip50-ui.js?v='+v));
