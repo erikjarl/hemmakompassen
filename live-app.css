@@ -2187,3 +2187,53 @@
 }
 .comm-toolkit .comm-situation,
 .comm-toolkit .comm-exercise summary { min-height:44px; }
+
+
+/* DES-01G: private AI mediator - warm, readable chat surfaces.
+   Visual styles only; safety referrals, consent, history and send/clear actions stay intact. */
+.mediator-view .mediator-notice {
+  background:#fff3dc;
+  border-color:#a58a53;
+  color:#302b26;
+}
+.mediator-view .mediator-notice p { color:#534c44; }
+.mediator-view .mediator-message {
+  background:#fff9f1;
+  border-color:#d9d1c5;
+  color:#302b26;
+  box-shadow:0 4px 12px rgb(48 43 38 / 5%);
+}
+.mediator-view .mediator-message strong { color:#394627; }
+.mediator-view .mediator-message-user {
+  background:#e5e7db;
+  border-color:#a6a892;
+}
+.mediator-view .mediator-message-assistant {
+  background:#fff9f1;
+  border-color:#d9d1c5;
+}
+.mediator-view .mediator-message-safety {
+  background:#fff3dc;
+  border-color:#a58a53;
+}
+.mediator-view .mediator-message-safety strong { color:#694912; }
+.mediator-view .mediator-empty { color:#534c44; }
+.mediator-view #mediator-input {
+  background:#fff9f1;
+  border-color:#a6a892;
+  color:#302b26;
+}
+.mediator-view #mediator-input::placeholder { color:#665e54; }
+.mediator-view #mediator-input:focus-visible,
+.mediator-view .mediator-clear:focus-visible {
+  outline:3px solid #314f60;
+  outline-offset:3px;
+}
+.mediator-view .mediator-clear {
+  background:#e5e7db;
+  border-color:#a6a892;
+  color:#394627;
+  min-height:44px;
+}
+.mediator-view .mediator-error { color:#9b3026; }
+.mediator-view #mediator-status { color:#534c44; }

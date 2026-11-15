@@ -5,7 +5,7 @@ import {readFileSync} from 'node:fs';
 const css=readFileSync(new URL('../live-app.css',import.meta.url),'utf8');
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const app=readFileSync(new URL('../live-app.js',import.meta.url),'utf8');
-const stage=css.split('/* DES-01G: communication tools - warm editorial presentation.')[1]||'';
+const stage=(css.split('/* DES-01G: communication tools - warm editorial presentation.')[1]||'').split('/* DES-01G: private AI mediator')[0];
 
 test('communication hero, situations and exercises have readable cream and olive surfaces',()=>{
  assert.ok(stage);
@@ -30,7 +30,7 @@ test('communication hero, situations and exercises have readable cream and olive
 });
 
 test('communication theme changes neither safety materials nor activity controls',()=>{
- const v='20261115-des01g-comm1';
+ const v='20261115-des01g-mediator1';
  assert.ok(html.includes('live-app.css?v='+v));
  assert.ok(html.includes('live-app.js?v='+v));
  assert.ok(app.includes('ipip50-ui.js?v='+v));
