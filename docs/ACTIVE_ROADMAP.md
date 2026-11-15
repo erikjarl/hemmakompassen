@@ -18,6 +18,9 @@
 
 ---
 
+**15/11 – Jobb hk, DES-01E PR #484 levererad och svarsknappar i nästa steg:** [PR #484](https://github.com/erikjarl/hemmakompassen/pull/484) godkändes i full [UI-browser-CI #43661803129](https://github.com/erikjarl/hemmakompassen/actions/runs/43661803129) (`success`) för head `558e157a` och squash-mergades som [`7186805`](https://github.com/erikjarl/hemmakompassen/commit/71868057763c1ab6f10dc909c8d0934a3ad167d3). Nästa avgränsade DES-01E-arbetsgren `design/des01e-light-swipe-choices-20261115` byter endast Gillaswajpens Ja/Nej-knappar och progress till ljus oliv/persika, med synligt tangentbordsfokus och fortsatt minst 48 px knapphöjd; befintliga svar, gester, behörighet, lagring och delning ska vara orörda. Node-regression för scoped CSS/cache tillagd. **CI/PR-merge för arbetsgrenen, riktig Pages-kontroll, fysisk Safari och autentiserad tvåkontoverifiering återstår.** `public.test_feedback` läst read-only och öppna rapporters innehåll triagerat: fortsatt 7 öppna (2 `new`, 5 `reviewing`), inga data eller rapportstatusar ändrade. UX-READ-01: frågan och svarsalternativen prioriteras visuellt utan att ta bort integritetsbesked.
+
+
 **15/11 – Jobb hk, DES-01E frågekort i [PR #484](https://github.com/erikjarl/hemmakompassen/pull/484):** Första avgränsade ljust creme/oliv-färgade Gillaswajp-steget på arbetsgren. Endast CSS för `.swipe-play-view` (scen, frågekort, kategorietikett, privat prioriteringsreglage och fokus), oförändrade svarsalternativ, sveplogik, sparning och delning. Cacheversion synkad mellan HTML och importer, nytt Node-kontrakt i `tests/des01e-swipe-stage.test.mjs`. **CI, merge, autentiserade tvåkontotester, fysisk Safari och serverad Pages-version återstår att verifiera.** Supabase `public.test_feedback` kontrollerad läsbaserat: 7 öppna (2 `new`, 5 `reviewing`), inga rapportstatusar eller användarsvar ändrade. UX-READ-01: den viktigaste frågan är fortsatt huvudfokus; verkligt användartest av begriplighet saknas.
 
 
