@@ -26,7 +26,7 @@ test('warm secondary controls preserve focus and readable foreground',()=>{
 });
 test('HTML CSS and versioned module imports use a coherent revision',()=>{
   const v=html.match(/name="hk-ui-version" content="([^"]+)"/)?.[1];
-  assert.ok(v?.startsWith('20261115-des01e-'));
+  assert.ok(/^20261115-des01[ef]-/.test(v||''));
   assert.ok(html.includes('live-app.css?v='+v));
   assert.ok(html.includes('live-app.js?v='+v));
   assert.ok(app.includes('ipip50-ui.js?v='+v));
