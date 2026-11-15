@@ -36,7 +36,11 @@ test('account updates cache without changing its pairing or feedback controls',(
 test('account refresh stays distinct from the primary sign-in action',()=>{
  assert.ok(html.includes('id="refresh-account" type="button"'));
  assert.ok(html.includes('<button type="submit">Logga in</button>'));
- assert.ok(css.includes('body.hk-light-account #refresh-account{\\n  background:var(--hk-surface-alt);'));
- assert.ok(css.includes('body.hk-light-account #refresh-account:focus-visible{\\n  outline:3px solid var(--hk-focus);'));
+ const secondary=css.split('/* UX-READ-01: account refresh is a secondary action')[1]||'';
+ assert.ok(secondary.includes('body.hk-light-account #refresh-account{'));
+ assert.ok(secondary.includes('background:var(--hk-surface-alt);'));
+ assert.ok(secondary.includes('color:var(--hk-ink);'));
+ assert.ok(secondary.includes('body.hk-light-account #refresh-account:focus-visible{'));
+ assert.ok(secondary.includes('outline:3px solid var(--hk-focus);'));
  assert.ok(css.includes('min-height: 44px;'));
 });
