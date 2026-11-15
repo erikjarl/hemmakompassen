@@ -2561,3 +2561,36 @@ body .live-layout #live-app:has(> .home-hero) > .live-panel .live-button:focus-v
     width:100%;
   }
 }
+
+/* DES-01G / UX-READ-01: Schyssta listan light canvas and agreed-rules hierarchy.
+   Scoped to the rendered rules view; preserve all decision, consent and read states. */
+body .live-layout .live-main:has(#live-app > .schyssta-view) {
+  background:#f8f2ea;
+}
+body .live-layout #live-app > .schyssta-view .schyssta-page-intro h1 {
+  color:#302b26;
+}
+body .live-layout #live-app > .schyssta-view .schyssta-page-intro p,
+body .live-layout #live-app > .schyssta-view .schyssta-approved-hint {
+  color:#665e54;
+  line-height:1.5;
+}
+body .live-layout #live-app > .schyssta-view
+.schyssta-filter-group[data-schyssta-filter-group="approved"] > .live-panel {
+  background:#fff9f1;
+  border-color:#a6a892;
+  color:#302b26;
+  box-shadow:0 8px 24px rgb(48 43 38 / 8%);
+}
+body .live-layout #live-app > .schyssta-view
+.schyssta-filter-group[data-schyssta-filter-group="approved"] > .live-panel > h2 {
+  color:#394627;
+}
+body .live-layout #live-app > .schyssta-view
+.schyssta-filter-group[data-schyssta-filter-group="approved"] .schyssta-list > li {
+  border-bottom-color:#d9d1c5;
+}
+body .live-layout #live-app > .schyssta-view
+.schyssta-filter-group[data-schyssta-filter-group="approved"] .schyssta-approved-extra {
+  border-top-color:#d9d1c5;
+}
