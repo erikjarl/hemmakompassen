@@ -189,6 +189,10 @@ async function verifyWarmSchysstaCanvas(){
       {authenticated:true,paired:true,role:item.role});
     try{
       await page.goto(base+'#regler',{waitUntil:'load'});
+      // Fixture rejects a forged rule on the first read; recover using its real retry control.
+      await page.getByRole('heading',{name:'Kunde inte visa listan'}).waitFor();
+      await page.evaluate(()=>{window.__HK_SCHYSSTA_CLEAN_RPC__=true;});
+      await page.locator('#schyssta-retry').click();
       await page.locator('#live-app > .schyssta-view').waitFor({state:'visible'});
       const styles=await page.evaluate(()=>{
         const main=document.querySelector('.live-main');
