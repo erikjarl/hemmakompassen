@@ -4333,6 +4333,18 @@ try{
   assert.ok(heroMetrics.titleFits&&heroMetrics.actionHeight>=40,'UX-04: title and hero action remain accessible');
   await capture(m.page,"mobile-home.png");
   await checkMobileNavigation(m.page,'390px mobile navigation');
+  // DES-01C: mobile nav gets the light palette without changing its scroll mechanics.
+  const mobileTheme=await m.page.locator('#live-mobile-nav').evaluate(nav=>{
+    const active=nav.querySelector('a[aria-current="page"]');
+    const css=getComputedStyle(nav),tab=active&&getComputedStyle(active);
+    return {background:css.backgroundColor,overflowX:css.overflowX,
+      activeBackground:tab?.backgroundColor,activeColor:tab?.color};
+  });
+  assert.equal(mobileTheme.background,'rgb(248, 242, 234)','DES-01C mobile strip is warm ivory');
+  assert.equal(mobileTheme.overflowX,'auto','DES-01C horizontal tab swipe remains available');
+  assert.equal(mobileTheme.activeBackground,'rgb(229, 231, 219)','DES-01C active tab is sage');
+  assert.equal(mobileTheme.activeColor,'rgb(48, 43, 38)','DES-01C active tab label remains legible');
+
   // UX-01: verify keyboard navigation and actual browser focus.
   const skipHash=new URL(m.page.url()).hash;
   await m.page.locator('#live-skip-to-main').focus();

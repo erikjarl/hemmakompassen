@@ -1568,3 +1568,34 @@
   }
   body .live-sidebar #live-desktop-nav a::before { color:#515b32; }
 }
+
+/* DES-01C: warm mobile tab strip; retain existing horizontal scroll/snap and tab sizing. */
+@media (max-width:800px) {
+  body #live-mobile-nav {
+    background:#f8f2ea;
+    border-top:1px solid #d9d1c5;
+    box-shadow:0 -6px 22px rgb(35 29 20 / 11%);
+    scrollbar-color:#a6a892 #f8f2ea;
+  }
+  body #live-mobile-nav > a {
+    color:#394627;
+    border-color:transparent;
+    background:transparent;
+  }
+  body #live-mobile-nav > a::before { color:#515b32; }
+  body #live-mobile-nav > a[aria-current=page] {
+    color:#302b26;
+    background:#e5e7db;
+    border:1px solid #a6a892;
+  }
+  body #live-mobile-nav > a[aria-current=page]::before { color:#394627; }
+  body #live-mobile-nav > a:focus-visible {
+    outline:3px solid #314f60;
+    outline-offset:-3px;
+  }
+  body #live-mobile-nav .live-nav-count {
+    color:#fff9f1;
+    background:#515b32;
+    border-color:#394627;
+  }
+}

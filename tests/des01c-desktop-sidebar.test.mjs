@@ -5,7 +5,9 @@ import {readFileSync} from 'node:fs';
 const css=readFileSync(new URL('../live-app.css',import.meta.url),'utf8');
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const js=readFileSync(new URL('../live-app.js',import.meta.url),'utf8');
-const scope=css.slice(css.lastIndexOf('/* DES-01C: warm desktop navigation shell'));
+const start=css.lastIndexOf('/* DES-01C: warm desktop navigation shell');
+const end=css.indexOf('/* DES-01C: warm mobile tab strip',start);
+const scope=css.slice(start,end>=0?end:undefined);
 const lum=h=>{
  const v=[0,2,4].map(i=>parseInt(h.slice(i,i+2),16)/255).map(x=>x<=.04045?x/12.92:((x+.055)/1.055)**2.4);
  return .2126*v[0]+.7152*v[1]+.0722*v[2];
@@ -23,7 +25,8 @@ test('DES-01C desktop sidebar styles stay isolated from swipeable mobile navigat
 test('DES-01C desktop navigation has readable contrast and coordinated CSS cache',()=>{
  for(const [ink,surface] of [['302b26','f8f2ea'],['394627','f8f2ea'],['302b26','e5e7db'],['665e54','f8f2ea']])
    assert.ok(ratio(ink,surface)>=4.5,ink+' on '+surface);
- const version='20261115-des01c-light-sidebar1';
+ const version=html.match(/live-app\.css\?v=(202611\d\d-[a-z0-9-]+)/)?.[1];
+ assert.ok(version,'versioned stylesheet must be present');
  assert.match(html,new RegExp('live-app\\.css\\?v='+version));
  assert.match(html,new RegExp('live-app\\.js\\?v='+version));
  assert.match(js,new RegExp('ipip50-ui\\.js\\?v='+version));
