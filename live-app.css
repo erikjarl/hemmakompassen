@@ -1634,3 +1634,37 @@
 .swipe-play-view .swipe-stage-top { color:#534c44; }
 .swipe-play-view .swipe-playing-card .swipe-stamp-no { color:#93432e; }
 .swipe-play-view .swipe-playing-card .swipe-stamp-yes { color:#394627; }
+
+
+/* DES-01E continued: warm answer controls and progress; no change to click/swipe semantics. */
+.swipe-play-view .swipe-track {
+  background:#d9d1c5;
+}
+.swipe-play-view .swipe-track-fill {
+  background:#666f3f;
+}
+.swipe-play-view .swipe-actions .swipe-choice {
+  min-height:48px;
+  background:#fff9f1;
+  color:#302b26;
+  border-color:#a6a892;
+  box-shadow:0 3px 10px rgb(35 29 20 / 7%);
+}
+.swipe-play-view .swipe-actions .swipe-yes {
+  background:#e5e7db;
+  border-color:#666f3f;
+  color:#394627;
+}
+.swipe-play-view .swipe-actions .swipe-no {
+  background:#f7dccf;
+  border-color:#af674c;
+  color:#713c2e;
+}
+.swipe-play-view .swipe-actions .swipe-choice:focus-visible {
+  outline:3px solid #314f60;
+  outline-offset:3px;
+}
+.swipe-play-view .swipe-actions .swipe-choice:disabled {
+  opacity:.55;
+  box-shadow:none;
+}
