@@ -5,7 +5,7 @@ import {readFileSync} from 'node:fs';
 const css=readFileSync(new URL('../live-app.css',import.meta.url),'utf8');
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const app=readFileSync(new URL('../live-app.js',import.meta.url),'utf8');
-const section=css.split('/* DES-01G: warm private conversation, presentation only.')[1]||'';
+const section=(css.split('/* DES-01G: warm private conversation, presentation only.')[1]||'').split('/* DES-01G: light, readable Inbox event and rule notices.')[0];
 
 test('private chat styles preserve alignment, text, receipt and keyboard focus',()=>{
  assert.ok(section);
@@ -31,7 +31,8 @@ test('private chat styles preserve alignment, text, receipt and keyboard focus',
 });
 
 test('chat style version stays coherent and existing read/privacy protections remain',()=>{
- const version='20261115-des01g-chat1';
+ const version=html.match(/name="hk-ui-version" content="([^"]+)"/)?.[1];
+ assert.match(version || '', /^20261115-des01g-[a-z0-9-]+$/);
  assert.ok(html.includes('live-app.css?v='+version));
  assert.ok(html.includes('live-app.js?v='+version));
  assert.ok(app.includes('ipip50-ui.js?v='+version));

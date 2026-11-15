@@ -1,9 +1,9 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261115-des01g-chat1';
+import {createPersonalityExperience} from './personality/ipip50-ui.js?v=20261115-des01g-events1';
 import {createAiMediatorExperience} from './ai-mediator-ui.js?v=20261110-mediator-initial1';
-import {createAiResultExperience} from './ai-result-ui.js?v=20261115-des01g-chat1';
+import {createAiResultExperience} from './ai-result-ui.js?v=20261115-des01g-events1';
 import {renderParentMiGuide} from './communication/mi-guide.js?v=20261107-authoritative-export4';
-import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261115-des01g-chat1';
+import {renderCommunicationToolkit,renderNvcExercise,buildNvcSentence,buildNvcAiPrompt,normalizeNvcAiReply,withNvcAiDeadline,buildSolutionPlan,buildReflectionPractice,communicationSkillFromHash,openCommunicationSkill} from './communication/toolkit.js?v=20261115-des01g-events1';
 import {GENERAL_CARDS,THEME_DECK_MODELS,ADVICE_BY_KEY,adviceKeyForCard,cardTextForRole} from './card-catalog.js';
 const c=window.HEMMAKOMPASSEN_BACKEND;
 const sharedPrioritiesEnabled=c.enableSharedPriorities===true;
@@ -2601,7 +2601,7 @@ function inboxView(){
   const needs=(!schysstaLoading&&!schysstaError&&schysstaListEnabled)?schysstaNeedsAnswer():[];
   const kinds={rule_proposed:'Nytt regelförslag',rule_accepted:'En regel har godkänts',
     rule_declined:'Ett regelförslag har avböjts',rule_withdrawn:'En överenskommelse har avslutats'};
-  const noticeHtml=schysstaNotifications.length?'<ul class="schyssta-list">'
+  const noticeHtml=schysstaNotifications.length?'<ul class="schyssta-list inbox-rule-events">'
     +schysstaNotifications.map(n=>'<li class="'+(n.read_at===null?'schyssta-unread':'')+'"><p><strong>'+kinds[n.kind]+'</strong>'+(n.read_at===null?' · Oläst':'')+'</p>'
       +'<p>'+esc(n.body)+'</p><p class="live-muted">Från: '+otherName+' · <time datetime="'+esc(n.created_at)+'">'+esc(familyChatTimestamp(n.created_at))+'</time></p>'
       +'<div class="schyssta-actions"><button type="button" class="live-button" data-schyssta-open="'+n.agreement_id+'">Visa regeln</button>'
@@ -2611,7 +2611,7 @@ function inboxView(){
     :schysstaLoading?card('<p role="status">Hämtar regelförfrågningar…</p>')
     :schysstaError?card('<p role="alert">'+esc(schysstaError)+'</p><button type="button" class="schyssta-secondary" id="schyssta-retry">Försök igen</button>')
     :card('<h2>Regelförfrågningar'+(needs.length?' ('+needs.length+')':'')+'</h2>'
-      +(needs.length?'<ul class="schyssta-list">'+needs.map(row=>'<li><p>'+esc(row.body)+'</p><button type="button" class="live-button" data-schyssta-open="'+row.agreement_id+'">Se och svara i Schyssta listan</button></li>').join('')+'</ul>'
+      +(needs.length?'<ul class="schyssta-list inbox-rule-requests">'+needs.map(row=>'<li><p>'+esc(row.body)+'</p><button type="button" class="live-button" data-schyssta-open="'+row.agreement_id+'">Se och svara i Schyssta listan</button></li>').join('')+'</ul>'
         :'<p class="live-muted">Inga regelförslag väntar på ditt svar.</p>')
       +'<h3 id="inbox-rules-heading" tabindex="-1">Händelser från Schyssta listan'+(schysstaUnreadCount()?' · '+schysstaUnreadCount()+(schysstaUnreadCount()===1?' oläst':' olästa'):'')+'</h3>'
       // Rule-notice actions can run directly in this inbox, so their feedback
@@ -2626,7 +2626,7 @@ function inboxView(){
         +'<button type="button" class="schyssta-secondary" data-activity-refresh>Försök igen</button>':'')
       +(!activityNotificationsError&&activityFeedback?'<p role="status" class="schyssta-feedback">'+esc(activityFeedback)+'</p>':'')
       +(activityNotificationsLoading&&!activityNotifications.length?'<p role="status">Hämtar aviseringar…</p>':'')
-      +(activityNotifications.length?'<ul class="schyssta-list">'
+      +(activityNotifications.length?'<ul class="schyssta-list inbox-activity-events">'
         +activityNotifications.map(n=>'<li class="'+(n.read_at===null?'schyssta-unread':'')+'">'
           +'<p><strong>'+(n.event_kind==='mutual_match'
             ?'Nytt gemensamt JA · '+esc(ACTIVITY_DECK_LABELS[n.deck_id])
