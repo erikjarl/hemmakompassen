@@ -64,3 +64,51 @@
     right:8px;
   }
 }
+
+/* DES-01G: warm light reporting dialog on account and app pages.
+   Styling only: preserve form validation, privacy notice and draft handling. */
+.hk-feedback-open{
+  background:#666f3f;
+  border-color:#666f3f;
+  color:#fff9f1;
+  box-shadow:0 6px 22px #302b2626;
+}
+.hk-feedback-open:hover{background:#4d562e}
+.hk-feedback-dialog{
+  background:#fff9f1;
+  border-color:#d9d1c5;
+  color:#302b26;
+  box-shadow:0 28px 90px #302b2640;
+}
+.hk-feedback-dialog::backdrop{background:#171b20b8}
+.hk-feedback-dialog select,.hk-feedback-dialog textarea{
+  background:#fffdf8;
+  color:#302b26;
+  border-color:#8b8c7b;
+}
+.hk-feedback-dialog select:focus-visible,
+.hk-feedback-dialog textarea:focus-visible,
+.hk-feedback-open:focus-visible,
+.hk-feedback-dialog button:focus-visible,
+.hk-feedback-dialog a:focus-visible{
+  outline:3px solid #314f60;
+  outline-offset:3px;
+}
+.hk-feedback-dialog button[type=submit]{
+  background:#666f3f;
+  color:#fff9f1;
+}
+.hk-feedback-dialog button[type=submit]:hover{background:#4d562e}
+.hk-feedback-dialog button[type=button]{
+  background:#f8f2ea;
+  border-color:#8b8c7b;
+  color:#302b26;
+}
+.hk-feedback-dialog button[type=button]:hover{background:#e5e7db}
+.hk-feedback-dialog .hk-feedback-note{color:#534c44}
+.hk-feedback-dialog .hk-feedback-note a{
+  color:#394627;
+  text-decoration:underline;
+  text-underline-offset:3px;
+}
+#hk-feedback-status{color:#302b26}
