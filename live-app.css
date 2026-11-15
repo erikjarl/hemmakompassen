@@ -1668,3 +1668,41 @@
   opacity:.55;
   box-shadow:none;
 }
+
+
+/* DES-01E: warm optional filter and private export, preserving disclosure and privacy. */
+.swipe-play-view .swipe-category-filter {
+  background:#fff9f1;
+  border-color:#d9d1c5;
+  color:#302b26;
+}
+.swipe-play-view .swipe-category-filter label,
+.swipe-play-view .swipe-category-filter summary {
+  color:#394627;
+}
+.swipe-play-view .swipe-category-filter select {
+  background:#fff9f1;
+  border-color:#a6a892;
+  color:#302b26;
+}
+.swipe-play-view .swipe-category-filter select:focus-visible,
+.swipe-play-view .swipe-category-filter summary:focus-visible {
+  outline:3px solid #314f60;
+  outline-offset:3px;
+}
+.swipe-play-view .swipe-category-filter p { color:#665e54; }
+.swipe-play-view > .swipe-private-export {
+  background:#fff9f1;
+  border-color:#d9d1c5;
+  color:#302b26;
+}
+.swipe-play-view > .swipe-private-export h2,
+.swipe-play-view > .swipe-private-export h3 { color:#302b26; }
+.swipe-play-view > .swipe-private-export p,
+.swipe-play-view > .swipe-private-export .live-muted { color:#665e54; }
+.swipe-play-view > .swipe-private-export summary,
+.swipe-play-view > .swipe-private-export a { color:#394627; }
+.swipe-play-view > .swipe-private-export :focus-visible {
+  outline:3px solid #314f60;
+  outline-offset:3px;
+}
