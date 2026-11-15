@@ -1827,3 +1827,65 @@
   outline:3px solid #314f60;
   outline-offset:3px;
 }
+
+
+/* DES-01E: light, readable mutual-match summary. Display only; no change to
+   RPC-confirmed matches, private priorities, share controls or disclosure. */
+.swipe-results {
+  background:#fff9f1;
+  border-color:#d9d1c5;
+  color:#302b26;
+}
+.swipe-results h2 { color:#302b26; }
+.swipe-results h3,
+.swipe-results .swipe-match-theme h4,
+.swipe-results .swipe-match-category,
+.swipe-results .swipe-summary-label { color:#394627; }
+.swipe-results .swipe-match-list li,
+.swipe-results .swipe-summary-overview li {
+  background:#f8f2ea;
+  color:#302b26;
+  border-color:#d9d1c5;
+}
+.swipe-results .swipe-rule-summary,
+.swipe-results .swipe-fact-summary {
+  background:#e5e7db;
+  border-left-color:#666f3f;
+  color:#302b26;
+}
+.swipe-results .swipe-summary-overview h4 { color:#394627; }
+.swipe-results .swipe-summary-icon {
+  color:#394627;
+  border-color:#a6a892;
+  background:#e5e7db;
+}
+.swipe-results .swipe-summary-details { border-top-color:#d9d1c5; }
+.swipe-results .swipe-summary-details summary { color:#394627; }
+.swipe-results .swipe-summary-details summary:focus-visible,
+.swipe-results .swipe-priority-share:focus-visible {
+  outline:3px solid #314f60;
+  outline-offset:3px;
+}
+.swipe-results .swipe-priority-summary {
+  background:#f8f2ea;
+  border-color:#a6a892;
+  color:#302b26;
+  box-shadow:0 8px 20px rgb(48 43 38 / 6%);
+}
+.swipe-results .swipe-priority-summary h3,
+.swipe-results .swipe-priority-theme h4 { color:#394627; }
+.swipe-results .swipe-priority-theme { border-top-color:#d9d1c5; }
+.swipe-results .swipe-priority-share {
+  background:#e5e7db;
+  color:#394627;
+  border-color:#666f3f;
+}
+.swipe-results .swipe-priority-share[aria-pressed="true"] {
+  background:#394627;
+  color:#fff9f1;
+}
+.swipe-results .swipe-priority-share-status {
+  color:#302b26;
+  background:#e5e7db;
+  border-left-color:#666f3f;
+}

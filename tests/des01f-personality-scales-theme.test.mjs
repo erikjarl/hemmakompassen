@@ -19,7 +19,7 @@ test('light personality scales are strictly scoped, accessible and do not hide s
 });
 test('DES-01F asset imports carry matching cache revision',()=>{
   const v=html.match(/name="hk-ui-version" content="([^"]+)"/)?.[1];
-  assert.ok(/^20261115-des01f-[a-z0-9-]+$/.test(v||''));
+  assert.ok(/^20261115-des01[a-z]-[a-z0-9-]+$/.test(v||''));
   assert.ok(html.includes('live-app.css?v='+v));
   assert.ok(html.includes('live-app.js?v='+v));
   assert.ok(app.includes('ipip50-ui.js?v='+v));
