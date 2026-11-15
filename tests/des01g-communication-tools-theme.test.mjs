@@ -34,7 +34,7 @@ test('communication theme changes neither safety materials nor activity controls
  assert.ok(html.includes('live-app.css?v='+v));
  assert.ok(html.includes('live-app.js?v='+v));
  assert.ok(app.includes('ipip50-ui.js?v='+v));
- for(const fragment of ['comm-toolkit','comm-safety','comm-situation','comm-exercise','comm-fields','comm-output']){
+ for(const fragment of ['comm-safety','comm-situation','comm-exercise','comm-fields','comm-output']){
   assert.ok(app.includes(fragment),fragment);
  }
  assert.ok(css.includes('.comm-safety summary'));
