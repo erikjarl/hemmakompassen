@@ -22,7 +22,7 @@ test('account pairing and status panels remain scoped to account',()=>{
  assert.doesNotMatch(stage,/display\s*:\s*none|visibility\s*:\s*hidden|pointer-events\s*:\s*none/);
 });
 test('account updates cache without changing its pairing or feedback controls',()=>{
- assert.ok(html.includes('design-tokens.css?v=20261114-des01b-account1&stage=account-panels2'));
+ assert.ok(html.includes('design-tokens.css?v=20261114-des01b-account1&stage=account-status-neutral3'));
  for(const id of ['create-family','role','waiting','invite-qr','invite-code','accept-form',
  'refresh-account-status','status','hk-feedback-dialog','logout']){
    assert.ok(html.includes('id="'+id+'"'),id);

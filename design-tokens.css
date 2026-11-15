@@ -177,8 +177,16 @@ body.hk-light-account :is(#status,#refresh-account-status,#invite-notice,#new-in
   overflow-wrap:anywhere;
   line-height:1.5;
 }
+/* Status strings may report success, failure or an unverified outcome.
+   Keep them neutral; only the separately verified invite notice has an accent. */
 body.hk-light-account #status:not(:empty),
-body.hk-light-account #refresh-account-status:not(:empty),
+body.hk-light-account #refresh-account-status:not(:empty){
+  padding:12px 14px;
+  background:var(--hk-surface-alt);
+  border-left:4px solid #8b8c7b;
+  border-radius:10px;
+  color:var(--hk-ink);
+}
 body.hk-light-account #invite-notice:not(.hidden){
   padding:12px 14px;
   background:var(--hk-sage-pale);
