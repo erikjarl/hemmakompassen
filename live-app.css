@@ -2237,3 +2237,43 @@
 }
 .mediator-view .mediator-error { color:#9b3026; }
 .mediator-view #mediator-status { color:#534c44; }
+
+
+/* DES-01G: private mediator history and optional AI context, presentation only.
+   Preserve per-account history, explicit opt-out and server-side context rules. */
+.mediator-view .mediator-history {
+  background:#fff9f1;
+  border-color:#d9d1c5;
+  color:#302b26;
+}
+.mediator-view .mediator-history-heading h2 { color:#302b26; }
+.mediator-view .mediator-thread-list button {
+  background:#f8f2ea;
+  border-color:#a6a892;
+  color:#302b26;
+  min-height:44px;
+}
+.mediator-view .mediator-thread-list button[aria-current="true"] {
+  background:#e5e7db;
+  border-color:#666f3f;
+  color:#394627;
+  font-weight:700;
+}
+.mediator-view .mediator-thread-list button:focus-visible,
+.mediator-view .mediator-context-choice input:focus-visible {
+  outline:3px solid #314f60;
+  outline-offset:3px;
+}
+.mediator-view .mediator-context-choice {
+  background:#fff9f1;
+  border-color:#a6a892;
+  color:#302b26;
+}
+.mediator-view .mediator-context-choice input { accent-color:#666f3f; }
+.mediator-view .mediator-context {
+  background:#e5e7db;
+  border-color:#a6a892;
+  color:#302b26;
+}
+.mediator-view .mediator-context h2 { color:#394627; }
+.mediator-view .mediator-context p { color:#534c44; }
