@@ -181,6 +181,41 @@ async function verifyWarmHomeCanvas(){
   }
 }
 
+async function verifyWarmSchysstaCanvas(){
+  // Synthetically authenticated role fixtures, not an actual two-account acceptance test.
+  for(const item of [{width:320,role:'parent'},{width:390,role:'teen'},{width:1280,role:'parent'}]){
+    const {context,page}=await freshContext(
+      {viewport:{width:item.width,height:844}},
+      {authenticated:true,paired:true,role:item.role});
+    try{
+      await page.goto(base+'#regler',{waitUntil:'load'});
+      await page.locator('#live-app > .schyssta-view').waitFor({state:'visible'});
+      const styles=await page.evaluate(()=>{
+        const main=document.querySelector('.live-main');
+        const title=document.querySelector('.schyssta-view .schyssta-page-intro h1');
+        const intro=document.querySelector('.schyssta-view .schyssta-page-intro p');
+        return {
+          background:getComputedStyle(main).backgroundColor,
+          title:getComputedStyle(title).color,
+          intro:getComputedStyle(intro).color,
+          nav:!!document.querySelector('#live-mobile-nav')
+        };
+      });
+      assert.deepEqual(styles,{
+        background:'rgb(248, 242, 234)',
+        title:'rgb(48, 43, 38)',
+        intro:'rgb(102, 94, 84)',
+        nav:true
+      },'DES-01G Schyssta canvas '+item.width+' '+item.role);
+      await checkOverflow(page,'DES-01G Schyssta '+item.width+' '+item.role);
+      await page.screenshot({
+        path:path.join(output,'des01g-schyssta-canvas-'+item.width+'-'+item.role+'.png'),
+        animations:'disabled'
+      });
+    }finally{await context.close();}
+  }
+}
+
 async function verifyDesktopSidebarBrand(){
   for(const width of [821,1024,1440]){
     const {context,page}=await freshContext({viewport:{width,height:900}},{authenticated:true,paired:true});
@@ -4297,6 +4332,7 @@ try{
   await verifySchysstaMobileHierarchy();
   await verifyInboxInsightsPriority();
   await verifyDesktopSidebarBrand();
+  await verifyWarmSchysstaCanvas();
   await verifyWarmHomeCanvas();
   const login=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true});
   await login.page.locator("#live-login").waitFor();
