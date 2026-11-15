@@ -1,6 +1,6 @@
 # Hemmakompassen – aktiv roadmap
 
-## Snabböversikt – 13 november 2026
+## Snabböversikt – 15 november 2026
 
 **Syfte:** Hitta nästa genomförbara arbete utan att behöva läsa hela ändringshistoriken. Detaljer, acceptanskriterier och verifieringslogg finns längre ned i **den här filen**; sammanfattningen är ingen ny parallell arbetskö.
 
@@ -12,9 +12,9 @@
 | **P1 · UX-READ-01** | Ta en konkret vy i taget: primärt resultat först, tydlig nästa handling, kort svenska, bibehållen sekretess- och felinformation. Fortsätt med hem/dashboard, personlighet och övriga vyer efter pågående arbete i Gillaswajpen, Schyssta listan och Inkorgen. | Automatiska funktionstester, mobil 320/390 px, tangentbord och helst autentiserat uppgiftstest. |
 | **P1 · Drift/verifiering** | Bekräfta att mergad `main` faktiskt serveras via Pages; undersök möjligheten till fysisk Safari-testning. | Dokumentera källa, tidpunkt och vad som faktiskt kontrollerats. |
 
-**Senast lästa rapportläge:** 13/11, läsbaserad `SELECT` i `public.test_feedback`: **7 öppna** (2 `new`, 5 `reviewing`); de två nya förslagen gäller AI-reflektion högre upp i Inkorgen och tidigare, tydligare ingång till fler kortlekar. Inga rapportstatusar eller användarsvar ändrade. Detta är en ögonblicksbild, inte ett löfte om att antalet förblir oförändrat.
+**Senast lästa rapportläge:** 15/11, läsbaserad `SELECT` i `public.test_feedback`: **7 öppna** (2 `new`, 5 `reviewing`); de två nya förslagen gäller AI-reflektion högre upp i Inkorgen och tidigare, tydligare ingång till fler kortlekar. Inga rapportstatusar eller användarsvar ändrade. Detta är en ögonblicksbild, inte ett löfte om att antalet förblir oförändrat.
 
-**Senast dokumenterad kodbaslinje:** PR [#473](https://github.com/erikjarl/hemmakompassen/pull/473), [UI-browser-CI #43518509443](https://github.com/erikjarl/hemmakompassen/actions/runs/43518509443) `success`, squash-mergad som [`9d58dff`](https://github.com/erikjarl/hemmakompassen/commit/9d58dffac8c03c99a17cf88ad7a3aaa7355e9e94). Verklig tvåkontoverifiering, fysisk Safari och separat kontroll av serverad Pages-version saknas fortfarande.
+**Senast verifierade designleverans på `main`:** PR [#485](https://github.com/erikjarl/hemmakompassen/pull/485), [UI-browser-CI #43664213114](https://github.com/erikjarl/hemmakompassen/actions/runs/43664213114) `success`, squash-mergad som [`5238aec`](https://github.com/erikjarl/hemmakompassen/commit/5238aec49892070b58853163755633d4edf685a3). Pågående [PR #486](https://github.com/erikjarl/hemmakompassen/pull/486) är **inte** därmed verifierad eller mergad. Verklig tvåkontoverifiering, fysisk Safari och separat kontroll av serverad Pages-version saknas fortfarande.
 
 ---
 
