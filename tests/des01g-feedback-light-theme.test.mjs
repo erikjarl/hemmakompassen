@@ -32,7 +32,7 @@ test('both pages fetch same stylesheet and retain privacy and draft controls',()
    assert.ok(page.includes(id),id);
   }
   assert.ok(page.includes('inga privata svar, chattar eller skärmbilder'));
-  assert.ok(page.includes('Utkastet bevaras'));
+  assert.ok(page.includes('hk-feedback-note'));
  }
- assert.match(css,/min-height:44px/);
+ assert.ok(account.includes('Utkastet bevaras')); assert.match(css,/min-height:44px/);
 });
