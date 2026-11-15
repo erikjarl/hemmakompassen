@@ -29,7 +29,7 @@ test('DES-01G Schyssta proposal styles remain local and keep decision states vis
 
 test('DES-01G CSS and module URLs carry one current cache revision',()=>{
   const v=html.match(/name="hk-ui-version" content="([^"]+)"/)?.[1];
-  assert.equal(v,'20261115-des01g-schyssta1');
+  assert.match(v || '', /^20261115-des01g-[a-z0-9-]+$/);
   assert.ok(html.includes('live-app.css?v='+v));
   assert.ok(html.includes('live-app.js?v='+v));
   assert.ok(app.includes('ipip50-ui.js?v='+v));

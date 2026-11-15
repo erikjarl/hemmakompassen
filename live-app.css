@@ -1960,3 +1960,14 @@
   outline:3px solid #314f60;
   outline-offset:3px;
 }
+
+
+/* DES-01G follow-up: approved-rule disclosure must remain readable on the
+   newly light Schyssta cards. Text, arrow, focus and divider only. */
+.schyssta-view .schyssta-approved-details>summary>p { color:#302b26; }
+.schyssta-view .schyssta-approved-details>summary::after { color:#394627; }
+.schyssta-view .schyssta-approved-details>summary:focus-visible {
+  outline:3px solid #314f60;
+  outline-offset:-4px;
+}
+.schyssta-view .schyssta-approved-extra { border-top-color:#d9d1c5; }
