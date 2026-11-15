@@ -142,3 +142,65 @@ body.hk-light-account .hk-feedback-dialog button[type=button] {
 @media (prefers-reduced-motion: reduce) {
   body.hk-light-account { scroll-behavior: auto; }
 }
+
+/* DES-01G: readable account pairing and status panels.
+   Visual-only: pairing, invitation codes and status messages retain their behavior. */
+body.hk-light-account #logged-in > section,
+body.hk-light-account #logged-in > form,
+body.hk-light-account #logged-in > #unpaired,
+body.hk-light-account #logged-in > #waiting,
+body.hk-light-account #logged-in > #family,
+body.hk-light-account #logged-in > #join-family{
+  min-width:0;
+  padding:clamp(14px,3vw,20px);
+  border:1px solid var(--hk-border);
+  border-radius:16px;
+  background:var(--hk-surface);
+}
+body.hk-light-account #logged-in > section h2{
+  margin:0;
+  line-height:1.25;
+}
+body.hk-light-account #logged-in > a[href="./index.html"]{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  align-self:start;
+  min-height:44px;
+  padding:10px 16px;
+  border-radius:11px;
+  background:var(--hk-olive);
+  color:#fff9f1;
+  font-weight:700;
+}
+body.hk-light-account :is(#status,#refresh-account-status,#invite-notice,#new-invite){
+  overflow-wrap:anywhere;
+  line-height:1.5;
+}
+body.hk-light-account #status:not(:empty),
+body.hk-light-account #refresh-account-status:not(:empty),
+body.hk-light-account #invite-notice:not(.hidden){
+  padding:12px 14px;
+  background:var(--hk-sage-pale);
+  border-left:4px solid var(--hk-olive);
+  border-radius:10px;
+  color:var(--hk-ink);
+}
+body.hk-light-account #join-help{
+  margin:0;
+  line-height:1.55;
+}
+body.hk-light-account #new-invite:not(:empty){
+  padding:12px;
+  border:1px solid var(--hk-border);
+  border-radius:10px;
+  background:var(--hk-sage-pale);
+  color:var(--hk-ink);
+}
+body.hk-light-account .pairing-qr figcaption{
+  line-height:1.5;
+}
+@media(max-width:580px){
+  body.hk-light-account #logged-in > section,
+  body.hk-light-account #logged-in > form{padding:14px}
+}
