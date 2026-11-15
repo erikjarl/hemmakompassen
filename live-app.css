@@ -1786,3 +1786,44 @@
 @media(max-width:420px) {
   .pf-percentile-chart .pf-scale-row { padding:13px 11px; border-radius:14px; }
 }
+
+
+/* DES-01F: warm family reflection reading surface; content and disclosure remain unchanged. */
+.pf-family-reflections {
+  background:#fff9f1;
+  border-color:#d9d1c5;
+  color:#302b26;
+  box-shadow:0 8px 25px rgb(48 43 38 / 7%);
+}
+.pf-family-reflections h3,
+.pf-family-reflections .pf-insight-header h5 { color:#302b26; }
+.pf-family-reflections .pf-insight-audience,
+.pf-family-reflections .pf-insight-type,
+.pf-family-reflections .pf-insight-group > h4 { color:#394627; }
+.pf-family-reflections .pf-insight-similarity .pf-insight-type { color:#4d6549; }
+.pf-family-reflections .pf-insight-intro,
+.pf-family-reflections .pf-insight-overview,
+.pf-family-reflections .pf-insight-empty,
+.pf-family-reflections .pf-insight-card p,
+.pf-family-reflections .pf-insight-card .pf-insight-context,
+.pf-family-reflections .pf-insight-card .pf-reflection-context,
+.pf-family-reflections .pf-insight-card .pf-insight-narrative,
+.pf-family-reflections .pf-insight-card .pf-insight-question,
+.pf-family-reflections .pf-insight-method p { color:#534c44!important; }
+.pf-family-reflections .pf-insight-overview { border-left-color:#a6a892; }
+.pf-family-reflections .pf-insight-card,
+.pf-family-reflections .pf-insight-more,
+.pf-family-reflections .pf-insight-method { border-top-color:#d9d1c5; }
+.pf-family-reflections .pf-insight-resource {
+  background:#e5e7db;
+  border-color:#a6a892;
+}
+.pf-family-reflections .pf-insight-resource a { color:#394627; }
+.pf-family-reflections .pf-insight-resource p { color:#534c44; }
+.pf-family-reflections .pf-insight-more summary,
+.pf-family-reflections .pf-insight-method summary { color:#394627; }
+.pf-family-reflections details summary:focus-visible,
+.pf-family-reflections .pf-insight-resource a:focus-visible {
+  outline:3px solid #314f60;
+  outline-offset:3px;
+}
