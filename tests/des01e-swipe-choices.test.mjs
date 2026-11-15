@@ -26,7 +26,7 @@ test('warm progress and answer palette remains semantically distinct',()=>{
 });
 test('new CSS version matches HTML and JS module imports',()=>{
   const version=html.match(/name="hk-ui-version" content="([^"]+)"/)?.[1];
-  assert.match(version || '', /^20261115-des01e-[a-z0-9-]+$/);
+  assert.match(version || '', /^20261115-des01[ef]-[a-z0-9-]+$/);
   assert.ok(html.includes('live-app.css?v='+version));
   assert.ok(html.includes('live-app.js?v='+version));
   assert.ok(app.includes('ipip50-ui.js?v='+version));

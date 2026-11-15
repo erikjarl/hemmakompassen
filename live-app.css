@@ -1733,3 +1733,56 @@
 .swipe-themes .swipe-more-decks[open] > summary {
   border-bottom-color:#d9d1c5;
 }
+
+
+/* DES-01F: light personality result scales. Modeled P≈ values, marker positions
+   and five statistical SD zones retain their existing meaning and logic. */
+.pf-percentile-chart {
+  color:#302b26;
+}
+.pf-percentile-chart .pf-scale-row {
+  background:#fff9f1;
+  border:1px solid #d9d1c5;
+  border-radius:18px;
+  padding:15px clamp(12px,3vw,20px);
+  box-shadow:0 5px 16px rgb(48 43 38 / 5%);
+}
+.pf-percentile-chart .pf-scale-row h3 { color:#302b26; }
+.pf-percentile-chart .pf-scale-bands {
+  border-color:#9a9588;
+  background:#ece4d6;
+}
+.pf-percentile-chart .pf-band-very-low { background:#d8c8da; }
+.pf-percentile-chart .pf-band-low { background:#d7e0da; }
+.pf-percentile-chart .pf-band-average { background:#a6a892; }
+.pf-percentile-chart .pf-band-high { background:#bdc99d; }
+.pf-percentile-chart .pf-band-very-high { background:#e9bfa7; }
+.pf-percentile-chart .pf-scale-grid i { background:rgb(48 43 38 / 36%); }
+.pf-percentile-chart .pf-scale-grid i.pf-median { background:#302b26; }
+.pf-percentile-chart .pf-score-own {
+  background:#394627;
+  border:2px solid #fff9f1;
+  box-shadow:0 0 0 2px #394627;
+}
+.pf-percentile-chart .pf-score-other {
+  background:#fff9f1;
+  border:3px dashed #713c2e;
+  box-shadow:0 0 0 1px #713c2e;
+}
+.pf-percentile-chart .pf-pct-axis,
+.pf-percentile-chart .pf-scale-summary,
+.pf-percentile-chart .pf-chart-description,
+.pf-percentile-chart .pf-band-key { color:#534c44; }
+.pf-percentile-chart .pf-chart-help {
+  background:#fff9f1;
+  color:#302b26;
+  border-color:#d9d1c5;
+}
+.pf-percentile-chart .pf-chart-help summary { color:#394627; }
+.pf-percentile-chart .pf-chart-help summary:focus-visible {
+  outline:3px solid #314f60;
+  outline-offset:3px;
+}
+@media(max-width:420px) {
+  .pf-percentile-chart .pf-scale-row { padding:13px 11px; border-radius:14px; }
+}
