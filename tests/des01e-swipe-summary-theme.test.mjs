@@ -6,7 +6,7 @@ const css = readFileSync(new URL('../live-app.css', import.meta.url), 'utf8');
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const app = readFileSync(new URL('../live-app.js', import.meta.url), 'utf8');
 const personality = readFileSync(new URL('../personality/ipip50-ui.js', import.meta.url), 'utf8');
-const stage = css.split('/* DES-01E: light, readable mutual-match summary.')[1] || '';
+const stage = (css.split('/* DES-01E: light, readable mutual-match summary.')[1] || '').split('/* DES-01G: readable Schyssta proposal/decision surfaces.')[0];
 
 test('DES-01E mutual-match summary styles are scoped and have accessible colors', () => {
   assert.ok(stage, 'the targeted summary stage must exist');
@@ -27,7 +27,8 @@ test('DES-01E mutual-match summary styles are scoped and have accessible colors'
 });
 
 test('DES-01E summary cache marker remains coherent across served HTML and module imports', () => {
-  const revision = '20261115-des01e-summary1';
+  const revision = html.match(/name="hk-ui-version" content="([^"]+)"/)?.[1];
+  assert.match(revision || '', /^20261115-des01[a-z]-[a-z0-9-]+$/);
   assert.ok(html.includes('live-app.css?v=' + revision));
   assert.ok(html.includes('live-app.js?v=' + revision));
   assert.ok(app.includes('ipip50-ui.js?v=' + revision));
