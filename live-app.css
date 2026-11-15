@@ -1706,3 +1706,30 @@
   outline:3px solid #314f60;
   outline-offset:3px;
 }
+
+
+/* DES-01E: warmer optional themed-deck disclosure; retain structure and behaviors. */
+.swipe-themes .swipe-more-decks {
+  background:#fff9f1;
+  border-color:#d9d1c5;
+  color:#302b26;
+}
+.swipe-themes .swipe-more-decks > summary {
+  color:#302b26;
+}
+.swipe-themes .swipe-more-decks > summary:hover { background:#e5e7db; }
+.swipe-themes .swipe-more-decks-label small { color:#665e54; }
+.swipe-themes .swipe-more-decks-icon {
+  background:#e5e7db;
+  color:#394627;
+}
+.swipe-themes .swipe-more-decks > summary::after {
+  background:#515b32;
+  color:#fff9f1;
+}
+.swipe-themes .swipe-more-decks > summary:focus-visible {
+  outline:3px solid #314f60;
+}
+.swipe-themes .swipe-more-decks[open] > summary {
+  border-bottom-color:#d9d1c5;
+}
