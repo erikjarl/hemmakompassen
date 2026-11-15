@@ -2015,3 +2015,75 @@
   color:#394627;
 }
 .inbox-refresh-actions > [role="status"] { color:#534c44; }
+
+
+/* DES-01G: warm private conversation, presentation only. The different
+   bubble alignments, author labels, read receipts and explicit read actions
+   retain their existing DOM and behaviour. */
+.family-chat-history {
+  background:#f8f2ea;
+  border-color:#d9d1c5;
+  color:#302b26;
+}
+.family-chat-bubble {
+  background:#fff9f1;
+  border-color:#d9d1c5;
+  color:#302b26;
+  box-shadow:0 3px 10px rgb(48 43 38 / 5%);
+}
+.family-chat-mine {
+  background:#e5e7db;
+  border-color:#a6a892;
+}
+.family-chat-theirs {
+  background:#fff9f1;
+  border-color:#d9d1c5;
+}
+.family-chat-author {
+  color:#394627;
+}
+.family-chat-text {
+  color:#302b26;
+}
+.family-chat-receipt {
+  color:#534c44;
+}
+.family-chat-form label {
+  color:#394627;
+}
+.family-chat-form textarea {
+  background:#fff9f1;
+  color:#302b26;
+  border-color:#a6a892;
+}
+.family-chat-form textarea::placeholder {
+  color:#675e53;
+}
+.family-chat-form textarea:focus-visible,
+.family-chat button:focus-visible,
+.family-chat-history button:focus-visible {
+  outline:3px solid #314f60;
+  outline-offset:2px;
+}
+.family-chat-read-controls {
+  background:#e5e7db;
+  border-color:#a6a892;
+  color:#302b26;
+}
+.family-chat-read-controls p {
+  color:#302b26;
+}
+.family-chat-read-controls button,
+.family-chat-compose-actions button {
+  min-height:44px;
+}
+.family-chat .schyssta-feedback {
+  background:#e5e7db;
+  color:#302b26;
+  border-left-color:#666f3f;
+}
+@media(max-width:480px) {
+  .family-chat-bubble {
+    max-width:95%;
+  }
+}
