@@ -18,6 +18,9 @@
 
 ---
 
+**15/11 – Jobb hk, DES-01F CI-korrigering PR #488:** Första fullständiga [CI #43672296014](https://github.com/erikjarl/hemmakompassen/actions/runs/43672296014) avslutades med `failure`: 784 av 787 Node-tester passerade, medan tre äldre DES-01E-kontrakt läste senare CSS-regler eller krävde det tidigare cacheprefixet. De tre testkontrakten har avgränsats till rätt visuellt steg och accepterar nu även DES-01F-cacheversion utan förändring av produktens interaktion, IPIP-beräkningar, delning eller användarsvar. **Nytt fullständigt CI-resultat, merge, serverad Pages-version, fysisk Safari och verkliga tvåkontotester återstår att verifiera.** Supabase `public.test_feedback` kontrollerades read-only: 7 öppna (2 `new`, 5 `reviewing`); inga rapportstatusar ändrade. UX-READ-01: samma fem resultatskalor och metodförklaringar kvar, med tydligare ljus visuell hierarki.
+
+
 **15/11 – Jobb hk, PR #487 verifierad och mergad; DES-01F på arbetsgren:** PR #487:s CI #43671041661 slutade med `success`; squash-merge till `main` som `e4430b9230324163440e7515da328db5e7470cf2`. Nästa del `design/des01f-light-personality-scales-20261115` gör enbart de fem befintliga IPIP-resultatskalorna ljusa med fem fortsatt skilda SD-zoner, fortsatt två visuellt skilda markörer och tydlig fokusring på metodförklaringen. Beräknade P≈, referensbegränsningar, svar, delning och rättigheter ska förbli oförändrade. CSS och cacheversion synkade, Node-kontrakt tillagda, tidigare testkontrakt görs oberoende av efterföljande cacheetiketter. **CI, PR-merge, fysisk Safari, Pages och verkliga tvåkontotester för DES-01F är inte verifierade.** Rapporter read-only: 7 öppna, 2 `new` och 5 `reviewing`; inga rapportstatusar eller användarsvar ändrade. UX-READ-01: skalans huvudinformation först, metodförklaring fortsatt tillgänglig.
 
 ---
