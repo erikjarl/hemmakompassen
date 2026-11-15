@@ -1599,3 +1599,38 @@
     border-color:#394627;
   }
 }
+
+
+/* DES-01E: first warm swipe question surface. Only visual styles;
+   retain all choice targets, gestures, private slider and status behavior. */
+.swipe-play-view .swipe-stage {
+  background:#ece4d6;
+  border:1px solid #d9d1c5;
+  color:#302b26;
+}
+.swipe-play-view .swipe-playing-card {
+  background:#fff9f1;
+  border:1px solid #d9d1c5;
+  color:#302b26;
+  box-shadow:0 12px 28px rgb(35 29 20 / 9%);
+}
+.swipe-play-view .swipe-playing-card h2 { color:#302b26; }
+.swipe-play-view .swipe-playing-card .swipe-card-hint { color:#665e54; }
+.swipe-play-view .swipe-playing-card .swipe-category {
+  color:#394627;
+  background:#e5e7db;
+  border-color:#a6a892;
+}
+.swipe-play-view .swipe-importance {
+  background:#e5e7db;
+  border-color:#a6a892;
+}
+.swipe-play-view .swipe-importance-title,
+.swipe-play-view .swipe-importance-scale { color:#394627; }
+.swipe-play-view .swipe-importance-status { color:#665e54; }
+.swipe-play-view .swipe-importance input[type=range]:focus-visible {
+  outline:3px solid #314f60;
+}
+.swipe-play-view .swipe-stage-top { color:#534c44; }
+.swipe-play-view .swipe-playing-card .swipe-stamp-no { color:#93432e; }
+.swipe-play-view .swipe-playing-card .swipe-stamp-yes { color:#394627; }
