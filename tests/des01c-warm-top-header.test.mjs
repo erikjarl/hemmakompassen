@@ -24,3 +24,10 @@ test('existing navigation and feedback remain intact',()=>{
   assert.ok(html.includes('&top=warm-header1'));
   assert.ok(html.includes('id="live-app"'));
 });
+
+test('short landscape keeps header compact without hiding navigation',()=>{
+  assert.ok(stage.includes('(max-width:800px) and (max-height:450px)'));
+  assert.ok(stage.includes('margin-bottom:0;'));
+  assert.ok(stage.includes('body .live-layout .live-main .live-top #account-link'));
+  assert.ok(html.includes('id="live-mobile-nav"'));
+});
