@@ -1889,3 +1889,74 @@
   background:#e5e7db;
   border-left-color:#666f3f;
 }
+
+
+/* DES-01G: readable Schyssta proposal/decision surfaces. Visual styling only;
+   preserve both parties' independent votes, status, history and errors. */
+.schyssta-view .schyssta-list > li {
+  background:#fff9f1;
+  color:#302b26;
+  border-color:#d9d1c5;
+  box-shadow:0 5px 16px rgb(48 43 38 / 5%);
+}
+.schyssta-view .schyssta-list > li > p,
+.schyssta-view .schyssta-own-proposal-note { color:#534c44; }
+.schyssta-view .schyssta-status { color:#534c44; }
+.schyssta-view .schyssta-status strong { color:#394627; }
+.schyssta-view .schyssta-unread {
+  border-color:#a6a892!important;
+  box-shadow:inset 4px 0 0 #666f3f;
+}
+.schyssta-view .schyssta-unread strong { color:#394627; }
+.schyssta-view .schyssta-secondary {
+  background:#e5e7db;
+  border-color:#a6a892;
+  color:#394627;
+  min-height:44px;
+}
+.schyssta-view .schyssta-secondary:focus-visible,
+.schyssta-view .schyssta-actions button:focus-visible,
+.schyssta-view .schyssta-confirm button:focus-visible {
+  outline:3px solid #314f60;
+  outline-offset:3px;
+}
+.schyssta-view .schyssta-confirm,
+.schyssta-view .schyssta-feedback,
+.schyssta-view .schyssta-preview,
+.schyssta-view .schyssta-review,
+.schyssta-view .schyssta-history {
+  background:#e5e7db;
+  color:#302b26;
+  border-color:#a6a892;
+}
+.schyssta-view .schyssta-history summary,
+.schyssta-view .schyssta-review summary { color:#394627; }
+.schyssta-view .schyssta-history summary:focus-visible,
+.schyssta-view .schyssta-review summary:focus-visible {
+  outline:3px solid #314f60;
+  outline-offset:3px;
+}
+.schyssta-view .schyssta-preview > strong { color:#394627; }
+.schyssta-view .schyssta-compose label,
+.schyssta-view .schyssta-copy-manual label { color:#394627; }
+.schyssta-view .schyssta-compose textarea,
+.schyssta-view .schyssta-copy-manual textarea {
+  background:#fff9f1;
+  border-color:#a6a892;
+  color:#302b26;
+}
+.schyssta-view .schyssta-compose textarea:focus-visible,
+.schyssta-view .schyssta-copy-manual textarea:focus-visible {
+  outline:3px solid #314f60;
+  outline-offset:2px;
+}
+.schyssta-view .schyssta-tips {
+  background:#f8f2ea;
+  color:#302b26;
+  border-color:#d9d1c5;
+}
+.schyssta-view .schyssta-tips summary { color:#394627; }
+.schyssta-view .schyssta-tips summary:focus-visible {
+  outline:3px solid #314f60;
+  outline-offset:3px;
+}

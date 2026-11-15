@@ -28,7 +28,7 @@ test('DES-01E light swipe palette keeps dark readable foreground and keyboard fo
 });
 test('DES-01E CSS and module cache revisions agree', () => {
   const version = html.match(/name="hk-ui-version" content="([^"]+)"/)?.[1];
-  assert.ok(/^20261115-des01[ef]-/.test(version || ''));
+  assert.ok(/^20261115-des01[efg]-/.test(version || ''));
   assert.ok(html.includes('live-app.css?v=' + version));
   assert.ok(html.includes('live-app.js?v=' + version));
   assert.ok(app.includes('ipip50-ui.js?v=' + version));
