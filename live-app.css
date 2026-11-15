@@ -1971,3 +1971,47 @@
   outline-offset:-4px;
 }
 .schyssta-view .schyssta-approved-extra { border-top-color:#d9d1c5; }
+
+
+/* DES-01G: accessible light Inbox priorities. Both the consent-guarded
+   insights panel and independent unread counts remain in their original order. */
+.inbox-insights-shortcut {
+  background:#fff9f1;
+  border-color:#d9d1c5;
+  color:#302b26;
+  box-shadow:0 8px 24px rgb(48 43 38 / 7%);
+}
+.inbox-insights-shortcut h2 { color:#302b26; }
+.inbox-insights-shortcut p { color:#534c44; }
+.inbox-insights-shortcut a { color:#394627; }
+.inbox-insights-shortcut a:focus-visible {
+  outline:3px solid #314f60;
+  outline-offset:3px;
+}
+.inbox-unread-summary {
+  background:#e5e7db;
+  border-color:#a6a892;
+  color:#302b26;
+}
+.inbox-unread-summary p { color:#534c44; }
+.inbox-unread-summary p strong { color:#302b26; }
+.inbox-unread-summary [role="status"] { color:#713c2e; }
+.inbox-unread-shortcuts button,
+.inbox-unread-shortcuts span {
+  min-height:44px;
+  background:#fff9f1;
+  border-color:#a6a892;
+  color:#394627;
+}
+.inbox-unread-shortcuts button:focus-visible,
+.inbox-refresh-actions button:focus-visible {
+  outline:3px solid #314f60;
+  outline-offset:3px;
+}
+.inbox-refresh-actions > button {
+  min-height:44px;
+  background:#fff9f1;
+  border:1px solid #a6a892;
+  color:#394627;
+}
+.inbox-refresh-actions > [role="status"] { color:#534c44; }
