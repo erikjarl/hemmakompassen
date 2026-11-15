@@ -5,7 +5,7 @@ import {readFileSync} from 'node:fs';
 const css=readFileSync(new URL('../live-app.css',import.meta.url),'utf8');
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const app=readFileSync(new URL('../live-app.js',import.meta.url),'utf8');
-const stage=css.split('/* DES-01G: accessible light Inbox priorities.')[1]||'';
+const stage=(css.split('/* DES-01G: accessible light Inbox priorities.')[1]||'').split('/* DES-01G: warm private conversation, presentation only.')[0];
 
 test('DES-01G Inbox priorities use scoped light styles and visible controls',()=>{
   assert.ok(stage);
@@ -25,7 +25,8 @@ test('DES-01G Inbox priorities use scoped light styles and visible controls',()=
 });
 
 test('DES-01G Inbox asset URLs and markup respect existing privacy and reading semantics',()=>{
-  const revision='20261115-des01g-inbox1';
+  const revision=html.match(/name="hk-ui-version" content="([^"]+)"/)?.[1];
+  assert.match(revision || '', /^20261115-des01g-[a-z0-9-]+$/);
   assert.ok(html.includes('live-app.css?v='+revision));
   assert.ok(html.includes('live-app.js?v='+revision));
   assert.ok(app.includes('ipip50-ui.js?v='+revision));
