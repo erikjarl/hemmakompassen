@@ -5,7 +5,7 @@ import {readFileSync} from 'node:fs';
 const css=readFileSync(new URL('../live-app.css',import.meta.url),'utf8');
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const app=readFileSync(new URL('../live-app.js',import.meta.url),'utf8');
-const stage=css.split('/* DES-01G: readable Schyssta proposal/decision surfaces.')[1]||'';
+const stage=(css.split('/* DES-01G: readable Schyssta proposal/decision surfaces.')[1]||'').split('/* DES-01G follow-up: approved-rule disclosure must remain readable')[0];
 
 test('DES-01G Schyssta proposal styles remain local and keep decision states visible',()=>{
   assert.ok(stage);
