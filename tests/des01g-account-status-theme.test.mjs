@@ -22,7 +22,7 @@ test('account pairing and status panels remain scoped to account',()=>{
  assert.doesNotMatch(stage,/display\s*:\s*none|visibility\s*:\s*hidden|pointer-events\s*:\s*none/);
 });
 test('account updates cache without changing its pairing or feedback controls',()=>{
- assert.ok(html.includes('design-tokens.css?v=20261114-des01b-account1&stage=account-status-neutral3'));
+ assert.ok(html.includes('design-tokens.css?v=20261115-des01g-account-refresh-secondary1'));
  for(const id of ['create-family','role','waiting','invite-qr','invite-code','accept-form',
  'refresh-account-status','status','hk-feedback-dialog','logout']){
    assert.ok(html.includes('id="'+id+'"'),id);
@@ -30,4 +30,13 @@ test('account updates cache without changing its pairing or feedback controls',(
  assert.ok(html.includes('Din profil och privata kontodata bevaras'));
  assert.ok(html.includes('Dela bara koden eller QR-länken'));
  assert.ok(js.includes('create-family'));
+});
+
+
+test('account refresh stays distinct from the primary sign-in action',()=>{
+ assert.ok(html.includes('id="refresh-account" type="button"'));
+ assert.ok(html.includes('<button type="submit">Logga in</button>'));
+ assert.match(css,/body\\.hk-light-account #refresh-account\\s*\\{[^}]*background:var\\(--hk-surface-alt\\);[^}]*color:var\\(--hk-ink\\);/s);
+ assert.match(css,/body\\.hk-light-account #refresh-account:focus-visible\\s*\\{[^}]*outline:3px solid var\\(--hk-focus\\);/s);
+ assert.match(css,/body\\.hk-light-account :is\\(button, input\\[type=submit\\]\\)\\s*\\{[^}]*min-height: 44px;/s);
 });
