@@ -23,3 +23,11 @@ test('rule decision functionality and responsive navigation remain present',()=>
   assert.ok(html.includes('&rules=light-canvas1'));
   assert.ok(html.includes('id="live-mobile-nav"'));
 });
+
+test('compact mobile agreed rules remain a flat list rather than nested cards',()=>{
+  assert.ok(stage.includes('@media(max-width:430px)'));
+  assert.ok(stage.includes('.schyssta-filter-group.schyssta-approved-present'));
+  assert.ok(stage.includes('background:transparent'));
+  assert.ok(stage.includes('box-shadow:none'));
+  assert.ok(stage.includes('border:0'));
+});
