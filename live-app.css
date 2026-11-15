@@ -2371,3 +2371,20 @@
   outline:3px solid #314f60;
   outline-offset:2px;
 }
+
+/* DES-01E / UX-READ-01: legible route back from a themed swipe deck.
+   Limit the accent to theme back-navigation; retain all swipe behavior. */
+@media (max-width:800px) {
+  .swipe-theme-play>.swipe-heading>.swipe-theme-back {
+    color:#a6c38b;
+    text-decoration-thickness:2px;
+    text-underline-offset:4px;
+  }
+  .swipe-theme-play>.swipe-heading>.swipe-theme-back:hover {
+    color:#c6d9b6;
+  }
+  .swipe-theme-play>.swipe-heading>.swipe-theme-back:focus-visible {
+    outline:3px solid #a6c38b;
+    outline-offset:3px;
+  }
+}
