@@ -2087,3 +2087,60 @@
     max-width:95%;
   }
 }
+
+
+/* DES-01G: light, readable Inbox event and rule notices. Named lists prevent
+   unintended visual changes to Schyssta listan and private message threads. */
+.inbox-rule-events > li,
+.inbox-rule-requests > li,
+.inbox-activity-events > li {
+  background:#fff9f1;
+  border-color:#d9d1c5;
+  color:#302b26;
+  box-shadow:0 4px 12px rgb(48 43 38 / 5%);
+}
+.inbox-rule-events > li.schyssta-unread,
+.inbox-activity-events > li.schyssta-unread {
+  border-color:#a6a892!important;
+  box-shadow:inset 4px 0 0 #666f3f;
+}
+.inbox-rule-events > li strong,
+.inbox-rule-requests > li strong,
+.inbox-activity-events > li strong {
+  color:#394627;
+}
+.inbox-rule-events > li p,
+.inbox-rule-requests > li p,
+.inbox-activity-events > li p {
+  color:#534c44;
+  line-height:1.55;
+}
+.inbox-rule-events .schyssta-secondary,
+.inbox-activity-events .schyssta-secondary {
+  background:#e5e7db;
+  border-color:#a6a892;
+  color:#394627;
+  min-height:44px;
+}
+.inbox-rule-events .schyssta-actions button:focus-visible,
+.inbox-rule-requests button:focus-visible,
+.inbox-activity-events .schyssta-actions a:focus-visible,
+.inbox-activity-events .schyssta-actions button:focus-visible {
+  outline:3px solid #314f60;
+  outline-offset:3px;
+}
+.inbox-rule-events .schyssta-actions,
+.inbox-rule-requests .schyssta-actions,
+.inbox-activity-events .schyssta-actions {
+  min-width:0;
+}
+@media(max-width:440px) {
+  .inbox-rule-events > li,
+  .inbox-rule-requests > li,
+  .inbox-activity-events > li { padding:13px; }
+  .inbox-rule-events .schyssta-actions > *,
+  .inbox-activity-events .schyssta-actions > * {
+    max-width:100%;
+    white-space:normal;
+  }
+}
