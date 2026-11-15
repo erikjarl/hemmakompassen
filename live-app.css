@@ -2388,3 +2388,46 @@
     outline-offset:3px;
   }
 }
+
+/* DES-01G / UX-READ-01: one clear action in the consent-guarded Inbox insights card.
+   Keep the existing content, AI availability logic and shared/private boundaries. */
+.inbox-insights-shortcut {
+  border-left:4px solid #666f3f;
+}
+.inbox-insights-shortcut h2 {
+  font-size:clamp(1.25rem,3vw,1.6rem);
+  line-height:1.3;
+  margin-bottom:12px;
+}
+.inbox-insights-shortcut > p:last-child {
+  margin-bottom:0;
+}
+.inbox-insights-shortcut > p:last-child > a[href="#insikter"] {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  max-width:100%;
+  min-height:44px;
+  box-sizing:border-box;
+  padding:11px 15px;
+  border-radius:11px;
+  background:#666f3f;
+  color:#fff9f1;
+  font-weight:700;
+  line-height:1.4;
+  text-align:center;
+  text-decoration:none;
+  overflow-wrap:anywhere;
+}
+.inbox-insights-shortcut > p:last-child > a[href="#insikter"]:hover{
+  background:#4c5831;
+}
+.inbox-insights-shortcut > p:last-child > a[href="#insikter"]:focus-visible{
+  outline:3px solid #314f60;
+  outline-offset:3px;
+}
+@media (max-width:390px){
+  .inbox-insights-shortcut > p:last-child > a[href="#insikter"]{
+    width:100%;
+  }
+}
