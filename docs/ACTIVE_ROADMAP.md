@@ -18,6 +18,10 @@
 
 ---
 
+**15/11 – Jobb hk, PR #486 levererad; nästa DES-01E-kortlekslista på arbetsgren:** PR #486:s fulla UI-browser-CI #43667690880 avslutades med `success` och PR squash-mergades till `main` som `cc6a782`. Ny arbetsgren `design/des01e-light-more-decks-20261115` ger endast valfria fler-kortlekar-panelen en varm ljus yta, mörk text och synlig fokusmarkering; knapptext, öppna/stäng-beteende, kortleksinnehåll, sekretess, svar, lagring och roller ska förbli oförändrade. Nya Node-kontrakt för CSS-scope och synkroniserad cacheversion. **Full CI, merge, publicerad Pages-version, fysisk Safari och autentiserade tvåkontotester saknas för detta nya steg.** Supabase lästes read-only: 7 öppna (2 `new`, 5 `reviewing`), inga statusar eller användarsvar ändrades. UX-READ-01: flera kortlekar ska vara tydligt valbara men sekundära till huvudfrågan.
+
+---
+
 **15/11 – Jobb hk, DES-01E Ja/Nej levererad och sekundära paneler på arbetsgren:** [PR #485](https://github.com/erikjarl/hemmakompassen/pull/485) passerade full [UI-browser-CI #43664213114](https://github.com/erikjarl/hemmakompassen/actions/runs/43664213114) (`success`) efter rättning av felaktigt testantagande om CSS-fil; squash-mergad som [`5238aec`](https://github.com/erikjarl/hemmakompassen/commit/5238aec49892070b58853163755633d4edf685a3). Ja/Nej och framsteg är nu varma ljusa, utan avsedd interaktionsändring. Ny DES-01E-arbetsgren `design/des01e-light-swipe-secondary-20261115` gör endast valfri kategorifiltrering och privat exportpanel ljusa, med bevarade detaljer/sekretess och fokuskontroller. Separata Node-kontrakt, samordnade cacheversioner. **Full CI, PR-merge, Pages och verklig tvåkontoverifiering ska bekräftas separat**. Supabase `public.test_feedback` lästes read-only: fortsatt 7 öppna (2 `new`, 5 `reviewing`), inkl. synlighet för fler kortlekar/AI-reflektion och kvarstående Schyssta-/inkorgsrapporter; ingen status eller användardata ändrad. UX-READ-01: frågan och Ja/Nej kvar som primär handling, filter/export sekundärt.
 
 
