@@ -2594,3 +2594,14 @@ body .live-layout #live-app > .schyssta-view
 .schyssta-filter-group[data-schyssta-filter-group="approved"] .schyssta-approved-extra {
   border-top-color:#d9d1c5;
 }
+
+/* Preserve the verified flat agreed-rules list on narrow phones.
+   Do not reintroduce a card/shadow around an already compact list. */
+@media(max-width:430px) {
+  body .live-layout #live-app > .schyssta-view
+  .schyssta-filter-group.schyssta-approved-present[data-schyssta-filter-group="approved"] > .live-panel {
+    background:transparent;
+    border:0;
+    box-shadow:none;
+  }
+}
