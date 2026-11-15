@@ -14,7 +14,7 @@ test('warm swipe choices stay scoped and preserve existing interactive control s
     assert.ok(section.includes(selector),selector);
   }
   assert.doesNotMatch(section,/(?:touch-action|pointer-events|user-select|position\s*:|display\s*:none)/);
-  assert.match(css,/\.swipe-playing-card\{touch-action:pan-y/);
+  assert.match(html,/\.swipe-playing-card\{touch-action:pan-y/);
   assert.match(css,/\.swipe-choice:disabled/);
 });
 test('warm progress and answer palette remains semantically distinct',()=>{
