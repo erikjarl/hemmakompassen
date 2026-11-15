@@ -2144,3 +2144,46 @@
     white-space:normal;
   }
 }
+
+
+/* DES-01G: communication tools - warm editorial presentation.
+   Safety resources, exercise instructions, inputs and actions remain intact. */
+.comm-toolkit .comm-hero {
+  background:linear-gradient(135deg,#fff9f1,#e5e7db);
+  border-color:#d9d1c5;
+  color:#302b26;
+}
+.comm-toolkit .comm-hero h1,
+.comm-toolkit .comm-hero h2 { color:#302b26; }
+.comm-toolkit .comm-hero p { color:#534c44; }
+.comm-toolkit .comm-kicker { color:#394627; }
+.comm-toolkit .comm-situation {
+  background:#fff9f1;
+  border-color:#a6a892;
+  color:#302b26;
+}
+.comm-toolkit .comm-situation strong { color:#394627; }
+.comm-toolkit .comm-situation span { color:#534c44; }
+.comm-toolkit .comm-situation:hover {
+  background:#e5e7db;
+  border-color:#666f3f;
+}
+.comm-toolkit .comm-situation:focus-visible,
+.comm-toolkit .comm-exercise summary:focus-visible {
+  outline:3px solid #314f60;
+  outline-offset:3px;
+}
+.comm-toolkit .comm-exercise {
+  background:#fff9f1;
+  border-color:#d9d1c5;
+  color:#302b26;
+}
+.comm-toolkit .comm-exercise summary strong { color:#394627; }
+.comm-toolkit .comm-exercise summary span { color:#534c44; }
+.comm-toolkit .comm-exercise-content { border-top-color:#d9d1c5; }
+.comm-toolkit .comm-example {
+  background:#e5e7db;
+  color:#302b26;
+}
+.comm-toolkit .comm-situation,
+.comm-toolkit .comm-exercise summary { min-height:44px; }

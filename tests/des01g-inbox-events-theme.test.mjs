@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 const css=readFileSync(new URL('../live-app.css',import.meta.url),'utf8');
 const app=readFileSync(new URL('../live-app.js',import.meta.url),'utf8');
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
-const stage=css.split('/* DES-01G: light, readable Inbox event and rule notices.')[1]||'';
+const stage=(css.split('/* DES-01G: light, readable Inbox event and rule notices.')[1]||'').split('/* DES-01G: communication tools - warm editorial presentation.')[0];
 
 test('rule and activity event cards use light readable CSS without changing other modules',()=>{
   assert.ok(stage);
@@ -33,7 +33,8 @@ test('Inbox event labels, explicit read actions and module routing remain unchan
     'inbox-rules-heading','inbox-activities-heading',
     'event_kind===\'mutual_match\'',
   ])assert.ok(app.includes(text),text);
-  const version='20261115-des01g-events1';
+  const version=html.match(/name="hk-ui-version" content="([^"]+)"/)?.[1];
+  assert.match(version || '', /^20261115-des01g-[a-z0-9-]+$/);
   assert.ok(html.includes('live-app.css?v='+version));
   assert.ok(html.includes('live-app.js?v='+version));
   assert.ok(app.includes('ipip50-ui.js?v='+version));
