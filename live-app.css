@@ -2277,3 +2277,41 @@
 }
 .mediator-view .mediator-context h2 { color:#394627; }
 .mediator-view .mediator-context p { color:#534c44; }
+
+/* DES-01C: desktop sidebar account card in the same warm, readable palette.
+   Presentation only: preserve account status text, account link and auth logic. */
+@media (min-width:801px) {
+  body .live-sidebar > .live-panel {
+    min-width:0;
+    padding:18px 16px;
+    background:#fff9f1;
+    border:1px solid #d9d1c5;
+    border-radius:16px;
+    box-shadow:0 8px 20px rgb(48 43 38 / 7%);
+  }
+  body .live-sidebar > .live-panel #sidebar-account {
+    color:#302b26;
+    line-height:1.5;
+    overflow-wrap:anywhere;
+  }
+  body .live-sidebar > .live-panel a[href="./konto.html"] {
+    display:inline-flex;
+    align-items:center;
+    min-height:44px;
+    padding:9px 12px;
+    border-radius:11px;
+    color:#394627;
+    background:#e5e7db;
+    font-weight:700;
+    text-decoration:underline;
+    text-underline-offset:3px;
+    overflow-wrap:anywhere;
+  }
+  body .live-sidebar > .live-panel a[href="./konto.html"]:hover {
+    background:#d9ddc9;
+  }
+  body .live-sidebar > .live-panel a[href="./konto.html"]:focus-visible {
+    outline:3px solid #314f60;
+    outline-offset:3px;
+  }
+}
