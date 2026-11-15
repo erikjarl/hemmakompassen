@@ -212,3 +212,19 @@ body.hk-light-account .pairing-qr figcaption{
   body.hk-light-account #logged-in > section,
   body.hk-light-account #logged-in > form{padding:14px}
 }
+
+/* UX-READ-01: account refresh is a secondary action, not a competing sign-in CTA.
+   Keep the button visible and fully operable in logged-out and logged-in states. */
+body.hk-light-account #refresh-account{
+  background:var(--hk-surface-alt);
+  color:var(--hk-ink);
+  border:1px solid #8b8c7b;
+  box-shadow:none;
+}
+body.hk-light-account #refresh-account:hover:not(:disabled){
+  background:var(--hk-sage-pale);
+}
+body.hk-light-account #refresh-account:focus-visible{
+  outline:3px solid var(--hk-focus);
+  outline-offset:3px;
+}
