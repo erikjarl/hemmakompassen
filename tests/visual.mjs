@@ -134,6 +134,46 @@ async function verifyInboxInsightsPriority(){
     }
   }
 }
+async function verifyWarmInboxCanvas(){
+  // Chromium with synthetic paired roles; not a live two-account acceptance test.
+  for(const item of [
+    {width:320,role:'parent'},
+    {width:390,role:'teen'},
+    {width:768,role:'parent'},
+    {width:1280,role:'teen'}
+  ]){
+    const {context,page}=await freshContext(
+      {viewport:{width:item.width,height:844}},
+      {authenticated:true,paired:true,role:item.role,aiMediator:true,aiAnalyses:true});
+    try{
+      await page.goto(base+'#inkorg',{waitUntil:'load'});
+      await page.locator('#live-app > .inbox-refresh-actions').waitFor({state:'visible'});
+      const theme=await page.evaluate(()=>{
+        const main=document.querySelector('.live-main');
+        const root=document.querySelector('#live-app');
+        const firstPanel=root.querySelector(':scope > .live-panel:not(.inbox-unread-summary)');
+        const heading=root.querySelector(':scope > h1');
+        return {
+          canvas:getComputedStyle(main).backgroundColor,
+          panel:firstPanel?getComputedStyle(firstPanel).backgroundColor:null,
+          heading:heading?getComputedStyle(heading).color:null,
+          chat:!!root.querySelector('.family-chat-form'),
+          unread:!!root.querySelector('.inbox-refresh-actions')
+        };
+      });
+      assert.deepEqual(theme,{
+        canvas:'rgb(248, 242, 234)',
+        panel:'rgb(255, 249, 241)',
+        heading:'rgb(48, 43, 38)',
+        chat:true,
+        unread:true
+      },'DES-01G warm Inbox '+item.width+' '+item.role);
+      await checkOverflow(page,'DES-01G warm Inbox '+item.width+' '+item.role);
+      await page.screenshot({path:path.join(output,'des01g-inbox-canvas-'+item.width+'-'+item.role+'.png'),animations:'disabled'});
+    }finally{await context.close();}
+  }
+}
+
 async function verifyWarmHomeCanvas(){
   // DES-01D: a real Chromium layout/computed-style check with synthetic accounts.
   // Do not treat this as a genuine paired-user acceptance test.
@@ -4335,6 +4375,7 @@ try{
   await verifyNvcDraftAi();
   await verifySchysstaMobileHierarchy();
   await verifyInboxInsightsPriority();
+  await verifyWarmInboxCanvas();
   await verifyDesktopSidebarBrand();
   await verifyWarmSchysstaCanvas();
   await verifyWarmHomeCanvas();
