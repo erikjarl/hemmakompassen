@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 const css=readFileSync(new URL('../design-tokens.css',import.meta.url),'utf8');
 const html=readFileSync(new URL('../konto.html',import.meta.url),'utf8');
 const js=readFileSync(new URL('../konto.js',import.meta.url),'utf8');
-const stage=css.split('/* DES-01G: readable account pairing and status panels.')[1]||'';
+const stage=(css.split('/* DES-01G: readable account pairing and status panels.')[1]||'').split('/* UX-READ-01: account refresh is a secondary action')[0];
 
 test('account pairing and status panels remain scoped to account',()=>{
  assert.ok(stage,'missing account design stage');
@@ -22,7 +22,7 @@ test('account pairing and status panels remain scoped to account',()=>{
  assert.doesNotMatch(stage,/display\s*:\s*none|visibility\s*:\s*hidden|pointer-events\s*:\s*none/);
 });
 test('account updates cache without changing its pairing or feedback controls',()=>{
- assert.ok(html.includes('design-tokens.css?v=20261115-des01g-account-refresh-secondary1'));
+ assert.match(html, /design-tokens\.css\?v=20261116-des01g-account-disclosures1/);
  for(const id of ['create-family','role','waiting','invite-qr','invite-code','accept-form',
  'refresh-account-status','status','hk-feedback-dialog','logout']){
    assert.ok(html.includes('id="'+id+'"'),id);
