@@ -3042,3 +3042,29 @@ body .live-layout #live-app > .schyssta-view
     overflow-wrap:anywhere;
   }
 }
+
+
+/* DES-01G / UX-READ-01: Schyssta decisions on narrow phones.
+   Compact whitespace without hiding rule statuses, independent votes or history. */
+@media (max-width:390px) {
+  .schyssta-view .schyssta-list {
+    gap:9px;
+  }
+  .schyssta-view .schyssta-list > li {
+    min-width:0;
+    padding:12px;
+  }
+  .schyssta-view .schyssta-actions {
+    display:grid;
+    grid-template-columns:minmax(0,1fr);
+    gap:8px;
+    width:100%;
+  }
+  .schyssta-view .schyssta-actions > button {
+    box-sizing:border-box;
+    width:100%;
+    min-height:44px;
+    white-space:normal;
+    overflow-wrap:anywhere;
+  }
+}
