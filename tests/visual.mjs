@@ -260,6 +260,51 @@ async function verifyWarmSchysstaCanvas(){
   }
 }
 
+async function verifyWarmCommunicationCanvas(){
+  // The role fixtures are synthetic; they cannot replace real two-account testing.
+  for(const item of [
+    {width:320,role:'teen'},
+    {width:390,role:'parent'},
+    {width:768,role:'teen'},
+    {width:1280,role:'parent'}
+  ]){
+    const {context,page}=await freshContext(
+      {viewport:{width:item.width,height:844}},
+      {authenticated:true,paired:true,role:item.role});
+    try{
+      await page.goto(base+'#kommunikation',{waitUntil:'load'});
+      await page.locator('#live-app > .comm-toolkit').waitFor({state:'visible'});
+      const actual=await page.evaluate(()=>{
+        const root=document.querySelector('.comm-toolkit');
+        const feature=root.querySelector('.comm-feature');
+        const safety=root.querySelector('.comm-safety');
+        const section=root.querySelector('.comm-section > h2');
+        return {
+          canvas:getComputedStyle(document.querySelector('.live-main')).backgroundColor,
+          feature:getComputedStyle(feature).backgroundColor,
+          featureText:getComputedStyle(feature).color,
+          section:getComputedStyle(section).color,
+          safetyVisible:!!safety && getComputedStyle(safety).display!=='none',
+          safetyLink:!!root.querySelector('a[href="tel:112"]')
+        };
+      });
+      assert.deepEqual(actual,{
+        canvas:'rgb(248, 242, 234)',
+        feature:'rgb(255, 249, 241)',
+        featureText:'rgb(48, 43, 38)',
+        section:'rgb(48, 43, 38)',
+        safetyVisible:true,
+        safetyLink:true
+      },'DES-01G communication '+item.width+' '+item.role);
+      await checkOverflow(page,'DES-01G communication '+item.width+' '+item.role);
+      await page.screenshot({
+        path:path.join(output,'des01g-communication-'+item.width+'-'+item.role+'.png'),
+        animations:'disabled'
+      });
+    }finally{await context.close();}
+  }
+}
+
 async function verifyDesktopSidebarBrand(){
   for(const width of [821,1024,1440]){
     const {context,page}=await freshContext({viewport:{width,height:900}},{authenticated:true,paired:true});
@@ -4377,6 +4422,7 @@ try{
   await verifyInboxInsightsPriority();
   await verifyWarmInboxCanvas();
   await verifyDesktopSidebarBrand();
+  await verifyWarmCommunicationCanvas();
   await verifyWarmSchysstaCanvas();
   await verifyWarmHomeCanvas();
   const login=await freshContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true});
