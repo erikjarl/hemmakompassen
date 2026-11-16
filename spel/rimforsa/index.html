@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#183d32">
-<title>Lage i Rimforsa – 16-bitarsäventyr</title>
+<title>Lage i Rimforsa – utforska byn</title>
 <style>
 :root{color-scheme:dark;--cream:#fff1c9;--gold:#e6c16a;--pine:#173c32}
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#102b25;color:var(--cream);font-family:system-ui,-apple-system,sans-serif}
@@ -16,8 +16,8 @@ button{font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}butto
 canvas#world{display:block;width:100%;height:min(57svh,520px);min-height:315px;touch-action:none;image-rendering:pixelated;cursor:crosshair}
 .hud{position:absolute;left:8px;top:8px;display:flex;align-items:center;gap:7px;padding:6px 10px;border:3px solid #cda15e;border-radius:4px;background:#19362de9;color:#fff3c5;text-shadow:1px 1px #171a12;font:800 13px/1.2 ui-monospace,monospace;box-shadow:0 3px 0 #08241a;pointer-events:none}.heart{color:#ee6a65;font-size:17px;letter-spacing:-2px}
 .area{position:absolute;left:50%;top:8px;transform:translateX(-50%);max-width:55%;background:#17392cdd;border:2px solid #dfbe80;padding:6px 10px;border-radius:3px;text-align:center;color:#f8df9f;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px;pointer-events:none}
-.minimap{position:absolute;right:8px;top:8px;width:84px;height:112px;border:3px solid #ddbc79;background:#43834a;image-rendering:pixelated;box-shadow:0 2px 0 #1e382d;cursor:pointer}
-.mapBtn{position:absolute;right:7px;top:125px;font-size:11px;border:2px solid #e0bd7c;border-radius:2px;color:#fef0ca;background:#14372d;padding:5px 7px;font-weight:800}
+.minimap{position:absolute;right:8px;top:8px;width:104px;height:78px;border:3px solid #ddbc79;background:#43834a;image-rendering:pixelated;box-shadow:0 2px 0 #1e382d;cursor:pointer}
+.mapBtn{position:absolute;right:7px;top:97px;font-size:11px;border:2px solid #e0bd7c;border-radius:2px;color:#fef0ca;background:#14372d;padding:5px 7px;font-weight:800}
 .tip{display:flex;min-height:61px;align-items:center;justify-content:space-between;gap:9px;margin:11px 1px 4px;padding:10px 12px;border:2px solid #4f7860;background:#234639;border-radius:9px;font-size:14px;line-height:1.35}.tip strong{color:#ffe5a7}.action{font-size:13px;flex:0 0 auto}.action[hidden]{display:none}
 .controls{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;padding:9px 3px 0}.guide{color:#d5ddc2;font-size:12px;line-height:1.4;max-width:200px}
 .dpad{display:grid;grid-template-columns:repeat(3,48px);grid-template-rows:repeat(2,48px);gap:5px;user-select:none;touch-action:none}
@@ -25,86 +25,88 @@ canvas#world{display:block;width:100%;height:min(57svh,520px);min-height:315px;t
 .dpad button[data-dir=up]{grid-column:2;grid-row:1}.dpad button[data-dir=left]{grid-column:1;grid-row:2}.dpad button[data-dir=down]{grid-column:2;grid-row:2}.dpad button[data-dir=right]{grid-column:3;grid-row:2}
 .reset{justify-self:end;font-size:12px;text-decoration:underline;color:#f0daa6;background:none;border:0;padding:12px 3px}.footer{padding:14px 5px 3px;color:#a6b9a2;font-size:11px;text-align:center}
 #mapOverlay{position:absolute;inset:0;background:#102a22f2;display:none;align-items:center;justify-content:center;flex-direction:column;padding:12px;gap:8px;z-index:3}#mapOverlay.show{display:flex}#wholeMap{max-height:85%;max-width:100%;height:auto;width:auto;object-fit:contain;image-rendering:pixelated;border:3px solid var(--gold)}#closeMap{position:absolute;right:12px;top:12px;z-index:2}
-@media(min-width:650px){.dpad{grid-template-columns:repeat(3,58px);grid-template-rows:repeat(2,58px)}.controls{padding-top:15px}.area{font-size:15px}.minimap{width:105px;height:142px}.mapBtn{top:156px}.hud{font-size:15px}}
-@media(max-width:410px){.area{top:46px;max-width:66%;left:9px;transform:none}.minimap{width:75px;height:104px}.mapBtn{top:119px}.guide{font-size:11px}.tip{font-size:12px}.dpad{grid-template-columns:repeat(3,46px);grid-template-rows:repeat(2,46px)}.reset{font-size:11px}}
+@media(min-width:650px){.dpad{grid-template-columns:repeat(3,58px);grid-template-rows:repeat(2,58px)}.controls{padding-top:15px}.area{font-size:15px}.minimap{width:112px;height:84px}.mapBtn{top:101px}.hud{font-size:15px}}
+@media(max-width:410px){.area{top:46px;max-width:66%;left:9px;transform:none}.minimap{width:80px;height:60px}.mapBtn{top:93px}.guide{font-size:11px}.tip{font-size:12px}.dpad{grid-template-columns:repeat(3,46px);grid-template-rows:repeat(2,46px)}.reset{font-size:11px}}
 </style>
 </head>
 <body>
 <main class="shell">
- <header class="head"><div><h1>🌲 Lage i Rimforsa</h1><p class="subtitle">Ett litet 16-bitars promenadäventyr</p></div><button class="smallBtn" id="showMap">🗺️ Karta</button></header>
+ <header class="head"><div><h1>🌲 Lage i Rimforsa</h1><p class="subtitle">Ett 16-bitars promenadäventyr genom Rimforsa</p></div><button class="smallBtn" id="showMap">🗺️ Karta</button></header>
  <section class="game-frame" aria-label="Spelplan: utforska Rimforsa till fots">
-  <canvas id="world" width="384" height="280" aria-label="Karta över Rimforsa där Lage går omkring"></canvas>
+  <canvas id="world" width="384" height="316" aria-label="Karta över Rimforsa där Lage går omkring"></canvas>
   <div class="hud">LAGE <span class="heart">♥♥♥</span></div><div class="area" id="area">Rimforsa</div>
-  <canvas id="mini" class="minimap" width="84" height="112" aria-label="Minikarta över Rimforsa" role="img"></canvas>
+  <canvas id="mini" class="minimap" width="128" height="96" aria-label="Minikarta över Rimforsa" role="img"></canvas>
   <button class="mapBtn" id="miniMapBtn">STOR KARTA</button>
-  <div id="mapOverlay" role="dialog" aria-modal="true" aria-label="Karta över Rimforsa"><button class="smallBtn" id="closeMap">Stäng ✕</button><canvas id="wholeMap" width="480" height="800" aria-label="Översikt av hela spelkartan"></canvas></div>
+  <div id="mapOverlay" role="dialog" aria-modal="true" aria-label="Karta över Rimforsa"><button class="smallBtn" id="closeMap">Stäng ✕</button><canvas id="wholeMap" width="640" height="480" aria-label="Översikt av hela spelkartan"></canvas></div>
  </section>
- <div class="tip"><span id="message"><strong>Nu börjar äventyret!</strong> Använd pilarna för att upptäcka Rimforsa.</span><button id="interact" class="action" hidden>Utforska ✨</button></div>
- <div class="controls"><div class="guide">Gå med pilarna, WASD eller tryck på en plats i spelvärlden.</div><div class="dpad" aria-label="Styr Lage"><button data-dir="up" aria-label="Gå uppåt">▲</button><button data-dir="left" aria-label="Gå åt vänster">◀</button><button data-dir="down" aria-label="Gå nedåt">▼</button><button data-dir="right" aria-label="Gå åt höger">▶</button></div><button class="reset" id="reset">Börja om ↺</button></div>
- <div class="footer">En lekfull, förenklad karta inspirerad av verkliga Rimforsa – inte en exakt vägkarta.</div>
+ <div class="tip" aria-live="polite"><span id="message"><strong>Nu börjar äventyret!</strong> Använd pilarna för att upptäcka Rimforsa.</span><button id="interact" class="action" hidden>Utforska ✨</button></div>
+ <div class="controls"><div class="guide">Pilar/WASD, eller tryck på kartan så hittar Lage en gångbar väg.</div><div class="dpad" aria-label="Styr Lage"><button data-dir="up" aria-label="Gå uppåt">▲</button><button data-dir="left" aria-label="Gå åt vänster">◀</button><button data-dir="down" aria-label="Gå nedåt">▼</button><button data-dir="right" aria-label="Gå åt höger">▶</button></div><button class="reset" id="reset">Börja om ↺</button></div>
+ <div class="footer">Illustrerad spelvärld inspirerad av Rimforsa. Platserna ligger ungefär rätt, men kartan är inte skalenlig.</div>
 </main>
 <script>
 (()=>{'use strict';
-const W=960,H=1600;const c=document.getElementById('world'),ctx=c.getContext('2d');const mini=document.getElementById('mini'),mc=mini.getContext('2d');const whole=document.getElementById('wholeMap'),wc=whole.getContext('2d');const msg=document.getElementById('message'),area=document.getElementById('area'),interact=document.getElementById('interact');ctx.imageSmoothingEnabled=false;mc.imageSmoothingEnabled=false;wc.imageSmoothingEnabled=false;
-const map=document.createElement('canvas');map.width=W;map.height=H;const g=map.getContext('2d');g.imageSmoothingEnabled=false;
-let seed=72831;function rnd(){seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296}function rand(a,b){return a+rnd()*(b-a)};
-const blueNorth=[[672,-20],[985,-20],[985,720],[923,688],[903,607],[854,563],[815,497],[791,418],[737,391],[698,326],[650,279],[638,176]];
-const blueSouth=[[982,1245],[940,1257],[894,1287],[860,1370],[817,1460],[781,1608],[982,1608]];
-function polygon(points){g.beginPath();g.moveTo(points[0][0],points[0][1]);for(let i=1;i<points.length;i++)g.lineTo(points[i][0],points[i][1]);g.closePath()}
-function inPoly(x,y,p){let yes=false;for(let i=0,j=p.length-1;i<p.length;j=i++){let a=p[i],b=p[j];if((a[1]>y)!==(b[1]>y)&&x<(b[0]-a[0])*(y-a[1])/(b[1]-a[1])+a[0])yes=!yes}return yes}
-function water(x,y){return inPoly(x,y,blueNorth)||inPoly(x,y,blueSouth)}
-function tile(x,y,size,color){g.fillStyle=color;g.fillRect(Math.round(x),Math.round(y),size,size)}
-// Deterministic retro grass tiles.
-g.fillStyle='#75ad59';g.fillRect(0,0,W,H);for(let y=0;y<H;y+=16)for(let x=0;x<W;x+=16){const q=rnd();tile(x,y,16,q<.18?'#72a855':q<.42?'#7ab15e':q<.70?'#78ad57':'#82b960');if(rnd()<.25){tile(x+4,y+6,3,'#95c66c');tile(x+10,y+9,2,'#56934b')}}
-// Fields west of the lake, north of the village.
-const fields=[{x:250,y:0,w:180,h:540,col:'#b6b75c'},{x:15,y:265,w:225,h:255,col:'#80b86b'},{x:440,y:25,w:152,h:490,col:'#d6c675'},{x:220,y:505,w:355,h:160,col:'#8bad67'}];for(const f of fields){g.fillStyle='#547a47';g.fillRect(f.x-4,f.y-4,f.w+8,f.h+8);g.fillStyle=f.col;g.fillRect(f.x,f.y,f.w,f.h);for(let y=f.y+10;y<f.y+f.h;y+=12){g.fillStyle='#ffffff22';g.fillRect(f.x+5,y,f.w-10,3);g.fillStyle='#567f3d44';g.fillRect(f.x+5,y+5,f.w-10,2)}}
-// Lakes and pixelated shorelines.
-for(const p of [blueNorth,blueSouth]){g.strokeStyle='#e4d48d';g.lineWidth=20;g.lineJoin='bevel';polygon(p);g.stroke();g.fillStyle='#23699a';polygon(p);g.fill();g.strokeStyle='#3c90b4';g.lineWidth=5;polygon(p);g.stroke()}
-for(let i=0;i<800;i++){let x=rand(0,W),y=rand(0,H);if(water(x,y)){g.fillStyle=rnd()<.5?'#307ca5':'#3d93b7';g.fillRect(x,y,rand(3,13),2)}}
-// Stone and dirt tracks: approximate the screenshot's roads.
-function road(points,width,kind='dirt'){g.lineCap='square';g.lineJoin='round';g.beginPath();g.moveTo(...points[0]);points.slice(1).forEach(p=>g.lineTo(...p));g.lineWidth=width+6;g.strokeStyle=kind==='main'?'#647167':'#6c864c';g.stroke();g.lineWidth=width;g.strokeStyle=kind==='main'?'#999994':kind==='town'?'#cbba8b':'#d1bc7c';g.stroke();if(kind==='main'){g.setLineDash([14,23]);g.strokeStyle='#ede1a4';g.lineWidth=2;g.stroke();g.setLineDash([])}}
-const mainRoad=[[344,0],[338,300],[340,560],[330,770],[297,980],[265,1180],[211,1600]];road(mainRoad,30,'main');
-const roads=[[[0,626],[105,642],[232,675],[332,760],[458,772],[645,692],[857,675]],[[0,954],[141,945],[295,977],[432,1008],[626,1016],[900,1000]],[[310,1180],[460,1133],[593,1117],[744,1100]],[[400,790],[412,934],[403,1137],[392,1410]],[[590,753],[620,883],[620,1050],[597,1247],[520,1480]],[[745,697],[740,882],[740,1114],[692,1350]],[[0,1224],[145,1218],[260,1252],[420,1332],[602,1359],[755,1330]],[[475,1050],[556,1074],[708,1085]],[[390,1482],[530,1510],[708,1500]],[[97,725],[105,875],[144,993]],[[470,632],[535,598],[605,591]],[[815,812],[870,858],[930,938]]];for(const r of roads)road(r,17,'town');
-for(const r of [[[112,618],[120,740],[185,816]],[[102,520],[178,575],[258,620]],[[502,574],[612,538],[728,521]],[[784,1190],[850,1230]],[[784,1410],[822,1490]]])road(r,10);
-// Forest clusters: trees do not block paths; walking is an exploration game.
-function tree(x,y,scale=1){let r=12*scale;g.fillStyle='#496b36';g.fillRect(x-2,y-3,r*.42,r);g.fillStyle='#245c3b';g.fillRect(x-r,y-r*1.8,r*2,r*1.4);g.fillStyle='#307c48';g.fillRect(x-r*.75,y-r*2.3,r*1.5,r*1.45);g.fillStyle='#3f9754';g.fillRect(x-r*.45,y-r*2.5,r*.9,r*.7);g.fillStyle='#9ec56b';g.fillRect(x-r*.55,y-r*1.8,4,3)}
-for(let i=0;i<440;i++){let x=rand(0,W),y=rand(0,H);let forest=(x<230&&y<620)||(x<110&&y>950)||(x>620&&y<370)||(y>1480&&x<650)||(x>790&&y>1070);if(!forest||water(x,y))continue;if(Math.abs(x-335)<45&&y<850)continue;tree(x,y,rand(.68,1.45))}
-// Gardens and buildings around the village.
-function house(x,y,size=34,roof='#c76a3f'){if(water(x,y))return;g.fillStyle='#466d42';g.fillRect(x-size/2-4,y-size/2-4,size+8,size+8);g.fillStyle='#d9bd80';g.fillRect(x-size/2,y-size/2+6,size,size*.77);g.fillStyle='#a55132';g.fillRect(x-size/2-4,y-size/2,size+8,size*.44);g.fillStyle=roof;g.fillRect(x-size/2,y-size/2-3,size,size*.35);g.fillStyle='#f8e2b1';g.fillRect(x-size*.3,y+1,8,7);g.fillRect(x+size*.15,y+1,8,7);g.fillStyle='#598fa9';g.fillRect(x-size*.3+2,y+2,4,5);g.fillRect(x+size*.15+2,y+2,4,5);g.fillStyle='#805239';g.fillRect(x-3,y+size*.1,7,size*.4)}
-for(let y=825;y<1508;y+=91){for(let x=370;x<795;x+=88){if(rnd()<.20||water(x,y)||Math.hypot(x-540,y-915)<92||Math.hypot(x-700,y-672)<80)continue;house(x+rand(-12,12),y+rand(-12,12),rand(31,43),rnd()<.4?'#b44b36':'#cb7444')}}
-for(let i=0;i<28;i++){let x=rand(44,235),y=rand(820,1465);if(Math.abs(x-(340-y*.08))<45)continue;house(x,y,rand(27,39))}
-for(let i=0;i<48;i++){let x=rand(0,W),y=rand(0,H);if(water(x,y))continue;g.fillStyle=rnd()<.5?'#f6d871':'#e9b2bb';g.fillRect(x,y,3,4);g.fillRect(x+6,y+3,2,2)}
-function label(t,x,y){g.font='bold 16px ui-monospace, monospace';let w=g.measureText(t).width+16;g.fillStyle='#193e32';g.fillRect(Math.round(x-w/2),Math.round(y-14),Math.ceil(w),21);g.strokeStyle='#f4db9d';g.lineWidth=2;g.strokeRect(Math.round(x-w/2),Math.round(y-14),Math.ceil(w),21);g.textAlign='center';g.fillStyle='#fff1be';g.fillText(t,x,y+2)}
-// Public destinations represented as simplified in-game illustrations.
-const spots=[
- {name:'Hem',x:104,y:620,text:'Här börjar Lages äventyr! Nu kan du upptäcka hela Rimforsa.',kind:'home'},
- {name:'Förskolan',x:695,y:700,text:'Här finns förskolan och en lekplats med gungor och rutschkana.',kind:'school'},
- {name:'ICA Rimforsa',x:535,y:895,text:'Dags att handla något gott? Här ligger ICA i Rimforsa.',kind:'shop'},
- {name:'Rimforsa centrum',x:448,y:1050,text:'Nu är du mitt i Rimforsa! Utforska gatorna och husen.',kind:'center'},
- {name:'Liljeholmen',x:790,y:925,text:'Här ligger bostadsområdet Liljeholmen med små vägar och hus.',kind:'houses'},
- {name:'Åsundabadet',x:709,y:1390,text:'Här går det att bada när det är varmt och skönt ute!',kind:'beach'}
+const W=1448,H=1086, canvas=document.getElementById('world'), ctx=canvas.getContext('2d',{alpha:false});
+const mini=document.getElementById('mini'), mc=mini.getContext('2d');
+const whole=document.getElementById('wholeMap'), wc=whole.getContext('2d');
+const message=document.getElementById('message'), title=document.getElementById('area'), interact=document.getElementById('interact');
+const overlay=document.getElementById('mapOverlay');
+const tiles=new Image(), maskImage=new Image(), sprite=new Image();
+maskImage.crossOrigin='anonymous';
+tiles.src='./rimforsa-karta.webp?v=2';maskImage.src='./gangbarhet.png?v=2';sprite.src='./lage-sprites.png';
+let imageLoaded=false,maskLoaded=false,spriteLoaded=false,collision=null,maskW=724,maskH=543,frameCount=0;
+const state={x:360,y:335,dir:'down',phase:0,camX:359,camY:330,near:null,visited:new Set(),path:[],messageLocked:false};
+const keys={up:false,down:false,left:false,right:false};
+const sites=[
+ {name:'Hem',x:360,y:335,text:'Välkommen hem! Här på Ulrikavägen börjar Lages Rimforsaäventyr.',symbol:'🏠'},
+ {name:'Hackelhallen',x:667,y:418,text:'Här kan man spela fotboll, röra på sig och ha kul.',symbol:'⚽'},
+ {name:'Förskolan Hackel',x:1002,y:480,text:'En förskola med stor gård, rutschkana och plats för lek.',symbol:'🛝'},
+ {name:'Bensinmacken',x:394,y:641,text:'Här kan man köpa korv! Mums!',symbol:'🌭'},
+ {name:'ICA Melkers',x:699,y:783,text:'Här kan Lage köpa något gott att äta.',symbol:'🛒'},
+ {name:'Bella Donna',x:921,y:813,text:'Här ligger pizzerian Bella Donna. Kanske dags för pizza?',symbol:'🍕'},
+ {name:'Åsundabadet',x:1220,y:740,text:'Här kan man bada och leka vid sjön när vädret är fint.',symbol:'🏖️'},
+ {name:'Kinda Båtklubb',x:1100,y:116,text:'Här ligger båtarna vid sjön.',symbol:'⛵'}
 ];
-for(const s of spots){if(s.kind==='school'||s.kind==='shop'||s.kind==='home'){house(s.x,s.y-5,s.kind==='home'?46:69,s.kind==='school'?'#a95038':'#d97c32')}else if(s.kind==='beach'){g.fillStyle='#edcf82';g.fillRect(s.x-20,s.y-15,44,25);g.fillStyle='#ffffff';g.fillRect(s.x-3,s.y-24,4,20);g.fillStyle='#ea685e';g.fillRect(s.x+1,s.y-25,12,7)}else if(s.kind==='center'){g.fillStyle='#c2b58c';g.fillRect(s.x-22,s.y-23,44,31);g.fillStyle='#6b5f57';g.fillRect(s.x-3,s.y-17,7,26)}else{house(s.x,s.y,49)}label(s.name.toUpperCase(),s.x,s.y-47)}
-// A local road sign on Route 23.
-g.fillStyle='#2164a2';g.fillRect(279,488,41,32);g.fillStyle='#eee7c4';g.font='bold 22px monospace';g.textAlign='center';g.fillText('23',300,512);
-// Pointer and keyboard controls.
-const sprite=new Image();sprite.src='./lage-sprites.png';let available=false;sprite.onload=()=>{available=true};const state={x:120,y:721,dir:'down',phase:0,camX:0,camY:0,walked:0};const keys={up:false,down:false,left:false,right:false};let goto=null,shown=null,near=null;
-function start(){state.x=122;state.y=725;state.dir='down';state.phase=0;state.camX=state.x;state.camY=state.y;state.walked=0;goto=null;shown=null;near=null;msg.innerHTML='<strong>Nu börjar äventyret!</strong> Gå till ICA, förskolan, stranden eller bara utforska.';interact.hidden=true;area.textContent='Rimforsa';}
-start();
-function stop(){goto=null;for(const k in keys)keys[k]=false;document.querySelectorAll('[data-dir]').forEach(b=>b.classList.remove('held'))}
-document.querySelectorAll('[data-dir]').forEach(b=>{const d=b.dataset.dir;b.addEventListener('pointerdown',e=>{e.preventDefault();stop();keys[d]=true;b.classList.add('held');b.setPointerCapture(e.pointerId)});for(const type of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(type,()=>{keys[d]=false;b.classList.remove('held')})});
-const lookup={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',a:'left',s:'down',d:'right',W:'up',A:'left',S:'down',D:'right'};
-window.addEventListener('keydown',e=>{if(document.getElementById('mapOverlay').classList.contains('show')){if(e.key==='Escape')closeMap();return}const d=lookup[e.key];if(!d)return;e.preventDefault();goto=null;keys[d]=true});window.addEventListener('keyup',e=>{const d=lookup[e.key];if(d)keys[d]=false});window.addEventListener('blur',stop);document.addEventListener('visibilitychange',()=>{if(document.hidden)stop()});
-function resize(){const box=c.getBoundingClientRect();const ratio=Math.min(1,450/Math.max(1,box.width));c.width=Math.max(240,Math.round(box.width*ratio));c.height=Math.max(210,Math.round(box.height*ratio));ctx.imageSmoothingEnabled=false}resize();window.addEventListener('resize',resize);
-c.addEventListener('pointerdown',e=>{e.preventDefault();const r=c.getBoundingClientRect();const x=(e.clientX-r.left)*c.width/r.width;const y=(e.clientY-r.top)*c.height/r.height;const vc=viewCamera();const cameraX=vc.x-c.width/2,cameraY=vc.y-c.height/2;goto={x:Math.max(14,Math.min(W-14,cameraX+x)),y:Math.max(14,Math.min(H-14,cameraY+y))};});
-function currentSpot(){let chosen=null,dist=1e9;for(const s of spots){const d=Math.hypot(s.x-state.x,s.y-state.y);if(d<dist){dist=d;chosen=s}}return dist<88?chosen:null}
-function refreshMessage(){const here=currentSpot();if(here?.name!==near?.name){shown=null;near=here;interact.hidden=!here;if(here){msg.innerHTML='<strong>'+here.name+'</strong> – tryck på Utforska för att titta närmare.';area.textContent=here.name}else{msg.innerHTML='<strong>På upptäcktsfärd!</strong> Fortsätt gå runt i Rimforsa.';area.textContent='Rimforsa'}}}
-interact.addEventListener('click',()=>{if(!near)return;shown=near;msg.innerHTML='<strong>'+near.name+':</strong> '+near.text});document.getElementById('reset').addEventListener('click',()=>{stop();start()});
-function viewCamera(){return {x:Math.max(c.width/2,Math.min(W-c.width/2,state.camX)),y:Math.max(c.height/2,Math.min(H-c.height/2,state.camY))}}
-function drawPlayer(){const vc=viewCamera();const x=Math.round(state.x-(vc.x-c.width/2)),y=Math.round(state.y-(vc.y-c.height/2));ctx.fillStyle='#1d352844';ctx.beginPath();ctx.ellipse(x,y-2,12,5,0,0,Math.PI*2);ctx.fill();if(available){const row=state.dir==='down'?0:state.dir==='left'?1:state.dir==='right'?2:3;const frame=Math.floor(state.phase)%4;ctx.drawImage(sprite,frame*56,row*56,56,56,x-23,y-49,46,46)}else{ctx.fillStyle='#a2713e';ctx.fillRect(x-9,y-32,18,12);ctx.fillStyle='#f2ca9f';ctx.fillRect(x-8,y-27,16,13);ctx.fillStyle='#fcf1ca';ctx.fillRect(x-11,y-15,22,16);ctx.fillStyle='#9c4551';ctx.fillRect(x-9,y,7,8);ctx.fillRect(x+3,y,7,8)}}
-function draw(){const cw=c.width,ch=c.height;ctx.fillStyle='#2e734f';ctx.fillRect(0,0,cw,ch);const vc=viewCamera();ctx.drawImage(map,Math.round(cw/2-vc.x),Math.round(ch/2-vc.y));drawPlayer();ctx.strokeStyle='#182c20';ctx.lineWidth=2;ctx.strokeRect(1,1,cw-2,ch-2);mc.clearRect(0,0,mini.width,mini.height);mc.drawImage(map,0,0,mini.width,mini.height);const mx=state.x/W*mini.width,my=state.y/H*mini.height;mc.fillStyle='#fffaad';mc.fillRect(Math.round(mx)-3,Math.round(my)-3,7,7);mc.fillStyle='#e6424d';mc.fillRect(Math.round(mx)-2,Math.round(my)-2,5,5)}
-let last=performance.now();function tick(now){const dt=Math.min((now-last)/1000,.045);last=now;let dx=(+keys.right)-(+keys.left),dy=(+keys.down)-(+keys.up);if(dx||dy)goto=null;else if(goto){dx=goto.x-state.x;dy=goto.y-state.y;if(Math.hypot(dx,dy)<6){goto=null;dx=dy=0}}const mag=Math.hypot(dx,dy);if(mag>.01){dx/=mag;dy/=mag;const speed=152*dt;let nx=Math.max(14,Math.min(W-14,state.x+dx*speed)),ny=Math.max(14,Math.min(H-14,state.y+dy*speed));if(!water(nx,ny)){state.x=nx;state.y=ny}else{if(!water(nx,state.y))state.x=nx;if(!water(state.x,ny))state.y=ny;if(goto)goto=null}state.dir=Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up');state.phase+=dt*8;state.walked+=dt;if(state.walked>.16){refreshMessage();state.walked=0}}else state.phase=0;state.camX+=(state.x-state.camX)*Math.min(1,dt*13);state.camY+=(state.y-state.camY)*Math.min(1,dt*13);draw();requestAnimationFrame(tick)}requestAnimationFrame(tick);
-const mapOverlay=document.getElementById('mapOverlay');function openMap(){stop();mapOverlay.classList.add('show');wc.drawImage(map,0,0,whole.width,whole.height);wc.fillStyle='#ffdc6c';wc.fillRect(state.x/W*whole.width-5,state.y/H*whole.height-5,10,10);wc.strokeStyle='#6c2826';wc.lineWidth=2;wc.strokeRect(state.x/W*whole.width-5,state.y/H*whole.height-5,10,10);document.getElementById('closeMap').focus()};function closeMap(){mapOverlay.classList.remove('show')};document.getElementById('showMap').addEventListener('click',openMap);document.getElementById('miniMapBtn').addEventListener('click',openMap);document.getElementById('closeMap').addEventListener('click',closeMap);mini.addEventListener('click',openMap);mapOverlay.addEventListener('click',e=>{if(e.target===mapOverlay)closeMap()});
+const playerRadius=6;
+function loadMask(){if(!maskImage.complete||!maskImage.naturalWidth)return;const off=document.createElement('canvas');off.width=maskImage.naturalWidth;off.height=maskImage.naturalHeight;const g=off.getContext('2d',{willReadFrequently:true});g.imageSmoothingEnabled=false;g.drawImage(maskImage,0,0);collision=g.getImageData(0,0,off.width,off.height).data;maskW=off.width;maskH=off.height;maskLoaded=true;message.innerHTML='<strong>Äventyret börjar!</strong> Besök platserna på kartan och utforska Rimforsa.'}
+maskImage.addEventListener('load',loadMask);tiles.addEventListener('load',()=>imageLoaded=true);sprite.addEventListener('load',()=>spriteLoaded=true);
+for(const [image,label] of [[tiles,'kartan'],[maskImage,'gångbarhetskartan']])image.addEventListener('error',()=>{message.textContent='Kunde inte ladda '+label+'. Försök uppdatera sidan.'});
+function freePoint(x,y){if(!collision||x<8||y<8||x>=W-8||y>=H-8)return false;const px=Math.floor(x*maskW/W),py=Math.floor(y*maskH/H);const i=(py*maskW+px)*4;return collision[i]>200}
+function canStand(x,y){return freePoint(x,y+1)&&freePoint(x-5,y-3)&&freePoint(x+5,y-3)&&freePoint(x,y-8)}
+function clearPath(){state.path=[]}
+function nearestSite(){let choice=null,d=65;for(const s of sites){const dist=Math.hypot(state.x-s.x,state.y-s.y);if(dist<d){d=dist;choice=s}}return choice}
+function updateMessage(){const near=nearestSite();if(near===state.near)return;state.near=near;interact.hidden=!near;state.messageLocked=false;if(near){message.innerHTML='<strong>'+near.symbol+' '+near.name+'</strong> – tryck på Utforska för att besöka platsen.';title.textContent=near.name}else{title.textContent='Rimforsa';message.innerHTML='<strong>På upptäcktsfärd!</strong> Följ vägarna till nästa plats.'}}
+interact.addEventListener('click',()=>{if(!state.near)return;state.visited.add(state.near.name);message.innerHTML='<strong>'+state.near.symbol+' '+state.near.name+'</strong> – '+state.near.text;state.messageLocked=true;title.textContent=state.near.name;interact.textContent='Besök igen ✨'});
+function reset(){state.x=360;state.y=335;state.camX=360;state.camY=335;state.dir='down';state.phase=0;state.visited.clear();state.path=[];state.near=null;interact.textContent='Utforska ✨';interact.hidden=true;title.textContent='Hem – Ulrikavägen';message.innerHTML='<strong>Nu börjar äventyret!</strong> Gå på vägarna till ICA, Bella Donna eller badplatsen.';updateMessage()}
+document.getElementById('reset').addEventListener('click',()=>{stop();reset()});
+function stop(){clearPath();for(const k of Object.keys(keys))keys[k]=false;document.querySelectorAll('[data-dir]').forEach(b=>b.classList.remove('held'))}
+for(const button of document.querySelectorAll('[data-dir]')){const dir=button.dataset.dir;button.addEventListener('pointerdown',ev=>{ev.preventDefault();stop();keys[dir]=true;button.classList.add('held');try{button.setPointerCapture(ev.pointerId)}catch{}});for(const evt of ['pointerup','pointercancel','lostpointercapture'])button.addEventListener(evt,()=>{keys[dir]=false;button.classList.remove('held')})}
+const inputMap={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',a:'left',s:'down',d:'right',W:'up',A:'left',S:'down',D:'right'};
+window.addEventListener('keydown',ev=>{if(overlay.classList.contains('show')){if(ev.key==='Escape')closeMap();return}const dir=inputMap[ev.key];if(!dir)return;ev.preventDefault();clearPath();keys[dir]=true});
+window.addEventListener('keyup',ev=>{let dir=inputMap[ev.key];if(dir)keys[dir]=false});window.addEventListener('blur',stop);document.addEventListener('visibilitychange',()=>{if(document.hidden)stop()});
+function resize(){const r=canvas.getBoundingClientRect(),ratio=Math.min(1,450/Math.max(1,r.width));canvas.width=Math.round(Math.max(265,r.width*ratio));canvas.height=Math.round(Math.max(240,r.height*ratio));ctx.imageSmoothingEnabled=false}resize();window.addEventListener('resize',resize);
+// A* makes tapping anywhere on a street route around buildings instead of trying to walk through them.
+const STEP=8,NX=Math.ceil(W/STEP),NY=Math.ceil(H/STEP),MAX=NX*NY;
+function walkCell(cx,cy){return cx>=1&&cy>=1&&cx<NX-1&&cy<NY-1&&canStand((cx+.5)*STEP,(cy+.5)*STEP)}
+function closestWalkable(tx,ty){const startX=Math.max(1,Math.min(NX-2,Math.floor(tx/STEP))),startY=Math.max(1,Math.min(NY-2,Math.floor(ty/STEP)));if(walkCell(startX,startY))return[startX,startY];for(let d=1;d<=18;d++){let best=null,bestDistance=Infinity;for(let yy=startY-d;yy<=startY+d;yy++)for(let xx=startX-d;xx<=startX+d;xx++){if(Math.abs(xx-startX)!==d&&Math.abs(yy-startY)!==d)continue;if(walkCell(xx,yy)){const v=(xx*STEP-tx)**2+(yy*STEP-ty)**2;if(v<bestDistance){best=[xx,yy];bestDistance=v}}}if(best)return best}return null}
+function pathTo(x,y){if(!maskLoaded)return [];const s=closestWalkable(state.x,state.y),t=closestWalkable(x,y);if(!s||!t)return [];
+const start=s[1]*NX+s[0],goal=t[1]*NX+t[0],prev=new Int32Array(MAX).fill(-1),dist=new Float32Array(MAX).fill(Infinity),seen=new Uint8Array(MAX);let heap=[];const push=(id,cost)=>{let i=heap.length;heap.push([cost,id]);while(i){const p=(i-1)>>1;if(heap[p][0]<=cost)break;heap[i]=heap[p];i=p}heap[i]=[cost,id]};const pop=()=>{let top=heap[0],last=heap.pop();if(heap.length){let i=0;while(true){let c=i*2+1;if(c>=heap.length)break;if(c+1<heap.length&&heap[c+1][0]<heap[c][0])c++;if(last[0]<=heap[c][0])break;heap[i]=heap[c];i=c}heap[i]=last}return top[1]};
+dist[start]=0;push(start,0);let reached=false,expanded=0;const moves=[[1,0,1],[-1,0,1],[0,1,1],[0,-1,1],[1,1,1.414],[-1,1,1.414],[1,-1,1.414],[-1,-1,1.414]];
+while(heap.length&&expanded++<MAX){const id=pop();if(seen[id])continue;seen[id]=1;if(id===goal){reached=true;break}const cx=id%NX,cy=(id/NX)|0;for(const [dx,dy,cost] of moves){const nx=cx+dx,ny=cy+dy;if(!walkCell(nx,ny))continue;if(dx&&dy&&(!walkCell(cx+dx,cy)||!walkCell(cx,cy+dy)))continue;let nid=ny*NX+nx,nd=dist[id]+cost;if(nd>=dist[nid])continue;prev[nid]=id;dist[nid]=nd;const h=Math.hypot(t[0]-nx,t[1]-ny);push(nid,nd+h)}}
+if(!reached)return [];let ids=[];for(let i=goal;i!==-1;i=prev[i])ids.push(i);ids.reverse();return ids.slice(1).map(id=>({x:((id%NX)+.5)*STEP,y:((((id/NX)|0)+.5)*STEP)}))}
+canvas.addEventListener('pointerdown',ev=>{if(!maskLoaded||overlay.classList.contains('show'))return;ev.preventDefault();const r=canvas.getBoundingClientRect(),sx=(ev.clientX-r.left)*canvas.width/r.width,sy=(ev.clientY-r.top)*canvas.height/r.height;const x=state.camX-canvas.width/2+sx,y=state.camY-canvas.height/2+sy;state.path=pathTo(x,y)});
+function slideMove(dx,dy){if(!maskLoaded)return false;const nx=state.x+dx,ny=state.y+dy;let moved=false;if(canStand(nx,ny)){state.x=nx;state.y=ny;return true}if(dx&&canStand(nx,state.y)){state.x=nx;moved=true}if(dy&&canStand(state.x,ny)){state.y=ny;moved=true}return moved}
+function drawPlayer(){const x=Math.round(state.x-state.camX+canvas.width/2),y=Math.round(state.y-state.camY+canvas.height/2);ctx.fillStyle='#162d2588';ctx.beginPath();ctx.ellipse(x,y-2,11,4,0,0,2*Math.PI);ctx.fill();if(spriteLoaded){const row=state.dir==='down'?0:state.dir==='left'?1:state.dir==='right'?2:3,frame=Math.floor(state.phase)%4;ctx.drawImage(sprite,frame*56,row*56,56,56,x-22,y-47,44,44)}else{ctx.fillStyle='#f6d3aa';ctx.fillRect(x-7,y-33,14,15);ctx.fillStyle='#f6e8c5';ctx.fillRect(x-12,y-18,24,17);ctx.fillStyle='#b65c63';ctx.fillRect(x-9,y-2,7,9);ctx.fillRect(x+3,y-2,7,9)}}
+function drawMap(ctx2,w,h,full=false){ctx2.clearRect(0,0,w,h);ctx2.imageSmoothingEnabled=false;if(imageLoaded)ctx2.drawImage(tiles,0,0,w,h);else{ctx2.fillStyle='#80a75c';ctx2.fillRect(0,0,w,h)}for(const s of sites){const x=s.x/W*w,y=s.y/H*h;ctx2.fillStyle='#feeaa9';ctx2.fillRect(x-2,y-2,4,4);if(full){ctx2.fillStyle='#08251d';ctx2.fillRect(x+3,y-1,2,2)}}const px=state.x/W*w,py=state.y/H*h;ctx2.fillStyle='#ff4d5e';ctx2.fillRect(px-3,py-3,7,7);ctx2.strokeStyle='#fff2c0';ctx2.lineWidth=1.2;ctx2.strokeRect(px-4,py-4,9,9)}
+function draw(){const w=canvas.width,h=canvas.height;ctx.fillStyle='#305d42';ctx.fillRect(0,0,w,h);if(imageLoaded)ctx.drawImage(tiles,Math.round(w/2-state.camX),Math.round(h/2-state.camY));drawPlayer();ctx.strokeStyle='#1b3028';ctx.lineWidth=2;ctx.strokeRect(1,1,w-2,h-2);drawMap(mc,mini.width,mini.height)}
+let last=performance.now(),stepProgress=0;function tick(now){const dt=Math.min(.05,(now-last)/1000);last=now;if(maskLoaded){let dx=(+keys.right)-(+keys.left),dy=(+keys.down)-(+keys.up);const byKeys=!!(dx||dy);if(byKeys)clearPath();else if(state.path.length){let next=state.path[0],d=Math.hypot(next.x-state.x,next.y-state.y);if(d<9){state.path.shift();next=state.path[0]}if(next){dx=next.x-state.x;dy=next.y-state.y}}let len=Math.hypot(dx,dy);if(len>.1){dx/=len;dy/=len;let step=Math.min(143*dt,byKeys?143*dt:len);const moved=slideMove(dx*step,dy*step);if(!moved&&!byKeys)clearPath();if(moved){state.dir=Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up');state.phase+=dt*9;stepProgress+=dt;if(stepProgress>.11){updateMessage();stepProgress=0}}else state.phase=0}else state.phase=0}
+const clampedX=Math.max(canvas.width/2,Math.min(W-canvas.width/2,state.x)),clampedY=Math.max(canvas.height/2,Math.min(H-canvas.height/2,state.y));state.camX+=(clampedX-state.camX)*Math.min(1,dt*14);state.camY+=(clampedY-state.camY)*Math.min(1,dt*14);draw();frameCount++;requestAnimationFrame(tick)}requestAnimationFrame(tick);
+function openMap(){stop();overlay.classList.add('show');drawMap(wc,whole.width,whole.height,true);document.getElementById('closeMap').focus()}
+function closeMap(){overlay.classList.remove('show')}
+for(const id of ['showMap','miniMapBtn'])document.getElementById(id).addEventListener('click',openMap);
+document.getElementById('closeMap').addEventListener('click',closeMap);mini.addEventListener('click',openMap);overlay.addEventListener('click',e=>{if(e.target===overlay)closeMap()});
+window.__rimforsaTest={state,sites,canStand,pathTo,moveTo:(x,y)=>{state.x=x;state.y=y;updateMessage()},isReady:()=>maskLoaded&&imageLoaded,hasSprite:()=>spriteLoaded,frames:()=>frameCount};
+reset();
 })();
+
 </script>
 </body></html>
