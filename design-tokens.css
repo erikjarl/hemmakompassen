@@ -273,3 +273,24 @@ body.hk-light-account #logged-out > details > p {
 body.hk-light-account #logged-out > details > p {
   line-height:1.55;
 }
+
+/* DES-01G / UX-READ-01: signing out is a secondary account action.
+   Preserve its visible label, 44px target, keyboard focus and JS handler. */
+body.hk-light-account #logout {
+  justify-self:start;
+  min-height:44px;
+  background:var(--hk-surface-alt);
+  color:var(--hk-ink);
+  border:1px solid #8b8c7b;
+  box-shadow:none;
+}
+body.hk-light-account #logout:hover:not(:disabled) {
+  background:var(--hk-sage-pale);
+}
+body.hk-light-account #logout:focus-visible {
+  outline:3px solid var(--hk-focus);
+  outline-offset:3px;
+}
+@media (max-width:390px) {
+  body.hk-light-account #logout { width:100%; }
+}

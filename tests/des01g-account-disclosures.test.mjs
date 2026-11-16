@@ -10,7 +10,7 @@ test('registration and password recovery remain native optional disclosures',()=
   assert.match(html,/<details id="register"><summary>Skapa konto<\/summary><form id="signup-form">/);
   assert.match(html,/<details id="reset"><summary>Glömt lösenord eller saknar lösenord\?<\/summary>/);
   assert.match(html,/<form id="email-form">/);
-  assert.match(html,/20261116-des01g-account-disclosures1/);
+  assert.match(html,/20261116-des01g-account-logout-secondary1/);
 });
 test('optional disclosure targets retain visible label, arrow and focus',()=>{
   assert.ok(stage,'expected scoped account disclosure CSS');
