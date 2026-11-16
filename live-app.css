@@ -2686,3 +2686,40 @@ body .live-layout #live-app > .comm-toolkit .comm-feature a:focus-visible {
   outline:3px solid #314f60;
   outline-offset:3px;
 }
+
+
+/* DES-01G / UX-READ-01: warm mediator page canvas. Scoped to the actual
+   mediator route; preserve safety notice, private threads, consent and actions. */
+body .live-layout .live-main:has(#live-app > .mediator-view) {
+  background:#f8f2ea;
+  color:#302b26;
+}
+body .live-layout #live-app > .mediator-view > h1,
+body .live-layout #live-app > .mediator-view > h2 {
+  color:#302b26;
+}
+body .live-layout #live-app > .mediator-view > p.live-muted {
+  color:#534c44;
+}
+body .live-layout #live-app > .mediator-view > .live-panel:not(.mediator-notice) {
+  background:#fff9f1;
+  border-color:#d9d1c5;
+  color:#302b26;
+  box-shadow:0 8px 22px rgb(48 43 38 / 6%);
+}
+body .live-layout #live-app > .mediator-view > .live-panel:not(.mediator-notice) h2,
+body .live-layout #live-app > .mediator-view > .live-panel:not(.mediator-notice) h3 {
+  color:#302b26;
+}
+body .live-layout #live-app > .mediator-view .mediator-actions .live-button {
+  background:#666f3f;
+  color:#fff9f1;
+  min-height:44px;
+}
+body .live-layout #live-app > .mediator-view .mediator-actions .live-button:hover {
+  background:#4c5831;
+}
+body .live-layout #live-app > .mediator-view .mediator-actions .live-button:focus-visible {
+  outline:3px solid #314f60;
+  outline-offset:3px;
+}
