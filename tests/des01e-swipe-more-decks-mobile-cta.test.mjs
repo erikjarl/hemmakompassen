@@ -7,7 +7,7 @@ const css=readFileSync(new URL('../live-app.css',import.meta.url),'utf8');
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 
 test('FBK-02: the existing more-decks shortcut stays a real button above swipe content',()=>{
-  assert.match(app,/<header class=\\"swipe-heading\\">[\s\S]*?<button type=\\"button\\" class=\\"live-button swipe-more-decks-shortcut\\" id=\\"swipe-show-more-decks\\">Gör fler kortlekar/);
+  assert.match(app,/<header class="swipe-heading">[\s\S]*?<button type="button" class="live-button swipe-more-decks-shortcut" id="swipe-show-more-decks">Gör fler kortlekar/);
   assert.match(app,/if\(e\.target\.closest\('#swipe-show-more-decks'\)&&page\(\)==='swipe'\)/);
   assert.match(app,/if\(chooser\)chooser\.open=true;/);
   assert.match(app,/target\.querySelector\('#swipe-themes-heading'\)\?\.focus/);
