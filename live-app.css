@@ -2723,3 +2723,39 @@ body .live-layout #live-app > .mediator-view .mediator-actions .live-button:focu
   outline:3px solid #314f60;
   outline-offset:3px;
 }
+
+
+/* DES-01G / UX-READ-01: light AI reflection output without changing analysis,
+   retry, disclosure, privacy or error behavior. */
+.ai-result-panel {
+  background:#fff9f1;
+  border-color:#d9d1c5;
+  color:#302b26;
+  box-shadow:0 8px 22px rgb(48 43 38 / 7%);
+}
+.ai-result-panel h3 { color:#394627; }
+.ai-result-panel p,
+.ai-result-panel .ai-result-prose,
+.ai-result-panel details { color:#302b26; }
+.ai-result-panel .live-muted { color:#534c44; }
+.ai-result-panel summary {
+  color:#394627;
+  min-height:44px;
+  display:list-item;
+  align-content:center;
+  overflow-wrap:anywhere;
+}
+.ai-result-panel summary:focus-visible,
+.ai-result-panel [data-ai-analysis-retry]:focus-visible {
+  outline:3px solid #314f60;
+  outline-offset:3px;
+}
+.ai-result-panel [role=alert] { color:#9b3026; }
+.ai-result-panel [data-ai-analysis-retry] {
+  min-height:44px;
+  max-width:100%;
+  white-space:normal;
+}
+@media(max-width:420px) {
+  .ai-result-panel { padding:16px; }
+}
