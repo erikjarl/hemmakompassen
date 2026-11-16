@@ -24,7 +24,7 @@ test('the completed-deck chooser is bright, legible and focused',()=>{
  assert.doesNotMatch(stage,/display\s*:\s*none|visibility\s*:\s*hidden|pointer-events\s*:\s*none/);
 });
 test('deck progress and access mechanisms are preserved, stylesheet cache refreshed',()=>{
- assert.ok(html.includes('decks=light-chooser1'));
+ assert.ok(html.includes('decks=highlight-next1'));
  for(const name of ['swipe-more-decks-shortcut','swipe-more-decks','swipe-theme-compact-list','swipe-more-decks-label']){
   assert.ok(js.includes(name),name);
  }
