@@ -2810,3 +2810,35 @@ body .live-layout #live-app > .insights-view > .live-panel h3 {
 body .live-layout #live-app > .insights-view > .live-panel .live-muted {
   color:#534c44;
 }
+
+
+
+/* DES-01F / UX-READ-01: readable self-only personality export actions.
+   No change to export contents, permissions or download behavior. */
+.pf-export {
+  border-top-color:#d9d1c5;
+  color:#302b26;
+}
+.pf-export button {
+  background:#e5e7db;
+  border-color:#a6a892;
+  color:#394627;
+  box-sizing:border-box;
+  min-height:44px;
+  font-weight:700;
+  white-space:normal;
+  overflow-wrap:anywhere;
+}
+.pf-export button:hover {
+  background:#d7ddc8;
+}
+.pf-export button:focus-visible {
+  outline:3px solid #314f60;
+  outline-offset:3px;
+}
+.pf-export .live-muted {
+  color:#534c44;
+}
+@media(max-width:390px) {
+  .pf-export button { width:100%; }
+}
