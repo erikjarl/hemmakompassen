@@ -25,7 +25,7 @@ test('feedback form and launcher use readable light styling on both pages',()=>{
  assert.doesNotMatch(stage,/display\s*:\s*none|visibility\s*:\s*hidden|pointer-events\s*:\s*none/);
 });
 test('both pages fetch same stylesheet and retain privacy and draft controls',()=>{
- const rev='feedback.css?v=20261115-des01g-feedback-light1';
+ const rev='feedback.css?v=20261116-des01g-feedback-mobile1';
  for(const page of [app,account]){
   assert.ok(page.includes(rev));
   for(const id of ['hk-feedback-dialog','hk-feedback-form','hk-feedback-status','hk-feedback-close','hk-feedback-clear']){
@@ -35,4 +35,14 @@ test('both pages fetch same stylesheet and retain privacy and draft controls',()
   assert.ok(page.includes('hk-feedback-note'));
  }
  assert.ok(account.includes('Utkastet bevaras')); assert.match(css,/min-height:44px/);
+});
+
+test('report actions on narrow phones have full-width buttons and safe scroll area',()=>{
+ assert.match(stage,/@media \(max-width:390px\)/);
+ assert.match(stage,/\.hk-feedback-dialog \.hk-feedback-actions \{/);
+ assert.match(stage,/grid-template-columns:minmax\(0,1fr\)/);
+ assert.match(stage,/\.hk-feedback-dialog \.hk-feedback-actions button \{/);
+ assert.match(stage,/width:100%/);
+ assert.match(stage,/overflow-wrap:anywhere/);
+ assert.match(stage,/env\(safe-area-inset-bottom\)/);
 });
