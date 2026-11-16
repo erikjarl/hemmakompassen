@@ -2939,3 +2939,52 @@ body .live-layout #live-app > .swipe-play-view.swipe-theme-play > .swipe-heading
     font-weight:700;
   }
 }
+
+
+/* DES-01E / UX-READ-01: completed themed decks use the same bright reading
+   surface as their question cards, without changing stored answers or retest. */
+body .live-layout #live-app > .swipe-play-view.swipe-theme-play .swipe-stage .swipe-finished {
+  background:#fff9f1;
+  border:1px solid #d9d1c5;
+  border-radius:18px;
+  padding:clamp(16px,4vw,25px);
+  color:#302b26;
+}
+body .live-layout #live-app > .swipe-play-view.swipe-theme-play .swipe-finished > h2 {
+  color:#302b26;
+  font-size:clamp(1.3rem,3.5vw,1.75rem);
+  line-height:1.25;
+}
+body .live-layout #live-app > .swipe-play-view.swipe-theme-play .swipe-finished > p {
+  color:#534c44;
+  line-height:1.55;
+}
+body .live-layout #live-app > .swipe-play-view.swipe-theme-play .swipe-finished details {
+  margin-top:12px;
+}
+body .live-layout #live-app > .swipe-play-view.swipe-theme-play .swipe-finished summary {
+  box-sizing:border-box;
+  min-height:44px;
+  padding:10px 5px;
+  color:#394627;
+  font-weight:700;
+  cursor:pointer;
+}
+body .live-layout #live-app > .swipe-play-view.swipe-theme-play .swipe-finished summary:focus-visible,
+body .live-layout #live-app > .swipe-play-view.swipe-theme-play .swipe-finished #theme-restart:focus-visible {
+  outline:3px solid #314f60;
+  outline-offset:3px;
+}
+body .live-layout #live-app > .swipe-play-view.swipe-theme-play .swipe-finished #theme-restart {
+  min-height:44px;
+  max-width:100%;
+  white-space:normal;
+  margin-top:8px;
+  background:#666f3f;
+  color:#fff9f1;
+}
+@media(max-width:390px){
+  body .live-layout #live-app > .swipe-play-view.swipe-theme-play .swipe-finished #theme-restart {
+    width:100%;
+  }
+}
