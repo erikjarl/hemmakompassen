@@ -49,3 +49,22 @@ test('tested presentation colors remain in their corresponding components',()=>{
   assert.match(app,/\.ai-result-panel h3\s*\{\s*color:#394627;/);
   assert.match(app,/\.swipe-results \.swipe-rule-summary,[\s\S]*?background:#e5e7db;/);
 });
+
+
+test('DES-01H: account-page labels, links and controls retain readable text colors',()=>{
+  const accountPairs=[
+    ['account default text',palette.ink,palette.bg],
+    ['account secondary text',palette.muted,palette.bg],
+    ['account disclosure title',palette.ink,palette['surface-alt']],
+    ['account link','#394627',palette.bg],
+    ['account button text',palette.surface,palette.olive],
+    ['account status text',palette.ink,palette.surface]
+  ];
+  for(const [label,foreground,background] of accountPairs){
+    assert.ok(contrast(foreground,background)>=4.5,label+' misses normal-text AA contrast');
+  }
+  assert.match(tokens,/body\.hk-light-account\s*\{[\s\S]*?background:\s*var\(--hk-bg\);[\s\S]*?color:\s*var\(--hk-ink\);/);
+  assert.match(tokens,/body\.hk-light-account p,[\s\S]*?body\.hk-light-account small\s*\{\s*color:\s*var\(--hk-muted\);/);
+  assert.match(tokens,/body\.hk-light-account a\s*\{\s*color:\s*#394627;/);
+  assert.match(tokens,/body\.hk-light-account :is\(button, input\[type=submit\]\)\s*\{[\s\S]*?background:\s*var\(--hk-olive\);\s*color:\s*#fff9f1;/);
+});
