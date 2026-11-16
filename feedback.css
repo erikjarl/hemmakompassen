@@ -112,3 +112,25 @@
   text-underline-offset:3px;
 }
 #hk-feedback-status{color:#302b26}
+
+/* DES-01G / UX-READ-01: report actions remain readable on narrow phones.
+   Form data, validation, submission and draft preservation are unchanged. */
+@media (max-width:390px) {
+  .hk-feedback-dialog {
+    padding:16px;
+    max-height:calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  }
+  .hk-feedback-dialog .hk-feedback-actions {
+    display:grid;
+    grid-template-columns:minmax(0,1fr);
+    gap:10px;
+  }
+  .hk-feedback-dialog .hk-feedback-actions button {
+    box-sizing:border-box;
+    width:100%;
+    min-width:0;
+    min-height:44px;
+    white-space:normal;
+    overflow-wrap:anywhere;
+  }
+}
