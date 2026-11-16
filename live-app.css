@@ -3042,3 +3042,40 @@ body .live-layout #live-app > .schyssta-view
     overflow-wrap:anywhere;
   }
 }
+
+/* DES-01E / UX-READ-01: make the optional next-deck disclosure recognizable
+   as an action in the already-completed general deck. No change in behavior. */
+.swipe-themes .swipe-more-decks {
+  border:2px solid #666f3f;
+  background:#e5e7db;
+  box-shadow:0 8px 20px rgb(48 43 38 / 9%);
+}
+.swipe-themes .swipe-more-decks > summary {
+  background:#e5e7db;
+  color:#394627;
+  min-height:60px;
+  font-size:clamp(18px,2.6vw,21px);
+  font-weight:800;
+  padding:15px 17px;
+}
+.swipe-themes .swipe-more-decks > summary:hover,
+.swipe-themes .swipe-more-decks > summary:focus-visible {
+  background:#d7ddc8;
+}
+.swipe-themes .swipe-more-decks > summary:focus-visible {
+  outline:3px solid #314f60;
+  outline-offset:-3px;
+}
+.swipe-themes .swipe-more-decks[open] > summary {
+  background:#e5e7db;
+}
+@media(max-width:390px) {
+  .swipe-themes .swipe-more-decks > summary {
+    min-height:60px;
+    padding:13px;
+  }
+  .swipe-themes .swipe-more-decks > summary::after {
+    white-space:normal;
+    text-align:center;
+  }
+}
