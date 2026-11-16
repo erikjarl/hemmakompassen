@@ -228,3 +228,48 @@ body.hk-light-account #refresh-account:focus-visible{
   outline:3px solid var(--hk-focus);
   outline-offset:3px;
 }
+
+
+/* DES-01G / UX-READ-01: two optional account paths are discoverable and
+   keyboard/touch accessible without competing with the login submit button. */
+body.hk-light-account #logged-out > details > summary {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  box-sizing:border-box;
+  min-height:48px;
+  padding:10px 2px;
+  color:#394627;
+  font-weight:700;
+  line-height:1.4;
+  overflow-wrap:anywhere;
+  list-style:none;
+}
+body.hk-light-account #logged-out > details > summary::-webkit-details-marker {
+  display:none;
+}
+body.hk-light-account #logged-out > details > summary::after {
+  content:"";
+  flex:0 0 auto;
+  width:10px;
+  height:10px;
+  margin-right:5px;
+  border-right:2px solid currentColor;
+  border-bottom:2px solid currentColor;
+  transform:rotate(45deg);
+}
+body.hk-light-account #logged-out > details[open] > summary::after {
+  transform:rotate(225deg);
+}
+body.hk-light-account #logged-out > details > summary:focus-visible {
+  outline:3px solid var(--hk-focus);
+  outline-offset:3px;
+}
+body.hk-light-account #logged-out > details > form,
+body.hk-light-account #logged-out > details > p {
+  margin-top:12px;
+}
+body.hk-light-account #logged-out > details > p {
+  line-height:1.55;
+}

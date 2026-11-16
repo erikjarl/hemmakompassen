@@ -17,7 +17,7 @@ test('account status has neutral styling regardless of outcome',()=>{
  assert.match(section,/background:var\(--hk-sage-pale\)/);
 });
 test('status and refresh are separate live regions, with unchanged form hooks',()=>{
- assert.ok(html.includes('design-tokens.css?v=20261115-des01g-account-refresh-secondary1'));
+ assert.match(html, /design-tokens\.css\?v=20261116-des01g-account-disclosures1/);
  assert.match(html,/id="status" role="status" aria-live="polite"/);
  assert.match(html,/id="refresh-account-status" role="status" aria-atomic="true"/);
  for(const id of ['email-form','signup-form','accept-form','refresh-account','invite-notice']){
