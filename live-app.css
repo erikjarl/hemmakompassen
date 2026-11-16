@@ -3097,3 +3097,40 @@ body .live-layout #live-app .swipe-play-view:not(.swipe-theme-play) .swipe-headi
   outline:3px solid #314f60;
   outline-offset:3px;
 }
+
+
+/* DES-01E / UX-READ-01: completed general deck disclosure is a clear next step.
+   Reuses the native details/summary and keeps the existing deck choices intact. */
+.swipe-themes .swipe-more-decks {
+  border:2px solid #666f3f;
+  background:#e5e7db;
+  box-shadow:0 8px 20px rgb(48 43 38 / 9%);
+}
+.swipe-themes .swipe-more-decks > summary {
+  box-sizing:border-box;
+  min-height:60px;
+  padding:15px 17px;
+  background:#e5e7db;
+  color:#394627;
+  font-size:clamp(18px,2.6vw,21px);
+  font-weight:800;
+  white-space:normal;
+  overflow-wrap:anywhere;
+}
+.swipe-themes .swipe-more-decks > summary:hover,
+.swipe-themes .swipe-more-decks > summary:focus-visible {
+  background:#d7ddc8;
+}
+.swipe-themes .swipe-more-decks > summary:focus-visible {
+  outline:3px solid #314f60;
+  outline-offset:-3px;
+}
+@media (max-width:390px) {
+  .swipe-themes .swipe-more-decks > summary {
+    padding:13px;
+  }
+  .swipe-themes .swipe-more-decks > summary::after {
+    white-space:normal;
+    text-align:center;
+  }
+}
