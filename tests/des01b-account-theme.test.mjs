@@ -8,7 +8,7 @@ const app = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 
 test('DES-01B account theme is intentionally scoped', () => {
   assert.match(html, /<body class="hk-light-account">/);
-  assert.match(html, /design-tokens\.css\?v=20261116-des01g-account-disclosures1/);
+  assert.match(html, /design-tokens\.css\?v=20261116-des01g-account-logout-secondary1/);
   assert.doesNotMatch(app, /design-tokens\.css/);
   assert.match(css, /body\.hk-light-account/);
   assert.doesNotMatch(css, /(?:^|\n)\s*(?:body|\.live-mobile|#live-mobile-nav)\s*\{/);
