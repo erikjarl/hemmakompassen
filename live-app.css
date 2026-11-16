@@ -2605,3 +2605,42 @@ body .live-layout #live-app > .schyssta-view
     box-shadow:none;
   }
 }
+
+/* DES-01G / UX-READ-01: light Inbox canvas, preserving private message
+   content, independent read receipts and all loading/error states.
+   The refresh toolbar is unique to the verified paired Inbox view. */
+body .live-layout .live-main:has(#live-app > .inbox-refresh-actions) {
+  background:#f8f2ea;
+}
+body .live-layout #live-app:has(> .inbox-refresh-actions) > h1 {
+  color:#302b26;
+}
+body .live-layout #live-app:has(> .inbox-refresh-actions) > p.live-muted {
+  color:#665e54;
+  line-height:1.55;
+}
+body .live-layout #live-app:has(> .inbox-refresh-actions) > .live-panel:not(.inbox-unread-summary) {
+  background:#fff9f1;
+  color:#302b26;
+  border:1px solid #d9d1c5;
+  box-shadow:0 8px 24px rgb(48 43 38 / 7%);
+}
+body .live-layout #live-app:has(> .inbox-refresh-actions) > .live-panel:not(.inbox-unread-summary) h2,
+body .live-layout #live-app:has(> .inbox-refresh-actions) > .live-panel:not(.inbox-unread-summary) h3 {
+  color:#302b26;
+}
+body .live-layout #live-app:has(> .inbox-refresh-actions) > .live-panel:not(.inbox-unread-summary) p.live-muted {
+  color:#665e54;
+}
+body .live-layout #live-app:has(> .inbox-refresh-actions) > .live-panel:not(.inbox-unread-summary) [role="alert"] {
+  color:#713c2e;
+}
+body .live-layout #live-app:has(> .inbox-refresh-actions) > .live-panel:not(.inbox-unread-summary) a[href="#regler"] {
+  color:#394627;
+  font-weight:700;
+  text-underline-offset:3px;
+}
+body .live-layout #live-app:has(> .inbox-refresh-actions) > .live-panel:not(.inbox-unread-summary) a[href="#regler"]:focus-visible {
+  outline:3px solid #314f60;
+  outline-offset:3px;
+}
