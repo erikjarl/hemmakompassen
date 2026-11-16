@@ -107,6 +107,19 @@ try {
     'An empty report must not cause a leave-page confirmation');
   await btn.click();
   assert.equal(await page.locator('#hk-feedback-dialog').evaluate(el=>el.open),true);
+  await page.setViewportSize({width:320,height:700});
+  const narrowDialog = await page.locator('#hk-feedback-dialog').boundingBox();
+  const narrowButtons = await page.locator('#hk-feedback-dialog .hk-feedback-actions button').all();
+  assert.ok(narrowDialog && narrowDialog.x >= 0 && narrowDialog.x+narrowDialog.width <= 320,
+    'The report dialog stays inside a 320px viewport');
+  assert.ok(narrowButtons.length >= 2,'The existing send/clear/close controls are present');
+  for (const action of narrowButtons) {
+    const rect = await action.boundingBox();
+    assert.ok(rect && rect.width > 0 && rect.x >= narrowDialog.x &&
+      rect.x + rect.width <= narrowDialog.x + narrowDialog.width,
+      'Each report action fits inside the narrow dialog');
+  }
+  await page.setViewportSize({width:390,height:844});
   await page.locator('[name="category"]').selectOption('bug');
   assert.equal(await unloadBlocked(),false,
     'Selecting only the report category must not cause a leave-page confirmation');
