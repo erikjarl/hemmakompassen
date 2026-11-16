@@ -2904,3 +2904,38 @@ body .live-layout #live-app > .swipe-play-view .swipe-finished-actions summary:f
   outline:3px solid #314f60;
   outline-offset:3px;
 }
+
+
+/* DES-01E / UX-READ-01: themed-deck navigation on the warm swipe canvas.
+   Preserve the existing theme-back button, gestures and compact phone layout. */
+body .live-layout #live-app > .swipe-play-view.swipe-theme-play > .swipe-heading > .swipe-theme-back {
+  color:#394627;
+  background:transparent;
+  border-color:transparent;
+  text-decoration:underline;
+  text-underline-offset:4px;
+  min-height:44px;
+  box-shadow:none;
+}
+body .live-layout #live-app > .swipe-play-view.swipe-theme-play > .swipe-heading > .swipe-theme-back:hover {
+  color:#302b26;
+  background:#e5e7db;
+}
+body .live-layout #live-app > .swipe-play-view.swipe-theme-play > .swipe-heading > .swipe-theme-back:focus-visible {
+  outline:3px solid #314f60;
+  outline-offset:3px;
+}
+body .live-layout #live-app > .swipe-play-view.swipe-theme-play > .swipe-heading > h1 {
+  color:#302b26;
+}
+body .live-layout #live-app > .swipe-play-view.swipe-theme-play > .swipe-heading > p {
+  color:#534c44;
+  line-height:1.5;
+}
+@media(max-width:800px) {
+  body .live-layout #live-app > .swipe-play-view.swipe-theme-play > .swipe-heading > .swipe-theme-back {
+    padding:5px 8px;
+    margin:0 0 2px;
+    font-weight:700;
+  }
+}
