@@ -3026,3 +3026,19 @@ body .live-layout #live-app > .schyssta-view
   outline:3px solid #314f60;
   outline-offset:3px;
 }
+
+/* DES-01G / UX-READ-01: discoverable secondary export actions at narrow widths. */
+body .live-layout #live-app > .schyssta-view
+.schyssta-filter-group[data-schyssta-filter-group="approved"] .schyssta-export-panel .schyssta-secondary:hover {
+  background:#d7ddc8;
+  border-color:#666f3f;
+}
+@media (max-width:390px) {
+  body .live-layout #live-app > .schyssta-view
+  .schyssta-filter-group[data-schyssta-filter-group="approved"] .schyssta-export-panel .schyssta-secondary {
+    box-sizing:border-box;
+    width:100%;
+    white-space:normal;
+    overflow-wrap:anywhere;
+  }
+}
