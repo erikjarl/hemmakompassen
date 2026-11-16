@@ -3138,8 +3138,12 @@ body .live-layout #live-app .swipe-play-view:not(.swipe-theme-play) .swipe-headi
 
 /* DES-01H / UX-READ-01: screenshot-driven mobile readability corrections.
    Keep routes, messages, consent, and horizontal tab navigation unchanged. */
-body .live-layout {
-  background:#f8f2ea; /* Warm surface behind the docked mobile report control. */
+@media(max-width:800px) {
+  /* The scrolling tab strip reserves 64px for the report button. Color only
+     that reserved strip; leave dark sign-in routes and other canvases alone. */
+  body .live-layout .live-mobile {
+    box-shadow:64px 0 0 #f8f2ea,0 -6px 22px rgb(35 29 20 / 11%);
+  }
 }
 /* #live-app is a programmatically focused, non-interactive main landmark.
    Avoid an orange full-page focus rectangle; real controls retain focus rings. */
