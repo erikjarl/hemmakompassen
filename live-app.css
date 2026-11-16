@@ -2988,3 +2988,41 @@ body .live-layout #live-app > .swipe-play-view.swipe-theme-play .swipe-finished 
     width:100%;
   }
 }
+
+
+/* DES-01G / UX-READ-01: export disclosure belongs to the light, server-
+   verified agreed-rules panel. Keep export controls optional and unchanged. */
+body .live-layout #live-app > .schyssta-view
+.schyssta-filter-group[data-schyssta-filter-group="approved"] .schyssta-export-panel {
+  border-top-color:#d9d1c5;
+}
+body .live-layout #live-app > .schyssta-view
+.schyssta-filter-group[data-schyssta-filter-group="approved"] .schyssta-export-panel > summary {
+  color:#394627;
+  min-height:44px;
+}
+body .live-layout #live-app > .schyssta-view
+.schyssta-filter-group[data-schyssta-filter-group="approved"] .schyssta-export-panel > summary::before {
+  color:#394627;
+}
+body .live-layout #live-app > .schyssta-view
+.schyssta-filter-group[data-schyssta-filter-group="approved"] .schyssta-export-panel > summary:focus-visible {
+  outline:3px solid #314f60;
+  outline-offset:3px;
+}
+body .live-layout #live-app > .schyssta-view
+.schyssta-filter-group[data-schyssta-filter-group="approved"] .schyssta-export-panel > .live-muted {
+  color:#665e54;
+}
+body .live-layout #live-app > .schyssta-view
+.schyssta-filter-group[data-schyssta-filter-group="approved"] .schyssta-export-panel .schyssta-secondary {
+  min-height:44px;
+  background:#e5e7db;
+  border-color:#a6a892;
+  color:#394627;
+}
+body .live-layout #live-app > .schyssta-view
+.schyssta-filter-group[data-schyssta-filter-group="approved"] .schyssta-export-panel .schyssta-secondary:focus-visible {
+  outline:3px solid #314f60;
+  outline-offset:3px;
+}
