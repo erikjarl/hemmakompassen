@@ -2644,3 +2644,45 @@ body .live-layout #live-app:has(> .inbox-refresh-actions) > .live-panel:not(.inb
   outline:3px solid #314f60;
   outline-offset:3px;
 }
+
+/* DES-01G / UX-READ-01: warm Communication canvas and practical sections.
+   Purely visual: exercises, private drafts, safety links and role-specific
+   information retain their existing behavior and DOM. */
+body .live-layout .live-main:has(#live-app > .comm-toolkit) {
+  background:#f8f2ea;
+}
+body .live-layout #live-app > .comm-toolkit .comm-section > h2 {
+  color:#302b26;
+}
+body .live-layout #live-app > .comm-toolkit .comm-section > p.live-muted {
+  color:#665e54;
+  line-height:1.55;
+}
+body .live-layout #live-app > .comm-toolkit > .live-panel:not(.comm-safety),
+body .live-layout #live-app > .comm-toolkit .comm-feature {
+  background:#fff9f1;
+  color:#302b26;
+  border-color:#d9d1c5;
+  box-shadow:0 8px 24px rgb(48 43 38 / 7%);
+}
+body .live-layout #live-app > .comm-toolkit > .live-panel:not(.comm-safety) > h2,
+body .live-layout #live-app > .comm-toolkit .comm-feature h2 {
+  color:#302b26;
+}
+body .live-layout #live-app > .comm-toolkit > .live-panel:not(.comm-safety) > p,
+body .live-layout #live-app > .comm-toolkit .comm-feature > p:not(.comm-kicker) {
+  color:#665e54;
+}
+body .live-layout #live-app > .comm-toolkit .comm-feature .live-button {
+  background:#666f3f;
+  border:1px solid #4c5831;
+  color:#fff9f1;
+  min-height:44px;
+}
+body .live-layout #live-app > .comm-toolkit .comm-feature .live-button:hover {
+  background:#4c5831;
+}
+body .live-layout #live-app > .comm-toolkit .comm-feature a:focus-visible {
+  outline:3px solid #314f60;
+  outline-offset:3px;
+}
