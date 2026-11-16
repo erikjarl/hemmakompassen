@@ -53,7 +53,7 @@ const overlay=document.getElementById('mapOverlay');
 const tiles=new Image(), maskImage=new Image(), sprite=new Image();
 maskImage.crossOrigin='anonymous';
 tiles.src='./rimforsa-karta.webp?v=2';maskImage.src='./gangbarhet.png?v=2';sprite.src='./lage-sprites.png';
-let imageLoaded=false,maskLoaded=false,spriteLoaded=false,collision=null,maskW=724,maskH=543,frameCount=0;
+let imageLoaded=false,maskLoaded=false,spriteLoaded=false,collision=null,edgeDistance=null,maskW=724,maskH=543,frameCount=0;
 const state={x:360,y:335,dir:'down',phase:0,camX:359,camY:330,near:null,visited:new Set(),path:[],messageLocked:false};
 const keys={up:false,down:false,left:false,right:false};
 const sites=[
@@ -67,11 +67,48 @@ const sites=[
  {name:'Kinda Båtklubb',x:1100,y:116,text:'Här ligger båtarna vid sjön.',symbol:'⛵'}
 ];
 const playerRadius=6;
-function loadMask(){if(!maskImage.complete||!maskImage.naturalWidth)return;const off=document.createElement('canvas');off.width=maskImage.naturalWidth;off.height=maskImage.naturalHeight;const g=off.getContext('2d',{willReadFrequently:true});g.imageSmoothingEnabled=false;g.drawImage(maskImage,0,0);collision=g.getImageData(0,0,off.width,off.height).data;maskW=off.width;maskH=off.height;maskLoaded=true;message.innerHTML='<strong>Äventyret börjar!</strong> Besök platserna på kartan och utforska Rimforsa.'}
+function loadMask(){if(!maskImage.complete||!maskImage.naturalWidth)return;const off=document.createElement('canvas');off.width=maskImage.naturalWidth;off.height=maskImage.naturalHeight;const g=off.getContext('2d',{willReadFrequently:true});g.imageSmoothingEnabled=false;g.drawImage(maskImage,0,0);collision=g.getImageData(0,0,off.width,off.height).data;maskW=off.width;maskH=off.height;buildEdgeDistance();maskLoaded=true;message.innerHTML='<strong>Äventyret börjar!</strong> Besök platserna på kartan och utforska Rimforsa.'}
 maskImage.addEventListener('load',loadMask);tiles.addEventListener('load',()=>imageLoaded=true);sprite.addEventListener('load',()=>spriteLoaded=true);
 for(const [image,label] of [[tiles,'kartan'],[maskImage,'gångbarhetskartan']])image.addEventListener('error',()=>{message.textContent='Kunde inte ladda '+label+'. Försök uppdatera sidan.'});
 function freePoint(x,y){if(!collision||x<8||y<8||x>=W-8||y>=H-8)return false;const px=Math.floor(x*maskW/W),py=Math.floor(y*maskH/H);const i=(py*maskW+px)*4;return collision[i]>200}
 function canStand(x,y){return freePoint(x,y+1)&&freePoint(x-5,y-3)&&freePoint(x+5,y-3)&&freePoint(x,y-8)}
+// A distance-to-wall field is generated once from the existing walkability mask.
+// Its gradient gently guides manual input along road edges WITHOUT making houses, water or forest walkable.
+function buildEdgeDistance(){
+ const inf=1e5,diag=1.41421356237,w=maskW,h=maskH;
+ edgeDistance=new Float32Array(w*h);
+ for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+   const i=y*w+x;edgeDistance[i]=(x===0||y===0||x===w-1||y===h-1||collision[i*4]<=200)?0:inf;
+ }
+ for(let y=1;y<h;y++)for(let x=1;x<w-1;x++){
+   const i=y*w+x;edgeDistance[i]=Math.min(edgeDistance[i],edgeDistance[i-1]+1,edgeDistance[i-w]+1,edgeDistance[i-w-1]+diag,edgeDistance[i-w+1]+diag);
+ }
+ for(let y=h-2;y>=0;y--)for(let x=w-2;x>=1;x--){
+   const i=y*w+x;edgeDistance[i]=Math.min(edgeDistance[i],edgeDistance[i+1]+1,edgeDistance[i+w]+1,edgeDistance[i+w-1]+diag,edgeDistance[i+w+1]+diag);
+ }
+}
+function edgeClearance(x,y){
+ if(!edgeDistance)return 0;
+ let d=1e5;const pts=[[0,1],[-5,-3],[5,-3],[0,-8]];
+ for(const [ox,oy] of pts){const px=Math.floor((x+ox)*maskW/W),py=Math.floor((y+oy)*maskH/H);
+   if(px<0||py<0||px>=maskW||py>=maskH)return 0;
+   d=Math.min(d,edgeDistance[py*maskW+px]);
+ }
+ return d*(W/maskW);
+}
+function edgeNormal(x,y){
+ const spread=5,nx=edgeClearance(x+spread,y)-edgeClearance(x-spread,y),ny=edgeClearance(x,y+spread)-edgeClearance(x,y-spread);
+ const len=Math.hypot(nx,ny);return len>.12?{x:nx/len,y:ny/len}:{x:0,y:0};
+}
+function edgeAssistedDirection(dx,dy,x=state.x,y=state.y){
+ const d=edgeClearance(x,y),range=19;
+ if(d>=range)return {x:dx,y:dy};
+ const n=edgeNormal(x,y),toward=Math.max(0,-dx*n.x-dy*n.y);
+ if(toward<.04)return {x:dx,y:dy};
+ const proximity=Math.max(0,1-d/range),strength=.92*proximity*proximity*toward;
+ const ax=dx+strength*n.x,ay=dy+strength*n.y,len=Math.hypot(ax,ay);
+ return len>.001?{x:ax/len,y:ay/len}:{x:dx,y:dy};
+}
 function clearPath(){state.path=[]}
 function nearestSite(){let choice=null,d=65;for(const s of sites){const dist=Math.hypot(state.x-s.x,state.y-s.y);if(dist<d){d=dist;choice=s}}return choice}
 function updateMessage(){const near=nearestSite();if(near===state.near)return;state.near=near;interact.hidden=!near;state.messageLocked=false;if(near){message.innerHTML='<strong>'+near.symbol+' '+near.name+'</strong> – tryck på Utforska för att besöka platsen.';title.textContent=near.name}else{title.textContent='Rimforsa';message.innerHTML='<strong>På upptäcktsfärd!</strong> Följ vägarna till nästa plats.'}}
@@ -94,17 +131,42 @@ dist[start]=0;push(start,0);let reached=false,expanded=0;const moves=[[1,0,1],[-
 while(heap.length&&expanded++<MAX){const id=pop();if(seen[id])continue;seen[id]=1;if(id===goal){reached=true;break}const cx=id%NX,cy=(id/NX)|0;for(const [dx,dy,cost] of moves){const nx=cx+dx,ny=cy+dy;if(!walkCell(nx,ny))continue;if(dx&&dy&&(!walkCell(cx+dx,cy)||!walkCell(cx,cy+dy)))continue;let nid=ny*NX+nx,nd=dist[id]+cost;if(nd>=dist[nid])continue;prev[nid]=id;dist[nid]=nd;const h=Math.hypot(t[0]-nx,t[1]-ny);push(nid,nd+h)}}
 if(!reached)return [];let ids=[];for(let i=goal;i!==-1;i=prev[i])ids.push(i);ids.reverse();return ids.slice(1).map(id=>({x:((id%NX)+.5)*STEP,y:((((id/NX)|0)+.5)*STEP)}))}
 canvas.addEventListener('pointerdown',ev=>{if(!maskLoaded||overlay.classList.contains('show'))return;ev.preventDefault();const r=canvas.getBoundingClientRect(),sx=(ev.clientX-r.left)*canvas.width/r.width,sy=(ev.clientY-r.top)*canvas.height/r.height;const x=state.camX-canvas.width/2+sx,y=state.camY-canvas.height/2+sy;state.path=pathTo(x,y)});
-function slideMove(dx,dy){if(!maskLoaded)return false;const nx=state.x+dx,ny=state.y+dy;let moved=false;if(canStand(nx,ny)){state.x=nx;state.y=ny;return true}if(dx&&canStand(nx,state.y)){state.x=nx;moved=true}if(dy&&canStand(state.x,ny)){state.y=ny;moved=true}return moved}
+function slideMove(dx,dy){
+ if(!maskLoaded)return false;
+ // Short substeps prevent tunneling through thin fences when the game briefly slows down.
+ const steps=Math.max(1,Math.ceil(Math.hypot(dx,dy)/1.6)),vx=dx/steps,vy=dy/steps;
+ let moved=false;
+ for(let k=0;k<steps;k++){
+   if(canStand(state.x+vx,state.y+vy)){state.x+=vx;state.y+=vy;moved=true;continue}
+   // Slide along the wall tangent instead of stopping at a slanted edge.
+   const n=edgeNormal(state.x,state.y),against=vx*n.x+vy*n.y;
+   if((n.x||n.y)&&against<0){
+     const tx=vx-against*n.x,ty=vy-against*n.y;
+     if(Math.hypot(tx,ty)>.07&&canStand(state.x+tx,state.y+ty)){
+       state.x+=tx;state.y+=ty;moved=true;continue;
+     }
+   }
+   // Last fallback for sharp corners / diagonal movement, never violating collision.
+   if(Math.abs(vx)>=Math.abs(vy)){
+     if(Math.abs(vx)>.01&&canStand(state.x+vx,state.y)){state.x+=vx;moved=true;continue}
+     if(Math.abs(vy)>.01&&canStand(state.x,state.y+vy)){state.y+=vy;moved=true;continue}
+   }else{
+     if(Math.abs(vy)>.01&&canStand(state.x,state.y+vy)){state.y+=vy;moved=true;continue}
+     if(Math.abs(vx)>.01&&canStand(state.x+vx,state.y)){state.x+=vx;moved=true;continue}
+   }
+ }
+ return moved;
+}
 function drawPlayer(){const x=Math.round(state.x-state.camX+canvas.width/2),y=Math.round(state.y-state.camY+canvas.height/2);ctx.fillStyle='#162d2588';ctx.beginPath();ctx.ellipse(x,y-2,11,4,0,0,2*Math.PI);ctx.fill();if(spriteLoaded){const row=state.dir==='down'?0:state.dir==='left'?1:state.dir==='right'?2:3,frame=Math.floor(state.phase)%4;ctx.drawImage(sprite,frame*56,row*56,56,56,x-22,y-47,44,44)}else{ctx.fillStyle='#f6d3aa';ctx.fillRect(x-7,y-33,14,15);ctx.fillStyle='#f6e8c5';ctx.fillRect(x-12,y-18,24,17);ctx.fillStyle='#b65c63';ctx.fillRect(x-9,y-2,7,9);ctx.fillRect(x+3,y-2,7,9)}}
 function drawMap(ctx2,w,h,full=false){ctx2.clearRect(0,0,w,h);ctx2.imageSmoothingEnabled=false;if(imageLoaded)ctx2.drawImage(tiles,0,0,w,h);else{ctx2.fillStyle='#80a75c';ctx2.fillRect(0,0,w,h)}for(const s of sites){const x=s.x/W*w,y=s.y/H*h;ctx2.fillStyle='#feeaa9';ctx2.fillRect(x-2,y-2,4,4);if(full){ctx2.fillStyle='#08251d';ctx2.fillRect(x+3,y-1,2,2)}}const px=state.x/W*w,py=state.y/H*h;ctx2.fillStyle='#ff4d5e';ctx2.fillRect(px-3,py-3,7,7);ctx2.strokeStyle='#fff2c0';ctx2.lineWidth=1.2;ctx2.strokeRect(px-4,py-4,9,9)}
 function draw(){const w=canvas.width,h=canvas.height;ctx.fillStyle='#305d42';ctx.fillRect(0,0,w,h);if(imageLoaded)ctx.drawImage(tiles,Math.round(w/2-state.camX),Math.round(h/2-state.camY));drawPlayer();ctx.strokeStyle='#1b3028';ctx.lineWidth=2;ctx.strokeRect(1,1,w-2,h-2);drawMap(mc,mini.width,mini.height)}
-let last=performance.now(),stepProgress=0;function tick(now){const dt=Math.min(.05,(now-last)/1000);last=now;if(maskLoaded){let dx=(+keys.right)-(+keys.left),dy=(+keys.down)-(+keys.up);const byKeys=!!(dx||dy);if(byKeys)clearPath();else if(state.path.length){let next=state.path[0],d=Math.hypot(next.x-state.x,next.y-state.y);if(d<9){state.path.shift();next=state.path[0]}if(next){dx=next.x-state.x;dy=next.y-state.y}}let len=Math.hypot(dx,dy);if(len>.1){dx/=len;dy/=len;let step=Math.min(143*dt,byKeys?143*dt:len);const moved=slideMove(dx*step,dy*step);if(!moved&&!byKeys)clearPath();if(moved){state.dir=Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up');state.phase+=dt*9;stepProgress+=dt;if(stepProgress>.11){updateMessage();stepProgress=0}}else state.phase=0}else state.phase=0}
+let last=performance.now(),stepProgress=0;function tick(now){const dt=Math.min(.05,(now-last)/1000);last=now;if(maskLoaded){let dx=(+keys.right)-(+keys.left),dy=(+keys.down)-(+keys.up);const byKeys=!!(dx||dy);if(byKeys)clearPath();else if(state.path.length){let next=state.path[0],d=Math.hypot(next.x-state.x,next.y-state.y);if(d<9){state.path.shift();next=state.path[0]}if(next){dx=next.x-state.x;dy=next.y-state.y}}let len=Math.hypot(dx,dy);if(len>.1){dx/=len;dy/=len;let step=Math.min(143*dt,byKeys?143*dt:len);const direction=byKeys?edgeAssistedDirection(dx,dy):{x:dx,y:dy};const moved=slideMove(direction.x*step,direction.y*step);if(!moved&&!byKeys)clearPath();if(moved){state.dir=Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up');state.phase+=dt*9;stepProgress+=dt;if(stepProgress>.11){updateMessage();stepProgress=0}}else state.phase=0}else state.phase=0}
 const clampedX=Math.max(canvas.width/2,Math.min(W-canvas.width/2,state.x)),clampedY=Math.max(canvas.height/2,Math.min(H-canvas.height/2,state.y));state.camX+=(clampedX-state.camX)*Math.min(1,dt*14);state.camY+=(clampedY-state.camY)*Math.min(1,dt*14);draw();frameCount++;requestAnimationFrame(tick)}requestAnimationFrame(tick);
 function openMap(){stop();overlay.classList.add('show');drawMap(wc,whole.width,whole.height,true);document.getElementById('closeMap').focus()}
 function closeMap(){overlay.classList.remove('show')}
 for(const id of ['showMap','miniMapBtn'])document.getElementById(id).addEventListener('click',openMap);
 document.getElementById('closeMap').addEventListener('click',closeMap);mini.addEventListener('click',openMap);overlay.addEventListener('click',e=>{if(e.target===overlay)closeMap()});
-window.__rimforsaTest={state,sites,canStand,pathTo,moveTo:(x,y)=>{state.x=x;state.y=y;updateMessage()},isReady:()=>maskLoaded&&imageLoaded,hasSprite:()=>spriteLoaded,frames:()=>frameCount};
+window.__rimforsaTest={state,sites,canStand,pathTo,moveTo:(x,y)=>{state.x=x;state.y=y;updateMessage()},isReady:()=>maskLoaded&&imageLoaded,hasSprite:()=>spriteLoaded,frames:()=>frameCount,edgeClearance,edgeAssistedDirection,slideMove};
 reset();
 })();
 
