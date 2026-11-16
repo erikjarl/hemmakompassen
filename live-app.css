@@ -2842,3 +2842,65 @@ body .live-layout #live-app > .insights-view > .live-panel .live-muted {
 @media(max-width:390px) {
   .pf-export button { width:100%; }
 }
+
+
+/* DES-01E / UX-READ-01: unify the swipe page with its already warm question
+   card. Only rendered swipe routes are affected; no change to swipe, privacy,
+   persistence, category filtering or sharing behavior. */
+body .live-layout .live-main:has(#live-app > .swipe-play-view) {
+  background:#f8f2ea;
+}
+body .live-layout #live-app > .swipe-play-view > .swipe-heading h1 {
+  color:#302b26;
+}
+body .live-layout #live-app > .swipe-play-view > .swipe-heading > p {
+  color:#534c44;
+  line-height:1.55;
+}
+body .live-layout #live-app > .swipe-play-view > .swipe-heading .swipe-eyebrow {
+  color:#394627;
+}
+body .live-layout #live-app > .swipe-play-view > .swipe-understanding-notice {
+  background:#e5e7db;
+  color:#302b26;
+  border:1px solid #a6a892;
+}
+body .live-layout #live-app > .swipe-play-view > .swipe-understanding-notice a {
+  color:#394627;
+  font-weight:700;
+}
+body .live-layout #live-app > .swipe-play-view > .swipe-understanding-notice a:focus-visible {
+  outline:3px solid #314f60;
+  outline-offset:3px;
+}
+body .live-layout #live-app > .swipe-play-view .swipe-stage > .swipe-disclaimer {
+  color:#534c44;
+  line-height:1.55;
+}
+body .live-layout #live-app > .swipe-play-view .swipe-stage > .swipe-skip {
+  min-height:44px;
+  border-color:#666f3f;
+  background:#fff9f1;
+  color:#394627;
+}
+body .live-layout #live-app > .swipe-play-view .swipe-stage > .swipe-skip:hover {
+  background:#e5e7db;
+}
+body .live-layout #live-app > .swipe-play-view .swipe-stage > .swipe-skip:focus-visible {
+  outline:3px solid #314f60;
+  outline-offset:3px;
+}
+body .live-layout #live-app > .swipe-play-view .swipe-finished-compact {
+  background:#fff9f1;
+  border-color:#d9d1c5;
+  color:#302b26;
+}
+body .live-layout #live-app > .swipe-play-view .swipe-finished-actions summary {
+  color:#394627;
+  min-height:44px;
+  align-content:center;
+}
+body .live-layout #live-app > .swipe-play-view .swipe-finished-actions summary:focus-visible {
+  outline:3px solid #314f60;
+  outline-offset:3px;
+}
