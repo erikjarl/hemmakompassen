@@ -2759,3 +2759,54 @@ body .live-layout #live-app > .mediator-view .mediator-actions .live-button:focu
 @media(max-width:420px) {
   .ai-result-panel { padding:16px; }
 }
+
+
+/* DES-01G / UX-READ-01: warm shared-insights view with readable disclosure.
+   Presentation only; results remain server-confirmed and consent-controlled. */
+body .live-layout .live-main:has(#live-app > .insights-view) {
+  background:#f8f2ea;
+  color:#302b26;
+}
+body .live-layout #live-app > .insights-view .insights-heading h1 {
+  color:#302b26;
+}
+body .live-layout #live-app > .insights-view .insights-heading p,
+body .live-layout #live-app > .insights-view .insights-main-intro {
+  color:#534c44;
+}
+body .live-layout #live-app > .insights-view .insights-heading .swipe-eyebrow {
+  color:#394627;
+}
+body .live-layout #live-app > .insights-view .insights-back-link {
+  color:#394627;
+  min-height:44px;
+}
+body .live-layout #live-app > .insights-view .insights-back-link:focus-visible,
+body .live-layout #live-app > .insights-view .insights-method summary:focus-visible {
+  outline:3px solid #314f60;
+  outline-offset:3px;
+}
+body .live-layout #live-app > .insights-view .insights-method {
+  background:#e5e7db;
+  border-color:#a6a892;
+  color:#302b26;
+}
+body .live-layout #live-app > .insights-view .insights-method summary {
+  color:#394627;
+  min-height:44px;
+}
+body .live-layout #live-app > .insights-view .insights-method p {
+  color:#534c44;
+}
+body .live-layout #live-app > .insights-view > .live-panel {
+  background:#fff9f1;
+  border-color:#d9d1c5;
+  color:#302b26;
+}
+body .live-layout #live-app > .insights-view > .live-panel h2,
+body .live-layout #live-app > .insights-view > .live-panel h3 {
+  color:#302b26;
+}
+body .live-layout #live-app > .insights-view > .live-panel .live-muted {
+  color:#534c44;
+}
