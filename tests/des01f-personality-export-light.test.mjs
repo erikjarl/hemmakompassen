@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 
 const css=readFileSync(new URL('../live-app.css',import.meta.url),'utf8');
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
-const stage=css.split('/* DES-01F / UX-READ-01: readable self-only personality export actions.')[1]||'';
+const stage=(css.split('/* DES-01F / UX-READ-01: readable self-only personality export actions.')[1]||'').split('/* DES-01E / UX-READ-01: unify the swipe page with its already warm question')[0];
 
 test('personal export controls are readable, focusable and work on narrow screens',()=>{
   assert.ok(stage,'missing personality export styling');
