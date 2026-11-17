@@ -9,7 +9,7 @@ test('Kinda båtklubb öppnar båtminispelet i samma spelsida', () => {
   assert.match(page, /id="boatGame"/);
   assert.match(page, /state\.near\.name==='Kinda Båtklubb'\)\{openBoatGame\(\);return;/);
   assert.match(page, /function closeBoatGame\(\)/);
-  assert.match(page, /data:image\/jpeg;base64,/);
+  assert.match(page, /boat-minigame-map\.webp/);
 });
 
 test('Båtens hjärtan, grund och mynt finns och kan återställas', () => {
