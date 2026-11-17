@@ -1,6 +1,6 @@
 # Hemmakompassen – aktiv roadmap
 
-## Snabböversikt – 16 november 2026
+## Snabböversikt – 17 november 2026
 
 **Syfte:** Hitta nästa genomförbara arbete utan att behöva läsa hela ändringshistoriken. Detaljer, acceptanskriterier och verifieringslogg finns längre ned i **den här filen**; sammanfattningen är ingen ny parallell arbetskö.
 
@@ -11,6 +11,8 @@
 | **P1 · FBK-02** | Triagera öppna testarrapporter i Supabase vid **varje** `Jobb hk`. Fokusera bland annat på kvarstående olästmarkeringar, Schyssta-beslut och hur användarna hittar AI-reflektionen och fler kortlekar. | Läs rapporter utan att sprida personuppgifter. Håll öppna tills respektive fel/upplevelse är reproducerat och verkligt verifierat. |
 | **P1 · UX-READ-01** | Ta en konkret vy i taget: primärt resultat först, tydlig nästa handling, kort svenska, bibehållen sekretess- och felinformation. Fortsätt med hem/dashboard, personlighet och övriga vyer efter pågående arbete i Gillaswajpen, Schyssta listan och Inkorgen. | Automatiska funktionstester, mobil 320/390 px, tangentbord och helst autentiserat uppgiftstest. |
 | **P1 · Drift/verifiering** | Bekräfta att mergad `main` faktiskt serveras via Pages; undersök möjligheten till fysisk Safari-testning. | Dokumentera källa, tidpunkt och vad som faktiskt kontrollerats. |
+
+**17/11 – Jobb hk, DES-01G/UX-READ-01 + FBK-02: AI-reflektionen och gemensamma insikter (arbetsgren):** En av sju fortsatt öppna Supabase-rapporter efterfrågar att gemensam AI-reflektion syns tidigt. I `#insikter` placeras därför den **redan behörighets-/server-/parningskontrollerade** AI-reflektionspanelen direkt efter kort inledning i huvudsektionen, före långa kortlekslistor; vid inga tillgängliga eller verifierade data visas ingen AI-panel. Detaljerade faktiska ja-svar, frivilliga B-delningar, recheck, generering och återkallelse behåller befintlig logik. Samtidigt får insiktsöversiktens nästlade mörka kort, expanderbar kortlekslista och samtyckeskontroller ljus creme/salvia-palett; AI-panelen särskiljs med ljus rosé. Endast HTML-strängens presentationsordning i `live-app.js`, CSS i `live-app.css`, CSS-cache i `index.html`, regressionstester och roadmap. Supabase `public.test_feedback` läst read-only: **7 öppna**, ingen status ändrad. **Före merge:** fullständig grön GitHub CI. **Efter merge fortfarande ej verifierat:** fysisk iPhone/Safari, autentiserat tvåkontotest eller faktisk upplevd upptäckbarhet. Flytt av redan existerande panel innebär **inte** att den öppna rapporten är verifierat löst.
 
 **17/11 – DES-01H: färgkontrast utifrån fem verkliga iPhone-skärmbilder, PR #533:** [PR #533](https://github.com/erikjarl/hemmakompassen/pull/533) åtgärdar fem kvarstående mörk/ljus-konflikter efter ljusdesigndriftsättningen: Inkorgens sekundära uppdateringsknapp, nästlade Gillaswajp-aktiviteter, Schyssta listans paneler och filtrering, Kommunikationsrådens privata speglingsformulär samt personlighetssidans yttre kort och sidbakgrund. CSS-only och ny cachefråga i `index.html`; statiskt Node-kontraktstest med färgpar. Inga ändrade meddelanden, regler, testresultat, privata data, JS, RPC eller behörigheter. **Kräver grön fullständig GitHub Actions-CI och merge innan leverans kan hävdas.** Verklig iPhone/Safari-verifiering, båda autentiserade roller och offentligt serverad GitHub Pages-version behöver kontrolleras separat.
 
