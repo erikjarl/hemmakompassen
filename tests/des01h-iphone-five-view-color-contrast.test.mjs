@@ -38,6 +38,12 @@ test('Inbox refresh secondary action has dark text on light sage',()=>{
   assert.match(s,/color:#394627/);
   assert.match(app,/data-family-chat-refresh>Uppdatera konversationen/);
 });
+test('Inbox send message and open rule remain legible primary olive actions',()=>{
+  assert.match(block('.family-chat .family-chat-compose-actions button[type="submit"]'),/background:#666f3f/);
+  assert.match(block('.inbox-rule-events .schyssta-actions .live-button'),/color:#fff9f1/);
+  assert.match(app,/Skicka meddelande/);
+  assert.match(app,/Visa regeln/);
+});
 test('nested shared Swipe activities do not inherit midnight li background',()=>{
   const s=block('.swipe-unified-list > li .swipe-unified-statements > li');
   assert.match(s,/background:#e5e7db/);
