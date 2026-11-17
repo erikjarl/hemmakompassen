@@ -3332,3 +3332,244 @@ body .live-layout #live-app .comm-toolkit .comm-safety .comm-safety-body a:focus
   outline:3px solid #314f60;
   outline-offset:3px;
 }
+
+/* DES-01H: 2026-11-17 iPhone contrast follow-up (five real tester screenshots).
+   Presentation only: no hidden controls, no changed behavior, states or data.
+   Scope to existing views; restore dark-on-light pairs from DES-01 tokens. */
+
+/* INBOX: existing send/open-rule actions are primary olive actions, not
+   the old orange call-to-action from the midnight theme. */
+body .live-layout #live-app .family-chat .family-chat-compose-actions button[type="submit"],
+body .live-layout #live-app .inbox-rule-events .schyssta-actions .live-button {
+  background:#666f3f;
+  border:1px solid #4c5831;
+  color:#fff9f1;
+  min-height:44px;
+  font-weight:700;
+}
+body .live-layout #live-app .family-chat .family-chat-compose-actions button[type="submit"]:hover:not(:disabled),
+body .live-layout #live-app .inbox-rule-events .schyssta-actions .live-button:hover:not(:disabled) {
+  background:#4c5831;
+}
+body .live-layout #live-app .family-chat .family-chat-compose-actions button[type="submit"]:focus-visible,
+body .live-layout #live-app .inbox-rule-events .schyssta-actions .live-button:focus-visible {
+  outline:3px solid #314f60;
+  outline-offset:3px;
+}
+
+/* INBOX: refresh is a secondary action, not a pale gold ghost button on cream.
+   Keep it visible even if temporarily disabled during a network request. */
+body .live-layout #live-app .family-chat .family-chat-compose-actions [data-family-chat-refresh] {
+  background:#e5e7db;
+  border:1px solid #666f3f;
+  color:#394627;
+  min-height:44px;
+  font-weight:700;
+}
+body .live-layout #live-app .family-chat .family-chat-compose-actions [data-family-chat-refresh]:hover:not(:disabled) {
+  background:#d7ddc8;
+}
+body .live-layout #live-app .family-chat .family-chat-compose-actions [data-family-chat-refresh]:focus-visible {
+  outline:3px solid #314f60;
+  outline-offset:3px;
+}
+
+/* SWIPE: nested match statements inherit the old '.swipe-match-list li'
+   midnight backgrounds, even when their parent result card is cream. */
+body .live-layout #live-app .swipe-unified-overview .swipe-unified-list > li .swipe-unified-statements > li {
+  background:#e5e7db;
+  border:1px solid #c6c9b5;
+  color:#302b26;
+  border-radius:12px;
+  padding:12px 14px;
+  line-height:1.5;
+  overflow-wrap:anywhere;
+}
+body .live-layout #live-app .swipe-unified-overview .swipe-unified-list > li .swipe-unified-statements {
+  display:grid;
+  gap:8px;
+  padding-left:0;
+  list-style:none;
+}
+body .live-layout #live-app .swipe-unified-overview .swipe-unified-advice h3,
+body .live-layout #live-app .swipe-unified-overview .swipe-unified-understanding h3 {
+  color:#394627;
+}
+body .live-layout #live-app .swipe-unified-overview .swipe-unified-advice > p {
+  color:#302b26;
+}
+
+/* RULES: the older dark disclosures/ongoing panel conflict with the new
+   cream page. Native details, summary, filters and both votes remain intact. */
+body .live-layout #live-app .schyssta-view :is(.schyssta-compose-panel,.schyssta-search-panel,.schyssta-extra-panel) {
+  background:#fff9f1;
+  border-color:#d9d1c5;
+  color:#302b26;
+}
+body .live-layout #live-app .schyssta-view :is(.schyssta-compose-panel,.schyssta-search-panel,.schyssta-extra-panel) > summary,
+body .live-layout #live-app .schyssta-view .schyssta-compose-panel > summary > h2 {
+  color:#302b26;
+}
+body .live-layout #live-app .schyssta-view .schyssta-compose-panel > summary > span,
+body .live-layout #live-app .schyssta-view .schyssta-quick-state p,
+body .live-layout #live-app .schyssta-view .schyssta-quick-counts {
+  color:#534c44;
+}
+body .live-layout #live-app .schyssta-view :is(.schyssta-compose-panel,.schyssta-search-panel,.schyssta-extra-panel) > summary::after {
+  color:#394627;
+}
+body .live-layout #live-app .schyssta-view :is(.schyssta-compose-panel,.schyssta-search-panel,.schyssta-extra-panel) > summary:focus-visible {
+  outline:3px solid #314f60;
+  outline-offset:-3px;
+}
+body .live-layout #live-app .schyssta-view :is(.schyssta-compose-panel,.schyssta-extra-panel) > .live-panel,
+body .live-layout #live-app .schyssta-view .schyssta-search-panel > .schyssta-filter-toolbar {
+  background:#fff9f1;
+  border-top-color:#d9d1c5;
+  color:#302b26;
+}
+body .live-layout #live-app .schyssta-view .schyssta-filter-toolbar label {
+  color:#394627;
+}
+body .live-layout #live-app .schyssta-view .schyssta-filter-toolbar :is(input,select) {
+  background:#fffdf8;
+  border-color:#948a7b;
+  color:#302b26;
+}
+body .live-layout #live-app .schyssta-view .schyssta-quick-actions {
+  background:#e5e7db;
+  border-color:#a6a892;
+  color:#302b26;
+}
+body .live-layout #live-app .schyssta-view .schyssta-quick-state strong {
+  color:#394627;
+}
+body .live-layout #live-app .schyssta-view .schyssta-quick-actions > .live-button {
+  background:#666f3f;
+  color:#fff9f1;
+  border:1px solid #4c5831;
+}
+body .live-layout #live-app .schyssta-view .schyssta-filter-group[data-schyssta-filter-group="ongoing"] > .live-panel {
+  background:#fff9f1;
+  border-color:#d9d1c5;
+  color:#302b26;
+}
+body .live-layout #live-app .schyssta-view .schyssta-filter-group[data-schyssta-filter-group="ongoing"] > .live-panel :is(h2,p) {
+  color:#302b26;
+}
+body .live-layout #live-app .schyssta-view .schyssta-page-help {
+  background:#e5e7db;
+  border-color:#a6a892;
+  color:#302b26;
+}
+body .live-layout #live-app .schyssta-view .schyssta-page-help > summary {
+  color:#394627;
+}
+
+/* COMMUNICATION: the editable reflection fields retained white/gold labels
+   and midnight textareas despite the surrounding light panel. */
+body .live-layout #live-app .comm-toolkit .comm-fields label,
+body .live-layout #live-app .comm-toolkit .comm-fields label strong {
+  color:#302b26;
+}
+body .live-layout #live-app .comm-toolkit .comm-fields label span {
+  color:#534c44;
+}
+body .live-layout #live-app .comm-toolkit .comm-fields :is(textarea,input,select) {
+  background:#fffdf8;
+  color:#302b26;
+  border:1px solid #948a7b;
+}
+body .live-layout #live-app .comm-toolkit .comm-fields :is(textarea,input,select):focus-visible,
+body .live-layout #live-app .comm-toolkit .comm-actions button:focus-visible {
+  outline:3px solid #314f60;
+  outline-offset:3px;
+}
+body .live-layout #live-app .comm-toolkit .comm-actions .live-button {
+  background:#666f3f;
+  border:1px solid #4c5831;
+  color:#fff9f1;
+  min-height:44px;
+}
+body .live-layout #live-app .comm-toolkit .comm-actions .comm-quiet-button {
+  background:#e5e7db;
+  border:1px solid #a6a892;
+  color:#394627;
+  min-height:44px;
+}
+body .live-layout #live-app .comm-toolkit .comm-output {
+  background:#e5e7db;
+  border-left-color:#666f3f;
+  color:#302b26;
+}
+
+/* PERSONALITY: the result chart was light, but its surrounding page, profile
+   card and legend remained midnight. Retain calculated percentiles as-is. */
+body .live-layout .live-main:has(#live-app > .pf-intro) {
+  background:#f8f2ea;
+  color:#302b26;
+}
+body .live-layout #live-app > .pf-intro h1 {
+  color:#302b26;
+}
+body .live-layout #live-app > .pf-intro .swipe-eyebrow {
+  color:#394627;
+}
+body .live-layout #live-app > .pf-intro p {
+  color:#534c44;
+}
+body .live-layout #live-app > :is(.pf-results,.pf-overview,.pf-survey,.pf-sharing,.pf-comparison) {
+  background:#fff9f1;
+  color:#302b26;
+  border-color:#d9d1c5;
+  box-shadow:0 8px 24px rgb(48 43 38 / 7%);
+}
+body .live-layout #live-app > :is(.pf-results,.pf-overview,.pf-survey,.pf-sharing,.pf-comparison) :is(h2,h3,legend) {
+  color:#302b26;
+}
+body .live-layout #live-app > :is(.pf-results,.pf-overview,.pf-survey,.pf-sharing,.pf-comparison) :is(p,.live-muted,.pf-status,.pf-legend,.pf-reference-legend) {
+  color:#534c44;
+}
+body .live-layout #live-app .pf-counter,
+body .live-layout #live-app .pf-chart-help summary {
+  color:#394627;
+}
+body .live-layout #live-app .pf-progress {
+  background:#e5e7db;
+}
+body .live-layout #live-app .pf-progress > span {
+  background:#666f3f;
+}
+body .live-layout #live-app .pf-option {
+  background:#f8f2ea;
+  border-color:#a6a892;
+  color:#302b26;
+}
+body .live-layout #live-app .pf-option:is(.is-selected,:has(input:checked)) {
+  background:#e5e7db;
+  border-color:#666f3f;
+  color:#302b26;
+  box-shadow:inset 0 0 0 1px #666f3f;
+}
+body .live-layout #live-app .pf-option.is-selected span::before {
+  color:#394627;
+}
+body .live-layout #live-app .pf-reference-caveat {
+  background:#e5e7db;
+  border-left-color:#666f3f;
+  color:#302b26;
+}
+body .live-layout #live-app .pf-reference-caveat a {
+  color:#394627;
+  text-decoration:underline;
+}
+body .live-layout #live-app :is(.pf-results,.pf-overview,.pf-survey,.pf-sharing,.pf-comparison) button:not(.live-button) {
+  background:#e5e7db;
+  border:1px solid #a6a892;
+  color:#394627;
+  min-height:44px;
+}
+body .live-layout #live-app :is(.pf-results,.pf-overview,.pf-survey,.pf-sharing,.pf-comparison) button:not(.live-button):focus-visible {
+  outline:3px solid #314f60;
+  outline-offset:3px;
+}
