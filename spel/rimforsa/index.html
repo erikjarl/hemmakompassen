@@ -14,7 +14,7 @@ button{font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}butto
 .smallBtn,.action{background:var(--gold);border:2px solid #724929;box-shadow:inset 0 2px #fff4b6,0 3px #081d17;border-radius:9px;color:#2f2c20;font-weight:900;padding:9px 12px;white-space:nowrap}
 .game-frame{position:relative;overflow:hidden;border:5px solid #9d683f;outline:3px solid #352a1c;border-radius:6px;box-shadow:0 8px 0 #081b15,0 15px 30px #07191380;background:#508557}
 canvas#world{display:block;width:100%;height:min(57svh,520px);min-height:315px;touch-action:none;image-rendering:pixelated;cursor:crosshair}
-.hud{position:absolute;left:8px;top:8px;display:flex;align-items:center;gap:7px;padding:6px 10px;border:3px solid #cda15e;border-radius:4px;background:#19362de9;color:#fff3c5;text-shadow:1px 1px #171a12;font:800 13px/1.2 ui-monospace,monospace;box-shadow:0 3px 0 #08241a;pointer-events:none}.heart{color:#ee6a65;font-size:17px;letter-spacing:-2px}
+.hud{position:absolute;left:8px;top:8px;display:flex;align-items:center;gap:7px;padding:6px 10px;border:3px solid #cda15e;border-radius:4px;background:#19362de9;color:#fff3c5;text-shadow:1px 1px #171a12;font:800 13px/1.2 ui-monospace,monospace;box-shadow:0 3px 0 #08241a;pointer-events:none}.heart{color:#ee6a65;font-size:17px;letter-spacing:-2px}.coinScore{color:#ffe089;white-space:nowrap;font-weight:900;margin-left:6px;text-shadow:1px 1px #5c340a}
 .area{position:absolute;left:50%;top:8px;transform:translateX(-50%);max-width:55%;background:#17392cdd;border:2px solid #dfbe80;padding:6px 10px;border-radius:3px;text-align:center;color:#f8df9f;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px;pointer-events:none}
 .minimap{position:absolute;right:8px;top:8px;width:104px;height:78px;border:3px solid #ddbc79;background:#43834a;image-rendering:pixelated;box-shadow:0 2px 0 #1e382d;cursor:pointer}
 .mapBtn{position:absolute;right:7px;top:97px;font-size:11px;border:2px solid #e0bd7c;border-radius:2px;color:#fef0ca;background:#14372d;padding:5px 7px;font-weight:800}
@@ -34,13 +34,13 @@ canvas#world{display:block;width:100%;height:min(57svh,520px);min-height:315px;t
  <header class="head"><div><h1>🌲 Lage i Rimforsa</h1><p class="subtitle">Ett 16-bitars promenadäventyr genom Rimforsa</p></div><button class="smallBtn" id="showMap">🗺️ Karta</button></header>
  <section class="game-frame" aria-label="Spelplan: utforska Rimforsa till fots">
   <canvas id="world" width="384" height="316" aria-label="Karta över Rimforsa där Lage går omkring"></canvas>
-  <div class="hud">LAGE <span class="heart">♥♥♥</span></div><div class="area" id="area">Rimforsa</div>
+  <div class="hud">LAGE <span class="heart">♥♥♥</span> <span class="coinScore" id="coinScore" aria-label="Samlade guldmynt">🪙 0/12</span></div><div class="area" id="area">Rimforsa</div>
   <canvas id="mini" class="minimap" width="128" height="96" aria-label="Minikarta över Rimforsa" role="img"></canvas>
   <button class="mapBtn" id="miniMapBtn">STOR KARTA</button>
   <div id="mapOverlay" role="dialog" aria-modal="true" aria-label="Karta över Rimforsa"><button class="smallBtn" id="closeMap">Stäng ✕</button><canvas id="wholeMap" width="640" height="480" aria-label="Översikt av hela spelkartan"></canvas></div>
  </section>
  <div class="tip" aria-live="polite"><span id="message"><strong>Nu börjar äventyret!</strong> Använd pilarna för att upptäcka Rimforsa.</span><button id="interact" class="action" hidden>Utforska ✨</button></div>
- <div class="controls"><div class="guide">Pilar/WASD, eller tryck på kartan så hittar Lage en gångbar väg.</div><div class="dpad" aria-label="Styr Lage"><button data-dir="up" aria-label="Gå uppåt">▲</button><button data-dir="left" aria-label="Gå åt vänster">◀</button><button data-dir="down" aria-label="Gå nedåt">▼</button><button data-dir="right" aria-label="Gå åt höger">▶</button></div><button class="reset" id="reset">Börja om ↺</button></div>
+ <div class="controls"><div class="guide">Samla 12 gömda guldmynt bakom buskarna! Styr med pilar/WASD eller tryck på kartan.</div><div class="dpad" aria-label="Styr Lage"><button data-dir="up" aria-label="Gå uppåt">▲</button><button data-dir="left" aria-label="Gå åt vänster">◀</button><button data-dir="down" aria-label="Gå nedåt">▼</button><button data-dir="right" aria-label="Gå åt höger">▶</button></div><button class="reset" id="reset">Börja om ↺</button></div>
  <div class="footer">Illustrerad spelvärld inspirerad av Rimforsa. Platserna ligger ungefär rätt, men kartan är inte skalenlig.</div>
 </main>
 <script>
@@ -56,6 +56,9 @@ tiles.src='./rimforsa-karta.webp?v=2';maskImage.src='./gangbarhet.png?v=2';sprit
 let imageLoaded=false,maskLoaded=false,spriteLoaded=false,collision=null,edgeDistance=null,maskW=724,maskH=543,frameCount=0;
 const state={x:360,y:335,dir:'down',phase:0,camX:359,camY:330,near:null,visited:new Set(),path:[],messageLocked:false};
 const keys={up:false,down:false,left:false,right:false};
+const COIN_TARGET=12,coinScore=document.getElementById('coinScore');
+let coinCandidates=[],coins=[],coinCount=0,coinNoticeUntil=0;
+
 const sites=[
  {name:'Hem',x:360,y:335,text:'Välkommen hem! Här på Ulrikavägen börjar Lages Rimforsaäventyr.',symbol:'🏠'},
  {name:'Hackelhallen',x:667,y:418,text:'Här kan man spela fotboll, röra på sig och ha kul.',symbol:'⚽'},
@@ -67,7 +70,7 @@ const sites=[
  {name:'Kinda Båtklubb',x:1100,y:116,text:'Här ligger båtarna vid sjön.',symbol:'⛵'}
 ];
 const playerRadius=6;
-function loadMask(){if(!maskImage.complete||!maskImage.naturalWidth)return;const off=document.createElement('canvas');off.width=maskImage.naturalWidth;off.height=maskImage.naturalHeight;const g=off.getContext('2d',{willReadFrequently:true});g.imageSmoothingEnabled=false;g.drawImage(maskImage,0,0);collision=g.getImageData(0,0,off.width,off.height).data;maskW=off.width;maskH=off.height;buildEdgeDistance();maskLoaded=true;message.innerHTML='<strong>Äventyret börjar!</strong> Besök platserna på kartan och utforska Rimforsa.'}
+function loadMask(){if(!maskImage.complete||!maskImage.naturalWidth)return;const off=document.createElement('canvas');off.width=maskImage.naturalWidth;off.height=maskImage.naturalHeight;const g=off.getContext('2d',{willReadFrequently:true});g.imageSmoothingEnabled=false;g.drawImage(maskImage,0,0);collision=g.getImageData(0,0,off.width,off.height).data;maskW=off.width;maskH=off.height;buildEdgeDistance();maskLoaded=true;buildCoinCandidates();scatterCoins();message.innerHTML='<strong>Skattjakten börjar!</strong> Leta efter 12 guldmynt bakom små buskar längs vägarna.'}
 maskImage.addEventListener('load',loadMask);tiles.addEventListener('load',()=>imageLoaded=true);sprite.addEventListener('load',()=>spriteLoaded=true);
 for(const [image,label] of [[tiles,'kartan'],[maskImage,'gångbarhetskartan']])image.addEventListener('error',()=>{message.textContent='Kunde inte ladda '+label+'. Försök uppdatera sidan.'});
 function freePoint(x,y){if(!collision||x<8||y<8||x>=W-8||y>=H-8)return false;const px=Math.floor(x*maskW/W),py=Math.floor(y*maskH/H);const i=(py*maskW+px)*4;return collision[i]>200}
@@ -109,11 +112,89 @@ function edgeAssistedDirection(dx,dy,x=state.x,y=state.y){
  const ax=dx+strength*n.x,ay=dy+strength*n.y,len=Math.hypot(ax,ay);
  return len>.001?{x:ax/len,y:ay/len}:{x:dx,y:dy};
 }
+// Coins are generated ONLY on connected, walkable grid cells. The distance field
+// favours road edges, while a short exclusion radius avoids hiding coins in buildings
+// or on the exact starting position. Bushes are visual decorations, not new obstacles.
+function buildCoinCandidates(){
+ coinCandidates=[];
+ const start=closestWalkable(360,335);if(!start)return;
+ const reachable=new Uint8Array(MAX),queue=new Int32Array(MAX);
+ let head=0,tail=0;const first=start[1]*NX+start[0];queue[tail++]=first;reachable[first]=1;
+ const moves=[[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
+ while(head<tail){
+  const id=queue[head++],cx=id%NX,cy=Math.floor(id/NX);
+  if(cx%2===0&&cy%2===0){
+   const x=(cx+.5)*STEP,y=(cy+.5)*STEP,clearance=edgeClearance(x,y);
+   if(clearance>=7&&clearance<=37&&Math.hypot(x-360,y-335)>100&&
+      sites.every(s=>Math.hypot(x-s.x,y-s.y)>43))coinCandidates.push({x,y});
+  }
+  for(const [dx,dy] of moves){
+   const xx=cx+dx,yy=cy+dy;if(xx<1||yy<1||xx>=NX-1||yy>=NY-1)continue;
+   const next=yy*NX+xx;if(reachable[next]||!walkCell(xx,yy))continue;
+   if(dx&&dy&&(!walkCell(cx+dx,cy)||!walkCell(cx,cy+dy)))continue;
+   reachable[next]=1;queue[tail++]=next;
+  }
+ }
+}
+function shuffled(items){const result=items.slice();for(let i=result.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[result[i],result[j]]=[result[j],result[i]]}return result}
+function scatterCoins(){
+ coinCount=0;coinNoticeUntil=0;coins=[];
+ if(!maskLoaded){updateCoinScore();return}
+ // Pick places across the map first so the treasure hunt encourages exploring.
+ const regions=Array.from({length:12},()=>[]);
+ for(const p of shuffled(coinCandidates)){
+  const col=Math.min(3,Math.floor(p.x/W*4)),row=Math.min(2,Math.floor(p.y/H*3));
+  regions[row*4+col].push(p);
+ }
+ const farEnough=(p,min)=>coins.every(c=>Math.hypot(c.x-p.x,c.y-p.y)>=min);
+ for(const region of shuffled(regions)){
+  const p=region.find(p=>farEnough(p,95));
+  if(p&&coins.length<COIN_TARGET)coins.push({...p});
+ }
+ if(coins.length<COIN_TARGET){for(const min of [92,66,36]){
+  for(const p of shuffled(coinCandidates)){
+   if(coins.length>=COIN_TARGET)break;
+   if(farEnough(p,min))coins.push({...p});
+  }
+  if(coins.length>=COIN_TARGET)break;
+ }}
+ updateCoinScore();
+}
+function updateCoinScore(){coinScore.textContent='🪙 '+coinCount+'/'+(coinCount+coins.length)}
+function collectCoins(){
+ if(!coins.length)return false;
+ const before=coins.length;
+ coins=coins.filter(c=>Math.hypot(state.x-c.x,state.y-c.y)>=19);
+ const collected=before-coins.length;if(!collected)return false;
+ coinCount+=collected;updateCoinScore();coinNoticeUntil=performance.now()+2300;
+ if(coins.length===0){
+  message.innerHTML='<strong>🏆 Alla guldmynt hittade!</strong> Du hittade '+coinCount+' mynt i Rimforsa! Tryck på Börja om för en ny skattjakt.';
+ }else{
+  message.innerHTML='<strong>🪙 Klirr!</strong> Lage hittade ett guldmynt bakom en buske! '+coinCount+' av '+(coinCount+coins.length)+' insamlade.';
+ }
+ return true;
+}
+function drawCoinBush(c){
+ const x=Math.round(c.x-state.camX+canvas.width/2),y=Math.round(c.y-state.camY+canvas.height/2);
+ if(x< -25||y< -25||x>canvas.width+25||y>canvas.height+25)return;
+ // Chunky 16-bit coin: its bottom half is occluded by foliage in front.
+ ctx.fillStyle='#5e350f';ctx.fillRect(x-6,y-19,13,14);
+ ctx.fillStyle='#f9be37';ctx.fillRect(x-5,y-20,11,13);
+ ctx.fillStyle='#fff0a4';ctx.fillRect(x-2,y-18,5,3);
+ ctx.fillStyle='#d98516';ctx.fillRect(x+2,y-14,3,6);
+ // A small soft-edged bush is visually in front of the coin, not solid terrain.
+ ctx.fillStyle='#133f27';ctx.fillRect(x-16,y-9,32,13);
+ ctx.fillStyle='#21623a';ctx.fillRect(x-13,y-13,11,13);ctx.fillRect(x-3,y-11,13,13);ctx.fillRect(x+7,y-13,8,12);
+ ctx.fillStyle='#328649';ctx.fillRect(x-11,y-13,8,6);ctx.fillRect(x-1,y-14,8,8);ctx.fillRect(x+7,y-12,6,6);
+ ctx.fillStyle='#60a75b';ctx.fillRect(x-9,y-12,4,3);ctx.fillRect(x+1,y-13,3,3);ctx.fillRect(x+9,y-10,3,3);
+ ctx.fillStyle='#194b2d';ctx.fillRect(x-13,y+1,27,4);
+}
+function drawCoins(){for(const coin of coins)drawCoinBush(coin)}
 function clearPath(){state.path=[]}
 function nearestSite(){let choice=null,d=65;for(const s of sites){const dist=Math.hypot(state.x-s.x,state.y-s.y);if(dist<d){d=dist;choice=s}}return choice}
-function updateMessage(){const near=nearestSite();if(near===state.near)return;state.near=near;interact.hidden=!near;state.messageLocked=false;if(near){message.innerHTML='<strong>'+near.symbol+' '+near.name+'</strong> – tryck på Utforska för att besöka platsen.';title.textContent=near.name}else{title.textContent='Rimforsa';message.innerHTML='<strong>På upptäcktsfärd!</strong> Följ vägarna till nästa plats.'}}
+function updateMessage(){if(coins.length===0&&coinCount>0||performance.now()<coinNoticeUntil)return;const near=nearestSite();if(near===state.near)return;state.near=near;interact.hidden=!near;state.messageLocked=false;if(near){message.innerHTML='<strong>'+near.symbol+' '+near.name+'</strong> – tryck på Utforska för att besöka platsen.';title.textContent=near.name}else{title.textContent='Rimforsa';message.innerHTML='<strong>På upptäcktsfärd!</strong> Följ vägarna till nästa plats.'}}
 interact.addEventListener('click',()=>{if(!state.near)return;state.visited.add(state.near.name);message.innerHTML='<strong>'+state.near.symbol+' '+state.near.name+'</strong> – '+state.near.text;state.messageLocked=true;title.textContent=state.near.name;interact.textContent='Besök igen ✨'});
-function reset(){state.x=360;state.y=335;state.camX=360;state.camY=335;state.dir='down';state.phase=0;state.visited.clear();state.path=[];state.near=null;interact.textContent='Utforska ✨';interact.hidden=true;title.textContent='Hem – Ulrikavägen';message.innerHTML='<strong>Nu börjar äventyret!</strong> Gå på vägarna till ICA, Bella Donna eller badplatsen.';updateMessage()}
+function reset(){state.x=360;state.y=335;state.camX=360;state.camY=335;state.dir='down';state.phase=0;state.visited.clear();state.path=[];state.near=null;scatterCoins();interact.textContent='Utforska ✨';interact.hidden=true;title.textContent='Hem – Ulrikavägen';message.innerHTML='<strong>Ny skattjakt!</strong> Leta efter '+COIN_TARGET+' guldmynt som glimmar bakom små buskar vid vägarna.';updateMessage()}
 document.getElementById('reset').addEventListener('click',()=>{stop();reset()});
 function stop(){clearPath();for(const k of Object.keys(keys))keys[k]=false;document.querySelectorAll('[data-dir]').forEach(b=>b.classList.remove('held'))}
 for(const button of document.querySelectorAll('[data-dir]')){const dir=button.dataset.dir;button.addEventListener('pointerdown',ev=>{ev.preventDefault();stop();keys[dir]=true;button.classList.add('held');try{button.setPointerCapture(ev.pointerId)}catch{}});for(const evt of ['pointerup','pointercancel','lostpointercapture'])button.addEventListener(evt,()=>{keys[dir]=false;button.classList.remove('held')})}
@@ -159,14 +240,14 @@ function slideMove(dx,dy){
 }
 function drawPlayer(){const x=Math.round(state.x-state.camX+canvas.width/2),y=Math.round(state.y-state.camY+canvas.height/2);ctx.fillStyle='#162d2588';ctx.beginPath();ctx.ellipse(x,y-2,11,4,0,0,2*Math.PI);ctx.fill();if(spriteLoaded){const row=state.dir==='down'?0:state.dir==='left'?1:state.dir==='right'?2:3,frame=Math.floor(state.phase)%4;ctx.drawImage(sprite,frame*56,row*56,56,56,x-22,y-47,44,44)}else{ctx.fillStyle='#f6d3aa';ctx.fillRect(x-7,y-33,14,15);ctx.fillStyle='#f6e8c5';ctx.fillRect(x-12,y-18,24,17);ctx.fillStyle='#b65c63';ctx.fillRect(x-9,y-2,7,9);ctx.fillRect(x+3,y-2,7,9)}}
 function drawMap(ctx2,w,h,full=false){ctx2.clearRect(0,0,w,h);ctx2.imageSmoothingEnabled=false;if(imageLoaded)ctx2.drawImage(tiles,0,0,w,h);else{ctx2.fillStyle='#80a75c';ctx2.fillRect(0,0,w,h)}for(const s of sites){const x=s.x/W*w,y=s.y/H*h;ctx2.fillStyle='#feeaa9';ctx2.fillRect(x-2,y-2,4,4);if(full){ctx2.fillStyle='#08251d';ctx2.fillRect(x+3,y-1,2,2)}}const px=state.x/W*w,py=state.y/H*h;ctx2.fillStyle='#ff4d5e';ctx2.fillRect(px-3,py-3,7,7);ctx2.strokeStyle='#fff2c0';ctx2.lineWidth=1.2;ctx2.strokeRect(px-4,py-4,9,9)}
-function draw(){const w=canvas.width,h=canvas.height;ctx.fillStyle='#305d42';ctx.fillRect(0,0,w,h);if(imageLoaded)ctx.drawImage(tiles,Math.round(w/2-state.camX),Math.round(h/2-state.camY));drawPlayer();ctx.strokeStyle='#1b3028';ctx.lineWidth=2;ctx.strokeRect(1,1,w-2,h-2);drawMap(mc,mini.width,mini.height)}
-let last=performance.now(),stepProgress=0;function tick(now){const dt=Math.min(.05,(now-last)/1000);last=now;if(maskLoaded){let dx=(+keys.right)-(+keys.left),dy=(+keys.down)-(+keys.up);const byKeys=!!(dx||dy);if(byKeys)clearPath();else if(state.path.length){let next=state.path[0],d=Math.hypot(next.x-state.x,next.y-state.y);if(d<9){state.path.shift();next=state.path[0]}if(next){dx=next.x-state.x;dy=next.y-state.y}}let len=Math.hypot(dx,dy);if(len>.1){dx/=len;dy/=len;let step=Math.min(143*dt,byKeys?143*dt:len);const direction=byKeys?edgeAssistedDirection(dx,dy):{x:dx,y:dy};const moved=slideMove(direction.x*step,direction.y*step);if(!moved&&!byKeys)clearPath();if(moved){state.dir=Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up');state.phase+=dt*9;stepProgress+=dt;if(stepProgress>.11){updateMessage();stepProgress=0}}else state.phase=0}else state.phase=0}
+function draw(){const w=canvas.width,h=canvas.height;ctx.fillStyle='#305d42';ctx.fillRect(0,0,w,h);if(imageLoaded)ctx.drawImage(tiles,Math.round(w/2-state.camX),Math.round(h/2-state.camY));drawCoins();drawPlayer();ctx.strokeStyle='#1b3028';ctx.lineWidth=2;ctx.strokeRect(1,1,w-2,h-2);drawMap(mc,mini.width,mini.height)}
+let last=performance.now(),stepProgress=0;function tick(now){const dt=Math.min(.05,(now-last)/1000);last=now;if(maskLoaded){let dx=(+keys.right)-(+keys.left),dy=(+keys.down)-(+keys.up);const byKeys=!!(dx||dy);if(byKeys)clearPath();else if(state.path.length){let next=state.path[0],d=Math.hypot(next.x-state.x,next.y-state.y);if(d<9){state.path.shift();next=state.path[0]}if(next){dx=next.x-state.x;dy=next.y-state.y}}let len=Math.hypot(dx,dy);if(len>.1){dx/=len;dy/=len;let step=Math.min(143*dt,byKeys?143*dt:len);const direction=byKeys?edgeAssistedDirection(dx,dy):{x:dx,y:dy};const moved=slideMove(direction.x*step,direction.y*step);if(!moved&&!byKeys)clearPath();if(moved){collectCoins();state.dir=Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up');state.phase+=dt*9;stepProgress+=dt;if(stepProgress>.11){updateMessage();stepProgress=0}}else state.phase=0}else state.phase=0}
 const clampedX=Math.max(canvas.width/2,Math.min(W-canvas.width/2,state.x)),clampedY=Math.max(canvas.height/2,Math.min(H-canvas.height/2,state.y));state.camX+=(clampedX-state.camX)*Math.min(1,dt*14);state.camY+=(clampedY-state.camY)*Math.min(1,dt*14);draw();frameCount++;requestAnimationFrame(tick)}requestAnimationFrame(tick);
 function openMap(){stop();overlay.classList.add('show');drawMap(wc,whole.width,whole.height,true);document.getElementById('closeMap').focus()}
 function closeMap(){overlay.classList.remove('show')}
 for(const id of ['showMap','miniMapBtn'])document.getElementById(id).addEventListener('click',openMap);
 document.getElementById('closeMap').addEventListener('click',closeMap);mini.addEventListener('click',openMap);overlay.addEventListener('click',e=>{if(e.target===overlay)closeMap()});
-window.__rimforsaTest={state,sites,canStand,pathTo,moveTo:(x,y)=>{state.x=x;state.y=y;updateMessage()},isReady:()=>maskLoaded&&imageLoaded,hasSprite:()=>spriteLoaded,frames:()=>frameCount,edgeClearance,edgeAssistedDirection,slideMove};
+window.__rimforsaTest={state,sites,canStand,pathTo,moveTo:(x,y)=>{state.x=x;state.y=y;updateMessage()},isReady:()=>maskLoaded&&imageLoaded,hasSprite:()=>spriteLoaded,frames:()=>frameCount,edgeClearance,edgeAssistedDirection,slideMove,coinCandidates:()=>coinCandidates.slice(),coins:()=>coins.map(c=>({...c})),coinCount:()=>coinCount,scatterCoins,collectCoins,reset};
 reset();
 })();
 
