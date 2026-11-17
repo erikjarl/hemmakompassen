@@ -24,6 +24,12 @@ canvas#world{display:block;width:100%;height:min(57svh,520px);min-height:315px;t
 .dpad button{border-radius:8px;border:2px solid #936635;background:#e9cb83;box-shadow:inset 0 3px #fff1bf,0 3px #4e3a25;color:#3f3c28;font-size:23px;font-weight:900;touch-action:none;user-select:none}
 /* Stoppa långtryck-markering och iOS kopieringsmeny enbart i spel och styrkontroller. */
 .game-frame,.game-frame *,.controls,.controls *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}.dpad button:active,.dpad button.held{transform:translateY(2px);background:#fff0bd;box-shadow:inset 0 2px #f6d89b,0 1px #4e3a25}
+/* Safari: ikoner ritade med CSS i stället för text som kan markeras vid långtryck. */
+.dpad button{display:flex;align-items:center;justify-content:center;font-size:0;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:none}
+.dpad button::before{content:"";display:block;width:0;height:0;border-left:11px solid transparent;border-right:11px solid transparent;border-bottom:16px solid #3f3c28;pointer-events:none}
+.dpad button[data-dir=down]::before{transform:rotate(180deg)}
+.dpad button[data-dir=left]::before{transform:rotate(-90deg)}
+.dpad button[data-dir=right]::before{transform:rotate(90deg)}
 .dpad button[data-dir=up]{grid-column:2;grid-row:1}.dpad button[data-dir=left]{grid-column:1;grid-row:2}.dpad button[data-dir=down]{grid-column:2;grid-row:2}.dpad button[data-dir=right]{grid-column:3;grid-row:2}
 .reset{justify-self:end;font-size:12px;text-decoration:underline;color:#f0daa6;background:none;border:0;padding:12px 3px}.footer{padding:14px 5px 3px;color:#a6b9a2;font-size:11px;text-align:center}
 #mapOverlay{position:absolute;inset:0;background:#102a22f2;display:none;align-items:center;justify-content:center;flex-direction:column;padding:12px;gap:8px;z-index:3}#mapOverlay.show{display:flex}#wholeMap{max-height:85%;max-width:100%;height:auto;width:auto;object-fit:contain;image-rendering:pixelated;border:3px solid var(--gold)}#closeMap{position:absolute;right:12px;top:12px;z-index:2}
@@ -42,7 +48,7 @@ canvas#world{display:block;width:100%;height:min(57svh,520px);min-height:315px;t
   <div id="mapOverlay" role="dialog" aria-modal="true" aria-label="Karta över Rimforsa"><button class="smallBtn" id="closeMap">Stäng ✕</button><canvas id="wholeMap" width="640" height="480" aria-label="Översikt av hela spelkartan"></canvas></div>
  </section>
  <div class="tip" aria-live="polite"><span id="message"><strong>Nu börjar äventyret!</strong> Använd pilarna för att upptäcka Rimforsa.</span><button id="interact" class="action" hidden>Utforska ✨</button></div>
- <div class="controls"><div class="guide">Samla 12 gömda guldmynt bakom buskarna! Styr med pilar/WASD eller tryck på kartan.</div><div class="dpad" aria-label="Styr Lage"><button data-dir="up" aria-label="Gå uppåt">▲</button><button data-dir="left" aria-label="Gå åt vänster">◀</button><button data-dir="down" aria-label="Gå nedåt">▼</button><button data-dir="right" aria-label="Gå åt höger">▶</button></div><button class="reset" id="reset">Börja om ↺</button></div>
+ <div class="controls"><div class="guide">Samla 12 gömda guldmynt bakom buskarna! Styr med pilar/WASD eller tryck på kartan.</div><div class="dpad" aria-label="Styr Lage"><button type="button" data-dir="up" aria-label="Gå uppåt"></button><button type="button" data-dir="left" aria-label="Gå åt vänster"></button><button type="button" data-dir="down" aria-label="Gå nedåt"></button><button type="button" data-dir="right" aria-label="Gå åt höger"></button></div><button class="reset" id="reset">Börja om ↺</button></div>
  <div class="footer">Illustrerad spelvärld inspirerad av Rimforsa. Platserna ligger ungefär rätt, men kartan är inte skalenlig.</div>
 </main>
 <script>
@@ -204,7 +210,18 @@ function stop(){clearPath();for(const k of Object.keys(keys))keys[k]=false;docum
 for(const zone of [document.querySelector('.game-frame'),document.querySelector('.controls')]){
  for(const type of ['contextmenu','selectstart','dragstart'])zone.addEventListener(type,event=>event.preventDefault());
 }
-for(const button of document.querySelectorAll('[data-dir]')){const dir=button.dataset.dir;button.addEventListener('pointerdown',ev=>{ev.preventDefault();stop();keys[dir]=true;button.classList.add('held');try{button.setPointerCapture(ev.pointerId)}catch{}});for(const evt of ['pointerup','pointercancel','lostpointercapture'])button.addEventListener(evt,()=>{keys[dir]=false;button.classList.remove('held')})}
+for(const button of document.querySelectorAll('[data-dir]')){
+ const dir=button.dataset.dir;
+ const release=()=>{keys[dir]=false;button.classList.remove('held')};
+ const press=()=>{stop();keys[dir]=true;button.classList.add('held')};
+ button.addEventListener('pointerdown',ev=>{ev.preventDefault();press();try{button.setPointerCapture(ev.pointerId)}catch{}});
+ // iOS Safari can show the text magnifier/copy callout after a sustained touch.
+ // Cancel only the native touch gesture on D-pad buttons; pointer controls remain active.
+ button.addEventListener('touchstart',ev=>{if(ev.cancelable)ev.preventDefault();if(!keys[dir])press()},{passive:false});
+ button.addEventListener('touchmove',ev=>{if(ev.cancelable)ev.preventDefault()},{passive:false});
+ button.addEventListener('touchend',release,{passive:false});
+ for(const evt of ['pointerup','pointercancel','lostpointercapture'])button.addEventListener(evt,release);
+}
 const inputMap={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',a:'left',s:'down',d:'right',W:'up',A:'left',S:'down',D:'right'};
 window.addEventListener('keydown',ev=>{if(overlay.classList.contains('show')){if(ev.key==='Escape')closeMap();return}const dir=inputMap[ev.key];if(!dir)return;ev.preventDefault();clearPath();keys[dir]=true});
 window.addEventListener('keyup',ev=>{let dir=inputMap[ev.key];if(dir)keys[dir]=false});window.addEventListener('blur',stop);document.addEventListener('visibilitychange',()=>{if(document.hidden)stop()});
