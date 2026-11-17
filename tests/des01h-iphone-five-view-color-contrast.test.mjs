@@ -57,7 +57,8 @@ test('communication reflection inputs and hints remain legible',()=>{
   assert.match(block('.comm-toolkit .comm-fields :is(textarea,input,select)'),/background:#fffdf8/);
   assert.match(block('.comm-toolkit .comm-fields :is(textarea,input,select)'),/color:#302b26/);
   assert.match(toolkit,/id="comm-reflection-form"/);
-  assert.match(toolkit,/id="comm-reflection-heard/);
+  assert.match(toolkit,/id="comm-reflection-'/);
+  assert.match(toolkit,/Vad hörde jag personen säga/);
 });
 test('personality has a light canvas, cards and dark legend without touching IPIP values',()=>{
   assert.match(block('.live-main:has(#live-app > .pf-intro)'),/background:#f8f2ea/);
