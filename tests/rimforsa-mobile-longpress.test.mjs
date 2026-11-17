@@ -23,3 +23,23 @@ test('Rimforsa: touch movement and regular page text remain usable', () => {
   assert.match(html, /button\.setPointerCapture\(ev\.pointerId\)/);
   assert.ok(!html.includes('body{-webkit-user-select:none'), 'Do not prevent text selection across the entire page');
 });
+
+test('Rimforsa: pilknappar är inte markerbara texttecken', () => {
+  for (const dir of ['up', 'left', 'down', 'right']) {
+    const button = html.match(new RegExp('<button[^>]+data-dir="' + dir + '"[^>]*>([^<]*)</button>'));
+    assert.ok(button, 'Missing direction button: ' + dir);
+    assert.equal(button[1], '', 'Direction button must not contain selectable arrow text');
+  }
+  assert.match(html, /\.dpad button::before\{[^}]*border-bottom:16px solid/);
+  for (const dir of ['down', 'left', 'right']) {
+    assert.match(html, new RegExp('\\.dpad button\\[data-dir=' + dir + '\\]::before\\{[^}]*transform:rotate\\('));
+  }
+});
+
+test('Rimforsa: iOS långtryck stoppas med icke-passiva touch-lyssnare på pilarna', () => {
+  assert.match(html, /button\.addEventListener\('touchstart',ev=>\{if\(ev\.cancelable\)ev\.preventDefault\(\);if\(!keys\[dir\]\)press\(\)\},\{passive:false\}\)/);
+  assert.match(html, /button\.addEventListener\('touchmove',ev=>\{if\(ev\.cancelable\)ev\.preventDefault\(\)\},\{passive:false\}\)/);
+  assert.match(html, /button\.addEventListener\('touchend',release,\{passive:false\}\)/);
+  assert.match(html, /button\.addEventListener\('pointerdown',ev=>\{ev\.preventDefault\(\);press\(\)/);
+  assert.match(html, /for\(const evt of \['pointerup','pointercancel','lostpointercapture'\]\)button\.addEventListener\(evt,release\)/);
+});
