@@ -3337,6 +3337,26 @@ body .live-layout #live-app .comm-toolkit .comm-safety .comm-safety-body a:focus
    Presentation only: no hidden controls, no changed behavior, states or data.
    Scope to existing views; restore dark-on-light pairs from DES-01 tokens. */
 
+/* INBOX: existing send/open-rule actions are primary olive actions, not
+   the old orange call-to-action from the midnight theme. */
+body .live-layout #live-app .family-chat .family-chat-compose-actions button[type="submit"],
+body .live-layout #live-app .inbox-rule-events .schyssta-actions .live-button {
+  background:#666f3f;
+  border:1px solid #4c5831;
+  color:#fff9f1;
+  min-height:44px;
+  font-weight:700;
+}
+body .live-layout #live-app .family-chat .family-chat-compose-actions button[type="submit"]:hover:not(:disabled),
+body .live-layout #live-app .inbox-rule-events .schyssta-actions .live-button:hover:not(:disabled) {
+  background:#4c5831;
+}
+body .live-layout #live-app .family-chat .family-chat-compose-actions button[type="submit"]:focus-visible,
+body .live-layout #live-app .inbox-rule-events .schyssta-actions .live-button:focus-visible {
+  outline:3px solid #314f60;
+  outline-offset:3px;
+}
+
 /* INBOX: refresh is a secondary action, not a pale gold ghost button on cream.
    Keep it visible even if temporarily disabled during a network request. */
 body .live-layout #live-app .family-chat .family-chat-compose-actions [data-family-chat-refresh] {
