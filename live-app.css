@@ -3573,3 +3573,124 @@ body .live-layout #live-app :is(.pf-results,.pf-overview,.pf-survey,.pf-sharing,
   outline:3px solid #314f60;
   outline-offset:3px;
 }
+
+/* DES-01G / UX-READ-01: shared-insights nested palette and early AI panel.
+   Existing A match, voluntary B sharing and reflection guards are unchanged.
+   Only the visually inconsistent inner surfaces of #insikter are rethemed. */
+
+/* The summary uses legacy midnight list and header colors outside .swipe-results. */
+body .live-layout #live-app > .insights-view .swipe-fact-summary {
+  background:#e5e7db;
+  border-left-color:#666f3f;
+  color:#302b26;
+  border-radius:0 12px 12px 0;
+}
+body .live-layout #live-app > .insights-view .swipe-fact-summary > h3 {
+  color:#302b26;
+}
+body .live-layout #live-app > .insights-view .swipe-fact-summary :is(p,.live-muted) {
+  color:#534c44;
+}
+body .live-layout #live-app > .insights-view .swipe-fact-summary .swipe-summary-label,
+body .live-layout #live-app > .insights-view .swipe-summary-overview h4 {
+  color:#394627;
+}
+body .live-layout #live-app > .insights-view .swipe-summary-overview > li {
+  background:#fff9f1;
+  border-color:#d9d1c5;
+  color:#302b26;
+}
+body .live-layout #live-app > .insights-view .swipe-summary-icon {
+  background:#e5e7db;
+  border-color:#a6a892;
+  color:#394627;
+}
+
+/* Per-deck details and shared understanding cards stay distinct and readable. */
+body .live-layout #live-app > .insights-view .insights-decks-secondary {
+  background:#f8f2ea;
+  color:#302b26;
+  border-color:#d9d1c5;
+}
+body .live-layout #live-app > .insights-view .insights-decks-secondary > summary {
+  color:#394627;
+}
+body .live-layout #live-app > .insights-view .insights-decks-secondary > summary:focus-visible {
+  outline:3px solid #314f60;
+  outline-offset:3px;
+}
+body .live-layout #live-app > .insights-view .insights-deck {
+  background:#fff9f1;
+  border-color:#d9d1c5;
+  color:#302b26;
+}
+body .live-layout #live-app > .insights-view .insights-deck h3 {
+  color:#302b26;
+}
+body .live-layout #live-app > .insights-view .swipe-match-theme h4 {
+  color:#394627;
+}
+body .live-layout #live-app > .insights-view .swipe-match-list > li,
+body .live-layout #live-app > .insights-view .swipe-match-theme .swipe-match-list > li {
+  background:#f8f2ea;
+  color:#302b26;
+  border-color:#d9d1c5;
+}
+body .live-layout #live-app > .insights-view .swipe-match-list > li p {
+  color:#302b26;
+}
+body .live-layout #live-app > .insights-view .understanding-consent {
+  color:#302b26;
+}
+body .live-layout #live-app > .insights-view .understanding-consent p {
+  color:#534c44;
+}
+body .live-layout #live-app > .insights-view .understanding-share-list .live-button {
+  background:#666f3f;
+  border:1px solid #4c5831;
+  color:#fff9f1;
+  min-height:44px;
+}
+body .live-layout #live-app > .insights-view .understanding-share-list .live-button[aria-pressed="true"] {
+  background:#e5e7db;
+  color:#394627;
+  border-color:#a6a892;
+}
+body .live-layout #live-app > .insights-view :is(.understanding-share-list .live-button,.understanding-consent .schyssta-secondary):focus-visible {
+  outline:3px solid #314f60;
+  outline-offset:3px;
+}
+
+/* The AI text is explicitly labelled and warm-rose, to distinguish it from
+   verified mutual YES answers. A role/consent error still suppresses the panel. */
+body .live-layout #live-app > .insights-view .ai-result-panel {
+  margin:12px 0 18px;
+  background:#f7dccf;
+  border-color:#af674c;
+  border-left:4px solid #af674c;
+  color:#302b26;
+}
+body .live-layout #live-app > .insights-view .ai-result-panel .swipe-summary-label {
+  color:#693b2b;
+}
+body .live-layout #live-app > .insights-view .ai-result-panel .ai-result-resources a,
+body .live-layout #live-app > .insights-view .ai-result-panel details summary {
+  color:#394627;
+}
+body .live-layout #live-app > .insights-view .ai-result-panel [data-ai-analysis-retry] {
+  background:#e5e7db;
+  border:1px solid #a6a892;
+  color:#394627;
+  min-height:44px;
+}
+body .live-layout #live-app > .insights-view .ai-result-panel :is(a,[data-ai-analysis-retry],summary):focus-visible {
+  outline:3px solid #314f60;
+  outline-offset:3px;
+}
+@media(max-width:390px) {
+  body .live-layout #live-app > .insights-view .ai-result-panel [data-ai-analysis-retry] {
+    width:100%;
+    white-space:normal;
+    overflow-wrap:anywhere;
+  }
+}

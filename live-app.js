@@ -1302,8 +1302,10 @@ function insightsView(){
     '<p class="insights-main-intro">Här finns det ni båda sagt ja till. Prata om vad ni vill prova – inget är bestämt än.</p>'+ 
     '<details class="insights-method"><summary>Hur visas insikterna?</summary><p>Endast serververifierade JA+JA på A-kort visas här. För aktiviteter kan du öppna ett frivilligt meddelandeutkast, utan att något skickas automatiskt.</p></details>'+
     (activityInviteError?'<p role="alert">'+esc(activityInviteError)+'</p>':'')+
-    (sections?sharedFactOverview(overviewGroups,'Gemensamt i alla kortlekar'): '')+(deckDetails||empty)+
-    (aiResultEnabled&&insightsAiSignature()?aiResults.panel('swipe','all',insightsAiSignature()):'')+'</section>'+
+    // Keep server-verified overview data unchanged, but surface an eligible
+    // AI reflection near the top rather than after the long per-deck overview.
+    (aiResultEnabled&&insightsAiSignature()?aiResults.panel('swipe','all',insightsAiSignature()):'')+
+    (sections?sharedFactOverview(overviewGroups,'Gemensamt i alla kortlekar'): '')+(deckDetails||empty)+'</section>'+
     '<section id="insights-understanding" tabindex="-1" class="live-panel" aria-labelledby="insights-b-heading"><h2 id="insights-b-heading">'+
     (viewerRole()==='parent'?'Så här funkar min tonåring':'Så här funkar jag')+
     '</h2>'+understandingInsights()+'</section>'+
