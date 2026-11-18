@@ -4,7 +4,7 @@
 **Spel:** `spel/rimforsa/index.html`  
 **Publicerad adress:** https://erikjarl.github.io/hemmakompassen/spel/rimforsa/  
 **Senast uppdaterad:** 2026-11-18  
-**Status:** Dessa önskemål är **planerade**, inte verifierat genomförda. Markera bara av en punkt när funktionen faktiskt är implementerad och testad.
+**Status:** Fyra ljuduppgifter är implementerade och verifierade med automatiserade Node/Web Audio-kontraktstester. Övriga önskemål är öppna; markera bara av punkter när funktionen är implementerad och testad.
 
 ## Stående instruktion – kommandot `jobb lage`
 
@@ -19,13 +19,13 @@ När användaren skriver **`jobb lage`**:
 
 ## Att göra – Kinda båtklubb
 
-- [ ] **BÅT-01: Vattenambience.** Lägg till bakgrundsljud med **vågskvalp och fiskmåsar** när man befinner sig i båtminispelet.
-- [ ] **BÅT-02: Motorljud.** Lägg till **båtmotorljud när motorbåten kör**. Ljudet ska följa körningen, och stanna när båten stannar eller minispelet lämnas.
+- [x] **BÅT-01: Vattenambience.** Lägg till bakgrundsljud med **vågskvalp och fiskmåsar** när man befinner sig i båtminispelet.
+- [x] **BÅT-02: Motorljud.** Lägg till **båtmotorljud när motorbåten kör**. Ljudet ska följa körningen, och stanna när båten stannar eller minispelet lämnas.
 
 ## Att göra – huvudkartan
 
-- [ ] **HUV-01: Myntljud.** Spela ett tydligt **pengaljud när ett mynt samlas in**.
-- [ ] **HUV-02: Musik.** Lägg till **mysig bakgrundsmusik** på huvudkartan.
+- [x] **HUV-01: Myntljud.** Spela ett tydligt **pengaljud när ett mynt samlas in**.
+- [x] **HUV-02: Musik.** Lägg till **mysig bakgrundsmusik** på huvudkartan.
 - [ ] **HUV-03: Vit bil vid hemmet.** Lägg till **en vit bil vid Hem/Ulrikavägen**. Lage ska kunna välja att köra den. När bilen kör ska den ha **motorljud**, och bilen ska kunna köra **över alla terränger utom vatten**.
 - [ ] **HUV-04: Bajskorvar.** Lägg till **bajskorvar** som hinder. Lage **förlorar ett hjärta** när han kommer i kontakt med en bajskorv.
 - [ ] **HUV-05: Hjärtan och omstart.** När **alla hjärtan försvinner** ska spelet **börja om**, och spelaren ska **förlora alla insamlade mynt**.
@@ -57,5 +57,7 @@ När användaren skriver **`jobb lage`**:
 - **Verifiering:** Lägg till tester för respektive uppgift, spela igenom huvudflödet och kontrollera samma publicerade URL. Redovisa separat om fysisk iPhone/Safari inte har testats.
 
 ## Arbetslogg
+
+- **2026-11-18 – Jobb lage / ljudpass:** Implementerat **BÅT-01, BÅT-02, HUV-01 och HUV-02** i `spel/rimforsa/audio.js` och kopplat till spelet. Ljuden är originalsyntetiserade i Web Audio API: mjukt vågbrus, syntetiserade fiskmåsläten, båtmotor med hastighetsberoende pitch/volym, myntklirr och egenkomponerad lugn 16-bitarsmelodi. Ljud startar först när spelaren aktiverar **Ljud på** (även tillgängligt i båtspelet); ljuden byts när man går in i/ut ur båtminispelet, stoppas när ljudet stängs av och pausas när sidan döljs. Versionsstyrd fil `audio.js?v=1`. Kod-commit: [`3737cbb`](https://github.com/erikjarl/hemmakompassen/commit/3737cbb4d9e25155f49510e3d822490851ed808a). **Verifierat:** GitHub Actions funktionella och backendtester slutförda med success; Pages-build och kontroll av serverade resurser rapporterade success. Full Chromium-smoketest var fortfarande under körning när denna arbetslogg uppdaterades. **Ej verifierat:** faktiskt ljud på fysisk iPhone/Safari, hur naturtroget fågel- och vågljudet upplevs eller den estetiska kvaliteten på musiken. Nästa uppgifter: HUV-03 (vit bil), HUV-04 (bajskorvar) och HUV-05 (hjärtan/omstart).
 
 - **2026-11-18:** Att-göra-listan och `jobb lage`-fullmakten dokumenterades i projektet. Ingen av ovanstående nya funktioner markeras som implementerad enbart för att listan skapats.
