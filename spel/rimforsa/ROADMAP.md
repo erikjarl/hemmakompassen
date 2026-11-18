@@ -30,6 +30,20 @@ När användaren skriver **`jobb lage`**:
 - [ ] **HUV-04: Bajskorvar.** Lägg till **bajskorvar** som hinder. Lage **förlorar ett hjärta** när han kommer i kontakt med en bajskorv.
 - [ ] **HUV-05: Hjärtan och omstart.** När **alla hjärtan försvinner** ska spelet **börja om**, och spelaren ska **förlora alla insamlade mynt**.
 
+## Nya förbättringar – huvudspel och spelvärld (2026-11-18)
+
+- [ ] **BIL-01: Finare vit bil.** Ersätt bilens nuvarande förenklade pixelgrafik med en mer detaljerad, välgjord **16-bitarsbil i samma grafiska stil som motorbåten**. Visa Lage i bilen, bevara styrning, motorljud, möjlighet att kliva in och ur och regeln att bilen inte får köra i vatten. Kontrollera utseende i rörelse och på mobil.
+
+- [ ] **MYNT-01: Fler mynt på kartan.** **Öka antalet insamlingsbara mynt** på huvudkartan och sprid ut dem på ett lekfullt sätt. Se till att alla kan nås, att HUD/räknare visar rätt totalantal och att insamlade mynt kan användas i framtida butiker. Undvik att pengar försvinner oavsiktligt vid byte till minispel.
+
+- [ ] **MYNT-02: Grattis när alla mynt hittats.** När Lage samlat **alla mynt** ska spelet ge en tydlig och festlig belöning, exempelvis texten **”Grattis! Du har samlat alla mynt!”** med en enkel animation och ett passande ljud. Den ska bara utlösas när målet är uppnått, gå att stänga och fungera på mobil. Anpassa till framtida köp och mynt som tillkommer vid kartutbyggnad.
+
+- [ ] **NPC-01: Vandrande karaktärer och samtal.** Skapa **andra karaktärer i samma pixelgrafik som Lage** som går omkring på gator och stigar, utan att blockera spelaren. Lage ska kunna gå fram och **prata med dem** via en lättbegriplig samtalsruta. Ge figurerna egna repliker och bevara stöd för mobilstyrning.
+
+- [ ] **INV-01: Föremål och väska.** Inför möjlighet att **samla in, förvara och spara föremål** i en enkel inventarievy/väska som kan öppnas igen efter att spelet stängts. Börja med lokal lagring på samma enhet (om den är tillåten), med tydlig återställningsfunktion. Planera föremål så att de kan återanvändas i framtida minispel och inköp. Myntsaldo och inventarieobjekt ska skiljas åt.
+
+- [ ] **DRAKE-01: Drake i skogen.** Skapa en **animerad drake i samma 16-bitarsstil** som rör sig bland skogspartier på huvudkartan och **sprutar eld med animation**. När draken är nära ska den vanliga musiken växla till **läskig/spännande musik**, och växla tillbaka när Lage lämnar området. Eldanimation och rörelse ska fungera även på mobil. Eventuella skador eller ytterligare spelregler bestäms senare; de ingår inte som uttryckligt krav här.
+
 ## Trollet vid stenen nordväst om rondellen
 
 - [x] **TROLL-01: Placering och interaktion.** Lägg ett troll på den befintliga stenen nordväst om rondellen, med transparent pixelgrafik från den godkända referensbilden. Trollet ska vara lite större än Lage, synas i huvudkartan och gå att hälsa på till fots; placeringen ska inte ändra den befintliga gång- eller bilkollisionen.
@@ -53,6 +67,12 @@ När användaren skriver **`jobb lage`**:
 - [ ] **BAD-02: Hajar.** Lägg till **hajar som simmar förbi**. Om Lage **nuddar en haj förlorar han ett hjärta**.
 - [ ] **BAD-03: Vågskvalp.** Lägg till **vågskvalpsljud i bakgrunden** vid Åsundabadet.
 
+## Långsiktig, återkommande världsexpansion – efter övriga uppgifter
+
+- [ ] **KARTA-01: Utöka Rimforsakartan till mer av Kindabygden.** **Sök och jämför verkliga kartor över Rimforsa och närområdet i Kinda** för att skapa en allt större, geografiskt igenkännbar pixelvärld med orter, vägar, skog, sjöar, broar, byggnader och utflyktsmål som ansluter till den nuvarande kartan. Dokumentera vilka geografiska detaljer som är bekräftade från kartkällor och vilka som är fria speltolkningar. Bevara samma 16-bitarsgrafik, spelkänsla och befintliga platser.
+
+  **Arbetsprincip:** Denna punkt är **lågprioriterad tills övriga konkreta uppgifter är klara**. Därefter är den ett **öppet, nästan obegränsat fortsättningsarbete** för kommande `jobb lage`-pass: utöka en sammanhängande region åt gången, återkom till punkten upprepade gånger och markera den inte slutligt färdig bara för att en enskild utbyggnad publicerats. Planera kartladdning, gångbarhet, bilens vattenmask, minikarta, NPC-rutter och myntplacering så att världens storlek kan växa utan att befintliga sparade framsteg förstörs. Använd geografiska källor som får användas och dokumentera källor/licenser innan kartmaterial anpassas.
+
 ## Gemensamma tekniska hänsyn (förslag för genomförandet, inte ytterligare användarkrav)
 
 - **Ekonomi:** Låt myntplånboken som används till ICA och pizzerian ha en tydlig koppling till insamlade mynt. Samordna avdrag och återställning av mynt när hjärtan tar slut; undvik att räkna samma mynt två gånger.
@@ -62,6 +82,8 @@ När användaren skriver **`jobb lage`**:
 - **Verifiering:** Lägg till tester för respektive uppgift, spela igenom huvudflödet och kontrollera samma publicerade URL. Redovisa separat om fysisk iPhone/Safari inte har testats.
 
 ## Arbetslogg
+- **2026-11-18 – Nya önskemål dokumenterade (ingen spelkod ändrad):** Sju öppna punkter har lagts till: **BIL-01** (finare bil i båtens grafik), **MYNT-01** (fler mynt), **MYNT-02** (grattis vid alla mynt), **NPC-01** (vandrande pratbara figurer), **INV-01** (sparade föremål), **DRAKE-01** (eldsprutande drake med läskig musik) och **KARTA-01** (långsiktig geografiskt förankrad expansion av Kindabygden). KARTA-01 ska **inte** konkurrera med övriga prioriterade uppgifter utan fungera som en återkommande expansion efter dessa. Inget av detta är ännu implementerat eller testat.
+
 
 - **2026-11-18 – Troll vid stenen (TROLL-01):** Godkänd trollreferens omvandlades till en egen transparent spritesbild `spel/rimforsa/troll-sprite.png` (56×92 pixlar), placerad på befintliga stenen nordväst om rondellen vid världspunkt **(464, 454)**. Trollet ritas i huvudkartan och visas som liten markör i kartöversikten. När Lage närmar sig till fots finns knappen **Hälsa på trollet**. En stabil framtida integrationspunkt `window.RimforsaTrollMinigame.start({troll,player,returnToMap})` finns; tills minispelsmodulen skapats visas en ärlig 'kommer senare'-text. **TROLL-02 är inte genomförd.** Kod och figur: [bc67a11](https://github.com/erikjarl/hemmakompassen/commit/bc67a11a3ac9d85e66715a7db2170a12ae6affd0), testkorrigering: [d4bde10](https://github.com/erikjarl/hemmakompassen/commit/d4bde10558b4ff15133d6864db819be2d66bd36e). **Verifierat:** automatiska funktionella tester godkända och GitHub Pages-kontroll av serverade assets godkänd. **Ej verifierat:** verklig iPhone/Safari, estetisk positionsbedömning i spel på fysisk enhet; fulla browser smoke tests pågick när loggen skrevs.
 
