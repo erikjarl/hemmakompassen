@@ -27,6 +27,9 @@ canvas#world{display:block;width:100%;height:min(57svh,520px);min-height:315px;t
 .dpad button::before{content:"";display:block;width:0;height:0;border-left:11px solid transparent;border-right:11px solid transparent;border-bottom:16px solid #3f3c28;pointer-events:none}
 .dpad button[data-dir=down]::before{transform:rotate(180deg)}.dpad button[data-dir=left]::before{transform:rotate(-90deg)}.dpad button[data-dir=right]::before{transform:rotate(90deg)}
 .dpad button[data-dir=up]{grid-column:2;grid-row:1}.dpad button[data-dir=left]{grid-column:1;grid-row:2}.dpad button[data-dir=down]{grid-column:2;grid-row:2}.dpad button[data-dir=right]{grid-column:3;grid-row:2}
+.sound-toggle{font-size:12px;padding:9px 11px;min-width:103px}
+.head-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+@media(max-width:410px){.head-actions{gap:5px}.sound-toggle{font-size:11px;padding:8px 7px;min-width:95px}}
 .reset{justify-self:end;font-size:12px;text-decoration:underline;color:#f0daa6;background:none;border:0;padding:12px 3px}.footer{padding:14px 5px 3px;color:#a6b9a2;font-size:11px;text-align:center}
 #mapOverlay{position:absolute;inset:0;background:#102a22f2;display:none;align-items:center;justify-content:center;flex-direction:column;padding:12px;gap:8px;z-index:3}#mapOverlay.show{display:flex}#wholeMap{max-height:85%;max-width:100%;height:auto;width:auto;object-fit:contain;image-rendering:pixelated;border:3px solid var(--gold)}#closeMap{position:absolute;right:12px;top:12px;z-index:2}
 @media(min-width:650px){.dpad{grid-template-columns:repeat(3,58px);grid-template-rows:repeat(2,58px)}.controls{padding-top:15px}.area{font-size:15px}.minimap{width:112px;height:84px}.mapBtn{top:101px}.hud{font-size:15px}}
@@ -49,7 +52,7 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
 </head>
 <body>
 <main class="shell">
- <header class="head"><div><h1>🌲 Lage i Rimforsa</h1><p class="subtitle">Ett 16-bitars promenadäventyr genom Rimforsa</p></div><button class="smallBtn" id="showMap">🗺️ Karta</button></header>
+ <header class="head"><div><h1>🌲 Lage i Rimforsa</h1><p class="subtitle">Ett 16-bitars promenadäventyr genom Rimforsa</p></div><div class="head-actions"><button type="button" class="smallBtn sound-toggle" data-sound-toggle aria-label="Slå på spelljud" aria-pressed="false">🔈 Ljud på</button><button class="smallBtn" id="showMap">🗺️ Karta</button></div></header>
  <section class="game-frame" aria-label="Spelplan: utforska Rimforsa till fots">
   <canvas id="world" width="384" height="316" aria-label="Karta över Rimforsa där Lage går omkring"></canvas>
   <div class="hud">LAGE <span class="heart">♥♥♥</span> <span class="coinScore" id="coinScore" aria-label="Samlade guldmynt">🪙 0/12</span></div><div class="area" id="area">Rimforsa</div>
@@ -59,7 +62,7 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
 
   <div id="boatOverlay" class="boat-overlay" role="dialog" aria-modal="true" aria-label="Båtspel vid Kinda båtklubb" aria-hidden="true">
     <div class="boat-panel">
-      <div class="boat-head"><div><div class="boat-title">🛥️ Kinda båtklubb – båtäventyr</div><div class="boat-tip" id="boatTip" aria-live="polite">Styr den vita motorbåten, samla mynt och undvik grunden.</div></div><div class="boat-head-actions"><button class="smallBtn" id="boatRestart">Spela om ↺</button><button class="smallBtn" id="closeBoat">Tillbaka ✕</button></div></div>
+      <div class="boat-head"><div><div class="boat-title">🛥️ Kinda båtklubb – båtäventyr</div><div class="boat-tip" id="boatTip" aria-live="polite">Styr den vita motorbåten, samla mynt och undvik grunden.</div></div><div class="boat-head-actions"><button type="button" class="smallBtn sound-toggle" data-sound-toggle aria-label="Slå på spelljud" aria-pressed="false">🔈 Ljud på</button><button class="smallBtn" id="boatRestart">Spela om ↺</button><button class="smallBtn" id="closeBoat">Tillbaka ✕</button></div></div>
       <div class="boat-stats"><span>Hjärtan <strong id="boatHearts">♥♥♥</strong></span><span>Mynt <strong id="boatCoins">0 / 8</strong></span><span>Åsunden / Skedevi</span></div>
       <canvas id="boatGame" width="640" height="500" aria-label="Båtäventyr på sjön"></canvas>
       <div class="boat-controls"><div class="boat-guide">Styr med pilar/WASD eller knapparna. Samla mynt på sjön och undvik grunden.</div><div class="boat-pad" aria-label="Styr båten"><button type="button" data-bdir="up" aria-label="Kör uppåt"></button><button type="button" data-bdir="left" aria-label="Kör åt vänster"></button><button type="button" data-bdir="down" aria-label="Kör nedåt"></button><button type="button" data-bdir="right" aria-label="Kör åt höger"></button></div></div>
@@ -71,6 +74,7 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
  <div class="controls"><div class="guide">Samla 12 gömda guldmynt bakom buskarna! Styr med pilar/WASD eller tryck på kartan.</div><div class="dpad" aria-label="Styr Lage"><button type="button" data-dir="up" aria-label="Gå uppåt"></button><button type="button" data-dir="left" aria-label="Gå åt vänster"></button><button type="button" data-dir="down" aria-label="Gå nedåt"></button><button type="button" data-dir="right" aria-label="Gå åt höger"></button></div><button class="reset" id="reset">Börja om ↺</button></div>
  <div class="footer">Illustrerad spelvärld inspirerad av Rimforsa. Platserna ligger ungefär rätt, men kartan är inte skalenlig.</div>
 </main>
+<script src="./audio.js?v=1"></script>
 <script>
 (()=>{'use strict';
 const W=1448,H=1086, canvas=document.getElementById('world'), ctx=canvas.getContext('2d',{alpha:false});
@@ -80,6 +84,20 @@ const message=document.getElementById('message'), title=document.getElementById(
 const overlay=document.getElementById('mapOverlay');
 const boatOverlay=document.getElementById('boatOverlay'), boatCanvas=document.getElementById('boatGame'), boatCtx=boatCanvas.getContext('2d');
 const boatTip=document.getElementById('boatTip'), boatHearts=document.getElementById('boatHearts'), boatCoinsLabel=document.getElementById('boatCoins');
+const audio=window.RimforsaAudio||{toggle:()=>false,status:()=>({enabled:false,available:false}),coin(){},hit(){},setScene(){},setBoatSpeed(){},setVisible(){}};
+function showAudioState(){
+ const s=audio.status();
+ for(const button of document.querySelectorAll('[data-sound-toggle]')){
+  button.textContent=s.enabled?'🔊 Ljud av':'🔈 Ljud på';
+  button.setAttribute('aria-pressed',String(s.enabled));
+  button.setAttribute('aria-label',s.enabled?'Stäng av spelljud':'Slå på spelljud');
+  button.disabled=!s.available;
+  if(!s.available)button.title='Ljud stöds inte av den här webbläsaren';
+ }
+}
+for(const button of document.querySelectorAll('[data-sound-toggle]'))button.addEventListener('click',()=>{audio.toggle();showAudioState();});
+document.addEventListener('visibilitychange',()=>audio.setVisible(!document.hidden));
+showAudioState();
 const boatChart=new Image(); boatChart.src='./boat-minigame-map.webp?v=9';
 const boatSprite=new Image(); boatSprite.src='./lage-motorboat.png?v=9';
 let boatChartLoaded=false,boatWaterData=null,boatW=1122,boatH=1402;
@@ -222,7 +240,7 @@ function collectCoins(){
  const before=coins.length;
  coins=coins.filter(c=>Math.hypot(state.x-c.x,state.y-c.y)>=19);
  const collected=before-coins.length;if(!collected)return false;
- coinCount+=collected;updateCoinScore();coinNoticeUntil=performance.now()+2300;
+ coinCount+=collected;updateCoinScore();audio.coin();coinNoticeUntil=performance.now()+2300;
  if(coins.length===0){
   message.innerHTML='<strong>🏆 Alla guldmynt hittade!</strong> Du hittade '+coinCount+' mynt i Rimforsa! Tryck på Börja om för en ny skattjakt.';
  }else{
@@ -294,15 +312,15 @@ function spawnBoatCoins(){
  }
  updateBoatHud();
 }
-function resetBoatGame(){boatState.x=374;boatState.y=283;boatState.vx=0;boatState.vy=0;boatState.angle=0;boatState.hearts=3;boatState.flash=0;boatState.invul=0;boatState.done=false;boatState.message='';for(const k in boatKeys)boatKeys[k]=false;spawnBoatCoins();updateBoatHud();boatTip.textContent='Styr den vita motorbåten, samla mynt och undvik grunden.';}
-function openBoatGame(){if(!boatChartLoaded){boatTip.textContent='Laddar sjökartan…';}resetBoatGame();stop();boatState.active=true;boatOverlay.classList.add('show');boatOverlay.setAttribute('aria-hidden','false');boatTip.textContent='Kör ut från Kinda båtklubb och samla mynten utan att köra på grunden. Kartan är en fri 16-bitars-tolkning av Åsunden.';}
-function closeBoatGame(){boatState.active=false;boatOverlay.classList.remove('show');boatOverlay.setAttribute('aria-hidden','true');for(const k in boatKeys)boatKeys[k]=false;}
-function boatCrash(){if(boatState.invul>0||boatState.done)return;boatState.hearts--;boatState.invul=1.1;boatState.flash=.7;boatState.vx=boatState.vy=0;boatState.x=374;boatState.y=283;updateBoatHud();if(boatState.hearts<=0){boatState.done=true;boatTip.textContent='Aj! Alla hjärtan är slut. Tryck på Spela om för att försöka igen.';}else boatTip.textContent='Aj! Du körde på ett grund och tappade ett hjärta.';}
+function resetBoatGame(){audio.setBoatSpeed(0);boatState.x=374;boatState.y=283;boatState.vx=0;boatState.vy=0;boatState.angle=0;boatState.hearts=3;boatState.flash=0;boatState.invul=0;boatState.done=false;boatState.message='';for(const k in boatKeys)boatKeys[k]=false;spawnBoatCoins();updateBoatHud();boatTip.textContent='Styr den vita motorbåten, samla mynt och undvik grunden.';}
+function openBoatGame(){if(!boatChartLoaded){boatTip.textContent='Laddar sjökartan…';}resetBoatGame();stop();audio.setScene('boat');boatState.active=true;boatOverlay.classList.add('show');boatOverlay.setAttribute('aria-hidden','false');boatTip.textContent='Kör ut från Kinda båtklubb och samla mynten utan att köra på grunden. Kartan är en fri 16-bitars-tolkning av Åsunden.';}
+function closeBoatGame(){boatState.active=false;audio.setBoatSpeed(0);audio.setScene('land');boatOverlay.classList.remove('show');boatOverlay.setAttribute('aria-hidden','true');for(const k in boatKeys)boatKeys[k]=false;}
+function boatCrash(){if(boatState.invul>0||boatState.done)return;audio.hit();audio.setBoatSpeed(0);boatState.hearts--;boatState.invul=1.1;boatState.flash=.7;boatState.vx=boatState.vy=0;boatState.x=374;boatState.y=283;updateBoatHud();if(boatState.hearts<=0){boatState.done=true;boatTip.textContent='Aj! Alla hjärtan är slut. Tryck på Spela om för att försöka igen.';}else boatTip.textContent='Aj! Du körde på ett grund och tappade ett hjärta.';}
 function updateBoat(dt){
  if(!boatState.active||!boatChartLoaded)return;
  if(boatState.flash>0)boatState.flash=Math.max(0,boatState.flash-dt);
  if(boatState.invul>0)boatState.invul=Math.max(0,boatState.invul-dt);
- if(boatState.done)return;
+ if(boatState.done){audio.setBoatSpeed(0);return;}
  let dx=(+boatKeys.right)-(+boatKeys.left),dy=(+boatKeys.down)-(+boatKeys.up);
  const inputLength=Math.hypot(dx,dy);
  if(inputLength){dx/=inputLength;dy/=inputLength;}
@@ -327,15 +345,16 @@ function updateBoat(dt){
       boatState.vx*=.12;boatState.vy*=.12;break;
    }
  }
+ audio.setBoatSpeed(Math.hypot(boatState.vx,boatState.vy)/155);
  if(boatHitsHazard(boatState.x,boatState.y))boatCrash();
  for(const coin of boatState.coins){
    if(!coin.taken&&Math.hypot(boatState.x-coin.x,boatState.y-coin.y)<24){
-     coin.taken=true;boatState.collected++;updateBoatHud();
+     coin.taken=true;boatState.collected++;updateBoatHud();audio.coin();
      boatTip.textContent='Mynt upphittat! '+boatState.collected+' av '+BOAT_COIN_TARGET+'.';
    }
  }
  if(boatState.coins.length===BOAT_COIN_TARGET&&boatState.coins.every(c=>c.taken)){
-   boatState.done=true;boatTip.textContent='Klart! Du hittade alla mynt. Bra kört!';
+   boatState.done=true;audio.setBoatSpeed(0);boatTip.textContent='Klart! Du hittade alla mynt. Bra kört!';
  }
 }
 function drawBoatGame(){
