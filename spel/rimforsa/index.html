@@ -101,6 +101,8 @@ document.addEventListener('visibilitychange',()=>audio.setVisible(!document.hidd
 showAudioState();
 const boatChart=new Image(); boatChart.src='./boat-minigame-map.webp?v=9';
 const boatSprite=new Image(); boatSprite.src='./lage-motorboat.png?v=9';
+// Trollet är utskuret ur den av användaren godkända bilden, med transparent bakgrund.
+const trollSprite=new Image(); trollSprite.src='./troll-sprite.png?v=1';
 let boatChartLoaded=false,boatWaterData=null,boatW=1122,boatH=1402;
 
 const tiles=new Image(), maskImage=new Image(), sprite=new Image();
@@ -110,6 +112,9 @@ let imageLoaded=false,maskLoaded=false,spriteLoaded=false,collision=null,edgeDis
 const state={x:360,y:335,dir:'down',phase:0,camX:359,camY:330,near:null,nearKey:null,visited:new Set(),path:[],messageLocked:false,inCar:false};
 const carDrive=window.RimforsaCar;
 const carPos={x:carDrive.HOME.x,y:carDrive.HOME.y};
+// Strax nordväst om rondellen, ovanpå stenen. Separat minispel kan anslutas senare.
+const troll={id:'stone-troll',name:'Trollet vid stenen',x:464,y:454,interactionRadius:84,
+ minigameId:'troll-poop-toss',minigameImplemented:false,sprite:'./troll-sprite.png?v=1'};
 const carMaskImage=new Image();
 carMaskImage.src='./car-water-mask.png?v=1';
 carMaskImage.addEventListener('load',()=>{
@@ -302,6 +307,20 @@ function exitCar(){
 }
 
 function nearestSite(){let choice=null,d=65;for(const s of sites){const dist=Math.hypot(state.x-s.x,state.y-s.y);if(dist<d){d=dist;choice=s}}return choice}
+function nearTroll(){return !state.inCar&&Math.hypot(state.x-troll.x,state.y-troll.y)<troll.interactionRadius;}
+function visitTroll(){
+ state.visited.add(troll.id);
+ const start=window.RimforsaTrollMinigame&&window.RimforsaTrollMinigame.start;
+ if(typeof start==='function'){
+   // Framtida minispel kopplas hit utan att ändra trollposition, HUD eller normal navigering.
+   start({troll,player:state,returnToMap:()=>updateMessage()});
+   return true;
+ }
+ title.textContent='Trollet vid stenen';
+ message.innerHTML='<strong>👹 Hej, trollet!</strong> Här sitter trollet vid stenen nära rondellen. Ett minispel där Lage kastar bajs på trollet kommer senare. 💩';
+ interact.textContent='Hälsa igen 👹';
+ return false;
+}
 
 function isBoatOpen(){return boatState.active}
 function updateBoatHud(){boatHearts.textContent='♥'.repeat(Math.max(0,boatState.hearts))||'–';boatCoinsLabel.textContent=boatState.collected+' / '+BOAT_COIN_TARGET;}
@@ -429,15 +448,19 @@ function drawBoatGame(){
 function updateMessage(){
  if((coins.length===0&&coinCount>0)||performance.now()<coinNoticeUntil)return;
  const near=state.inCar?null:nearestSite(),carAction=state.inCar?'exit':nearCar()?'enter':null;
- const key=carAction?'car-'+carAction:near?near.name:'none';
+ const trollHere=!carAction&&nearTroll();
+ const key=carAction?'car-'+carAction:trollHere?'troll':near?near.name:'none';
  if(key===state.nearKey)return;
- state.near=near;state.nearKey=key;interact.hidden=!(carAction||near);state.messageLocked=false;
+ state.near=trollHere?null:near;state.nearKey=key;interact.hidden=!(carAction||trollHere||near);state.messageLocked=false;
  if(carAction==='enter'){
    interact.textContent='Kör bilen 🚗';title.textContent='Vit bil vid hemmet';
    message.innerHTML='<strong>🚗 Vit bil!</strong> Hoppa in och kör över land. Vattnet är stoppat.';
  }else if(carAction==='exit'){
    interact.textContent='Gå ur bilen 🚶';title.textContent='Ute och kör';
    message.innerHTML='<strong>🚗 Biltur!</strong> Bilen kan köra över alla landytor, men inte ut i vattnet.';
+ }else if(trollHere){
+   interact.textContent='Hälsa på trollet 👹';title.textContent='Trollet vid stenen';
+   message.innerHTML='<strong>👹 Trollet!</strong> Ett troll sitter på stenen. Gå fram och hälsa!';
  }else if(near){
    const isBoat=near.name==='Kinda Båtklubb';
    interact.textContent=isBoat?'Kör båt 🛥️':'Utforska ✨';
@@ -451,6 +474,7 @@ function updateMessage(){
 interact.addEventListener('click',()=>{
  if(state.inCar){exitCar();return;}
  if(nearCar()){enterCar();return;}
+ if(nearTroll()){visitTroll();return;}
  const near=nearestSite();if(!near)return;
  if(near.name==='Kinda Båtklubb'){openBoatGame();return;}
  state.visited.add(near.name);message.innerHTML='<strong>'+near.symbol+' '+near.name+'</strong> – '+near.text;
@@ -531,9 +555,24 @@ function slideMove(dx,dy){
  }
  return moved;
 }
+function drawTroll(){
+ const sx=Math.round(troll.x-state.camX+canvas.width/2),sy=Math.round(troll.y-state.camY+canvas.height/2);
+ if(sx<-70||sy<-110||sx>canvas.width+70||sy>canvas.height+110)return;
+ ctx.save();ctx.imageSmoothingEnabled=false;
+ if(trollSprite.complete&&trollSprite.naturalWidth){
+  // Sprite 56×92, större än Lages 44-pixelspelare. Fötterna möter stenen.
+  ctx.drawImage(trollSprite,sx-28,sy-92,56,92);
+ }else{
+  // Enkel fallback om sprite-resursen inte hunnit laddas.
+  ctx.fillStyle='#8b4a3a';ctx.fillRect(sx-12,sy-56,24,48);
+  ctx.fillStyle='#d5a37b';ctx.fillRect(sx-11,sy-75,22,22);
+  ctx.fillStyle='#3c1b18';ctx.fillRect(sx-6,sy-64,3,3);ctx.fillRect(sx+5,sy-64,3,3);
+ }
+ ctx.restore();
+}
 function drawPlayer(){const x=Math.round(state.x-state.camX+canvas.width/2),y=Math.round(state.y-state.camY+canvas.height/2);ctx.fillStyle='#162d2588';ctx.beginPath();ctx.ellipse(x,y-2,11,4,0,0,2*Math.PI);ctx.fill();if(spriteLoaded){const row=state.dir==='down'?0:state.dir==='left'?1:state.dir==='right'?2:3,frame=Math.floor(state.phase)%4;ctx.drawImage(sprite,frame*56,row*56,56,56,x-22,y-47,44,44)}else{ctx.fillStyle='#f6d3aa';ctx.fillRect(x-7,y-33,14,15);ctx.fillStyle='#f6e8c5';ctx.fillRect(x-12,y-18,24,17);ctx.fillStyle='#b65c63';ctx.fillRect(x-9,y-2,7,9);ctx.fillRect(x+3,y-2,7,9)}}
-function drawMap(ctx2,w,h,full=false){ctx2.clearRect(0,0,w,h);ctx2.imageSmoothingEnabled=false;if(imageLoaded)ctx2.drawImage(tiles,0,0,w,h);else{ctx2.fillStyle='#80a75c';ctx2.fillRect(0,0,w,h)}for(const s of sites){const x=s.x/W*w,y=s.y/H*h;ctx2.fillStyle='#feeaa9';ctx2.fillRect(x-2,y-2,4,4);if(full){ctx2.fillStyle='#08251d';ctx2.fillRect(x+3,y-1,2,2)}}const px=state.x/W*w,py=state.y/H*h;ctx2.fillStyle='#ff4d5e';ctx2.fillRect(px-3,py-3,7,7);ctx2.strokeStyle='#fff2c0';ctx2.lineWidth=1.2;ctx2.strokeRect(px-4,py-4,9,9)}
-function draw(){const w=canvas.width,h=canvas.height;ctx.fillStyle='#305d42';ctx.fillRect(0,0,w,h);if(imageLoaded)ctx.drawImage(tiles,Math.round(w/2-state.camX),Math.round(h/2-state.camY));drawCoins();
+function drawMap(ctx2,w,h,full=false){ctx2.clearRect(0,0,w,h);ctx2.imageSmoothingEnabled=false;if(imageLoaded)ctx2.drawImage(tiles,0,0,w,h);else{ctx2.fillStyle='#80a75c';ctx2.fillRect(0,0,w,h)}for(const s of sites){const x=s.x/W*w,y=s.y/H*h;ctx2.fillStyle='#feeaa9';ctx2.fillRect(x-2,y-2,4,4);if(full){ctx2.fillStyle='#08251d';ctx2.fillRect(x+3,y-1,2,2)}}const tx=troll.x/W*w,ty=troll.y/H*h;ctx2.fillStyle='#b26d4f';ctx2.fillRect(tx-2,ty-2,5,5);const px=state.x/W*w,py=state.y/H*h;ctx2.fillStyle='#ff4d5e';ctx2.fillRect(px-3,py-3,7,7);ctx2.strokeStyle='#fff2c0';ctx2.lineWidth=1.2;ctx2.strokeRect(px-4,py-4,9,9)}
+function draw(){const w=canvas.width,h=canvas.height;ctx.fillStyle='#305d42';ctx.fillRect(0,0,w,h);if(imageLoaded)ctx.drawImage(tiles,Math.round(w/2-state.camX),Math.round(h/2-state.camY));drawCoins();drawTroll();
 if(state.inCar){carDrive.draw(ctx,state.x-state.camX+w/2,state.y-state.camY+h/2,state.dir,true);}
 else{carDrive.draw(ctx,carPos.x-state.camX+w/2,carPos.y-state.camY+h/2,'right',false);drawPlayer();}
 ctx.strokeStyle='#1b3028';ctx.lineWidth=2;ctx.strokeRect(1,1,w-2,h-2);drawMap(mc,mini.width,mini.height);drawBoatGame()}
@@ -590,7 +629,7 @@ function openMap(){stop();overlay.classList.add('show');drawMap(wc,whole.width,w
 function closeMap(){overlay.classList.remove('show')}
 for(const id of ['showMap','miniMapBtn'])document.getElementById(id).addEventListener('click',openMap);
 document.getElementById('closeMap').addEventListener('click',closeMap);mini.addEventListener('click',openMap);overlay.addEventListener('click',e=>{if(e.target===overlay)closeMap()});
-window.__rimforsaTest={state,sites,carPos,carDrive,nearCar,enterCar,exitCar,canStand,pathTo,moveTo:(x,y)=>{state.x=x;state.y=y;updateMessage()},isReady:()=>maskLoaded&&imageLoaded,hasSprite:()=>spriteLoaded,frames:()=>frameCount,edgeClearance,edgeAssistedDirection,slideMove,coinCandidates:()=>coinCandidates.slice(),coins:()=>coins.map(c=>({...c})),coinCount:()=>coinCount,scatterCoins,collectCoins,reset,openBoatGame,closeBoatGame,boatState,boatHazards,boatReady:()=>boatChartLoaded,boatPixelWater,spawnBoatCoins};
+window.__rimforsaTest={state,sites,troll,nearTroll,visitTroll,carPos,carDrive,nearCar,enterCar,exitCar,canStand,pathTo,moveTo:(x,y)=>{state.x=x;state.y=y;updateMessage()},isReady:()=>maskLoaded&&imageLoaded,hasSprite:()=>spriteLoaded,frames:()=>frameCount,edgeClearance,edgeAssistedDirection,slideMove,coinCandidates:()=>coinCandidates.slice(),coins:()=>coins.map(c=>({...c})),coinCount:()=>coinCount,scatterCoins,collectCoins,reset,openBoatGame,closeBoatGame,boatState,boatHazards,boatReady:()=>boatChartLoaded,boatPixelWater,spawnBoatCoins};
 reset();
 })();
 
