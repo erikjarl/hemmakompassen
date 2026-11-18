@@ -33,3 +33,12 @@ test('Mobilstyrning och ordinarie Rimforsaäventyr bevaras', () => {
   assert.match(page, /edgeAssistedDirection/);
   assert.match(page, /id="boatRestart"/);
 });
+
+test('Båtens nya sprite och skalenliga kollisionskarta används',()=>{
+ assert.match(page, /lage-motorboat\.png\?v=9/);
+ assert.match(page, /boatW=boatChart\.naturalWidth;boatH=boatChart\.naturalHeight/);
+ assert.match(page, /boatWaterData=g\.getImageData\(0,0,boatW,boatH\)\.data/);
+ assert.match(page, /boatCtx\.drawImage\(boatSprite,-40,-40,80,77\)/);
+ assert.match(page, /const acceleration=290/);
+ assert.doesNotMatch(page, /boatW=710;boatH=1254/);
+});

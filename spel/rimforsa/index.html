@@ -80,7 +80,8 @@ const message=document.getElementById('message'), title=document.getElementById(
 const overlay=document.getElementById('mapOverlay');
 const boatOverlay=document.getElementById('boatOverlay'), boatCanvas=document.getElementById('boatGame'), boatCtx=boatCanvas.getContext('2d');
 const boatTip=document.getElementById('boatTip'), boatHearts=document.getElementById('boatHearts'), boatCoinsLabel=document.getElementById('boatCoins');
-const boatChart=new Image(); boatChart.src='./boat-minigame-map.webp?v=8';
+const boatChart=new Image(); boatChart.src='./boat-minigame-map.webp?v=9';
+const boatSprite=new Image(); boatSprite.src='./lage-motorboat.png?v=9';
 let boatChartLoaded=false,boatWaterData=null,boatW=1122,boatH=1402;
 
 const tiles=new Image(), maskImage=new Image(), sprite=new Image();
@@ -117,7 +118,16 @@ const sites=[
 const playerRadius=6;
 function loadMask(){if(!maskImage.complete||!maskImage.naturalWidth)return;const off=document.createElement('canvas');off.width=maskImage.naturalWidth;off.height=maskImage.naturalHeight;const g=off.getContext('2d',{willReadFrequently:true});g.imageSmoothingEnabled=false;g.drawImage(maskImage,0,0);collision=g.getImageData(0,0,off.width,off.height).data;maskW=off.width;maskH=off.height;buildEdgeDistance();maskLoaded=true;buildCoinCandidates();scatterCoins();message.innerHTML='<strong>Skattjakten börjar!</strong> Leta efter 12 guldmynt bakom små buskar längs vägarna.'}
 maskImage.addEventListener('load',loadMask);tiles.addEventListener('load',()=>imageLoaded=true);sprite.addEventListener('load',()=>spriteLoaded=true);
-boatChart.addEventListener('load',()=>{boatChartLoaded=true;boatW=710;boatH=1254;const off=document.createElement('canvas');off.width=boatW;off.height=boatH;const g=off.getContext('2d',{willReadFrequently:true});g.drawImage(boatChart,0,0,boatW,boatH);boatWaterData=g.getImageData(0,0,boatW,boatH).data;spawnBoatCoins();updateBoatHud();});
+boatChart.addEventListener('load',()=>{
+ // Collision pixels must use the same NATURAL image dimensions as the rendered map.
+ boatW=boatChart.naturalWidth;boatH=boatChart.naturalHeight;
+ const off=document.createElement('canvas');off.width=boatW;off.height=boatH;
+ const g=off.getContext('2d',{willReadFrequently:true});
+ g.drawImage(boatChart,0,0);
+ boatWaterData=g.getImageData(0,0,boatW,boatH).data;
+ boatChartLoaded=true;spawnBoatCoins();updateBoatHud();
+});
+boatChart.addEventListener('error',()=>{boatTip.textContent='Kunde inte ladda båtkartan. Ladda om sidan.';});
 for(const [image,label] of [[tiles,'kartan'],[maskImage,'gångbarhetskartan']])image.addEventListener('error',()=>{message.textContent='Kunde inte ladda '+label+'. Försök uppdatera sidan.'});
 function freePoint(x,y){if(!collision||x<8||y<8||x>=W-8||y>=H-8)return false;const px=Math.floor(x*maskW/W),py=Math.floor(y*maskH/H);const i=(py*maskW+px)*4;return collision[i]>200}
 function canStand(x,y){return freePoint(x,y+1)&&freePoint(x-5,y-3)&&freePoint(x+5,y-3)&&freePoint(x,y-8)}
@@ -253,7 +263,7 @@ function boatPixelWater(x,y){
  }
  return hits>=5;
 }
-function boatHitsHazard(x,y){for(const h of boatHazards){const dx=x-h.x,dy=y-h.y;if((dx*dx)/(h.r*h.r)+(dy*dy)/((h.r*.9)*(h.r*.9))<1)return h}return null}
+function boatHitsHazard(x,y){for(const h of boatHazards){const dx=x-h.x,dy=y-h.y;const rx=h.r+7,ry=h.r*.9+7;if(dx*dx/(rx*rx)+dy*dy/(ry*ry)<1)return h}return null}
 function reachableBoatPoints(){
  const step=12,nx=Math.floor(boatW/step),ny=Math.floor(boatH/step);
  const startX=Math.floor(374/step),startY=Math.floor(283/step),queue=[[startX,startY]],seen=new Uint8Array(nx*ny);
@@ -293,20 +303,40 @@ function updateBoat(dt){
  if(boatState.flash>0)boatState.flash=Math.max(0,boatState.flash-dt);
  if(boatState.invul>0)boatState.invul=Math.max(0,boatState.invul-dt);
  if(boatState.done)return;
- let ax=((boatKeys.right?1:0)-(boatKeys.left?1:0))*82, ay=((boatKeys.down?1:0)-(boatKeys.up?1:0))*82;
- boatState.vx+=ax*dt; boatState.vy+=ay*dt; boatState.vx*=0.965; boatState.vy*=0.965;
- const maxV=125, sp=Math.hypot(boatState.vx,boatState.vy); if(sp>maxV){boatState.vx=boatState.vx/sp*maxV;boatState.vy=boatState.vy/sp*maxV;}
- let nx=boatState.x+boatState.vx*dt, ny=boatState.y+boatState.vy*dt;
- if(sp>.5)boatState.angle=Math.atan2(boatState.vy,boatState.vx);
- if(!boatPixelWater(nx,ny)){
-   let moved=false;
-   if(boatPixelWater(nx,boatState.y)){boatState.x=nx;moved=true;} 
-   if(boatPixelWater(boatState.x,ny)){boatState.y=ny;moved=true;}
-   if(!moved){boatState.vx*= -0.18; boatState.vy*= -0.18;}
- } else { boatState.x=nx; boatState.y=ny; }
+ let dx=(+boatKeys.right)-(+boatKeys.left),dy=(+boatKeys.down)-(+boatKeys.up);
+ const inputLength=Math.hypot(dx,dy);
+ if(inputLength){dx/=inputLength;dy/=inputLength;}
+ // Frame-rate-independent movement: more responsive on mobile, slower glide on release.
+ const acceleration=290,drag=Math.exp(-(inputLength?1.4:5.2)*dt);
+ boatState.vx=(boatState.vx+dx*acceleration*dt)*drag;
+ boatState.vy=(boatState.vy+dy*acceleration*dt)*drag;
+ let speed=Math.hypot(boatState.vx,boatState.vy);
+ if(speed>155){boatState.vx*=155/speed;boatState.vy*=155/speed;speed=155;}
+ if(speed>.8)boatState.angle=Math.atan2(boatState.vy,boatState.vx);
+ // Take small steps to avoid crossing a narrow shore or island in one frame.
+ const count=Math.max(1,Math.ceil(speed*dt/3));
+ for(let i=0;i<count;i++){
+   const vx=boatState.vx*dt/count,vy=boatState.vy*dt/count;
+   if(boatPixelWater(boatState.x+vx,boatState.y+vy)){
+      boatState.x+=vx;boatState.y+=vy;
+   }else if(boatPixelWater(boatState.x+vx,boatState.y)){
+      boatState.x+=vx;boatState.vy*=.18;
+   }else if(boatPixelWater(boatState.x,boatState.y+vy)){
+      boatState.y+=vy;boatState.vx*=.18;
+   }else{
+      boatState.vx*=.12;boatState.vy*=.12;break;
+   }
+ }
  if(boatHitsHazard(boatState.x,boatState.y))boatCrash();
- for(const coin of boatState.coins){if(!coin.taken && Math.hypot(boatState.x-coin.x,boatState.y-coin.y)<18){coin.taken=true;boatState.collected++;updateBoatHud();boatTip.textContent='Mynt upphittat! '+boatState.collected+' av '+BOAT_COIN_TARGET+'.';}}
- if(boatState.coins.length===BOAT_COIN_TARGET&&boatState.coins.every(c=>c.taken)){boatState.done=true;boatTip.textContent='Klart! Du hittade alla mynt och undvek grunden. Bra kört!';}
+ for(const coin of boatState.coins){
+   if(!coin.taken&&Math.hypot(boatState.x-coin.x,boatState.y-coin.y)<24){
+     coin.taken=true;boatState.collected++;updateBoatHud();
+     boatTip.textContent='Mynt upphittat! '+boatState.collected+' av '+BOAT_COIN_TARGET+'.';
+   }
+ }
+ if(boatState.coins.length===BOAT_COIN_TARGET&&boatState.coins.every(c=>c.taken)){
+   boatState.done=true;boatTip.textContent='Klart! Du hittade alla mynt. Bra kört!';
+ }
 }
 function drawBoatGame(){
  if(!boatState.active)return;
@@ -321,8 +351,23 @@ function drawBoatGame(){
  for(const coin of boatState.coins){ if(coin.taken) continue; const sx=coin.x-camX+w/2, sy=coin.y-camY+h/2; if(sx<-20||sy<-20||sx>w+20||sy>h+20)continue; coin.spin+=0.08; boatCtx.save(); boatCtx.translate(sx,sy); boatCtx.fillStyle='#f7d75e'; boatCtx.strokeStyle='#8b5a11'; boatCtx.lineWidth=2; const r=8+Math.sin(coin.spin)*1.2; boatCtx.beginPath(); boatCtx.arc(0,0,r,0,Math.PI*2); boatCtx.fill(); boatCtx.stroke(); boatCtx.fillStyle='rgba(255,255,255,.55)'; boatCtx.fillRect(-2,-5,4,10); boatCtx.restore(); }
  // dock/start marker
  const dx=374-camX+w/2, dy=283-camY+h/2; boatCtx.fillStyle='rgba(255,255,255,.85)'; boatCtx.fillRect(dx-12,dy-2,24,4); boatCtx.fillStyle='#7b4a1f'; boatCtx.fillRect(dx-14,dy+2,28,5);
- // boat
- const bx=boatState.x-camX+w/2, by=boatState.y-camY+h/2; boatCtx.save(); boatCtx.translate(bx,by); boatCtx.rotate(boatState.angle); boatCtx.globalAlpha=(boatState.flash>0&&Math.floor(boatState.flash*12)%2===0)?0.45:1; boatCtx.fillStyle='#13293b66'; boatCtx.beginPath(); boatCtx.ellipse(0,11,12,5,0,0,Math.PI*2); boatCtx.fill(); boatCtx.fillStyle='#f8f8f6'; boatCtx.strokeStyle='#1f2c38'; boatCtx.lineWidth=2; boatCtx.beginPath(); boatCtx.moveTo(16,0); boatCtx.lineTo(3,-9); boatCtx.lineTo(-13,-6); boatCtx.lineTo(-16,0); boatCtx.lineTo(-13,6); boatCtx.lineTo(3,9); boatCtx.closePath(); boatCtx.fill(); boatCtx.stroke(); boatCtx.fillStyle='#dce7ef'; boatCtx.fillRect(-2,-5,7,10); boatCtx.strokeRect(-2,-5,7,10); boatCtx.fillStyle='#6b747c'; boatCtx.fillRect(-18,-3,7,6); boatCtx.fillStyle='#40464c'; boatCtx.fillRect(-23,-2,5,4); boatCtx.restore();
+ // En större vit motorbåt med Lage vid ratten, i samma 16-bitarsstil.
+ const bx=boatState.x-camX+w/2,by=boatState.y-camY+h/2;
+ boatCtx.save();boatCtx.translate(bx,by);
+ // Sprite's bow points down-right at zero rotation.
+ boatCtx.rotate(boatState.angle-Math.PI/4);
+ boatCtx.globalAlpha=(boatState.flash>0&&Math.floor(boatState.flash*12)%2===0)?0.5:1;
+ boatCtx.fillStyle='#122c3f77';boatCtx.beginPath();boatCtx.ellipse(3,16,25,8,0,0,Math.PI*2);boatCtx.fill();
+ if(boatSprite.complete&&boatSprite.naturalWidth){
+   boatCtx.imageSmoothingEnabled=false;
+   boatCtx.drawImage(boatSprite,-40,-40,80,77);
+ }else{
+   boatCtx.fillStyle='#f8f8f6';boatCtx.strokeStyle='#1f2c38';boatCtx.lineWidth=2;
+   boatCtx.beginPath();boatCtx.moveTo(21,0);boatCtx.lineTo(4,-12);boatCtx.lineTo(-20,-8);
+   boatCtx.lineTo(-23,0);boatCtx.lineTo(-20,8);boatCtx.lineTo(4,12);boatCtx.closePath();
+   boatCtx.fill();boatCtx.stroke();
+ }
+ boatCtx.restore();
  // HUD on canvas
  boatCtx.fillStyle='rgba(8,27,21,.72)'; boatCtx.fillRect(8,8,170,40); boatCtx.strokeStyle='#dfbe80'; boatCtx.lineWidth=2; boatCtx.strokeRect(8,8,170,40); boatCtx.fillStyle='#ffe59b'; boatCtx.font='bold 14px ui-monospace, monospace'; boatCtx.fillText('♥ '+boatState.hearts+'   MYNT '+boatState.collected+'/'+BOAT_COIN_TARGET,18,33);
 }
