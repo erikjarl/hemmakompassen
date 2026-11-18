@@ -3,7 +3,7 @@
   'use strict';
   const AudioCtor = root.AudioContext || root.webkitAudioContext;
   let ctx=null,master=null,scene='land',enabled=false,hidden=false;
-  let musicInterval=null,gullInterval=null,engine=null,waves=null,melodyStep=0,volume=.55;
+  let musicInterval=null,gullInterval=null,engine=null,waves=null,carEngine=null,carActive=false,melodyStep=0,volume=.55;
   const melody=[392,440,523.25,440,392,329.63,349.23,392,440,392,329.63,293.66,329.63,349.23,392,0,
                  349.23,392,440,523.25,587.33,523.25,440,392,349.23,329.63,293.66,329.63,349.23,392,329.63,0];
   const bass=[130.81,146.83,174.61,196,164.81,146.83,130.81,146.83];
@@ -66,6 +66,32 @@
     for(const n of [engine.lo,engine.hi,engine.filter,engine.g])n.disconnect();
     engine=null;
   }
+  function startCarEngine(){
+    if(carEngine||!enabled||hidden||scene!=='land')return;
+    const lo=oscillator('sawtooth',85),hi=oscillator('triangle',125),filter=ctx.createBiquadFilter(),g=gain(0);
+    filter.type='lowpass';filter.frequency.value=340;
+    lo.connect(filter);hi.connect(filter);filter.connect(g);g.connect(master);
+    lo.start();hi.start();carEngine={lo,hi,filter,g};
+  }
+  function stopCarEngine(){
+    if(!carEngine)return;
+    try{carEngine.lo.stop();carEngine.hi.stop();}catch(_){}
+    for(const n of [carEngine.lo,carEngine.hi,carEngine.filter,carEngine.g])n.disconnect();
+    carEngine=null;
+  }
+  function setCarActive(active){
+    carActive=!!active;
+    if(!carActive)stopCarEngine();
+    else if(enabled&&!hidden&&scene==='land')startCarEngine();
+  }
+  function setCarSpeed(speed){
+    if(!carEngine||!ctx)return;
+    const v=Math.max(0,Math.min(1,Number(speed)||0)),t=now();
+    carEngine.lo.frequency.setTargetAtTime(70+v*110,t,.08);
+    carEngine.hi.frequency.setTargetAtTime(105+v*135,t,.08);
+    carEngine.filter.frequency.setTargetAtTime(260+v*550,t,.08);
+    carEngine.g.gain.setTargetAtTime(v<.02?0:.014+.07*v,t,.06);
+  }
   function setBoatSpeed(speed){
     if(!engine||!ctx)return;
     const v=Math.max(0,Math.min(1,Number(speed)||0)),t=now();
@@ -85,7 +111,7 @@
   function stopScene(){
     if(musicInterval!==null){root.clearInterval(musicInterval);musicInterval=null;}
     if(gullInterval!==null){root.clearInterval(gullInterval);gullInterval=null;}
-    stopWaves();stopEngine();
+    stopWaves();stopEngine();stopCarEngine();
   }
   function startScene(){
     if(!enabled||!ctx||hidden)return;
@@ -96,6 +122,7 @@
     }else{
       musicTick();
       musicInterval=root.setInterval(musicTick,360);
+      if(carActive)startCarEngine();
     }
   }
   function ensureContext(){
@@ -148,6 +175,6 @@
     stopScene();
     if(!hidden&&enabled){ensureContext();startScene();}
   }
-  function status(){return {enabled,available:!!AudioCtor,scene,hidden,playingMusic:musicInterval!==null,playingWaves:!!waves,playingEngine:!!engine};}
-  root.RimforsaAudio={enable,disable,toggle,setScene,setBoatSpeed,coin,hit,setVisible,status};
+  function status(){return {enabled,available:!!AudioCtor,scene,hidden,playingMusic:musicInterval!==null,playingWaves:!!waves,playingEngine:!!engine,playingCarEngine:!!carEngine,carActive};}
+  root.RimforsaAudio={enable,disable,toggle,setScene,setBoatSpeed,setCarActive,setCarSpeed,coin,hit,setVisible,status};
 })(window);

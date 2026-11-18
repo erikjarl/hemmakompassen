@@ -89,7 +89,7 @@ test('Ljud pausas när sidan döljs, med säkert läge i webbläsare utan Web Au
 });
 
 test('Spelet har två ljudknappar och ljud kopplat till båda miljöerna',()=>{
- assert.match(html, /<script src="\.\/audio\.js\?v=1"><\/script>/);
+ assert.match(html, /<script src="\.\/audio\.js\?v=2"><\/script>/);
  assert.equal((html.match(/data-sound-toggle/g)||[]).length>=3,true);
  for(const required of [
   "audio.setScene('boat')",
@@ -102,4 +102,14 @@ test('Spelet har två ljudknappar och ljud kopplat till båda miljöerna',()=>{
  assert.match(html,/function scatterCoins\(\)/);
  assert.match(html,/function reachableBoatPoints\(\)/);
  assert.match(html,/boatW=boatChart\.naturalWidth;boatH=boatChart\.naturalHeight/);
+});
+
+test('Bilens motorljud följer ljudknappen och bytet till båtspelet',()=>{
+ const {audio}=audioFixture();
+ audio.enable();audio.setCarActive(true);audio.setCarSpeed(.6);
+ assert.equal(audio.status().playingCarEngine,true);
+ audio.setScene('boat');assert.equal(audio.status().playingCarEngine,false);
+ audio.setScene('land');assert.equal(audio.status().playingCarEngine,true);
+ audio.setCarActive(false);assert.equal(audio.status().playingCarEngine,false);
+ audio.disable();
 });
