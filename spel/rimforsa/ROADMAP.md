@@ -4,7 +4,7 @@
 **Spel:** `spel/rimforsa/index.html`  
 **Publicerad adress:** https://erikjarl.github.io/hemmakompassen/spel/rimforsa/  
 **Senast uppdaterad:** 2026-11-18  
-**Status:** Sex uppgifter är implementerade och verifierade med funktionella automatiserade tester: fyra ljuduppgifter, den vita bilen och trollfiguren/interaktionen. Det nya bajskastnings-minispelet och övriga önskemål är öppna; markera bara av punkter när funktionen är implementerad och testad.
+**Status:** Tio uppgifter är implementerade och verifierade med funktionella automatiserade tester: fyra ljuduppgifter, den vita bilen, trollfiguren/interaktionen, bajshinder med hjärtförlust, omstart utan mynt, fler mynt och ett vinstfirande. Övriga önskemål är öppna; markera bara av punkter när funktionen är implementerad och testad.
 
 ## Stående instruktion – kommandot `jobb lage`
 
@@ -27,16 +27,16 @@ När användaren skriver **`jobb lage`**:
 - [x] **HUV-01: Myntljud.** Spela ett tydligt **pengaljud när ett mynt samlas in**.
 - [x] **HUV-02: Musik.** Lägg till **mysig bakgrundsmusik** på huvudkartan.
 - [x] **HUV-03: Vit bil vid hemmet.** Lägg till **en vit bil vid Hem/Ulrikavägen**. Lage ska kunna välja att köra den. När bilen kör ska den ha **motorljud**, och bilen ska kunna köra **över alla terränger utom vatten**.
-- [ ] **HUV-04: Bajskorvar.** Lägg till **bajskorvar** som hinder. Lage **förlorar ett hjärta** när han kommer i kontakt med en bajskorv.
-- [ ] **HUV-05: Hjärtan och omstart.** När **alla hjärtan försvinner** ska spelet **börja om**, och spelaren ska **förlora alla insamlade mynt**.
+- [x] **HUV-04: Bajskorvar.** Lägg till **bajskorvar** som hinder. Lage **förlorar ett hjärta** när han kommer i kontakt med en bajskorv.
+- [x] **HUV-05: Hjärtan och omstart.** När **alla hjärtan försvinner** ska spelet **börja om**, och spelaren ska **förlora alla insamlade mynt**.
 
 ## Nya förbättringar – huvudspel och spelvärld (2026-11-18)
 
 - [ ] **BIL-01: Finare vit bil.** Ersätt bilens nuvarande förenklade pixelgrafik med en mer detaljerad, välgjord **16-bitarsbil i samma grafiska stil som motorbåten**. Visa Lage i bilen, bevara styrning, motorljud, möjlighet att kliva in och ur och regeln att bilen inte får köra i vatten. Kontrollera utseende i rörelse och på mobil.
 
-- [ ] **MYNT-01: Fler mynt på kartan.** **Öka antalet insamlingsbara mynt** på huvudkartan och sprid ut dem på ett lekfullt sätt. Se till att alla kan nås, att HUD/räknare visar rätt totalantal och att insamlade mynt kan användas i framtida butiker. Undvik att pengar försvinner oavsiktligt vid byte till minispel.
+- [x] **MYNT-01: Fler mynt på kartan.** **Öka antalet insamlingsbara mynt** på huvudkartan och sprid ut dem på ett lekfullt sätt. Se till att alla kan nås, att HUD/räknare visar rätt totalantal och att insamlade mynt kan användas i framtida butiker. Undvik att pengar försvinner oavsiktligt vid byte till minispel.
 
-- [ ] **MYNT-02: Grattis när alla mynt hittats.** När Lage samlat **alla mynt** ska spelet ge en tydlig och festlig belöning, exempelvis texten **”Grattis! Du har samlat alla mynt!”** med en enkel animation och ett passande ljud. Den ska bara utlösas när målet är uppnått, gå att stänga och fungera på mobil. Anpassa till framtida köp och mynt som tillkommer vid kartutbyggnad.
+- [x] **MYNT-02: Grattis när alla mynt hittats.** När Lage samlat **alla mynt** ska spelet ge en tydlig och festlig belöning, exempelvis texten **”Grattis! Du har samlat alla mynt!”** med en enkel animation och ett passande ljud. Den ska bara utlösas när målet är uppnått, gå att stänga och fungera på mobil. Anpassa till framtida köp och mynt som tillkommer vid kartutbyggnad.
 
 - [ ] **NPC-01: Vandrande karaktärer och samtal.** Skapa **andra karaktärer i samma pixelgrafik som Lage** som går omkring på gator och stigar, utan att blockera spelaren. Lage ska kunna gå fram och **prata med dem** via en lättbegriplig samtalsruta. Ge figurerna egna repliker och bevara stöd för mobilstyrning.
 
@@ -82,6 +82,8 @@ När användaren skriver **`jobb lage`**:
 - **Verifiering:** Lägg till tester för respektive uppgift, spela igenom huvudflödet och kontrollera samma publicerade URL. Redovisa separat om fysisk iPhone/Safari inte har testats.
 
 ## Arbetslogg
+- **2026-11-18 – Jobb lage / HUV-04, HUV-05, MYNT-01, MYNT-02:** Ett sammanhängande poäng- och hjärtsystem byggdes in på huvudkartan. De ursprungliga **12** mynten har ökats till **20** med bredare regionspridning, och den faktiska uppnåeliga myntmängden styr målet om färre än 20 platser kan placeras. **Sju** bajskorvar försöker placeras på nåbara stigar med avstånd till hemmet, bilen, trollet och mynten. Lage förlorar **ett av tre hjärtan** vid kontakt med en bajskorv till fots, men samma bajskorv skadar inte igen förrän han lämnat den; en kort skadepaus skyddar mot snabbt upprepade träffar. När hjärtana tar slut startar en ny omgång automatiskt vid hemmet med **0 mynt** och alla hjärtan återställda. När det sista myntet hittas visas en festlig, stängbar **grattisruta** med originalkomponerad fanfar som respekterar ljudknappen. Båtminispelets hjärtsystem är separat och oförändrat; för bilåkning gäller fortfarande den befintliga vattenmasken. Ändrade filer: `spel/rimforsa/index.html`, `gameplay.js`, `audio.js` och motsvarande tester. Kodcommit: [cde377e](https://github.com/erikjarl/hemmakompassen/commit/cde377ef5ac688e72b07422d051cfb995322ecb9), testjustering: [a11a4a3](https://github.com/erikjarl/hemmakompassen/commit/a11a4a3408dc2502f5bc30a868dc100fe82852f5). **Verifierat:** GitHub Actions funktionella tester godkända, Pages-publicering och verifiering av serverade resurser godkända. **Ej ännu verifierat:** full Chromium-smoketest (pågående vid loggskrivningen), praktiskt spel på fysisk iPhone/Safari och den exakta visuella upplevelsen av hinder och grattisrutan. Nästa öppna uppgifter: **BIL-01** (förbättra bilgrafik), sedan andra funktioner som NPC/inventarie, trollminispel och nya miljöer. KARTA-01 kvarstår som långsiktig sistahandsuppgift.
+
 - **2026-11-18 – Nya önskemål dokumenterade (ingen spelkod ändrad):** Sju öppna punkter har lagts till: **BIL-01** (finare bil i båtens grafik), **MYNT-01** (fler mynt), **MYNT-02** (grattis vid alla mynt), **NPC-01** (vandrande pratbara figurer), **INV-01** (sparade föremål), **DRAKE-01** (eldsprutande drake med läskig musik) och **KARTA-01** (långsiktig geografiskt förankrad expansion av Kindabygden). KARTA-01 ska **inte** konkurrera med övriga prioriterade uppgifter utan fungera som en återkommande expansion efter dessa. Inget av detta är ännu implementerat eller testat.
 
 
