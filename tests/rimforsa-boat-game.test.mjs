@@ -7,7 +7,7 @@ const page = readFileSync(new URL('../spel/rimforsa/index.html', import.meta.url
 test('Kinda båtklubb öppnar båtminispelet i samma spelsida', () => {
   assert.match(page, /id="boatOverlay"/);
   assert.match(page, /id="boatGame"/);
-  assert.match(page, /state\.near\.name==='Kinda Båtklubb'\)\{openBoatGame\(\);return;/);
+  assert.match(page, /near\.name==='Kinda Båtklubb'\)\{openBoatGame\(\);return;/);
   assert.match(page, /function closeBoatGame\(\)/);
   assert.match(page, /boat-minigame-map\.webp/);
 });

@@ -28,8 +28,8 @@ function move(x,y,dx,dy,dt){
  let moved=false;
  for(let i=0;i<count;i++){
   if(canDrive(x+stepX,y+stepY)){x+=stepX;y+=stepY;moved=true;}
-  else if(canDrive(x+stepX,y)){x+=stepX;moved=true;}
-  else if(canDrive(x,y+stepY)){y+=stepY;moved=true;}
+  else if(Math.abs(stepX)>.0001&&canDrive(x+stepX,y)){x+=stepX;moved=true;}
+  else if(Math.abs(stepY)>.0001&&canDrive(x,y+stepY)){y+=stepY;moved=true;}
   else break;
  }
  return {x,y,moved,speed:moved?SPEED:0};
