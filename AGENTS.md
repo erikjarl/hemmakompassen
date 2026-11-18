@@ -21,3 +21,9 @@ Eriks uttryckliga instruktion:
 Det innebär stående tillåtelse inom Hemmakompassen att skapa commits, pusha utvecklingsgrenar, skapa PR, mergea till main och publicera, samt genomföra motsvarande nödvändiga projektförändringar, granskade migrationer och driftsättningar i anslutna Supabase och Cloudflare. Begär inte ett nytt generellt godkännande för dessa steg vid varje pass. Fullmakten gäller tills Erik ändrar den och ersätter äldre projektanteckningar om manuell merge eller separat godkännande inför vanlig publicering.
 
 Projektet används fortfarande för intern testning enligt Eriks instruktion. Testa ändringar och redovisa vad som faktiskt verifierats. Befintliga användarsvar ska inte ändras för testning. Fullmakten ändrar inte produktens regler för privat respektive uttryckligen delad information.
+
+## Kortkommando: Jobb lage – separat spelspår
+
+När användaren skriver `jobb lage` (skiftlägesokänsligt) gäller det fristående spelet **Lage i Rimforsa** under `spel/rimforsa/`, **inte** den allmänna arbetskön för `Jobb hk`. Läs först `spel/rimforsa/AGENTS.md` och `spel/rimforsa/ROADMAP.md`. Genomför ett självständigt utvecklingspass enligt listan och uppdatera roadmapens status med verifierade resultat.
+
+**Uttrycklig stående fullmakt från 18 november 2026:** användaren tillåter att ändringar i detta spel kodas, testas, committas, pushas till GitHub och publiceras på befintlig GitHub Pages-adress **utan att först be om nytt godkännande vid varje `jobb lage`**. Behörigheten omfattar fortsatt arbete på uppgifterna i roadmapen, inklusive att hålla denna instruktion aktuell; den gäller tills användaren ändrar den. Följ fortfarande säkerhetsregler och faktiska verktygsbehörigheter, verifiera vad som går och påstå aldrig att en ändring har publicerats utan bekräftelse. Undvik oavsiktliga ändringar i Hemmakompassens övriga delar.

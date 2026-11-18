@@ -1,0 +1,61 @@
+# Lage i Rimforsa – att-göra-lista och arbetsordning
+
+**Projekt:** `erikjarl/hemmakompassen`  
+**Spel:** `spel/rimforsa/index.html`  
+**Publicerad adress:** https://erikjarl.github.io/hemmakompassen/spel/rimforsa/  
+**Senast uppdaterad:** 2026-11-18  
+**Status:** Dessa önskemål är **planerade**, inte verifierat genomförda. Markera bara av en punkt när funktionen faktiskt är implementerad och testad.
+
+## Stående instruktion – kommandot `jobb lage`
+
+När användaren skriver **`jobb lage`**:
+
+1. Läs alltid denna fil och `spel/rimforsa/AGENTS.md`, och kontrollera aktuell spelkod och status på GitHub innan arbetet.
+2. Gå igenom hela att-göra-listan, välj nästa genomförbara uppgifter och genomför ett sammanhängande, självständigt utvecklingspass. Börja med fel som blockerar spelet och fortsätt med funktioner enligt beroenden och listordning.
+3. **Full behörighet är uttryckligen given för detta spel:** gör kodändringar, skapa/ändra resurser, kör tester, committa, pusha och publicera till samma GitHub Pages-sida utan att fråga användaren igen inför varje `jobb lage`. Detta gäller också att läsa och uppdatera denna instruktion och att-göra-lista vid varje pass. Gäller tills användaren ändrar fullmakten, inom faktiska verktygsbehörigheter och överordnade säkerhetskrav.
+4. Kontrollera att tidigare funktioner är kvar; testa särskilt mobil-/pekstyrning, bild- och ljudladdning, spelprogression, hjärtan, mynt och återstart. Kontrollera CI/Pages-status där det går.
+5. Markera genomförda uppgifter med `[x]` först efter verifiering, och dokumentera eventuella begränsningar, kända fel och vad som återstår. Vid utebliven publicering ska det stå tydligt.
+6. Håll utvecklingen avgränsad till spelet `spel/rimforsa/` och dess relevanta tester; `Jobb hk` är ett separat kommando för resten av Hemmakompassen.
+
+## Att göra – Kinda båtklubb
+
+- [ ] **BÅT-01: Vattenambience.** Lägg till bakgrundsljud med **vågskvalp och fiskmåsar** när man befinner sig i båtminispelet.
+- [ ] **BÅT-02: Motorljud.** Lägg till **båtmotorljud när motorbåten kör**. Ljudet ska följa körningen, och stanna när båten stannar eller minispelet lämnas.
+
+## Att göra – huvudkartan
+
+- [ ] **HUV-01: Myntljud.** Spela ett tydligt **pengaljud när ett mynt samlas in**.
+- [ ] **HUV-02: Musik.** Lägg till **mysig bakgrundsmusik** på huvudkartan.
+- [ ] **HUV-03: Vit bil vid hemmet.** Lägg till **en vit bil vid Hem/Ulrikavägen**. Lage ska kunna välja att köra den. När bilen kör ska den ha **motorljud**, och bilen ska kunna köra **över alla terränger utom vatten**.
+- [ ] **HUV-04: Bajskorvar.** Lägg till **bajskorvar** som hinder. Lage **förlorar ett hjärta** när han kommer i kontakt med en bajskorv.
+- [ ] **HUV-05: Hjärtan och omstart.** När **alla hjärtan försvinner** ska spelet **börja om**, och spelaren ska **förlora alla insamlade mynt**.
+
+## Att göra – nya minispel
+
+### ICA-affären
+- [ ] **ICA-01: Glassköp.** Använd insamlade pengar för att **köpa glass av en ICA-personal**. Spelaren ska kunna välja mellan **päronglass** och **vaniljglass**.
+
+### Pizzeria / Bella Donna
+- [ ] **PIZ-01: Pizza.** Låt spelaren **köpa en pizzaslice med ananas på**, betald med insamlade pengar.
+
+### Förskolan
+- [ ] **FÖR-01: Rutschkana.** Skapa ett rutschkane-minispel där Lage **åker nerför rutschkanan**. **Ju längre spelaren håller knappen nedtryckt, desto längre flyger Lage**.
+- [ ] **FÖR-02: Andra barn.** Lägg till **andra barn** i förskolemiljön.
+- [ ] **FÖR-03: Utomhusljud.** Lägg till **barnambient ljud** i förskolans utomhusmiljö.
+
+### Åsundabadet
+- [ ] **BAD-01: Simning och dykning.** Lägg till ett **2D-simspel med sidovy där man ser ner i vattendjupet**. Spelaren ska kunna **trycka på en knapp för att simma nedåt** och **hitta pengar på botten**.
+- [ ] **BAD-02: Hajar.** Lägg till **hajar som simmar förbi**. Om Lage **nuddar en haj förlorar han ett hjärta**.
+- [ ] **BAD-03: Vågskvalp.** Lägg till **vågskvalpsljud i bakgrunden** vid Åsundabadet.
+
+## Gemensamma tekniska hänsyn (förslag för genomförandet, inte ytterligare användarkrav)
+
+- **Ekonomi:** Låt myntplånboken som används till ICA och pizzerian ha en tydlig koppling till insamlade mynt. Samordna avdrag och återställning av mynt när hjärtan tar slut; undvik att räkna samma mynt två gånger.
+- **Ljud i webbläsaren:** Mobilwebbläsare kräver normalt en användargest innan ljud får starta. Starta ljud efter en faktisk spel-/knappinteraktion, och stoppa eller byt ljud vid miljöbyte. Använd originalskapade eller rättighetsklarerade ljud och musik.
+- **Kollisioner:** Bevara hinderreglerna i gångläget, förutom den uttryckliga förändringen för bilen (alla terränger utom vatten). Se till att en kollision inte tar flera hjärtan omedelbart genom samma kontakt.
+- **Trygg och begriplig barnupplevelse:** Gör köp, hjärtförlust, myntförlust och omstart tydliga och lätta att förstå. Håll styrning och ljudnivå lämpliga för mobil.
+- **Verifiering:** Lägg till tester för respektive uppgift, spela igenom huvudflödet och kontrollera samma publicerade URL. Redovisa separat om fysisk iPhone/Safari inte har testats.
+
+## Arbetslogg
+
+- **2026-11-18:** Att-göra-listan och `jobb lage`-fullmakten dokumenterades i projektet. Ingen av ovanstående nya funktioner markeras som implementerad enbart för att listan skapats.
