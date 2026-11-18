@@ -1,7 +1,12 @@
 /* Lage i Rimforsa: vit bil och separat vattenmask från den illustrerade kartan. */
 (function(root){
 'use strict';
-const HOME={x:408,y:342},SPEED=210;
+const HOME={x:430,y:342},SPEED=210;
+// Två bildrutor i samma pixelgrafik som båten: parkerad 0–87, Lage vid ratten 88–175.
+const CAR_FRAME_WIDTH=88,CAR_FRAME_HEIGHT=55;
+const carSprite=typeof root.Image==='function'?new root.Image():null;
+if(carSprite)carSprite.src='./car-spritesheet.png?v=2';
+function spriteReady(){return !!carSprite&&carSprite.complete&&carSprite.naturalWidth===176&&carSprite.naturalHeight===55;}
 let mask=null,maskW=0,maskH=0,worldW=1448,worldH=1086;
 function setWaterMask(data,width,height,w=1448,h=1086){
  if(!data||!Number.isFinite(width)||!Number.isFinite(height)||width<2||height<2)throw Error('Invalid water mask');
@@ -38,6 +43,16 @@ function draw(ctx,x,y,dir='right',occupied=false){
  ctx.save();ctx.translate(Math.round(x),Math.round(y));
  const angle=dir==='left'?Math.PI:dir==='up'?-Math.PI/2:dir==='down'?Math.PI/2:0;
  ctx.rotate(angle);
+ // Mjuk markskugga före pixelbilden. Originalskapat fordon; ritningen bevaras som fallback.
+ ctx.fillStyle='#15251d88';ctx.fillRect(-40,19,80,11);
+ if(spriteReady()&&typeof ctx.drawImage==='function'){
+   const smooth=ctx.imageSmoothingEnabled;
+   ctx.imageSmoothingEnabled=false;
+   ctx.drawImage(carSprite,occupied?CAR_FRAME_WIDTH:0,0,CAR_FRAME_WIDTH,CAR_FRAME_HEIGHT,-45,-30,90,56);
+   ctx.imageSmoothingEnabled=smooth;
+   ctx.restore();
+   return;
+ }
  ctx.fillStyle='#15251d88';ctx.fillRect(-25,11,50,9);
  // Fyra hjul, ljusa plåtsidor, blå rutor och röda baklyktor i chunky 16-bitarsstil.
  ctx.fillStyle='#242b2f';for(const a of [-18,11])for(const b of [-15,10])ctx.fillRect(a,b,9,6);
@@ -59,5 +74,5 @@ function draw(ctx,x,y,dir='right',occupied=false){
  }
  ctx.restore();
 }
-root.RimforsaCar={HOME,SPEED,setWaterMask,ready,waterAt,canDrive,move,draw};
+root.RimforsaCar={HOME,SPEED,setWaterMask,ready,waterAt,canDrive,move,draw,spriteReady};
 })(window);

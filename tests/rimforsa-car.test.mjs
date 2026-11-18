@@ -56,7 +56,7 @@ test('Rörelse normaliserar diagonal styrning och bilen ritas separat',()=>{
 
 test('Huvudspelet har påstigning, avstigning, motorljud och återställning',()=>{
  for(const phrase of [
-  '<script src="./car.js?v=1"></script>',
+  '<script src="./car.js?v=2"></script>',
   'car-water-mask.png?v=1',
   'function enterCar(){',
   'function exitCar(){',
@@ -71,4 +71,35 @@ test('Huvudspelet har påstigning, avstigning, motorljud och återställning',()
  assert.match(html,/function scatterCoins\(\)/);
  assert.match(html,/function reachableBoatPoints\(\)/);
  assert.match(html,/boatW=boatChart\.naturalWidth;boatH=boatChart\.naturalHeight/);
+});
+
+test('Bilen har en transparent 16-bitarsbild för parkerat läge och Lage vid ratten',()=>{
+ const fs=requireSprite();
+ assert.equal(fs.subarray(1,4).toString(),'PNG');
+ assert.equal(fs.readUInt32BE(16),176);
+ assert.equal(fs.readUInt32BE(20),55);
+ assert.match(code,/car-spritesheet\.png\?v=2/);
+});
+function requireSprite(){return readFileSync(new URL('../spel/rimforsa/car-spritesheet.png',import.meta.url));}
+
+test('Bilen visar olika bildrutor när Lage kliver in och ut',()=>{
+ const ctxVm={window:{Image:class {
+  constructor(){this.complete=true;this.naturalWidth=176;this.naturalHeight=55;}
+ }}};
+ vm.runInNewContext(code,ctxVm);
+ const car=ctxVm.window.RimforsaCar;
+ const draws=[];
+ const canvas={save(){},restore(){},translate(){},rotate(){},fillRect(){},
+  imageSmoothingEnabled:true,
+  drawImage(...args){draws.push(args);}
+ };
+ car.draw(canvas,100,100,'right',false);
+ car.draw(canvas,100,100,'left',true);
+ assert.equal(draws.length,2);
+ assert.equal(draws[0][1],0,'Parked image frame should be first');
+ assert.equal(draws[1][1],88,'Seated Lage frame should be second');
+ assert.equal(draws[0][3],88);
+ assert.equal(draws[0][4],55);
+ assert.equal(canvas.imageSmoothingEnabled,true,'Restore canvas smoothing after pixel rendering');
+ assert.equal(car.spriteReady(),true);
 });
