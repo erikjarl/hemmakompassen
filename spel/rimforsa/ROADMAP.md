@@ -4,7 +4,7 @@
 **Spel:** `spel/rimforsa/index.html`  
 **Publicerad adress:** https://erikjarl.github.io/hemmakompassen/spel/rimforsa/  
 **Senast uppdaterad:** 2026-11-18  
-**Status:** Fyra ljuduppgifter är implementerade och verifierade med automatiserade Node/Web Audio-kontraktstester. Övriga önskemål är öppna; markera bara av punkter när funktionen är implementerad och testad.
+**Status:** Fem uppgifter är implementerade och verifierade med automatiserade tester: fyra ljuduppgifter och den vita bilen. Övriga önskemål är öppna; markera bara av punkter när funktionen är implementerad och testad.
 
 ## Stående instruktion – kommandot `jobb lage`
 
@@ -26,7 +26,7 @@ När användaren skriver **`jobb lage`**:
 
 - [x] **HUV-01: Myntljud.** Spela ett tydligt **pengaljud när ett mynt samlas in**.
 - [x] **HUV-02: Musik.** Lägg till **mysig bakgrundsmusik** på huvudkartan.
-- [ ] **HUV-03: Vit bil vid hemmet.** Lägg till **en vit bil vid Hem/Ulrikavägen**. Lage ska kunna välja att köra den. När bilen kör ska den ha **motorljud**, och bilen ska kunna köra **över alla terränger utom vatten**.
+- [x] **HUV-03: Vit bil vid hemmet.** Lägg till **en vit bil vid Hem/Ulrikavägen**. Lage ska kunna välja att köra den. När bilen kör ska den ha **motorljud**, och bilen ska kunna köra **över alla terränger utom vatten**.
 - [ ] **HUV-04: Bajskorvar.** Lägg till **bajskorvar** som hinder. Lage **förlorar ett hjärta** när han kommer i kontakt med en bajskorv.
 - [ ] **HUV-05: Hjärtan och omstart.** När **alla hjärtan försvinner** ska spelet **börja om**, och spelaren ska **förlora alla insamlade mynt**.
 
@@ -57,6 +57,8 @@ När användaren skriver **`jobb lage`**:
 - **Verifiering:** Lägg till tester för respektive uppgift, spela igenom huvudflödet och kontrollera samma publicerade URL. Redovisa separat om fysisk iPhone/Safari inte har testats.
 
 ## Arbetslogg
+
+- **2026-11-18 – Jobb lage / HUV-03 vit bil vid Hem:** Implementerat i `spel/rimforsa/index.html`, `spel/rimforsa/car.js`, `spel/rimforsa/car-water-mask.png` och `spel/rimforsa/audio.js`: parkerad vit bil vid Ulrikavägen, **Kör bilen**-knapp vid bilen, Lage synlig i bilen, styrning via samma pilar/WASD, körning över alla landytor med särskild bildbaserad vattenmask som stoppar sjön, **Gå ur bilen** när en gångbar yta finns i närheten, separat hastighetsstyrt motorljud som respekterar ljudinställningen, samt återställning vid ny omgång. Avstigning från helt otillgänglig terräng visar instruktion att hitta en väg. GitHub-commit [8ae4c4a](https://github.com/erikjarl/hemmakompassen/commit/8ae4c4a243fee842a213390cfa6d14b9f46b01b3) och rättning [c7687da](https://github.com/erikjarl/hemmakompassen/commit/c7687da7f5a910463a9c2eee0029f2aac9b2b534). **Verifierat:** funktionella Node-tester om kollisionsmask, diagonal rörelse, förflyttning mot vattenkant, ljudlogik och kodintegration godkända i GitHub Actions; assetkontroll på Pages godkänd. **Återstår att kontrollera:** fullständig Chromium-browser smoke-körning och slutlig Pages-byggstatus (pågående vid loggskrivning), körkänsla, faktisk interaktion och ljud på fysisk iPhone/Safari. Nästa öppna uppgifter HUV-04 (bajskorvar) och HUV-05 (hjärtan/omstart).
 
 - **2026-11-18 – Jobb lage / ljudpass:** Implementerat **BÅT-01, BÅT-02, HUV-01 och HUV-02** i `spel/rimforsa/audio.js` och kopplat till spelet. Ljuden är originalsyntetiserade i Web Audio API: mjukt vågbrus, syntetiserade fiskmåsläten, båtmotor med hastighetsberoende pitch/volym, myntklirr och egenkomponerad lugn 16-bitarsmelodi. Ljud startar först när spelaren aktiverar **Ljud på** (även tillgängligt i båtspelet); ljuden byts när man går in i/ut ur båtminispelet, stoppas när ljudet stängs av och pausas när sidan döljs. Versionsstyrd fil `audio.js?v=1`. Kod-commit: [`3737cbb`](https://github.com/erikjarl/hemmakompassen/commit/3737cbb4d9e25155f49510e3d822490851ed808a). **Verifierat:** GitHub Actions funktionella och backendtester slutförda med success; Pages-build och kontroll av serverade resurser rapporterade success. Full Chromium-smoketest var fortfarande under körning när denna arbetslogg uppdaterades. **Ej verifierat:** faktiskt ljud på fysisk iPhone/Safari, hur naturtroget fågel- och vågljudet upplevs eller den estetiska kvaliteten på musiken. Nästa uppgifter: HUV-03 (vit bil), HUV-04 (bajskorvar) och HUV-05 (hjärtan/omstart).
 
