@@ -93,6 +93,7 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
 <script src="./audio.js?v=3"></script>
 <script src="./gameplay.js?v=1"></script>
 <script src="./car.js?v=2"></script>
+<script src="./npc.js?v=1"></script>
 <script>
 (()=>{'use strict';
 const W=1448,H=1086, canvas=document.getElementById('world'), ctx=canvas.getContext('2d',{alpha:false});
@@ -145,6 +146,7 @@ const COIN_TARGET=20,POOP_TARGET=7,coinScore=document.getElementById('coinScore'
 const landHearts=document.getElementById('landHearts');
 const winOverlay=document.getElementById('winOverlay'),winCount=document.getElementById('winCount');
 const game=window.RimforsaGameplay.createSession(COIN_TARGET);
+const npcSystem=window.RimforsaNPC.createSystem(canStand);
 let coinCandidates=[],coins=[],coinCount=0,coinNoticeUntil=0;
 let poops=[],hurtUntil=0;
 const boatKeys={up:false,down:false,left:false,right:false};
@@ -171,7 +173,7 @@ const sites=[
  {name:'Kinda Båtklubb',x:1100,y:116,text:'Här ligger båtarna vid sjön. Här kan Lage hoppa i en vit motorbåt och ge sig ut på skattjakt bland grunden.',symbol:'⛵'}
 ];
 const playerRadius=6;
-function loadMask(){if(!maskImage.complete||!maskImage.naturalWidth)return;const off=document.createElement('canvas');off.width=maskImage.naturalWidth;off.height=maskImage.naturalHeight;const g=off.getContext('2d',{willReadFrequently:true});g.imageSmoothingEnabled=false;g.drawImage(maskImage,0,0);collision=g.getImageData(0,0,off.width,off.height).data;maskW=off.width;maskH=off.height;buildEdgeDistance();maskLoaded=true;buildCoinCandidates();scatterCoins();message.innerHTML='<strong>Skattjakten börjar!</strong> Leta efter '+COIN_TARGET+' guldmynt och undvik bajskorvarna längs vägarna.'}
+function loadMask(){if(!maskImage.complete||!maskImage.naturalWidth)return;const off=document.createElement('canvas');off.width=maskImage.naturalWidth;off.height=maskImage.naturalHeight;const g=off.getContext('2d',{willReadFrequently:true});g.imageSmoothingEnabled=false;g.drawImage(maskImage,0,0);collision=g.getImageData(0,0,off.width,off.height).data;maskW=off.width;maskH=off.height;buildEdgeDistance();maskLoaded=true;buildCoinCandidates();scatterCoins();npcSystem.reset();message.innerHTML='<strong>Skattjakten börjar!</strong> Leta efter '+COIN_TARGET+' guldmynt och undvik bajskorvarna längs vägarna.'}
 maskImage.addEventListener('load',loadMask);tiles.addEventListener('load',()=>imageLoaded=true);sprite.addEventListener('load',()=>spriteLoaded=true);
 boatChart.addEventListener('load',()=>{
  // Collision pixels must use the same NATURAL image dimensions as the rendered map.
@@ -525,9 +527,10 @@ function updateMessage(){
  if(performance.now()<coinNoticeUntil)return;
  const near=state.inCar?null:nearestSite(),carAction=state.inCar?'exit':nearCar()?'enter':null;
  const trollHere=!carAction&&nearTroll();
- const key=carAction?'car-'+carAction:trollHere?'troll':near?near.name:'none';
+ const npcHere=!carAction&&!trollHere?npcSystem.near(state.x,state.y):null;
+ const key=carAction?'car-'+carAction:trollHere?'troll':npcHere?'npc-'+npcHere.id:near?near.name:'none';
  if(key===state.nearKey)return;
- state.near=trollHere?null:near;state.nearKey=key;interact.hidden=!(carAction||trollHere||near);state.messageLocked=false;
+ state.near=(trollHere||npcHere)?null:near;state.nearKey=key;interact.hidden=!(carAction||trollHere||npcHere||near);state.messageLocked=false;
  if(carAction==='enter'){
    interact.textContent='Kör bilen 🚗';title.textContent='Vit bil vid hemmet';
    message.innerHTML='<strong>🚗 Vit bil!</strong> Hoppa in och kör över land. Vattnet är stoppat.';
@@ -537,6 +540,9 @@ function updateMessage(){
  }else if(trollHere){
    interact.textContent='Hälsa på trollet 👹';title.textContent='Trollet vid stenen';
    message.innerHTML='<strong>👹 Trollet!</strong> Ett troll sitter på stenen. Gå fram och hälsa!';
+ }else if(npcHere){
+   interact.textContent='Prata med '+npcHere.name+' 💬';title.textContent=npcHere.name;
+   message.innerHTML='<strong>💬 '+npcHere.name+'</strong> – någon vill prata med Lage. Tryck på Prata!';
  }else if(near){
    const isBoat=near.name==='Kinda Båtklubb';
    interact.textContent=isBoat?'Kör båt 🛥️':'Utforska ✨';
@@ -551,6 +557,16 @@ interact.addEventListener('click',()=>{
  if(state.inCar){exitCar();return;}
  if(nearCar()){enterCar();return;}
  if(nearTroll()){visitTroll();return;}
+ const npcHere=npcSystem.near(state.x,state.y);
+ if(npcHere){
+   const dialogue=npcSystem.talk(npcHere.id);
+   if(dialogue){
+     title.textContent=dialogue.name;
+     message.textContent=dialogue.name+': ”'+dialogue.line+'”';
+     interact.textContent='Prata igen 💬';
+   }
+   return;
+ }
  const near=nearestSite();if(!near)return;
  if(near.name==='Kinda Båtklubb'){openBoatGame();return;}
  state.visited.add(near.name);message.innerHTML='<strong>'+near.symbol+' '+near.name+'</strong> – '+near.text;
@@ -561,7 +577,7 @@ function reset(){
  carPos.x=carDrive.HOME.x;carPos.y=carDrive.HOME.y;
  state.x=360;state.y=335;state.camX=360;state.camY=335;state.dir='down';
  state.phase=0;state.visited.clear();state.path=[];state.near=null;state.nearKey=null;
- scatterCoins();interact.textContent='Utforska ✨';interact.hidden=true;title.textContent='Hem – Ulrikavägen';
+ npcSystem.reset();scatterCoins();interact.textContent='Utforska ✨';interact.hidden=true;title.textContent='Hem – Ulrikavägen';
  message.innerHTML='<strong>Ny skattjakt!</strong> Leta efter '+COIN_TARGET+' guldmynt som glimmar bakom små buskar vid vägarna.';
  updateMessage();
 }
@@ -649,7 +665,7 @@ function drawTroll(){
 }
 function drawPlayer(){const x=Math.round(state.x-state.camX+canvas.width/2),y=Math.round(state.y-state.camY+canvas.height/2);ctx.fillStyle='#162d2588';ctx.beginPath();ctx.ellipse(x,y-2,11,4,0,0,2*Math.PI);ctx.fill();if(spriteLoaded){const row=state.dir==='down'?0:state.dir==='left'?1:state.dir==='right'?2:3,frame=Math.floor(state.phase)%4;ctx.drawImage(sprite,frame*56,row*56,56,56,x-22,y-47,44,44)}else{ctx.fillStyle='#f6d3aa';ctx.fillRect(x-7,y-33,14,15);ctx.fillStyle='#f6e8c5';ctx.fillRect(x-12,y-18,24,17);ctx.fillStyle='#b65c63';ctx.fillRect(x-9,y-2,7,9);ctx.fillRect(x+3,y-2,7,9)}}
 function drawMap(ctx2,w,h,full=false){ctx2.clearRect(0,0,w,h);ctx2.imageSmoothingEnabled=false;if(imageLoaded)ctx2.drawImage(tiles,0,0,w,h);else{ctx2.fillStyle='#80a75c';ctx2.fillRect(0,0,w,h)}for(const s of sites){const x=s.x/W*w,y=s.y/H*h;ctx2.fillStyle='#feeaa9';ctx2.fillRect(x-2,y-2,4,4);if(full){ctx2.fillStyle='#08251d';ctx2.fillRect(x+3,y-1,2,2)}}const tx=troll.x/W*w,ty=troll.y/H*h;ctx2.fillStyle='#b26d4f';ctx2.fillRect(tx-2,ty-2,5,5);const px=state.x/W*w,py=state.y/H*h;ctx2.fillStyle='#ff4d5e';ctx2.fillRect(px-3,py-3,7,7);ctx2.strokeStyle='#fff2c0';ctx2.lineWidth=1.2;ctx2.strokeRect(px-4,py-4,9,9)}
-function draw(){const w=canvas.width,h=canvas.height;ctx.fillStyle='#305d42';ctx.fillRect(0,0,w,h);if(imageLoaded)ctx.drawImage(tiles,Math.round(w/2-state.camX),Math.round(h/2-state.camY));drawCoins();drawPoops();drawTroll();
+function draw(){const w=canvas.width,h=canvas.height;ctx.fillStyle='#305d42';ctx.fillRect(0,0,w,h);if(imageLoaded)ctx.drawImage(tiles,Math.round(w/2-state.camX),Math.round(h/2-state.camY));drawCoins();drawPoops();drawTroll();npcSystem.draw(ctx,state.camX,state.camY,w,h,sprite);
 if(state.inCar){carDrive.draw(ctx,state.x-state.camX+w/2,state.y-state.camY+h/2,state.dir,true);}
 else{carDrive.draw(ctx,carPos.x-state.camX+w/2,carPos.y-state.camY+h/2,'right',false);drawPlayer();}
 ctx.strokeStyle='#1b3028';ctx.lineWidth=2;ctx.strokeRect(1,1,w-2,h-2);drawMap(mc,mini.width,mini.height);drawBoatGame()}
@@ -658,6 +674,7 @@ function tick(now){
  const dt=Math.min(.05,(now-last)/1000);last=now;
  updateBoat(dt);
  if(maskLoaded&&!isBoatOpen()&&winOverlay.hidden){
+  npcSystem.update(dt,state.x,state.y);
   let dx=(+keys.right)-(+keys.left),dy=(+keys.down)-(+keys.up);
   if(state.inCar){
     if(dx||dy){
@@ -707,7 +724,7 @@ function openMap(){stop();overlay.classList.add('show');drawMap(wc,whole.width,w
 function closeMap(){overlay.classList.remove('show')}
 for(const id of ['showMap','miniMapBtn'])document.getElementById(id).addEventListener('click',openMap);
 document.getElementById('closeMap').addEventListener('click',closeMap);mini.addEventListener('click',openMap);overlay.addEventListener('click',e=>{if(e.target===overlay)closeMap()});
-window.__rimforsaTest={state,sites,game,poops:()=>poops.map(p=>({...p})),scatterPoops,checkPoops,showTreasureVictory,troll,nearTroll,visitTroll,carPos,carDrive,nearCar,enterCar,exitCar,canStand,pathTo,moveTo:(x,y)=>{state.x=x;state.y=y;updateMessage()},isReady:()=>maskLoaded&&imageLoaded,hasSprite:()=>spriteLoaded,frames:()=>frameCount,edgeClearance,edgeAssistedDirection,slideMove,coinCandidates:()=>coinCandidates.slice(),coins:()=>coins.map(c=>({...c})),coinCount:()=>coinCount,scatterCoins,collectCoins,reset,openBoatGame,closeBoatGame,boatState,boatHazards,boatReady:()=>boatChartLoaded,boatPixelWater,spawnBoatCoins};
+window.__rimforsaTest={state,sites,npcSystem,game,poops:()=>poops.map(p=>({...p})),scatterPoops,checkPoops,showTreasureVictory,troll,nearTroll,visitTroll,carPos,carDrive,nearCar,enterCar,exitCar,canStand,pathTo,moveTo:(x,y)=>{state.x=x;state.y=y;updateMessage()},isReady:()=>maskLoaded&&imageLoaded,hasSprite:()=>spriteLoaded,frames:()=>frameCount,edgeClearance,edgeAssistedDirection,slideMove,coinCandidates:()=>coinCandidates.slice(),coins:()=>coins.map(c=>({...c})),coinCount:()=>coinCount,scatterCoins,collectCoins,reset,openBoatGame,closeBoatGame,boatState,boatHazards,boatReady:()=>boatChartLoaded,boatPixelWater,spawnBoatCoins};
 reset();
 })();
 
