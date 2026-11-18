@@ -89,7 +89,7 @@ test('Ljud pausas när sidan döljs, med säkert läge i webbläsare utan Web Au
 });
 
 test('Spelet har två ljudknappar och ljud kopplat till båda miljöerna',()=>{
- assert.match(html, /<script src="\.\/audio\.js\?v=2"><\/script>/);
+ assert.match(html, /<script src="\.\/audio\.js\?v=3"><\/script>/);
  assert.equal((html.match(/data-sound-toggle/g)||[]).length>=3,true);
  for(const required of [
   "audio.setScene('boat')",
@@ -111,5 +111,13 @@ test('Bilens motorljud följer ljudknappen och bytet till båtspelet',()=>{
  audio.setScene('boat');assert.equal(audio.status().playingCarEngine,false);
  audio.setScene('land');assert.equal(audio.status().playingCarEngine,true);
  audio.setCarActive(false);assert.equal(audio.status().playingCarEngine,false);
+ audio.disable();
+});
+
+test('En originalskapad grattisfanfar spelas bara när ljud är aktiverat',()=>{
+ const {audio,starts}=audioFixture();
+ const silent=starts();audio.victory();assert.equal(starts(),silent);
+ audio.enable();const before=starts();audio.victory();
+ assert.ok(starts()>=before+5,'Firandet ska skapa minst fem toner');
  audio.disable();
 });

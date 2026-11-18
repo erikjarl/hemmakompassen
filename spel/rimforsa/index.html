@@ -15,6 +15,14 @@ button{font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}butto
 .game-frame{position:relative;overflow:hidden;border:5px solid #9d683f;outline:3px solid #352a1c;border-radius:6px;box-shadow:0 8px 0 #081b15,0 15px 30px #07191380;background:#508557}
 canvas#world{display:block;width:100%;height:min(57svh,520px);min-height:315px;touch-action:none;image-rendering:pixelated;cursor:crosshair}
 .hud{position:absolute;left:8px;top:8px;display:flex;align-items:center;gap:7px;padding:6px 10px;border:3px solid #cda15e;border-radius:4px;background:#19362de9;color:#fff3c5;text-shadow:1px 1px #171a12;font:800 13px/1.2 ui-monospace,monospace;box-shadow:0 3px 0 #08241a;pointer-events:none}.heart{color:#ee6a65;font-size:17px;letter-spacing:-2px}.coinScore{color:#ffe089;white-space:nowrap;font-weight:900;margin-left:6px;text-shadow:1px 1px #5c340a}
+.win-overlay{position:absolute;inset:0;z-index:9;display:flex;align-items:center;justify-content:center;background:#0e271cc9;padding:18px;text-align:center}
+.win-overlay[hidden]{display:none}
+.win-panel{width:min(100%,310px);border:4px solid #ecc069;border-radius:10px;padding:22px 14px;background:linear-gradient(#255f49,#153d32);box-shadow:0 9px 0 #10281e,0 20px 40px #08160f99;color:#fff0be}
+.win-panel h2{font-size:clamp(21px,5vw,29px);margin:6px 0 8px;text-shadow:2px 3px #0a2d23}
+.win-panel p{font-size:15px;margin:8px 0 16px;line-height:1.5}
+.win-stars{font-size:32px;letter-spacing:8px;animation:winSparkle .75s ease-in-out infinite alternate}
+@keyframes winSparkle{to{transform:scale(1.12) rotate(4deg);filter:brightness(1.35)}}
+.hud .heart{white-space:nowrap}
 .area{position:absolute;left:50%;top:8px;transform:translateX(-50%);max-width:55%;background:#17392cdd;border:2px solid #dfbe80;padding:6px 10px;border-radius:3px;text-align:center;color:#f8df9f;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px;pointer-events:none}
 .minimap{position:absolute;right:8px;top:8px;width:104px;height:78px;border:3px solid #ddbc79;background:#43834a;image-rendering:pixelated;box-shadow:0 2px 0 #1e382d;cursor:pointer}
 .mapBtn{position:absolute;right:7px;top:97px;font-size:11px;border:2px solid #e0bd7c;border-radius:2px;color:#fef0ca;background:#14372d;padding:5px 7px;font-weight:800}
@@ -55,7 +63,7 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
  <header class="head"><div><h1>🌲 Lage i Rimforsa</h1><p class="subtitle">Ett 16-bitars promenadäventyr genom Rimforsa</p></div><div class="head-actions"><button type="button" class="smallBtn sound-toggle" data-sound-toggle aria-label="Slå på spelljud" aria-pressed="false">🔈 Ljud på</button><button class="smallBtn" id="showMap">🗺️ Karta</button></div></header>
  <section class="game-frame" aria-label="Spelplan: utforska Rimforsa till fots">
   <canvas id="world" width="384" height="316" aria-label="Karta över Rimforsa där Lage går omkring"></canvas>
-  <div class="hud">LAGE <span class="heart">♥♥♥</span> <span class="coinScore" id="coinScore" aria-label="Samlade guldmynt">🪙 0/12</span></div><div class="area" id="area">Rimforsa</div>
+  <div class="hud">LAGE <span class="heart" id="landHearts" aria-label="Hjärtan kvar">♥♥♥</span> <span class="coinScore" id="coinScore" aria-label="Samlade guldmynt">🪙 0/20</span></div><div class="area" id="area">Rimforsa</div>
   <canvas id="mini" class="minimap" width="128" height="96" aria-label="Minikarta över Rimforsa" role="img"></canvas>
   <button class="mapBtn" id="miniMapBtn">STOR KARTA</button>
   <div id="mapOverlay" role="dialog" aria-modal="true" aria-label="Karta över Rimforsa"><button class="smallBtn" id="closeMap">Stäng ✕</button><canvas id="wholeMap" width="640" height="480" aria-label="Översikt av hela spelkartan"></canvas></div>
@@ -69,12 +77,21 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
       <div class="boat-disclaimer">Illustrerat spel baserat på ett kartfoto – grundens markeringar är förenklade och kartan får aldrig användas vid riktig båtfärd.</div>
     </div>
   </div>
+  <div id="winOverlay" class="win-overlay" role="dialog" aria-modal="true" aria-label="Grattis, alla mynt insamlade" hidden>
+    <div class="win-panel">
+      <div class="win-stars" aria-hidden="true">✨🏆✨</div>
+      <h2>Grattis, Lage!</h2>
+      <p>Du har samlat <strong>alla <span id="winCount">20</span> guldmynt!</strong> Fantastiskt jobbat!</p>
+      <button class="smallBtn" type="button" id="closeWin">Fortsätt äventyret ✨</button>
+    </div>
+  </div>
  </section>
  <div class="tip" aria-live="polite"><span id="message"><strong>Nu börjar äventyret!</strong> Använd pilarna för att upptäcka Rimforsa.</span><button id="interact" class="action" hidden>Utforska ✨</button></div>
  <div class="controls"><div class="guide">Samla guldmynt! Vid hemmet står en vit bil – hoppa in med Kör bilen. Styr med pilar/WASD.</div><div class="dpad" aria-label="Styr Lage"><button type="button" data-dir="up" aria-label="Gå uppåt"></button><button type="button" data-dir="left" aria-label="Gå åt vänster"></button><button type="button" data-dir="down" aria-label="Gå nedåt"></button><button type="button" data-dir="right" aria-label="Gå åt höger"></button></div><button class="reset" id="reset">Börja om ↺</button></div>
  <div class="footer">Illustrerad spelvärld inspirerad av Rimforsa. Platserna ligger ungefär rätt, men kartan är inte skalenlig.</div>
 </main>
-<script src="./audio.js?v=2"></script>
+<script src="./audio.js?v=3"></script>
+<script src="./gameplay.js?v=1"></script>
 <script src="./car.js?v=1"></script>
 <script>
 (()=>{'use strict';
@@ -85,7 +102,7 @@ const message=document.getElementById('message'), title=document.getElementById(
 const overlay=document.getElementById('mapOverlay');
 const boatOverlay=document.getElementById('boatOverlay'), boatCanvas=document.getElementById('boatGame'), boatCtx=boatCanvas.getContext('2d');
 const boatTip=document.getElementById('boatTip'), boatHearts=document.getElementById('boatHearts'), boatCoinsLabel=document.getElementById('boatCoins');
-const audio=window.RimforsaAudio||{toggle:()=>false,status:()=>({enabled:false,available:false}),coin(){},hit(){},setScene(){},setBoatSpeed(){},setCarActive(){},setCarSpeed(){},setVisible(){}};
+const audio=window.RimforsaAudio||{toggle:()=>false,status:()=>({enabled:false,available:false}),coin(){},hit(){},setScene(){},setBoatSpeed(){},setCarActive(){},setCarSpeed(){},victory(){},setVisible(){}};
 function showAudioState(){
  const s=audio.status();
  for(const button of document.querySelectorAll('[data-sound-toggle]')){
@@ -124,8 +141,12 @@ carMaskImage.addEventListener('load',()=>{
 });
 carMaskImage.addEventListener('error',()=>{message.textContent='Bilens vattenkarta kunde inte laddas. Ladda om sidan.';});
 const keys={up:false,down:false,left:false,right:false};
-const COIN_TARGET=12,coinScore=document.getElementById('coinScore');
+const COIN_TARGET=20,POOP_TARGET=7,coinScore=document.getElementById('coinScore');
+const landHearts=document.getElementById('landHearts');
+const winOverlay=document.getElementById('winOverlay'),winCount=document.getElementById('winCount');
+const game=window.RimforsaGameplay.createSession(COIN_TARGET);
 let coinCandidates=[],coins=[],coinCount=0,coinNoticeUntil=0;
+let poops=[],hurtUntil=0;
 const boatKeys={up:false,down:false,left:false,right:false};
 const BOAT_COIN_TARGET=8;
 const boatState={active:false,x:374,y:283,vx:0,vy:0,angle:0,hearts:3,coins:[],collected:0,message:'',flash:0,invul:0,done:false};
@@ -150,7 +171,7 @@ const sites=[
  {name:'Kinda Båtklubb',x:1100,y:116,text:'Här ligger båtarna vid sjön. Här kan Lage hoppa i en vit motorbåt och ge sig ut på skattjakt bland grunden.',symbol:'⛵'}
 ];
 const playerRadius=6;
-function loadMask(){if(!maskImage.complete||!maskImage.naturalWidth)return;const off=document.createElement('canvas');off.width=maskImage.naturalWidth;off.height=maskImage.naturalHeight;const g=off.getContext('2d',{willReadFrequently:true});g.imageSmoothingEnabled=false;g.drawImage(maskImage,0,0);collision=g.getImageData(0,0,off.width,off.height).data;maskW=off.width;maskH=off.height;buildEdgeDistance();maskLoaded=true;buildCoinCandidates();scatterCoins();message.innerHTML='<strong>Skattjakten börjar!</strong> Leta efter 12 guldmynt bakom små buskar längs vägarna.'}
+function loadMask(){if(!maskImage.complete||!maskImage.naturalWidth)return;const off=document.createElement('canvas');off.width=maskImage.naturalWidth;off.height=maskImage.naturalHeight;const g=off.getContext('2d',{willReadFrequently:true});g.imageSmoothingEnabled=false;g.drawImage(maskImage,0,0);collision=g.getImageData(0,0,off.width,off.height).data;maskW=off.width;maskH=off.height;buildEdgeDistance();maskLoaded=true;buildCoinCandidates();scatterCoins();message.innerHTML='<strong>Skattjakten börjar!</strong> Leta efter '+COIN_TARGET+' guldmynt och undvik bajskorvarna längs vägarna.'}
 maskImage.addEventListener('load',loadMask);tiles.addEventListener('load',()=>imageLoaded=true);sprite.addEventListener('load',()=>spriteLoaded=true);
 boatChart.addEventListener('load',()=>{
  // Collision pixels must use the same NATURAL image dimensions as the rendered map.
@@ -229,36 +250,79 @@ function buildCoinCandidates(){
 function shuffled(items){const result=items.slice();for(let i=result.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[result[i],result[j]]=[result[j],result[i]]}return result}
 function scatterCoins(){
  coinCount=0;coinNoticeUntil=0;coins=[];
- if(!maskLoaded){updateCoinScore();return}
+ if(!maskLoaded){poops=[];game.reset(0);updateLandHearts();updateCoinScore();return}
  // Pick places across the map first so the treasure hunt encourages exploring.
- const regions=Array.from({length:12},()=>[]);
+ const regions=Array.from({length:20},()=>[]);
  for(const p of shuffled(coinCandidates)){
-  const col=Math.min(3,Math.floor(p.x/W*4)),row=Math.min(2,Math.floor(p.y/H*3));
-  regions[row*4+col].push(p);
+  const col=Math.min(4,Math.floor(p.x/W*5)),row=Math.min(3,Math.floor(p.y/H*4));
+  regions[row*5+col].push(p);
  }
  const farEnough=(p,min)=>coins.every(c=>Math.hypot(c.x-p.x,c.y-p.y)>=min);
  for(const region of shuffled(regions)){
   const p=region.find(p=>farEnough(p,95));
   if(p&&coins.length<COIN_TARGET)coins.push({...p});
  }
- if(coins.length<COIN_TARGET){for(const min of [92,66,36]){
+ if(coins.length<COIN_TARGET){for(const min of [92,66,36,22]){
   for(const p of shuffled(coinCandidates)){
    if(coins.length>=COIN_TARGET)break;
    if(farEnough(p,min))coins.push({...p});
   }
   if(coins.length>=COIN_TARGET)break;
  }}
+ game.reset(coins.length);
+ scatterPoops();
+ updateLandHearts();
  updateCoinScore();
 }
+function updateLandHearts(){landHearts.textContent='♥'.repeat(game.snapshot().hearts)||'–';}
+function scatterPoops(){
+ poops=[];
+ const chosen=shuffled(coinCandidates);
+ for(const p of chosen){
+  if(poops.length>=POOP_TARGET)break;
+  if(Math.hypot(p.x-360,p.y-335)<165)continue;
+  if(Math.hypot(p.x-carDrive.HOME.x,p.y-carDrive.HOME.y)<110)continue;
+  if(Math.hypot(p.x-troll.x,p.y-troll.y)<80)continue;
+  if(coins.some(c=>Math.hypot(c.x-p.x,c.y-p.y)<42))continue;
+  if(poops.some(h=>Math.hypot(h.x-p.x,h.y-p.y)<105))continue;
+  poops.push({x:p.x,y:p.y,id:'poop-'+poops.length});
+ }
+}
+function checkPoops(){
+ if(state.inCar||boatState.active||!maskLoaded||!winOverlay.hidden){game.touchHazard(null);return false;}
+ const hazard=poops.find(p=>Math.hypot(state.x-p.x,state.y-p.y)<19);
+ if(!hazard){game.touchHazard(null);return false;}
+ if(performance.now()<hurtUntil)return false;
+ const result=game.touchHazard(hazard.id);
+ if(!result.damaged)return false;
+ audio.hit();updateLandHearts();hurtUntil=performance.now()+1500;
+ if(result.gameOver){
+  stop();reset();
+  coinNoticeUntil=performance.now()+4300;
+  message.innerHTML='<strong>💔 Alla hjärtan tog slut!</strong> Lage börjar om vid hemmet och förlorade alla sina mynt. Försök igen!';
+ }else{
+  coinNoticeUntil=performance.now()+2100;
+  message.innerHTML='<strong>💩 Usch, bajs!</strong> Lage tappade ett hjärta! '+result.hearts+' kvar. Akta bajskorvarna!';
+ }
+ return true;
+}
 function updateCoinScore(){coinScore.textContent='🪙 '+coinCount+'/'+(coinCount+coins.length)}
+function showTreasureVictory(){
+ audio.victory();stop();
+ winCount.textContent=String(coinCount);
+ winOverlay.hidden=false;
+ message.innerHTML='<strong>🏆 Grattis! Du har samlat alla mynt!</strong> Du hittade '+coinCount+' guldmynt i Rimforsa!';
+ document.getElementById('closeWin').focus();
+}
+
 function collectCoins(){
  if(!coins.length)return false;
  const before=coins.length;
  coins=coins.filter(c=>Math.hypot(state.x-c.x,state.y-c.y)>=19);
  const collected=before-coins.length;if(!collected)return false;
- coinCount+=collected;updateCoinScore();audio.coin();coinNoticeUntil=performance.now()+2300;
- if(coins.length===0){
-  message.innerHTML='<strong>🏆 Alla guldmynt hittade!</strong> Du hittade '+coinCount+' mynt i Rimforsa! Tryck på Börja om för en ny skattjakt.';
+ const result=game.collect(collected);coinCount=result.coins;updateCoinScore();audio.coin();coinNoticeUntil=performance.now()+2300;
+ if(result.justWon){
+  showTreasureVictory();
  }else{
   message.innerHTML='<strong>🪙 Klirr!</strong> Lage hittade ett guldmynt bakom en buske! '+coinCount+' av '+(coinCount+coins.length)+' insamlade.';
  }
@@ -280,6 +344,18 @@ function drawCoinBush(c){
  ctx.fillStyle='#194b2d';ctx.fillRect(x-13,y+1,27,4);
 }
 function drawCoins(){for(const coin of coins)drawCoinBush(coin)}
+function drawPoops(){
+ for(const p of poops){
+  const x=Math.round(p.x-state.camX+canvas.width/2),y=Math.round(p.y-state.camY+canvas.height/2);
+  if(x<-22||y<-25||x>canvas.width+22||y>canvas.height+25)continue;
+  // 16-bitars bajskorv med mörk kontur, ljus skugga och små glanspixlar.
+  ctx.fillStyle='#382017';ctx.fillRect(x-11,y-1,23,12);ctx.fillRect(x-8,y-9,17,10);ctx.fillRect(x-3,y-15,9,7);
+  ctx.fillStyle='#81502c';ctx.fillRect(x-8,y-8,17,15);ctx.fillRect(x-3,y-13,9,10);
+  ctx.fillStyle='#b77942';ctx.fillRect(x-5,y-8,9,4);ctx.fillRect(x-7,y,13,5);
+  ctx.fillStyle='#e2a964';ctx.fillRect(x-1,y-11,4,3);
+  ctx.fillStyle='#281a14';ctx.fillRect(x-5,y,2,3);ctx.fillRect(x+3,y,2,3);
+ }
+}
 function clearPath(){state.path=[]}
 function nearCar(){return !state.inCar&&Math.hypot(state.x-carPos.x,state.y-carPos.y)<78;}
 function enterCar(){
@@ -446,7 +522,7 @@ function drawBoatGame(){
  boatCtx.fillStyle='rgba(8,27,21,.72)'; boatCtx.fillRect(8,8,170,40); boatCtx.strokeStyle='#dfbe80'; boatCtx.lineWidth=2; boatCtx.strokeRect(8,8,170,40); boatCtx.fillStyle='#ffe59b'; boatCtx.font='bold 14px ui-monospace, monospace'; boatCtx.fillText('♥ '+boatState.hearts+'   MYNT '+boatState.collected+'/'+BOAT_COIN_TARGET,18,33);
 }
 function updateMessage(){
- if((coins.length===0&&coinCount>0)||performance.now()<coinNoticeUntil)return;
+ if(performance.now()<coinNoticeUntil)return;
  const near=state.inCar?null:nearestSite(),carAction=state.inCar?'exit':nearCar()?'enter':null;
  const trollHere=!carAction&&nearTroll();
  const key=carAction?'car-'+carAction:trollHere?'troll':near?near.name:'none';
@@ -481,7 +557,7 @@ interact.addEventListener('click',()=>{
  state.messageLocked=true;title.textContent=near.name;interact.textContent='Besök igen ✨';
 });
 function reset(){
- audio.setCarSpeed(0);audio.setCarActive(false);state.inCar=false;
+ winOverlay.hidden=true;hurtUntil=0;audio.setCarSpeed(0);audio.setCarActive(false);state.inCar=false;
  carPos.x=carDrive.HOME.x;carPos.y=carDrive.HOME.y;
  state.x=360;state.y=335;state.camX=360;state.camY=335;state.dir='down';
  state.phase=0;state.visited.clear();state.path=[];state.near=null;state.nearKey=null;
@@ -490,6 +566,7 @@ function reset(){
  updateMessage();
 }
 document.getElementById('reset').addEventListener('click',()=>{stop();reset()});
+document.getElementById('closeWin').addEventListener('click',()=>{winOverlay.hidden=true;updateMessage();});
 document.getElementById('closeBoat').addEventListener('click',closeBoatGame);
 document.getElementById('boatRestart').addEventListener('click',resetBoatGame);
 for(const button of document.querySelectorAll('[data-bdir]')){
@@ -572,7 +649,7 @@ function drawTroll(){
 }
 function drawPlayer(){const x=Math.round(state.x-state.camX+canvas.width/2),y=Math.round(state.y-state.camY+canvas.height/2);ctx.fillStyle='#162d2588';ctx.beginPath();ctx.ellipse(x,y-2,11,4,0,0,2*Math.PI);ctx.fill();if(spriteLoaded){const row=state.dir==='down'?0:state.dir==='left'?1:state.dir==='right'?2:3,frame=Math.floor(state.phase)%4;ctx.drawImage(sprite,frame*56,row*56,56,56,x-22,y-47,44,44)}else{ctx.fillStyle='#f6d3aa';ctx.fillRect(x-7,y-33,14,15);ctx.fillStyle='#f6e8c5';ctx.fillRect(x-12,y-18,24,17);ctx.fillStyle='#b65c63';ctx.fillRect(x-9,y-2,7,9);ctx.fillRect(x+3,y-2,7,9)}}
 function drawMap(ctx2,w,h,full=false){ctx2.clearRect(0,0,w,h);ctx2.imageSmoothingEnabled=false;if(imageLoaded)ctx2.drawImage(tiles,0,0,w,h);else{ctx2.fillStyle='#80a75c';ctx2.fillRect(0,0,w,h)}for(const s of sites){const x=s.x/W*w,y=s.y/H*h;ctx2.fillStyle='#feeaa9';ctx2.fillRect(x-2,y-2,4,4);if(full){ctx2.fillStyle='#08251d';ctx2.fillRect(x+3,y-1,2,2)}}const tx=troll.x/W*w,ty=troll.y/H*h;ctx2.fillStyle='#b26d4f';ctx2.fillRect(tx-2,ty-2,5,5);const px=state.x/W*w,py=state.y/H*h;ctx2.fillStyle='#ff4d5e';ctx2.fillRect(px-3,py-3,7,7);ctx2.strokeStyle='#fff2c0';ctx2.lineWidth=1.2;ctx2.strokeRect(px-4,py-4,9,9)}
-function draw(){const w=canvas.width,h=canvas.height;ctx.fillStyle='#305d42';ctx.fillRect(0,0,w,h);if(imageLoaded)ctx.drawImage(tiles,Math.round(w/2-state.camX),Math.round(h/2-state.camY));drawCoins();drawTroll();
+function draw(){const w=canvas.width,h=canvas.height;ctx.fillStyle='#305d42';ctx.fillRect(0,0,w,h);if(imageLoaded)ctx.drawImage(tiles,Math.round(w/2-state.camX),Math.round(h/2-state.camY));drawCoins();drawPoops();drawTroll();
 if(state.inCar){carDrive.draw(ctx,state.x-state.camX+w/2,state.y-state.camY+h/2,state.dir,true);}
 else{carDrive.draw(ctx,carPos.x-state.camX+w/2,carPos.y-state.camY+h/2,'right',false);drawPlayer();}
 ctx.strokeStyle='#1b3028';ctx.lineWidth=2;ctx.strokeRect(1,1,w-2,h-2);drawMap(mc,mini.width,mini.height);drawBoatGame()}
@@ -580,7 +657,7 @@ let last=performance.now(),stepProgress=0;
 function tick(now){
  const dt=Math.min(.05,(now-last)/1000);last=now;
  updateBoat(dt);
- if(maskLoaded&&!isBoatOpen()){
+ if(maskLoaded&&!isBoatOpen()&&winOverlay.hidden){
   let dx=(+keys.right)-(+keys.left),dy=(+keys.down)-(+keys.up);
   if(state.inCar){
     if(dx||dy){
@@ -618,6 +695,7 @@ function tick(now){
     }else state.phase=0;
   }
  }
+ checkPoops();
  const clampedX=Math.max(canvas.width/2,Math.min(W-canvas.width/2,state.x));
  const clampedY=Math.max(canvas.height/2,Math.min(H-canvas.height/2,state.y));
  state.camX+=(clampedX-state.camX)*Math.min(1,dt*14);
@@ -629,7 +707,7 @@ function openMap(){stop();overlay.classList.add('show');drawMap(wc,whole.width,w
 function closeMap(){overlay.classList.remove('show')}
 for(const id of ['showMap','miniMapBtn'])document.getElementById(id).addEventListener('click',openMap);
 document.getElementById('closeMap').addEventListener('click',closeMap);mini.addEventListener('click',openMap);overlay.addEventListener('click',e=>{if(e.target===overlay)closeMap()});
-window.__rimforsaTest={state,sites,troll,nearTroll,visitTroll,carPos,carDrive,nearCar,enterCar,exitCar,canStand,pathTo,moveTo:(x,y)=>{state.x=x;state.y=y;updateMessage()},isReady:()=>maskLoaded&&imageLoaded,hasSprite:()=>spriteLoaded,frames:()=>frameCount,edgeClearance,edgeAssistedDirection,slideMove,coinCandidates:()=>coinCandidates.slice(),coins:()=>coins.map(c=>({...c})),coinCount:()=>coinCount,scatterCoins,collectCoins,reset,openBoatGame,closeBoatGame,boatState,boatHazards,boatReady:()=>boatChartLoaded,boatPixelWater,spawnBoatCoins};
+window.__rimforsaTest={state,sites,game,poops:()=>poops.map(p=>({...p})),scatterPoops,checkPoops,showTreasureVictory,troll,nearTroll,visitTroll,carPos,carDrive,nearCar,enterCar,exitCar,canStand,pathTo,moveTo:(x,y)=>{state.x=x;state.y=y;updateMessage()},isReady:()=>maskLoaded&&imageLoaded,hasSprite:()=>spriteLoaded,frames:()=>frameCount,edgeClearance,edgeAssistedDirection,slideMove,coinCandidates:()=>coinCandidates.slice(),coins:()=>coins.map(c=>({...c})),coinCount:()=>coinCount,scatterCoins,collectCoins,reset,openBoatGame,closeBoatGame,boatState,boatHazards,boatReady:()=>boatChartLoaded,boatPixelWater,spawnBoatCoins};
 reset();
 })();
 

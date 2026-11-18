@@ -164,6 +164,13 @@
     tone(880,t+.09,.15,.064,'square');
     tone(1318.5,t+.19,.22,.045,'sine');
   }
+  function victory(){
+    if(!enabled||!ctx||hidden)return;
+    const t=now()+.02;
+    // Originalskapat fyrtons-firande, efter sista insamlade myntet.
+    [523.25,659.25,783.99,1046.5].forEach((f,i)=>tone(f,t+i*.16,.28,.065,'triangle'));
+    tone(261.63,t+.48,.6,.035,'sine');
+  }
   function hit(){
     if(!enabled||!ctx||hidden)return;
     const t=now()+.01;
@@ -176,5 +183,5 @@
     if(!hidden&&enabled){ensureContext();startScene();}
   }
   function status(){return {enabled,available:!!AudioCtor,scene,hidden,playingMusic:musicInterval!==null,playingWaves:!!waves,playingEngine:!!engine,playingCarEngine:!!carEngine,carActive};}
-  root.RimforsaAudio={enable,disable,toggle,setScene,setBoatSpeed,setCarActive,setCarSpeed,coin,hit,setVisible,status};
+  root.RimforsaAudio={enable,disable,toggle,setScene,setBoatSpeed,setCarActive,setCarSpeed,coin,hit,victory,setVisible,status};
 })(window);
