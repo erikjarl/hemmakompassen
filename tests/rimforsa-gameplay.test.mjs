@@ -54,7 +54,7 @@ test('Huvudkartan integrerar bajs, hjärtan, fler mynt och grattisruta',()=>{
  for(const marker of [
    '<script src="./gameplay.js?v=1"></script>',
    'const COIN_TARGET=20',
-   'const POOP_TARGET=7',
+   'POOP_TARGET=7',
    'function scatterPoops(){',
    'function drawPoops(){',
    'function checkPoops(){',

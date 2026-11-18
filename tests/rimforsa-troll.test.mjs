@@ -15,7 +15,7 @@ test('Godkänd trollfigur laddas separat som transparent spelsprite',()=>{
 test('Trollet står vid stenen nordväst om rondellen och finns på minikartan',()=>{
  assert.match(page,/id:'stone-troll',name:'Trollet vid stenen',x:464,y:454,interactionRadius:84/);
  assert.match(page,/function drawTroll\(\)/);
- assert.match(page,/drawCoins\(\);drawTroll\(\);/);
+ assert.match(page,/drawCoins\(\);drawPoops\(\);drawTroll\(\);/);
  assert.match(page,/const tx=troll\.x\/W\*w,ty=troll\.y\/H\*h/);
 });
 
