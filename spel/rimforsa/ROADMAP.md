@@ -4,7 +4,7 @@
 **Spel:** `spel/rimforsa/index.html`  
 **Publicerad adress:** https://erikjarl.github.io/hemmakompassen/spel/rimforsa/  
 **Senast uppdaterad:** 2026-11-18  
-**Status:** Fem uppgifter är implementerade och verifierade med automatiserade tester: fyra ljuduppgifter och den vita bilen. Övriga önskemål är öppna; markera bara av punkter när funktionen är implementerad och testad.
+**Status:** Sex uppgifter är implementerade och verifierade med funktionella automatiserade tester: fyra ljuduppgifter, den vita bilen och trollfiguren/interaktionen. Det nya bajskastnings-minispelet och övriga önskemål är öppna; markera bara av punkter när funktionen är implementerad och testad.
 
 ## Stående instruktion – kommandot `jobb lage`
 
@@ -29,6 +29,11 @@ När användaren skriver **`jobb lage`**:
 - [x] **HUV-03: Vit bil vid hemmet.** Lägg till **en vit bil vid Hem/Ulrikavägen**. Lage ska kunna välja att köra den. När bilen kör ska den ha **motorljud**, och bilen ska kunna köra **över alla terränger utom vatten**.
 - [ ] **HUV-04: Bajskorvar.** Lägg till **bajskorvar** som hinder. Lage **förlorar ett hjärta** när han kommer i kontakt med en bajskorv.
 - [ ] **HUV-05: Hjärtan och omstart.** När **alla hjärtan försvinner** ska spelet **börja om**, och spelaren ska **förlora alla insamlade mynt**.
+
+## Trollet vid stenen nordväst om rondellen
+
+- [x] **TROLL-01: Placering och interaktion.** Lägg ett troll på den befintliga stenen nordväst om rondellen, med transparent pixelgrafik från den godkända referensbilden. Trollet ska vara lite större än Lage, synas i huvudkartan och gå att hälsa på till fots; placeringen ska inte ändra den befintliga gång- eller bilkollisionen.
+- [ ] **TROLL-02: Bajskastnings-minispel.** Bygg ett separat minispel där Lage kastar bajs på trollet. Återanvänd trollets fasta världspunkt och ingången `window.RimforsaTrollMinigame.start({troll,player,returnToMap})`. Kaststyrning, poäng, grafik, ljud och återgång till huvudkartan är **ännu inte implementerade**. Behåll dessa som ett eget framtida utvecklingsarbete.
 
 ## Att göra – nya minispel
 
@@ -57,6 +62,9 @@ När användaren skriver **`jobb lage`**:
 - **Verifiering:** Lägg till tester för respektive uppgift, spela igenom huvudflödet och kontrollera samma publicerade URL. Redovisa separat om fysisk iPhone/Safari inte har testats.
 
 ## Arbetslogg
+
+- **2026-11-18 – Troll vid stenen (TROLL-01):** Godkänd trollreferens omvandlades till en egen transparent spritesbild `spel/rimforsa/troll-sprite.png` (56×92 pixlar), placerad på befintliga stenen nordväst om rondellen vid världspunkt **(464, 454)**. Trollet ritas i huvudkartan och visas som liten markör i kartöversikten. När Lage närmar sig till fots finns knappen **Hälsa på trollet**. En stabil framtida integrationspunkt `window.RimforsaTrollMinigame.start({troll,player,returnToMap})` finns; tills minispelsmodulen skapats visas en ärlig 'kommer senare'-text. **TROLL-02 är inte genomförd.** Kod och figur: [bc67a11](https://github.com/erikjarl/hemmakompassen/commit/bc67a11a3ac9d85e66715a7db2170a12ae6affd0), testkorrigering: [d4bde10](https://github.com/erikjarl/hemmakompassen/commit/d4bde10558b4ff15133d6864db819be2d66bd36e). **Verifierat:** automatiska funktionella tester godkända och GitHub Pages-kontroll av serverade assets godkänd. **Ej verifierat:** verklig iPhone/Safari, estetisk positionsbedömning i spel på fysisk enhet; fulla browser smoke tests pågick när loggen skrevs.
+
 
 - **2026-11-18 – Jobb lage / HUV-03 vit bil vid Hem:** Implementerat i `spel/rimforsa/index.html`, `spel/rimforsa/car.js`, `spel/rimforsa/car-water-mask.png` och `spel/rimforsa/audio.js`: parkerad vit bil vid Ulrikavägen, **Kör bilen**-knapp vid bilen, Lage synlig i bilen, styrning via samma pilar/WASD, körning över alla landytor med särskild bildbaserad vattenmask som stoppar sjön, **Gå ur bilen** när en gångbar yta finns i närheten, separat hastighetsstyrt motorljud som respekterar ljudinställningen, samt återställning vid ny omgång. Avstigning från helt otillgänglig terräng visar instruktion att hitta en väg. GitHub-commit [8ae4c4a](https://github.com/erikjarl/hemmakompassen/commit/8ae4c4a243fee842a213390cfa6d14b9f46b01b3) och rättning [c7687da](https://github.com/erikjarl/hemmakompassen/commit/c7687da7f5a910463a9c2eee0029f2aac9b2b534). **Verifierat:** funktionella Node-tester om kollisionsmask, diagonal rörelse, förflyttning mot vattenkant, ljudlogik och kodintegration godkända i GitHub Actions; assetkontroll på Pages godkänd. **Återstår att kontrollera:** fullständig Chromium-browser smoke-körning och slutlig Pages-byggstatus (pågående vid loggskrivning), körkänsla, faktisk interaktion och ljud på fysisk iPhone/Safari. Nästa öppna uppgifter HUV-04 (bajskorvar) och HUV-05 (hjärtan/omstart).
 
