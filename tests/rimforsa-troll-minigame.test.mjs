@@ -29,7 +29,7 @@ test('aim stays in bounds and game can stop and restart',()=>{
  g.start();assert.equal(g.snapshot().active,true);
 });
 test('troll score increments when projectile reaches moving target',()=>{
- const g=session();g.start();g.aimAt(g.snapshot().targetX);
+ const g=session();g.start();g.aimAt(240+Math.sin(.63*1.45)*88);
  assert.equal(g.throwPoop(),true);
  let result;for(let i=0;i<20;i++)result=g.step(.035)||result;
  assert.equal(result.hit,true);assert.equal(g.snapshot().hits,1);
