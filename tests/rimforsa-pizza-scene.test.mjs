@@ -9,6 +9,7 @@ test('Bella Donna uses distinct oven, pizza and cashier areas',()=>{
  const s=scene();assert.equal(s.hitTest(55,145),'oven');
  assert.equal(s.hitTest(225,194),'pizza');
  assert.equal(s.hitTest(395,153),'chef');
+ assert.equal(s.hitTest(393,72),'chef','kockmössan ska vara klickbar');
  assert.equal(s.hitTest(-10,40),null);
  assert.equal(s.hitTest(NaN,30),null);
 });
@@ -22,7 +23,7 @@ test('Bella Donna draws pixel-art pizzeria, chef, oven and pineapple pizza',()=>
  assert.doesNotMatch(source,/fillText\(['"](?:🍕|🍍|👨)/);
 });
 test('pizza scene uses existing money, purchase and bag path',()=>{
- for(const marker of ['id="pizzaShopScene"','./pizza-scene.js?v=1',
+ for(const marker of ['id="pizzaShopScene"','./pizza-scene.js?v=2',
   'window.RimforsaPizzaScene.draw',"window.RimforsaPizzaScene.hitTest",
   'id="buyPizza"','game.spend(PIZZA_PRICE)',"bag.addPurchase('ananaspizza')",
   'game.refund(PIZZA_PRICE)'])assert.ok(html.includes(marker),marker);
