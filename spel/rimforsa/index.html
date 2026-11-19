@@ -57,7 +57,7 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
 .game-frame,.game-frame *,.controls,.controls *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
 .boat-overlay,.boat-overlay *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
 .bag-dialog[hidden]{display:none!important}.bag-dialog{position:fixed;inset:0;z-index:40;background:#0b1815d9;display:grid;place-items:center;padding:12px}.bag-panel{width:min(420px,100%);border:4px solid #d3a45b;border-radius:12px;background:#203b31;color:#fff3d4;padding:17px;box-shadow:0 12px 30px #0008}.bag-panel h2{margin:0 0 9px}.bag-list{list-style:none;margin:12px 0;padding:0;display:grid;gap:8px}.bag-list li{padding:9px;background:#315444;border:2px solid #55745b;border-radius:6px}.bag-actions{display:flex;gap:10px;flex-wrap:wrap}.bag-note{font-size:12px;line-height:1.4;color:#e3dfb9}
-.ica-dialog[hidden]{display:none!important}.ica-dialog{position:fixed;inset:0;z-index:1200;display:grid;place-items:center;padding:12px;background:#071b15e8}.ica-panel{width:min(650px,100%);max-height:95dvh;overflow:auto;border:4px solid #e1b46a;background:#1c4235;color:#fff4d5;border-radius:12px;padding:17px;box-shadow:0 12px 36px #0009}.ica-panel h2{margin:0 0 10px}.ica-shop-scene{display:block;width:100%;height:auto;image-rendering:pixelated;border:3px solid #c9a06b;border-radius:5px;cursor:pointer;touch-action:manipulation;margin:9px 0}.ica-shop-hint{font-size:12px;color:#f3dcad;margin:5px 0}.ica-cashier{font-size:42px;text-align:center;margin:6px 0}.ica-products{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:14px 0}.ica-products button{display:grid;gap:5px;justify-items:center;border:3px solid #9e7139;border-radius:10px;background:#f5d788;color:#313322;padding:14px 6px;min-height:100px;font:900 15px system-ui;cursor:pointer}.ica-products button:disabled{opacity:.55;cursor:default}.ica-products button span{font-size:36px}.ica-products button:focus-visible{outline:3px solid white;outline-offset:3px}.ica-status{min-height:35px;line-height:1.35}
+.ica-dialog[hidden]{display:none!important}.ica-dialog{position:fixed;inset:0;z-index:1200;display:grid;place-items:center;padding:12px;background:#071b15e8}.ica-panel{width:min(650px,100%);max-height:95dvh;overflow:auto;border:4px solid #e1b46a;background:#1c4235;color:#fff4d5;border-radius:12px;padding:17px;box-shadow:0 12px 36px #0009}.ica-panel h2{margin:0 0 10px}.ica-shop-scene{display:block;width:100%;height:auto;image-rendering:pixelated;border:3px solid #c9a06b;border-radius:5px;cursor:pointer;touch-action:manipulation;margin:9px 0}.ica-shop-hint{font-size:12px;color:#f3dcad;margin:5px 0}.ica-cashier{font-size:42px;text-align:center;margin:6px 0}.ica-products{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:14px 0}.ica-products button{display:grid;gap:5px;justify-items:center;border:3px solid #9e7139;border-radius:10px;background:#f5d788;color:#313322;padding:14px 6px;min-height:100px;font:900 15px system-ui;cursor:pointer}.ica-products button:disabled{opacity:.55;cursor:default}.ica-products button span{font-size:36px}.ica-products button:focus-visible{outline:3px solid white;outline-offset:3px}.ica-status{min-height:35px;line-height:1.35}.farm-sale{padding:8px 12px;border:2px solid #977950;background:#2a553f;border-radius:8px;margin:10px 0}.farm-sale p{margin:4px 0 8px}.farm-sale button:disabled{opacity:.5}
 .pizza-dialog[hidden]{display:none!important}.pizza-dialog{position:fixed;inset:0;z-index:1210;display:grid;place-items:center;padding:12px;background:#091b14e8}
 .pizza-panel{width:min(650px,100%);max-height:95dvh;overflow:auto;border:4px solid #dcb56f;border-radius:12px;background:#234336;color:#fff4d5;padding:18px;text-align:center;box-shadow:0 14px 32px #0009}
 .pizza-shop-scene{display:block;width:100%;height:auto;image-rendering:pixelated;border:3px solid #c79b67;border-radius:5px;cursor:pointer;touch-action:manipulation;margin:10px auto}.pizza-shop-hint{font-size:12px;line-height:1.4;color:#f5dfb6}.pizza-panel h2{margin:0 0 8px}.pizza-panel .pizza-art{font-size:66px;margin:12px 0}.pizza-panel .pizza-status{min-height:40px;line-height:1.4}
@@ -93,7 +93,7 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
     </div>
   </div>
  </section>
- <div id="icaOverlay" class="ica-dialog" role="dialog" aria-modal="true" aria-label="Handla glass på ICA Melkers" hidden><div class="ica-panel"><h2>🛒 ICA Melkers</h2><canvas id="icaShopScene" class="ica-shop-scene" width="480" height="288" aria-label="Pixelritad ICA-butik med glassfrys, varuhyllor, Lage och kassapersonal. Tryck på en glass i frysen eller använd köpknapparna."></canvas><p class="ica-shop-hint">Tryck på päronglassen eller vaniljglassen i frysen, eller välj med knapparna nedanför. Kassapersonalen hjälper dig!</p><p><strong>ICA-personalen:</strong> Hej Lage! Vilken glass vill du köpa?</p><p id="icaBalance">Du har 0 mynt.</p><div class="ica-products"><button type="button" data-buy-ice="paronglass"><span aria-hidden="true">🍐</span>Päronglass · 3 mynt</button><button type="button" data-buy-ice="vaniljglass"><span aria-hidden="true">🍦</span>Vaniljglass · 4 mynt</button></div><p id="icaStatus" class="ica-status" role="status" aria-live="polite">Samla mynt längs vägarna om du vill köpa glass!</p><button type="button" id="closeIca" class="smallBtn">Tillbaka till Rimforsa ✕</button></div></div>
+ <div id="icaOverlay" class="ica-dialog" role="dialog" aria-modal="true" aria-label="Handla glass på ICA Melkers" hidden><div class="ica-panel"><h2>🛒 ICA Melkers</h2><canvas id="icaShopScene" class="ica-shop-scene" width="480" height="288" aria-label="Pixelritad ICA-butik med glassfrys, varuhyllor, Lage och kassapersonal. Tryck på en glass i frysen eller använd köpknapparna."></canvas><p class="ica-shop-hint">Tryck på päronglassen eller vaniljglassen i frysen, eller välj med knapparna nedanför. Kassapersonalen hjälper dig!</p><p><strong>ICA-personalen:</strong> Hej Lage! Vilken glass vill du köpa?</p><p id="icaBalance">Du har 0 mynt.</p><div class="farm-sale"><p id="farmSellStock">🥔 Potatis att sälja: 0</p><button type="button" id="sellPotatoes" class="smallBtn">Sälj 3 potatisar · få 6 mynt</button></div><div class="ica-products"><button type="button" data-buy-ice="paronglass"><span aria-hidden="true">🍐</span>Päronglass · 3 mynt</button><button type="button" data-buy-ice="vaniljglass"><span aria-hidden="true">🍦</span>Vaniljglass · 4 mynt</button></div><p id="icaStatus" class="ica-status" role="status" aria-live="polite">Samla mynt längs vägarna om du vill köpa glass!</p><button type="button" id="closeIca" class="smallBtn">Tillbaka till Rimforsa ✕</button></div></div>
  <div id="pizzaOverlay" class="pizza-dialog" role="dialog" aria-modal="true" aria-label="Köp ananaspizza hos Bella Donna" hidden>
  <div class="pizza-panel"><h2>🍕 Bella Donna</h2>
  <canvas id="pizzaShopScene" class="pizza-shop-scene" width="480" height="288" aria-label="Pixelritad pizzeria med vedugn, pizzor, Lage och en pizzabagare. Tryck på pizzan för att köpa, på bagaren för att prata eller på ugnen för att titta."></canvas>
@@ -172,14 +172,27 @@ const COIN_TARGET=20,POOP_TARGET=7,coinScore=document.getElementById('coinScore'
 const landHearts=document.getElementById('landHearts');
 const winOverlay=document.getElementById('winOverlay'),winCount=document.getElementById('winCount');
 const game=window.RimforsaGameplay.createSession(COIN_TARGET);
+ const farm=window.RimforsaFarm;
+ // Skattmynt och intäkter från odling redovisas separat.
+ const totalMoney=()=>game.snapshot().balance+farm.snapshot().balance;
+ function payCoins(amount){
+  if(!Number.isSafeInteger(amount)||amount<=0||totalMoney()<amount)return null;
+  const treasure=Math.min(amount,game.snapshot().balance),produce=amount-treasure;
+  if(treasure&&!game.spend(treasure).paid)return null;
+  if(produce&&!farm.spendCoins(produce)){
+   if(treasure)game.refund(treasure);
+   return null;
+  }
+  return ()=>{if(produce)farm.refundCoins(produce);if(treasure)game.refund(treasure)};
+ }
  const pizzaOverlay=document.getElementById('pizzaOverlay'),pizzaBalance=document.getElementById('pizzaBalance'),pizzaStatus=document.getElementById('pizzaStatus'),pizzaBuy=document.getElementById('buyPizza');
  const PIZZA_PRICE=5;
  const pizzaCanvas=document.getElementById('pizzaShopScene');
  function drawPizzaScene(){
-  window.RimforsaPizzaScene.draw(pizzaCanvas,{balance:game.snapshot().balance,purchased:bag.has('ananaspizza')});
+  window.RimforsaPizzaScene.draw(pizzaCanvas,{balance:totalMoney(),purchased:bag.has('ananaspizza')});
  }
  function renderPizza(){
-  const balance=game.snapshot().balance,owned=bag.has('ananaspizza');
+  const balance=totalMoney(),owned=bag.has('ananaspizza');
   pizzaBalance.textContent='Du har '+balance+' mynt att handla för.';
   pizzaBuy.disabled=owned||balance<PIZZA_PRICE;
   pizzaBuy.textContent=owned?'🍕 Pizzan ligger redan i väskan':balance<PIZZA_PRICE?'Samla '+(PIZZA_PRICE-balance)+' mynt till':'Köp pizzaslice med ananas · '+PIZZA_PRICE+' mynt';
@@ -199,24 +212,28 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
   if(target==='oven'){pizzaStatus.textContent='Titta! Här gräddas pizzorna i en varm stenugn.';return;}
   if(target==='pizza'){
    if(bag.has('ananaspizza')){pizzaStatus.textContent='Pizzan finns redan i väskan!';return;}
-   if(game.snapshot().balance<PIZZA_PRICE){pizzaStatus.textContent='Du behöver '+(PIZZA_PRICE-game.snapshot().balance)+' mynt till för att köpa pizzan.';return;}
+   if(totalMoney()<PIZZA_PRICE){pizzaStatus.textContent='Du behöver '+(PIZZA_PRICE-totalMoney())+' mynt till för att köpa pizzan.';return;}
    pizzaBuy.click();
   }
  });
  pizzaBuy.addEventListener('click',()=>{
   if(bag.has('ananaspizza')){pizzaStatus.textContent='Pizzan finns redan i väskan!';renderPizza();return;}
-  if(!game.spend(PIZZA_PRICE).paid){pizzaStatus.textContent='Du behöver minst fem mynt för att köpa pizzan.';renderPizza();return;}
+  const refund=payCoins(PIZZA_PRICE);
+   if(!refund){pizzaStatus.textContent='Du behöver minst fem mynt för att köpa pizzan.';renderPizza();return;}
   const result=bag.addPurchase('ananaspizza');
-  if(!result.added){game.refund(PIZZA_PRICE);pizzaStatus.textContent='Det gick inte att lägga pizzan i väskan.';renderPizza();return;}
+  if(!result.added){refund();pizzaStatus.textContent='Det gick inte att lägga pizzan i väskan.';renderPizza();return;}
   pizzaStatus.textContent='🍕 Mums! Pizzaslicen med ananas ligger i väskan.'+(result.saved?'':' Den kunde inte sparas till nästa besök.');
   audio.coin();updateCoinScore();renderBag();renderPizza();drawPizzaScene();
  });
  const icaOverlay=document.getElementById('icaOverlay'),icaBalance=document.getElementById('icaBalance'),icaStatus=document.getElementById('icaStatus');
  const icePrices={paronglass:3,vaniljglass:4};
  const icaCanvas=document.getElementById('icaShopScene');
- function drawIcaScene(){window.RimforsaIcaScene.draw(icaCanvas,{balance:game.snapshot().balance,owned:{paronglass:bag.has('paronglass'),vaniljglass:bag.has('vaniljglass')}});}
+ function drawIcaScene(){window.RimforsaIcaScene.draw(icaCanvas,{balance:totalMoney(),owned:{paronglass:bag.has('paronglass'),vaniljglass:bag.has('vaniljglass')}});}
  function renderIca(){
-  const balance=game.snapshot().balance;icaBalance.textContent='Du har '+balance+' mynt att handla för.';
+  const balance=totalMoney();icaBalance.textContent='Du har '+balance+' mynt att handla för ('+game.snapshot().balance+' skattmynt + '+farm.snapshot().balance+' potatismynt).';
+   const stock=farm.snapshot().harvested;
+   document.getElementById('farmSellStock').textContent='🥔 Potatis att sälja: '+stock+' · Sålda hittills: '+farm.snapshot().sold;
+   document.getElementById('sellPotatoes').disabled=stock<3;
   for(const button of icaOverlay.querySelectorAll('[data-buy-ice]')){
    const id=button.dataset.buyIce,owned=bag.has(id);
    button.disabled=owned||balance<icePrices[id];
@@ -239,7 +256,7 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
   const id=location==='pear'?'paronglass':location==='vanilla'?'vaniljglass':null;
   if(id){
    if(bag.has(id)){icaStatus.textContent='Den glassen finns redan i väskan!';return;}
-   const missing=icePrices[id]-game.snapshot().balance;
+   const missing=icePrices[id]-totalMoney();
    if(missing>0){icaStatus.textContent='Du behöver '+missing+' mynt till för att köpa den glassen.';return;}
    icaOverlay.querySelector('[data-buy-ice="'+id+'"]').click();
   }
@@ -247,13 +264,19 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
  for(const button of icaOverlay.querySelectorAll('[data-buy-ice]'))button.addEventListener('click',()=>{
    const id=button.dataset.buyIce,cost=icePrices[id];
    if(bag.has(id)){icaStatus.textContent='Den glassen finns redan i väskan!';renderIca();return;}
-   const payment=game.spend(cost);
-   if(!payment.paid){icaStatus.textContent='Du behöver fler guldmynt för att köpa den glassen.';renderIca();return;}
+   const refund=payCoins(cost);
+   if(!refund){icaStatus.textContent='Du behöver fler guldmynt för att köpa den glassen.';renderIca();return;}
    const added=bag.addPurchase(id);
-   if(!added.added){game.refund(cost);icaStatus.textContent='Det gick inte att lägga glassen i väskan.';renderIca();return;}
+   if(!added.added){refund();icaStatus.textContent='Det gick inte att lägga glassen i väskan.';renderIca();return;}
    const name=id==='paronglass'?'päronglass':'vaniljglass';
    icaStatus.textContent='🍨 Tack för köpet! Du fick en '+name+' i väskan.'+(added.saved?'':' Den kunde inte sparas till nästa besök.');
    audio.coin();updateCoinScore();renderBag();renderIca();drawIcaScene();
+ });
+ document.getElementById('sellPotatoes').addEventListener('click',()=>{
+   const sale=farm.sell(3);
+   if(!sale.sold){icaStatus.textContent='Du behöver tre skördade potatisar för att sälja.';renderIca();return;}
+   icaStatus.textContent='🥔 ICA-personalen köpte tre potatisar! Du fick 6 potatismynt att handla för.';
+   audio.coin();updateCoinScore();renderIca();drawIcaScene();
  });
  const bag=window.RimforsaInventory.createInventory((()=>{try{return window.localStorage}catch(e){return null}})());
  const bagOverlay=document.getElementById('bagOverlay'),bagList=document.getElementById('bagList'),bagCount=document.getElementById('bagCount'),bagStatus=document.getElementById('bagStatus');
@@ -456,7 +479,7 @@ function checkPoops(){
  }
  return true;
 }
-function updateCoinScore(){coinScore.textContent='🪙 '+game.snapshot().balance+' · Hittade '+coinCount+'/'+(coinCount+coins.length)}
+function updateCoinScore(){coinScore.textContent='🪙 '+totalMoney()+' · Hittade '+coinCount+'/'+(coinCount+coins.length)+' · 🥔 '+farm.snapshot().balance}
 function showTreasureVictory(){
  audio.victory();stop();
  winCount.textContent=String(coinCount);
