@@ -139,3 +139,11 @@ Rotation: BRÄNSLE-01 → BRÄNSLE-02. Källkontroll av INGO:s officiella statio
 ## 2026-11-19 – Jobb lage: LJUD-01 talprofiler och sänkt musik under dialog
 
 Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` redan anropades från NPC-samtal efter spelarklick, respekterade ljudreglaget och alltid lämnade repliken i text. I `audio.js` infördes individuellt taltempo och tonhöjd för Maja, Oliver och Saga, samt dämpning av musik till 20 % under aktiv speechSynthesis-uppläsning och återställning vid slut, avbrott eller ny replik. `index.html` skickar NPC-id för rätt talprofil; ljudskriptet cacheversion v=9. Ingen ändring gjordes i NPC-repliker, rörelse, spelgrafik eller andra minispel. LJUD-01 avbockat efter inspektion av källkodens kravuppfyllelse (31 av 40 klara, 9 öppna). Fysiska iPhone/Safari-resultat och verklig röstupplevelse är inte verifierade och hör till LJUD-02. Rotationens nästa genomförbara punkt LJUD-03, eftersom LJUD-02 kräver fysisk iPhone-testning. Commits `a33420b`, `f9e170a`, `f4c39a2`.
+
+
+## 2026-11-19 · Jobb Lage KARTA-02
+
+- Ändrade bara huvudkartans osynliga gång-hitbox (`canStand`) och motsvarande vägkantsavstånd (`edgeClearance`) i `index.html`: x ±5 → ±2 px, övre marginal 8 → 4 px, central maskpunkt fortsatt obligatorisk.
+- Inga ändringar av bildresurser, vägarnas visuella bredd eller själva binära land-/vattenmasken.
+- Kontroll: kodjämförelse mot maskvillkor och matchande punkter. Ingen faktisk mobil-/tangentbordsgenomspelning genomförd; gångbarhet vid vägar, entréer, byggnader, stenar och vatten kvar att verifiera.
+- Status öppen enligt roadmap; nästa rotationsuppgift FORDON-02.
