@@ -113,6 +113,7 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
 <script src="./inventory.js?v=3"></script>
 <script src="./item-art.js?v=1"></script>
 <script src="./car.js?v=3"></script>
+<script src="./boat-direction-art.js?v=1"></script>
 <script src="./fuel.js?v=2"></script>
 <script src="./npc.js?v=2"></script>
 <script src="./farm.js?v=2"></script>
@@ -790,23 +791,26 @@ function drawBoatGame(){
  for(const coin of boatState.coins){ if(coin.taken) continue; const sx=coin.x-camX+w/2, sy=coin.y-camY+h/2; if(sx<-20||sy<-20||sx>w+20||sy>h+20)continue; coin.spin+=0.08; boatCtx.save(); boatCtx.translate(sx,sy); boatCtx.fillStyle='#f7d75e'; boatCtx.strokeStyle='#8b5a11'; boatCtx.lineWidth=2; const r=8+Math.sin(coin.spin)*1.2; boatCtx.beginPath(); boatCtx.arc(0,0,r,0,Math.PI*2); boatCtx.fill(); boatCtx.stroke(); boatCtx.fillStyle='rgba(255,255,255,.55)'; boatCtx.fillRect(-2,-5,4,10); boatCtx.restore(); }
  // dock/start marker
  const dx=374-camX+w/2, dy=283-camY+h/2; boatCtx.fillStyle='rgba(255,255,255,.85)'; boatCtx.fillRect(dx-12,dy-2,24,4); boatCtx.fillStyle='#7b4a1f'; boatCtx.fillRect(dx-14,dy+2,28,5);
- // En större vit motorbåt med Lage vid ratten, i samma 16-bitarsstil.
+ // En egen pixelyta för var och en av båtens åtta färdriktningar.
+ // Behåll befintlig originalbåt som reserv om modulen inte kan laddas.
  const bx=boatState.x-camX+w/2,by=boatState.y-camY+h/2;
- boatCtx.save();boatCtx.translate(bx,by);
- // Sprite's bow points down-right at zero rotation.
- boatCtx.rotate(boatState.angle-Math.PI/4);
- boatCtx.globalAlpha=(boatState.flash>0&&Math.floor(boatState.flash*12)%2===0)?0.5:1;
- boatCtx.fillStyle='#122c3f77';boatCtx.beginPath();boatCtx.ellipse(3,16,25,8,0,0,Math.PI*2);boatCtx.fill();
- if(boatSprite.complete&&boatSprite.naturalWidth){
-   boatCtx.imageSmoothingEnabled=false;
-   boatCtx.drawImage(boatSprite,-40,-40,80,77);
+ if(window.RimforsaBoatDirections){
+   window.RimforsaBoatDirections.draw(boatCtx,bx,by,boatState.angle,
+     boatState.flash>0&&Math.floor(boatState.flash*12)%2===0);
  }else{
-   boatCtx.fillStyle='#f8f8f6';boatCtx.strokeStyle='#1f2c38';boatCtx.lineWidth=2;
-   boatCtx.beginPath();boatCtx.moveTo(21,0);boatCtx.lineTo(4,-12);boatCtx.lineTo(-20,-8);
-   boatCtx.lineTo(-23,0);boatCtx.lineTo(-20,8);boatCtx.lineTo(4,12);boatCtx.closePath();
-   boatCtx.fill();boatCtx.stroke();
+   boatCtx.save();boatCtx.translate(bx,by);
+   boatCtx.rotate(boatState.angle-Math.PI/4);
+   boatCtx.globalAlpha=(boatState.flash>0&&Math.floor(boatState.flash*12)%2===0)?0.5:1;
+   if(boatSprite.complete&&boatSprite.naturalWidth){
+     boatCtx.drawImage(boatSprite,-40,-40,80,77);
+   }else{
+     boatCtx.fillStyle='#f8f8f6';boatCtx.strokeStyle='#1f2c38';boatCtx.lineWidth=2;
+     boatCtx.beginPath();boatCtx.moveTo(21,0);boatCtx.lineTo(4,-12);boatCtx.lineTo(-20,-8);
+     boatCtx.lineTo(-23,0);boatCtx.lineTo(-20,8);boatCtx.closePath();
+     boatCtx.fill();boatCtx.stroke();
+   }
+   boatCtx.restore();
  }
- boatCtx.restore();
  // HUD on canvas
  boatCtx.fillStyle='rgba(8,27,21,.72)'; boatCtx.fillRect(8,8,170,40); boatCtx.strokeStyle='#dfbe80'; boatCtx.lineWidth=2; boatCtx.strokeRect(8,8,170,40); boatCtx.fillStyle='#ffe59b'; boatCtx.font='bold 14px ui-monospace, monospace'; boatCtx.fillText('♥ '+boatState.hearts+'   MYNT '+boatState.collected+'/'+BOAT_COIN_TARGET,18,33);
 }
