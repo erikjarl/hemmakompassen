@@ -609,7 +609,7 @@ function updateMessage(){
  if(performance.now()<coinNoticeUntil)return;
  const near=state.inCar?null:nearestSite(),carAction=state.inCar?'exit':nearCar()?'enter':null;
  const trollHere=!carAction&&nearTroll();
- const npcHere=!carAction&&!trollHere?npcSystem.near(state.x,state.y):null;
+ const npcHere=!carAction&&!trollHere&&!(near&&near.name==='Förskolan Hackel')?npcSystem.near(state.x,state.y):null;
  const key=carAction?'car-'+carAction:trollHere?'troll':npcHere?'npc-'+npcHere.id:near?near.name:'none';
  if(key===state.nearKey)return;
  state.near=(trollHere||npcHere)?null:near;state.nearKey=key;interact.hidden=!(carAction||trollHere||npcHere||near);state.messageLocked=false;
@@ -639,6 +639,7 @@ interact.addEventListener('click',()=>{
  if(state.inCar){exitCar();return;}
  if(nearCar()){enterCar();return;}
  if(nearTroll()){visitTroll();return;}
+ if(nearestSite()?.name==='Förskolan Hackel'){stop();window.RimforsaSlideMinigame.start({returnToMap:()=>{state.nearKey=null;updateMessage();}});return;}
  const npcHere=npcSystem.near(state.x,state.y);
  if(npcHere){
    const dialogue=npcSystem.talk(npcHere.id);
