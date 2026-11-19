@@ -56,7 +56,7 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
 /* Undertryck långtrycksmenyer enbart i spelet och styrpanelerna. */
 .game-frame,.game-frame *,.controls,.controls *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
 .boat-overlay,.boat-overlay *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
-.bag-dialog[hidden]{display:none!important}.bag-dialog{position:fixed;inset:0;z-index:40;background:#0b1815d9;display:grid;place-items:center;padding:12px}.bag-panel{width:min(420px,100%);border:4px solid #d3a45b;border-radius:12px;background:#203b31;color:#fff3d4;padding:17px;box-shadow:0 12px 30px #0008}.bag-panel h2{margin:0 0 9px}.bag-list{list-style:none;margin:12px 0;padding:0;display:grid;gap:8px}.bag-list li{padding:0;background:#315444;border:2px solid #55745b;border-radius:6px}.bag-item{width:100%;display:flex;align-items:center;gap:12px;padding:9px;background:transparent;color:#fff3d4;border:0;text-align:left;font:700 15px system-ui;cursor:pointer;min-height:56px}.bag-item:focus-visible{outline:3px solid #f5d780;outline-offset:-3px}.bag-item[aria-pressed="true"]{background:#416d50}.bag-art{flex:0 0 auto;width:40px;height:40px;border:2px solid #8ea27c;background:#1b3d32;image-rendering:pixelated}.bag-detail{min-height:42px;padding:10px;border:2px solid #6c8a66;background:#173c31;border-radius:6px;line-height:1.4}.bag-actions{display:flex;gap:10px;flex-wrap:wrap}.bag-note{font-size:12px;line-height:1.4;color:#e3dfb9}
+.fuel-dialog[hidden]{display:none!important}.fuel-dialog{position:fixed;inset:0;z-index:1600;display:grid;place-items:center;background:#081f1be9;padding:12px}.fuel-panel{width:min(530px,100%);max-height:95dvh;overflow:auto;border:4px solid #dabb76;background:#203e35;color:#fff1ce;border-radius:7px;padding:14px;font:700 15px system-ui}.fuel-panel h2{margin:0 0 9px}.fuel-panel canvas{display:block;width:100%;height:auto;image-rendering:pixelated;border:3px solid #9b794c}.fuel-buttons{display:flex;flex-wrap:wrap;gap:9px}.fuel-buttons button{background:#e7c77c;color:#2b342a;border:2px solid #785838;padding:11px;border-radius:5px;font-weight:800;min-height:46px}.fuel-buttons button:disabled{opacity:.55}.fuel-help{font-size:12px;line-height:1.4}.bag-dialog[hidden]{display:none!important}.bag-dialog{position:fixed;inset:0;z-index:40;background:#0b1815d9;display:grid;place-items:center;padding:12px}.bag-panel{width:min(420px,100%);border:4px solid #d3a45b;border-radius:12px;background:#203b31;color:#fff3d4;padding:17px;box-shadow:0 12px 30px #0008}.bag-panel h2{margin:0 0 9px}.bag-list{list-style:none;margin:12px 0;padding:0;display:grid;gap:8px}.bag-list li{padding:0;background:#315444;border:2px solid #55745b;border-radius:6px}.bag-item{width:100%;display:flex;align-items:center;gap:12px;padding:9px;background:transparent;color:#fff3d4;border:0;text-align:left;font:700 15px system-ui;cursor:pointer;min-height:56px}.bag-item:focus-visible{outline:3px solid #f5d780;outline-offset:-3px}.bag-item[aria-pressed="true"]{background:#416d50}.bag-art{flex:0 0 auto;width:40px;height:40px;border:2px solid #8ea27c;background:#1b3d32;image-rendering:pixelated}.bag-detail{min-height:42px;padding:10px;border:2px solid #6c8a66;background:#173c31;border-radius:6px;line-height:1.4}.bag-actions{display:flex;gap:10px;flex-wrap:wrap}.bag-note{font-size:12px;line-height:1.4;color:#e3dfb9}
 .ica-dialog[hidden]{display:none!important}.ica-dialog{position:fixed;inset:0;z-index:1200;display:grid;place-items:center;padding:12px;background:#071b15e8}.ica-panel{width:min(650px,100%);max-height:95dvh;overflow:auto;border:4px solid #e1b46a;background:#1c4235;color:#fff4d5;border-radius:12px;padding:17px;box-shadow:0 12px 36px #0009}.ica-panel h2{margin:0 0 10px}.ica-shop-scene{display:block;width:100%;height:auto;image-rendering:pixelated;border:3px solid #c9a06b;border-radius:5px;cursor:pointer;touch-action:manipulation;margin:9px 0}.ica-shop-hint{font-size:12px;color:#f3dcad;margin:5px 0}.ica-cashier{font-size:42px;text-align:center;margin:6px 0}.ica-products{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:14px 0}.ica-products button{display:grid;gap:5px;justify-items:center;border:3px solid #9e7139;border-radius:10px;background:#f5d788;color:#313322;padding:14px 6px;min-height:100px;font:900 15px system-ui;cursor:pointer}.ica-products button:disabled{opacity:.55;cursor:default}.ica-products button span{font-size:36px}.ica-products button:focus-visible{outline:3px solid white;outline-offset:3px}.ica-status{min-height:35px;line-height:1.35}.farm-sale{padding:8px 12px;border:2px solid #977950;background:#2a553f;border-radius:8px;margin:10px 0}.farm-sale p{margin:4px 0 8px}.farm-sale button:disabled{opacity:.5}
 .pizza-dialog[hidden]{display:none!important}.pizza-dialog{position:fixed;inset:0;z-index:1210;display:grid;place-items:center;padding:12px;background:#091b14e8}
 .pizza-panel{width:min(650px,100%);max-height:95dvh;overflow:auto;border:4px solid #dcb56f;border-radius:12px;background:#234336;color:#fff4d5;padding:18px;text-align:center;box-shadow:0 14px 32px #0009}
@@ -113,6 +113,7 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
 <script src="./inventory.js?v=3"></script>
 <script src="./item-art.js?v=1"></script>
 <script src="./car.js?v=2"></script>
+<script src="./fuel.js?v=1"></script>
 <script src="./npc.js?v=2"></script>
 <script src="./farm.js?v=2"></script>
 <script src="./dragon.js?v=1"></script>
@@ -156,6 +157,7 @@ tiles.src='./rimforsa-karta.webp?v=2';maskImage.src='./gangbarhet.png?v=2';sprit
 let imageLoaded=false,maskLoaded=false,spriteLoaded=false,collision=null,edgeDistance=null,maskW=724,maskH=543,frameCount=0;
 const state={x:360,y:335,dir:'down',phase:0,camX:359,camY:330,near:null,nearKey:null,visited:new Set(),path:[],messageLocked:false,inCar:false};
 const carDrive=window.RimforsaCar;
+const carFuel=window.RimforsaFuel;
 const carPos={x:carDrive.HOME.x,y:carDrive.HOME.y};
 // Strax nordväst om rondellen, ovanpå stenen. Separat minispel kan anslutas senare.
 const troll={id:'stone-troll',name:'Trollet vid stenen',x:464,y:454,interactionRadius:84,
@@ -551,6 +553,7 @@ function drawPoops(){
 function clearPath(){state.path=[]}
 function nearCar(){return !state.inCar&&Math.hypot(state.x-carPos.x,state.y-carPos.y)<78;}
 function enterCar(){
+ if(carFuel.snapshot().level<=0){message.textContent="Bilen har tom tank! Gå till Bensinmacken och tanka först.";return false;}
  if(!carDrive.ready()){message.textContent='Laddar vattenkartan till bilen…';return false;}
  state.inCar=true;state.x=carPos.x;state.y=carPos.y;state.path=[];state.nearKey=null;
  audio.setCarActive(true);audio.setCarSpeed(0);updateMessage();return true;
@@ -574,6 +577,49 @@ function exitCar(){
  audio.setCarSpeed(0);audio.setCarActive(false);updateMessage();return true;
 }
 
+// Bensinstationen: egen detaljerad pixelritad interaktiv miljö.
+let fuelDialog=null;
+function openFuelStation(){
+ stop();
+ if(!fuelDialog){
+  fuelDialog=document.createElement('div');fuelDialog.className='fuel-dialog';fuelDialog.setAttribute('role','dialog');
+  fuelDialog.setAttribute('aria-modal','true');fuelDialog.setAttribute('aria-label','Bensinmackens tankstation');
+  fuelDialog.innerHTML='<div class="fuel-panel"><h2>⛽ Bensinmacken</h2><canvas width="320" height="180" aria-label="Pixelritad bensinmack med pump, tak, skylt och vägar"></canvas><p data-fuel-status role="status"></p><div class="fuel-buttons"><button type="button" data-fuel-buy>Tanka fullt – 2 spelmynt</button><button type="button" data-fuel-close>Tillbaka till kartan</button></div><p class="fuel-help">Spelpris, inte aktuellt bensinpris. Bilen kan alltid nås till fots om tanken tar slut.</p></div>';
+  document.body.append(fuelDialog);
+  fuelDialog.querySelector('[data-fuel-buy]').addEventListener('click',()=>{
+   if(carFuel.snapshot().level>=100){fuelDialog.querySelector('[data-fuel-status]').textContent='Tanken är redan full!';return;}
+   const refund=payCoins(carFuel.COST);
+   if(!refund){fuelDialog.querySelector('[data-fuel-status]').textContent='Du behöver två spelmynt. Samla mynt på kartan eller sälj potatis på ICA.';return;}
+   carFuel.fill();renderFuelStation();
+  });
+  fuelDialog.querySelector('[data-fuel-close]').addEventListener('click',()=>{fuelDialog.hidden=true;state.nearKey=null;updateMessage();});
+  fuelDialog.addEventListener('click',e=>{if(e.target===fuelDialog){fuelDialog.hidden=true;state.nearKey=null;updateMessage();}});
+ }
+ fuelDialog.hidden=false;renderFuelStation();fuelDialog.querySelector('[data-fuel-buy]').focus();
+}
+function renderFuelStation(){
+ const ctx=fuelDialog.querySelector('canvas').getContext('2d');ctx.imageSmoothingEnabled=false;
+ const rect=(x,y,w,h,color)=>{ctx.fillStyle=color;ctx.fillRect(x,y,w,h)};
+ rect(0,0,320,180,'#80bcb6');rect(0,100,320,80,'#638e5d');rect(0,144,320,36,'#6a6d63');
+ for(let x=0;x<320;x+=35){rect(x,159,17,3,'#e4cc83');}
+ // Skärmtak, skuggade stolpar, lysrör och pumpdetaljer i fast pixelskala.
+ rect(28,41,250,14,'#253e43');rect(34,32,238,13,'#c4433d');rect(40,35,226,4,'#f3d7a3');
+ rect(51,54,11,83,'#576765');rect(55,57,3,77,'#adb3a2');
+ rect(249,54,11,83,'#576765');rect(252,57,3,77,'#adb3a2');
+ rect(45,54,30,4,'#f8e0a5');rect(231,54,30,4,'#f8e0a5');
+ rect(124,82,61,58,'#384c58');rect(128,87,53,49,'#b84b40');rect(136,94,36,20,'#233d42');
+ rect(139,97,29,12,'#c5e8cf');rect(140,118,20,7,'#ffe3a0');
+ rect(177,97,5,27,'#1d2e35');rect(182,119,9,4,'#1d2e35');
+ rect(18,89,73,38,'#668652');rect(24,92,60,30,'#3c6348');
+ rect(214,95,80,29,'#567848');rect(220,99,65,22,'#41644c');
+ rect(114,138,86,5,'#2c4543');rect(133,73,43,6,'#dba75d');
+ const amount=carFuel.snapshot().percent;
+ rect(16,9,288,18,'#244b43');rect(18,11,Math.floor(284*amount/100),14,'#e2bd68');
+ ctx.fillStyle='#fff5ce';ctx.font='bold 10px monospace';ctx.fillText('BILTANK '+amount+' %',23,22);
+ const label=fuelDialog.querySelector('[data-fuel-status]');
+ label.textContent='Biltank: '+amount+' %. Spelmynt tillgängliga: '+totalMoney()+'.';
+ fuelDialog.querySelector('[data-fuel-buy]').disabled=amount>=100;
+}
 function nearestSite(){let choice=null,d=75;for(const s of sites){const dist=Math.hypot(state.x-s.x,state.y-s.y);if(dist<d){d=dist;choice=s}}return choice}
 function nearTroll(){return !state.inCar&&Math.hypot(state.x-troll.x,state.y-troll.y)<troll.interactionRadius;}
 function visitTroll(){
@@ -723,10 +769,10 @@ function updateMessage(){
  state.near=(trollHere||npcHere)?null:near;state.nearKey=key;interact.hidden=!(carAction||trollHere||npcHere||near);state.messageLocked=false;
  if(carAction==='enter'){
    interact.textContent='Kör bilen 🚗';title.textContent='Vit bil vid hemmet';
-   message.innerHTML='<strong>🚗 Vit bil!</strong> Hoppa in och kör över land. Vattnet är stoppat.';
+   message.innerHTML='<strong>🚗 Vit bil!</strong> '+(carFuel.snapshot().level>0?'Tank: '+carFuel.snapshot().percent+' %. Hoppa in och kör över land.':'Tom tank! Gå till Bensinmacken och tanka.');
  }else if(carAction==='exit'){
    interact.textContent='Gå ur bilen 🚶';title.textContent='Ute och kör';
-   message.innerHTML='<strong>🚗 Biltur!</strong> Bilen kan köra över alla landytor, men inte ut i vattnet.';
+   message.innerHTML='<strong>🚗 Biltur!</strong> Tank: '+carFuel.snapshot().percent+' %. Bilen kör på land, inte vatten.';
  }else if(trollHere){
    interact.textContent='Kasta bajs på trollet 💩';title.textContent='Trollet vid stenen';
    message.innerHTML='<strong>👹 Trollet!</strong> Vågar du kasta bajs på trollet? Tryck på knappen! 💩';
@@ -735,7 +781,7 @@ function updateMessage(){
    message.innerHTML='<strong>💬 '+npcHere.name+'</strong> – någon vill prata med Lage. Tryck på Prata!';
  }else if(near){
    const isBoat=near.name==='Kinda Båtklubb';
-   interact.textContent=isBoat?'Kör båt 🛥️':near.name==='ICA Melkers'?'Köp glass 🍦':near.name==='Bella Donna'?'Köp pizza 🍕':near.name==='Förskolan Hackel'?'Åk rutschkana 🛝':near.name==='Åsundabadet'?'Dyk efter mynt 🤿':near.name==='Potatislandet'?'Odla potatis 🥔':'Utforska ✨';
+   interact.textContent=near.name==='Bensinmacken'?'Tanka bilen ⛽':isBoat?'Kör båt 🛥️':near.name==='ICA Melkers'?'Köp glass 🍦':near.name==='Bella Donna'?'Köp pizza 🍕':near.name==='Förskolan Hackel'?'Åk rutschkana 🛝':near.name==='Åsundabadet'?'Dyk efter mynt 🤿':near.name==='Potatislandet'?'Odla potatis 🥔':'Utforska ✨';
    message.innerHTML='<strong>'+near.symbol+' '+near.name+'</strong> – '+(isBoat?'tryck på Kör båt för att åka ut på sjön.':'tryck på Utforska för att besöka platsen.');
    title.textContent=near.name;
  }else{
@@ -762,6 +808,7 @@ interact.addEventListener('click',()=>{
    return;
  }
  const near=nearestSite();if(!near)return;
+ if(near.name==='Bensinmacken'){openFuelStation();return;}
  if(near.name==='Kinda Båtklubb'){openBoatGame();return;}
   if(near.name==='ICA Melkers'){openIca();return;}
   if(near.name==='Bella Donna'){openPizza();return;}
@@ -881,6 +928,11 @@ function tick(now){
   if(state.inCar){
     if(dx||dy){
       clearPath();
+      if(carFuel.snapshot().level<=0){
+        audio.setCarSpeed(0);
+        message.textContent='Bensinen är slut! Kliv ur bilen och gå till Bensinmacken.';
+      }else{
+      const oldX=state.x,oldY=state.y;
       const movement=carDrive.move(state.x,state.y,dx,dy,dt);
       if(movement.moved){
         state.x=movement.x;state.y=movement.y;collectCoins();
@@ -888,7 +940,13 @@ function tick(now){
         stepProgress+=dt;
         if(stepProgress>.08){updateMessage();stepProgress=0;}
       }
-      audio.setCarSpeed(movement.moved?1:0);
+      if(movement.moved){
+        const distance=Math.hypot(movement.x-oldX,movement.y-oldY);
+        carFuel.consume(distance);
+        if(carFuel.snapshot().level<=0)message.textContent='Bensinen är slut! Kliv ur bilen och gå till Bensinmacken.';
+      }
+      audio.setCarSpeed(movement.moved&&carFuel.snapshot().level>0?1:0);
+      }
     }else{audio.setCarSpeed(0);}
   }else{
     const byKeys=!!(dx||dy);
