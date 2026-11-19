@@ -29,7 +29,7 @@
   function stop(){active=false;flight=null;}
   return {start,stop,step,throwPoop,moveAim,aimAt,snapshot};
  }
- let game=null,overlay=null,canvas=null,ctx=null,score=null,notice=null,throwButton=null,lastFrame=0,raf=0,returnToMap=null,trollImage=null,previousFocus=null;
+ let game=null,overlay=null,canvas=null,ctx=null,score=null,notice=null,throwButton=null,lastFrame=0,raf=0,returnToMap=null,trollImage=null,previousFocus=null,impactUntil=0,impactX=240;
  function install(){
   if(overlay)return;
   const style=doc.createElement('style');style.textContent=`
@@ -61,7 +61,7 @@
   if(hit)root.RimforsaAudio.coin();
   else root.RimforsaAudio.hit();
  }
- function reset(){game.start();notice.textContent='Sikta och försök träffa trollet!';render();lastFrame=0;}
+ function reset(){impactUntil=0;game.start();notice.textContent='Sikta och försök träffa trollet!';render();lastFrame=0;}
  function throwNow(){if(!game.throwPoop())return;render();}
  function close(){
   if(!game||!game.snapshot().active)return;
@@ -179,6 +179,7 @@
   ctx.fillStyle='#173d2fdc';ctx.fillRect(5,5,279,27);
   ctx.fillStyle='#fff1bf';ctx.font='bold 15px system-ui';
   ctx.fillText('Sikta med pilarna och kasta!',13,24);
+  if(impactUntil>lastFrame&&s.active)drawImpact(impactX,107,lastFrame/1000);
   if(s.done){
    pixelRect(32,142,416,64,'#19392d');
    pixelRect(40,150,400,48,'#345541');
@@ -191,7 +192,8 @@
   if(!game||!game.snapshot().active)return;
   const dt=lastFrame?Math.min(.05,(t-lastFrame)/1000):0;lastFrame=t;
   const result=game.step(dt);
-  if(result){notice.textContent=result.hit?'🎯 Träff! Trollet fick bajs på sig!':'Nästan! Sikta igen!';
+  if(result){if(result.hit){impactX=game.snapshot().targetX;impactUntil=t+420;}
+   notice.textContent=result.hit?'🎯 Träff! Trollet fick bajs på sig!':'Nästan! Sikta igen!';
    if(result.done)notice.textContent=result.hits>=WIN_HITS?'🎉 Grattis! Du träffade trollet '+result.hits+' gånger!':'Du träffade '+result.hits+' gånger. Prova igen!';
    playSound(result.hit);
   }
@@ -201,7 +203,7 @@
   if(!options||!options.troll||!options.player)return false;
   install();if(game&&game.snapshot().active)close();
   previousFocus=doc.activeElement;returnToMap=options.returnToMap;
-  game=createSession();game.start();overlay.hidden=false;notice.textContent='Sikta och försök träffa trollet!';lastFrame=0;
+  game=createSession();game.start();impactUntil=0;overlay.hidden=false;notice.textContent='Sikta och försök träffa trollet!';lastFrame=0;
   overlay.querySelector('[data-troll-throw]').focus();raf=root.requestAnimationFrame(frame);return true;
  }
  root.RimforsaTrollMinigame={start,createSession,isOpen:()=>!!game&&game.snapshot().active,close};
