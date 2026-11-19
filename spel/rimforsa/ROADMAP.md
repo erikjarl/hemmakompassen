@@ -4,7 +4,7 @@
 **Spel:** `spel/rimforsa/index.html`  
 **Publicerad adress:** https://erikjarl.github.io/hemmakompassen/spel/rimforsa/  
 **Senast uppdaterad:** 2026-11-19  
-**Status:** Väskan, draken och bajskastnings-minispelet är implementerade på main med tester. Den senaste Pages-publiceringen och UI-smoketesterna måste verifieras innan full produktionsbekräftelse. ICA, pizzerian, förskolan och badet återstår.
+**Status:** ICA-glassbutik med köp av päron- och vaniljglass och separat myntsaldo är implementerad på main med regressionstester. Senaste CI/Pages behöver slutverifieras. Pizzerian, förskolan och badet återstår; nya önskemål är sorterade i avsnittet ovan.
 
 ## Stående instruktion – kommandot `jobb lage`
 
@@ -17,20 +17,24 @@ När användaren skriver **`jobb lage`**:
 5. Markera genomförda uppgifter med `[x]` först efter verifiering, och dokumentera eventuella begränsningar, kända fel och vad som återstår. Vid utebliven publicering ska det stå tydligt.
 6. Håll utvecklingen avgränsad till spelet `spel/rimforsa/` och dess relevanta tester; `Jobb hk` är ett separat kommando för resten av Hemmakompassen.
 
-## Nya att göra objekt (inlagda av Erik - gpt har i uppgift att sortera in varje genomgång av deyts dokument, ta bort objekt från denna lista när de sorterats in i listan nedan):
-- göra så att bilen och båten utgår från flera bilder från olika vinklar så att den aldrig blir upp och ner vänd. åker man pt höger ser man bilens framdel vänd åt höger med taket alltid uppåt samma dak vänster. åker neråt eller uppåt ser man bilen mer ovanifrån och sedan mellanting för diagnola vinklar
-- göra så att karaktärerna oliver och saga har egna utseenden
-- göra föremålen tydligare visuellt (nyckel mm)
-- göra så stt karaktärers dialoger blir upplästa 
--  fixa så att ljudet fungerar även för safari i mobilversion
-- göra en potatisodling funktion på ett sv fälten. det ysr fem minuter för potatis att växa
-- göra det möjligt att sälja potatis till ica handlaren och få pengsr
-- göra bil och båtfunktionen beroende av bensin som köps på macken. kostnaden för bensin ska följa det faktiska bensinpriset.
--skapa en funktion där båtens och bilens bensinmätare. när bensinen tar slut hår det ej att köra mer. i börjsn av varje spel är tanken tom
-- dagens bensinpris för Ingo ska visad på en skylt i huvudkartan
-- lägg in att görs punkter för stt skapa så många ljud som mökligt för alla olika händelser 
-- byt bajsljudet till ett mer pruttliknande ljud 
+## Nya utvecklingsuppgifter – sorterade 19 november 2026
 
+### Fordon och drivmedel
+- [ ] **FORDON-02: Riktningsanpassad grafik för bil och båt.** Använd egna bilder för höger, vänster, uppåt, nedåt och diagonala färdriktningar. Taket ska alltid vara uppåt i bild; perspektivet ska fungera även på mobil.
+- [ ] **BRÄNSLE-01: Tankmätare, bensinförbrukning och inköp.** Bil och båt ska starta med tomma tankar, kunna tankas på macken och inte gå att köra utan bensin. Planera så att spelaren kan komma vidare även när tanken är tom.
+- [ ] **BRÄNSLE-02: Aktuellt Ingo-pris på skylt.** Visa verifierat dagspris på en skylt i huvudkartan och låt tankningskostnaden utgå från detta. Undersök prisdatakälla och uppdateringsmöjligheter först; visa inte ett inaktuellt pris som dagens.
+
+### Karaktärer, inventarier och odling
+- [ ] **NPC-02: Unika utseenden för Oliver och Saga.** Egna sprites i samma 16-bitarsstil, inte bara nya färger.
+- [ ] **INV-02: Tydligare bilder av föremål.** Framför allt nycklar och andra upphittade eller köpta saker.
+- [ ] **ODLING-01: Odla potatis på ett av fälten.** Plantera, vänta fem minuter på tillväxt och skörda. Visa tiden tydligt, inklusive hur den fungerar vid omladdning.
+- [ ] **ODLING-02: Sälj potatis till ICA-handlaren.** Ge spelmynt vid försäljning och håll köpta/sålda mynt åtskilda från skattjaktsmålet. Beror på ODLING-01.
+
+### Ljud
+- [ ] **LJUD-01: Läs upp karaktärernas repliker.** Utöver skriven text; med respekt för ljudknappen.
+- [ ] **LJUD-02: Åtgärda ljud i Safari på mobil.** Testa faktisk iPhone/Safari och hantering av ljudstart, paus och återupptagning.
+- [ ] **LJUD-03: Fler effekter för spelhändelser.** Skapa många men välavvägda originalskapade ljudeffekter.
+- [ ] **LJUD-04: Pruttigare bajsljud.** Ersätt den nuvarande ljudeffekten med ett kort, originalskapat pruttljud.
 
 ## Att göra – Kinda båtklubb
 
@@ -67,7 +71,7 @@ När användaren skriver **`jobb lage`**:
 ## Att göra – nya minispel
 
 ### ICA-affären
-- [ ] **ICA-01: Glassköp.** Använd insamlade pengar för att **köpa glass av en ICA-personal**. Spelaren ska kunna välja mellan **päronglass** och **vaniljglass**.
+- [x] **ICA-01: Glassköp.** Använd insamlade pengar för att **köpa glass av en ICA-personal**. Spelaren ska kunna välja mellan **päronglass** och **vaniljglass**.
 
 ### Pizzeria / Bella Donna
 - [ ] **PIZ-01: Pizza.** Låt spelaren **köpa en pizzaslice med ananas på**, betald med insamlade pengar.
@@ -97,6 +101,8 @@ När användaren skriver **`jobb lage`**:
 - **Verifiering:** Lägg till tester för respektive uppgift, spela igenom huvudflödet och kontrollera samma publicerade URL. Redovisa separat om fysisk iPhone/Safari inte har testats.
 
 ## Arbetslogg
+- **2026-11-19 – Jobb lage / ICA-01:** ICA Melkers har fått en mobilanpassad butik med ICA-personal, **päronglass för 3 spelmynt** och **vaniljglass för 4 spelmynt**. Myntmotorn skiljer insamlad mängd från disponibelt saldo, så köp påverkar inte grattis när samtliga kartmynt hittats. Köpta glassar sparas i väskan och kan inte plockas upp gratis vid ett ICA-besök. Dubbelköp stoppas om samma glass redan ägs. Pengarna återställs vid ny spelomgång, men redan sparade föremål stannar i väskan tills den töms. Regressionstester har lagts till. Även alla nya uppgifter från inkorgssektionen har sorterats och behållits som öppna punkter. **Verifieringsnivå:** committat till main; CI/Pages-kontrollen för senaste commit pågick vid dokumentationen, fysisk mobil Safari är inte verifierad. Nästa ordinarie minispel: **PIZ-01**.
+
 - **2026-11-19 – Jobb lage / TROLL-02:** Ny fristående `troll-minigame.js` ansluten genom befintlig `window.RimforsaTrollMinigame.start({troll,player,returnToMap})`. När Lage går till trollet till fots kan han välja **Kasta bajs på trollet 💩** och få ett eget mobilanpassat Canvas-minispel med samma trollsprite, rörligt mål, riktning via skärmknappar/tangentbord/tryck på spelplanen, tio kast, träffräkning, seger vid fem träffar, omspel och återgång. Träff/miss använder befintliga användaraktiverade ljud, och huvudkartans rörelse stoppas under spelet. Inga hjärtan eller mynt ändras. Testerna i `tests/rimforsa-troll-minigame.test.mjs` och de äldre trollregressionstesterna har uppdaterats. **Verifieringsstatus vid loggskrivning:** kod och tester finns på main; kontrollen av serverade Pages-resurser har rapporterat success för kodversion c181cda0, medan GitHub Actions funktionella tester/UI och Pages-publicering ännu pågick. Fysisk iPhone/Safari ej testad. Nästa uppgift **ICA-01**.\n\n
 - **2026-11-19 – Jobb lage / DRAKE-01:** Originalritad grön drake i `dragon.js` patrullerar runt spelvärldspunkt cirka (510, 820) i ett avgränsat område, flaxar med vingarna och sprutar cykliskt animerad eld. Draken visas på huvudkartan och som markör i minikartan. Nytt originalkomponerat molltema i `audio.js` väljs inom cirka 235 världspixlar från draken och ersätts av vanliga musiken på avstånd; ljud startar endast efter aktivt ljudval i spelet och stannar i båtminispelet. Draken orsakar ingen skada, ger inga föremål och ändrar inte kollisioner. `tests/rimforsa-dragon.test.mjs` tillagt för rörelse, närhet och Canvas-ritning. **Verifiering:** Koden committad till main och Pages asset-kontrollen var godkänd för integrationscommiten; senaste Pages-bygg och UI-smoketest pågick vid loggskrivningen, så de är inte verifierade ännu. Fysisk iPhone/Safari och faktisk musikalisk upplevelse ej verifierad. Nästa prioritet **TROLL-02** och därefter köpmiljöerna.
 
