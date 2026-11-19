@@ -118,7 +118,7 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
 <script src="./troll-minigame.js?v=3"></script>
 <script src="./slide-minigame.js?v=2"></script>
 <script src="./swim-minigame.js?v=3"></script>
-<script src="./ica-scene.js?v=2"></script>
+<script src="./ica-scene.js?v=3"></script>
 <script src="./pizza-scene.js?v=2"></script>
 <script>
 (()=>{'use strict';
@@ -252,7 +252,12 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
   const x=(event.clientX-rect.left)*icaCanvas.width/rect.width;
   const y=(event.clientY-rect.top)*icaCanvas.height/rect.height;
   const location=window.RimforsaIcaScene.hitTest(x,y);
-  if(location==='cashier'){icaStatus.textContent='ICA-personalen: Hej Lage! Välj en glass i frysen!';return;}
+  if(location==='cashier'){icaStatus.textContent='ICA-personalen: Hej Lage! Vill du köpa glass eller sälja potatis?';return;}
+   if(location==='potatoes'){
+    if(farm.snapshot().harvested>=3)document.getElementById('sellPotatoes').click();
+    else icaStatus.textContent='Odla och skörda tre potatisar i potatislandet först!';
+    return;
+   }
   const id=location==='pear'?'paronglass':location==='vanilla'?'vaniljglass':null;
   if(id){
    if(bag.has(id)){icaStatus.textContent='Den glassen finns redan i väskan!';return;}
