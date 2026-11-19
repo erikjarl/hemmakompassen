@@ -196,7 +196,11 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
   const target=window.RimforsaPizzaScene.hitTest(x,y);
   if(target==='chef'){pizzaStatus.textContent='Pizzabagaren: Ciao Lage! Vill du ha en pizzaslice med ananas för 5 mynt?';return;}
   if(target==='oven'){pizzaStatus.textContent='Titta! Här gräddas pizzorna i en varm stenugn.';return;}
-  if(target==='pizza')pizzaBuy.click();
+  if(target==='pizza'){
+   if(bag.has('ananaspizza')){pizzaStatus.textContent='Pizzan finns redan i väskan!';return;}
+   if(game.snapshot().balance<PIZZA_PRICE){pizzaStatus.textContent='Du behöver '+(PIZZA_PRICE-game.snapshot().balance)+' mynt till för att köpa pizzan.';return;}
+   pizzaBuy.click();
+  }
  });
  pizzaBuy.addEventListener('click',()=>{
   if(bag.has('ananaspizza')){pizzaStatus.textContent='Pizzan finns redan i väskan!';renderPizza();return;}
@@ -226,12 +230,18 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
  icaCanvas.addEventListener('pointerdown',event=>{
   if(icaOverlay.hidden)return;
   const rect=icaCanvas.getBoundingClientRect();
+  if(!rect.width||!rect.height)return;
   const x=(event.clientX-rect.left)*icaCanvas.width/rect.width;
   const y=(event.clientY-rect.top)*icaCanvas.height/rect.height;
   const location=window.RimforsaIcaScene.hitTest(x,y);
   if(location==='cashier'){icaStatus.textContent='ICA-personalen: Hej Lage! Välj en glass i frysen!';return;}
   const id=location==='pear'?'paronglass':location==='vanilla'?'vaniljglass':null;
-  if(id)icaOverlay.querySelector('[data-buy-ice="'+id+'"]').click();
+  if(id){
+   if(bag.has(id)){icaStatus.textContent='Den glassen finns redan i väskan!';return;}
+   const missing=icePrices[id]-game.snapshot().balance;
+   if(missing>0){icaStatus.textContent='Du behöver '+missing+' mynt till för att köpa den glassen.';return;}
+   icaOverlay.querySelector('[data-buy-ice="'+id+'"]').click();
+  }
  });
  for(const button of icaOverlay.querySelectorAll('[data-buy-ice]'))button.addEventListener('click',()=>{
    const id=button.dataset.buyIce,cost=icePrices[id];
