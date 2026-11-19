@@ -3,9 +3,12 @@
   'use strict';
   const AudioCtor = root.AudioContext || root.webkitAudioContext;
   let ctx=null,master=null,scene='land',enabled=false,hidden=false;
-  let musicInterval=null,gullInterval=null,engine=null,waves=null,carEngine=null,carActive=false,melodyStep=0,volume=.55;
+  let musicInterval=null,gullInterval=null,engine=null,waves=null,carEngine=null,carActive=false,melodyStep=0,volume=.55,dragonNearby=false;
   const melody=[392,440,523.25,440,392,329.63,349.23,392,440,392,329.63,293.66,329.63,349.23,392,0,
                  349.23,392,440,523.25,587.33,523.25,440,392,349.23,329.63,293.66,329.63,349.23,392,329.63,0];
+  // Originalkomponerat molltema med låg bordun för drakens skog.
+  const dangerMelody=[196,0,207.65,196,174.61,0,155.56,0,196,233.08,207.65,0,174.61,155.56,146.83,0];
+  const dangerBass=[73.42,82.41,69.30,73.42];
   const bass=[130.81,146.83,174.61,196,164.81,146.83,130.81,146.83];
   const now=()=>ctx?ctx.currentTime:0;
   function gain(v=0){const n=ctx.createGain();n.gain.value=v;return n;}
@@ -103,10 +106,17 @@
   }
   function musicTick(){
     if(!enabled||scene!=='land'||hidden)return;
-    const i=melodyStep++,t=now()+.015,note=melody[i%melody.length];
-    if(note)tone(note,t,.27,.028,'triangle');
-    if(i%4===0)tone(bass[(Math.floor(i/4))%bass.length],t,.58,.021,'sine');
-    if(i%8===4)tone(261.63,t,.27,.010,'sine');
+    const i=melodyStep++,t=now()+.015;
+    if(dragonNearby){
+      const note=dangerMelody[i%dangerMelody.length];
+      if(note)tone(note,t,.32,.036,'sawtooth');
+      if(i%4===0)tone(dangerBass[Math.floor(i/4)%dangerBass.length],t,.78,.035,'triangle');
+    }else{
+      const note=melody[i%melody.length];
+      if(note)tone(note,t,.27,.028,'triangle');
+      if(i%4===0)tone(bass[(Math.floor(i/4))%bass.length],t,.58,.021,'sine');
+      if(i%8===4)tone(261.63,t,.27,.010,'sine');
+    }
   }
   function stopScene(){
     if(musicInterval!==null){root.clearInterval(musicInterval);musicInterval=null;}
@@ -157,6 +167,11 @@
     if(newScene===scene)return;
     stopScene();scene=newScene;startScene();
   }
+  function setDragonNearby(value){
+    const next=!!value;
+    if(next===dragonNearby)return;
+    dragonNearby=next;melodyStep=0;
+  }
   function coin(){
     if(!enabled||!ctx||hidden)return;
     const t=now()+.01;
@@ -182,6 +197,6 @@
     stopScene();
     if(!hidden&&enabled){ensureContext();startScene();}
   }
-  function status(){return {enabled,available:!!AudioCtor,scene,hidden,playingMusic:musicInterval!==null,playingWaves:!!waves,playingEngine:!!engine,playingCarEngine:!!carEngine,carActive};}
-  root.RimforsaAudio={enable,disable,toggle,setScene,setBoatSpeed,setCarActive,setCarSpeed,coin,hit,victory,setVisible,status};
+  function status(){return {enabled,available:!!AudioCtor,scene,hidden,playingMusic:musicInterval!==null,playingWaves:!!waves,playingEngine:!!engine,playingCarEngine:!!carEngine,carActive,dragonNearby};}
+  root.RimforsaAudio={enable,disable,toggle,setScene,setBoatSpeed,setCarActive,setCarSpeed,setDragonNearby,coin,hit,victory,setVisible,status};
 })(window);
