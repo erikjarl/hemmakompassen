@@ -11,3 +11,7 @@ Detta är ett separat utvecklingskommando för **Lage i Rimforsa**. Läs `spel/r
 Arbetsflöde: kontrollera `AGENTS.md` i repo-roten och denna fil, läs `ROADMAP.md`, kontrollera kod och aktuella tester/CI, åtgärda blockerande buggar och arbeta av uppgifter, testa mobil/desktop, commit/pusha/publicera när möjligt, uppdatera kryssrutor och arbetslogg, rapportera exakt vad som är gjort respektive återstår. Ljud ska följa webbläsarens användargestkrav och använda material som får användas. Ändra inte Hemmakompassens övriga appar, användardata eller behörigheter som del av ett spelpass.
 
 Den separata arbetsrutinen `Jobb hk` fortsätter att styras av `docs/ACTIVE_ROADMAP.md`.
+
+## OBLIGATORISKT: konsekvent 16-bitarsgrafik i varje uppgift (19 november 2026)
+
+**VID VARJE `jobb lage`, FÖR VARJE ATT-GÖRA-PUNKT: ALL NY OCH ÄNDRAD SPELGRAFIK SKA VARA 16-BITARS SUPER NINTENDO-PIXELKONST MED EXAKT SAMMA UPPLEVDA PIXELSKALA, SKÄRPA, DETALJRIKEDOM, FÄRGSTIL, PROPORTIONER OCH KARAKTÄRSDESIGN SOM HUVUDKARTAN OCH LAGES SPRITE (TYDLIGA ANSIKTSDRAG OCH HÅR). INGA AVVIKANDE, GROVPIXliga ELLER LÅGDETALJERADE GRAFIKLÖSNINGAR.** Använd dykspelet, rutschkanan, båtspelet och trollspelet som positiva referenser där deras grafik följer huvudkartans nivå. Läs den utförliga grafiska standarden i `spel/rimforsa/ROADMAP.md`, som även är uttryckligen tillagd på varje kryssruteuppgift. Gäller också nya uppgifter som tillkommer senare och synliga ändringar i redan avbockade uppgifter; behåll högkvalitativa befintliga resurser och förbättra endast de delar som avviker.
