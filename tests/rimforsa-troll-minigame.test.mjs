@@ -36,7 +36,7 @@ test('troll score increments when projectile reaches moving target',()=>{
 });
 test('main game preserves troll location and integrates minigame with map pause',()=>{
  assert.match(html,/x:464,y:454,interactionRadius:84/);
- assert.match(html,/troll-minigame\.js\?v=1/);
+ assert.match(html,/troll-minigame\.js\?v=2/);
  assert.match(html,/minigameImplemented:true/);
  assert.match(html,/RimforsaTrollMinigame\.start/);
  assert.match(html,/!window\.RimforsaTrollMinigame\.isOpen\(\)/);
