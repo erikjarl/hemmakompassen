@@ -24,8 +24,8 @@ function createFarm(storage,clock=()=>Date.now()){
  function plant(){if(plantedAt!==null)return false;plantedAt=clock();persist();return true}
  function harvest(){if(!snapshot().ready)return false;plantedAt=null;harvested+=3;persist();return true}
  function sell(quantity=3){
-  if(!Number.isSafeInteger(quantity)||quantity<=0||harvested<quantity||earned>Number.MAX_SAFE_INTEGER-quantity*2)return {sold:false,...snapshot()};
-  harvested-=quantity;sold+=quantity;earned+=quantity*2;persist();return {sold:true,coins:quantity*2,...snapshot()};
+  if(!Number.isSafeInteger(quantity)||quantity<=0||harvested<quantity||earned>Number.MAX_SAFE_INTEGER-quantity*2)return {...snapshot(),success:false};
+  harvested-=quantity;sold+=quantity;earned+=quantity*2;persist();return {...snapshot(),success:true,coins:quantity*2};
  }
  function spendCoins(amount){
   if(!Number.isSafeInteger(amount)||amount<=0||amount>earned-spent)return false;
