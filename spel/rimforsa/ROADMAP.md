@@ -4,7 +4,7 @@
 **Spel:** `spel/rimforsa/index.html`  
 **Publicerad adress:** https://erikjarl.github.io/hemmakompassen/spel/rimforsa/  
 **Senast uppdaterad:** 2026-11-19  
-**Status:** ICA-glassbutik med köp av päron- och vaniljglass och separat myntsaldo är implementerad på main med regressionstester. Senaste CI/Pages behöver slutverifieras. Pizzerian, förskolan och badet återstår; nya önskemål är sorterade i avsnittet ovan.
+**Status:** ICA-glassbutik och pizzaköp hos Bella Donna är implementerade på main med gemensam myntplånbok och sparning i väskan. Pizzans funktionella tester är godkända på kodcommit 4f93b539, men slutlig Pages-/webbläsarverifiering för dokumentationscommiten återstår. Förskolan och badet samt andra önskemål återstår.
 
 ## Stående instruktion – kommandot `jobb lage`
 
@@ -74,7 +74,7 @@ När användaren skriver **`jobb lage`**:
 - [x] **ICA-01: Glassköp.** Använd insamlade pengar för att **köpa glass av en ICA-personal**. Spelaren ska kunna välja mellan **päronglass** och **vaniljglass**.
 
 ### Pizzeria / Bella Donna
-- [ ] **PIZ-01: Pizza.** Låt spelaren **köpa en pizzaslice med ananas på**, betald med insamlade pengar.
+- [x] **PIZ-01: Pizza.** Låt spelaren **köpa en pizzaslice med ananas på**, betald med insamlade pengar.
 
 ### Förskolan
 - [ ] **FÖR-01: Rutschkana.** Skapa ett rutschkane-minispel där Lage **åker nerför rutschkanan**. **Ju längre spelaren håller knappen nedtryckt, desto längre flyger Lage**.
@@ -101,6 +101,8 @@ När användaren skriver **`jobb lage`**:
 - **Verifiering:** Lägg till tester för respektive uppgift, spela igenom huvudflödet och kontrollera samma publicerade URL. Redovisa separat om fysisk iPhone/Safari inte har testats.
 
 ## Arbetslogg
+- **2026-11-19 – Jobb lage / PIZ-01:** Lagt till en mobilanpassad pizzeriadialog hos **Bella Donna** på kartans befintliga koordinat. Lage kan köpa **en pizzaslice med ananas för fem spelmynt**; summan dras från samma saldo som ICA-glassen utan att minska antalet mynt som räknas mot skattjaktsmålet. Pizzan lagras i väskan som föremålet `ananaspizza`, men kan inte plockas upp gratis genom enbart platsbesök; återköp av redan ägd pizza blockeras. Dialogen kan stängas med knapp, Escape eller tryck utanför, och hindrar huvudkartans rörelse under köp. Väsktotalen är nu sju objekt och cache-versionen för inventariemodulen har höjts. Nya regressionstester för pizza, saldobetalning, sparning och platsintegration. **Verifierat vid loggskrivningen:** GitHub Actions funktionella tester godkända på kodcommit 4f93b539, kontroll av serverade Pages-resurser godkänd och Pages-bygget pågick. Fullständig Chromium-smoketest och fysisk iPhone/Safari ännu inte bekräftade. Nästa ordinarie minispel: **FÖR-01**.
+
 - **2026-11-19 – Jobb lage / ICA-01:** ICA Melkers har fått en mobilanpassad butik med ICA-personal, **päronglass för 3 spelmynt** och **vaniljglass för 4 spelmynt**. Myntmotorn skiljer insamlad mängd från disponibelt saldo, så köp påverkar inte grattis när samtliga kartmynt hittats. Köpta glassar sparas i väskan och kan inte plockas upp gratis vid ett ICA-besök. Dubbelköp stoppas om samma glass redan ägs. Pengarna återställs vid ny spelomgång, men redan sparade föremål stannar i väskan tills den töms. Regressionstester har lagts till. Även alla nya uppgifter från inkorgssektionen har sorterats och behållits som öppna punkter. **Verifieringsnivå:** committat till main; CI/Pages-kontrollen för senaste commit pågick vid dokumentationen, fysisk mobil Safari är inte verifierad. Nästa ordinarie minispel: **PIZ-01**.
 
 - **2026-11-19 – Jobb lage / TROLL-02:** Ny fristående `troll-minigame.js` ansluten genom befintlig `window.RimforsaTrollMinigame.start({troll,player,returnToMap})`. När Lage går till trollet till fots kan han välja **Kasta bajs på trollet 💩** och få ett eget mobilanpassat Canvas-minispel med samma trollsprite, rörligt mål, riktning via skärmknappar/tangentbord/tryck på spelplanen, tio kast, träffräkning, seger vid fem träffar, omspel och återgång. Träff/miss använder befintliga användaraktiverade ljud, och huvudkartans rörelse stoppas under spelet. Inga hjärtan eller mynt ändras. Testerna i `tests/rimforsa-troll-minigame.test.mjs` och de äldre trollregressionstesterna har uppdaterats. **Verifieringsstatus vid loggskrivning:** kod och tester finns på main; kontrollen av serverade Pages-resurser har rapporterat success för kodversion c181cda0, medan GitHub Actions funktionella tester/UI och Pages-publicering ännu pågick. Fysisk iPhone/Safari ej testad. Nästa uppgift **ICA-01**.\n\n
