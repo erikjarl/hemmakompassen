@@ -22,7 +22,7 @@ canvas#world{display:block;width:100%;height:min(57svh,520px);min-height:315px;t
 .win-panel p{font-size:15px;margin:8px 0 16px;line-height:1.5}
 .win-stars{font-size:32px;letter-spacing:8px;animation:winSparkle .75s ease-in-out infinite alternate}
 @keyframes winSparkle{to{transform:scale(1.12) rotate(4deg);filter:brightness(1.35)}}
-.hud .heart{white-space:nowrap}
+.hud .heart{white-space:nowrap}.fuel-hud{position:absolute;left:8px;top:47px;z-index:2;padding:4px 8px;border:2px solid #cda15e;border-radius:4px;background:#19362de9;color:#fff3c5;font:800 11px/1.3 ui-monospace,monospace;pointer-events:none}
 .area{position:absolute;left:50%;top:8px;transform:translateX(-50%);max-width:55%;background:#17392cdd;border:2px solid #dfbe80;padding:6px 10px;border-radius:3px;text-align:center;color:#f8df9f;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px;pointer-events:none}
 .minimap{position:absolute;right:8px;top:8px;width:104px;height:78px;border:3px solid #ddbc79;background:#43834a;image-rendering:pixelated;box-shadow:0 2px 0 #1e382d;cursor:pointer}
 .mapBtn{position:absolute;right:7px;top:97px;font-size:11px;border:2px solid #e0bd7c;border-radius:2px;color:#fef0ca;background:#14372d;padding:5px 7px;font-weight:800}
@@ -70,7 +70,7 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
  <header class="head"><div><h1>🌲 Lage i Rimforsa</h1><p class="subtitle">Ett 16-bitars promenadäventyr genom Rimforsa</p></div><div class="head-actions"><button type="button" class="smallBtn sound-toggle" data-sound-toggle aria-label="Slå på spelljud" aria-pressed="false">🔈 Ljud på</button><button type="button" class="smallBtn" id="showBag">🎒 Väska <span id="bagCount">0/7</span></button><button class="smallBtn" id="showMap">🗺️ Karta</button></div></header>
  <section class="game-frame" aria-label="Spelplan: utforska Rimforsa till fots">
   <canvas id="world" width="384" height="316" aria-label="Karta över Rimforsa där Lage går omkring"></canvas>
-  <div class="hud">LAGE <span class="heart" id="landHearts" aria-label="Hjärtan kvar">♥♥♥</span> <span class="coinScore" id="coinScore" aria-label="Myntsaldo och insamlade guldmynt">🪙 0 · Hittade 0/20</span></div><div class="area" id="area">Rimforsa</div>
+  <div class="hud">LAGE <span class="heart" id="landHearts" aria-label="Hjärtan kvar">♥♥♥</span> <span class="coinScore" id="coinScore" aria-label="Myntsaldo och insamlade guldmynt">🪙 0 · Hittade 0/20</span></div><div class="fuel-hud" id="fuelHud">⛽ Bil 0% · Båt 0%</div><div class="area" id="area">Rimforsa</div>
   <canvas id="mini" class="minimap" width="128" height="96" aria-label="Minikarta över Rimforsa" role="img"></canvas>
   <button class="mapBtn" id="miniMapBtn">STOR KARTA</button>
   <div id="mapOverlay" role="dialog" aria-modal="true" aria-label="Karta över Rimforsa"><button class="smallBtn" id="closeMap">Stäng ✕</button><canvas id="wholeMap" width="640" height="480" aria-label="Översikt av hela spelkartan. Tryck på en plats för att gå dit."></canvas><button type="button" class="smallBtn" id="goBeach">🏖️ Gå till Åsundabadet</button><button type="button" class="smallBtn" id="goFarm">🥔 Gå till potatislandet</button><p id="mapRouteHint" role="status" aria-live="polite" style="font-size:12px;margin:0;text-align:center">Tryck på kartan eller välj badplatsen för att gå dit.</p></div>
@@ -78,7 +78,7 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
   <div id="boatOverlay" class="boat-overlay" role="dialog" aria-modal="true" aria-label="Båtspel vid Kinda båtklubb" aria-hidden="true">
     <div class="boat-panel">
       <div class="boat-head"><div><div class="boat-title">🛥️ Kinda båtklubb – båtäventyr</div><div class="boat-tip" id="boatTip" aria-live="polite">Styr den vita motorbåten, samla mynt och undvik grunden.</div></div><div class="boat-head-actions"><button type="button" class="smallBtn sound-toggle" data-sound-toggle aria-label="Slå på spelljud" aria-pressed="false">🔈 Ljud på</button><button class="smallBtn" id="boatRestart">Spela om ↺</button><button class="smallBtn" id="closeBoat">Tillbaka ✕</button></div></div>
-      <div class="boat-stats"><span>Hjärtan <strong id="boatHearts">♥♥♥</strong></span><span>Mynt <strong id="boatCoins">0 / 8</strong></span><span>Åsunden / Skedevi</span></div>
+      <div class="boat-stats"><span>Hjärtan <strong id="boatHearts">♥♥♥</strong></span><span>Mynt <strong id="boatCoins">0 / 8</strong></span><span>⛽ Båt: <strong id="boatFuel">0%</strong></span><span>Åsunden / Skedevi</span></div>
       <canvas id="boatGame" width="640" height="500" aria-label="Båtäventyr på sjön"></canvas>
       <div class="boat-controls"><div class="boat-guide">Styr med pilar/WASD eller knapparna. Samla mynt på sjön och undvik grunden.</div><div class="boat-pad" aria-label="Styr båten"><button type="button" data-bdir="up" aria-label="Kör uppåt"></button><button type="button" data-bdir="left" aria-label="Kör åt vänster"></button><button type="button" data-bdir="down" aria-label="Kör nedåt"></button><button type="button" data-bdir="right" aria-label="Kör åt höger"></button></div></div>
       <div class="boat-disclaimer">Illustrerat spel baserat på ett kartfoto – grundens markeringar är förenklade och kartan får aldrig användas vid riktig båtfärd.</div>
@@ -113,7 +113,7 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
 <script src="./inventory.js?v=3"></script>
 <script src="./item-art.js?v=1"></script>
 <script src="./car.js?v=2"></script>
-<script src="./fuel.js?v=1"></script>
+<script src="./fuel.js?v=2"></script>
 <script src="./npc.js?v=2"></script>
 <script src="./farm.js?v=2"></script>
 <script src="./dragon.js?v=1"></script>
@@ -157,7 +157,13 @@ tiles.src='./rimforsa-karta.webp?v=2';maskImage.src='./gangbarhet.png?v=2';sprit
 let imageLoaded=false,maskLoaded=false,spriteLoaded=false,collision=null,edgeDistance=null,maskW=724,maskH=543,frameCount=0;
 const state={x:360,y:335,dir:'down',phase:0,camX:359,camY:330,near:null,nearKey:null,visited:new Set(),path:[],messageLocked:false,inCar:false};
 const carDrive=window.RimforsaCar;
-const carFuel=window.RimforsaFuel;
+const carFuel=window.RimforsaFuel,boatFuel=carFuel.boat;
+const fuelHud=document.getElementById('fuelHud'),boatFuelLabel=document.getElementById('boatFuel');
+function updateFuelHud(){
+ fuelHud.textContent='⛽ Bil '+carFuel.snapshot().percent+'% · Båt '+boatFuel.snapshot().percent+'%';
+ boatFuelLabel.textContent=boatFuel.snapshot().percent+'%';
+}
+updateFuelHud();
 const carPos={x:carDrive.HOME.x,y:carDrive.HOME.y};
 // Strax nordväst om rondellen, ovanpå stenen. Separat minispel kan anslutas senare.
 const troll={id:'stone-troll',name:'Trollet vid stenen',x:464,y:454,interactionRadius:84,
@@ -571,7 +577,14 @@ function nearbyExit(){
 function exitCar(){
  if(!state.inCar)return false;
  const exit=nearbyExit();
- if(!exit){message.innerHTML='<strong>🚗 Hitta en väg!</strong> Kör närmare en gångbar väg för att kliva ur bilen.';return false;}
+ if(!exit){
+  // Kostnadsfri bärgning hindrar att Lage blir inlåst på otillgänglig mark.
+  state.inCar=false;carPos.x=carDrive.HOME.x;carPos.y=carDrive.HOME.y;
+  state.x=carDrive.HOME.x;state.y=carDrive.HOME.y;state.nearKey=null;
+  audio.setCarSpeed(0);audio.setCarActive(false);updateMessage();
+  message.textContent='Bilen har bärgats hem. Du kan gå vidare till fots!';
+  return true;
+ }
  carPos.x=state.x;carPos.y=state.y;
  state.inCar=false;state.x=exit.x;state.y=exit.y;state.nearKey=null;
  audio.setCarSpeed(0);audio.setCarActive(false);updateMessage();return true;
@@ -584,13 +597,19 @@ function openFuelStation(){
  if(!fuelDialog){
   fuelDialog=document.createElement('div');fuelDialog.className='fuel-dialog';fuelDialog.setAttribute('role','dialog');
   fuelDialog.setAttribute('aria-modal','true');fuelDialog.setAttribute('aria-label','Bensinmackens tankstation');
-  fuelDialog.innerHTML='<div class="fuel-panel"><h2>⛽ Bensinmacken</h2><canvas width="320" height="180" aria-label="Pixelritad bensinmack med pump, tak, skylt och vägar"></canvas><p data-fuel-status role="status"></p><div class="fuel-buttons"><button type="button" data-fuel-buy>Tanka fullt – 2 spelmynt</button><button type="button" data-fuel-close>Tillbaka till kartan</button></div><p class="fuel-help">Spelpris, inte aktuellt bensinpris. Bilen kan alltid nås till fots om tanken tar slut.</p></div>';
+  fuelDialog.innerHTML='<div class="fuel-panel"><h2>⛽ Bensinmacken</h2><canvas width="320" height="180" aria-label="Pixelritad bensinmack med pump, tak, skylt och vägar"></canvas><p data-fuel-status role="status"></p><div class="fuel-buttons"><button type="button" data-fuel-buy>Tanka bilen – 2 spelmynt</button><button type="button" data-fuel-boat>Tanka båten – 2 spelmynt</button><button type="button" data-fuel-close>Tillbaka till kartan</button></div><p class="fuel-help">Spelpris, inte aktuellt bensinpris. Bilen kan alltid nås till fots om tanken tar slut.</p></div>';
   document.body.append(fuelDialog);
   fuelDialog.querySelector('[data-fuel-buy]').addEventListener('click',()=>{
    if(carFuel.snapshot().level>=100){fuelDialog.querySelector('[data-fuel-status]').textContent='Tanken är redan full!';return;}
    const refund=payCoins(carFuel.COST);
    if(!refund){fuelDialog.querySelector('[data-fuel-status]').textContent='Du behöver två spelmynt. Samla mynt på kartan eller sälj potatis på ICA.';return;}
-   carFuel.fill();renderFuelStation();
+   carFuel.fill();updateFuelHud();renderFuelStation();
+  });
+  fuelDialog.querySelector('[data-fuel-boat]').addEventListener('click',()=>{
+   if(boatFuel.snapshot().level>=100){fuelDialog.querySelector('[data-fuel-status]').textContent='Båtens tank är redan full!';return;}
+   const refund=payCoins(carFuel.COST);
+   if(!refund){fuelDialog.querySelector('[data-fuel-status]').textContent='Du behöver två spelmynt för att tanka båten.';return;}
+   boatFuel.fill();updateFuelHud();renderFuelStation();
   });
   fuelDialog.querySelector('[data-fuel-close]').addEventListener('click',()=>{fuelDialog.hidden=true;state.nearKey=null;updateMessage();});
   fuelDialog.addEventListener('click',e=>{if(e.target===fuelDialog){fuelDialog.hidden=true;state.nearKey=null;updateMessage();}});
@@ -613,12 +632,15 @@ function renderFuelStation(){
  rect(18,89,73,38,'#668652');rect(24,92,60,30,'#3c6348');
  rect(214,95,80,29,'#567848');rect(220,99,65,22,'#41644c');
  rect(114,138,86,5,'#2c4543');rect(133,73,43,6,'#dba75d');
- const amount=carFuel.snapshot().percent;
- rect(16,9,288,18,'#244b43');rect(18,11,Math.floor(284*amount/100),14,'#e2bd68');
- ctx.fillStyle='#fff5ce';ctx.font='bold 10px monospace';ctx.fillText('BILTANK '+amount+' %',23,22);
+ const amount=carFuel.snapshot().percent,boatAmount=boatFuel.snapshot().percent;
+ rect(16,7,288,12,'#244b43');rect(18,9,Math.floor(284*amount/100),8,'#e2bd68');
+ rect(16,20,288,12,'#244b43');rect(18,22,Math.floor(284*boatAmount/100),8,'#8ac5bf');
+ ctx.fillStyle='#fff5ce';ctx.font='bold 9px monospace';
+ ctx.fillText('BIL '+amount+' %',23,16);ctx.fillText('BÅT '+boatAmount+' %',23,29);
  const label=fuelDialog.querySelector('[data-fuel-status]');
- label.textContent='Biltank: '+amount+' %. Spelmynt tillgängliga: '+totalMoney()+'.';
+ label.textContent='Bil: '+amount+' % · Båt: '+boatAmount+' % · Spelmynt: '+totalMoney()+'.';
  fuelDialog.querySelector('[data-fuel-buy]').disabled=amount>=100;
+ fuelDialog.querySelector('[data-fuel-boat]').disabled=boatAmount>=100;
 }
 function nearestSite(){let choice=null,d=75;for(const s of sites){const dist=Math.hypot(state.x-s.x,state.y-s.y);if(dist<d){d=dist;choice=s}}return choice}
 function nearTroll(){return !state.inCar&&Math.hypot(state.x-troll.x,state.y-troll.y)<troll.interactionRadius;}
@@ -637,7 +659,7 @@ function visitTroll(){
 }
 
 function isBoatOpen(){return boatState.active}
-function updateBoatHud(){boatHearts.textContent='♥'.repeat(Math.max(0,boatState.hearts))||'–';boatCoinsLabel.textContent=boatState.collected+' / '+BOAT_COIN_TARGET;}
+function updateBoatHud(){boatHearts.textContent='♥'.repeat(Math.max(0,boatState.hearts))||'–';boatCoinsLabel.textContent=boatState.collected+' / '+BOAT_COIN_TARGET;updateFuelHud();}
 function boatPixelWater(x,y){
  if(!boatWaterData||x<1||y<1||x>=boatW-1||y>=boatH-1)return false;
  const pts=[[0,0],[8,0],[-8,0],[0,8],[0,-8],[6,6],[-6,6],[6,-6],[-6,-6]];
@@ -681,8 +703,8 @@ function spawnBoatCoins(){
  }
  updateBoatHud();
 }
-function resetBoatGame(){audio.setBoatSpeed(0);boatState.x=374;boatState.y=283;boatState.vx=0;boatState.vy=0;boatState.angle=0;boatState.hearts=3;boatState.flash=0;boatState.invul=0;boatState.done=false;boatState.message='';for(const k in boatKeys)boatKeys[k]=false;spawnBoatCoins();updateBoatHud();boatTip.textContent='Styr den vita motorbåten, samla mynt och undvik grunden.';}
-function openBoatGame(){if(!boatChartLoaded){boatTip.textContent='Laddar sjökartan…';}resetBoatGame();stop();audio.setScene('boat');boatState.active=true;boatOverlay.classList.add('show');boatOverlay.setAttribute('aria-hidden','false');boatTip.textContent='Kör ut från Kinda båtklubb och samla mynten utan att köra på grunden. Kartan är en fri 16-bitars-tolkning av Åsunden.';}
+function resetBoatGame(){audio.setBoatSpeed(0);boatState.x=374;boatState.y=283;boatState.vx=0;boatState.vy=0;boatState.angle=0;boatState.hearts=3;boatState.flash=0;boatState.invul=0;boatState.done=false;boatState.message='';for(const k in boatKeys)boatKeys[k]=false;spawnBoatCoins();updateBoatHud();boatTip.textContent=boatFuel.snapshot().level>0?'Styr båten, samla mynt och undvik grunden.':'Båttanken är tom! Gå till Bensinmacken på huvudkartan och tanka båten.';}
+function openBoatGame(){if(!boatChartLoaded){boatTip.textContent='Laddar sjökartan…';}resetBoatGame();stop();audio.setScene('boat');boatState.active=true;boatOverlay.classList.add('show');boatOverlay.setAttribute('aria-hidden','false');boatTip.textContent=boatFuel.snapshot().level>0?'Kör ut från Kinda båtklubb och samla mynten utan att köra på grunden. Kartan är en fri 16-bitars-tolkning av Åsunden.':'Båten har tom tank! Gå till Bensinmacken på kartan och köp båtbensin. Välj Tillbaka för att gå dit.';}
 function closeBoatGame(){boatState.active=false;audio.setBoatSpeed(0);audio.setScene('land');boatOverlay.classList.remove('show');boatOverlay.setAttribute('aria-hidden','true');for(const k in boatKeys)boatKeys[k]=false;}
 function boatCrash(){if(boatState.invul>0||boatState.done)return;audio.hit();audio.setBoatSpeed(0);boatState.hearts--;boatState.invul=1.1;boatState.flash=.7;boatState.vx=boatState.vy=0;boatState.x=374;boatState.y=283;updateBoatHud();if(boatState.hearts<=0){boatState.done=true;boatTip.textContent='Aj! Alla hjärtan är slut. Tryck på Spela om för att försöka igen.';}else boatTip.textContent='Aj! Du körde på ett grund och tappade ett hjärta.';}
 function updateBoat(dt){
@@ -690,6 +712,13 @@ function updateBoat(dt){
  if(boatState.flash>0)boatState.flash=Math.max(0,boatState.flash-dt);
  if(boatState.invul>0)boatState.invul=Math.max(0,boatState.invul-dt);
  if(boatState.done){audio.setBoatSpeed(0);return;}
+ if(boatFuel.snapshot().level<=0){
+  boatState.vx=0;boatState.vy=0;audio.setBoatSpeed(0);
+  if(Math.hypot(boatState.x-374,boatState.y-283)>2){boatState.x=374;boatState.y=283;}
+  boatTip.textContent='Bensinen är slut! Båten har bogserats till bryggan. Tanka på Bensinmacken.';
+  updateBoatHud();return;
+ }
+ const fuelOldX=boatState.x,fuelOldY=boatState.y;
  let dx=(+boatKeys.right)-(+boatKeys.left),dy=(+boatKeys.down)-(+boatKeys.up);
  const inputLength=Math.hypot(dx,dy);
  if(inputLength){dx/=inputLength;dy/=inputLength;}
@@ -713,6 +742,12 @@ function updateBoat(dt){
    }else{
       boatState.vx*=.12;boatState.vy*=.12;break;
    }
+ }
+ const traveled=Math.hypot(boatState.x-fuelOldX,boatState.y-fuelOldY);
+ if(traveled>0){boatFuel.consume(traveled);updateFuelHud();}
+ if(boatFuel.snapshot().level<=0){
+  boatState.x=374;boatState.y=283;boatState.vx=0;boatState.vy=0;
+  audio.setBoatSpeed(0);boatTip.textContent='Bensinen tog slut! Båten har bogserats till bryggan. Gå till Bensinmacken och tanka.';return;
  }
  audio.setBoatSpeed(Math.hypot(boatState.vx,boatState.vy)/155);
  if(boatHitsHazard(boatState.x,boatState.y))boatCrash();
@@ -942,7 +977,7 @@ function tick(now){
       }
       if(movement.moved){
         const distance=Math.hypot(movement.x-oldX,movement.y-oldY);
-        carFuel.consume(distance);
+        carFuel.consume(distance);updateFuelHud();
         if(carFuel.snapshot().level<=0)message.textContent='Bensinen är slut! Kliv ur bilen och gå till Bensinmacken.';
       }
       audio.setCarSpeed(movement.moved&&carFuel.snapshot().level>0?1:0);
