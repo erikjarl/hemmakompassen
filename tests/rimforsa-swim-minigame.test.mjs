@@ -20,3 +20,28 @@ test('swim boundaries and reset do not change the global game',()=>{
  assert.match(html,/RimforsaSwimMinigame.isOpen/);
  assert.match(html,/\.\/swim-minigame\.js\?v=1/);
 });
+
+test('sharks patrol and three separated collisions end swimming only',()=>{
+ const s=session();assert.equal(s.snapshot().hearts,3);
+ const firstX=s.snapshot().sharks[1].x;
+ const hits=[];for(let i=0;i<500&&!s.snapshot().gameOver;i++){
+  const p=s.snapshot(),shark=p.sharks[1];
+  const result=s.step(.05,{down:p.y<shark.y-2,up:p.y>shark.y+2,right:p.x<shark.x-3,left:p.x>shark.x+3});
+  if(result.damaged)hits.push(result.hearts);
+ }
+ assert.ok(s.snapshot().sharks[1].x!==firstX,'sharks must move');
+ assert.deepEqual(hits,[2,1,0]);
+ assert.equal(s.snapshot().gameOver,true);
+ const after=s.step(.05,{right:true});assert.equal(after.gained,0);
+ assert.equal(after.damaged,false);
+ assert.equal(s.reset().hearts,3);
+ assert.equal(s.snapshot().gameOver,false);
+});
+test('bad remains separate from land hearts and paints pixel sharks',()=>{
+ assert.match(script,/const sharkStarts=/);
+ assert.match(script,/invul=1\.4/);
+ assert.match(script,/if\(after\.damaged&&root\.RimforsaAudio\)/);
+ assert.match(script,/for\(const shark of s\.sharks\)/);
+ assert.match(script,/gameOver:finished/);
+ assert.match(html,/\.\/swim-minigame\.js\?v=2/);
+});
