@@ -133,7 +133,10 @@
   }
   function startScene(){
     if(!enabled||!ctx||hidden)return;
-    if(scene==='boat'){
+    if(scene==='swim'){
+      // Badet använder bara mjukt vågskvalp – inga måsar eller motorljud.
+      startWaves();
+    }else if(scene==='boat'){
       startWaves();startEngine();
       gullInterval=root.setInterval(gull,7200);
       gull();
@@ -174,7 +177,7 @@
     return enable();
   }
   function setScene(next){
-    const newScene=['boat','preschool'].includes(next)?next:'land';
+    const newScene=['boat','preschool','swim'].includes(next)?next:'land';
     if(newScene===scene)return;
     stopScene();scene=newScene;startScene();
   }
