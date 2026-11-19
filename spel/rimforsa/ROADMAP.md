@@ -15,7 +15,7 @@
 
 ## Öppna uppgifter – arbetskö (18)
 
-- [ ] **GRAF-02 – Prioritet hög, börja här: Bygg om trollminispelets grafik.** · [Detaljer](docs/TASK_DETAILS.md#graf-02) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.** _Pågående: träffpartiklar, förgrundsvegetation, förankrad trollskugga och träffanimation kodade 19 nov; visuell webbläsargranskning återstår._
+- [ ] **GRAF-02 – Prioritet hög, börja här: Bygg om trollminispelets grafik.** · [Detaljer](docs/TASK_DETAILS.md#graf-02) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.** _Pågående: gemensamma trollspriten har nu 45 extra pixelritade detaljer i hår, ögon, tänder, päls, hud och mossa (19 nov); förgrundsvegetation och träffanimation kodade. Slutlig visuell webbläsargranskning återstår._
 - [ ] **GRAF-01 – Prioritet hög: Harmonisering av alla scener.** · [Detaljer](docs/TASK_DETAILS.md#graf-01) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.**
 - [ ] **BUTIK-01 – Prioritet hög: ICA som riktigt inomhusminispel.** · [Detaljer](docs/TASK_DETAILS.md#butik-01) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.**
 - [ ] **BUTIK-02 – Prioritet hög: Pizzerian som riktigt inomhusminispel.** · [Detaljer](docs/TASK_DETAILS.md#butik-02) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.**
