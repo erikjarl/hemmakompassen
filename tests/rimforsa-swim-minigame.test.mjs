@@ -18,7 +18,7 @@ test('swim boundaries and reset do not change the global game',()=>{
  assert.match(html,/name:'Åsundabadet'/);
  assert.match(html,/RimforsaSwimMinigame.start/);
  assert.match(html,/RimforsaSwimMinigame.isOpen/);
- assert.match(html,/\.\/swim-minigame\.js\?v=1/);
+ assert.match(html,/\.\/swim-minigame\.js\?v=3/);
 });
 
 test('sharks patrol and three separated collisions end swimming only',()=>{
@@ -43,7 +43,7 @@ test('bad remains separate from land hearts and paints pixel sharks',()=>{
  assert.match(script,/if\(after\.damaged&&root\.RimforsaAudio\)/);
  assert.match(script,/for\(const shark of s\.sharks\)/);
  assert.match(script,/gameOver:finished/);
- assert.match(html,/\.\/swim-minigame\.js\?v=2/);
+ assert.match(html,/\.\/swim-minigame\.js\?v=3/);
 });
 
 test('waves are enabled only in swimming scene and stop on exit',()=>{
