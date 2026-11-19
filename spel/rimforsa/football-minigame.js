@@ -103,7 +103,7 @@ function kick(){
  const vx=player.dx||1,vy=player.dy||0,n=Math.hypot(vx,vy)||1;
  ball.vx=vx/n*290;ball.vy=vy/n*290;kicks++;
  status.textContent='Bra skott! Mål: '+goals+' · Skott: '+kicks;
- if(root.RimforsaAudio&&root.RimforsaAudio.slideLaunch)root.RimforsaAudio.slideLaunch();
+ if(root.RimforsaAudio&&root.RimforsaAudio.footballKick)root.RimforsaAudio.footballKick();
  return true;
 }
 function frame(time){
@@ -118,7 +118,7 @@ function frame(time){
  // Maja är målvakt och försöker följa bollens rörelse i målområdet.
  majaY=clamp(majaY+clamp(ball.y-majaY,-78*dt,78*dt),187,249);
  ball.x+=ball.vx*dt;ball.y+=ball.vy*dt;
- if(ball.vx>0&&ball.x>379&&ball.x<404&&Math.abs(ball.y-(majaY-10))<23){ball.x=378;ball.vx=-Math.max(125,Math.abs(ball.vx)*.68);ball.vy+=(ball.y-majaY)*2;status.textContent='Maja räddade! Försök igen. Mål: '+goals;}
+ if(ball.vx>0&&ball.x>379&&ball.x<404&&Math.abs(ball.y-(majaY-10))<23){ball.x=378;ball.vx=-Math.max(125,Math.abs(ball.vx)*.68);ball.vy+=(ball.y-majaY)*2;status.textContent='Maja räddade! Försök igen. Mål: '+goals;if(root.RimforsaAudio&&root.RimforsaAudio.footballSave)root.RimforsaAudio.footballSave();}
 
  const drag=Math.pow(.988,dt*60);ball.vx*=drag;ball.vy*=drag;
  if(ball.y<142){ball.y=142;ball.vy=Math.abs(ball.vy)*.58;}
@@ -126,7 +126,7 @@ function frame(time){
  if(ball.x<43){ball.x=43;ball.vx=Math.abs(ball.vx)*.58;}
  if(ball.x>425&&ball.y>165&&ball.y<251&&ball.vx>0){
   goals++;goalFlash=1.15;status.textContent='MÅL! Lage och Maja firar! '+goals+' mål på '+kicks+' skott.';
-  if(root.RimforsaAudio&&root.RimforsaAudio.victory)root.RimforsaAudio.victory();
+  if(root.RimforsaAudio&&root.RimforsaAudio.footballGoal)root.RimforsaAudio.footballGoal();
   ball.x=205;ball.y=205;ball.vx=ball.vy=0;player.x=115;player.y=215;
  }else if(ball.x>424){ball.x=424;ball.vx=-Math.abs(ball.vx)*.58;}
  goalFlash=Math.max(0,goalFlash-dt);
