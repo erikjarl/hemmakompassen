@@ -7,7 +7,7 @@ function boot(storage){const context={};vm.runInNewContext(script,context);retur
 function storage(){const map=new Map();return {getItem:k=>map.get(k)||null,setItem:(k,v)=>map.set(k,v),map};}
 test('objects are collected once, remain after reload, and are separate from coins',()=>{
  const s=storage(),bag=boot(s);
- assert.equal(bag.items().length,0);assert.equal(bag.total(),4);
+ assert.equal(bag.items().length,0);assert.equal(bag.total(),6);
  assert.equal(bag.collectAt('Hackelhallen').item.id,'fotboll');
  assert.equal(bag.collectAt('Hackelhallen'),null);
  assert.equal(boot(s).items()[0].id,'fotboll');
@@ -27,4 +27,14 @@ test('unavailable storage is safe and does not crash collecting',()=>{
 test('unexpected saved objects are rejected',()=>{
  const s=storage();s.setItem('lage-rimforsa-inventory-v1',JSON.stringify(['fotboll','invalid','fotboll',3]));
  const bag=boot(s);assert.deepEqual(Array.from(bag.items(),x=>x.id),['fotboll']);
+});
+
+test('glass can only be added through a purchase and persists in the bag',()=>{
+ const s=storage(),bag=boot(s);
+ assert.equal(bag.collectAt('ICA Melkers'),null,'visit alone never yields free ice cream');
+ assert.equal(bag.addPurchase('paronglass').added,true);
+ assert.equal(bag.addPurchase('paronglass').added,false);
+ assert.equal(bag.addPurchase('vaniljglass').added,true);
+ assert.equal(bag.addPurchase('nyckelring').added,false,'found objects cannot be bought');
+ assert.deepEqual(Array.from(boot(s).items(),x=>x.id),['paronglass','vaniljglass']);
 });
