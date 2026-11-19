@@ -3,24 +3,39 @@
 'use strict';
 const KEY='lage-rimforsa-farm-v1',GROW_MS=5*60*1000;
 function createFarm(storage,clock=()=>Date.now()){
- let plantedAt=null,harvested=0;
+ let plantedAt=null,harvested=0,sold=0,earned=0,spent=0;
  try{
   const saved=JSON.parse(storage?.getItem(KEY)||'null');
   if(saved&&typeof saved==='object'){
    if(Number.isFinite(saved.plantedAt)&&saved.plantedAt>=0&&saved.plantedAt<=clock()+60000)plantedAt=saved.plantedAt;
    if(Number.isSafeInteger(saved.harvested)&&saved.harvested>=0)harvested=saved.harvested;
+   if(Number.isSafeInteger(saved.sold)&&saved.sold>=0)sold=saved.sold;
+   if(Number.isSafeInteger(saved.earned)&&saved.earned>=0)earned=saved.earned;
+   if(Number.isSafeInteger(saved.spent)&&saved.spent>=0&&saved.spent<=earned)spent=saved.spent;
   }
  }catch{}
  function persist(){
-  try{storage?.setItem(KEY,JSON.stringify({plantedAt,harvested}));return true}catch{return false}
+  try{storage?.setItem(KEY,JSON.stringify({plantedAt,harvested,sold,earned,spent}));return true}catch{return false}
  }
  function snapshot(){
   const age=plantedAt===null?0:Math.max(0,clock()-plantedAt);
-  return {plantedAt,harvested,age,stage:plantedAt===null?0:age>=GROW_MS?4:Math.max(1,Math.ceil(age/(GROW_MS/3))),remaining:plantedAt===null?0:Math.max(0,GROW_MS-age),ready:plantedAt!==null&&age>=GROW_MS};
+  return {plantedAt,harvested,sold,earned,spent,balance:earned-spent,age,stage:plantedAt===null?0:age>=GROW_MS?4:Math.max(1,Math.ceil(age/(GROW_MS/3))),remaining:plantedAt===null?0:Math.max(0,GROW_MS-age),ready:plantedAt!==null&&age>=GROW_MS};
  }
  function plant(){if(plantedAt!==null)return false;plantedAt=clock();persist();return true}
  function harvest(){if(!snapshot().ready)return false;plantedAt=null;harvested+=3;persist();return true}
- return {snapshot,plant,harvest,key:KEY};
+ function sell(quantity=3){
+  if(!Number.isSafeInteger(quantity)||quantity<=0||harvested<quantity||earned>Number.MAX_SAFE_INTEGER-quantity*2)return {sold:false,...snapshot()};
+  harvested-=quantity;sold+=quantity;earned+=quantity*2;persist();return {sold:true,coins:quantity*2,...snapshot()};
+ }
+ function spendCoins(amount){
+  if(!Number.isSafeInteger(amount)||amount<=0||amount>earned-spent)return false;
+  spent+=amount;persist();return true;
+ }
+ function refundCoins(amount){
+  if(!Number.isSafeInteger(amount)||amount<=0||amount>spent)return false;
+  spent-=amount;persist();return true;
+ }
+ return {snapshot,plant,harvest,sell,spendCoins,refundCoins,key:KEY};
 }
 let overlay=null,canvas=null,ctx=null,info=null,plantButton=null,harvestButton=null,loop=null,previousFocus=null,returnToMap=null;
 let farm=createFarm((()=>{try{return root.localStorage}catch{return null}})());
@@ -64,7 +79,7 @@ function render(){
  else info.textContent='Potatisen växer! Färdig om '+m+':'+String(sec).padStart(2,'0')+'. Du kan lämna fältet under tiden.';
  plantButton.hidden=s.plantedAt!==null;
  harvestButton.hidden=!s.ready;
- overlay.querySelector('[data-farm-count]').textContent='Skördade potatisar: '+s.harvested;
+ overlay.querySelector('[data-farm-count]').textContent='Potatisar i förrådet: '+s.harvested;
 }
 function close(){
  if(!overlay||overlay.hidden)return;
@@ -99,5 +114,5 @@ function start({returnToMap:cb}={}){
  loop=root.setInterval(render,1000);
  plantButton.focus();return true;
 }
-root.RimforsaFarm={start,close,isOpen:()=>!!overlay&&!overlay.hidden,createFarm,snapshot:()=>farm.snapshot()};
+root.RimforsaFarm={start,close,isOpen:()=>!!overlay&&!overlay.hidden,createFarm,snapshot:()=>farm.snapshot(),sell:quantity=>farm.sell(quantity),spendCoins:amount=>farm.spendCoins(amount),refundCoins:amount=>farm.refundCoins(amount)};
 })(typeof window!=='undefined'?window:globalThis);
