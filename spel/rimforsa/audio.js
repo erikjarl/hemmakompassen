@@ -228,6 +228,26 @@
     osc.start(t);osc.stop(t+.41);
     osc.onended=()=>{osc.disconnect();filter.disconnect();g.disconnect();};
   }
+  // Korta originalsyntetiserade händelseljud: rutschkana och hajkollision.
+  // Respekterar ljudknappen och dold flik; inga inspelade filer behövs.
+  function slideLaunch(){
+    if(!enabled||!ctx||hidden)return;
+    const t=now()+.01;
+    [392,523.25,659.25].forEach((f,i)=>tone(f,t+i*.075,.19,.038,'triangle'));
+  }
+  function slideLand(){
+    if(!enabled||!ctx||hidden)return;
+    const t=now()+.01;
+    tone(262,t,.09,.044,'triangle');
+    tone(392,t+.085,.13,.048,'triangle');
+    tone(523.25,t+.17,.22,.04,'sine');
+  }
+  function sharkBump(){
+    if(!enabled||!ctx||hidden)return;
+    const t=now()+.01;
+    tone(185,t,.16,.06,'sawtooth');
+    tone(110,t+.11,.2,.047,'triangle');
+  }
   function setVisible(visible){
     if(!visible)stopSpeech();
     hidden=!visible;
@@ -275,5 +295,5 @@
     }catch(_){speechMusicVolume(volume);return false;}
   }
   function status(){return {enabled,available:!!AudioCtor,scene,hidden,playingMusic:musicInterval!==null,playingWaves:!!waves,playingEngine:!!engine,playingCarEngine:!!carEngine,carActive,dragonNearby};}
-  root.RimforsaAudio={enable,disable,toggle,setScene,setBoatSpeed,setCarActive,setCarSpeed,setDragonNearby,coin,hit,poop,victory,speak,stopSpeech,setVisible,status};
+  root.RimforsaAudio={enable,disable,toggle,setScene,setBoatSpeed,setCarActive,setCarSpeed,setDragonNearby,coin,hit,poop,victory,slideLaunch,slideLand,sharkBump,speak,stopSpeech,setVisible,status};
 })(window);
