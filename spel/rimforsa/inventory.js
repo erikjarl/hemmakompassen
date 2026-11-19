@@ -6,7 +6,9 @@
   {id:'fotboll',site:'Hackelhallen',name:'Fotboll',icon:'⚽'},
   {id:'kritor',site:'Förskolan Hackel',name:'Färgkritor',icon:'🖍️'},
   {id:'snacka',site:'Åsundabadet',name:'Snäcka',icon:'🐚'},
-  {id:'nyckelring',site:'Bensinmacken',name:'Nyckelring',icon:'🔑'}
+  {id:'nyckelring',site:'Bensinmacken',name:'Nyckelring',icon:'🔑'},
+  {id:'paronglass',site:'ICA Melkers',name:'Päronglass',icon:'🍐'},
+  {id:'vaniljglass',site:'ICA Melkers',name:'Vaniljglass',icon:'🍦'}
  ]);
  const known=new Map(ITEMS.map(item=>[item.id,item]));
  function createInventory(storage){
@@ -29,6 +31,12 @@
     const item=ITEMS.find(entry=>entry.site===site&&!ids.includes(entry.id));
     if(!item)return null;
     ids.push(item.id);return {item:{...item},saved:save()};
+   },
+   has:id=>ids.includes(id),
+   addPurchase(id){
+    if(!known.has(id)||!['paronglass','vaniljglass'].includes(id)||ids.includes(id))return {added:false,saved:false};
+    ids.push(id);
+    return {added:true,saved:save()};
    },
    clear(){ids=[];return save();},
    total:()=>ITEMS.length
