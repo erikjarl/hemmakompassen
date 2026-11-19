@@ -167,6 +167,7 @@
     }catch(e){enabled=false;return false;}
   }
   function disable(){
+    stopSpeech();
     if(!enabled)return;
     enabled=false;stopScene();
     if(master&&ctx)master.gain.setTargetAtTime(0,now(),.03);
@@ -177,6 +178,7 @@
     return enable();
   }
   function setScene(next){
+    stopSpeech();
     const newScene=['boat','preschool','swim'].includes(next)?next:'land';
     if(newScene===scene)return;
     stopScene();scene=newScene;startScene();
@@ -227,10 +229,33 @@
     osc.onended=()=>{osc.disconnect();filter.disconnect();g.disconnect();};
   }
   function setVisible(visible){
+    if(!visible)stopSpeech();
     hidden=!visible;
     stopScene();
     if(!hidden&&enabled){ensureContext();startScene();}
   }
+  // Webbläsarens talsyntes används bara efter ett klick på dialogen.
+  // Texten finns alltid kvar visuellt om svensk röst saknas.
+  function stopSpeech(){
+    if(root.speechSynthesis&&typeof root.speechSynthesis.cancel==='function'){
+      try{root.speechSynthesis.cancel();}catch(_){}
+    }
+  }
+  function speak(text){
+    if(!enabled||hidden||scene!=='land'||!root.speechSynthesis||!root.SpeechSynthesisUtterance)return false;
+    const words=String(text||'').trim();
+    if(!words)return false;
+    stopSpeech();
+    try{
+      const utterance=new root.SpeechSynthesisUtterance(words);
+      utterance.lang='sv-SE';utterance.rate=.87;utterance.pitch=1.1;utterance.volume=.9;
+      const voices=root.speechSynthesis.getVoices?root.speechSynthesis.getVoices():[];
+      const swedish=voices.find(v=>/^sv(?:-|_)/i.test(v.lang));
+      if(swedish)utterance.voice=swedish;
+      root.speechSynthesis.speak(utterance);
+      return true;
+    }catch(_){return false;}
+  }
   function status(){return {enabled,available:!!AudioCtor,scene,hidden,playingMusic:musicInterval!==null,playingWaves:!!waves,playingEngine:!!engine,playingCarEngine:!!carEngine,carActive,dragonNearby};}
-  root.RimforsaAudio={enable,disable,toggle,setScene,setBoatSpeed,setCarActive,setCarSpeed,setDragonNearby,coin,hit,poop,victory,setVisible,status};
+  root.RimforsaAudio={enable,disable,toggle,setScene,setBoatSpeed,setCarActive,setCarSpeed,setDragonNearby,coin,hit,poop,victory,speak,stopSpeech,setVisible,status};
 })(window);
