@@ -4,7 +4,7 @@
 **Spel:** `spel/rimforsa/index.html`  
 **Publicerad adress:** https://erikjarl.github.io/hemmakompassen/spel/rimforsa/  
 **Senast uppdaterad:** 2026-11-19  
-**Status:** ICA-glassbutik och pizzaköp hos Bella Donna är implementerade på main med gemensam myntplånbok och sparning i väskan. Pizzans funktionella tester är godkända på kodcommit 4f93b539, men slutlig Pages-/webbläsarverifiering för dokumentationscommiten återstår. Förskolan och badet samt andra önskemål återstår.
+**Status:** ICA, pizzeria och förskolans rutschkana finns i spelet med tester. Tidigare pizzaversion är bekräftad genom godkänd Pages-publicering, resurskontroll och fullständigt UI-test. Rutschkans senaste publicering och UI-test behöver slutverifieras. Barn på gården, förskoleljud och badet återstår.
 
 ## Stående instruktion – kommandot `jobb lage`
 
@@ -77,7 +77,7 @@ När användaren skriver **`jobb lage`**:
 - [x] **PIZ-01: Pizza.** Låt spelaren **köpa en pizzaslice med ananas på**, betald med insamlade pengar.
 
 ### Förskolan
-- [ ] **FÖR-01: Rutschkana.** Skapa ett rutschkane-minispel där Lage **åker nerför rutschkanan**. **Ju längre spelaren håller knappen nedtryckt, desto längre flyger Lage**.
+- [x] **FÖR-01: Rutschkana.** Skapa ett rutschkane-minispel där Lage **åker nerför rutschkanan**. **Ju längre spelaren håller knappen nedtryckt, desto längre flyger Lage**.
 - [ ] **FÖR-02: Andra barn.** Lägg till **andra barn** i förskolemiljön.
 - [ ] **FÖR-03: Utomhusljud.** Lägg till **barnambient ljud** i förskolans utomhusmiljö.
 
@@ -101,6 +101,8 @@ När användaren skriver **`jobb lage`**:
 - **Verifiering:** Lägg till tester för respektive uppgift, spela igenom huvudflödet och kontrollera samma publicerade URL. Redovisa separat om fysisk iPhone/Safari inte har testats.
 
 ## Arbetslogg
+- **2026-11-19 – Jobb lage / FÖR-01:** Skapade `spel/rimforsa/slide-minigame.js` som eget mobilanpassat rutschkanespel kopplat till den redan befintliga platsen **Förskolan Hackel**. Knappen **HÅLL INNE FÖR FART!** laddar upp kraft under högst 2,5 sekunder; när den släpps flyger Lage enligt en enkel gravitationsmodell. Längre knapptryck ger högre fart och betydligt längre flygsträcka. Egen Canvas-scen med pixelrutschkana, kraftmätare, flyganimation, landning, distans, rekord och omspel. Fungerar med pekknapp och tangentbordets mellanslag. Rutschkanan ändrar inte spelhjärtan eller skattjaktens mynt. Under spelet stoppas huvudkartans rörelse och karta återupptas med Tillbaka, Escape eller tryck utanför dialogen. Förskoleinteraktionen har företräde framför Oliver när Lage står nära själva förskolan så minispelsknappen inte göms. Nya kontraktstester i `tests/rimforsa-slide-minigame.test.mjs` täcker kort/lång laddning, maxkraft, landning, rekord, omspel och integration. **Verifiering vid loggning:** funktionella tester godkända på commit 95718cc4, kontroll av serverade Pages-filer godkänd; senaste fullständiga UI-test/Pages-publicering ännu pågick efter integrationen och NPC-justeringen. Faktisk iPhone/Safari ej testad. Nästa prioritet **FÖR-02** (egna barn på förskolegården).
+
 - **2026-11-19 – Jobb lage / PIZ-01:** Lagt till en mobilanpassad pizzeriadialog hos **Bella Donna** på kartans befintliga koordinat. Lage kan köpa **en pizzaslice med ananas för fem spelmynt**; summan dras från samma saldo som ICA-glassen utan att minska antalet mynt som räknas mot skattjaktsmålet. Pizzan lagras i väskan som föremålet `ananaspizza`, men kan inte plockas upp gratis genom enbart platsbesök; återköp av redan ägd pizza blockeras. Dialogen kan stängas med knapp, Escape eller tryck utanför, och hindrar huvudkartans rörelse under köp. Väsktotalen är nu sju objekt och cache-versionen för inventariemodulen har höjts. Nya regressionstester för pizza, saldobetalning, sparning och platsintegration. **Verifierat vid loggskrivningen:** GitHub Actions funktionella tester godkända på kodcommit 4f93b539, kontroll av serverade Pages-resurser godkänd och Pages-bygget pågick. Fullständig Chromium-smoketest och fysisk iPhone/Safari ännu inte bekräftade. Nästa ordinarie minispel: **FÖR-01**.
 
 - **2026-11-19 – Jobb lage / ICA-01:** ICA Melkers har fått en mobilanpassad butik med ICA-personal, **päronglass för 3 spelmynt** och **vaniljglass för 4 spelmynt**. Myntmotorn skiljer insamlad mängd från disponibelt saldo, så köp påverkar inte grattis när samtliga kartmynt hittats. Köpta glassar sparas i väskan och kan inte plockas upp gratis vid ett ICA-besök. Dubbelköp stoppas om samma glass redan ägs. Pengarna återställs vid ny spelomgång, men redan sparade föremål stannar i väskan tills den töms. Regressionstester har lagts till. Även alla nya uppgifter från inkorgssektionen har sorterats och behållits som öppna punkter. **Verifieringsnivå:** committat till main; CI/Pages-kontrollen för senaste commit pågick vid dokumentationen, fysisk mobil Safari är inte verifierad. Nästa ordinarie minispel: **PIZ-01**.
