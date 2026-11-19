@@ -8,7 +8,8 @@
   {id:'snacka',site:'Åsundabadet',name:'Snäcka',icon:'🐚'},
   {id:'nyckelring',site:'Bensinmacken',name:'Nyckelring',icon:'🔑'},
   {id:'paronglass',site:'ICA Melkers',name:'Päronglass',icon:'🍐'},
-  {id:'vaniljglass',site:'ICA Melkers',name:'Vaniljglass',icon:'🍦'}
+  {id:'vaniljglass',site:'ICA Melkers',name:'Vaniljglass',icon:'🍦'},
+  {id:'ananaspizza',site:'Bella Donna',name:'Pizzaslice med ananas',icon:'🍕'}
  ]);
  const known=new Map(ITEMS.map(item=>[item.id,item]));
  function createInventory(storage){
@@ -26,15 +27,15 @@
   return {
    items:()=>ids.map(id=>({...known.get(id)})),
    available:()=>available,
-   findAt:site=>ITEMS.find(item=>item.site===site&&!['paronglass','vaniljglass'].includes(item.id)&&!ids.includes(item.id))||null,
+   findAt:site=>ITEMS.find(item=>item.site===site&&!['paronglass','vaniljglass','ananaspizza'].includes(item.id)&&!ids.includes(item.id))||null,
    collectAt(site){
-    const item=ITEMS.find(entry=>entry.site===site&&!['paronglass','vaniljglass'].includes(entry.id)&&!ids.includes(entry.id));
+    const item=ITEMS.find(entry=>entry.site===site&&!['paronglass','vaniljglass','ananaspizza'].includes(entry.id)&&!ids.includes(entry.id));
     if(!item)return null;
     ids.push(item.id);return {item:{...item},saved:save()};
    },
    has:id=>ids.includes(id),
    addPurchase(id){
-    if(!known.has(id)||!['paronglass','vaniljglass'].includes(id)||ids.includes(id))return {added:false,saved:false};
+    if(!known.has(id)||!['paronglass','vaniljglass','ananaspizza'].includes(id)||ids.includes(id))return {added:false,saved:false};
     ids.push(id);
     return {added:true,saved:save()};
    },
