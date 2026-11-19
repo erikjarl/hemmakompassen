@@ -163,3 +163,10 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 - `audio.js`: `AudioContext.onstatechange` meddelar huvudvyn så ljudknappen får rätt status när Safari asynkront återupptagit ljud; `enable()` återställer mastervolymen efter tidigare avstängning.
 - `index.html`: kompletterat gesthantering med passiv `touchstart` för äldre iOS-varianter och lyssnare för AudioContext-statushändelse. Användargesten respekteras fortsatt.
 - Kontroll: genomgång av eventflöden och bevarade ljudknappsvillkor; ingen faktisk iPhone/Safari-lyssning eller driftverifiering utförd. LJUD-02 är därför fortsatt öppen. Nästa huvuduppgift LJUD-03.
+
+
+## 2026-11-20 · Jobb Lage LJUD-03
+
+- Lade till fyra korta, originalsyntetiserade effekter i `audio.js`: fotbollsspark, målvaktsräddning, mål och komplett båtmyntsamling. Samtliga respekterar på/av, flikstatus och `AudioContext.state === 'running'`.
+- Anslöt ljuden till `football-minigame.js` respektive båtens segergren i `index.html`; versionsnummer på båda berörda skript uppdaterade för att motverka cache av äldre JavaScript.
+- Filer och anropsställen kontrollerade i kod; ingen faktisk webbläsaravlyssning eller mobilgenomspelning. LJUD-03 fortsatt öppen; nästa rotation LJUD-04 eller efterföljande praktiskt genomförbar uppgift.
