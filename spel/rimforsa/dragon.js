@@ -12,7 +12,7 @@
    y=home.y+Math.sin(t*.61)*53;
    near=Math.hypot(x-playerX,y-playerY)<proximity;
    shotTimer-=dt;
-   if(shotTimer<=0){shotTimer=2.7;const aimAtHelicopter=!!helicopter&&shotId%3===1;const target=aimAtHelicopter?helicopter:{x:playerX,y:playerY};const distance=Math.hypot(target.x-x,target.y-y);if(distance>35&&distance<(aimAtHelicopter?780:430)){const speed=165;shots.push({id:'dragon-fire-'+(++shotId),x:x+28,y:y-7,vx:(target.x-x)/distance*speed,vy:(target.y-y)/distance*speed,life:5});}}
+   if(shotTimer<=0){shotTimer=2.7;const aimAtHelicopter=!!helicopter&&(shotId%3===0||Math.hypot(playerX-x,playerY-y)>430);const target=aimAtHelicopter?helicopter:{x:playerX,y:playerY};const distance=Math.hypot(target.x-x,target.y-y);if(distance>35&&distance<(aimAtHelicopter?780:430)){const speed=165;shots.push({id:'dragon-fire-'+(++shotId),x:x+28,y:y-7,vx:(target.x-x)/distance*speed,vy:(target.y-y)/distance*speed,life:5});}}
    for(let k=shots.length-1;k>=0;k--){const s=shots[k];s.x+=s.vx*dt;s.y+=s.vy*dt;s.life-=dt;if(s.life<=0||s.x<0||s.y<0||s.x>1448||s.y>1086)shots.splice(k,1);}
    return near;
   }
@@ -22,7 +22,7 @@
   function snapshot(){return {x,y,near,breathing:Math.sin(t*2.25)>.28,proximity};}
   function draw(ctx,camX,camY,w,h){
    const sx=Math.round(x-camX+w/2),sy=Math.round(y-camY+h/2);
-   if(sx< -100||sy< -100||sx>w+120||sy>h+100)return;
+   if(!(sx< -100||sy< -100||sx>w+120||sy>h+100)){
    ctx.save();ctx.translate(sx,sy+Math.round(Math.sin(t*4)*4));ctx.imageSmoothingEnabled=false;
    // Pixelformer med heltalspunkter och kantig siluett i 16-bitarsstil.
    const poly=(points,color)=>{ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(points[0],points[1]);for(let i=2;i<points.length;i+=2)ctx.lineTo(points[i],points[i+1]);ctx.closePath();ctx.fill();};
@@ -53,6 +53,7 @@
     for(let i=0;i<3;i++){ctx.fillStyle=i%2?'#ffd968':'#f5792d';ctx.fillRect(Math.round(51+i*11+Math.sin(t*11+i)*4),-12+i*4,4,4);}
    }
    ctx.restore();
+   }
    for(const shot of shots){const fx=Math.round(shot.x-camX+w/2),fy=Math.round(shot.y-camY+h/2);ctx.fillStyle='#762818';ctx.fillRect(fx-9,fy-7,17,14);ctx.fillStyle='#ed5a22';ctx.fillRect(fx-8,fy-6,15,11);ctx.fillStyle='#ffbf47';ctx.fillRect(fx-5,fy-5,10,8);ctx.fillStyle='#fff0a0';ctx.fillRect(fx-2,fy-3,5,4);ctx.fillStyle='#fa7929';ctx.fillRect(fx-13,fy-2,5,4);}
   }
   return {update,draw,snapshot,hazards,consume,strikeObject,home};
