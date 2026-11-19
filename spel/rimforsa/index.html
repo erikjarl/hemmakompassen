@@ -422,7 +422,13 @@ boatChart.addEventListener('load',()=>{
 boatChart.addEventListener('error',()=>{boatTip.textContent='Kunde inte ladda båtkartan. Ladda om sidan.';});
 for(const [image,label] of [[tiles,'kartan'],[maskImage,'gångbarhetskartan']])image.addEventListener('error',()=>{message.textContent='Kunde inte ladda '+label+'. Försök uppdatera sidan.'});
 function freePoint(x,y){if(!collision||x<8||y<8||x>=W-8||y>=H-8)return false;const px=Math.floor(x*maskW/W),py=Math.floor(y*maskH/H);const i=(py*maskW+px)*4;return collision[i]>200}
-function canStand(x,y){return freePoint(x,y+1)&&freePoint(x-5,y-3)&&freePoint(x+5,y-3)&&freePoint(x,y-8)}
+// Keep Lage's position on the original land mask, but allow his feet to use more
+// of each narrow path. Only the invisible hitbox is reduced; water, buildings,
+// stones and other masked-out terrain still block movement.
+function canStand(x,y){
+ return freePoint(x,y+1)&&freePoint(x,y-2)&&
+        freePoint(x-2,y-2)&&freePoint(x+2,y-2)&&freePoint(x,y-4);
+}
 // A distance-to-wall field is generated once from the existing walkability mask.
 // Its gradient gently guides manual input along road edges WITHOUT making houses, water or forest walkable.
 function buildEdgeDistance(){
@@ -440,7 +446,7 @@ function buildEdgeDistance(){
 }
 function edgeClearance(x,y){
  if(!edgeDistance)return 0;
- let d=1e5;const pts=[[0,1],[-5,-3],[5,-3],[0,-8]];
+ let d=1e5;const pts=[[0,1],[0,-2],[-2,-2],[2,-2],[0,-4]];
  for(const [ox,oy] of pts){const px=Math.floor((x+ox)*maskW/W),py=Math.floor((y+oy)*maskH/H);
    if(px<0||py<0||px>=maskW||py>=maskH)return 0;
    d=Math.min(d,edgeDistance[py*maskW+px]);
