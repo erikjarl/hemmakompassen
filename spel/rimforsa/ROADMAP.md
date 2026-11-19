@@ -19,7 +19,7 @@
 
 ## Öppna uppgifter – arbetskö (11)
 
-- [ ] **GRAF-02 – Prioritet hög, börja här: Bygg om trollminispelets grafik.** · [Detaljer](docs/TASK_DETAILS.md#graf-02) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.** _Pågående: gemensamma trollspriten har 45 extra pixelritade detaljer; förgrundsvegetation och träffanimation finns. 19 nov: skogsscenen kompletterad med pixelritade svampar, mossig stubbe och skuggade stenar; kastmekaniken orörd. Slutlig visuell webbläsargranskning återstår._
+- [ ] **GRAF-02 – Prioritet hög, börja här: Bygg om trollminispelets grafik.** · [Detaljer](docs/TASK_DETAILS.md#graf-02) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.** _Pågående: gemensamma trollspriten, skog, vegetation och träffanimation finns. 19 nov: Lage visas nu med huvudkartans ansikte och hår framifrån, en pixelerad kaströrelse tillkommer och trollets blink-/träffeffekter riktas mot rätt ögonposition. Kodgranskat; faktisk visuell genomspelning på mobil och dator återstår, därför fortsatt öppen._
 - [ ] **GRAF-01 – Prioritet hög: Harmonisering av alla scener.** · [Detaljer](docs/TASK_DETAILS.md#graf-01) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.** _19 nov: rutschkanans tidigare förenklade Lage-figur ersatt i kod med samma spritesheet som huvudkartan; visuell webbläsarkontroll återstår, och fler scener behöver harmoniseras._
 - [ ] **MINI-01 – Stående kontroll av framtida minispel.** · [Detaljer](docs/TASK_DETAILS.md#mini-01) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.**
 - [ ] **FORDON-02 – Riktningsanpassad grafik för bil och båt.** · [Detaljer](docs/TASK_DETAILS.md#fordon-02) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.**
