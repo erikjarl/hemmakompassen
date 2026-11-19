@@ -69,10 +69,55 @@ function render(){
  if(!session||!ctx)return;
  const s=session.snapshot(),w=canvas.width,h=canvas.height;
  ctx.imageSmoothingEnabled=false;ctx.clearRect(0,0,w,h);
- ctx.fillStyle='#8cc8e8';ctx.fillRect(0,0,w,h);
- ctx.fillStyle='#ffffd6';ctx.fillRect(394,22,25,25);
+ // Flera skarpa 16-bitarslager: avlägsen skog, gårdsstaket och gräs i samma
+ // jordgröna palett som huvudkartan. Alla detaljer är ritade direkt i pixlar.
+ ctx.fillStyle='#91c9df';ctx.fillRect(0,0,w,h);
+ ctx.fillStyle='#b5d8d6';ctx.fillRect(0,108,w,38);
+ // Mjuka moln byggda av rektangulära pixelsteg, utan utjämning.
+ for(const [cx,cy] of [[30,24],[210,39],[348,17]]){
+  ctx.fillStyle='#d8e9df';ctx.fillRect(cx,cy+10,64,12);
+  ctx.fillStyle='#f8f0d6';ctx.fillRect(cx+8,cy+3,40,15);
+  ctx.fillRect(cx+17,cy-2,22,11);
+  ctx.fillStyle='#fff6df';ctx.fillRect(cx+12,cy+3,33,5);
+ }
+ // Träd i tre avståndsskikt: stammar, skuggade kronor och ljusfläckar.
+ for(let n=0;n<14;n++){
+  const tx=n*39-17,base=160+(n%3)*5;
+  ctx.fillStyle='#315f48';ctx.fillRect(tx+11,base-39,9,48);
+  ctx.fillStyle='#2b644a';ctx.fillRect(tx-8,base-38,49,18);
+  ctx.fillStyle='#397650';ctx.fillRect(tx-4,base-53,40,22);
+  ctx.fillStyle='#558b59';ctx.fillRect(tx+3,base-64,27,20);
+  ctx.fillStyle='#8cae69';ctx.fillRect(tx+8,base-60,13,5);
+  ctx.fillStyle='#274b3d';ctx.fillRect(tx-9,base-23,52,8);
+ }
+ ctx.fillStyle='#406f4c';ctx.fillRect(0,171,w,25);
+ // Förskolegårdens staket, med synlig träådring och stolpskuggor.
+ for(let n=0;n<20;n++){
+  const fx=n*26-5;
+  ctx.fillStyle='#665139';ctx.fillRect(fx+4,166,8,32);
+  ctx.fillStyle='#be9c66';ctx.fillRect(fx+5,168,5,25);
+  ctx.fillStyle='#d8b77c';ctx.fillRect(fx+6,168,2,18);
+ }
+ ctx.fillStyle='#8c734d';ctx.fillRect(0,178,w,7);ctx.fillRect(0,190,w,6);
+ ctx.fillStyle='#d0ab6e';ctx.fillRect(0,179,w,3);ctx.fillRect(0,190,w,3);
  ctx.fillStyle='#669954';ctx.fillRect(0,196,w,74);
- for(let n=0;n<18;n++){ctx.fillStyle=n%2?'#4f8d49':'#79a94e';ctx.fillRect(n*32,200+(n%3)*8,27,6);}
+ ctx.fillStyle='#52894c';ctx.fillRect(0,221,w,49);
+ ctx.fillStyle='#76a45d';ctx.fillRect(0,201,w,12);
+ for(let n=0;n<49;n++){
+  const gx=(n*73+19)%w,gy=202+(n*31)%66;
+  ctx.fillStyle=n%3===0?'#416e42':'#8fb769';
+  ctx.fillRect(gx,gy,7,3);
+  ctx.fillRect(gx+2,gy-5,3,7);
+  if(n%6===0){
+   ctx.fillStyle='#f2d695';ctx.fillRect(gx+8,gy-6,4,4);
+   ctx.fillStyle='#dd9981';ctx.fillRect(gx+10,gy-9,4,4);
+  }
+ }
+ // Pixelritad sand runt rutschkanans landningszon.
+ ctx.fillStyle='#b79c67';ctx.fillRect(58,198,165,15);
+ ctx.fillStyle='#dbbe81';ctx.fillRect(64,200,152,9);
+ for(let n=0;n<18;n++){ctx.fillStyle=n%2?'#a78b5d':'#f0d59c';ctx.fillRect(69+n*8,204+(n%3)*2,4,2);}
+
  // Förskolekompisar i bakgrunden: originalritade pixelbarn, utan kollisioner.
  // Figurerna är statiska så att den laddade flygrörelsen förblir tydlig.
  function drawPreschoolFriend(cx,ground,shirt,hair,skin,pose){
