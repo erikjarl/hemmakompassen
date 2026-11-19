@@ -85,7 +85,7 @@ function render(){
  ctx.fillStyle='#243e32';ctx.fillRect(18,19,154,21);ctx.fillStyle='#e4c992';ctx.fillRect(22,23,146,13);
  ctx.fillStyle='#e19a38';ctx.fillRect(22,23,146*s.charge/s.maxCharge,13);
  ctx.fillStyle='#26382a';ctx.font='bold 13px system-ui';ctx.fillText('FART',18,15);
- button.disabled=s.state==='flying'||s.state==='charging';
+ button.disabled=s.state==='flying';
  if(s.state==='ready')status.textContent='Ställ dig i rutschkanan och håll inne knappen!';
  else if(s.state==='charging')status.textContent='Tar sats… '+Math.round(s.charge/s.maxCharge*100)+' %!';
  else if(s.state==='flying')status.textContent='Wiiii! Lage flyger!';
