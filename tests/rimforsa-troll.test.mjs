@@ -9,8 +9,8 @@ test('Trollet är en originalritad transparent 16-bitars pixel-sprite i karta oc
  assert.match(sprite,/shape-rendering="crispEdges"/);
  assert.ok((sprite.match(/<rect /g)||[]).length>=90,'Trollet ska vara detaljritat i pixelblock');
  assert.doesNotMatch(sprite,/<image|data:image|<foreignObject/i,'inga inklistrade eller externa bilder');
- assert.match(page,/trollSprite\\.src='\\.\\/troll-pixel\\.svg\\?v=1'/);
- assert.match(page,/ctx\\.drawImage\\(trollSprite,sx-28,sy-92,56,92\\)/);
+ assert.match(page,/trollSprite\.src='\.\/troll-pixel\.svg\?v=1'/);
+ assert.match(page,/ctx\.drawImage\(trollSprite,sx-28,sy-92,56,92\)/);
 });
 
 test('Trollet står vid stenen nordväst om rondellen och finns på minikartan',()=>{
