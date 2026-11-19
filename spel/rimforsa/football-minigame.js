@@ -2,10 +2,11 @@
    Originalritad SNES-inspirerad miljö. Egen temporär poäng, oförändrad huvudplånbok. */
 (function(root){
 'use strict';
-let overlay=null,canvas=null,ctx=null,status=null,previousFocus=null,returnToMap=null,raf=0,last=0;
+let overlay=null,canvas=null,ctx=null,status=null,previousFocus=null,returnToMap=null,onGoalCoin=null,raf=0,last=0;
 const W=480,H=300,keys={up:false,down:false,left:false,right:false};
 const player={x:115,y:215,dx:1,dy:0},ball={x:205,y:170,vx:0,vy:0};
 let goals=0,kicks=0,goalFlash=0,majaY=206,lageImage=null;
+const MAX_GOAL_COINS=3;
 const clamp=(a,l,h)=>Math.max(l,Math.min(h,a));
 function resetPositions(){player.x=115;player.y=215;player.dx=1;player.dy=0;ball.x=205;ball.y=170;ball.vx=ball.vy=0;majaY=206;}
 function clearKeys(){Object.keys(keys).forEach(k=>keys[k]=false);}
@@ -17,7 +18,7 @@ function install(){
  overlay=root.document.createElement('div');
  overlay.className='football-overlay';overlay.hidden=true;
  overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','Fotboll i Hackelhallen');
- overlay.innerHTML=`<div class="football-panel"><h2>⚽ Hackelhallen – spela med Maja</h2><p>Styr Lage till bollen och skjut mot målet till höger! Maja står i mål och försöker rädda dina skott.</p><canvas width="480" height="300" aria-label="Detaljerad pixelritad fotbollshall med Lage, Maja, boll och mål"></canvas><p data-status role="status" aria-live="polite">Mål: 0 · Skott: 0</p><div class="football-controls"><div class="football-pad" aria-label="Styr Lage"><button data-dir="up" aria-label="Gå upp">▲</button><button data-dir="left" aria-label="Gå vänster">◀</button><button data-dir="down" aria-label="Gå ned">▼</button><button data-dir="right" aria-label="Gå höger">▶</button></div><button type="button" data-kick>SKJUT ⚽</button><button type="button" data-reset>Spela om ↺</button><button type="button" data-close>Tillbaka ✕</button></div><p>Mobil: styr med pilarna och tryck Skjut nära bollen. Dator: pilar/WASD och mellanslag.</p></div>`;
+ overlay.innerHTML=`<div class="football-panel"><h2>⚽ Hackelhallen – spela med Maja</h2><p>Styr Lage till bollen och skjut mot målet till höger! Maja står i mål och försöker rädda dina skott.</p><canvas width="480" height="300" aria-label="Detaljerad pixelritad fotbollshall med Lage, Maja, boll och mål"></canvas><p data-status role="status" aria-live="polite">Mål: 0 · Skott: 0</p><div class="football-controls"><div class="football-pad" aria-label="Styr Lage"><button data-dir="up" aria-label="Gå upp">▲</button><button data-dir="left" aria-label="Gå vänster">◀</button><button data-dir="down" aria-label="Gå ned">▼</button><button data-dir="right" aria-label="Gå höger">▶</button></div><button type="button" data-kick>SKJUT ⚽</button><button type="button" data-reset>Spela om ↺</button><button type="button" data-close>Tillbaka ✕</button></div><p>De första tre målen kan ge ett mynt var till huvudkartans plånbok. Varje målbonus kan bara fås en gång per skattjakt.</p><p>Mobil: styr med pilarna och tryck Skjut nära bollen. Dator: pilar/WASD och mellanslag.</p></div>`;
  root.document.body.append(overlay);canvas=overlay.querySelector('canvas');ctx=canvas.getContext('2d');status=overlay.querySelector('[data-status]');
  lageImage=new root.Image();lageImage.src='./lage-sprites.png';lageImage.onload=()=>{if(!overlay.hidden)render();};
  for(const button of overlay.querySelectorAll('[data-dir]')){
@@ -125,7 +126,9 @@ function frame(time){
  if(ball.y>265){ball.y=265;ball.vy=-Math.abs(ball.vy)*.58;}
  if(ball.x<43){ball.x=43;ball.vx=Math.abs(ball.vx)*.58;}
  if(ball.x>425&&ball.y>165&&ball.y<251&&ball.vx>0){
-  goals++;goalFlash=1.15;status.textContent='MÅL! Lage och Maja firar! '+goals+' mål på '+kicks+' skott.';
+  goals++;goalFlash=1.15;
+  const earned=goals<=MAX_GOAL_COINS&&typeof onGoalCoin==='function'&&onGoalCoin(goals-1)===true;
+  status.textContent='MÅL! Lage och Maja firar! '+goals+' mål på '+kicks+' skott.'+(earned?' +1 mynt till huvudkartan!':goals<=MAX_GOAL_COINS?' Målbonusen är redan hämtad.':' Alla tre målbonusar är utdelade.');
   if(root.RimforsaAudio&&root.RimforsaAudio.footballGoal)root.RimforsaAudio.footballGoal();
   ball.x=205;ball.y=205;ball.vx=ball.vy=0;player.x=115;player.y=215;
  }else if(ball.x>424){ball.x=424;ball.vx=-Math.abs(ball.vx)*.58;}
@@ -135,7 +138,7 @@ function frame(time){
 function start(options){
  if(!options||typeof options.returnToMap!=='function')return false;
  install();if(!overlay.hidden)close();
- previousFocus=root.document.activeElement;returnToMap=options.returnToMap;
+ previousFocus=root.document.activeElement;returnToMap=options.returnToMap;onGoalCoin=typeof options.onGoalCoin==='function'?options.onGoalCoin:null;
  clearKeys();resetPositions();goals=kicks=0;goalFlash=0;status.textContent='Mål: 0 · Skott: 0';
  overlay.hidden=false;last=0;
  if(root.RimforsaAudio&&root.RimforsaAudio.setScene)root.RimforsaAudio.setScene('preschool');
@@ -145,7 +148,7 @@ function close(){
  if(!overlay||overlay.hidden)return;
  overlay.hidden=true;root.cancelAnimationFrame(raf);clearKeys();
  if(root.RimforsaAudio&&root.RimforsaAudio.setScene)root.RimforsaAudio.setScene('land');
- const cb=returnToMap;returnToMap=null;if(typeof cb==='function')cb();
+ const cb=returnToMap;returnToMap=null;onGoalCoin=null;if(typeof cb==='function')cb();
  if(previousFocus&&previousFocus.isConnected)previousFocus.focus();
 }
 root.RimforsaFootball={start,close,isOpen:()=>!!overlay&&!overlay.hidden};
