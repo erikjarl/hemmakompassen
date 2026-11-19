@@ -4,6 +4,10 @@
 **Publicerad adress:** https://erikjarl.github.io/hemmakompassen/spel/rimforsa/  
 **Omstrukturerad:** 2026-11-19 · **Källa för uppgiftsstatus och arbetsordning:** denna fil.
 
+## Obligatorisk avbockning – vid VARJE `jobb lage`
+
+**GÅ IGENOM ÖPPNA PUNKTER OCH KRYSSA AV ALLT SOM REDAN ÄR FÄRDIGT.** Detta gäller oavsett om arbetet utfördes nu eller under ett tidigare pass. Kontrollera befintlig implementation mot uppgiftens acceptansvillkor **innan** nästa arbete väljs och kontrollera igen **efter** passet. När en uppgift är helt genomförd och tillräckligt verifierad: byt `[ ]` till `[x]`, flytta raden till **Tidigare avbockade uppgifter** och uppdatera antalen i rubrikerna. Låt inte färdiga punkter ligga kvar öppna av slentrian. Verifiering ska vara relevant och proportionerlig; ett omfattande CI-pass eller fysisk Safari behövs inte automatiskt för varje isolerad uppgift, men om uppgiften kräver sådan kontroll får den inte påstås vara slutförd utan den. Om en del återstår: behåll `[ ]` och ange konkret **vad** som saknas i stället för att bara skriva ”verifiering återstår”. Skilj separata framtida grafikförbättringar från redan färdiga funktionskrav, utan att förbigå grafikkrav som ingår i själva uppgiften. `ROADMAP.md` är enda källa till uppgiftskryss och status.
+
 ## Snabb rutin för `jobb lage`
 
 1. Läs [AGENTS.md](AGENTS.md) och **denna korta kö**. Välj första genomförbara öppna uppgift; respektera beroenden och blockerande fel. `GRAF-02` är uttryckligen märkt **börja här**.
