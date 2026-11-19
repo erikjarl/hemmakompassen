@@ -1,5 +1,7 @@
 # Lage i Rimforsa – historisk arbetslogg
 
+- **2026-11-19 – Jobb lage / LJUD-04:** Den befintliga originalsyntetiserade `poop()`-effekten i `audio.js` har fått fallande baston med ojämna pulser och ett separat lågpassfiltrerat bruslager för luftpuffar. Ljudet är ca 0,45 s och respekterar befintlig ljudknapp/dold flik. Trollspelets kod och grafik ändrades inte. `index.html` pekar på `audio.js?v=11`. GitHub bekräftade kod- och roadmapcommits; LJUD-04 kvarstår öppen tills faktisk avlyssning/volymbedömning genomförts. Nästa huvuduppgift KARTA-01. Pages/Safari ej verifierat.
+
 - **2026-11-19 – Jobb lage / LJUD-03:** Lade till tre nya originalsyntetiserade spelhändelseljud i `audio.js`: rutschkanans avstamp (`slideLaunch`), landning (`slideLand`) och hajkollision (`sharkBump`). Kopplade händelser i `slide-minigame.js` och `swim-minigame.js` och höjde cacheversioner i `index.html`. GitHub bekräftade ändringarna och roadmapens rotationsfält har flyttats till LJUD-04. Inte verifierat genom avlyssning, faktisk Safari/webbläsare eller GitHub Pages; LJUD-03 kvarstår öppen.
 
 **Arkiv:** Här ligger de tidigare utvecklingsnoteringarna, med deras ursprungliga ordalydelse och eventuella dåtida verifieringsstatus. **Detta är inte en arbetskö.** Läs bara relevanta datum eller uppgifts-ID:n när du behöver historik. Arbetskön och dess status finns i [ROADMAP.md](../ROADMAP.md).
