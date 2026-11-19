@@ -114,7 +114,7 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
 <script src="./car.js?v=2"></script>
 <script src="./npc.js?v=1"></script>
 <script src="./dragon.js?v=1"></script>
-<script src="./troll-minigame.js?v=2"></script>
+<script src="./troll-minigame.js?v=3"></script>
 <script src="./slide-minigame.js?v=2"></script>
 <script src="./swim-minigame.js?v=3"></script>
 <script src="./ica-scene.js?v=2"></script>
@@ -144,8 +144,8 @@ document.addEventListener('visibilitychange',()=>audio.setVisible(!document.hidd
 showAudioState();
 const boatChart=new Image(); boatChart.src='./boat-minigame-map.webp?v=9';
 const boatSprite=new Image(); boatSprite.src='./lage-motorboat.png?v=9';
-// Trollet är utskuret ur den av användaren godkända bilden, med transparent bakgrund.
-const trollSprite=new Image(); trollSprite.src='./troll-sprite.png?v=1';
+// Originalritad transparent 16-bitars pixelgrafik; samma sprite används i trollminispelet.
+const trollSprite=new Image(); trollSprite.src='./troll-pixel.svg?v=1';
 let boatChartLoaded=false,boatWaterData=null,boatW=1122,boatH=1402;
 
 const tiles=new Image(), maskImage=new Image(), sprite=new Image();
@@ -157,7 +157,7 @@ const carDrive=window.RimforsaCar;
 const carPos={x:carDrive.HOME.x,y:carDrive.HOME.y};
 // Strax nordväst om rondellen, ovanpå stenen. Separat minispel kan anslutas senare.
 const troll={id:'stone-troll',name:'Trollet vid stenen',x:464,y:454,interactionRadius:84,
- minigameId:'troll-poop-toss',minigameImplemented:true,sprite:'./troll-sprite.png?v=1'};
+ minigameId:'troll-poop-toss',minigameImplemented:true,sprite:'./troll-pixel.svg?v=1'};
 const carMaskImage=new Image();
 carMaskImage.src='./car-water-mask.png?v=1';
 carMaskImage.addEventListener('load',()=>{
@@ -785,7 +785,7 @@ function drawTroll(){
  if(sx<-70||sy<-110||sx>canvas.width+70||sy>canvas.height+110)return;
  ctx.save();ctx.imageSmoothingEnabled=false;
  if(trollSprite.complete&&trollSprite.naturalWidth){
-  // Sprite 56×92, större än Lages 44-pixelspelare. Fötterna möter stenen.
+  // Originaltroll i samma pixelkonst som minispelsvarianten; fötterna möter stenen.
   ctx.drawImage(trollSprite,sx-28,sy-92,56,92);
  }else{
   // Enkel fallback om sprite-resursen inte hunnit laddas.
