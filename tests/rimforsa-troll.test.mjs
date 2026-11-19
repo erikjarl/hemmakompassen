@@ -24,17 +24,18 @@ test('Trollet kan hälsas på utan att störa bil eller båtspelet',()=>{
  assert.match(page,/const trollHere=!carAction&&nearTroll\(\)/);
  assert.match(page,/if\(nearTroll\(\)\)\{visitTroll\(\);return;\}/);
  assert.match(page,/function visitTroll\(\)/);
- assert.match(page,/Hälsa på trollet/);
+ assert.match(page,/Kasta bajs på trollet/);
  assert.match(page,/if\(state\.inCar\)\{exitCar\(\);return;\}/);
  assert.match(page,/if\(nearCar\(\)\)\{enterCar\(\);return;\}/);
  assert.match(page,/if\(near\.name==='Kinda Båtklubb'\)\{openBoatGame\(\);return;\}/);
 });
 
-test('Förberett bajskastnings-minispel har avsiktlig framtida startpunkt, ej falskt spelläge',()=>{
- assert.match(page,/minigameId:'troll-poop-toss',minigameImplemented:false/);
+test('Bajskastnings-minispelet använder den befintliga trollpunkten och lämnar övriga spel i fred',()=>{
+ assert.match(page,/minigameId:'troll-poop-toss',minigameImplemented:true/);
  assert.match(page,/window\.RimforsaTrollMinigame&&window\.RimforsaTrollMinigame\.start/);
  assert.match(page,/typeof start==='function'/);
- assert.match(page,/kastar bajs på trollet kommer senare/);
+ assert.match(page,/troll-minigame\.js\?v=1/);
+ assert.match(page,/!window\.RimforsaTrollMinigame\.isOpen\(\)/);
  assert.match(page,/function scatterCoins\(\)/);
  assert.match(page,/boatW=boatChart\.naturalWidth;boatH=boatChart\.naturalHeight/);
  assert.match(page,/carDrive\.move\(state\.x,state\.y,dx,dy,dt\)/);
