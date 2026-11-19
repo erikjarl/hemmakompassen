@@ -10,6 +10,7 @@ test('ICA has distinct clickable freezer flavors and cashier',()=>{
  assert.equal(s.hitTest(70,185),'pear');
  assert.equal(s.hitTest(180,185),'vanilla');
  assert.equal(s.hitTest(360,190),'cashier');
+ assert.equal(s.hitTest(374,104),'cashier','personens huvud ska gå att trycka på');
  assert.equal(s.hitTest(270,80),null);
 });
 test('ICA renders a full pixel-art interior, clerk and Lage without emoji',()=>{
@@ -22,5 +23,5 @@ test('ICA renders a full pixel-art interior, clerk and Lage without emoji',()=>{
  assert.doesNotMatch(source,/fillText\(['"](?:🧑|🍐|🍦)/);
 });
 test('world page integrates accessible purchases with ICA canvas scene',()=>{
- for(const marker of ['id="icaShopScene"','./ica-scene.js?v=1',"window.RimforsaIcaScene.draw",'data-buy-ice="paronglass"','data-buy-ice="vaniljglass"','game.spend(cost)','bag.addPurchase(id)'])assert.ok(html.includes(marker),marker);
+ for(const marker of ['id="icaShopScene"','./ica-scene.js?v=2',"window.RimforsaIcaScene.draw",'data-buy-ice="paronglass"','data-buy-ice="vaniljglass"','game.spend(cost)','bag.addPurchase(id)'])assert.ok(html.includes(marker),marker);
 });
