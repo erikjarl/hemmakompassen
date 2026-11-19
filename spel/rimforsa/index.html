@@ -922,7 +922,7 @@ let last=performance.now(),stepProgress=0;
 function tick(now){
  const dt=Math.min(.05,(now-last)/1000);last=now;
  updateBoat(dt);
- if(maskLoaded&&!isBoatOpen()&&winOverlay.hidden&&bagOverlay.hidden&&icaOverlay.hidden&&pizzaOverlay.hidden&&!window.RimforsaSlideMinigame.isOpen()&&!window.RimforsaSwimMinigame.isOpen()&&!window.RimforsaTrollMinigame.isOpen()&&!window.RimforsaFarm.isOpen()){
+ if(maskLoaded&&(!fuelDialog||fuelDialog.hidden)&&!isBoatOpen()&&winOverlay.hidden&&bagOverlay.hidden&&icaOverlay.hidden&&pizzaOverlay.hidden&&!window.RimforsaSlideMinigame.isOpen()&&!window.RimforsaSwimMinigame.isOpen()&&!window.RimforsaTrollMinigame.isOpen()&&!window.RimforsaFarm.isOpen()){
   npcSystem.update(dt,state.x,state.y);
   let dx=(+keys.right)-(+keys.left),dy=(+keys.down)-(+keys.up);
   if(state.inCar){
