@@ -48,7 +48,7 @@ function setup(){
  lageSprite.onload=()=>{if(session&&!dialog.hidden)render();};
  lageSprite.src='./lage-sprites.png';
  function charge(e){if(e&&e.cancelable)e.preventDefault();if(!session||dialog.hidden)return;session.startCharge();render();}
- function release(e){if(e&&e.cancelable)e.preventDefault();if(!session||dialog.hidden)return;session.release();render();}
+ function release(e){if(e&&e.cancelable)e.preventDefault();if(!session||dialog.hidden)return;const launched=session.release();if(launched&&root.RimforsaAudio&&root.RimforsaAudio.slideLaunch)root.RimforsaAudio.slideLaunch();render();}
  button.addEventListener('pointerdown',e=>{charge(e);try{button.setPointerCapture(e.pointerId)}catch(_){}});
  for(const name of ['pointerup','pointercancel','lostpointercapture'])button.addEventListener(name,release);
  root.document.addEventListener('keydown',e=>{
@@ -126,7 +126,7 @@ function frame(t){
  if(!session||dialog.hidden)return;
  const dt=lastFrame?Math.min(.05,(t-lastFrame)/1000):0;lastFrame=t;
  const was=session.snapshot().state,now=session.step(dt).state;
- if(was==='flying'&&now==='landed'&&root.RimforsaAudio&&root.RimforsaAudio.status().enabled)root.RimforsaAudio.coin();
+ if(was==='flying'&&now==='landed'&&root.RimforsaAudio&&root.RimforsaAudio.status().enabled)(root.RimforsaAudio.slideLand?root.RimforsaAudio.slideLand():root.RimforsaAudio.coin());
  render();frameId=root.requestAnimationFrame(frame);
 }
 function start(options){
