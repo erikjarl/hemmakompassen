@@ -1063,6 +1063,13 @@ function tick(now){
  }
  checkPoops();
  audio.setDragonNearby(dragon.update(dt,state.x,state.y));
+  if(!state.inCar&&!boatState.active&&winOverlay.hidden&&performance.now()>=hurtUntil){
+   const danger=dragon.hazards(state.x,state.y);
+   if(danger){const hit=game.touchHazard(danger);if(hit.damaged){dragon.consume(danger);audio.hit();updateLandHearts();hurtUntil=performance.now()+1500;
+    if(hit.gameOver){stop();reset();coinNoticeUntil=performance.now()+4300;message.innerHTML='<strong>💔 Draken tog sista hjärtat!</strong> Lage börjar om hemma utan sina mynt.';}
+    else{coinNoticeUntil=performance.now()+2200;message.innerHTML='<strong>🔥 Akta draken!</strong> Lage tappade ett hjärta. '+hit.hearts+' kvar!';}
+   }}else game.touchHazard(null);
+  }
  const clampedX=Math.max(canvas.width/2,Math.min(W-canvas.width/2,state.x));
  const clampedY=Math.max(canvas.height/2,Math.min(H-canvas.height/2,state.y));
  state.camX+=(clampedX-state.camX)*Math.min(1,dt*14);
