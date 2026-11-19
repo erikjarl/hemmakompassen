@@ -138,3 +138,27 @@ test('Drakens musik växlar vid närhet och återgår när Lage går därifrån'
  assert.equal(audio.status().playingMusic,false);
  audio.disable();
 });
+
+test('Swimming uses waves but never boat engine or gull timer, and respects toggle and visibility',()=>{
+ const {audio,clocks}=audioFixture();
+ audio.setScene('swim');
+ assert.equal(audio.status().playingWaves,false,'no autoplay before user enables sound');
+ assert.equal(audio.enable(),true);
+ assert.equal(audio.status().scene,'swim');
+ assert.equal(audio.status().playingWaves,true);
+ assert.equal(audio.status().playingEngine,false);
+ assert.equal(audio.status().playingMusic,false);
+ assert.equal(clocks.size,0,'no periodic boat gull while swimming');
+ audio.setVisible(false);
+ assert.equal(audio.status().playingWaves,false);
+ audio.setVisible(true);
+ assert.equal(audio.status().playingWaves,true);
+ audio.disable();
+ assert.equal(audio.status().playingWaves,false);
+ assert.equal(audio.toggle(),true);
+ assert.equal(audio.status().playingWaves,true);
+ audio.setScene('land');
+ assert.equal(audio.status().playingWaves,false);
+ assert.equal(audio.status().playingMusic,true);
+ audio.disable();
+});
