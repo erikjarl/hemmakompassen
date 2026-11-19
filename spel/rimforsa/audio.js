@@ -282,6 +282,28 @@
     tone(185,t,.16,.06,'sawtooth');
     tone(110,t+.11,.2,.047,'triangle');
   }
+  // Tre korta originalsyntetiserade återkopplingsljud: köp, tankning och grundstötning.
+  // Återanvänder upplåst WebAudio-motor och respekterar ljudknapp/flikstatus.
+  function purchase(){
+    if(!enabled||!ctx||hidden||ctx.state!=='running')return;
+    const t=now()+.01;
+    tone(523.25,t,.11,.038,'triangle');
+    tone(659.25,t+.09,.13,.042,'triangle');
+    tone(783.99,t+.19,.19,.036,'sine');
+  }
+  function fuelFill(){
+    if(!enabled||!ctx||hidden||ctx.state!=='running')return;
+    const t=now()+.01;
+    for(let i=0;i<4;i++)tone(155+i*37,t+i*.075,.10,.031,'triangle');
+    tone(523.25,t+.32,.20,.042,'sine');
+  }
+  function boatGrounding(){
+    if(!enabled||!ctx||hidden||ctx.state!=='running')return;
+    const t=now()+.01;
+    tone(165,t,.16,.072,'sawtooth');
+    tone(117,t+.085,.22,.052,'triangle');
+    tone(82.41,t+.20,.24,.035,'sine');
+  }
   function setVisible(visible){
     if(!visible)stopSpeech();
     hidden=!visible;
@@ -329,5 +351,5 @@
     }catch(_){speechMusicVolume(volume);return false;}
   }
   function status(){return {enabled,available:!!AudioCtor,contextState:ctx?ctx.state:'not-created',scene,hidden,playingMusic:musicInterval!==null,playingWaves:!!waves,playingEngine:!!engine,playingCarEngine:!!carEngine,carActive,dragonNearby};}
-  root.RimforsaAudio={enable,disable,toggle,resumeFromGesture,setScene,setBoatSpeed,setCarActive,setCarSpeed,setDragonNearby,coin,hit,poop,victory,slideLaunch,slideLand,sharkBump,speak,stopSpeech,setVisible,status};
+  root.RimforsaAudio={enable,disable,toggle,resumeFromGesture,setScene,setBoatSpeed,setCarActive,setCarSpeed,setDragonNearby,coin,hit,poop,victory,slideLaunch,slideLand,sharkBump,purchase,fuelFill,boatGrounding,speak,stopSpeech,setVisible,status};
 })(window);
