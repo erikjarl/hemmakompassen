@@ -113,7 +113,7 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
 <script src="./inventory.js?v=3"></script>
 <script src="./car.js?v=2"></script>
 <script src="./npc.js?v=2"></script>
-<script src="./farm.js?v=1"></script>
+<script src="./farm.js?v=2"></script>
 <script src="./dragon.js?v=1"></script>
 <script src="./troll-minigame.js?v=3"></script>
 <script src="./slide-minigame.js?v=2"></script>
@@ -279,7 +279,7 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
  });
  document.getElementById('sellPotatoes').addEventListener('click',()=>{
    const sale=farm.sell(3);
-   if(!sale.sold){icaStatus.textContent='Du behöver tre skördade potatisar för att sälja.';renderIca();return;}
+   if(!sale.success){icaStatus.textContent='Du behöver tre skördade potatisar för att sälja.';renderIca();return;}
    icaStatus.textContent='🥔 ICA-personalen köpte tre potatisar! Du fick 6 potatismynt att handla för.';
    audio.coin();updateCoinScore();renderIca();drawIcaScene();
  });
