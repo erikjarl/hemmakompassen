@@ -585,12 +585,18 @@ function drawPoops(){
  for(const p of poops){
   const x=Math.round(p.x-state.camX+canvas.width/2),y=Math.round(p.y-state.camY+canvas.height/2);
   if(x<-22||y<-25||x>canvas.width+22||y>canvas.height+25)continue;
-  // 16-bitars bajskorv med mörk kontur, ljus skugga och små glanspixlar.
-  ctx.fillStyle='#382017';ctx.fillRect(x-11,y-1,23,12);ctx.fillRect(x-8,y-9,17,10);ctx.fillRect(x-3,y-15,9,7);
-  ctx.fillStyle='#81502c';ctx.fillRect(x-8,y-8,17,15);ctx.fillRect(x-3,y-13,9,10);
-  ctx.fillStyle='#b77942';ctx.fillRect(x-5,y-8,9,4);ctx.fillRect(x-7,y,13,5);
-  ctx.fillStyle='#e2a964';ctx.fillRect(x-1,y-11,4,3);
-  ctx.fillStyle='#281a14';ctx.fillRect(x-5,y,2,3);ctx.fillRect(x+3,y,2,3);
+  // Skarp SNES-pixelsiluett i samma 23×26 px-yta; endast färger och inre detaljer ändras.
+  // Mörk, sammanhängande ytterkontur skiljer figuren från både gräs och väg.
+  ctx.fillStyle='#251711';ctx.fillRect(x-11,y-1,23,12);ctx.fillRect(x-8,y-9,17,10);ctx.fillRect(x-3,y-15,9,7);
+  // Djup botten-/sidskugga och tre tydliga, trappade nivåer.
+  ctx.fillStyle='#4b2619';ctx.fillRect(x-9,y,19,9);ctx.fillRect(x-7,y-8,15,9);ctx.fillRect(x-2,y-14,7,8);
+  ctx.fillStyle='#88502b';ctx.fillRect(x-7,y-7,14,7);ctx.fillRect(x-8,y+1,17,6);ctx.fillRect(x-1,y-12,5,6);
+  ctx.fillStyle='#b77940';ctx.fillRect(x-6,y-6,9,3);ctx.fillRect(x-6,y+1,12,4);ctx.fillRect(x,y-11,3,4);
+  // Varm, ljus pixelrand ger kontrast utan större sprite eller glöd runtom.
+  ctx.fillStyle='#e4ad69';ctx.fillRect(x-4,y-6,6,2);ctx.fillRect(x-5,y+1,8,2);ctx.fillRect(x,y-11,3,2);
+  ctx.fillStyle='#f4cc91';ctx.fillRect(x-2,y-10,2,2);ctx.fillRect(x-4,y+1,3,1);
+  // Små konturpixlar gör formen läsbar vid huvudkartans verkliga skala.
+  ctx.fillStyle='#2d1912';ctx.fillRect(x-7,y+7,14,2);ctx.fillRect(x+7,y+2,2,5);ctx.fillRect(x-4,y-2,2,2);
  }
 }
 function clearPath(){state.path=[]}
