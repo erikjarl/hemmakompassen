@@ -49,7 +49,7 @@ test('Rörelse normaliserar diagonal styrning och bilen ritas separat',()=>{
  assert.ok(a.moved&&b.moved);
  assert.ok(Math.hypot(b.x-25,b.y-25)<=Math.hypot(a.x-25,a.y-25)+.01);
  let drawn=0;
- const ctx={save(){},translate(){},rotate(){},restore(){},fillRect(){drawn++}};
+ const ctx={save(){},translate(){},rotate(){},scale(){},restore(){},fillRect(){drawn++}};
  car.draw(ctx,10,10,'left',true);
  assert.ok(drawn>8,'The white car, wheels and seated Lage should be rendered');
 });
@@ -89,7 +89,7 @@ test('Bilen visar olika bildrutor när Lage kliver in och ut',()=>{
  vm.runInNewContext(code,ctxVm);
  const car=ctxVm.window.RimforsaCar;
  const draws=[];
- const canvas={save(){},restore(){},translate(){},rotate(){},fillRect(){},
+ const canvas={save(){},restore(){},translate(){},rotate(){},scale(){},fillRect(){},
   imageSmoothingEnabled:true,
   drawImage(...args){draws.push(args);}
  };
