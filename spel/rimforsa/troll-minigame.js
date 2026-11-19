@@ -205,11 +205,18 @@
   for(let i=0;i<6;i++)pixelRect(31+i*77,113+(i%3)*17+Math.floor(Math.sin(time*2+i)*2),5,3,'#98b88a');
  }
  function drawLage(x,y,time){
-  // Huvudkartans riktiga fyrariktade Lage-spritesheet. Rad 3 är ryggen mot spelaren.
+  // Huvudkartans originalsprite, framifrån så att ansikte och hår är tydliga även här.
   pixelRect(x-12,y-2,24,4,'#233e3088');
   if(lageImage&&lageImage.complete&&lageImage.naturalWidth){
-   const frame=Math.floor(time*2)%4;
-   ctx.drawImage(lageImage,frame*56,3*56,56,56,Math.round(x-22),Math.round(y-47),44,44);
+   const throwing=!!(game&&game.snapshot().flight);
+   const frame=throwing?1:0;
+   ctx.drawImage(lageImage,frame*56,0,56,56,Math.round(x-22),Math.round(y-47),44,44);
+   if(throwing){
+    // Två diskreta pixelstreck markerar kaströrelsen utan att täcka ansiktet.
+    pixelRect(x+17,y-39,4,11,'#e7ad80');
+    pixelRect(x+19,y-43,5,5,'#f6c693');
+    pixelRect(x+25,y-46,4,3,'#fff0bd');
+   }
   }else{
    pixelRect(x-8,y-32,16,16,'#e9b78d');
    pixelRect(x-11,y-38,22,8,'#654b33');
@@ -240,16 +247,17 @@
   }
  }
  function drawTrollExpression(x,time){
-  // Ett kort huvud- och ögonljus vid träff utan att ändra kollisionsytan.
+  // Trollets ögon ligger på högra halvan av den gemensamma 80×112-spriten.
+  // Blink och träffskimmer följer samma ansikte när hela spriten flyttar sig.
   const hit=impactUntil>lastFrame,blink=Math.sin(time*2.2)>0.995;
   if(hit){
-   pixelRect(x-27,59,12,5,'#f2d48e');
-   pixelRect(x+13,59,12,5,'#f2d48e');
-   pixelRect(x-22,64,8,4,'#8e4a37');
-   pixelRect(x+15,64,8,4,'#8e4a37');
+   pixelRect(x+2,70,7,3,'#fff0ba');
+   pixelRect(x+15,70,6,3,'#fff0ba');
+   pixelRect(x+4,85,12,3,'#dfac7b');
+   pixelRect(x+1,92,6,3,'#855037');
   }else if(blink){
-   pixelRect(x-20,68,8,3,'#493528');
-   pixelRect(x+13,68,8,3,'#493528');
+   pixelRect(x+3,71,6,3,'#493528');
+   pixelRect(x+15,71,6,3,'#493528');
   }
  }
  function drawImpact(x,y,t){
