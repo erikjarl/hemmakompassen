@@ -41,3 +41,15 @@ test('repeat launches update record; reset keeps record',()=>{
 test('map integration uses preschool site and hides main game movement',()=>{
  for(const marker of ["name:'Förskolan Hackel'","Åk rutschkana 🛝","RimforsaSlideMinigame.start","!window.RimforsaSlideMinigame.isOpen()","./slide-minigame.js?v=1"])assert.ok(page.includes(marker),marker);
 });
+
+test('preschool yard contains three original pixel friends without changing the physics API',()=>{
+ assert.ok(script.includes('function drawPreschoolFriend('));
+ assert.equal((script.match(/drawPreschoolFriend\(\d+,198,/g)||[]).length,3);
+ assert.ok(script.includes("drawPreschoolFriend(310,198"));
+ assert.ok(script.includes("drawPreschoolFriend(377,198"));
+ assert.ok(script.includes("drawPreschoolFriend(446,198"));
+ const g=session();
+ assert.equal(g.snapshot().state,'ready');
+ assert.equal(g.snapshot().distance,0);
+ assert.equal(g.snapshot().launches,0);
+});
