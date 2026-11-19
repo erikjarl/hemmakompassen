@@ -8,6 +8,27 @@ const zones=Object.freeze({
  oven:{x:19,y:72,w:122,h:137}
 });
 const rect=(c,x,y,w,h,color)=>{c.fillStyle=color;c.fillRect(Math.round(x),Math.round(y),w,h)};
+ // Samma 56×56-originalsprite som huvudkartan, utan oskarp interpolation.
+ const lageSprite=typeof root.Image==='function'?new root.Image():null;
+ let lastCanvas=null,lastOptions=null;
+ if(lageSprite){
+  lageSprite.onload=()=>{if(lastCanvas&&lastOptions)draw(lastCanvas,lastOptions);};
+  lageSprite.src='./lage-sprites.png';
+ }
+ function drawLage(c,x,y){
+  if(lageSprite&&lageSprite.complete&&lageSprite.naturalWidth>=56&&lageSprite.naturalHeight>=56){
+   c.save();
+   c.imageSmoothingEnabled=false;
+   rect(c,x-24,y+17,48,6,'#3a403555');
+   c.drawImage(lageSprite,0,0,56,56,Math.round(x-30),Math.round(y-43),60,60);
+   c.restore();
+  }else{
+   // Visuell reserv om spritefilen inte laddats; riktiga spriten ersätter vid onload.
+   return false;
+  }
+  return true;
+ }
+ 
 function character(c,x,y,{shirt='#be5a4d',hair='#70472e',hat=false}={}){
  rect(c,x-14,y+12,10,23,'#39545a');rect(c,x+4,y+12,10,23,'#39545a');
  rect(c,x-17,y-13,34,29,shirt);
@@ -35,6 +56,7 @@ function drawPizza(c,x,y,diameter=47){
 function draw(canvas,options={}){
  const c=canvas&&canvas.getContext&&canvas.getContext('2d');
  if(!c)return false;
+ lastCanvas=canvas;lastOptions=options;
  c.imageSmoothingEnabled=false;
  const purchased=!!options.purchased,balance=Number(options.balance)||0;
  rect(c,0,0,W,H,'#ad865a');
@@ -70,7 +92,7 @@ function draw(canvas,options={}){
  rect(c,308,148,45,20,'#3b5145');rect(c,313,151,33,10,'#aac8a6');
  character(c,392,128,{shirt:'#9e634a',hair:'#684b34',hat:true});
  // Lage står framför disken.
- character(c,275,236,{shirt:'#c66356',hair:'#795335'});
+ if(!drawLage(c,275,236))character(c,275,236,{shirt:'#c66356',hair:'#795335'});
  rect(c,9,7,156,22,'#293d35');c.fillStyle='#fff1c7';c.font='bold 15px monospace';c.fillText('MYNT: '+balance,18,23);
  rect(c,344,231,119,16,purchased?'#50685b':'#345b46');
  c.fillStyle='#f3e0a9';c.font='bold 12px monospace';
