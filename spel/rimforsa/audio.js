@@ -208,25 +208,33 @@
     tone(220,t,.14,.07,'triangle');
     tone(164.81,t+.12,.24,.055,'triangle');
   }
-  // Kort originalsyntetiserad prutt: fallande baston med pulserad luft.
-  // Spelas endast när användaren aktiverat spelljud.
+  // Originalsyntetiserad kort prutt med oregelbunden baspuls och luftpuff.
+  // Ingen extern ljudfil, inga ljud om spelljud är av eller fliken dold.
   function poop(){
     if(!enabled||!ctx||hidden)return;
-    const t=now()+.006,osc=oscillator('sawtooth',165),filter=ctx.createBiquadFilter(),g=gain(0);
-    filter.type='lowpass';filter.frequency.setValueAtTime(460,t);
-    filter.frequency.exponentialRampToValueAtTime(125,t+.36);
-    osc.frequency.setValueAtTime(165,t);
-    osc.frequency.exponentialRampToValueAtTime(64,t+.37);
-    osc.connect(filter);filter.connect(g);g.connect(master);
-    g.gain.setValueAtTime(.0001,t);
-    g.gain.linearRampToValueAtTime(.09,t+.025);
-    g.gain.setValueAtTime(.07,t+.08);
-    g.gain.linearRampToValueAtTime(.025,t+.12);
-    g.gain.linearRampToValueAtTime(.082,t+.17);
-    g.gain.linearRampToValueAtTime(.038,t+.24);
-    g.gain.exponentialRampToValueAtTime(.0001,t+.4);
-    osc.start(t);osc.stop(t+.41);
-    osc.onended=()=>{osc.disconnect();filter.disconnect();g.disconnect();};
+    const t=now()+.008,duration=.44;
+    const osc=oscillator('sawtooth',138),filter=ctx.createBiquadFilter(),body=gain(0);
+    const air=ctx.createBufferSource(),airFilter=ctx.createBiquadFilter(),airGain=gain(0);
+    filter.type='lowpass';
+    filter.frequency.setValueAtTime(620,t);
+    filter.frequency.exponentialRampToValueAtTime(145,t+duration);
+    osc.frequency.setValueAtTime(138,t);
+    osc.frequency.exponentialRampToValueAtTime(61,t+duration);
+    osc.connect(filter);filter.connect(body);body.connect(master);
+    // Ojämna vibrationer ger en studsande, pruttig rytm i stället för en ren baston.
+    for(const [offset,level] of [[0,.0001],[.025,.07],[.075,.025],[.115,.10],[.16,.018],[.205,.095],[.26,.031],[.31,.078],[.37,.015],[duration,.0001]]){
+      body.gain.setValueAtTime(level,t+offset);
+    }
+    air.buffer=createNoise(.5);
+    airFilter.type='lowpass';airFilter.frequency.value=850;
+    air.connect(airFilter);airFilter.connect(airGain);airGain.connect(master);
+    for(const [offset,level] of [[0,.0001],[.035,.018],[.09,.004],[.14,.028],[.19,.003],[.235,.025],[.295,.006],[.345,.019],[duration,.0001]]){
+      airGain.gain.setValueAtTime(level,t+offset);
+    }
+    osc.start(t);air.start(t);
+    osc.stop(t+duration+.015);air.stop(t+duration+.015);
+    osc.onended=()=>{for(const n of [osc,filter,body])n.disconnect();};
+    air.onended=()=>{for(const n of [air,airFilter,airGain])n.disconnect();};
   }
   // Korta originalsyntetiserade händelseljud: rutschkana och hajkollision.
   // Respekterar ljudknappen och dold flik; inga inspelade filer behövs.
