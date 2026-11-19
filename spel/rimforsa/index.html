@@ -56,7 +56,7 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
 /* Undertryck långtrycksmenyer enbart i spelet och styrpanelerna. */
 .game-frame,.game-frame *,.controls,.controls *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
 .boat-overlay,.boat-overlay *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
-.bag-dialog[hidden]{display:none!important}.bag-dialog{position:fixed;inset:0;z-index:40;background:#0b1815d9;display:grid;place-items:center;padding:12px}.bag-panel{width:min(420px,100%);border:4px solid #d3a45b;border-radius:12px;background:#203b31;color:#fff3d4;padding:17px;box-shadow:0 12px 30px #0008}.bag-panel h2{margin:0 0 9px}.bag-list{list-style:none;margin:12px 0;padding:0;display:grid;gap:8px}.bag-list li{padding:9px;background:#315444;border:2px solid #55745b;border-radius:6px}.bag-actions{display:flex;gap:10px;flex-wrap:wrap}.bag-note{font-size:12px;line-height:1.4;color:#e3dfb9}
+.bag-dialog[hidden]{display:none!important}.bag-dialog{position:fixed;inset:0;z-index:40;background:#0b1815d9;display:grid;place-items:center;padding:12px}.bag-panel{width:min(420px,100%);border:4px solid #d3a45b;border-radius:12px;background:#203b31;color:#fff3d4;padding:17px;box-shadow:0 12px 30px #0008}.bag-panel h2{margin:0 0 9px}.bag-list{list-style:none;margin:12px 0;padding:0;display:grid;gap:8px}.bag-list li{padding:0;background:#315444;border:2px solid #55745b;border-radius:6px}.bag-item{width:100%;display:flex;align-items:center;gap:12px;padding:9px;background:transparent;color:#fff3d4;border:0;text-align:left;font:700 15px system-ui;cursor:pointer;min-height:56px}.bag-item:focus-visible{outline:3px solid #f5d780;outline-offset:-3px}.bag-item[aria-pressed="true"]{background:#416d50}.bag-art{flex:0 0 auto;width:40px;height:40px;border:2px solid #8ea27c;background:#1b3d32;image-rendering:pixelated}.bag-detail{min-height:42px;padding:10px;border:2px solid #6c8a66;background:#173c31;border-radius:6px;line-height:1.4}.bag-actions{display:flex;gap:10px;flex-wrap:wrap}.bag-note{font-size:12px;line-height:1.4;color:#e3dfb9}
 .ica-dialog[hidden]{display:none!important}.ica-dialog{position:fixed;inset:0;z-index:1200;display:grid;place-items:center;padding:12px;background:#071b15e8}.ica-panel{width:min(650px,100%);max-height:95dvh;overflow:auto;border:4px solid #e1b46a;background:#1c4235;color:#fff4d5;border-radius:12px;padding:17px;box-shadow:0 12px 36px #0009}.ica-panel h2{margin:0 0 10px}.ica-shop-scene{display:block;width:100%;height:auto;image-rendering:pixelated;border:3px solid #c9a06b;border-radius:5px;cursor:pointer;touch-action:manipulation;margin:9px 0}.ica-shop-hint{font-size:12px;color:#f3dcad;margin:5px 0}.ica-cashier{font-size:42px;text-align:center;margin:6px 0}.ica-products{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:14px 0}.ica-products button{display:grid;gap:5px;justify-items:center;border:3px solid #9e7139;border-radius:10px;background:#f5d788;color:#313322;padding:14px 6px;min-height:100px;font:900 15px system-ui;cursor:pointer}.ica-products button:disabled{opacity:.55;cursor:default}.ica-products button span{font-size:36px}.ica-products button:focus-visible{outline:3px solid white;outline-offset:3px}.ica-status{min-height:35px;line-height:1.35}.farm-sale{padding:8px 12px;border:2px solid #977950;background:#2a553f;border-radius:8px;margin:10px 0}.farm-sale p{margin:4px 0 8px}.farm-sale button:disabled{opacity:.5}
 .pizza-dialog[hidden]{display:none!important}.pizza-dialog{position:fixed;inset:0;z-index:1210;display:grid;place-items:center;padding:12px;background:#091b14e8}
 .pizza-panel{width:min(650px,100%);max-height:95dvh;overflow:auto;border:4px solid #dcb56f;border-radius:12px;background:#234336;color:#fff4d5;padding:18px;text-align:center;box-shadow:0 14px 32px #0009}
@@ -103,7 +103,7 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
  <p id="pizzaStatus" class="pizza-status" role="status" aria-live="polite">En nybakad pizzaslice väntar!</p>
  <button type="button" id="closePizza" class="smallBtn">Tillbaka till Rimforsa ✕</button></div>
  </div>
- <div id="bagOverlay" class="bag-dialog" role="dialog" aria-modal="true" aria-label="Lages väska" hidden><div class="bag-panel"><h2>🎒 Lages väska</h2><p>Hitta fyra saker, köp glass och prova ananaspizza!</p><ul class="bag-list" id="bagList"></ul><p class="bag-note" id="bagStatus"></p><div class="bag-actions"><button class="smallBtn" type="button" id="closeBag">Tillbaka till spelet</button><button class="smallBtn" type="button" id="clearBag">Töm väskan</button></div></div></div>
+ <div id="bagOverlay" class="bag-dialog" role="dialog" aria-modal="true" aria-label="Lages väska" hidden><div class="bag-panel"><h2>🎒 Lages väska</h2><p>Hitta fyra saker, köp glass och prova ananaspizza!</p><ul class="bag-list" id="bagList"></ul><p id="bagDetail" class="bag-detail" role="status" aria-live="polite">Välj ett föremål i väskan för att titta närmare.</p><p class="bag-note" id="bagStatus"></p><div class="bag-actions"><button class="smallBtn" type="button" id="closeBag">Tillbaka till spelet</button><button class="smallBtn" type="button" id="clearBag">Töm väskan</button></div></div></div>
  <div class="tip" aria-live="polite"><span id="message"><strong>Nu börjar äventyret!</strong> Använd pilarna för att upptäcka Rimforsa.</span><button id="interact" class="action" hidden>Utforska ✨</button></div>
  <div class="controls"><div class="guide">Samla guldmynt! Vid hemmet står en vit bil – hoppa in med Kör bilen. Styr med pilar/WASD.</div><div class="dpad" aria-label="Styr Lage"><button type="button" data-dir="up" aria-label="Gå uppåt"></button><button type="button" data-dir="left" aria-label="Gå åt vänster"></button><button type="button" data-dir="down" aria-label="Gå nedåt"></button><button type="button" data-dir="right" aria-label="Gå åt höger"></button></div><button class="reset" id="reset">Börja om ↺</button></div>
  <div class="footer">Illustrerad spelvärld inspirerad av Rimforsa. Platserna ligger ungefär rätt, men kartan är inte skalenlig.</div>
@@ -111,6 +111,7 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
 <script src="./audio.js?v=6"></script>
 <script src="./gameplay.js?v=2"></script>
 <script src="./inventory.js?v=3"></script>
+<script src="./item-art.js?v=1"></script>
 <script src="./car.js?v=2"></script>
 <script src="./npc.js?v=2"></script>
 <script src="./farm.js?v=2"></script>
@@ -288,8 +289,21 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
  function renderBag(){
   bagList.replaceChildren();
   const items=bag.items();bagCount.textContent=items.length+'/'+bag.total();
-  if(!items.length){const li=document.createElement('li');li.textContent='Väskan är tom. Utforska Rimforsa!';bagList.append(li);}
-  for(const item of items){const li=document.createElement('li');li.textContent=item.icon+' '+item.name;bagList.append(li);}
+  const detail=document.getElementById('bagDetail');
+  detail.textContent=items.length?'Välj ett föremål för att titta närmare.':'Väskan är tom. Utforska Rimforsa!';
+  for(const item of items){
+   const li=document.createElement('li'),button=document.createElement('button'),art=document.createElement('canvas'),label=document.createElement('span');
+   button.type='button';button.className='bag-item';button.setAttribute('aria-pressed','false');
+   button.setAttribute('aria-label','Titta på '+item.name);
+   art.width=32;art.height=32;art.className='bag-art';art.setAttribute('aria-hidden','true');
+   window.RimforsaItemArt.draw(art,item.id);
+   label.textContent=item.name;button.append(art,label);li.append(button);bagList.append(li);
+   button.addEventListener('click',()=>{
+    for(const other of bagList.querySelectorAll('.bag-item'))other.setAttribute('aria-pressed','false');
+    button.setAttribute('aria-pressed','true');
+    detail.textContent=item.name+' – '+(window.RimforsaItemArt.descriptions[item.id]||'Ett fint fynd från Rimforsa!');
+   });
+  }
   bagStatus.textContent=bag.available()?'Föremålen sparas på den här enheten, även när spelet stängs. Mynten är separata.':'Föremålen finns kvar under det här besöket men kunde inte sparas i webbläsaren.';
  }
  function closeBag(){bagOverlay.hidden=true;}
