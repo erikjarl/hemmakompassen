@@ -546,9 +546,7 @@ function checkPoops(){
  if(!result.damaged)return false;
  audio.hit();updateLandHearts();hurtUntil=performance.now()+1500;
  if(result.gameOver){
-  stop();reset();
-  coinNoticeUntil=performance.now()+4300;
-  message.innerHTML='<strong>💔 Alla hjärtan tog slut!</strong> Lage börjar om vid hemmet och förlorade alla sina mynt. Försök igen!';
+  restartAfterGameOver('bajskorvarna');
  }else{
   coinNoticeUntil=performance.now()+2100;
   message.innerHTML='<strong>💩 Usch, bajs!</strong> Lage tappade ett hjärta! '+result.hearts+' kvar. Akta bajskorvarna!';
@@ -923,6 +921,16 @@ interact.addEventListener('click',()=>{
   message.innerHTML='<strong>'+near.symbol+' '+near.name+'</strong> – '+near.text+(found?' <strong>'+found.item.icon+' Du hittade '+found.item.name+'! Den finns i väskan.</strong>':'');
  state.messageLocked=true;title.textContent=near.name;interact.textContent='Besök igen ✨';
 });
+function restartAfterGameOver(cause){
+ const lostCoins=totalMoney();
+ stop();
+ reset({clearMoney:true});
+ // Gemensam nollställning av kartmynt, båt-/dyk-/fotbollsmynt och potatisintäkter.
+ // Ingen återställning av väska, skörd eller pågående potatisodling.
+ updateCoinScore();
+ coinNoticeUntil=performance.now()+4300;
+ message.innerHTML='<strong>💔 Alla hjärtan tog slut!</strong> '+(cause==='draken'?'Draken':'Bajskorvarna')+' tog det sista hjärtat. Lage förlorade '+lostCoins+' mynt och börjar om hemma med 0 mynt. Samla nya mynt och försök igen!';
+}
 function reset({clearMoney=true}={}){
   // Loading the page must preserve earned minigame coins.
   if(clearMoney){rewardWallet.clear();farm.clearCoins();}
@@ -1103,7 +1111,7 @@ function tick(now){
   if(!state.inCar&&!boatState.active&&winOverlay.hidden&&performance.now()>=hurtUntil){
    const danger=dragon.hazards(state.x,state.y);
    if(danger){const hit=game.touchHazard(danger);if(hit.damaged){dragon.consume(danger);audio.hit();updateLandHearts();hurtUntil=performance.now()+1500;
-    if(hit.gameOver){stop();reset();coinNoticeUntil=performance.now()+4300;message.innerHTML='<strong>💔 Draken tog sista hjärtat!</strong> Lage börjar om hemma utan sina mynt.';}
+    if(hit.gameOver){restartAfterGameOver('draken');}
     else{coinNoticeUntil=performance.now()+2200;message.innerHTML='<strong>🔥 Akta draken!</strong> Lage tappade ett hjärta. '+hit.hearts+' kvar!';}
    }}else game.touchHazard(null);
   }
