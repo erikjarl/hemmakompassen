@@ -3,7 +3,7 @@
 'use strict';
 const W=480,H=288;
 const zones=Object.freeze({
- chef:{x:282,y:82,w:178,h:142},
+ chef:{x:282,y:55,w:178,h:169},
  pizza:{x:150,y:150,w:132,h:103},
  oven:{x:19,y:72,w:122,h:137}
 });
