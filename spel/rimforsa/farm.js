@@ -1,0 +1,103 @@
+/* Lage i Rimforsa – originalritat potatisland med verklig femminuterstimer. */
+(function(root){
+'use strict';
+const KEY='lage-rimforsa-farm-v1',GROW_MS=5*60*1000;
+function createFarm(storage,clock=()=>Date.now()){
+ let plantedAt=null,harvested=0;
+ try{
+  const saved=JSON.parse(storage?.getItem(KEY)||'null');
+  if(saved&&typeof saved==='object'){
+   if(Number.isFinite(saved.plantedAt)&&saved.plantedAt>=0&&saved.plantedAt<=clock()+60000)plantedAt=saved.plantedAt;
+   if(Number.isSafeInteger(saved.harvested)&&saved.harvested>=0)harvested=saved.harvested;
+  }
+ }catch{}
+ function persist(){
+  try{storage?.setItem(KEY,JSON.stringify({plantedAt,harvested}));return true}catch{return false}
+ }
+ function snapshot(){
+  const age=plantedAt===null?0:Math.max(0,clock()-plantedAt);
+  return {plantedAt,harvested,age,stage:plantedAt===null?0:age>=GROW_MS?4:Math.max(1,Math.ceil(age/(GROW_MS/3))),remaining:plantedAt===null?0:Math.max(0,GROW_MS-age),ready:plantedAt!==null&&age>=GROW_MS};
+ }
+ function plant(){if(plantedAt!==null)return false;plantedAt=clock();persist();return true}
+ function harvest(){if(!snapshot().ready)return false;plantedAt=null;harvested+=3;persist();return true}
+ return {snapshot,plant,harvest,key:KEY};
+}
+let overlay=null,canvas=null,ctx=null,info=null,plantButton=null,harvestButton=null,loop=null,previousFocus=null,returnToMap=null;
+let farm=createFarm((()=>{try{return root.localStorage}catch{return null}})());
+function rect(x,y,w,h,color){ctx.fillStyle=color;ctx.fillRect(x,y,w,h)}
+function drawField(){
+ if(!ctx)return;
+ const s=farm.snapshot();
+ ctx.imageSmoothingEnabled=false;
+ rect(0,0,480,288,'#81b2a0');rect(0,0,480,87,'#95c5be');
+ for(let i=0;i<13;i++){
+  const x=i*42-10;rect(x,60+(i%3)*6,42,84,'#457b57');rect(x+5,43+(i%3)*6,32,41,'#39714c');rect(x+13,28+(i%3)*5,18,27,'#589367');
+ }
+ rect(0,148,480,140,'#76a04d');rect(0,198,480,90,'#649244');
+ // Staket och gärdsgård, helt i originalritade pixelblock.
+ for(let i=0;i<9;i++){const x=i*62+2;rect(x,137,8,60,'#77543a');rect(x+2,139,3,46,'#bd9360')}
+ rect(0,148,480,10,'#a67a4b');rect(0,172,480,8,'#946e46');
+ // Väldefinierat jordland med tre separata potatisfåror.
+ rect(63,185,354,95,'#5b3d2c');rect(69,191,342,81,'#78523a');
+ for(let row=0;row<3;row++){
+  const yy=208+row*23;rect(77,yy,326,8,'#442e25');rect(77,yy+8,326,3,'#a6774c');
+  for(let j=0;j<7;j++){
+   const x=91+j*49;
+   if(s.stage===0){rect(x,yy-1,7,3,'#c49b67');continue}
+   if(s.stage>=1){rect(x+2,yy-7,4,9,'#43824a');rect(x-2,yy-11,7,6,'#71aa55')}
+   if(s.stage>=2){rect(x+5,yy-18,5,14,'#377d43');rect(x-7,yy-17,13,7,'#6ba64f');rect(x+4,yy-23,12,8,'#91bf62')}
+   if(s.stage>=3){rect(x-8,yy-29,17,10,'#418c47');rect(x+3,yy-32,12,8,'#5da34d');rect(x-5,yy-22,19,8,'#7eb758')}
+   if(s.ready){rect(x-2,yy-36,7,5,'#f6d383');rect(x+5,yy-35,4,4,'#f8df9b')}
+  }
+ }
+ // Säcken står utanför jordlandet, även när grödan väntar.
+ rect(418,218,41,48,'#a98554');rect(423,213,30,8,'#d7bb80');rect(426,230,24,20,'#c5a06c');
+ rect(432,235,12,10,'#745437');rect(430,258,17,5,'#6f5237');
+ ctx.fillStyle='#173f32';ctx.font='bold 14px monospace';ctx.fillText('LAGES POTATISLAND',15,24);
+}
+function render(){
+ if(!overlay||overlay.hidden)return;
+ const s=farm.snapshot();drawField();
+ const m=Math.floor(s.remaining/60000),sec=Math.ceil((s.remaining%60000)/1000);
+ if(!s.plantedAt)info.textContent='Jorden är redo! Plantera din första potatis.';
+ else if(s.ready)info.textContent='Potatisen är färdig! Skörda tre potatisar.';
+ else info.textContent='Potatisen växer! Färdig om '+m+':'+String(sec).padStart(2,'0')+'. Du kan lämna fältet under tiden.';
+ plantButton.hidden=s.plantedAt!==null;
+ harvestButton.hidden=!s.ready;
+ overlay.querySelector('[data-farm-count]').textContent='Skördade potatisar: '+s.harvested;
+}
+function close(){
+ if(!overlay||overlay.hidden)return;
+ overlay.hidden=true;
+ if(loop!==null){root.clearInterval(loop);loop=null}
+ const cb=returnToMap;returnToMap=null;
+ if(previousFocus&&previousFocus.isConnected)previousFocus.focus();
+ if(typeof cb==='function')cb();
+}
+function install(){
+ if(overlay)return;
+ const style=root.document.createElement('style');style.textContent=`
+ .farm-dialog[hidden]{display:none!important}.farm-dialog{position:fixed;inset:0;z-index:1420;background:#0d241cdd;display:grid;place-items:center;padding:10px}
+ .farm-panel{width:min(570px,100%);max-height:96dvh;overflow:auto;background:#214635;border:4px solid #d4ae69;color:#fff4d4;border-radius:10px;padding:14px;box-shadow:0 15px 35px #0008}
+ .farm-panel h2{margin:0 0 8px}.farm-scene{display:block;width:100%;height:auto;image-rendering:pixelated;border:3px solid #b38d52;border-radius:5px}
+ .farm-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}.farm-actions button{min-height:44px;padding:9px 16px;border:2px solid #7c5932;background:#f0d08a;color:#2e3023;border-radius:7px;font-weight:900}
+ .farm-actions button[hidden]{display:none}.farm-panel p{line-height:1.45}
+ `;root.document.head.append(style);
+ overlay=root.document.createElement('div');overlay.className='farm-dialog';overlay.hidden=true;overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','Potatislandet');
+ overlay.innerHTML='<section class="farm-panel"><h2>🥔 Lages potatisland</h2><canvas class="farm-scene" width="480" height="288" aria-label="Pixelritat potatisland med jordfåror och växande potatisplantor"></canvas><p data-farm-info role="status" aria-live="polite"></p><p data-farm-count>Skördade potatisar: 0</p><div class="farm-actions"><button type="button" data-farm-plant>Plantera potatis 🥔</button><button type="button" data-farm-harvest>Skörda potatis 🧺</button><button type="button" data-farm-close>Tillbaka till kartan ✕</button></div><p style="font-size:12px">En odling tar fem minuter i verklig tid. Du kan spela vidare eller stänga sidan – tiden räknas ändå. Skörden sparas på den här enheten.</p></section>';
+ root.document.body.append(overlay);
+ canvas=overlay.querySelector('canvas');ctx=canvas.getContext('2d');info=overlay.querySelector('[data-farm-info]');
+ plantButton=overlay.querySelector('[data-farm-plant]');harvestButton=overlay.querySelector('[data-farm-harvest]');
+ plantButton.addEventListener('click',()=>{farm.plant();render()});
+ harvestButton.addEventListener('click',()=>{farm.harvest();render()});
+ overlay.querySelector('[data-farm-close]').addEventListener('click',close);
+ root.document.addEventListener('keydown',e=>{if(overlay&&!overlay.hidden&&e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();close()}},true);
+}
+function start({returnToMap:cb}={}){
+ install();previousFocus=root.document.activeElement;returnToMap=cb;overlay.hidden=false;render();
+ if(loop!==null)root.clearInterval(loop);
+ loop=root.setInterval(render,1000);
+ plantButton.focus();return true;
+}
+root.RimforsaFarm={start,close,isOpen:()=>!!overlay&&!overlay.hidden,createFarm,snapshot:()=>farm.snapshot()};
+})(typeof window!=='undefined'?window:globalThis);
