@@ -35,7 +35,7 @@ test('Bajskastnings-minispelet använder den befintliga trollpunkten och lämnar
  assert.match(page,/minigameId:'troll-poop-toss',minigameImplemented:true/);
  assert.match(page,/window\.RimforsaTrollMinigame&&window\.RimforsaTrollMinigame\.start/);
  assert.match(page,/typeof start==='function'/);
- assert.match(page,/troll-minigame\.js\?v=1/);
+ assert.match(page,/troll-minigame\.js\?v=3/);
  assert.match(page,/!window\.RimforsaTrollMinigame\.isOpen\(\)/);
  assert.match(page,/function scatterCoins\(\)/);
  assert.match(page,/boatW=boatChart\.naturalWidth;boatH=boatChart\.naturalHeight/);
