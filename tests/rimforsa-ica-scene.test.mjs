@@ -25,3 +25,10 @@ test('ICA renders a full pixel-art interior, clerk and Lage without emoji',()=>{
 test('world page integrates accessible purchases with ICA canvas scene',()=>{
  for(const marker of ['id="icaShopScene"','./ica-scene.js?v=2',"window.RimforsaIcaScene.draw",'data-buy-ice="paronglass"','data-buy-ice="vaniljglass"','game.spend(cost)','bag.addPurchase(id)'])assert.ok(html.includes(marker),marker);
 });
+
+test('tapping ice in the scene explains missing coins and already-owned items',()=>{
+ assert.match(html,/if\(bag\.has\(id\)\)\{icaStatus\.textContent='Den glassen finns redan i väskan!/);
+ assert.match(html,/const missing=icePrices\[id\]-game\.snapshot\(\)\.balance/);
+ assert.match(html,/if\(missing>0\)\{icaStatus\.textContent='Du behöver '/);
+ assert.match(html,/if\(!rect\.width\|\|!rect\.height\)return;/);
+});
