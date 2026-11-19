@@ -122,11 +122,14 @@ function start(options){
  if(!options||typeof options.returnToMap!=='function')return false;
  if(!dialog.hidden)close();
  previousFocus=root.document.activeElement;callback=options.returnToMap;
- session=createSession();dialog.hidden=false;lastFrame=0;render();button.focus();frameId=root.requestAnimationFrame(frame);return true;
+ session=createSession();dialog.hidden=false;
+ if(root.RimforsaAudio&&typeof root.RimforsaAudio.setScene==='function')root.RimforsaAudio.setScene('preschool');
+ lastFrame=0;render();button.focus();frameId=root.requestAnimationFrame(frame);return true;
 }
 function close(){
  if(!session||dialog.hidden)return;
  session.reset();dialog.hidden=true;root.cancelAnimationFrame(frameId);
+ if(root.RimforsaAudio&&typeof root.RimforsaAudio.setScene==='function')root.RimforsaAudio.setScene('land');
  const onReturn=callback;callback=null;
  if(typeof onReturn==='function')onReturn();
  if(previousFocus&&previousFocus.isConnected)previousFocus.focus();
