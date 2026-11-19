@@ -63,7 +63,7 @@
   else root.RimforsaAudio.hit();
  }
  function reset(){impactUntil=0;game.start();notice.textContent='Sikta och försök träffa trollet!';render();lastFrame=0;}
- function throwNow(){if(!game.throwPoop())return;render();}
+ function throwNow(){if(!game.throwPoop())return;if(root.RimforsaAudio&&root.RimforsaAudio.poop)root.RimforsaAudio.poop();render();}
  function close(){
   if(!game||!game.snapshot().active)return;
   game.stop();overlay.hidden=true;root.cancelAnimationFrame(raf);
