@@ -69,6 +69,24 @@ function render(){
  ctx.fillStyle='#ffffd6';ctx.fillRect(394,22,25,25);
  ctx.fillStyle='#669954';ctx.fillRect(0,196,w,74);
  for(let n=0;n<18;n++){ctx.fillStyle=n%2?'#4f8d49':'#79a94e';ctx.fillRect(n*32,200+(n%3)*8,27,6);}
+ // Förskolekompisar i bakgrunden: originalritade pixelbarn, utan kollisioner.
+ // Figurerna är statiska så att den laddade flygrörelsen förblir tydlig.
+ function drawPreschoolFriend(cx,ground,shirt,hair,skin,pose){
+  ctx.fillStyle='#314a3a';ctx.fillRect(cx-9,ground-3,19,4); // markskugga
+  ctx.fillStyle='#344f72';ctx.fillRect(cx-7,ground-14,6,12);ctx.fillRect(cx+2,ground-14,6,12);
+  ctx.fillStyle='#4c362d';ctx.fillRect(cx-8,ground-3,7,3);ctx.fillRect(cx+2,ground-3,7,3);
+  ctx.fillStyle=shirt;ctx.fillRect(cx-10,ground-30,21,18);
+  ctx.fillStyle=skin;ctx.fillRect(cx-8,ground-44,17,15);
+  ctx.fillStyle=hair;ctx.fillRect(cx-9,ground-47,19,6);ctx.fillRect(cx-10,ground-42,4,7);
+  ctx.fillStyle='#2c302a';ctx.fillRect(cx+4,ground-38,2,2);
+  ctx.fillStyle=skin;
+  if(pose==='wave'){ctx.fillRect(cx+11,ground-39,5,13);ctx.fillRect(cx+13,ground-43,6,6);ctx.fillRect(cx-14,ground-27,5,11);}
+  else{ctx.fillRect(cx-14,ground-27,5,12);ctx.fillRect(cx+11,ground-27,5,12);}
+ }
+ // Barnen står längre bort än själva rutschkanan och påverkar aldrig poäng eller hjärtan.
+ drawPreschoolFriend(310,198,'#a359be','#663d27','#f0bf92','wave');
+ drawPreschoolFriend(377,198,'#4b90c5','#3c322d','#cb956d','stand');
+ drawPreschoolFriend(446,198,'#e5a146','#b16e36','#e9b48c','stand');
  // Stolpar, trappa och den gula glidytan.
  ctx.fillStyle='#855535';ctx.fillRect(52,92,9,107);ctx.fillRect(139,153,9,46);ctx.fillRect(52,86,62,9);
  ctx.fillStyle='#a0a0a0';ctx.fillRect(68,105,15,7);ctx.fillRect(80,121,16,7);ctx.fillRect(94,139,16,7);
