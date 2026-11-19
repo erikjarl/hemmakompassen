@@ -210,16 +210,26 @@ const winOverlay=document.getElementById('winOverlay'),winCount=document.getElem
 const game=window.RimforsaGameplay.createSession(COIN_TARGET);
  const farm=window.RimforsaFarm;
  // Skattmynt och intäkter från odling redovisas separat.
- const totalMoney=()=>game.snapshot().balance+farm.snapshot().balance;
+ const rewardWallet=(()=>{
+  const key='rimforsa-minigame-coins-v1';let earned={},spent=0;
+  try{const s=JSON.parse(localStorage.getItem(key)||'{}');if(s&&typeof s==='object'){for(const id of Object.keys(s.earned||{}))if(/^(boat|swim)-[0-9]+$/.test(id)&&s.earned[id]===true)earned[id]=true;spent=Math.min(Object.keys(earned).length,Math.max(0,Math.floor(Number(s.spent)||0)));}}catch(_){}
+  const balance=()=>Object.keys(earned).length-spent;
+  const save=()=>{try{localStorage.setItem(key,JSON.stringify({earned,spent}));}catch(_){}};
+  return {balance,award(id){if(!/^(boat|swim)-[0-9]+$/.test(id)||earned[id])return false;earned[id]=true;save();return true;},spend(n){if(!Number.isSafeInteger(n)||n<0||n>balance())return false;spent+=n;save();return true;},refund(n){if(!Number.isSafeInteger(n)||n<0||n>spent)return false;spent-=n;save();return true;},clear(){earned={};spent=0;try{localStorage.removeItem(key);}catch(_){}}};
+ })();
+ const awardMinigameCoin=id=>{if(rewardWallet.award(id)){updateCoinScore();return true;}return false;};
+ const totalMoney=()=>game.snapshot().balance+rewardWallet.balance()+farm.snapshot().balance;
  function payCoins(amount){
   if(!Number.isSafeInteger(amount)||amount<=0||totalMoney()<amount)return null;
-  const treasure=Math.min(amount,game.snapshot().balance),produce=amount-treasure;
+  const treasure=Math.min(amount,game.snapshot().balance),bonus=Math.min(amount-treasure,rewardWallet.balance()),produce=amount-treasure-bonus;
   if(treasure&&!game.spend(treasure).paid)return null;
+  if(bonus&&!rewardWallet.spend(bonus)){if(treasure)game.refund(treasure);return null;}
   if(produce&&!farm.spendCoins(produce)){
+   if(bonus)rewardWallet.refund(bonus);
    if(treasure)game.refund(treasure);
    return null;
   }
-  return ()=>{if(produce)farm.refundCoins(produce);if(treasure)game.refund(treasure)};
+  return ()=>{if(produce)farm.refundCoins(produce);if(bonus)rewardWallet.refund(bonus);if(treasure)game.refund(treasure)};
  }
  const pizzaOverlay=document.getElementById('pizzaOverlay'),pizzaBalance=document.getElementById('pizzaBalance'),pizzaStatus=document.getElementById('pizzaStatus'),pizzaBuy=document.getElementById('buyPizza');
  const PIZZA_PRICE=5;
@@ -533,7 +543,7 @@ function checkPoops(){
  }
  return true;
 }
-function updateCoinScore(){coinScore.textContent='🪙 '+totalMoney()+' · Hittade '+coinCount+'/'+(coinCount+coins.length)+' · 🥔 '+farm.snapshot().balance}
+function updateCoinScore(){coinScore.textContent='🪙 '+totalMoney()+' · Hittade '+coinCount+'/'+(coinCount+coins.length)+' · Minispel '+rewardWallet.balance()+' · 🥔 '+farm.snapshot().balance}
 function showTreasureVictory(){
  audio.victory();stop();
  winCount.textContent=String(coinCount);
@@ -735,7 +745,7 @@ function spawnBoatCoins(){
    let options=candidates.filter(p=>boatState.coins.every(c=>Math.hypot(c.x-p.x,c.y-p.y)>95));
    if(!options.length)options=candidates;
    if(!options.length)break;
-   const p=options[Math.floor(Math.random()*options.length)];boatState.coins.push({x:p.x,y:p.y,taken:false,spin:Math.random()*Math.PI*2});
+   const p=options[Math.floor(Math.random()*options.length)];boatState.coins.push({id:i,x:p.x,y:p.y,taken:false,spin:Math.random()*Math.PI*2});
  }
  updateBoatHud();
 }
@@ -789,7 +799,7 @@ function updateBoat(dt){
  if(boatHitsHazard(boatState.x,boatState.y))boatCrash();
  for(const coin of boatState.coins){
    if(!coin.taken&&Math.hypot(boatState.x-coin.x,boatState.y-coin.y)<24){
-     coin.taken=true;boatState.collected++;updateBoatHud();audio.coin();
+     coin.taken=true;boatState.collected++;awardMinigameCoin('boat-'+coin.id);updateBoatHud();audio.coin();
      boatTip.textContent='Mynt upphittat! '+boatState.collected+' av '+BOAT_COIN_TARGET+'.';
    }
  }
@@ -869,7 +879,7 @@ interact.addEventListener('click',()=>{
  if(nearTroll()){visitTroll();return;}
  if(nearestSite()?.name==='Hackelhallen'){stop();window.RimforsaFootball.start({returnToMap:()=>{state.nearKey=null;updateMessage();}});return;}
  if(nearestSite()?.name==='Förskolan Hackel'){stop();window.RimforsaSlideMinigame.start({returnToMap:()=>{state.nearKey=null;updateMessage();}});return;}
-  if(nearestSite()?.name==='Åsundabadet'){stop();window.RimforsaSwimMinigame.start({returnToMap:()=>{state.nearKey=null;updateMessage();}});return;}
+  if(nearestSite()?.name==='Åsundabadet'){stop();window.RimforsaSwimMinigame.start({onCoin:id=>awardMinigameCoin('swim-'+id),returnToMap:()=>{state.nearKey=null;updateMessage();}});return;}
   if(nearestSite()?.name==='Potatislandet'){stop();window.RimforsaFarm.start({returnToMap:()=>{state.nearKey=null;updateMessage();}});return;}
  const npcHere=npcSystem.near(state.x,state.y);
  if(npcHere){
@@ -889,13 +899,14 @@ interact.addEventListener('click',()=>{
   if(near.name==='Bella Donna'){openPizza();return;}
    if(near.name==='Potatislandet'){stop();window.RimforsaFarm.start({returnToMap:()=>{state.nearKey=null;updateMessage();}});return;}
   if(near.name==='Förskolan Hackel'){stop();window.RimforsaSlideMinigame.start({returnToMap:()=>{state.nearKey=null;updateMessage();}});return;}
-   if(near.name==='Åsundabadet'){stop();window.RimforsaSwimMinigame.start({returnToMap:()=>{state.nearKey=null;updateMessage();}});return;}
+   if(near.name==='Åsundabadet'){stop();window.RimforsaSwimMinigame.start({onCoin:id=>awardMinigameCoin('swim-'+id),returnToMap:()=>{state.nearKey=null;updateMessage();}});return;}
  state.visited.add(near.name);
   const found=bag.collectAt(near.name);if(found)renderBag();
   message.innerHTML='<strong>'+near.symbol+' '+near.name+'</strong> – '+near.text+(found?' <strong>'+found.item.icon+' Du hittade '+found.item.name+'! Den finns i väskan.</strong>':'');
  state.messageLocked=true;title.textContent=near.name;interact.textContent='Besök igen ✨';
 });
 function reset(){
+  rewardWallet.clear();
  pizzaOverlay.hidden=true;icaOverlay.hidden=true;winOverlay.hidden=true;hurtUntil=0;audio.setCarSpeed(0);audio.setCarActive(false);state.inCar=false;
  carPos.x=carDrive.HOME.x;carPos.y=carDrive.HOME.y;
  state.x=360;state.y=335;state.camX=360;state.camY=335;state.dir='down';
