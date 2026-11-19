@@ -304,6 +304,39 @@
     for(let i=0;i<4;i++)tone(155+i*37,t+i*.075,.10,.031,'triangle');
     tone(523.25,t+.32,.20,.042,'sine');
   }
+  // Fotbollens tre separata, korta originalsyntetiserade återkopplingar.
+  // Inga ljud spelas när ljudet är av, sidan dold eller Safari-kontexten pausad.
+  function footballKick(){
+    if(!enabled||!ctx||hidden||ctx.state!=='running')return;
+    const t=now()+.006;
+    const o=oscillator('triangle',160),g=gain(0);
+    o.connect(g);g.connect(master);
+    o.frequency.setValueAtTime(160,t);
+    o.frequency.exponentialRampToValueAtTime(70,t+.11);
+    g.gain.setValueAtTime(.0001,t);
+    g.gain.linearRampToValueAtTime(.085,t+.012);
+    g.gain.exponentialRampToValueAtTime(.0001,t+.12);
+    o.start(t);o.stop(t+.13);
+    o.onended=()=>{o.disconnect();g.disconnect();};
+  }
+  function footballSave(){
+    if(!enabled||!ctx||hidden||ctx.state!=='running')return;
+    const t=now()+.008;
+    tone(310,t,.09,.042,'square');
+    tone(230,t+.065,.16,.032,'triangle');
+  }
+  function footballGoal(){
+    if(!enabled||!ctx||hidden||ctx.state!=='running')return;
+    const t=now()+.012;
+    [392,523.25,659.25,783.99,1046.5].forEach((f,i)=>tone(f,t+i*.105,.21,.044,'triangle'));
+    tone(261.63,t+.38,.46,.026,'sine');
+  }
+  function boatTreasure(){
+    if(!enabled||!ctx||hidden||ctx.state!=='running')return;
+    const t=now()+.01;
+    [523.25,659.25,880,1174.66].forEach((f,i)=>tone(f,t+i*.11,.19,.039,'square'));
+    tone(440,t+.38,.38,.024,'sine');
+  }
   function boatGrounding(){
     if(!enabled||!ctx||hidden||ctx.state!=='running')return;
     const t=now()+.01;
@@ -358,5 +391,5 @@
     }catch(_){speechMusicVolume(volume);return false;}
   }
   function status(){return {enabled,available:!!AudioCtor,contextState:ctx?ctx.state:'not-created',scene,hidden,playingMusic:musicInterval!==null,playingWaves:!!waves,playingEngine:!!engine,playingCarEngine:!!carEngine,carActive,dragonNearby};}
-  root.RimforsaAudio={enable,disable,toggle,resumeFromGesture,setScene,setBoatSpeed,setCarActive,setCarSpeed,setDragonNearby,coin,hit,poop,victory,slideLaunch,slideLand,sharkBump,purchase,fuelFill,boatGrounding,speak,stopSpeech,setVisible,status};
+  root.RimforsaAudio={enable,disable,toggle,resumeFromGesture,setScene,setBoatSpeed,setCarActive,setCarSpeed,setDragonNearby,coin,hit,poop,victory,slideLaunch,slideLand,sharkBump,purchase,fuelFill,boatGrounding,footballKick,footballSave,footballGoal,boatTreasure,speak,stopSpeech,setVisible,status};
 })(window);
