@@ -53,7 +53,7 @@
    if(e.key==='Escape')close();else if(e.key==='ArrowLeft')game.moveAim(-22);else if(e.key==='ArrowRight')game.moveAim(22);else if(e.key===' '||e.key==='Spacebar')throwNow();
   },true);
   doc.addEventListener('keyup',e=>{if(game&&game.snapshot().active&&['ArrowLeft','ArrowRight',' ','Spacebar'].includes(e.key)){e.preventDefault();e.stopImmediatePropagation();}},true);
-  trollImage=new root.Image();trollImage.src='./troll-pixel.svg?v=1';
+  trollImage=new root.Image();trollImage.src='./troll-pixel.svg?v=2';
   lageImage=new root.Image();lageImage.src='./lage-sprites.png';
  }
  function playSound(hit){
