@@ -2,14 +2,15 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 const page=readFileSync(new URL('../spel/rimforsa/index.html',import.meta.url),'utf8');
-const sprite=readFileSync(new URL('../spel/rimforsa/troll-sprite.png',import.meta.url));
+const sprite=readFileSync(new URL('../spel/rimforsa/troll-pixel.svg',import.meta.url),'utf8');
 
-test('Godkänd trollfigur laddas separat som transparent spelsprite',()=>{
- assert.equal(sprite.subarray(1,4).toString(),'PNG');
- assert.equal(sprite.readUInt32BE(16),56);
- assert.equal(sprite.readUInt32BE(20),92);
- assert.match(page,/trollSprite\.src='\.\/*troll-sprite\.png\?v=1'/);
- assert.match(page,/ctx\.drawImage\(trollSprite,sx-28,sy-92,56,92\)/);
+test('Trollet är en originalritad transparent 16-bitars pixel-sprite i karta och minispel',()=>{
+ assert.match(sprite,/<svg[^>]+viewBox="0 0 80 112"/);
+ assert.match(sprite,/shape-rendering="crispEdges"/);
+ assert.ok((sprite.match(/<rect /g)||[]).length>=90,'Trollet ska vara detaljritat i pixelblock');
+ assert.doesNotMatch(sprite,/<image|data:image|<foreignObject/i,'inga inklistrade eller externa bilder');
+ assert.match(page,/trollSprite\\.src='\\.\\/troll-pixel\\.svg\\?v=1'/);
+ assert.match(page,/ctx\\.drawImage\\(trollSprite,sx-28,sy-92,56,92\\)/);
 });
 
 test('Trollet står vid stenen nordväst om rondellen och finns på minikartan',()=>{
