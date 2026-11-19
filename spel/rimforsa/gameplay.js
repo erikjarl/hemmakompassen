@@ -2,12 +2,12 @@
 (function(root){
 'use strict';
 function createSession(target=20){
- let hearts=3,coins=0,goal=Math.max(0,Math.floor(target)),lastHazard=null,finished=false;
- const snapshot=()=>({hearts,coins,goal,finished,lastHazard});
+ let hearts=3,coins=0,spent=0,goal=Math.max(0,Math.floor(target)),lastHazard=null,finished=false;
+ const snapshot=()=>({hearts,coins,spent,balance:coins-spent,goal,finished,lastHazard});
  return {
   snapshot,
   reset(nextGoal=goal){
-   hearts=3;coins=0;goal=Math.max(0,Math.floor(nextGoal));lastHazard=null;finished=false;
+   hearts=3;coins=0;spent=0;goal=Math.max(0,Math.floor(nextGoal));lastHazard=null;finished=false;
    return snapshot();
   },
   collect(amount=1){
@@ -17,6 +17,18 @@ function createSession(target=20){
    const justWon=goal>0&&before<goal&&coins===goal;
    if(justWon)finished=true;
    return {...snapshot(),added:coins-before,justWon};
+  },
+  spend(amount){
+   const cost=Number(amount);
+   if(!Number.isSafeInteger(cost)||cost<=0||hearts===0||cost>coins-spent)return {...snapshot(),paid:false};
+   spent+=cost;
+   return {...snapshot(),paid:true};
+  },
+  refund(amount){
+   const value=Number(amount);
+   if(!Number.isSafeInteger(value)||value<=0||value>spent)return {...snapshot(),refunded:false};
+   spent-=value;
+   return {...snapshot(),refunded:true};
   },
   touchHazard(id){
    if(id===null||id===undefined){lastHazard=null;return {...snapshot(),damaged:false,gameOver:false};}
