@@ -234,27 +234,45 @@
     stopScene();
     if(!hidden&&enabled){ensureContext();startScene();}
   }
-  // Webbläsarens talsyntes används bara efter ett klick på dialogen.
-  // Texten finns alltid kvar visuellt om svensk röst saknas.
+  // Tal startas bara efter spelarens klick och med spelljudet aktiverat.
+  // Samma repliker finns alltid kvar som text, även utan svensk systemröst.
+  let speechToken=0;
+  const npcVoices={
+    maja:{rate:1.00,pitch:1.24},
+    oliver:{rate:.92,pitch:.91},
+    saga:{rate:.95,pitch:1.12}
+  };
+  function speechMusicVolume(value){
+    if(master&&ctx&&enabled){
+      master.gain.setTargetAtTime(value,now(),.14);
+    }
+  }
   function stopSpeech(){
+    speechToken++;
     if(root.speechSynthesis&&typeof root.speechSynthesis.cancel==='function'){
       try{root.speechSynthesis.cancel();}catch(_){}
     }
+    // Ingen bakgrundsmusik får ligga kvar på nedskruvad nivå efter dialogen.
+    speechMusicVolume(volume);
   }
-  function speak(text){
+  function speak(text,speaker){
     if(!enabled||hidden||scene!=='land'||!root.speechSynthesis||!root.SpeechSynthesisUtterance)return false;
     const words=String(text||'').trim();
     if(!words)return false;
     stopSpeech();
+    const token=speechToken,profile=npcVoices[speaker]||{rate:.91,pitch:1};
     try{
       const utterance=new root.SpeechSynthesisUtterance(words);
-      utterance.lang='sv-SE';utterance.rate=.87;utterance.pitch=1.1;utterance.volume=.9;
-      const voices=root.speechSynthesis.getVoices?root.speechSynthesis.getVoices():[];
+      utterance.lang='sv-SE';utterance.rate=profile.rate;utterance.pitch=profile.pitch;utterance.volume=.9;
+      const voices=typeof root.speechSynthesis.getVoices==='function'?root.speechSynthesis.getVoices():[];
       const swedish=voices.find(v=>/^sv(?:-|_)/i.test(v.lang));
       if(swedish)utterance.voice=swedish;
+      utterance.onstart=()=>{if(token===speechToken)speechMusicVolume(volume*.20);};
+      const finish=()=>{if(token===speechToken)speechMusicVolume(volume);};
+      utterance.onend=finish;utterance.onerror=finish;
       root.speechSynthesis.speak(utterance);
       return true;
-    }catch(_){return false;}
+    }catch(_){speechMusicVolume(volume);return false;}
   }
   function status(){return {enabled,available:!!AudioCtor,scene,hidden,playingMusic:musicInterval!==null,playingWaves:!!waves,playingEngine:!!engine,playingCarEngine:!!carEngine,carActive,dragonNearby};}
   root.RimforsaAudio={enable,disable,toggle,setScene,setBoatSpeed,setCarActive,setCarSpeed,setDragonNearby,coin,hit,poop,victory,speak,stopSpeech,setVisible,status};
