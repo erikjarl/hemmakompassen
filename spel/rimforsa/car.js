@@ -4,6 +4,13 @@
 const HOME={x:430,y:342},SPEED=210;
 // Två bildrutor i samma pixelgrafik som båten: parkerad 0–87, Lage vid ratten 88–175.
 const CAR_FRAME_WIDTH=88,CAR_FRAME_HEIGHT=55;
+// Gemensamt spriteark: samma bil från åtta riktningar. Originalets
+// parkerade sidovy behålls; den nya grafiken visas när Lage kör.
+const DIRECTION_FRAME_WIDTH=80,DIRECTION_FRAME_HEIGHT=60;
+const CAR_DIRECTIONS=['down','down-right','left','up-left','up','up-right','right','down-left'];
+const directionSprite=typeof root.Image==='function'?new root.Image():null;
+if(directionSprite)directionSprite.src='./car-directions.png?v=1';
+function directionSpriteReady(){return !!directionSprite&&directionSprite.complete&&directionSprite.naturalWidth===640&&directionSprite.naturalHeight===60;}
 const carSprite=typeof root.Image==='function'?new root.Image():null;
 if(carSprite)carSprite.src='./car-spritesheet.png?v=2';
 function spriteReady(){return !!carSprite&&carSprite.complete&&carSprite.naturalWidth===176&&carSprite.naturalHeight===55;}
@@ -46,6 +53,14 @@ function draw(ctx,x,y,dir='right',occupied=false){
  ctx.save();ctx.translate(Math.round(x),Math.round(y));
  const rect=(a,b,w,h,color)=>{ctx.fillStyle=color;ctx.fillRect(a,b,w,h);};
  const left=dir==='left',right=dir==='right';
+ // Alla åtta körvinklar använder samma detaljerade bil och pixelskala.
+ // Behåll befintlig sidobild för bilen som står parkerad vid hemmet.
+ const directionFrame=CAR_DIRECTIONS.indexOf(dir);
+ if(occupied&&directionFrame!==-1&&directionSpriteReady()&&typeof ctx.drawImage==='function'){
+  const smooth=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=false;
+  ctx.drawImage(directionSprite,directionFrame*DIRECTION_FRAME_WIDTH,0,DIRECTION_FRAME_WIDTH,DIRECTION_FRAME_HEIGHT,-48,-40,96,72);
+  ctx.imageSmoothingEnabled=smooth;ctx.restore();return;
+ }
  if(left||right){
   if(left)ctx.scale(-1,1);
   rect(-38,19,76,9,'#15251d88');
@@ -98,5 +113,5 @@ function draw(ctx,x,y,dir='right',occupied=false){
  ctx.restore();
 }
 
-root.RimforsaCar={HOME,SPEED,setWaterMask,ready,waterAt,canDrive,move,draw,spriteReady};
+root.RimforsaCar={HOME,SPEED,setWaterMask,ready,waterAt,canDrive,move,draw,spriteReady,directionSpriteReady};
 })(window);
