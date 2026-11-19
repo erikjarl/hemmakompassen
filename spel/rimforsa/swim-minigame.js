@@ -80,6 +80,45 @@ function render(){
  ctx.fillStyle='#d6bd7c';ctx.fillRect(0,262,480,38);
  ctx.fillStyle='#f4e39f';for(let x=0;x<480;x+=32)ctx.fillRect(x+9,267+(x%3)*5,12,3);
  ctx.fillStyle='#ade9f4';for(let x=0;x<480;x+=45)ctx.fillRect(x,53,28,3);
+ // Pixelritad strand och skogshorisont: samma jordgröna färgskala som huvudkartan.
+ ctx.fillStyle='#5b916c';ctx.fillRect(0,28,480,20);
+ ctx.fillStyle='#346747';ctx.fillRect(0,39,480,11);
+ for(let i=0;i<16;i++){
+  const tx=i*32-6,tip=12+(i%4)*5;
+  ctx.fillStyle=i%2?'#285b42':'#3c7950';ctx.fillRect(tx+7,tip,16,29-tip);
+  ctx.fillRect(tx+3,tip+9,24,9);ctx.fillRect(tx,tip+17,30,11);
+  ctx.fillStyle='#659c62';ctx.fillRect(tx+10,tip+6,8,4);
+ }
+ ctx.fillStyle='#ceb57b';ctx.fillRect(0,48,480,4);
+ ctx.fillStyle='#e4d296';for(let i=0;i<20;i++)ctx.fillRect((i*57)%480,48,12,2);
+ // Små blockiga ljusstråk från vattenytan genom de övre vattenlagren.
+ for(let i=0;i<7;i++){
+  const lx=18+i*72;
+  ctx.fillStyle='#72b9cd';ctx.fillRect(lx,57,13,14);
+  ctx.fillStyle='#479bc2';ctx.fillRect(lx+4,71,8,17);
+  ctx.fillStyle='#3689b3';ctx.fillRect(lx+8,88,5,19);
+ }
+ // Stenar och vass i förgrunden ger sjöbotten mer 16-bitarsdjup.
+ for(let i=0;i<8;i++){
+  const rx=28+i*63;
+  ctx.fillStyle='#456b61';ctx.fillRect(rx,256,28,7);
+  ctx.fillStyle='#8fa196';ctx.fillRect(rx+3,251,20,7);
+  ctx.fillStyle='#c6c3a5';ctx.fillRect(rx+7,249,11,3);
+  for(let j=0;j<3;j++){
+   const stem=rx-7+j*6;
+   ctx.fillStyle=j%2?'#367968':'#4d9b77';ctx.fillRect(stem,229-j*5,3,30+j*5);
+   ctx.fillStyle='#78b995';ctx.fillRect(stem-3,236-j*5,6,4);
+  }
+ }
+ // Små fiskar är enbart miljödetaljer: de har ingen kollision eller poäng.
+ for(let i=0;i<7;i++){
+  const fx=42+i*61,fy=100+(i%4)*29,dir=i%2?1:-1;
+  ctx.fillStyle=i%2?'#a7c7ac':'#e7c17a';
+  ctx.fillRect(fx-7,fy-3,14,7);
+  ctx.fillRect(fx-dir*11,fy-6,5,12);
+  ctx.fillStyle='#fff3cd';ctx.fillRect(fx+dir*3,fy-2,3,2);
+  ctx.fillStyle='#36575b';ctx.fillRect(fx+dir*5,fy-1,2,2);
+ }
  // Pixelritad sjöbotten med stenar, vass och luftbubblor.
  for(let i=0;i<12;i++){const bx=(i*83+27)%475,by=254+(i%3)*4;ctx.fillStyle='#758d85';ctx.fillRect(bx,by,17,8);ctx.fillStyle='#b6b9a4';ctx.fillRect(bx+3,by,9,2);}
  for(let i=0;i<10;i++){const rx=(i*67+18)%476;ctx.fillStyle='#285c67';ctx.fillRect(rx,242,4,20);ctx.fillStyle='#3d927b';ctx.fillRect(rx+4,237,3,25);ctx.fillStyle='#73b49a';ctx.fillRect(rx+3,239,2,8);}
@@ -88,9 +127,18 @@ function render(){
  for(const shark of s.sharks){
   const x=Math.round(shark.x),y=Math.round(shark.y),face=shark.speed>=0?1:-1;
   ctx.save();ctx.translate(x,y);ctx.scale(face,1);
-  ctx.fillStyle='#163c52';ctx.fillRect(-18,-7,32,15);ctx.fillRect(-3,-15,11,12);ctx.fillRect(-23,-14,7,12);ctx.fillRect(-23,4,7,12);
-  ctx.fillStyle='#7bb1bb';ctx.fillRect(-14,3,25,5);ctx.fillRect(11,-3,12,7);ctx.fillRect(-2,-20,5,8);
-  ctx.fillStyle='#f7f0d3';ctx.fillRect(7,-4,3,3);ctx.restore();
+  // Tydligare hajsiluett med ryggfena, stjärtfena, käklinje och pixelögon.
+  ctx.fillStyle='#183f55';ctx.fillRect(-19,-8,33,15);
+  ctx.fillRect(-4,-17,11,12);ctx.fillRect(-1,-23,5,8);
+  ctx.fillRect(-25,-16,7,13);ctx.fillRect(-25,5,7,13);
+  ctx.fillRect(12,-5,10,9);ctx.fillRect(20,-2,7,4);
+  ctx.fillStyle='#386d81';ctx.fillRect(-16,-7,28,6);ctx.fillRect(-2,-15,5,5);
+  ctx.fillStyle='#9bbec0';ctx.fillRect(-16,3,29,5);ctx.fillRect(11,3,8,3);
+  ctx.fillStyle='#f1e0c0';ctx.fillRect(13,1,3,3);ctx.fillRect(17,0,3,2);
+  ctx.fillStyle='#f9e9c8';ctx.fillRect(6,-5,4,4);
+  ctx.fillStyle='#1b3445';ctx.fillRect(8,-4,2,2);
+  ctx.fillStyle='#183f55';ctx.fillRect(12,0,8,2);
+  ctx.restore();
  }
  for(const c of s.coins)if(!c.taken){ctx.fillStyle='#86511d';ctx.fillRect(c.x-9,c.y-10,18,19);ctx.fillStyle='#ffcd47';ctx.fillRect(c.x-7,c.y-8,14,15);ctx.fillStyle='#fff0a6';ctx.fillRect(c.x-3,c.y-6,4,8);}
  const x=Math.round(s.x),y=Math.round(s.y);
