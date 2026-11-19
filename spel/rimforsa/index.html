@@ -220,7 +220,7 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
   try{const s=JSON.parse(localStorage.getItem(key)||'{}');if(s&&typeof s==='object'){for(const id of Object.keys(s.earned||{}))if(/^(boat|swim|football)-[0-9]+$/.test(id)&&s.earned[id]===true)earned[id]=true;spent=Math.min(Object.keys(earned).length,Math.max(0,Math.floor(Number(s.spent)||0)));}}catch(_){}
   const balance=()=>Object.keys(earned).length-spent;
   const save=()=>{try{localStorage.setItem(key,JSON.stringify({earned,spent}));}catch(_){}};
-  return {balance,award(id){if(!/^(boat|swim)-[0-9]+$/.test(id)||earned[id])return false;earned[id]=true;save();return true;},spend(n){if(!Number.isSafeInteger(n)||n<0||n>balance())return false;spent+=n;save();return true;},refund(n){if(!Number.isSafeInteger(n)||n<0||n>spent)return false;spent-=n;save();return true;},clear(){earned={};spent=0;try{localStorage.removeItem(key);}catch(_){}}};
+  return {balance,award(id){if(!/^(boat|swim|football)-[0-9]+$/.test(id)||earned[id])return false;earned[id]=true;save();return true;},spend(n){if(!Number.isSafeInteger(n)||n<0||n>balance())return false;spent+=n;save();return true;},refund(n){if(!Number.isSafeInteger(n)||n<0||n>spent)return false;spent-=n;save();return true;},clear(){earned={};spent=0;try{localStorage.removeItem(key);}catch(_){}}};
  })();
  const awardMinigameCoin=id=>{if(rewardWallet.award(id)){updateCoinScore();return true;}return false;};
  const totalMoney=()=>game.snapshot().balance+rewardWallet.balance()+farm.snapshot().balance;
