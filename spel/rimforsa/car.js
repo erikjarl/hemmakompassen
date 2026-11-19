@@ -39,40 +39,64 @@ function move(x,y,dx,dy,dt){
  }
  return {x,y,moved,speed:moved?SPEED:0};
 }
+// Riktningsanpassad originalpixelgrafik. Sidovyerna använder befintlig detaljsprite;
+// fram-/bak- och diagonala vyer ritas som egna topp-/3/4-perspektiv utan
+// att rotera sidobildens tak till en vägg.
 function draw(ctx,x,y,dir='right',occupied=false){
  ctx.save();ctx.translate(Math.round(x),Math.round(y));
- const angle=dir==='left'?Math.PI:dir==='up'?-Math.PI/2:dir==='down'?Math.PI/2:0;
- ctx.rotate(angle);
- // Mjuk markskugga före pixelbilden. Originalskapat fordon; ritningen bevaras som fallback.
- ctx.fillStyle='#15251d88';ctx.fillRect(-40,19,80,11);
- if(spriteReady()&&typeof ctx.drawImage==='function'){
-   const smooth=ctx.imageSmoothingEnabled;
-   ctx.imageSmoothingEnabled=false;
+ const rect=(a,b,w,h,color)=>{ctx.fillStyle=color;ctx.fillRect(a,b,w,h);};
+ const left=dir==='left',right=dir==='right';
+ if(left||right){
+  if(left)ctx.scale(-1,1);
+  rect(-38,19,76,9,'#15251d88');
+  if(spriteReady()&&typeof ctx.drawImage==='function'){
+   const smooth=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=false;
    ctx.drawImage(carSprite,occupied?CAR_FRAME_WIDTH:0,0,CAR_FRAME_WIDTH,CAR_FRAME_HEIGHT,-45,-30,90,56);
-   ctx.imageSmoothingEnabled=smooth;
-   ctx.restore();
-   return;
+   ctx.imageSmoothingEnabled=smooth;ctx.restore();return;
+  }
+  // Ritad sidovy om bildfilen saknas.
+  rect(-32,15,64,9,'#272f34');rect(-32,-9,64,27,'#e5e9e8');
+  rect(-23,-20,36,13,'#f5f6ef');rect(-18,-17,26,10,'#7bb9d4');
+  rect(-26,17,13,8,'#2b3033');rect(17,17,13,8,'#2b3033');
+  rect(29,-5,5,7,'#f5e39a');rect(-34,-5,5,7,'#bf4645');
+  ctx.restore();return;
  }
- ctx.fillStyle='#15251d88';ctx.fillRect(-25,11,50,9);
- // Fyra hjul, ljusa plåtsidor, blå rutor och röda baklyktor i chunky 16-bitarsstil.
- ctx.fillStyle='#242b2f';for(const a of [-18,11])for(const b of [-15,10])ctx.fillRect(a,b,9,6);
- ctx.fillStyle='#4e5860';ctx.fillRect(-24,-11,48,24);
- ctx.fillStyle='#f2f0e5';ctx.fillRect(-23,-12,46,23);
- ctx.fillStyle='#ffffff';ctx.fillRect(-20,-11,40,20);
- ctx.fillStyle='#d0d5d2';ctx.fillRect(-5,-12,17,23);
- ctx.fillStyle='#7dbedb';ctx.fillRect(-3,-9,13,18);
- ctx.fillStyle='#b1e7f4';ctx.fillRect(5,-7,3,9);
- ctx.fillStyle='#a9b5bc';ctx.fillRect(-8,-12,3,23);
- ctx.fillStyle='#eeeeee';ctx.fillRect(18,-10,5,19);
- ctx.fillStyle='#d24e48';ctx.fillRect(-24,-10,3,6);ctx.fillRect(-24,4,3,6);
- ctx.fillStyle='#fff9b0';ctx.fillRect(22,-9,3,5);ctx.fillRect(22,4,3,5);
+ const diagonal=dir.includes('-');
+ const up=dir.startsWith('up'),down=dir.startsWith('down');
+ const shift=dir.endsWith('left')?-1:1;
+ // Alla former ritas i samma pixelgrid; bilens tak behåller sin övre yta.
+ // Diagonalvyer har förskjuten motorhuv, sned vindruta och asymmetrisk skugga.
+ const dx=diagonal?shift*8:0;
+ rect(-21+dx/2,19,44,9,'#15251d88');
+ rect(-25+dx/2,-17,9,14,'#242c34');rect(16+dx/2,-17,9,14,'#242c34');
+ rect(-25+dx/2,12,9,14,'#242c34');rect(16+dx/2,12,9,14,'#242c34');
+ rect(-22,-24,44,49,'#526069');
+ rect(-20,-23,40,46,'#e8e9e5');
+ rect(-18,-21,36,40,'#f8f7ed');
+ if(diagonal){
+  // Frontpartiets förskjutning ger en tydlig tredimensionell 3/4-vy.
+  rect(dx>0?7:-23,down?12:-21,17,12,'#d0d6d5');
+  rect(dx>0?19:-24,-10,5,25,'#bac4c6');
+  rect(dx>0?20:-24,down?13:-19,4,8,'#f6e5ae');
+ }
+ const windY=up?-15:9,backY=up?12:-16;
+ rect(-15+dx/4,windY,30,10,'#497a96');
+ rect(-12+dx/4,windY+2,24,5,'#86c7e3');
+ rect(-16,backY,32,7,'#a7bfc8');
+ rect(-13,-4,26,17,'#d6d9d6');
+ rect(-11,-2,22,13,'#f3f0e6');
+ rect(-8,0,16,8,'#c4cdd0');
+ rect(-17,up?-23:20,9,4,up?'#e9dfc6':'#c34e46');
+ rect(8,up?-23:20,9,4,up?'#e9dfc6':'#c34e46');
+ rect(-17,up?20:-23,9,4,up?'#c34e46':'#f1e4a9');
+ rect(8,up?20:-23,9,4,up?'#c34e46':'#f1e4a9');
  if(occupied){
-  // Lage i förarsätet: ljust hår, ansikte och röd tröja.
-  ctx.fillStyle='#e8ba63';ctx.fillRect(1,-2,7,5);
-  ctx.fillStyle='#f4cc9d';ctx.fillRect(2,-1,6,6);
-  ctx.fillStyle='#ba586c';ctx.fillRect(1,5,8,3);
+  // Föraren syns genom främre rutan i samma färger som Lage.
+  rect(-5,windY+3,10,5,'#e9c08e');
+  rect(-4,windY+2,8,3,'#8b643f');
  }
  ctx.restore();
 }
+
 root.RimforsaCar={HOME,SPEED,setWaterMask,ready,waterAt,canDrive,move,draw,spriteReady};
 })(window);
