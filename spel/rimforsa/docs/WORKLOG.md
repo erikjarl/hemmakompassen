@@ -176,3 +176,9 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 - Hoppade över LJUD-04 (kräver faktisk avlyssning) och KARTA-01 (långsiktigt lägre prioritet), roterade från LJUD-03 till DRAKE-02.
 - Lade till `helicopter.js` med parkerad, pixelritad helikopter vid hemmet och kort visuell reaktion vid träff. Kopplade `index.html` till renderingen och `dragon.js` till att rikta eldklot även mot helikoptern. Eldklot ritas även när draken befinner sig utanför bild.
 - Syntaxkontroll via JavaScript-kompilering av de två modulerna och inline-skriptet i huvudsidan: godkänd. Ingen riktig webbläsar-/mobilgenomspelning, visuell bedömning eller hörselkontroll utförd. Helikoptern saknar fortfarande flygning, bränsle och eget motorljud; DRAKE-02 står kvar öppen. Nästa rotation: MYNT-03.
+
+### 2026-11-20 · Jobb Lage · MYNT-03
+
+- Rotationssteg från DRAKE-02 till MYNT-03. Hackelhallen ger nu upp till tre engångsmynt för mål 1–3, `football-0`–`football-2`, till den delade minispelsplånboken via callback vid mål. Belöningar som redan hämtats betalas inte ut igen vid omspelning eller efter omladdning så länge localStorage finns kvar. Belöningsgränsen och om mynt tilldelades visas i fotbollsspelet.
+- Huvudsidan godtar nu `football-*` i både inläsning från localStorage och när en belöning tilldelas. Redan befintligt gemensamt saldo för båt/dyk och utgifter återanvänds. Inga grafikändringar; måltextens missvisande +1 togs bort när inga nya mynt ges.
+- JavaScript-syntax kontrollerad i fotbollsmodul och huvudsidans inline-skript. Kopplingen mellan callback och plånbok källgranskad. Ingen riktig spelgenomgång i mobil/webbläsare, inga faktiska återladdnings-, köp- eller hjärtförlusttester utförda. MYNT-03 och HUV-05 förblir öppna. Nästa rotation HUV-05.
