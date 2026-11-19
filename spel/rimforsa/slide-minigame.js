@@ -28,7 +28,7 @@ function createSession(){
  function reset(){state='ready';charge=0;x=0;y=0;vx=0;vy=0;return snapshot();}
  return {snapshot,startCharge,step,release,reset};
 }
-let session=null,dialog=null,canvas=null,ctx=null,button=null,status=null,metrics=null,frameId=0,lastFrame=0,previousFocus=null,callback=null,previousState='';
+let session=null,dialog=null,canvas=null,ctx=null,button=null,status=null,metrics=null,frameId=0,lastFrame=0,previousFocus=null,callback=null,previousState='',lageSprite=null;
 function setup(){
  if(dialog)return;
  const style=root.document.createElement('style');
@@ -43,6 +43,10 @@ function setup(){
  dialog=root.document.createElement('div');dialog.className='slide-dialog';dialog.hidden=true;dialog.setAttribute('role','dialog');dialog.setAttribute('aria-modal','true');dialog.setAttribute('aria-label','Rutschkanan på förskolan');
  dialog.innerHTML=`<div class="slide-panel"><h2>🛝 Lages rutschkana</h2><p>Håll inne knappen för att ta sats. Släpp för att flyga!</p><canvas width="480" height="270" aria-label="Lage åker nerför rutschkanan och landar på gräset"></canvas><p class="slide-message" data-slide-status role="status" aria-live="polite">Redo att åka!</p><p data-slide-metrics>Rekord: 0 meter</p><div class="slide-controls"><button type="button" class="slide-launch" data-slide-launch>HÅLL INNE FÖR FART!</button><button type="button" data-slide-reset>Åk igen ↺</button><button type="button" data-slide-close>Tillbaka ✕</button></div><p class="slide-hint">Mobil: håll fingret på knappen och släpp. Dator: håll mellanslag och släpp. Ingen förlorar hjärtan här.</p></div>`;
  root.document.body.append(dialog);canvas=dialog.querySelector('canvas');ctx=canvas.getContext('2d');button=dialog.querySelector('[data-slide-launch]');status=dialog.querySelector('[data-slide-status]');metrics=dialog.querySelector('[data-slide-metrics]');
+ // Återanvänd exakt samma Lage-spritesheet som huvudkartan, även i luften.
+ lageSprite=new root.Image();
+ lageSprite.onload=()=>{if(session&&!dialog.hidden)render();};
+ lageSprite.src='./lage-sprites.png';
  function charge(e){if(e&&e.cancelable)e.preventDefault();if(!session||dialog.hidden)return;session.startCharge();render();}
  function release(e){if(e&&e.cancelable)e.preventDefault();if(!session||dialog.hidden)return;session.release();render();}
  button.addEventListener('pointerdown',e=>{charge(e);try{button.setPointerCapture(e.pointerId)}catch(_){}});
@@ -94,11 +98,19 @@ function render(){
  ctx.strokeStyle='#c87531';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(114,91);ctx.lineTo(167,166);ctx.lineTo(202,182);ctx.stroke();
  const px=s.state==='flying'||s.state==='landed'?202+Math.min(s.x*.62,260):s.state==='charging'?114:95;
  const py=s.state==='flying'?177+s.y*.55:s.state==='landed'?180:s.state==='charging'?76:78;
- ctx.fillStyle='#2b3b30';ctx.fillRect(px-11,py+14,9,12);ctx.fillRect(px+3,py+14,9,12);
- ctx.fillStyle='#ca5f5b';ctx.fillRect(px-12,py-4,25,22);
- ctx.fillStyle='#f5c99d';ctx.fillRect(px-9,py-19,19,16);
- ctx.fillStyle='#71502e';ctx.fillRect(px-9,py-20,19,5);
- ctx.fillStyle='#172b29';ctx.fillRect(px+4,py-11,3,3);
+ // Huvudkartans 56×56-Lage ritas som 44×44 med närmaste-granne-skalning.
+ // Rad 2 är riktningen åt höger, vilket passar rutschkanans färdriktning.
+ if(lageSprite&&lageSprite.complete&&lageSprite.naturalWidth>=224&&lageSprite.naturalHeight>=224){
+  const walkingFrame=s.state==='flying'?2:0;
+  ctx.drawImage(lageSprite,walkingFrame*56,2*56,56,56,Math.round(px-22),Math.round(py-30),44,44);
+ }else{
+  // Reservfigur syns enbart om originalbilden inte kan hämtas.
+  ctx.fillStyle='#2b3b30';ctx.fillRect(px-11,py+14,9,12);ctx.fillRect(px+3,py+14,9,12);
+  ctx.fillStyle='#ca5f5b';ctx.fillRect(px-12,py-4,25,22);
+  ctx.fillStyle='#f5c99d';ctx.fillRect(px-9,py-19,19,16);
+  ctx.fillStyle='#71502e';ctx.fillRect(px-9,py-20,19,5);
+  ctx.fillStyle='#172b29';ctx.fillRect(px+4,py-11,3,3);
+ }
  // Kraftmätare visar direkt varför ett långt tryck ger längre flygtur.
  ctx.fillStyle='#243e32';ctx.fillRect(18,19,154,21);ctx.fillStyle='#e4c992';ctx.fillRect(22,23,146,13);
  ctx.fillStyle='#e19a38';ctx.fillRect(22,23,146*s.charge/s.maxCharge,13);
