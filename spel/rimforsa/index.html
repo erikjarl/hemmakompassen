@@ -114,6 +114,7 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
 <script src="./dragon.js?v=1"></script>
 <script src="./troll-minigame.js?v=1"></script>
 <script src="./slide-minigame.js?v=2"></script>
+<script src="./swim-minigame.js?v=1"></script>
 <script>
 (()=>{'use strict';
 const W=1448,H=1086, canvas=document.getElementById('world'), ctx=canvas.getContext('2d',{alpha:false});
@@ -627,7 +628,7 @@ function updateMessage(){
    message.innerHTML='<strong>💬 '+npcHere.name+'</strong> – någon vill prata med Lage. Tryck på Prata!';
  }else if(near){
    const isBoat=near.name==='Kinda Båtklubb';
-   interact.textContent=isBoat?'Kör båt 🛥️':near.name==='ICA Melkers'?'Köp glass 🍦':near.name==='Bella Donna'?'Köp pizza 🍕':near.name==='Förskolan Hackel'?'Åk rutschkana 🛝':'Utforska ✨';
+   interact.textContent=isBoat?'Kör båt 🛥️':near.name==='ICA Melkers'?'Köp glass 🍦':near.name==='Bella Donna'?'Köp pizza 🍕':near.name==='Förskolan Hackel'?'Åk rutschkana 🛝':near.name==='Åsundabadet'?'Dyk efter mynt 🤿':'Utforska ✨';
    message.innerHTML='<strong>'+near.symbol+' '+near.name+'</strong> – '+(isBoat?'tryck på Kör båt för att åka ut på sjön.':'tryck på Utforska för att besöka platsen.');
    title.textContent=near.name;
  }else{
@@ -640,6 +641,7 @@ interact.addEventListener('click',()=>{
  if(nearCar()){enterCar();return;}
  if(nearTroll()){visitTroll();return;}
  if(nearestSite()?.name==='Förskolan Hackel'){stop();window.RimforsaSlideMinigame.start({returnToMap:()=>{state.nearKey=null;updateMessage();}});return;}
+  if(nearestSite()?.name==='Åsundabadet'){stop();window.RimforsaSwimMinigame.start({returnToMap:()=>{state.nearKey=null;updateMessage();}});return;}
  const npcHere=npcSystem.near(state.x,state.y);
  if(npcHere){
    const dialogue=npcSystem.talk(npcHere.id);
@@ -655,6 +657,7 @@ interact.addEventListener('click',()=>{
   if(near.name==='ICA Melkers'){openIca();return;}
   if(near.name==='Bella Donna'){openPizza();return;}
   if(near.name==='Förskolan Hackel'){stop();window.RimforsaSlideMinigame.start({returnToMap:()=>{state.nearKey=null;updateMessage();}});return;}
+   if(near.name==='Åsundabadet'){stop();window.RimforsaSwimMinigame.start({returnToMap:()=>{state.nearKey=null;updateMessage();}});return;}
  state.visited.add(near.name);
   const found=bag.collectAt(near.name);if(found)renderBag();
   message.innerHTML='<strong>'+near.symbol+' '+near.name+'</strong> – '+near.text+(found?' <strong>'+found.item.icon+' Du hittade '+found.item.name+'! Den finns i väskan.</strong>':'');
@@ -709,7 +712,7 @@ const start=s[1]*NX+s[0],goal=t[1]*NX+t[0],prev=new Int32Array(MAX).fill(-1),dis
 dist[start]=0;push(start,0);let reached=false,expanded=0;const moves=[[1,0,1],[-1,0,1],[0,1,1],[0,-1,1],[1,1,1.414],[-1,1,1.414],[1,-1,1.414],[-1,-1,1.414]];
 while(heap.length&&expanded++<MAX){const id=pop();if(seen[id])continue;seen[id]=1;if(id===goal){reached=true;break}const cx=id%NX,cy=(id/NX)|0;for(const [dx,dy,cost] of moves){const nx=cx+dx,ny=cy+dy;if(!walkCell(nx,ny))continue;if(dx&&dy&&(!walkCell(cx+dx,cy)||!walkCell(cx,cy+dy)))continue;let nid=ny*NX+nx,nd=dist[id]+cost;if(nd>=dist[nid])continue;prev[nid]=id;dist[nid]=nd;const h=Math.hypot(t[0]-nx,t[1]-ny);push(nid,nd+h)}}
 if(!reached)return [];let ids=[];for(let i=goal;i!==-1;i=prev[i])ids.push(i);ids.reverse();return ids.slice(1).map(id=>({x:((id%NX)+.5)*STEP,y:((((id/NX)|0)+.5)*STEP)}))}
-canvas.addEventListener('pointerdown',ev=>{if(!maskLoaded||overlay.classList.contains('show')||!icaOverlay.hidden||!pizzaOverlay.hidden||!bagOverlay.hidden||window.RimforsaSlideMinigame.isOpen()||window.RimforsaTrollMinigame.isOpen())return;ev.preventDefault();if(state.inCar)return;const r=canvas.getBoundingClientRect(),sx=(ev.clientX-r.left)*canvas.width/r.width,sy=(ev.clientY-r.top)*canvas.height/r.height;const x=state.camX-canvas.width/2+sx,y=state.camY-canvas.height/2+sy;state.path=pathTo(x,y)});
+canvas.addEventListener('pointerdown',ev=>{if(!maskLoaded||overlay.classList.contains('show')||!icaOverlay.hidden||!pizzaOverlay.hidden||!bagOverlay.hidden||window.RimforsaSlideMinigame.isOpen()||window.RimforsaSwimMinigame.isOpen()||window.RimforsaTrollMinigame.isOpen())return;ev.preventDefault();if(state.inCar)return;const r=canvas.getBoundingClientRect(),sx=(ev.clientX-r.left)*canvas.width/r.width,sy=(ev.clientY-r.top)*canvas.height/r.height;const x=state.camX-canvas.width/2+sx,y=state.camY-canvas.height/2+sy;state.path=pathTo(x,y)});
 function slideMove(dx,dy){
  if(!maskLoaded)return false;
  // Short substeps prevent tunneling through thin fences when the game briefly slows down.
@@ -761,7 +764,7 @@ let last=performance.now(),stepProgress=0;
 function tick(now){
  const dt=Math.min(.05,(now-last)/1000);last=now;
  updateBoat(dt);
- if(maskLoaded&&!isBoatOpen()&&winOverlay.hidden&&bagOverlay.hidden&&icaOverlay.hidden&&pizzaOverlay.hidden&&!window.RimforsaSlideMinigame.isOpen()&&!window.RimforsaTrollMinigame.isOpen()){
+ if(maskLoaded&&!isBoatOpen()&&winOverlay.hidden&&bagOverlay.hidden&&icaOverlay.hidden&&pizzaOverlay.hidden&&!window.RimforsaSlideMinigame.isOpen()&&!window.RimforsaSwimMinigame.isOpen()&&!window.RimforsaTrollMinigame.isOpen()){
   npcSystem.update(dt,state.x,state.y);
   let dx=(+keys.right)-(+keys.left),dy=(+keys.down)-(+keys.up);
   if(state.inCar){
@@ -813,7 +816,7 @@ function openMap(){stop();overlay.classList.add('show');drawMap(wc,whole.width,w
 function closeMap(){overlay.classList.remove('show')}
 for(const id of ['showMap','miniMapBtn'])document.getElementById(id).addEventListener('click',openMap);
 document.getElementById('closeMap').addEventListener('click',closeMap);mini.addEventListener('click',openMap);overlay.addEventListener('click',e=>{if(e.target===overlay)closeMap()});
-window.__rimforsaTest={slideGame:window.RimforsaSlideMinigame,openPizza,closePizza,renderPizza,PIZZA_PRICE,openIca,closeIca,renderIca,icePrices,dragon,bag,state,sites,npcSystem,game,poops:()=>poops.map(p=>({...p})),scatterPoops,checkPoops,showTreasureVictory,troll,nearTroll,visitTroll,carPos,carDrive,nearCar,enterCar,exitCar,canStand,pathTo,moveTo:(x,y)=>{state.x=x;state.y=y;updateMessage()},isReady:()=>maskLoaded&&imageLoaded,hasSprite:()=>spriteLoaded,frames:()=>frameCount,edgeClearance,edgeAssistedDirection,slideMove,coinCandidates:()=>coinCandidates.slice(),coins:()=>coins.map(c=>({...c})),coinCount:()=>coinCount,scatterCoins,collectCoins,reset,openBoatGame,closeBoatGame,boatState,boatHazards,boatReady:()=>boatChartLoaded,boatPixelWater,spawnBoatCoins};
+window.__rimforsaTest={swimGame:window.RimforsaSwimMinigame,slideGame:window.RimforsaSlideMinigame,openPizza,closePizza,renderPizza,PIZZA_PRICE,openIca,closeIca,renderIca,icePrices,dragon,bag,state,sites,npcSystem,game,poops:()=>poops.map(p=>({...p})),scatterPoops,checkPoops,showTreasureVictory,troll,nearTroll,visitTroll,carPos,carDrive,nearCar,enterCar,exitCar,canStand,pathTo,moveTo:(x,y)=>{state.x=x;state.y=y;updateMessage()},isReady:()=>maskLoaded&&imageLoaded,hasSprite:()=>spriteLoaded,frames:()=>frameCount,edgeClearance,edgeAssistedDirection,slideMove,coinCandidates:()=>coinCandidates.slice(),coins:()=>coins.map(c=>({...c})),coinCount:()=>coinCount,scatterCoins,collectCoins,reset,openBoatGame,closeBoatGame,boatState,boatHazards,boatReady:()=>boatChartLoaded,boatPixelWater,spawnBoatCoins};
 reset();
 })();
 
