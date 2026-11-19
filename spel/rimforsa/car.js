@@ -4,8 +4,8 @@
 const HOME={x:430,y:342},SPEED=210;
 // Två bildrutor i samma pixelgrafik som båten: parkerad 0–87, Lage vid ratten 88–175.
 const CAR_FRAME_WIDTH=88,CAR_FRAME_HEIGHT=55;
-// Gemensamt spriteark: samma bil från åtta riktningar. Originalets
-// parkerade sidovy behålls; den nya grafiken visas när Lage kör.
+// Gemensamt spriteark: samma bil från åtta riktningar används både parkerad
+// och under körning. Den äldre sidobilden används endast som fallback.
 const DIRECTION_FRAME_WIDTH=80,DIRECTION_FRAME_HEIGHT=60;
 const CAR_DIRECTIONS=['down','down-right','left','up-left','up','up-right','right','down-left'];
 const directionSprite=typeof root.Image==='function'?new root.Image():null;
@@ -53,12 +53,12 @@ function draw(ctx,x,y,dir='right',occupied=false){
  ctx.save();ctx.translate(Math.round(x),Math.round(y));
  const rect=(a,b,w,h,color)=>{ctx.fillStyle=color;ctx.fillRect(a,b,w,h);};
  const left=dir==='left',right=dir==='right';
- // Alla åtta körvinklar använder samma detaljerade bil och pixelskala.
- // Behåll befintlig sidobild för bilen som står parkerad vid hemmet.
+ // Prioritera en enda bilmodell i ALLA lägen, även vid hemmet.
+ // För okända riktningar används höger sidovy; gammal bild är bara fallback.
  const directionFrame=CAR_DIRECTIONS.indexOf(dir);
- if(occupied&&directionFrame!==-1&&directionSpriteReady()&&typeof ctx.drawImage==='function'){
+ if(directionSpriteReady()&&typeof ctx.drawImage==='function'){
   const smooth=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=false;
-  ctx.drawImage(directionSprite,directionFrame*DIRECTION_FRAME_WIDTH,0,DIRECTION_FRAME_WIDTH,DIRECTION_FRAME_HEIGHT,-48,-40,96,72);
+  ctx.drawImage(directionSprite,(directionFrame<0?CAR_DIRECTIONS.indexOf('right'):directionFrame)*DIRECTION_FRAME_WIDTH,0,DIRECTION_FRAME_WIDTH,DIRECTION_FRAME_HEIGHT,-48,-40,96,72);
   ctx.imageSmoothingEnabled=smooth;ctx.restore();return;
  }
  if(left||right){
