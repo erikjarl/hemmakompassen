@@ -297,7 +297,19 @@ const sites=[
  {name:'Kinda Båtklubb',x:1100,y:116,text:'Här ligger båtarna vid sjön. Här kan Lage hoppa i en vit motorbåt och ge sig ut på skattjakt bland grunden.',symbol:'⛵'}
 ];
 const playerRadius=6;
-function loadMask(){if(!maskImage.complete||!maskImage.naturalWidth)return;const off=document.createElement('canvas');off.width=maskImage.naturalWidth;off.height=maskImage.naturalHeight;const g=off.getContext('2d',{willReadFrequently:true});g.imageSmoothingEnabled=false;g.drawImage(maskImage,0,0);collision=g.getImageData(0,0,off.width,off.height).data;maskW=off.width;maskH=off.height;buildEdgeDistance();maskLoaded=true;buildCoinCandidates();scatterCoins();npcSystem.reset();message.innerHTML='<strong>Skattjakten börjar!</strong> Leta efter '+COIN_TARGET+' guldmynt och undvik bajskorvarna längs vägarna.'}
+function loadMask(){if(!maskImage.complete||!maskImage.naturalWidth)return;const off=document.createElement('canvas');off.width=maskImage.naturalWidth;off.height=maskImage.naturalHeight;const g=off.getContext('2d',{willReadFrequently:true});g.imageSmoothingEnabled=false;g.drawImage(maskImage,0,0);
+// The original walkability image omits the short shore access from Bella Donna's
+// east road to Åsundabadet. Restore this narrow land path in collision space;
+// do not make the adjacent lake or the entire beach/forest freely walkable.
+g.save();
+g.scale(off.width/W,off.height/H);
+g.strokeStyle='#fff';g.lineWidth=34;g.lineCap='round';g.lineJoin='round';
+g.beginPath();
+g.moveTo(1047,842);g.lineTo(1081,846);g.lineTo(1116,814);
+g.lineTo(1150,783);g.lineTo(1188,758);g.lineTo(1220,740);
+g.stroke();
+g.restore();
+collision=g.getImageData(0,0,off.width,off.height).data;maskW=off.width;maskH=off.height;buildEdgeDistance();maskLoaded=true;buildCoinCandidates();scatterCoins();npcSystem.reset();message.innerHTML='<strong>Skattjakten börjar!</strong> Leta efter '+COIN_TARGET+' guldmynt och undvik bajskorvarna längs vägarna.'}
 maskImage.addEventListener('load',loadMask);tiles.addEventListener('load',()=>imageLoaded=true);sprite.addEventListener('load',()=>spriteLoaded=true);
 boatChart.addEventListener('load',()=>{
  // Collision pixels must use the same NATURAL image dimensions as the rendered map.
