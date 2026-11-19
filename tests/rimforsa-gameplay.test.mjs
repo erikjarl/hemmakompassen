@@ -91,3 +91,15 @@ test('ICA storefront integrates balance, both flavors and existing reset',()=>{
  for(const text of ['data-buy-ice="paronglass"','data-buy-ice="vaniljglass"','game.spend(cost)','bag.addPurchase(id)','id="icaOverlay"','Köp glass 🍦'])
   assert.ok(html.includes(text),text);
 });
+
+test('Bella Donna pizza requires five coins and preserves treasure progress',()=>{
+ for(const marker of ['id="pizzaOverlay"','id="buyPizza"',"PIZZA_PRICE=5","game.spend(PIZZA_PRICE)","bag.addPurchase('ananaspizza')","near.name==='Bella Donna'","openPizza();return;"])
+  assert.ok(html.includes(marker),'Missing pizza integration: '+marker);
+ const game=engine.createSession(20);
+ game.collect(7);
+ assert.equal(game.spend(5).paid,true);
+ assert.equal(game.snapshot().balance,2);
+ assert.equal(game.snapshot().coins,7);
+ assert.equal(game.spend(5).paid,false);
+ assert.equal(game.reset(20).balance,0);
+});
