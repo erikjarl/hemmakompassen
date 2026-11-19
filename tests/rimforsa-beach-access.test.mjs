@@ -88,3 +88,15 @@ test('shore trail is drawn on world, minimap and overview',()=>{
  assert.ok(html.includes('ctx2.scale(w/W,h/H);drawBeachAccess(ctx2)'));
  assert.ok(html.includes('g.setLineDash([7,12])'));
 });
+
+test('large map can plan a route to Åsundabadet by button or touch',()=>{
+ assert.match(html,/id="goBeach"/);
+ assert.match(html,/id="mapRouteHint" role="status"/);
+ assert.match(html,/function routeFromMap\(x,y\)/);
+ assert.match(html,/const route=pathTo\(x,y\)/);
+ assert.match(html,/state\.path=route;closeMap\(\)/);
+ assert.match(html,/getElementById\('goBeach'\)\.addEventListener\('click',\(\)=>routeFromMap\(1220,740\)\)/);
+ assert.match(html,/whole\.addEventListener\('pointerdown'/);
+ assert.match(html,/\(ev\.clientX-rect\.left\)\/rect\.width\*W/);
+ assert.match(html,/if\(!route\.length\)/);
+});
