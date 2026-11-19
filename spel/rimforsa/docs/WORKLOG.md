@@ -170,3 +170,9 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 - Lade till fyra korta, originalsyntetiserade effekter i `audio.js`: fotbollsspark, målvaktsräddning, mål och komplett båtmyntsamling. Samtliga respekterar på/av, flikstatus och `AudioContext.state === 'running'`.
 - Anslöt ljuden till `football-minigame.js` respektive båtens segergren i `index.html`; versionsnummer på båda berörda skript uppdaterade för att motverka cache av äldre JavaScript.
 - Filer och anropsställen kontrollerade i kod; ingen faktisk webbläsaravlyssning eller mobilgenomspelning. LJUD-03 fortsatt öppen; nästa rotation LJUD-04 eller efterföljande praktiskt genomförbar uppgift.
+
+### 2026-11-20 · Jobb Lage · DRAKE-02
+
+- Hoppade över LJUD-04 (kräver faktisk avlyssning) och KARTA-01 (långsiktigt lägre prioritet), roterade från LJUD-03 till DRAKE-02.
+- Lade till `helicopter.js` med parkerad, pixelritad helikopter vid hemmet och kort visuell reaktion vid träff. Kopplade `index.html` till renderingen och `dragon.js` till att rikta eldklot även mot helikoptern. Eldklot ritas även när draken befinner sig utanför bild.
+- Syntaxkontroll via JavaScript-kompilering av de två modulerna och inline-skriptet i huvudsidan: godkänd. Ingen riktig webbläsar-/mobilgenomspelning, visuell bedömning eller hörselkontroll utförd. Helikoptern saknar fortfarande flygning, bränsle och eget motorljud; DRAKE-02 står kvar öppen. Nästa rotation: MYNT-03.
