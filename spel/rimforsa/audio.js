@@ -132,7 +132,7 @@
     stopWaves();stopEngine();stopCarEngine();
   }
   function startScene(){
-    if(!enabled||!ctx||hidden)return;
+    if(!enabled||!ctx||hidden||ctx.state!=='running')return;
     if(scene==='swim'){
       // Badet använder bara mjukt vågskvalp – inga måsar eller motorljud.
       startWaves();
