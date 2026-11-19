@@ -45,3 +45,14 @@ test('bad remains separate from land hearts and paints pixel sharks',()=>{
  assert.match(script,/gameOver:finished/);
  assert.match(html,/\.\/swim-minigame\.js\?v=2/);
 });
+
+test('waves are enabled only in swimming scene and stop on exit',()=>{
+ const audio=fs.readFileSync(new URL('../spel/rimforsa/audio.js',import.meta.url),'utf8');
+ assert.match(script,/RimforsaAudio\.setScene\('swim'\)/);
+ assert.match(script,/RimforsaAudio\.setScene\('land'\)/);
+ assert.match(script,/data-swim-sound/);
+ assert.match(script,/root\.RimforsaAudio\.toggle\(\)/);
+ assert.match(audio,/scene==='swim'/);
+ assert.match(audio,/\['boat','preschool','swim'\]\.includes\(next\)/);
+ assert.match(html,/\.\/audio\.js\?v=6/);
+});
