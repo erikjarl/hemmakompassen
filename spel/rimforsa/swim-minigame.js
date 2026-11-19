@@ -29,7 +29,7 @@ function createSession(){
  }
  return {snapshot,step,reset:()=>{x=52;y=74;elapsed=0;hearts=3;invul=0;finished=false;sharks=sharkStarts.map(s=>({...s}));coins=coinsAt.map(([cx,cy],i)=>({x:cx,y:cy,id:i,taken:false}));return snapshot();}};
 }
-let dialog=null,canvas,ctx,session,keys={up:false,down:false,left:false,right:false},raf=0,last=0,back=null,previousFocus=null,status,score;
+let lageSprite=null,dialog=null,canvas,ctx,session,keys={up:false,down:false,left:false,right:false},raf=0,last=0,back=null,previousFocus=null,status,score;
 function setup(){
  if(dialog)return;
  const style=root.document.createElement('style');
@@ -37,7 +37,7 @@ function setup(){
  root.document.head.append(style);
  dialog=root.document.createElement('div');dialog.hidden=true;dialog.className='swim-dialog';dialog.setAttribute('role','dialog');dialog.setAttribute('aria-modal','true');dialog.setAttribute('aria-label','Simma vid Åsundabadet');
  dialog.innerHTML=`<div class="swim-panel"><h2>🏖️ Dyk vid Åsundabadet</h2><button type="button" class="swim-exit" data-swim-sound aria-label="Slå på ljud i badspelet" aria-pressed="false">🔈 Ljud på</button><p>Simma ner och hitta fem mynt på sjöbotten!</p><canvas width="480" height="300" aria-label="Sidovy av sjön med vattenyta och sandbotten där Lage simmar och hittar mynt"></canvas><p data-swim-score aria-live="polite">♥♥♥ · Hittade 0 av 5 mynt</p><p data-swim-status role="status" aria-live="polite">Tryck nedåt för att dyka.</p><div class="swim-actions"><div class="swim-pad" aria-label="Styr simningen"><button type="button" data-swim="up" aria-label="Simma uppåt">↑</button><button type="button" data-swim="left" aria-label="Simma vänster">←</button><button type="button" data-swim="down" aria-label="Dyk nedåt">↓</button><button type="button" data-swim="right" aria-label="Simma höger">→</button></div><div><button type="button" class="swim-exit" data-swim-reset>Spela om ↺</button> <button type="button" class="swim-exit" data-swim-close>Tillbaka ✕</button></div></div><p class="swim-note">Håll knapparna nere eller använd piltangenter/WASD. Det här är ett fantasisimspel, inte simråd. Badet har egna tre hjärtan och fem mynt. Hjärtan och mynt på huvudkartan ändras inte.</p></div>`;
- root.document.body.append(dialog);canvas=dialog.querySelector('canvas');ctx=canvas.getContext('2d');score=dialog.querySelector('[data-swim-score]');status=dialog.querySelector('[data-swim-status]');
+ root.document.body.append(dialog);lageSprite=new root.Image();lageSprite.onload=()=>{if(session&&!dialog.hidden)render();};lageSprite.src='./lage-sprites.png';canvas=dialog.querySelector('canvas');ctx=canvas.getContext('2d');score=dialog.querySelector('[data-swim-score]');status=dialog.querySelector('[data-swim-status]');
  for(const b of dialog.querySelectorAll('[data-swim]')){
   const dir=b.dataset.swim;const up=()=>{keys[dir]=false;};
   b.addEventListener('pointerdown',e=>{e.preventDefault();keys[dir]=true;try{b.setPointerCapture(e.pointerId)}catch(_){}});
@@ -80,6 +80,10 @@ function render(){
  ctx.fillStyle='#d6bd7c';ctx.fillRect(0,262,480,38);
  ctx.fillStyle='#f4e39f';for(let x=0;x<480;x+=32)ctx.fillRect(x+9,267+(x%3)*5,12,3);
  ctx.fillStyle='#ade9f4';for(let x=0;x<480;x+=45)ctx.fillRect(x,53,28,3);
+ // Pixelritad sjöbotten med stenar, vass och luftbubblor.
+ for(let i=0;i<12;i++){const bx=(i*83+27)%475,by=254+(i%3)*4;ctx.fillStyle='#758d85';ctx.fillRect(bx,by,17,8);ctx.fillStyle='#b6b9a4';ctx.fillRect(bx+3,by,9,2);}
+ for(let i=0;i<10;i++){const rx=(i*67+18)%476;ctx.fillStyle='#285c67';ctx.fillRect(rx,242,4,20);ctx.fillStyle='#3d927b';ctx.fillRect(rx+4,237,3,25);ctx.fillStyle='#73b49a';ctx.fillRect(rx+3,239,2,8);}
+ for(let i=0;i<16;i++){const bx=(i*43+14)%480,by=87+(i*47)%136;ctx.fillStyle='#72c2dc';ctx.fillRect(bx,by,3,8);ctx.fillRect(bx+5,by+9,2,3);}
  for(let i=0;i<18;i++){let xx=(i*53)%470,yy=75+(i*37)%173;ctx.fillStyle='#8ad4e5';ctx.fillRect(xx,yy,3,7);}
  for(const shark of s.sharks){
   const x=Math.round(shark.x),y=Math.round(shark.y),face=shark.speed>=0?1:-1;
@@ -91,11 +95,16 @@ function render(){
  for(const c of s.coins)if(!c.taken){ctx.fillStyle='#86511d';ctx.fillRect(c.x-9,c.y-10,18,19);ctx.fillStyle='#ffcd47';ctx.fillRect(c.x-7,c.y-8,14,15);ctx.fillStyle='#fff0a6';ctx.fillRect(c.x-3,c.y-6,4,8);}
  const x=Math.round(s.x),y=Math.round(s.y);
  if(!(s.invul>0&&Math.floor(s.invul*12)%2===0)){
+ if(lageSprite&&lageSprite.complete&&lageSprite.naturalWidth>=224){
+  // Använd huvudkartans riktiga Lage, utan omskalningens mjukfilter.
+  ctx.drawImage(lageSprite,2*56,1*56,56,56,x-22,y-29,44,44);
+ }else{
  ctx.fillStyle='#2d403b';ctx.fillRect(x-15,y+8,11,6);ctx.fillRect(x+5,y+8,11,6);
  ctx.fillStyle='#e26b53';ctx.fillRect(x-13,y-3,27,13);
  ctx.fillStyle='#f6c593';ctx.fillRect(x-9,y-19,19,17);
  ctx.fillStyle='#735034';ctx.fillRect(x-9,y-20,19,6);
  ctx.fillStyle='#263d3c';ctx.fillRect(x+5,y-10,3,3);
+ }
  }
  score.textContent='♥'.repeat(s.hearts)+' · 🪙 Hittade '+s.found+' av '+s.total+' sjömynt';
  status.textContent=s.gameOver?'💔 Alla badhjärtan tog slut. Tryck på Spela om!':s.complete?'🏆 Grattis Lage! Du hittade alla sjömynten!':'Dyk med ↓, samla sjömynt och undvik hajarna!';
