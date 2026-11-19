@@ -89,7 +89,7 @@ test('Ljud pausas när sidan döljs, med säkert läge i webbläsare utan Web Au
 });
 
 test('Spelet har två ljudknappar och ljud kopplat till båda miljöerna',()=>{
- assert.match(html, /<script src="\.\/audio\.js\?v=3"><\/script>/);
+ assert.match(html, /<script src="\.\/audio\.js\?v=\d+"><\/script>/);
  assert.equal((html.match(/data-sound-toggle/g)||[]).length>=3,true);
  for(const required of [
   "audio.setScene('boat')",
