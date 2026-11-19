@@ -52,7 +52,7 @@ test('Grattis ges bara när det sista myntet plockas upp, och en gång',()=>{
 
 test('Huvudkartan integrerar bajs, hjärtan, fler mynt och grattisruta',()=>{
  for(const marker of [
-   '<script src="./gameplay.js?v=1"></script>',
+   '<script src="./gameplay.js?v=2"></script>',
    'const COIN_TARGET=20',
    'POOP_TARGET=7',
    'function scatterPoops(){',
@@ -67,4 +67,27 @@ test('Huvudkartan integrerar bajs, hjärtan, fler mynt och grattisruta',()=>{
  ])assert.ok(html.includes(marker),'Saknas: '+marker);
  for(const previous of ['function openBoatGame(){','function drawTroll(){','carDrive.move(state.x,state.y,dx,dy,dt)','function scatterCoins(){','function closeBoatGame(){'])
   assert.ok(html.includes(previous),'Tidigare funktion saknas: '+previous);
+});
+
+test('spending coins does not reduce the collected treasure goal',()=>{
+ const game=engine.createSession(10);
+ assert.equal(game.spend(3).paid,false);
+ game.collect(8);
+ assert.equal(game.spend(3).paid,true);
+ assert.equal(game.snapshot().coins,8);
+ assert.equal(game.snapshot().balance,5);
+ assert.equal(game.spend(6).paid,false);
+ assert.equal(game.spend(-1).paid,false);
+ assert.equal(game.refund(2).refunded,true);
+ assert.equal(game.snapshot().balance,7);
+ assert.equal(game.collect(2).justWon,true);
+ assert.equal(game.snapshot().coins,10);
+ assert.equal(game.snapshot().balance,9);
+ const reset=game.reset(10);
+ assert.equal(reset.balance,0);assert.equal(reset.spent,0);
+});
+
+test('ICA storefront integrates balance, both flavors and existing reset',()=>{
+ for(const text of ['data-buy-ice="paronglass"','data-buy-ice="vaniljglass"','game.spend(cost)','bag.addPurchase(id)','id="icaOverlay"','Köp glass 🍦'])
+  assert.ok(html.includes(text),text);
 });
