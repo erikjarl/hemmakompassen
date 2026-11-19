@@ -35,6 +35,13 @@ När Lage går in på Bella Donna ska en detaljerad pixelritad pizzeria visas me
 Alla nya minispel ska planeras som egna igenkännbara, spelbara scener i huvudkartans grafiska stil redan från första versionen. Granska SNES-känsla, detaljnivå, figurer, föremål, mobila kontroller och återgång innan de markeras färdiga. Befintliga minispel uppgraderas successivt enligt GRAF-01.
 
 
+#### SPORT-01
+
+**Hackelhallen: fotbollsminispel med Maja.**
+
+När Lage går in i Hackelhallen öppnas en egen spelbar, detaljrik 16-bitars inomhushall där Maja är en tydligt ritad medspelare eller motspelare. Lage ska kunna spela fotboll med Maja, sparka boll mot mål och se mål/poäng. Spelet ska fungera på mobil och med tangentbord och gå att avsluta tillbaka till huvudkartan utan att övriga sparade framsteg försvinner.
+
+
 ## Nya utvecklingsuppgifter – sorterade 19 november 2026
 
 ### Fordon och drivmedel
@@ -42,7 +49,7 @@ Alla nya minispel ska planeras som egna igenkännbara, spelbara scener i huvudka
 
 **Riktningsanpassad grafik för bil och båt.**
 
-Använd egna bilder för höger, vänster, uppåt, nedåt och diagonala färdriktningar. Taket ska alltid vara uppåt i bild; perspektivet ska fungera även på mobil.
+Använd egna bilder för höger, vänster, uppåt, nedåt och diagonala färdriktningar. Taket ska alltid vara uppåt i bild; perspektivet ska fungera även på mobil. **Felhänvisning 19 november:** bilens fram- och bakdel ser inte ut att vara samma modell som sidovyn. Skapa konsekventa vyer av samma vita bil med samma tak, proportioner, fönster, hjul, ljus, färger, skuggning, pixelskala och detaljnivå. Granska alla riktningsvyer sida vid sida och i mobilvyn. Båtens riktningsvyer ingår fortfarande.
 
 #### BRÄNSLE-01
 
@@ -94,7 +101,7 @@ Utöver skriven text; med respekt för ljudknappen.
 
 **Åtgärda ljud i Safari på mobil.**
 
-Testa faktisk iPhone/Safari och hantering av ljudstart, paus och återupptagning.
+**Återkommande felrapport 19 november:** ljudet fungerar återigen inte fullt ut i mobilvyn. Undersök vad som faktiskt är tyst: bakgrundsmusik, effekter och tal på huvudkarta och i minispel. Kontrollera ljudknapp av/på, första användargesten, byte mellan scener, paus/återupptagning, flikbyte och att ljudmotorn inte fastnar tyst. Testa i faktisk iPhone/Safari och ange vad som verifierats; kringgå inte webbläsarens regler för ljudstart.
 
 #### LJUD-03
 
@@ -154,7 +161,20 @@ Lägg till **bajskorvar** som hinder. Lage **förlorar ett hjärta** när han ko
 
 **Hjärtan och omstart.**
 
-När **alla hjärtan försvinner** ska spelet **börja om**, och spelaren ska **förlora alla insamlade mynt**.
+När **alla hjärtan försvinner** ska spelet **börja om**, och spelaren ska **förlora alla insamlade mynt**. **Återöppnad efter felrapport 19 november:** gemensamt myntsaldo, även intäkter från minispel, ska bli **0** när sista hjärtat försvinner, och den nollställda statusen måste bestå efter omladdning. Återställ nödvändiga insamlingsflaggor så att en ny omgång är möjlig, utan att oavsiktligt radera andra ägodelar. Delvis hjärtförlust får inte nollställa mynten.
+
+
+#### HUV-06
+
+**Gör bajskorvarna tydligare – ändra inte storleken.**
+
+Förbättra deras synlighet på gräs, mark och väg genom mer distinkt siluett, kanter, färgkontrast och små pixelerade skugg-/ljusdetaljer. Behåll spriteytans storlek, placering, kollisionsyta och hjärtförlust. Ändringarna ska följa huvudkartans exakta pixelskala och SNES-detaljnivå.
+
+#### MYNT-03
+
+**Mynt från minispelen ska följa med till huvudkartan.**
+
+Mynt som Lage plockar upp eller vinner i minispel ska överföras till samma gemensamma myntsaldo som syns på huvudkartan och används vid inköp. Saldot ska finnas kvar vid scenbyte och omladdning, utan dubbla tilldelningar när minispel avslutas eller spelas om. När sista hjärtat försvinner ska dessa mynt också nollställas enligt HUV-05.
 
 
 ## Nya förbättringar – huvudspel och spelvärld (2026-11-18)
@@ -199,6 +219,13 @@ Inför möjlighet att **samla in, förvara och spara föremål** i en enkel inve
 **Drake i skogen.**
 
 Skapa en **animerad drake i samma 16-bitarsstil** som rör sig bland skogspartier på huvudkartan och **sprutar eld med animation**. När draken är nära ska den vanliga musiken växla till **läskig/spännande musik**, och växla tillbaka när Lage lämnar området. Eldanimation och rörelse ska fungera även på mobil. Eventuella skador eller ytterligare spelregler bestäms senare; de ingår inte som uttryckligt krav här.
+
+
+#### DRAKE-02
+
+**Farlig drake vid skogen längst till vänster och riktade eldklot.**
+
+Flytta drakens rörelseområde till skogen längst ut på vänsterkanten på huvudkartan utan att blockera vägar eller minispelsingångar. Lage förlorar ett hjärta om han nuddar draken. Draken ska skjuta tydliga animerade eldklot mot Lage **och helikoptern**; träff på Lage kostar ett hjärta. Ha en kort skadepaus så samma kontakt/eldklot inte tar flera hjärtan direkt. Helikoptern ska kunna bli träffad och reagera begripligt utan att spelet låser sig. Anpassa eldklot, ljudeffekter och spritekonst till huvudkartans SNES-stil.
 
 
 ## Trollet vid stenen nordväst om rondellen
@@ -272,6 +299,15 @@ Lägg till **hajar som simmar förbi**. Om Lage **nuddar en haj förlorar han et
 **Vågskvalp.**
 
 Lägg till **vågskvalpsljud i bakgrunden** vid Åsundabadet.
+
+
+## Framkomlighet på befintliga huvudkartan
+
+#### KARTA-02
+
+**Utöka gångytans bredd på vägar och stigar, inte deras grafik.**
+
+Öka den osynliga gångbara zonen och toleransen för vägkanter så Lage inte fastnar eller behöver gå alltför exakt på vägar. Ändra **inte** vägarnas ritade bredd eller bakgrundsbilder. Bevara kollisionshinder för hus, stenar och vatten; tillåt förflyttning på övrig öppen mark enligt huvudkartans regler. Kontrollera att olika vägar och viktiga minispelsentréer är nåbara med mobilstyrning och tangentbord.
 
 
 ## Långsiktig, återkommande världsexpansion – efter övriga uppgifter
