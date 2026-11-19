@@ -29,7 +29,7 @@
   function stop(){active=false;flight=null;}
   return {start,stop,step,throwPoop,moveAim,aimAt,snapshot};
  }
- let game=null,overlay=null,canvas=null,ctx=null,score=null,notice=null,throwButton=null,lastFrame=0,raf=0,returnToMap=null,trollImage=null,previousFocus=null,impactUntil=0,impactX=240;
+ let game=null,overlay=null,canvas=null,ctx=null,score=null,notice=null,throwButton=null,lastFrame=0,raf=0,returnToMap=null,trollImage=null,lageImage=null,previousFocus=null,impactUntil=0,impactX=240;
  function install(){
   if(overlay)return;
   const style=doc.createElement('style');style.textContent=`
@@ -53,7 +53,8 @@
    if(e.key==='Escape')close();else if(e.key==='ArrowLeft')game.moveAim(-22);else if(e.key==='ArrowRight')game.moveAim(22);else if(e.key===' '||e.key==='Spacebar')throwNow();
   },true);
   doc.addEventListener('keyup',e=>{if(game&&game.snapshot().active&&['ArrowLeft','ArrowRight',' ','Spacebar'].includes(e.key)){e.preventDefault();e.stopImmediatePropagation();}},true);
-  trollImage=new root.Image();trollImage.src='./troll-sprite.png?v=1';
+  trollImage=new root.Image();trollImage.src='./troll-pixel.svg?v=1';
+  lageImage=new root.Image();lageImage.src='./lage-sprites.png';
  }
  function playSound(hit){
   // Återanvänd den redan upplåsta spelljudmotorn; tyst om ljud är avstängt.
@@ -95,6 +96,19 @@
    pixelRect(x,y,27,64,'#416d51');pixelRect(x+5,y-12,17,20,'#568862');
    pixelRect(x+9,y-20,10,10,'#729e74');
   }
+  // Extra barrskogsplan i samma pixelskala och färgpalett.
+  for(let i=0;i<14;i++){
+   const x=(i*43+19)%480,y=113+(i%3)*8;
+   pixelRect(x-3,y-46,6,53,'#325a47');
+   pixelRect(x-13,y-23,26,14,'#315d45');
+   pixelRect(x-10,y-37,20,14,'#3a6b4b');
+   pixelRect(x-6,y-48,12,13,'#4a7d59');
+  }
+  for(const x of [40,168,350]){
+   pixelRect(x,38,37,8,'#e5e3c5');
+   pixelRect(x+9,31,22,9,'#f2e9cc');
+   pixelRect(x+17,26,9,6,'#faf0d2');
+  }
   forestTree(16,120,.78);forestTree(467,121,.87);
   forestTree(76,111,.60);forestTree(405,113,.62);
   // Stenen återger huvudkartans trollplats, med flerskiktad klippa/mossa.
@@ -103,6 +117,13 @@
   pixelRect(131,130,219,84,'#817f6b');
   pixelRect(145,123,181,78,'#a7a18a');
   pixelRect(151,128,164,15,'#c0b39a');
+  pixelRect(160,128,151,6,'#d0c7a4');
+  pixelRect(139,141,36,8,'#759556');
+  pixelRect(307,141,31,8,'#719052');
+  pixelRect(181,171,5,30,'#6c7263');
+  pixelRect(186,198,19,4,'#6c7263');
+  pixelRect(245,166,5,21,'#696f61');
+  pixelRect(250,184,18,4,'#696f61');
   pixelRect(121,153,47,11,'#5b7c4d');
   pixelRect(303,138,47,9,'#65844f');
   pixelRect(160,179,36,9,'#747565');pixelRect(261,185,47,7,'#6e6e5d');
@@ -125,17 +146,18 @@
   for(let i=0;i<6;i++)pixelRect(31+i*77,113+(i%3)*17+Math.floor(Math.sin(time*2+i)*2),5,3,'#98b88a');
  }
  function drawLage(x,y,time){
-  const bob=Math.round(Math.sin(time*5)*2);
-  ctx.save();ctx.translate(Math.round(x),Math.round(y+bob));
-  pixelRect(-15,15,30,5,'#30462e');
-  pixelRect(-12,8,9,11,'#283d40');pixelRect(4,8,9,11,'#283d40');
-  pixelRect(-13,16,10,4,'#3c352b');pixelRect(4,16,10,4,'#3c352b');
-  pixelRect(-15,-13,30,24,'#af494a');pixelRect(-12,-10,23,16,'#c86458');
-  pixelRect(-20,-6,7,17,'#edb88c');pixelRect(14,-6,7,17,'#edb88c');
-  pixelRect(-11,-34,23,22,'#edbf95');pixelRect(-13,-36,27,9,'#654b33');
-  pixelRect(-10,-40,19,6,'#805a36');pixelRect(-9,-27,3,3,'#273a30');
-  pixelRect(5,-27,3,3,'#273a30');pixelRect(-2,-20,7,2,'#af7058');
-  ctx.restore();
+  // Huvudkartans riktiga fyrariktade Lage-spritesheet. Rad 3 är ryggen mot spelaren.
+  pixelRect(x-12,y-2,24,4,'#233e3088');
+  if(lageImage&&lageImage.complete&&lageImage.naturalWidth){
+   const frame=Math.floor(time*2)%4;
+   ctx.drawImage(lageImage,frame*56,3*56,56,56,Math.round(x-22),Math.round(y-47),44,44);
+  }else{
+   pixelRect(x-8,y-32,16,16,'#e9b78d');
+   pixelRect(x-11,y-38,22,8,'#654b33');
+   pixelRect(x-13,y-16,26,17,'#b85b57');
+   pixelRect(x-11,y,9,5,'#323c3b');
+   pixelRect(x+3,y,9,5,'#323c3b');
+  }
  }
  function drawPoop(x,y,size=1){
   // Canvas-pixelgrafik i stället för teckensnittsberoende emoji.
@@ -158,18 +180,19 @@
   // Separat bakgrundsritning; spelmekanik och träffzoner lämnas helt orörda.
   drawForest(lastFrame/1000||0);
   const tx=s.targetX;
-  pixelRect(tx-37,144,75,8,'#43503b');
+  pixelRect(tx-41,144,83,8,'#43503b');
   if(trollImage.complete&&trollImage.naturalWidth){
-   ctx.drawImage(trollImage,Math.round(tx-31),42,62,102);
-  }else{
-   // Reservsprite om bilden inte laddas, inte en emoji.
-   pixelRect(tx-24,66,48,66,'#435d42');
-   pixelRect(tx-29,57,58,28,'#5c7a51');pixelRect(tx-22,44,17,21,'#4b6040');
-   pixelRect(tx+7,44,17,21,'#4b6040');pixelRect(tx-15,78,9,9,'#f6dca7');
-   pixelRect(tx+8,78,9,9,'#f6dca7');pixelRect(tx-6,99,16,8,'#312b23');
-  }
-  drawLage(s.aim,263,lastFrame/1000||0);
-  pixelRect(s.aim-2,182,4,48,'#f3dfa0');
+    // Identisk genomskinlig pixelkonst i minispel och huvudkarta.
+    ctx.drawImage(trollImage,Math.round(tx-38),35,76,108);
+   }else{
+    pixelRect(tx-29,68,58,71,'#352a22');
+    pixelRect(tx-22,76,44,57,'#8b6040');
+    pixelRect(tx-26,52,50,40,'#a86f43');
+    pixelRect(tx+10,67,20,14,'#c88b54');
+    pixelRect(tx-12,73,5,5,'#ffebbd');
+   }
+  drawLage(s.aim,276,lastFrame/1000||0);
+  pixelRect(s.aim-2,184,4,43,'#f3dfa0');
   pixelRect(s.aim-9,181,18,4,'#f3dfa0');
   pixelRect(s.aim-9,222,18,4,'#f3dfa0');
   if(s.flight){
