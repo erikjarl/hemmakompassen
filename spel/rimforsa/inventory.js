@@ -26,9 +26,9 @@
   return {
    items:()=>ids.map(id=>({...known.get(id)})),
    available:()=>available,
-   findAt:site=>ITEMS.find(item=>item.site===site&&!ids.includes(item.id))||null,
+   findAt:site=>ITEMS.find(item=>item.site===site&&!['paronglass','vaniljglass'].includes(item.id)&&!ids.includes(item.id))||null,
    collectAt(site){
-    const item=ITEMS.find(entry=>entry.site===site&&!ids.includes(entry.id));
+    const item=ITEMS.find(entry=>entry.site===site&&!['paronglass','vaniljglass'].includes(entry.id)&&!ids.includes(entry.id));
     if(!item)return null;
     ids.push(item.id);return {item:{...item},saved:save()};
    },
