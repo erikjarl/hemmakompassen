@@ -29,7 +29,7 @@
   function stop(){active=false;flight=null;}
   return {start,stop,step,throwPoop,moveAim,aimAt,snapshot};
  }
- let game=null,overlay=null,canvas=null,ctx=null,score=null,notice=null,throwButton=null,lastFrame=0,raf=0,returnToMap=null,trollImage=null,lageImage=null,previousFocus=null,impactUntil=0,impactX=240;
+ let game=null,overlay=null,canvas=null,ctx=null,score=null,notice=null,throwButton=null,lastFrame=0,raf=0,returnToMap=null,trollImage=null,lageImage=null,previousFocus=null,impactUntil=0,impactX=240,impactParticles=[];
  function install(){
   if(overlay)return;
   const style=doc.createElement('style');style.textContent=`
@@ -62,7 +62,7 @@
   if(hit)root.RimforsaAudio.coin();
   else root.RimforsaAudio.hit();
  }
- function reset(){impactUntil=0;game.start();notice.textContent='Sikta och försök träffa trollet!';render();lastFrame=0;}
+ function reset(){impactUntil=0;impactParticles=[];game.start();notice.textContent='Sikta och försök träffa trollet!';render();lastFrame=0;}
  function throwNow(){if(!game.throwPoop())return;if(root.RimforsaAudio&&root.RimforsaAudio.poop)root.RimforsaAudio.poop();render();}
  function close(){
   if(!game||!game.snapshot().active)return;
@@ -198,6 +198,31 @@
   pixelRect(-2,-15,6,5,'#b78047');pixelRect(-8,-2,14,4,'#bc8249');
   pixelRect(-6,3,4,3,'#dfad67');pixelRect(6,2,3,4,'#523424');ctx.restore();
  }
+ function drawTrollGround(x,time){
+  // Sten, gräs och skugga förankrar originaltrollet i samma pixelmiljö.
+  const sway=Math.round(Math.sin(time*1.8)*2);
+  pixelRect(x-44,130,88,16,'#394b3988');
+  pixelRect(x-35,135,70,8,'#294331');
+  for(let i=0;i<9;i++){
+   const px=x-46+i*11,py=143+(i%3)*3;
+   pixelRect(px,py,9,3,i%2?'#7a9362':'#4e784c');
+   pixelRect(px+2,py-5-(i%2)*2,3,7,i%2?'#89ae64':'#376b41');
+   pixelRect(px+5,py-8+sway*(i%2),2,6,'#a1bb75');
+  }
+ }
+ function drawTrollExpression(x,time){
+  // Ett kort huvud- och ögonljus vid träff utan att ändra kollisionsytan.
+  const hit=impactUntil>lastFrame,blink=Math.sin(time*2.2)>0.995;
+  if(hit){
+   pixelRect(x-27,59,12,5,'#f2d48e');
+   pixelRect(x+13,59,12,5,'#f2d48e');
+   pixelRect(x-22,64,8,4,'#8e4a37');
+   pixelRect(x+15,64,8,4,'#8e4a37');
+  }else if(blink){
+   pixelRect(x-20,68,8,3,'#493528');
+   pixelRect(x+13,68,8,3,'#493528');
+  }
+ }
  function drawImpact(x,y,t){
   for(let i=0;i<7;i++){
    const angle=i*Math.PI*2/7,r=16+5*Math.sin(t*20+i);
@@ -211,9 +236,14 @@
   drawForest(lastFrame/1000||0);
   const tx=s.targetX;
   pixelRect(tx-41,144,83,8,'#43503b');
+  drawTrollGround(tx,lastFrame/1000||0);
   if(trollImage.complete&&trollImage.naturalWidth){
-    // Identisk genomskinlig pixelkonst i minispel och huvudkarta.
-    ctx.drawImage(trollImage,Math.round(tx-38),35,76,108);
+    // Trollbilden är gemensam med huvudkartan. Recoil/ljus och markskugga
+    // binder den mot underlaget utan interpolation eller fristående cutout-look.
+    const hit=impactUntil>lastFrame;
+    const recoil=hit?Math.round(Math.sin(lastFrame*.055)*3):0;
+    ctx.drawImage(trollImage,Math.round(tx-38+recoil),35+(hit?3:0),76,108);
+    drawTrollExpression(tx+recoil,lastFrame/1000||0);
    }else{
     pixelRect(tx-29,68,58,71,'#352a22');
     pixelRect(tx-22,76,44,57,'#8b6040');
@@ -221,18 +251,37 @@
     pixelRect(tx+10,67,20,14,'#c88b54');
     pixelRect(tx-12,73,5,5,'#ffebbd');
    }
+  // Förgrundsvegetation framför stentrollets fötter ger djup i 16-bitarsmiljön.
+  for(let i=0;i<11;i++){
+   const x=tx-48+i*10,y=146+(i%2)*3;
+   pixelRect(x,y,7,4,i%2?'#426e42':'#63834d');
+   pixelRect(x+2,y-5,3,6,i%3?'#779c55':'#a0ae69');
+  }
   drawLage(s.aim,276,lastFrame/1000||0);
   pixelRect(s.aim-2,184,4,43,'#f3dfa0');
   pixelRect(s.aim-9,181,18,4,'#f3dfa0');
   pixelRect(s.aim-9,222,18,4,'#f3dfa0');
   if(s.flight){
    const p=s.flight.progress,x=s.flight.x,y=231-121*p-24*Math.sin(Math.PI*p);
+   // Små originalritade fartstreck i kastets bana.
+   for(let i=1;i<=3;i++){
+    const trailY=y+12+i*8,trailX=x-2+(i%2)*5;
+    pixelRect(trailX,trailY,3,6,i%2?'#b68a52':'#765035');
+   }
    drawPoop(x,y,1);
   }else drawPoop(s.aim+18,249,.65);
   ctx.fillStyle='#173d2fdc';ctx.fillRect(5,5,279,27);
   ctx.fillStyle='#fff1bf';ctx.font='bold 15px system-ui';
   ctx.fillText('Sikta med pilarna och kasta!',13,24);
-  if(impactUntil>lastFrame&&s.active)drawImpact(impactX,107,lastFrame/1000);
+  if(impactUntil>lastFrame&&s.active){
+   drawImpact(impactX,107,lastFrame/1000);
+   // Splitter som flyger från träffen och faller, med samma fasta pixelskala.
+   const age=1-(impactUntil-lastFrame)/420;
+   impactParticles.forEach((p,i)=>{
+    const x=impactX+p.dx*age,y=107+p.dy*age+42*age*age;
+    pixelRect(x,y,i%2?5:4,i%3?4:6,i%2?'#a16c39':'#dfb673');
+   });
+  }
   if(s.done){
    pixelRect(32,142,416,64,'#19392d');
    pixelRect(40,150,400,48,'#345541');
@@ -245,7 +294,7 @@
   if(!game||!game.snapshot().active)return;
   const dt=lastFrame?Math.min(.05,(t-lastFrame)/1000):0;lastFrame=t;
   const result=game.step(dt);
-  if(result){if(result.hit){impactX=game.snapshot().targetX;impactUntil=t+420;}
+  if(result){if(result.hit){impactX=game.snapshot().targetX;impactUntil=t+420;impactParticles=Array.from({length:11},(_,i)=>({dx:Math.cos(i*2.4)*((i%4)+20),dy:-20-Math.abs(Math.sin(i*2.4))*37}));}
    notice.textContent=result.hit?'🎯 Träff! Trollet fick bajs på sig!':'Nästan! Sikta igen!';
    if(result.done)notice.textContent=result.hits>=WIN_HITS?'🎉 Grattis! Du träffade trollet '+result.hits+' gånger!':'Du träffade '+result.hits+' gånger. Prova igen!';
    playSound(result.hit);
@@ -256,7 +305,7 @@
   if(!options||!options.troll||!options.player)return false;
   install();if(game&&game.snapshot().active)close();
   previousFocus=doc.activeElement;returnToMap=options.returnToMap;
-  game=createSession();game.start();impactUntil=0;overlay.hidden=false;notice.textContent='Sikta och försök träffa trollet!';lastFrame=0;
+  game=createSession();game.start();impactUntil=0;impactParticles=[];overlay.hidden=false;notice.textContent='Sikta och försök träffa trollet!';lastFrame=0;
   overlay.querySelector('[data-troll-throw]').focus();raf=root.requestAnimationFrame(frame);return true;
  }
  root.RimforsaTrollMinigame={start,createSession,isOpen:()=>!!game&&game.snapshot().active,close};
