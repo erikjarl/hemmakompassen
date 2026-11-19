@@ -39,7 +39,7 @@ test('repeat launches update record; reset keeps record',()=>{
  g.reset();assert.equal(g.snapshot().state,'ready');assert.equal(g.snapshot().record,record);
 });
 test('map integration uses preschool site and hides main game movement',()=>{
- for(const marker of ["name:'Förskolan Hackel'","Åk rutschkana 🛝","RimforsaSlideMinigame.start","!window.RimforsaSlideMinigame.isOpen()","./slide-minigame.js?v=1"])assert.ok(page.includes(marker),marker);
+ for(const marker of ["name:'Förskolan Hackel'","Åk rutschkana 🛝","RimforsaSlideMinigame.start","!window.RimforsaSlideMinigame.isOpen()","./slide-minigame.js?v=2"])assert.ok(page.includes(marker),marker);
 });
 
 test('preschool yard contains three original pixel friends without changing the physics API',()=>{
