@@ -98,6 +98,7 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
 <script src="./car.js?v=2"></script>
 <script src="./npc.js?v=1"></script>
 <script src="./dragon.js?v=1"></script>
+<script src="./troll-minigame.js?v=1"></script>
 <script>
 (()=>{'use strict';
 const W=1448,H=1086, canvas=document.getElementById('world'), ctx=canvas.getContext('2d',{alpha:false});
@@ -136,7 +137,7 @@ const carDrive=window.RimforsaCar;
 const carPos={x:carDrive.HOME.x,y:carDrive.HOME.y};
 // Strax nordväst om rondellen, ovanpå stenen. Separat minispel kan anslutas senare.
 const troll={id:'stone-troll',name:'Trollet vid stenen',x:464,y:454,interactionRadius:84,
- minigameId:'troll-poop-toss',minigameImplemented:false,sprite:'./troll-sprite.png?v=1'};
+ minigameId:'troll-poop-toss',minigameImplemented:true,sprite:'./troll-sprite.png?v=1'};
 const carMaskImage=new Image();
 carMaskImage.src='./car-water-mask.png?v=1';
 carMaskImage.addEventListener('load',()=>{
@@ -410,8 +411,8 @@ function visitTroll(){
  state.visited.add(troll.id);
  const start=window.RimforsaTrollMinigame&&window.RimforsaTrollMinigame.start;
  if(typeof start==='function'){
-   // Framtida minispel kopplas hit utan att ändra trollposition, HUD eller normal navigering.
-   start({troll,player:state,returnToMap:()=>updateMessage()});
+   stop();
+   start({troll,player:state,returnToMap:()=>{state.nearKey=null;updateMessage();}});
    return true;
  }
  title.textContent='Trollet vid stenen';
@@ -558,8 +559,8 @@ function updateMessage(){
    interact.textContent='Gå ur bilen 🚶';title.textContent='Ute och kör';
    message.innerHTML='<strong>🚗 Biltur!</strong> Bilen kan köra över alla landytor, men inte ut i vattnet.';
  }else if(trollHere){
-   interact.textContent='Hälsa på trollet 👹';title.textContent='Trollet vid stenen';
-   message.innerHTML='<strong>👹 Trollet!</strong> Ett troll sitter på stenen. Gå fram och hälsa!';
+   interact.textContent='Kasta bajs på trollet 💩';title.textContent='Trollet vid stenen';
+   message.innerHTML='<strong>👹 Trollet!</strong> Vågar du kasta bajs på trollet? Tryck på knappen! 💩';
  }else if(npcHere){
    interact.textContent='Prata med '+npcHere.name+' 💬';title.textContent=npcHere.name;
    message.innerHTML='<strong>💬 '+npcHere.name+'</strong> – någon vill prata med Lage. Tryck på Prata!';
@@ -695,7 +696,7 @@ let last=performance.now(),stepProgress=0;
 function tick(now){
  const dt=Math.min(.05,(now-last)/1000);last=now;
  updateBoat(dt);
- if(maskLoaded&&!isBoatOpen()&&winOverlay.hidden&&bagOverlay.hidden){
+ if(maskLoaded&&!isBoatOpen()&&winOverlay.hidden&&bagOverlay.hidden&&!window.RimforsaTrollMinigame.isOpen()){
   npcSystem.update(dt,state.x,state.y);
   let dx=(+keys.right)-(+keys.left),dy=(+keys.down)-(+keys.up);
   if(state.inCar){
