@@ -1,9 +1,9 @@
-/* Lage i Rimforsa: originalritad drake, eld och skogspatrull. Ingen kollisionsskada. */
+/* Lage i Rimforsa: originalritad drake, eld och skogspatrull. Nu med kollisionsskada. */
 (function(root){
  'use strict';
  function createDragon(){
-  const home={x:510,y:820};
-  let t=0,x=home.x,y=home.y,near=false;
+  const home={x:115,y:780};
+  let t=0,x=home.x,y=home.y,near=false,shotTimer=1,shotId=0;const shots=[];
   const proximity=235;
   function update(dt,playerX,playerY){
    t+=Math.max(0,Math.min(.1,Number(dt)||0));
@@ -11,8 +11,13 @@
    x=home.x+Math.cos(t*.45)*75;
    y=home.y+Math.sin(t*.61)*53;
    near=Math.hypot(x-playerX,y-playerY)<proximity;
+   shotTimer-=dt;
+   if(shotTimer<=0){shotTimer=2.7;const distance=Math.hypot(playerX-x,playerY-y);if(distance>35&&distance<430){const speed=165;shots.push({id:'dragon-fire-'+(++shotId),x:x+28,y:y-7,vx:(playerX-x)/distance*speed,vy:(playerY-y)/distance*speed,life:3.1});}}
+   for(let k=shots.length-1;k>=0;k--){const s=shots[k];s.x+=s.vx*dt;s.y+=s.vy*dt;s.life-=dt;if(s.life<=0||s.x<0||s.y<0||s.x>1448||s.y>1086)shots.splice(k,1);}
    return near;
   }
+  function hazards(px,py){const contact=Math.hypot(px-x,py-y)<37;const fire=shots.find(s=>Math.hypot(px-s.x,py-s.y)<17);return contact?'dragon-contact':fire?fire.id:null;}
+  function consume(id){const n=shots.findIndex(s=>s.id===id);if(n>=0)shots.splice(n,1);}
   function snapshot(){return {x,y,near,breathing:Math.sin(t*2.25)>.28,proximity};}
   function draw(ctx,camX,camY,w,h){
    const sx=Math.round(x-camX+w/2),sy=Math.round(y-camY+h/2);
@@ -47,8 +52,9 @@
     for(let i=0;i<3;i++){ctx.fillStyle=i%2?'#ffd968':'#f5792d';ctx.fillRect(Math.round(51+i*11+Math.sin(t*11+i)*4),-12+i*4,4,4);}
    }
    ctx.restore();
+   for(const shot of shots){const fx=Math.round(shot.x-camX+w/2),fy=Math.round(shot.y-camY+h/2);ctx.fillStyle='#762818';ctx.fillRect(fx-9,fy-7,17,14);ctx.fillStyle='#ed5a22';ctx.fillRect(fx-8,fy-6,15,11);ctx.fillStyle='#ffbf47';ctx.fillRect(fx-5,fy-5,10,8);ctx.fillStyle='#fff0a0';ctx.fillRect(fx-2,fy-3,5,4);ctx.fillStyle='#fa7929';ctx.fillRect(fx-13,fy-2,5,4);}
   }
-  return {update,draw,snapshot,home};
+  return {update,draw,snapshot,hazards,consume,home};
  }
  root.RimforsaDragon={createDragon};
 })(typeof window!=='undefined'?window:globalThis);
