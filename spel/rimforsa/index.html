@@ -160,8 +160,14 @@ const carDrive=window.RimforsaCar;
 const carFuel=window.RimforsaFuel,boatFuel=carFuel.boat;
 const fuelHud=document.getElementById('fuelHud'),boatFuelLabel=document.getElementById('boatFuel');
 function updateFuelHud(){
- fuelHud.textContent='⛽ Bil '+carFuel.snapshot().percent+'% · Båt '+boatFuel.snapshot().percent+'%';
- boatFuelLabel.textContent=boatFuel.snapshot().percent+'%';
+ const car=carFuel.snapshot().percent,boat=boatFuel.snapshot().percent;
+ // Kompakta 10-stegs mätare i gränssnittet; procenten finns kvar för tillgänglighet.
+ const meter=value=>'▰'.repeat(Math.ceil(value/10))+'▱'.repeat(10-Math.ceil(value/10));
+ const status=value=>value===0?'TOM':value<=20?'SNART TOM':'';
+ fuelHud.textContent='⛽ Bil '+meter(car)+' '+car+'%'+(status(car)?' ('+status(car)+')':'')+
+   ' · Båt '+meter(boat)+' '+boat+'%'+(status(boat)?' ('+status(boat)+')':'');
+ fuelHud.setAttribute('aria-label','Bensin: bil '+car+' procent, båt '+boat+' procent.');
+ boatFuelLabel.textContent=boat+'%'+(boat<=20?' – '+(boat===0?'TOM TANK':'LÅG NIVÅ'):'');
 }
 updateFuelHud();
 const carPos={x:carDrive.HOME.x,y:carDrive.HOME.y};
@@ -638,7 +644,9 @@ function renderFuelStation(){
  ctx.fillStyle='#fff5ce';ctx.font='bold 9px monospace';
  ctx.fillText('BIL '+amount+' %',23,16);ctx.fillText('BÅT '+boatAmount+' %',23,29);
  const label=fuelDialog.querySelector('[data-fuel-status]');
- label.textContent='Bil: '+amount+' % · Båt: '+boatAmount+' % · Spelmynt: '+totalMoney()+'.';
+ label.textContent='Bil: '+amount+' % · Båt: '+boatAmount+' % · Spelmynt: '+totalMoney()+'.'+
+  (totalMoney()<carFuel.COST?' Du behöver '+(carFuel.COST-totalMoney())+' spelmynt till för att kunna tanka.':'')+
+  (amount===0&&boatAmount===0?' Båda tankarna är tomma: samla mynt till fots, sedan tanka här.':'');
  fuelDialog.querySelector('[data-fuel-buy]').disabled=amount>=100;
  fuelDialog.querySelector('[data-fuel-boat]').disabled=boatAmount>=100;
 }
