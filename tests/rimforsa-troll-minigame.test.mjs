@@ -59,3 +59,13 @@ test('Lage and troll use the exact same assets as the main map',()=>{
  assert.match(source,/trollImage\.src='\.\/troll-pixel\.svg\?v=1'/);
  assert.match(html,/trollSprite\.src='\.\/troll-pixel\.svg\?v=1'/);
 });
+
+test('forest polish stays within pixel canvas and never changes throw scoring',()=>{
+ for(const marker of ['Detaljerad pixelvegetation', 'Ljus och skuggning på stenen', 'Enstaka eldflugor', 'pixelRect(x,y,6,3', 'Math.sin(time*1.5+i)'])assert.ok(source.includes(marker),marker);
+ const g=session();g.start();g.aimAt(240+Math.sin(.63*1.45)*88);
+ g.throwPoop();let hit;
+ for(let i=0;i<20;i++)hit=g.step(.035)||hit;
+ assert.equal(hit.hit,true);
+ assert.equal(g.snapshot().hits,1);
+ assert.equal(g.snapshot().remaining,9);
+});
