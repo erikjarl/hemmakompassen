@@ -36,7 +36,7 @@ test('troll score increments when projectile reaches moving target',()=>{
 });
 test('main game preserves troll location and integrates minigame with map pause',()=>{
  assert.match(html,/x:464,y:454,interactionRadius:84/);
- assert.match(html,/troll-minigame\.js\?v=2/);
+ assert.match(html,/troll-minigame\.js\?v=3/);
  assert.match(html,/minigameImplemented:true/);
  assert.match(html,/RimforsaTrollMinigame\.start/);
  assert.match(html,/!window\.RimforsaTrollMinigame\.isOpen\(\)/);
@@ -44,9 +44,18 @@ test('main game preserves troll location and integrates minigame with map pause'
 });
 
 test('SNES troll scene uses layered original pixel graphics instead of emoji sprites',()=>{
- for(const marker of ['function forestTree(', 'function drawForest(', 'function drawLage(', 'function drawPoop(', 'function drawImpact(', 'ctx.imageSmoothingEnabled=false', "trollImage.src='./troll-sprite.png?v=1'"])assert.ok(source.includes(marker),marker);
+ for(const marker of ['function forestTree(', 'function drawForest(', 'function drawLage(', 'function drawPoop(', 'function drawImpact(', 'ctx.imageSmoothingEnabled=false', "trollImage.src='./troll-pixel.svg?v=1'", "lageImage.src='./lage-sprites.png'", 'ctx.drawImage(lageImage,frame*56,3*56,56,56'])assert.ok(source.includes(marker),marker);
  assert.doesNotMatch(source,/fillText\(['"](?:💩|👹)/);
  assert.ok(source.includes('drawPoop(s.aim+18,249,.65)'));
  assert.ok(source.includes('drawPoop(x,y,1)'));
  assert.match(source,/const MAX_THROWS=10,WIN_HITS=5/);
+});
+
+test('Lage and troll use the exact same assets as the main map',()=>{
+ assert.match(source,/lageImage\.src='\.\/lage-sprites\.png'/);
+ assert.match(html,/sprite\.src='\.\/lage-sprites\.png'/);
+ assert.match(source,/frame\*56,3\*56,56,56/);
+ assert.match(html,/row=state\.dir==='down'\?0:state\.dir==='left'\?1:state\.dir==='right'\?2:3/);
+ assert.match(source,/trollImage\.src='\.\/troll-pixel\.svg\?v=1'/);
+ assert.match(html,/trollSprite\.src='\.\/troll-pixel\.svg\?v=1'/);
 });
