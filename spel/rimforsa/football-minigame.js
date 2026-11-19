@@ -5,9 +5,9 @@
 let overlay=null,canvas=null,ctx=null,status=null,previousFocus=null,returnToMap=null,raf=0,last=0;
 const W=480,H=300,keys={up:false,down:false,left:false,right:false};
 const player={x:115,y:215,dx:1,dy:0},ball={x:205,y:170,vx:0,vy:0};
-let goals=0,kicks=0,goalFlash=0,lageImage=null,majaImage=null;
+let goals=0,kicks=0,goalFlash=0,majaY=206,lageImage=null;
 const clamp=(a,l,h)=>Math.max(l,Math.min(h,a));
-function resetPositions(){player.x=115;player.y=215;player.dx=1;player.dy=0;ball.x=205;ball.y=170;ball.vx=ball.vy=0;}
+function resetPositions(){player.x=115;player.y=215;player.dx=1;player.dy=0;ball.x=205;ball.y=170;ball.vx=ball.vy=0;majaY=206;}
 function clearKeys(){Object.keys(keys).forEach(k=>keys[k]=false);}
 function install(){
  if(overlay)return;
@@ -17,7 +17,7 @@ function install(){
  overlay=root.document.createElement('div');
  overlay.className='football-overlay';overlay.hidden=true;
  overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','Fotboll i Hackelhallen');
- overlay.innerHTML=`<div class="football-panel"><h2>⚽ Hackelhallen – spela med Maja</h2><p>Styr Lage till bollen och skjut mot målet till höger! Maja hejar på.</p><canvas width="480" height="300" aria-label="Detaljerad pixelritad fotbollshall med Lage, Maja, boll och mål"></canvas><p data-status role="status" aria-live="polite">Mål: 0 · Skott: 0</p><div class="football-controls"><div class="football-pad" aria-label="Styr Lage"><button data-dir="up" aria-label="Gå upp">▲</button><button data-dir="left" aria-label="Gå vänster">◀</button><button data-dir="down" aria-label="Gå ned">▼</button><button data-dir="right" aria-label="Gå höger">▶</button></div><button type="button" data-kick>SKJUT ⚽</button><button type="button" data-reset>Spela om ↺</button><button type="button" data-close>Tillbaka ✕</button></div><p>Mobil: styr med pilarna och tryck Skjut nära bollen. Dator: pilar/WASD och mellanslag.</p></div>`;
+ overlay.innerHTML=`<div class="football-panel"><h2>⚽ Hackelhallen – spela med Maja</h2><p>Styr Lage till bollen och skjut mot målet till höger! Maja står i mål och försöker rädda dina skott.</p><canvas width="480" height="300" aria-label="Detaljerad pixelritad fotbollshall med Lage, Maja, boll och mål"></canvas><p data-status role="status" aria-live="polite">Mål: 0 · Skott: 0</p><div class="football-controls"><div class="football-pad" aria-label="Styr Lage"><button data-dir="up" aria-label="Gå upp">▲</button><button data-dir="left" aria-label="Gå vänster">◀</button><button data-dir="down" aria-label="Gå ned">▼</button><button data-dir="right" aria-label="Gå höger">▶</button></div><button type="button" data-kick>SKJUT ⚽</button><button type="button" data-reset>Spela om ↺</button><button type="button" data-close>Tillbaka ✕</button></div><p>Mobil: styr med pilarna och tryck Skjut nära bollen. Dator: pilar/WASD och mellanslag.</p></div>`;
  root.document.body.append(overlay);canvas=overlay.querySelector('canvas');ctx=canvas.getContext('2d');status=overlay.querySelector('[data-status]');
  lageImage=new root.Image();lageImage.src='./lage-sprites.png';lageImage.onload=()=>{if(!overlay.hidden)render();};
  for(const button of overlay.querySelectorAll('[data-dir]')){
@@ -84,8 +84,8 @@ function render(){
  for(let gx=435;gx<461;gx+=7)rect(gx,165,2,84,'#d5e9d7');
  for(let gy=165;gy<250;gy+=9)rect(434,gy,27,2,'#d5e9d7');
  rect(426,158,37,7,'#f3efe2');rect(426,158,7,99,'#f3efe2');rect(426,250,37,7,'#f3efe2');
- // Maja är en tydlig karaktär i hallen, utan att hindra bollen eller Lage.
- drawMaja(353,144);
+ // Maja står i målet och försöker aktivt blockera inkommande bollar.
+ drawMaja(397,majaY);
  rect(player.x-11,player.y-3,23,4,'#674e39');
  const row=Math.abs(player.dx)>Math.abs(player.dy)?(player.dx>0?2:1):(player.dy>0?0:3);
  sprite(player.x,player.y,row,Math.floor(Date.now()/180)%4);
@@ -115,7 +115,11 @@ function frame(time){
   player.x=clamp(player.x+player.dx*116*dt,45,418);
   player.y=clamp(player.y+player.dy*116*dt,155,268);
  }
+ // Maja är målvakt och försöker följa bollens rörelse i målområdet.
+ majaY=clamp(majaY+clamp(ball.y-majaY,-78*dt,78*dt),187,249);
  ball.x+=ball.vx*dt;ball.y+=ball.vy*dt;
+ if(ball.vx>0&&ball.x>379&&ball.x<404&&Math.abs(ball.y-(majaY-10))<23){ball.x=378;ball.vx=-Math.max(125,Math.abs(ball.vx)*.68);ball.vy+=(ball.y-majaY)*2;status.textContent='Maja räddade! Försök igen. Mål: '+goals;}
+
  const drag=Math.pow(.988,dt*60);ball.vx*=drag;ball.vy*=drag;
  if(ball.y<142){ball.y=142;ball.vy=Math.abs(ball.vy)*.58;}
  if(ball.y>265){ball.y=265;ball.vy=-Math.abs(ball.vy)*.58;}
