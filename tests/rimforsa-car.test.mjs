@@ -49,14 +49,14 @@ test('Rörelse normaliserar diagonal styrning och bilen ritas separat',()=>{
  assert.ok(a.moved&&b.moved);
  assert.ok(Math.hypot(b.x-25,b.y-25)<=Math.hypot(a.x-25,a.y-25)+.01);
  let drawn=0;
- const ctx={save(){},translate(){},rotate(){},restore(){},fillRect(){drawn++}};
+ const ctx={save(){},translate(){},rotate(){},scale(){},restore(){},fillRect(){drawn++}};
  car.draw(ctx,10,10,'left',true);
  assert.ok(drawn>8,'The white car, wheels and seated Lage should be rendered');
 });
 
 test('Huvudspelet har påstigning, avstigning, motorljud och återställning',()=>{
  for(const phrase of [
-  '<script src="./car.js?v=2"></script>',
+  '<script src="./car.js?v=4"></script>',
   'car-water-mask.png?v=1',
   'function enterCar(){',
   'function exitCar(){',
@@ -89,7 +89,7 @@ test('Bilen visar olika bildrutor när Lage kliver in och ut',()=>{
  vm.runInNewContext(code,ctxVm);
  const car=ctxVm.window.RimforsaCar;
  const draws=[];
- const canvas={save(){},restore(){},translate(){},rotate(){},fillRect(){},
+ const canvas={save(){},restore(){},translate(){},rotate(){},scale(){},fillRect(){},
   imageSmoothingEnabled:true,
   drawImage(...args){draws.push(args);}
  };
@@ -102,4 +102,38 @@ test('Bilen visar olika bildrutor när Lage kliver in och ut',()=>{
  assert.equal(draws[0][4],55);
  assert.equal(canvas.imageSmoothingEnabled,true,'Restore canvas smoothing after pixel rendering');
  assert.equal(car.spriteReady(),true);
+});
+
+
+test('Nytt spritesheet visar samma bil i åtta riktningar utan utjämning',()=>{
+ const fs=readFileSync(new URL('../spel/rimforsa/car-directions.png',import.meta.url));
+ assert.equal(fs.subarray(1,4).toString(),'PNG');
+ assert.equal(fs.readUInt32BE(16),640);
+ assert.equal(fs.readUInt32BE(20),60);
+ const ImageMock=class {
+  set src(url){
+   this.complete=true;
+   this.naturalWidth=url.includes('car-directions')?640:176;
+   this.naturalHeight=url.includes('car-directions')?60:55;
+  }
+ };
+ const context={window:{Image:ImageMock}};
+ vm.runInNewContext(code,context);
+ const car=context.window.RimforsaCar;
+ assert.equal(car.directionSpriteReady(),true);
+ const draws=[];
+ const ctx={save(){},restore(){},translate(){},scale(){},fillRect(){},
+  imageSmoothingEnabled:true,drawImage(...args){draws.push(args);}
+ };
+ const dirs=['down','down-right','left','up-left','up','up-right','right','down-left'];
+ dirs.forEach(dir=>car.draw(ctx,120,120,dir,true));
+ assert.equal(draws.length,8);
+ dirs.forEach((_,i)=>{
+  assert.equal(draws[i][1],i*80,'Correct directional frame '+i);
+  assert.equal(draws[i][3],80);
+  assert.equal(draws[i][4],60);
+ });
+ assert.equal(ctx.imageSmoothingEnabled,true);
+ car.draw(ctx,120,120,'right',false);
+ assert.equal(draws.at(-1)[1],0,'Original parked car remains unchanged');
 });
