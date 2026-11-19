@@ -42,3 +42,11 @@ test('main game preserves troll location and integrates minigame with map pause'
  assert.match(html,/!window\.RimforsaTrollMinigame\.isOpen\(\)/);
  assert.match(html,/Kasta bajs på trollet/);
 });
+
+test('SNES troll scene uses layered original pixel graphics instead of emoji sprites',()=>{
+ for(const marker of ['function forestTree(', 'function drawForest(', 'function drawLage(', 'function drawPoop(', 'function drawImpact(', 'ctx.imageSmoothingEnabled=false', "trollImage.src='./troll-sprite.png?v=1'"])assert.ok(source.includes(marker),marker);
+ assert.doesNotMatch(source,/fillText\(['"](?:💩|👹)/);
+ assert.ok(source.includes('drawPoop(s.aim+18,249,.65)'));
+ assert.ok(source.includes('drawPoop(x,y,1)'));
+ assert.match(source,/const MAX_THROWS=10,WIN_HITS=5/);
+});
