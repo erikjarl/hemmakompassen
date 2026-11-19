@@ -112,7 +112,7 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
 <script src="./gameplay.js?v=2"></script>
 <script src="./inventory.js?v=3"></script>
 <script src="./item-art.js?v=1"></script>
-<script src="./car.js?v=2"></script>
+<script src="./car.js?v=3"></script>
 <script src="./fuel.js?v=2"></script>
 <script src="./npc.js?v=2"></script>
 <script src="./farm.js?v=2"></script>
@@ -971,7 +971,7 @@ function tick(now){
       const movement=carDrive.move(state.x,state.y,dx,dy,dt);
       if(movement.moved){
         state.x=movement.x;state.y=movement.y;collectCoins();
-        state.dir=Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up');
+        state.dir=dx&&dy?(dy<0?'up-':'down-')+(dx<0?'left':'right'):dx?(dx>0?'right':'left'):(dy>0?'down':'up');
         stepProgress+=dt;
         if(stepProgress>.08){updateMessage();stepProgress=0;}
       }
