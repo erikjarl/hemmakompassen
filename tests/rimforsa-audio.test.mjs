@@ -121,3 +121,20 @@ test('En originalskapad grattisfanfar spelas bara när ljud är aktiverat',()=>{
  assert.ok(starts()>=before+5,'Firandet ska skapa minst fem toner');
  audio.disable();
 });
+
+test('Drakens musik växlar vid närhet och återgår när Lage går därifrån',()=>{
+ const {audio,clocks,starts}=audioFixture();
+ assert.equal(audio.status().dragonNearby,false);
+ audio.setDragonNearby(true);
+ assert.equal(audio.status().dragonNearby,true);
+ assert.equal(clocks.size,0,'ljud får inte starta automatiskt');
+ audio.enable();
+ const before=starts();
+ for(const clock of clocks.values())clock.fn();
+ assert.ok(starts()>before,'draktemat ska spela toner');
+ audio.setDragonNearby(false);
+ assert.equal(audio.status().dragonNearby,false);
+ audio.setScene('boat');
+ assert.equal(audio.status().playingMusic,false);
+ audio.disable();
+});
