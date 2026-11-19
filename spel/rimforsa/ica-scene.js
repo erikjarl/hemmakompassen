@@ -4,6 +4,27 @@
 const W=480,H=288;
 const zones={cashier:{x:300,y:88,w:150,h:147},pear:{x:32,y:116,w:99,h:119},vanilla:{x:134,y:116,w:100,h:119},potatoes:{x:310,y:234,w:155,h:54}};
 const rect=(c,x,y,w,h,color)=>{c.fillStyle=color;c.fillRect(Math.round(x),Math.round(y),w,h)};
+ // Samma 56×56-originalsprite som huvudkartan, utan oskarp interpolation.
+ const lageSprite=typeof root.Image==='function'?new root.Image():null;
+ let lastCanvas=null,lastOptions=null;
+ if(lageSprite){
+  lageSprite.onload=()=>{if(lastCanvas&&lastOptions)draw(lastCanvas,lastOptions);};
+  lageSprite.src='./lage-sprites.png';
+ }
+ function drawLage(c,x,y){
+  if(lageSprite&&lageSprite.complete&&lageSprite.naturalWidth>=56&&lageSprite.naturalHeight>=56){
+   c.save();
+   c.imageSmoothingEnabled=false;
+   rect(c,x-24,y+17,48,6,'#3a403555');
+   c.drawImage(lageSprite,0,0,56,56,Math.round(x-30),Math.round(y-43),60,60);
+   c.restore();
+  }else{
+   // Visuell reserv om spritefilen inte laddats; riktiga spriten ersätter vid onload.
+   return false;
+  }
+  return true;
+ }
+ 
 function person(c,x,y,shirt='#bf6548',hair='#694b2d'){
  rect(c,x-12,y+12,10,22,'#344b55');rect(c,x+3,y+12,10,22,'#344b55');
  rect(c,x-15,y-12,31,28,shirt);
@@ -14,6 +35,7 @@ function person(c,x,y,shirt='#bf6548',hair='#694b2d'){
 }
 function draw(canvas,options={}){
  const c=canvas.getContext('2d');if(!c)return false;
+ lastCanvas=canvas;lastOptions=options;
  c.imageSmoothingEnabled=false;
  const owned=options.owned||{},balance=Number(options.balance)||0;
  rect(c,0,0,W,H,'#f1e4bc');rect(c,0,0,W,38,'#355d44');
@@ -54,7 +76,7 @@ function draw(canvas,options={}){
  rect(c,330,273,116,12,'#405d38');
  c.fillStyle='#ffebaa';c.font='bold 12px monospace';c.fillText('SÄLJ POTATIS',342,282);
  // Lage framför disken: alltid samma färgskala som huvudkartan.
- person(c,274,226,'#bf594f','#775032');
+ if(!drawLage(c,274,226))person(c,274,226,'#bf594f','#775032');
  rect(c,280,24,108,11,'#e6c96f');
  c.fillStyle='#f9eac5';c.font='bold 21px monospace';c.fillText('ICA MELKERS',315,20);
  c.font='bold 14px monospace';c.fillStyle='#fff2ca';
