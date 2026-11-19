@@ -161,7 +161,7 @@ function frame(t){
  if(!session||dialog.hidden)return;
  const dt=last?Math.min(.05,(t-last)/1000):0;last=t;
  const before=session.snapshot().found,after=session.step(dt,keys);
- if(after.damaged&&root.RimforsaAudio)root.RimforsaAudio.hit();
+ if(after.damaged&&root.RimforsaAudio)(root.RimforsaAudio.sharkBump?root.RimforsaAudio.sharkBump():root.RimforsaAudio.hit());
  if(after.found>before&&root.RimforsaAudio)root.RimforsaAudio.coin();
  render();raf=root.requestAnimationFrame(frame);
 }
