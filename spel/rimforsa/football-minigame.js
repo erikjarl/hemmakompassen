@@ -94,7 +94,7 @@ function render(){
  const bx=Math.round(ball.x),by=Math.round(ball.y);
  rect(bx-9,by-8,18,17,'#33413c');rect(bx-7,by-8,14,16,'#f0ead8');
  rect(bx-3,by-4,7,7,'#35434a');rect(bx-6,by+3,4,4,'#40505a');rect(bx+4,by+2,3,4,'#40505a');
- if(goalFlash>0){rect(165,106,150,33,'#2e5d41');ctx.font='bold 17px monospace';ctx.fillStyle='#fff1a8';ctx.fillText('MÅÅÅL! +1',180,129);}
+ if(goalFlash>0){rect(165,106,150,33,'#2e5d41');ctx.font='bold 17px monospace';ctx.fillStyle='#fff1a8';ctx.fillText('MÅÅÅL!',190,129);}
  rect(8,8,160,25,'#233f33');ctx.fillStyle='#f4d69c';ctx.font='bold 13px monospace';ctx.fillText('MÅL '+goals+'   SKOTT '+kicks,17,26);
 }
 function kick(){
