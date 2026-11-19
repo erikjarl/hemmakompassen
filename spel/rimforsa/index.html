@@ -108,7 +108,7 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
  <div class="controls"><div class="guide">Samla guldmynt! Vid hemmet står en vit bil – hoppa in med Kör bilen. Styr med pilar/WASD.</div><div class="dpad" aria-label="Styr Lage"><button type="button" data-dir="up" aria-label="Gå uppåt"></button><button type="button" data-dir="left" aria-label="Gå åt vänster"></button><button type="button" data-dir="down" aria-label="Gå nedåt"></button><button type="button" data-dir="right" aria-label="Gå åt höger"></button></div><button class="reset" id="reset">Börja om ↺</button></div>
  <div class="footer">Illustrerad spelvärld inspirerad av Rimforsa. Platserna ligger ungefär rätt, men kartan är inte skalenlig.</div>
 </main>
-<script src="./audio.js?v=12"></script>
+<script src="./audio.js?v=13"></script>
 <script src="./gameplay.js?v=2"></script>
 <script src="./inventory.js?v=3"></script>
 <script src="./item-art.js?v=1"></script>
@@ -258,7 +258,7 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
   const result=bag.addPurchase('ananaspizza');
   if(!result.added){refund();pizzaStatus.textContent='Det gick inte att lägga pizzan i väskan.';renderPizza();return;}
   pizzaStatus.textContent='🍕 Mums! Pizzaslicen med ananas ligger i väskan.'+(result.saved?'':' Den kunde inte sparas till nästa besök.');
-  audio.coin();updateCoinScore();renderBag();renderPizza();drawPizzaScene();
+  (audio.purchase||audio.coin)();updateCoinScore();renderBag();renderPizza();drawPizzaScene();
  });
  const icaOverlay=document.getElementById('icaOverlay'),icaBalance=document.getElementById('icaBalance'),icaStatus=document.getElementById('icaStatus');
  const icePrices={paronglass:3,vaniljglass:4};
@@ -310,7 +310,7 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
    if(!added.added){refund();icaStatus.textContent='Det gick inte att lägga glassen i väskan.';renderIca();return;}
    const name=id==='paronglass'?'päronglass':'vaniljglass';
    icaStatus.textContent='🍨 Tack för köpet! Du fick en '+name+' i väskan.'+(added.saved?'':' Den kunde inte sparas till nästa besök.');
-   audio.coin();updateCoinScore();renderBag();renderIca();drawIcaScene();
+   (audio.purchase||audio.coin)();updateCoinScore();renderBag();renderIca();drawIcaScene();
  });
  document.getElementById('sellPotatoes').addEventListener('click',()=>{
    const sale=farm.sell(3);
@@ -629,13 +629,13 @@ function openFuelStation(){
    if(carFuel.snapshot().level>=100){fuelDialog.querySelector('[data-fuel-status]').textContent='Tanken är redan full!';return;}
    const refund=payCoins(carFuel.COST);
    if(!refund){fuelDialog.querySelector('[data-fuel-status]').textContent='Du behöver två spelmynt. Samla mynt på kartan eller sälj potatis på ICA.';return;}
-   carFuel.fill();updateFuelHud();renderFuelStation();
+   carFuel.fill();(audio.fuelFill||audio.coin)();updateFuelHud();renderFuelStation();
   });
   fuelDialog.querySelector('[data-fuel-boat]').addEventListener('click',()=>{
    if(boatFuel.snapshot().level>=100){fuelDialog.querySelector('[data-fuel-status]').textContent='Båtens tank är redan full!';return;}
    const refund=payCoins(carFuel.COST);
    if(!refund){fuelDialog.querySelector('[data-fuel-status]').textContent='Du behöver två spelmynt för att tanka båten.';return;}
-   boatFuel.fill();updateFuelHud();renderFuelStation();
+   boatFuel.fill();(audio.fuelFill||audio.coin)();updateFuelHud();renderFuelStation();
   });
   fuelDialog.querySelector('[data-fuel-close]').addEventListener('click',()=>{fuelDialog.hidden=true;state.nearKey=null;updateMessage();});
   fuelDialog.addEventListener('click',e=>{if(e.target===fuelDialog){fuelDialog.hidden=true;state.nearKey=null;updateMessage();}});
@@ -741,7 +741,7 @@ function spawnBoatCoins(){
 function resetBoatGame(){audio.setBoatSpeed(0);boatState.x=374;boatState.y=283;boatState.vx=0;boatState.vy=0;boatState.angle=0;boatState.hearts=3;boatState.flash=0;boatState.invul=0;boatState.done=false;boatState.message='';for(const k in boatKeys)boatKeys[k]=false;spawnBoatCoins();updateBoatHud();boatTip.textContent=boatFuel.snapshot().level>0?'Styr båten, samla mynt och undvik grunden.':'Båttanken är tom! Gå till Bensinmacken på huvudkartan och tanka båten.';}
 function openBoatGame(){if(!boatChartLoaded){boatTip.textContent='Laddar sjökartan…';}resetBoatGame();stop();audio.setScene('boat');boatState.active=true;boatOverlay.classList.add('show');boatOverlay.setAttribute('aria-hidden','false');boatTip.textContent=boatFuel.snapshot().level>0?'Kör ut från Kinda båtklubb och samla mynten utan att köra på grunden. Kartan är en fri 16-bitars-tolkning av Åsunden.':'Båten har tom tank! Gå till Bensinmacken på kartan och köp båtbensin. Välj Tillbaka för att gå dit.';}
 function closeBoatGame(){boatState.active=false;audio.setBoatSpeed(0);audio.setScene('land');boatOverlay.classList.remove('show');boatOverlay.setAttribute('aria-hidden','true');for(const k in boatKeys)boatKeys[k]=false;}
-function boatCrash(){if(boatState.invul>0||boatState.done)return;audio.hit();audio.setBoatSpeed(0);boatState.hearts--;boatState.invul=1.1;boatState.flash=.7;boatState.vx=boatState.vy=0;boatState.x=374;boatState.y=283;updateBoatHud();if(boatState.hearts<=0){boatState.done=true;boatTip.textContent='Aj! Alla hjärtan är slut. Tryck på Spela om för att försöka igen.';}else boatTip.textContent='Aj! Du körde på ett grund och tappade ett hjärta.';}
+function boatCrash(){if(boatState.invul>0||boatState.done)return;(audio.boatGrounding||audio.hit)();audio.setBoatSpeed(0);boatState.hearts--;boatState.invul=1.1;boatState.flash=.7;boatState.vx=boatState.vy=0;boatState.x=374;boatState.y=283;updateBoatHud();if(boatState.hearts<=0){boatState.done=true;boatTip.textContent='Aj! Alla hjärtan är slut. Tryck på Spela om för att försöka igen.';}else boatTip.textContent='Aj! Du körde på ett grund och tappade ett hjärta.';}
 function updateBoat(dt){
  if(!boatState.active||!boatChartLoaded)return;
  if(boatState.flash>0)boatState.flash=Math.max(0,boatState.flash-dt);
