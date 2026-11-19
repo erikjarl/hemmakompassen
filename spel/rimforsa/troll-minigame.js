@@ -166,6 +166,35 @@
    const x=(i*79+13)%480,y=275+(i*11)%23;
    pixelRect(x,y,6,3,i%3===0?'#cbb386':'#6f6043');
   }
+  // Små skogsdetaljer i samma fasta pixelrutnät som den övriga 16-bitarsmiljön.
+  // Förankrade i marken så att gläntan får djup utan att dölja sikte eller troll.
+  function forestMushroom(mx,my){
+   pixelRect(mx-5,my-2,11,4,'#493c2b');
+   pixelRect(mx-3,my-8,7,9,'#e4d2a0');
+   pixelRect(mx-9,my-12,19,5,'#8d4438');
+   pixelRect(mx-7,my-15,15,4,'#ba5f48');
+   pixelRect(mx-4,my-14,3,2,'#f4d9ad');
+   pixelRect(mx+3,my-11,3,2,'#f4d9ad');
+   pixelRect(mx-10,my+1,22,3,'#315d3b');
+  }
+  forestMushroom(66,235);forestMushroom(427,250);forestMushroom(366,235);
+  // Mossbevuxen stubbe, barkstrimmor och stenar kring skogsstigen.
+  pixelRect(29,216,32,12,'#345039');
+  pixelRect(32,201,26,19,'#4a3528');
+  pixelRect(35,199,20,6,'#946e47');
+  pixelRect(38,198,14,3,'#c5a076');
+  pixelRect(36,207,4,9,'#795334');
+  pixelRect(48,205,4,11,'#2d2b24');
+  pixelRect(32,199,8,3,'#65864b');
+  pixelRect(52,202,8,4,'#739653');
+  for(let i=0;i<8;i++){
+   const rx=(i*61+86)%476,ry=231+(i*17)%38;
+   pixelRect(rx-7,ry,18,5,'#46534a');
+   pixelRect(rx-5,ry-5,13,6,'#818577');
+   pixelRect(rx-3,ry-6,7,3,'#bbb39a');
+   pixelRect(rx+5,ry-2,3,3,'#5f6659');
+   pixelRect(rx-8,ry+3,21,3,'#31583a');
+  }
   // Enstaka eldflugor – en diskret animation utan påverkan på fysiken.
   for(let i=0;i<5;i++){
    const x=54+i*91+Math.round(Math.sin(time*.9+i)*3);
