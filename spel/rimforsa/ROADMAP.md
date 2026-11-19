@@ -4,7 +4,7 @@
 **Spel:** `spel/rimforsa/index.html`  
 **Publicerad adress:** https://erikjarl.github.io/hemmakompassen/spel/rimforsa/  
 **Senast uppdaterad:** 2026-11-19  
-**Status:** Väskan och den animerade draken är implementerade på main med tester. Drakens senaste Pages-distribution och webbläsartester kontrolleras separat i GitHub Actions. Övriga minispel är öppna.
+**Status:** Väskan, draken och bajskastnings-minispelet är implementerade på main med tester. Den senaste Pages-publiceringen och UI-smoketesterna måste verifieras innan full produktionsbekräftelse. ICA, pizzerian, förskolan och badet återstår.
 
 ## Stående instruktion – kommandot `jobb lage`
 
@@ -47,7 +47,7 @@ När användaren skriver **`jobb lage`**:
 ## Trollet vid stenen nordväst om rondellen
 
 - [x] **TROLL-01: Placering och interaktion.** Lägg ett troll på den befintliga stenen nordväst om rondellen, med transparent pixelgrafik från den godkända referensbilden. Trollet ska vara lite större än Lage, synas i huvudkartan och gå att hälsa på till fots; placeringen ska inte ändra den befintliga gång- eller bilkollisionen.
-- [ ] **TROLL-02: Bajskastnings-minispel.** Bygg ett separat minispel där Lage kastar bajs på trollet. Återanvänd trollets fasta världspunkt och ingången `window.RimforsaTrollMinigame.start({troll,player,returnToMap})`. Kaststyrning, poäng, grafik, ljud och återgång till huvudkartan är **ännu inte implementerade**. Behåll dessa som ett eget framtida utvecklingsarbete.
+- [x] **TROLL-02: Bajskastnings-minispel.** Bygg ett separat minispel där Lage kastar bajs på trollet. Återanvänd trollets fasta världspunkt och ingången `window.RimforsaTrollMinigame.start({troll,player,returnToMap})`. Kaststyrning, poäng, grafik, ljud och återgång till huvudkartan är nu implementerade med särskild minispelsmodul och regressionstester.
 
 ## Att göra – nya minispel
 
@@ -82,6 +82,7 @@ När användaren skriver **`jobb lage`**:
 - **Verifiering:** Lägg till tester för respektive uppgift, spela igenom huvudflödet och kontrollera samma publicerade URL. Redovisa separat om fysisk iPhone/Safari inte har testats.
 
 ## Arbetslogg
+- **2026-11-19 – Jobb lage / TROLL-02:** Ny fristående `troll-minigame.js` ansluten genom befintlig `window.RimforsaTrollMinigame.start({troll,player,returnToMap})`. När Lage går till trollet till fots kan han välja **Kasta bajs på trollet 💩** och få ett eget mobilanpassat Canvas-minispel med samma trollsprite, rörligt mål, riktning via skärmknappar/tangentbord/tryck på spelplanen, tio kast, träffräkning, seger vid fem träffar, omspel och återgång. Träff/miss använder befintliga användaraktiverade ljud, och huvudkartans rörelse stoppas under spelet. Inga hjärtan eller mynt ändras. Testerna i `tests/rimforsa-troll-minigame.test.mjs` och de äldre trollregressionstesterna har uppdaterats. **Verifieringsstatus vid loggskrivning:** kod och tester finns på main; kontrollen av serverade Pages-resurser har rapporterat success för kodversion c181cda0, medan GitHub Actions funktionella tester/UI och Pages-publicering ännu pågick. Fysisk iPhone/Safari ej testad. Nästa uppgift **ICA-01**.\n\n
 - **2026-11-19 – Jobb lage / DRAKE-01:** Originalritad grön drake i `dragon.js` patrullerar runt spelvärldspunkt cirka (510, 820) i ett avgränsat område, flaxar med vingarna och sprutar cykliskt animerad eld. Draken visas på huvudkartan och som markör i minikartan. Nytt originalkomponerat molltema i `audio.js` väljs inom cirka 235 världspixlar från draken och ersätts av vanliga musiken på avstånd; ljud startar endast efter aktivt ljudval i spelet och stannar i båtminispelet. Draken orsakar ingen skada, ger inga föremål och ändrar inte kollisioner. `tests/rimforsa-dragon.test.mjs` tillagt för rörelse, närhet och Canvas-ritning. **Verifiering:** Koden committad till main och Pages asset-kontrollen var godkänd för integrationscommiten; senaste Pages-bygg och UI-smoketest pågick vid loggskrivningen, så de är inte verifierade ännu. Fysisk iPhone/Safari och faktisk musikalisk upplevelse ej verifierad. Nästa prioritet **TROLL-02** och därefter köpmiljöerna.
 
 - **2026-11-19 – Jobb lage / INV-01:** Lagt till knappen **🎒 Väska** och fyra unika föremål: fotboll vid Hackelhallen, färgkritor vid Förskolan Hackel, snäcka vid Åsundabadet och nyckelring vid Bensinmacken. Föremål erhålls vid första besök och sparas separat från mynt och hjärtan i webbläsarens lokala lagring. Samma fynd kan inte samlas flera gånger; väska kan öppnas, stängas och tömmas efter bekräftelse. Om lokal lagring saknas visas ett tydligt besked. Skapade `inventory.js` och `tests/rimforsa-inventory.test.mjs`. **Verifieringsläge vid loggskrivning:** commits finns på main; GitHub Actions för Pages och webbläsartester pågår, testresultat är ännu inte bekräftade. Fysisk iPhone/Safari ej testad. Nästa uppgift **DRAKE-01**, därefter trollminispelet och övriga minispel.
