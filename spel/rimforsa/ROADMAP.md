@@ -6,11 +6,11 @@
 
 ## Obligatorisk rotation mellan utvecklingspass
 
-**SENAST BEARBETAD HUVUDUPPGIFT: `FORDON-02` – riktade pixelvyer för bilen (19 november 2026).**
+**SENAST BEARBETAD HUVUDUPPGIFT: `BRÄNSLE-01` – mätare och återhämtning vid tom tank (19 november 2026).**
 
-**NÄSTA ROTATIONSPOSITION: `BRÄNSLE-01` – tankmätare, bensinförbrukning och inköp.**
+**NÄSTA ROTATIONSPOSITION: `BRÄNSLE-02` – dagspris och prisdatakälla för Ingo.**
 
-**ALDRIG SAMMA HUVUDUPPGIFT TVÅ `JOBB LAGE` I FÖLJD.** Följ ordningen bland öppna, genomförbara uppgifter nedan med cirkulär rotation. Starta på angiven nästa position, hoppa över avbockade punkter, stående kvalitetsregler som `MINI-01` (dessa gäller ändå varje pass) och tillfälligt blockerade uppgifter. Bearbeta olika delar av spelet mellan varven: grafik, fordon, bränsle, ljud och andra spelmekaniker. Om inget praktiskt kan göras på nästa punkt, gå vidare till följande **annan** uppgift; återvänd först efter andra utvecklingspass. Prioritet betyder vikt inom rotationen, **inte** rätt att välja samma uppgift igen direkt. När ett pass med faktisk spelutveckling slutförts, uppdatera **båda fälten ovan** till den verkliga huvuduppgiften och efterföljande öppna rotationsposition innan passet avslutas. Rapportera vilka fält som ändrades. Att kontrollera kryssrutor eller åtgärda ett akut blockerande fel räknas inte som att byta huvuduppgift. **Nästa `jobb lage` ska prioritera `BRÄNSLE-01` och inte välja `FORDON-02` direkt igen.**
+**ALDRIG SAMMA HUVUDUPPGIFT TVÅ `JOBB LAGE` I FÖLJD.** Följ ordningen bland öppna, genomförbara uppgifter nedan med cirkulär rotation. Starta på angiven nästa position, hoppa över avbockade punkter, stående kvalitetsregler som `MINI-01` (dessa gäller ändå varje pass) och tillfälligt blockerade uppgifter. Bearbeta olika delar av spelet mellan varven: grafik, fordon, bränsle, ljud och andra spelmekaniker. Om inget praktiskt kan göras på nästa punkt, gå vidare till följande **annan** uppgift; återvänd först efter andra utvecklingspass. Prioritet betyder vikt inom rotationen, **inte** rätt att välja samma uppgift igen direkt. När ett pass med faktisk spelutveckling slutförts, uppdatera **båda fälten ovan** till den verkliga huvuduppgiften och efterföljande öppna rotationsposition innan passet avslutas. Rapportera vilka fält som ändrades. Att kontrollera kryssrutor eller åtgärda ett akut blockerande fel räknas inte som att byta huvuduppgift. **Nästa `jobb lage` ska gå vidare till `BRÄNSLE-02`, inte arbeta med `BRÄNSLE-01` två gånger i följd.**
 
 ## Obligatorisk avbockning – vid VARJE `jobb lage`
 
@@ -25,13 +25,12 @@
 
 **OBLIGATORISKT FÖR VARJE UPPGIFT:** All ny och ändrad synlig grafik ska vara originalgjord **16-BITARS SUPER NINTENDO-PIXELKONST MED SAMMA PIXELSKALA, SKÄRPA, DETALJRIKEDOM, FÄRGSTIL, PROPORTIONER OCH TYDLIGA ANSIKTSDRAG/HÅR SOM HUVUDKARTAN OCH LAGES SPRITE**. Inga avvikande grovpixliga platshållare. Samma krav gäller även redan avbockade funktioner när grafiken berörs. Se [GAME_RULES.md](docs/GAME_RULES.md). Detta krav gäller även om den korta grafikmärkningen nedan utelämnas vid framtida redigering.
 
-## Öppna uppgifter – arbetskö (11)
+## Öppna uppgifter – arbetskö (10)
 
 - [ ] **GRAF-02 – Prioritet hög: Bygg om trollminispelets grafik.** · [Detaljer](docs/TASK_DETAILS.md#graf-02) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.** _Pågående: gemensamma trollspriten, skog, vegetation och träffanimation finns. 19 nov: Lage visas nu med huvudkartans ansikte och hår framifrån, en pixelerad kaströrelse tillkommer och trollets blink-/träffeffekter riktas mot rätt ögonposition. Kodgranskat; faktisk visuell genomspelning på mobil och dator återstår, därför fortsatt öppen._
 - [ ] **GRAF-01 – Prioritet hög: Harmonisering av alla scener.** · [Detaljer](docs/TASK_DETAILS.md#graf-01) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.** _19 nov: rutschkanans Lage-figur använder originalspriten. Dykminispelet har nu skogskant, strand, ljusstråk, sjöbottenväxter, småfisk och mer detaljerade hajsprites. Andra scener återstår; visuell webbläsarkontroll före/efter på mobil och dator saknas, så uppgiften är fortsatt öppen._
 - [ ] **MINI-01 – Stående kontroll av framtida minispel.** · [Detaljer](docs/TASK_DETAILS.md#mini-01) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.**
 - [ ] **FORDON-02 – Riktningsanpassad grafik för bil och båt.** · [Detaljer](docs/TASK_DETAILS.md#fordon-02) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.** _19 nov: bilens 4 kardinala och 4 diagonala riktningsvyer ritade med pixelblock och en bevarad horisontell takyta; bilens styrning väljer nu diagonaler. Båtens egna åttariktade bilder och visuell mobil-/webbläsarkontroll återstår._
-- [ ] **BRÄNSLE-01 – Tankmätare, bensinförbrukning och inköp.** · [Detaljer](docs/TASK_DETAILS.md#bränsle-01) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.** _Etapp för bil dokumenterad i arbetsloggen; helheten är ännu öppen._
 - [ ] **BRÄNSLE-02 – Aktuellt Ingo-pris på skylt.** · [Detaljer](docs/TASK_DETAILS.md#bränsle-02) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.**
 - [ ] **LJUD-01 – Läs upp karaktärernas repliker.** · [Detaljer](docs/TASK_DETAILS.md#ljud-01) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.**
 - [ ] **LJUD-02 – Åtgärda ljud i Safari på mobil.** · [Detaljer](docs/TASK_DETAILS.md#ljud-02) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.**
@@ -39,7 +38,9 @@
 - [ ] **LJUD-04 – Pruttigare bajsljud.** · [Detaljer](docs/TASK_DETAILS.md#ljud-04) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.**
 - [ ] **KARTA-01 – Utöka Rimforsakartan till mer av Kindabygden.** · [Detaljer](docs/TASK_DETAILS.md#karta-01) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.**
 
-## Tidigare avbockade uppgifter (29)
+## Tidigare avbockade uppgifter (30)
+
+- [x] **BRÄNSLE-01 – Tankmätare, bensinförbrukning och inköp.** · [Detaljer](docs/TASK_DETAILS.md#bränsle-01) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.** _Verifierad kod: båda tankar börjar tomma utan tidigare sparning, sparas var för sig, förbrukar bränsle vid förflyttning, fylls med spelmynt på macken; bil spärrad och båt bogseras vid tom tank. 19 nov tydligare HUD-mätare, lågvarningar och hjälp vid tom tank. Fysisk webbläsartestning ej utförd._
 
 - [x] **BUTIK-01 – Prioritet hög: ICA som riktigt inomhusminispel.** · [Detaljer](docs/TASK_DETAILS.md#butik-01) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.**
 - [x] **BUTIK-02 – Prioritet hög: Pizzerian som riktigt inomhusminispel.** · [Detaljer](docs/TASK_DETAILS.md#butik-02) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.**
