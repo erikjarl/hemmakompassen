@@ -149,20 +149,46 @@
       if(carActive)startCarEngine();
     }
   }
+  // iOS Safari kan pausa/interruptera AudioContext vid flik- och appbyte.
+  // Starta om schemalagda loopar först när ljudmotorn faktiskt kör igen.
+  function onContextStateChange(){
+    if(!ctx)return;
+    if(ctx.state==='running'){
+      if(enabled&&!hidden){stopScene();startScene();}
+    }else{
+      stopScene();
+    }
+  }
   function ensureContext(){
     if(!AudioCtor)return false;
     if(!ctx){
       ctx=new AudioCtor();
       master=gain(volume);master.connect(ctx.destination);
+      ctx.onstatechange=onContextStateChange;
     }
-    if(ctx.state==='suspended'){const p=ctx.resume();if(p&&p.catch)p.catch(()=>{});}
     return true;
   }
+  // Anropas bara som följd av ett aktivt fingertryck eller en tangentnedtryckning.
+  // Inga försök att kringgå webbläsarens krav på användargest.
+  function resumeFromGesture(){
+    if(!enabled||hidden||!ctx)return false;
+    if(ctx.state==='running')return true;
+    if(ctx.state==='closed')return false;
+    try{
+      const pending=ctx.resume();
+      if(pending&&typeof pending.catch==='function')pending.catch(()=>{});
+      return true;
+    }catch(_){return false;}
+  }
   function enable(){
-    if(enabled)return true;
+    if(enabled){resumeFromGesture();return true;}
     try{
       if(!ensureContext())return false;
-      enabled=true;startScene();
+      enabled=true;
+      // Vid ett klick på ljudknappen får Safari starta motorn från denna gest.
+      // Statechange återbygger ljudscenen när kontexten övergår till running.
+      resumeFromGesture();
+      if(ctx.state==='running')startScene();
       return true;
     }catch(e){enabled=false;return false;}
   }
@@ -260,7 +286,7 @@
     if(!visible)stopSpeech();
     hidden=!visible;
     stopScene();
-    if(!hidden&&enabled){ensureContext();startScene();}
+    if(!hidden&&enabled&&ctx&&ctx.state==='running')startScene();
   }
   // Tal startas bara efter spelarens klick och med spelljudet aktiverat.
   // Samma repliker finns alltid kvar som text, även utan svensk systemröst.
@@ -303,5 +329,5 @@
     }catch(_){speechMusicVolume(volume);return false;}
   }
   function status(){return {enabled,available:!!AudioCtor,scene,hidden,playingMusic:musicInterval!==null,playingWaves:!!waves,playingEngine:!!engine,playingCarEngine:!!carEngine,carActive,dragonNearby};}
-  root.RimforsaAudio={enable,disable,toggle,setScene,setBoatSpeed,setCarActive,setCarSpeed,setDragonNearby,coin,hit,poop,victory,slideLaunch,slideLand,sharkBump,speak,stopSpeech,setVisible,status};
+  root.RimforsaAudio={enable,disable,toggle,resumeFromGesture,setScene,setBoatSpeed,setCarActive,setCarSpeed,setDragonNearby,coin,hit,poop,victory,slideLaunch,slideLand,sharkBump,speak,stopSpeech,setVisible,status};
 })(window);
