@@ -17,6 +17,21 @@ När användaren skriver **`jobb lage`**:
 5. Markera genomförda uppgifter med `[x]` först efter verifiering, och dokumentera eventuella begränsningar, kända fel och vad som återstår. Vid utebliven publicering ska det stå tydligt.
 6. Håll utvecklingen avgränsad till spelet `spel/rimforsa/` och dess relevanta tester; `Jobb hk` är ett separat kommando för resten av Hemmakompassen.
 
+## Nya att göra objekt (inlagda av Erik - gpt har i uppgift att sortera in varje genomgång av deyts dokument, ta bort objekt från denna lista när de sorterats in i listan nedan):
+- göra så att bilen och båten utgår från flera bilder från olika vinklar så att den aldrig blir upp och ner vänd. åker man pt höger ser man bilens framdel vänd åt höger med taket alltid uppåt samma dak vänster. åker neråt eller uppåt ser man bilen mer ovanifrån och sedan mellanting för diagnola vinklar
+- göra så att karaktärerna oliver och saga har egna utseenden
+- göra föremålen tydligare visuellt (nyckel mm)
+- göra så stt karaktärers dialoger blir upplästa 
+-  fixa så att ljudet fungerar även för safari i mobilversion
+- göra en potatisodling funktion på ett sv fälten. det ysr fem minuter för potatis att växa
+- göra det möjligt att sälja potatis till ica handlaren och få pengsr
+- göra bil och båtfunktionen beroende av bensin som köps på macken. kostnaden för bensin ska följa det faktiska bensinpriset.
+-skapa en funktion där båtens och bilens bensinmätare. när bensinen tar slut hår det ej att köra mer. i börjsn av varje spel är tanken tom
+- dagens bensinpris för Ingo ska visad på en skylt i huvudkartan
+- lägg in att görs punkter för stt skapa så många ljud som mökligt för alla olika händelser 
+- byt bajsljudet till ett mer pruttliknande ljud 
+
+
 ## Att göra – Kinda båtklubb
 
 - [x] **BÅT-01: Vattenambience.** Lägg till bakgrundsljud med **vågskvalp och fiskmåsar** när man befinner sig i båtminispelet.
