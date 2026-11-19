@@ -142,6 +142,36 @@
    const x=(i*93+18)%470,y=211+(i*19)%45;
    pixelRect(x,y,4,4,'#e7c46d');pixelRect(x+4,y+2,3,3,'#ec8e80');
   }
+  // Detaljerad pixelvegetation och stensplitter ger samma täta SNES-känsla
+  // som huvudkartan. Alla koordinater är i Canvasens fasta 480×300-rutnät.
+  for(let i=0;i<46;i++){
+   const x=(i*67+29)%476,y=210+(i*37)%83;
+   if(y>265&&x>110&&x<365)continue; // lämna jordstigen tydlig
+   pixelRect(x,y,6,3,'#244e35');
+   pixelRect(x+2,y-5,3,6,i%4===0?'#b7cd70':'#77a956');
+   pixelRect(x+5,y-2,2,4,'#5b9148');
+   if(i%5===0){
+    pixelRect(x-3,y-4,4,4,'#efb0a8');
+    pixelRect(x+1,y-6,4,4,'#fff0bd');
+    pixelRect(x+5,y-4,4,4,'#efb0a8');
+   }
+  }
+  // Ljus och skuggning på stenen gör att trollets underlag får volym.
+  for(let i=0;i<17;i++){
+   const x=146+(i*37)%176,y=143+(i*19)%58;
+   pixelRect(x,y,8,3,i%3===0?'#c8bea3':'#6e7562');
+   pixelRect(x+3,y+4,3,6,'#646957');
+  }
+  for(let i=0;i<14;i++){
+   const x=(i*79+13)%480,y=275+(i*11)%23;
+   pixelRect(x,y,6,3,i%3===0?'#cbb386':'#6f6043');
+  }
+  // Enstaka eldflugor – en diskret animation utan påverkan på fysiken.
+  for(let i=0;i<5;i++){
+   const x=54+i*91+Math.round(Math.sin(time*.9+i)*3);
+   const y=153+(i%3)*17+Math.round(Math.sin(time*1.5+i)*5);
+   pixelRect(x,y,3,3,Math.sin(time*3+i)>0?'#f5e79c':'#b1c780');
+  }
   // Små ljusfläckar som flimrar utan att flytta på kollisionsmålet.
   for(let i=0;i<6;i++)pixelRect(31+i*77,113+(i%3)*17+Math.floor(Math.sin(time*2+i)*2),5,3,'#98b88a');
  }
