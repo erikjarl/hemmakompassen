@@ -4,13 +4,21 @@
 **Publicerad adress:** https://erikjarl.github.io/hemmakompassen/spel/rimforsa/  
 **Omstrukturerad:** 2026-11-19 · **Källa för uppgiftsstatus och arbetsordning:** denna fil.
 
+## Obligatorisk rotation mellan utvecklingspass
+
+**SENAST BEARBETAD HUVUDUPPGIFT: `GRAF-02` – trollminispelet (19 november 2026).**
+
+**NÄSTA ROTATIONSPOSITION: `GRAF-01` – harmonisera en ANNAN scen, inte trollspelet.**
+
+**ALDRIG SAMMA HUVUDUPPGIFT TVÅ `JOBB LAGE` I FÖLJD.** Följ ordningen bland öppna, genomförbara uppgifter nedan med cirkulär rotation. Starta på angiven nästa position, hoppa över avbockade punkter, stående kvalitetsregler som `MINI-01` (dessa gäller ändå varje pass) och tillfälligt blockerade uppgifter. Bearbeta olika delar av spelet mellan varven: grafik, fordon, bränsle, ljud och andra spelmekaniker. Om inget praktiskt kan göras på nästa punkt, gå vidare till följande **annan** uppgift; återvänd först efter andra utvecklingspass. Prioritet betyder vikt inom rotationen, **inte** rätt att välja samma uppgift igen direkt. När ett pass med faktisk spelutveckling slutförts, uppdatera **båda fälten ovan** till den verkliga huvuduppgiften och efterföljande öppna rotationsposition innan passet avslutas. Rapportera vilka fält som ändrades. Att kontrollera kryssrutor eller åtgärda ett akut blockerande fel räknas inte som att byta huvuduppgift. **Nästa `jobb lage` ska alltså arbeta på något annat än trollspelet/GRAF-02.**
+
 ## Obligatorisk avbockning – vid VARJE `jobb lage`
 
 **GÅ IGENOM ÖPPNA PUNKTER OCH KRYSSA AV ALLT SOM REDAN ÄR FÄRDIGT.** Detta gäller oavsett om arbetet utfördes nu eller under ett tidigare pass. Kontrollera befintlig implementation mot uppgiftens acceptansvillkor **innan** nästa arbete väljs och kontrollera igen **efter** passet. När en uppgift är helt genomförd och tillräckligt verifierad: byt `[ ]` till `[x]`, flytta raden till **Tidigare avbockade uppgifter** och uppdatera antalen i rubrikerna. Låt inte färdiga punkter ligga kvar öppna av slentrian. Verifiering ska vara relevant och proportionerlig; ett omfattande CI-pass eller fysisk Safari behövs inte automatiskt för varje isolerad uppgift, men om uppgiften kräver sådan kontroll får den inte påstås vara slutförd utan den. Om en del återstår: behåll `[ ]` och ange konkret **vad** som saknas i stället för att bara skriva ”verifiering återstår”. Skilj separata framtida grafikförbättringar från redan färdiga funktionskrav, utan att förbigå grafikkrav som ingår i själva uppgiften. `ROADMAP.md` är enda källa till uppgiftskryss och status.
 
 ## Snabb rutin för `jobb lage`
 
-1. Läs [AGENTS.md](AGENTS.md) och **denna korta kö**. Välj första genomförbara öppna uppgift; respektera beroenden och blockerande fel. `GRAF-02` är uttryckligen märkt **börja här**.
+1. Läs [AGENTS.md](AGENTS.md) och **denna korta kö**. Välj nästa genomförbara **annan** uppgift enligt rotationsfälten ovan; respektera beroenden och blockerande fel. Välj aldrig samma huvuduppgift två pass i följd.
 2. Läs **bara den valda uppgiftens avsnitt** i [TASK_DETAILS.md](docs/TASK_DETAILS.md) (vid behov genom textsökning/radintervall), sedan relevant kod. Gemensamma, detaljerade krav finns i [GAME_RULES.md](docs/GAME_RULES.md); läs relevanta delar när arbetet berör dem.
 3. Ägna huvuddelen av passet åt faktiska spelförbättringar, med proportionerliga kontroller. Committa, pusha och publicera enligt stående fullmakt. Markera `[x]` först efter relevant verifiering.
 4. Uppdatera **status endast i denna roadmap** och skriv ett kort, sakligt resultat i [WORKLOG.md](docs/WORKLOG.md). **Läs inte hela historiken inför varje pass**; sök där endast om tidigare beslut eller verifiering behöver kontrolleras.
@@ -19,7 +27,7 @@
 
 ## Öppna uppgifter – arbetskö (11)
 
-- [ ] **GRAF-02 – Prioritet hög, börja här: Bygg om trollminispelets grafik.** · [Detaljer](docs/TASK_DETAILS.md#graf-02) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.** _Pågående: gemensamma trollspriten, skog, vegetation och träffanimation finns. 19 nov: Lage visas nu med huvudkartans ansikte och hår framifrån, en pixelerad kaströrelse tillkommer och trollets blink-/träffeffekter riktas mot rätt ögonposition. Kodgranskat; faktisk visuell genomspelning på mobil och dator återstår, därför fortsatt öppen._
+- [ ] **GRAF-02 – Prioritet hög: Bygg om trollminispelets grafik.** · [Detaljer](docs/TASK_DETAILS.md#graf-02) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.** _Pågående: gemensamma trollspriten, skog, vegetation och träffanimation finns. 19 nov: Lage visas nu med huvudkartans ansikte och hår framifrån, en pixelerad kaströrelse tillkommer och trollets blink-/träffeffekter riktas mot rätt ögonposition. Kodgranskat; faktisk visuell genomspelning på mobil och dator återstår, därför fortsatt öppen._
 - [ ] **GRAF-01 – Prioritet hög: Harmonisering av alla scener.** · [Detaljer](docs/TASK_DETAILS.md#graf-01) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.** _19 nov: rutschkanans tidigare förenklade Lage-figur ersatt i kod med samma spritesheet som huvudkartan; visuell webbläsarkontroll återstår, och fler scener behöver harmoniseras._
 - [ ] **MINI-01 – Stående kontroll av framtida minispel.** · [Detaljer](docs/TASK_DETAILS.md#mini-01) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.**
 - [ ] **FORDON-02 – Riktningsanpassad grafik för bil och båt.** · [Detaljer](docs/TASK_DETAILS.md#fordon-02) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.**
