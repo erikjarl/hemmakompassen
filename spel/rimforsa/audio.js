@@ -3,7 +3,7 @@
   'use strict';
   const AudioCtor = root.AudioContext || root.webkitAudioContext;
   let ctx=null,master=null,scene='land',enabled=false,hidden=false;
-  let musicInterval=null,gullInterval=null,engine=null,waves=null,carEngine=null,carActive=false,melodyStep=0,volume=.55,dragonNearby=false;
+  let musicInterval=null,gullInterval=null,preschoolInterval=null,engine=null,waves=null,carEngine=null,carActive=false,melodyStep=0,volume=.55,dragonNearby=false;
   const melody=[392,440,523.25,440,392,329.63,349.23,392,440,392,329.63,293.66,329.63,349.23,392,0,
                  349.23,392,440,523.25,587.33,523.25,440,392,349.23,329.63,293.66,329.63,349.23,392,329.63,0];
   // Originalkomponerat molltema med låg bordun för drakens skog.
@@ -55,6 +55,13 @@
     g.gain.linearRampToValueAtTime(.034,t+.04);
     g.gain.exponentialRampToValueAtTime(.0001,t+.42);
     o.start(t);o.stop(t+.45);
+  }
+  // Originalsyntetiserade lekfulla rop och fågelkvitter, utan inspelade barnröster.
+  function preschoolSound(){
+    if(!enabled||scene!=='preschool'||hidden||!ctx)return;
+    const t=now()+.02;
+    const pattern=[[784,988,784],[659,880,1046],[988,784,659]][Math.floor(Math.random()*3)];
+    pattern.forEach((f,i)=>tone(f,t+i*.13,.17,.016,'sine'));
   }
   function startEngine(){
     const lo=oscillator('sawtooth',55),hi=oscillator('triangle',84);
@@ -121,6 +128,7 @@
   function stopScene(){
     if(musicInterval!==null){root.clearInterval(musicInterval);musicInterval=null;}
     if(gullInterval!==null){root.clearInterval(gullInterval);gullInterval=null;}
+    if(preschoolInterval!==null){root.clearInterval(preschoolInterval);preschoolInterval=null;}
     stopWaves();stopEngine();stopCarEngine();
   }
   function startScene(){
@@ -129,6 +137,9 @@
       startWaves();startEngine();
       gullInterval=root.setInterval(gull,7200);
       gull();
+    }else if(scene==='preschool'){
+      preschoolSound();
+      preschoolInterval=root.setInterval(preschoolSound,4800);
     }else{
       musicTick();
       musicInterval=root.setInterval(musicTick,360);
@@ -163,7 +174,7 @@
     return enable();
   }
   function setScene(next){
-    const newScene=next==='boat'?'boat':'land';
+    const newScene=['boat','preschool'].includes(next)?next:'land';
     if(newScene===scene)return;
     stopScene();scene=newScene;startScene();
   }
