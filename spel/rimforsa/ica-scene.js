@@ -2,7 +2,7 @@
 (function(root){
 'use strict';
 const W=480,H=288;
-const zones={cashier:{x:300,y:118,w:150,h:117},pear:{x:32,y:116,w:99,h:119},vanilla:{x:134,y:116,w:100,h:119}};
+const zones={cashier:{x:300,y:88,w:150,h:147},pear:{x:32,y:116,w:99,h:119},vanilla:{x:134,y:116,w:100,h:119}};
 const rect=(c,x,y,w,h,color)=>{c.fillStyle=color;c.fillRect(Math.round(x),Math.round(y),w,h)};
 function person(c,x,y,shirt='#bf6548',hair='#694b2d'){
  rect(c,x-12,y+12,10,22,'#344b55');rect(c,x+3,y+12,10,22,'#344b55');
