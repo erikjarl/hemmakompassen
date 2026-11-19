@@ -56,11 +56,12 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
 /* Undertryck långtrycksmenyer enbart i spelet och styrpanelerna. */
 .game-frame,.game-frame *,.controls,.controls *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
 .boat-overlay,.boat-overlay *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+.bag-dialog[hidden]{display:none!important}.bag-dialog{position:fixed;inset:0;z-index:40;background:#0b1815d9;display:grid;place-items:center;padding:12px}.bag-panel{width:min(420px,100%);border:4px solid #d3a45b;border-radius:12px;background:#203b31;color:#fff3d4;padding:17px;box-shadow:0 12px 30px #0008}.bag-panel h2{margin:0 0 9px}.bag-list{list-style:none;margin:12px 0;padding:0;display:grid;gap:8px}.bag-list li{padding:9px;background:#315444;border:2px solid #55745b;border-radius:6px}.bag-actions{display:flex;gap:10px;flex-wrap:wrap}.bag-note{font-size:12px;line-height:1.4;color:#e3dfb9}
 </style>
 </head>
 <body>
 <main class="shell">
- <header class="head"><div><h1>🌲 Lage i Rimforsa</h1><p class="subtitle">Ett 16-bitars promenadäventyr genom Rimforsa</p></div><div class="head-actions"><button type="button" class="smallBtn sound-toggle" data-sound-toggle aria-label="Slå på spelljud" aria-pressed="false">🔈 Ljud på</button><button class="smallBtn" id="showMap">🗺️ Karta</button></div></header>
+ <header class="head"><div><h1>🌲 Lage i Rimforsa</h1><p class="subtitle">Ett 16-bitars promenadäventyr genom Rimforsa</p></div><div class="head-actions"><button type="button" class="smallBtn sound-toggle" data-sound-toggle aria-label="Slå på spelljud" aria-pressed="false">🔈 Ljud på</button><button type="button" class="smallBtn" id="showBag">🎒 Väska <span id="bagCount">0/4</span></button><button class="smallBtn" id="showMap">🗺️ Karta</button></div></header>
  <section class="game-frame" aria-label="Spelplan: utforska Rimforsa till fots">
   <canvas id="world" width="384" height="316" aria-label="Karta över Rimforsa där Lage går omkring"></canvas>
   <div class="hud">LAGE <span class="heart" id="landHearts" aria-label="Hjärtan kvar">♥♥♥</span> <span class="coinScore" id="coinScore" aria-label="Samlade guldmynt">🪙 0/20</span></div><div class="area" id="area">Rimforsa</div>
@@ -86,12 +87,14 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
     </div>
   </div>
  </section>
+ <div id="bagOverlay" class="bag-dialog" role="dialog" aria-modal="true" aria-label="Lages väska" hidden><div class="bag-panel"><h2>🎒 Lages väska</h2><p>Besök platser och hitta fyra saker att spara!</p><ul class="bag-list" id="bagList"></ul><p class="bag-note" id="bagStatus"></p><div class="bag-actions"><button class="smallBtn" type="button" id="closeBag">Tillbaka till spelet</button><button class="smallBtn" type="button" id="clearBag">Töm väskan</button></div></div></div>
  <div class="tip" aria-live="polite"><span id="message"><strong>Nu börjar äventyret!</strong> Använd pilarna för att upptäcka Rimforsa.</span><button id="interact" class="action" hidden>Utforska ✨</button></div>
  <div class="controls"><div class="guide">Samla guldmynt! Vid hemmet står en vit bil – hoppa in med Kör bilen. Styr med pilar/WASD.</div><div class="dpad" aria-label="Styr Lage"><button type="button" data-dir="up" aria-label="Gå uppåt"></button><button type="button" data-dir="left" aria-label="Gå åt vänster"></button><button type="button" data-dir="down" aria-label="Gå nedåt"></button><button type="button" data-dir="right" aria-label="Gå åt höger"></button></div><button class="reset" id="reset">Börja om ↺</button></div>
  <div class="footer">Illustrerad spelvärld inspirerad av Rimforsa. Platserna ligger ungefär rätt, men kartan är inte skalenlig.</div>
 </main>
 <script src="./audio.js?v=3"></script>
 <script src="./gameplay.js?v=1"></script>
+<script src="./inventory.js?v=1"></script>
 <script src="./car.js?v=2"></script>
 <script src="./npc.js?v=1"></script>
 <script>
@@ -146,6 +149,21 @@ const COIN_TARGET=20,POOP_TARGET=7,coinScore=document.getElementById('coinScore'
 const landHearts=document.getElementById('landHearts');
 const winOverlay=document.getElementById('winOverlay'),winCount=document.getElementById('winCount');
 const game=window.RimforsaGameplay.createSession(COIN_TARGET);
+ const bag=window.RimforsaInventory.createInventory((()=>{try{return window.localStorage}catch(e){return null}})());
+ const bagOverlay=document.getElementById('bagOverlay'),bagList=document.getElementById('bagList'),bagCount=document.getElementById('bagCount'),bagStatus=document.getElementById('bagStatus');
+ function renderBag(){
+  bagList.replaceChildren();
+  const items=bag.items();bagCount.textContent=items.length+'/'+bag.total();
+  if(!items.length){const li=document.createElement('li');li.textContent='Väskan är tom. Utforska Rimforsa!';bagList.append(li);}
+  for(const item of items){const li=document.createElement('li');li.textContent=item.icon+' '+item.name;bagList.append(li);}
+  bagStatus.textContent=bag.available()?'Föremålen sparas på den här enheten, även när spelet stängs. Mynten är separata.':'Föremålen finns kvar under det här besöket men kunde inte sparas i webbläsaren.';
+ }
+ function closeBag(){bagOverlay.hidden=true;}
+ document.getElementById('showBag').addEventListener('click',()=>{stop();renderBag();bagOverlay.hidden=false;document.getElementById('closeBag').focus();});
+ document.getElementById('closeBag').addEventListener('click',closeBag);
+ bagOverlay.addEventListener('click',e=>{if(e.target===bagOverlay)closeBag();});
+ document.getElementById('clearBag').addEventListener('click',()=>{if(window.confirm('Vill du tömma väskan? Alla hittade föremål tas bort.')){bag.clear();renderBag();}});
+ renderBag();
 const npcSystem=window.RimforsaNPC.createSystem(canStand);
 let coinCandidates=[],coins=[],coinCount=0,coinNoticeUntil=0;
 let poops=[],hurtUntil=0;
@@ -569,7 +587,9 @@ interact.addEventListener('click',()=>{
  }
  const near=nearestSite();if(!near)return;
  if(near.name==='Kinda Båtklubb'){openBoatGame();return;}
- state.visited.add(near.name);message.innerHTML='<strong>'+near.symbol+' '+near.name+'</strong> – '+near.text;
+ state.visited.add(near.name);
+  const found=bag.collectAt(near.name);if(found)renderBag();
+  message.innerHTML='<strong>'+near.symbol+' '+near.name+'</strong> – '+near.text+(found?' <strong>'+found.item.icon+' Du hittade '+found.item.name+'! Den finns i väskan.</strong>':'');
  state.messageLocked=true;title.textContent=near.name;interact.textContent='Besök igen ✨';
 });
 function reset(){
@@ -673,7 +693,7 @@ let last=performance.now(),stepProgress=0;
 function tick(now){
  const dt=Math.min(.05,(now-last)/1000);last=now;
  updateBoat(dt);
- if(maskLoaded&&!isBoatOpen()&&winOverlay.hidden){
+ if(maskLoaded&&!isBoatOpen()&&winOverlay.hidden&&bagOverlay.hidden){
   npcSystem.update(dt,state.x,state.y);
   let dx=(+keys.right)-(+keys.left),dy=(+keys.down)-(+keys.up);
   if(state.inCar){
@@ -724,7 +744,7 @@ function openMap(){stop();overlay.classList.add('show');drawMap(wc,whole.width,w
 function closeMap(){overlay.classList.remove('show')}
 for(const id of ['showMap','miniMapBtn'])document.getElementById(id).addEventListener('click',openMap);
 document.getElementById('closeMap').addEventListener('click',closeMap);mini.addEventListener('click',openMap);overlay.addEventListener('click',e=>{if(e.target===overlay)closeMap()});
-window.__rimforsaTest={state,sites,npcSystem,game,poops:()=>poops.map(p=>({...p})),scatterPoops,checkPoops,showTreasureVictory,troll,nearTroll,visitTroll,carPos,carDrive,nearCar,enterCar,exitCar,canStand,pathTo,moveTo:(x,y)=>{state.x=x;state.y=y;updateMessage()},isReady:()=>maskLoaded&&imageLoaded,hasSprite:()=>spriteLoaded,frames:()=>frameCount,edgeClearance,edgeAssistedDirection,slideMove,coinCandidates:()=>coinCandidates.slice(),coins:()=>coins.map(c=>({...c})),coinCount:()=>coinCount,scatterCoins,collectCoins,reset,openBoatGame,closeBoatGame,boatState,boatHazards,boatReady:()=>boatChartLoaded,boatPixelWater,spawnBoatCoins};
+window.__rimforsaTest={bag,state,sites,npcSystem,game,poops:()=>poops.map(p=>({...p})),scatterPoops,checkPoops,showTreasureVictory,troll,nearTroll,visitTroll,carPos,carDrive,nearCar,enterCar,exitCar,canStand,pathTo,moveTo:(x,y)=>{state.x=x;state.y=y;updateMessage()},isReady:()=>maskLoaded&&imageLoaded,hasSprite:()=>spriteLoaded,frames:()=>frameCount,edgeClearance,edgeAssistedDirection,slideMove,coinCandidates:()=>coinCandidates.slice(),coins:()=>coins.map(c=>({...c})),coinCount:()=>coinCount,scatterCoins,collectCoins,reset,openBoatGame,closeBoatGame,boatState,boatHazards,boatReady:()=>boatChartLoaded,boatPixelWater,spawnBoatCoins};
 reset();
 })();
 
