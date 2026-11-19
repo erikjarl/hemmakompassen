@@ -130,7 +130,7 @@ test('Drakens musik växlar vid närhet och återgår när Lage går därifrån'
  assert.equal(clocks.size,0,'ljud får inte starta automatiskt');
  audio.enable();
  const before=starts();
- for(const clock of clocks.values())clock.fn();
+ for(let i=0;i<4;i++)for(const clock of clocks.values())clock.fn();
  assert.ok(starts()>before,'draktemat ska spela toner');
  audio.setDragonNearby(false);
  assert.equal(audio.status().dragonNearby,false);
