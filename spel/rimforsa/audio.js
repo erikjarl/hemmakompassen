@@ -158,6 +158,11 @@
     }else{
       stopScene();
     }
+    // Safari resolves resume() asynchronously. Refresh the visible sound button
+    // when the actual context state changes, rather than after the initial tap only.
+    if(typeof root.dispatchEvent==='function'&&typeof root.Event==='function'){
+      root.dispatchEvent(new root.Event('rimforsa-audio-state'));
+    }
   }
   function ensureContext(){
     if(!AudioCtor)return false;
@@ -184,6 +189,8 @@
     if(enabled){resumeFromGesture();return true;}
     try{
       if(!ensureContext())return false;
+      // Restore volume even if sound was previously disabled outside toggle().
+      master.gain.setTargetAtTime(volume,now(),.03);
       enabled=true;
       // Vid ett klick på ljudknappen får Safari starta motorn från denna gest.
       // Statechange återbygger ljudscenen när kontexten övergår till running.
