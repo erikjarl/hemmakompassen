@@ -147,3 +147,11 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 - Inga ändringar av bildresurser, vägarnas visuella bredd eller själva binära land-/vattenmasken.
 - Kontroll: kodjämförelse mot maskvillkor och matchande punkter. Ingen faktisk mobil-/tangentbordsgenomspelning genomförd; gångbarhet vid vägar, entréer, byggnader, stenar och vatten kvar att verifiera.
 - Status öppen enligt roadmap; nästa rotationsuppgift FORDON-02.
+
+
+## 2026-11-19 · Jobb Lage FORDON-02
+
+- `car.js`: ändrat så att såväl parkerad som körande bil använder samma `car-directions.png` med åtta riktningsvyer när bildarket laddats. Fallback till gammal sidobild behålls vid laddningsfel.
+- Detta avlägsnar en faktisk modellväxling mellan parkerings-/körläge, men påstår inte att samtliga ritade fram-/bakvyer är visuellt korrigerade. Båtens redan existerande åttavysfunktion är orörd.
+- Kodgranskning: källa och ritvillkor kontrollerade. Ingen visuell genomspelning på fysisk mobil/dator eller särskild bildgranskning utförd; uppgiften kvarstår öppen.
+- Nästa rotationsposition BRÄNSLE-02, alternativt nästa praktiskt genomförbara uppgift enligt roadmapen.
