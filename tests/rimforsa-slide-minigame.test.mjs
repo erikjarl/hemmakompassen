@@ -53,3 +53,14 @@ test('preschool yard contains three original pixel friends without changing the 
  assert.equal(g.snapshot().distance,0);
  assert.equal(g.snapshot().launches,0);
 });
+
+test('preschool audio is isolated, respects sound toggle and returns to map',()=>{
+ const audio=fs.readFileSync(new URL('../spel/rimforsa/audio.js',import.meta.url),'utf8');
+ assert.match(audio,/includes\(next\)\?next:'land'/);
+ assert.match(audio,/scene==='preschool'/);
+ assert.match(audio,/preschoolInterval=root.setInterval\(preschoolSound,4800\)/);
+ assert.match(audio,/root.clearInterval\(preschoolInterval\)/);
+ assert.match(audio,/if\(!enabled\|\|scene!=='preschool'\|\|hidden\|\|!ctx\)return/);
+ assert.match(script,/RimforsaAudio.setScene\('preschool'\)/);
+ assert.match(script,/RimforsaAudio.setScene\('land'\)/);
+});
