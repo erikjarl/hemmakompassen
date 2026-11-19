@@ -2,7 +2,7 @@
 (function(root){
 'use strict';
 const W=480,H=288;
-const zones={cashier:{x:300,y:88,w:150,h:147},pear:{x:32,y:116,w:99,h:119},vanilla:{x:134,y:116,w:100,h:119}};
+const zones={cashier:{x:300,y:88,w:150,h:147},pear:{x:32,y:116,w:99,h:119},vanilla:{x:134,y:116,w:100,h:119},potatoes:{x:310,y:234,w:155,h:54}};
 const rect=(c,x,y,w,h,color)=>{c.fillStyle=color;c.fillRect(Math.round(x),Math.round(y),w,h)};
 function person(c,x,y,shirt='#bf6548',hair='#694b2d'){
  rect(c,x-12,y+12,10,22,'#344b55');rect(c,x+3,y+12,10,22,'#344b55');
@@ -48,6 +48,11 @@ function draw(canvas,options={}){
  person(c,373,132,'#c45649','#4c3b2b');
  rect(c,308,154,48,24,'#3c4944');rect(c,313,157,35,12,'#a8c8aa');
  rect(c,327,179,26,5,'#343c36');rect(c,410,155,25,10,'#daaa60');
+ // Potatishörnan vid kassadisken – tre skördade potatisar kan säljas här.
+ rect(c,329,241,119,42,'#785439');rect(c,334,238,109,10,'#ba8b58');
+ for(let j=0;j<5;j++){const x=345+j*19;rect(c,x,250+(j%2)*6,17,13,'#b58b50');rect(c,x+3,251+(j%2)*6,7,3,'#e1ba78');rect(c,x+11,257+(j%2)*6,3,3,'#84613a')}
+ rect(c,330,273,116,12,'#405d38');
+ c.fillStyle='#ffebaa';c.font='bold 12px monospace';c.fillText('SÄLJ POTATIS',342,282);
  // Lage framför disken: alltid samma färgskala som huvudkartan.
  person(c,274,226,'#bf594f','#775032');
  rect(c,280,24,108,11,'#e6c96f');
