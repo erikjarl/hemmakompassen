@@ -117,7 +117,7 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
 <script src="./npc.js?v=2"></script>
 <script src="./farm.js?v=2"></script>
 <script src="./dragon.js?v=1"></script>
-<script src="./troll-minigame.js?v=5"></script>
+<script src="./troll-minigame.js?v=6"></script>
 <script src="./slide-minigame.js?v=2"></script>
 <script src="./swim-minigame.js?v=4"></script>
 <script src="./ica-scene.js?v=4"></script>
@@ -148,7 +148,7 @@ showAudioState();
 const boatChart=new Image(); boatChart.src='./boat-minigame-map.webp?v=9';
 const boatSprite=new Image(); boatSprite.src='./lage-motorboat.png?v=9';
 // Originalritad transparent 16-bitars pixelgrafik; samma sprite används i trollminispelet.
-const trollSprite=new Image(); trollSprite.src='./troll-pixel.svg?v=1';
+const trollSprite=new Image(); trollSprite.src='./troll-pixel.svg?v=2';
 let boatChartLoaded=false,boatWaterData=null,boatW=1122,boatH=1402;
 
 const tiles=new Image(), maskImage=new Image(), sprite=new Image();
@@ -167,7 +167,7 @@ updateFuelHud();
 const carPos={x:carDrive.HOME.x,y:carDrive.HOME.y};
 // Strax nordväst om rondellen, ovanpå stenen. Separat minispel kan anslutas senare.
 const troll={id:'stone-troll',name:'Trollet vid stenen',x:464,y:454,interactionRadius:84,
- minigameId:'troll-poop-toss',minigameImplemented:true,sprite:'./troll-pixel.svg?v=1'};
+ minigameId:'troll-poop-toss',minigameImplemented:true,sprite:'./troll-pixel.svg?v=2'};
 const carMaskImage=new Image();
 carMaskImage.src='./car-water-mask.png?v=1';
 carMaskImage.addEventListener('load',()=>{
