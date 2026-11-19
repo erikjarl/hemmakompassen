@@ -31,11 +31,12 @@ function createFarm(storage,clock=()=>Date.now()){
   if(!Number.isSafeInteger(amount)||amount<=0||amount>earned-spent)return false;
   spent+=amount;persist();return true;
  }
+ function clearCoins(){earned=0;spent=0;persist();return snapshot();}
  function refundCoins(amount){
   if(!Number.isSafeInteger(amount)||amount<=0||amount>spent)return false;
   spent-=amount;persist();return true;
  }
- return {snapshot,plant,harvest,sell,spendCoins,refundCoins,key:KEY};
+ return {snapshot,plant,harvest,sell,spendCoins,refundCoins,clearCoins,key:KEY};
 }
 let overlay=null,canvas=null,ctx=null,info=null,plantButton=null,harvestButton=null,loop=null,previousFocus=null,returnToMap=null;
 let farm=createFarm((()=>{try{return root.localStorage}catch{return null}})());
@@ -114,5 +115,5 @@ function start({returnToMap:cb}={}){
  loop=root.setInterval(render,1000);
  plantButton.focus();return true;
 }
-root.RimforsaFarm={start,close,isOpen:()=>!!overlay&&!overlay.hidden,createFarm,snapshot:()=>farm.snapshot(),sell:quantity=>farm.sell(quantity),spendCoins:amount=>farm.spendCoins(amount),refundCoins:amount=>farm.refundCoins(amount)};
+root.RimforsaFarm={start,close,isOpen:()=>!!overlay&&!overlay.hidden,createFarm,snapshot:()=>farm.snapshot(),sell:quantity=>farm.sell(quantity),spendCoins:amount=>farm.spendCoins(amount),refundCoins:amount=>farm.refundCoins(amount),clearCoins:()=>farm.clearCoins()};
 })(typeof window!=='undefined'?window:globalThis);
