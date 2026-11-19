@@ -121,7 +121,7 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
 <script src="./helicopter.js?v=1"></script>
 <script src="./troll-minigame.js?v=8"></script>
 <script src="./slide-minigame.js?v=5"></script>
-<script src="./football-minigame.js?v=2"></script>
+<script src="./football-minigame.js?v=3"></script>
 <script src="./swim-minigame.js?v=6"></script>
 <script src="./brokind-trail.js?v=1"></script>
 <script src="./ica-scene.js?v=4"></script>
@@ -217,7 +217,7 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
  // Skattmynt och intäkter från odling redovisas separat.
  const rewardWallet=(()=>{
   const key='rimforsa-minigame-coins-v1';let earned={},spent=0;
-  try{const s=JSON.parse(localStorage.getItem(key)||'{}');if(s&&typeof s==='object'){for(const id of Object.keys(s.earned||{}))if(/^(boat|swim)-[0-9]+$/.test(id)&&s.earned[id]===true)earned[id]=true;spent=Math.min(Object.keys(earned).length,Math.max(0,Math.floor(Number(s.spent)||0)));}}catch(_){}
+  try{const s=JSON.parse(localStorage.getItem(key)||'{}');if(s&&typeof s==='object'){for(const id of Object.keys(s.earned||{}))if(/^(boat|swim|football)-[0-9]+$/.test(id)&&s.earned[id]===true)earned[id]=true;spent=Math.min(Object.keys(earned).length,Math.max(0,Math.floor(Number(s.spent)||0)));}}catch(_){}
   const balance=()=>Object.keys(earned).length-spent;
   const save=()=>{try{localStorage.setItem(key,JSON.stringify({earned,spent}));}catch(_){}};
   return {balance,award(id){if(!/^(boat|swim)-[0-9]+$/.test(id)||earned[id])return false;earned[id]=true;save();return true;},spend(n){if(!Number.isSafeInteger(n)||n<0||n>balance())return false;spent+=n;save();return true;},refund(n){if(!Number.isSafeInteger(n)||n<0||n>spent)return false;spent-=n;save();return true;},clear(){earned={};spent=0;try{localStorage.removeItem(key);}catch(_){}}};
@@ -895,7 +895,7 @@ interact.addEventListener('click',()=>{
  if(state.inCar){exitCar();return;}
  if(nearCar()){enterCar();return;}
  if(nearTroll()){visitTroll();return;}
- if(nearestSite()?.name==='Hackelhallen'){stop();window.RimforsaFootball.start({returnToMap:()=>{state.nearKey=null;updateMessage();}});return;}
+ if(nearestSite()?.name==='Hackelhallen'){stop();window.RimforsaFootball.start({onGoalCoin:id=>awardMinigameCoin('football-'+id),returnToMap:()=>{state.nearKey=null;updateCoinScore();updateMessage();}});return;}
  if(nearestSite()?.name==='Förskolan Hackel'){stop();window.RimforsaSlideMinigame.start({returnToMap:()=>{state.nearKey=null;updateMessage();}});return;}
   if(nearestSite()?.name==='Åsundabadet'){stop();window.RimforsaSwimMinigame.start({onCoin:id=>awardMinigameCoin('swim-'+id),returnToMap:()=>{state.nearKey=null;updateMessage();}});return;}
   if(nearestSite()?.name==='Potatislandet'){stop();window.RimforsaFarm.start({returnToMap:()=>{state.nearKey=null;updateMessage();}});return;}
