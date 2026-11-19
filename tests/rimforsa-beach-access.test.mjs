@@ -38,11 +38,13 @@ function decodeGrayPng(data){
  return {w,h,pixels:out};
 }
 function beachAccess(){
- const section=html.slice(html.indexOf('function loadMask()'),html.indexOf('maskImage.addEventListener'));
- const width=Number(section.match(/g\.lineWidth=(\d+)/)?.[1]);
- const points=[...section.matchAll(/g\.(?:moveTo|lineTo)\((\d+),(\d+)\)/g)].map(m=>[+m[1],+m[2]]);
+ const route=html.slice(html.indexOf('function traceBeachAccess(g)'),html.indexOf('function drawBeachAccess(g)'));
+ const collision=html.slice(html.indexOf('function loadMask()'),html.indexOf('maskImage.addEventListener'));
+ const width=Number(collision.match(/g\.lineWidth=(\d+)/)?.[1]);
+ const points=[...route.matchAll(/g\.(?:moveTo|lineTo)\((\d+),(\d+)\)/g)].map(m=>[+m[1],+m[2]]);
  assert.ok(points.length>=2,'shore path geometry must exist');
  assert.ok(width>=22,'shore access must allow Lages collision footprint');
+ assert.ok(collision.includes('traceBeachAccess(g);g.stroke()'),'walkability must use the visible trail');
  return {points,width};
 }
 const mask=decodeGrayPng(png),shore=beachAccess();
@@ -78,4 +80,11 @@ test('Lage can walk from his house through Bella Donna road to Åsundabadet',()=
  }
  assert.equal(reached,true,'Åsundabadet must be reachable on the walkable collision grid');
  assert.ok(!freePoint(1390,740),'The adjacent lake must stay blocked');
+});
+
+test('shore trail is drawn on world, minimap and overview',()=>{
+ assert.ok(html.includes('function drawBeachAccess(g)'));
+ assert.ok(html.includes('ctx.translate(x,y);drawBeachAccess(ctx)'));
+ assert.ok(html.includes('ctx2.scale(w/W,h/H);drawBeachAccess(ctx2)'));
+ assert.ok(html.includes('g.setLineDash([7,12])'));
 });
