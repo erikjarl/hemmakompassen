@@ -17,12 +17,10 @@
 
 **OBLIGATORISKT FÖR VARJE UPPGIFT:** All ny och ändrad synlig grafik ska vara originalgjord **16-BITARS SUPER NINTENDO-PIXELKONST MED SAMMA PIXELSKALA, SKÄRPA, DETALJRIKEDOM, FÄRGSTIL, PROPORTIONER OCH TYDLIGA ANSIKTSDRAG/HÅR SOM HUVUDKARTAN OCH LAGES SPRITE**. Inga avvikande grovpixliga platshållare. Samma krav gäller även redan avbockade funktioner när grafiken berörs. Se [GAME_RULES.md](docs/GAME_RULES.md). Detta krav gäller även om den korta grafikmärkningen nedan utelämnas vid framtida redigering.
 
-## Öppna uppgifter – arbetskö (18)
+## Öppna uppgifter – arbetskö (11)
 
 - [ ] **GRAF-02 – Prioritet hög, börja här: Bygg om trollminispelets grafik.** · [Detaljer](docs/TASK_DETAILS.md#graf-02) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.** _Pågående: gemensamma trollspriten har 45 extra pixelritade detaljer; förgrundsvegetation och träffanimation finns. 19 nov: skogsscenen kompletterad med pixelritade svampar, mossig stubbe och skuggade stenar; kastmekaniken orörd. Slutlig visuell webbläsargranskning återstår._
-- [ ] **GRAF-01 – Prioritet hög: Harmonisering av alla scener.** · [Detaljer](docs/TASK_DETAILS.md#graf-01) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.**
-- [ ] **BUTIK-01 – Prioritet hög: ICA som riktigt inomhusminispel.** · [Detaljer](docs/TASK_DETAILS.md#butik-01) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.**
-- [ ] **BUTIK-02 – Prioritet hög: Pizzerian som riktigt inomhusminispel.** · [Detaljer](docs/TASK_DETAILS.md#butik-02) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.**
+- [ ] **GRAF-01 – Prioritet hög: Harmonisering av alla scener.** · [Detaljer](docs/TASK_DETAILS.md#graf-01) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.** _19 nov: rutschkanans tidigare förenklade Lage-figur ersatt i kod med samma spritesheet som huvudkartan; visuell webbläsarkontroll återstår, och fler scener behöver harmoniseras._
 - [ ] **MINI-01 – Stående kontroll av framtida minispel.** · [Detaljer](docs/TASK_DETAILS.md#mini-01) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.**
 - [ ] **FORDON-02 – Riktningsanpassad grafik för bil och båt.** · [Detaljer](docs/TASK_DETAILS.md#fordon-02) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.**
 - [ ] **BRÄNSLE-01 – Tankmätare, bensinförbrukning och inköp.** · [Detaljer](docs/TASK_DETAILS.md#bränsle-01) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.** _Etapp för bil dokumenterad i arbetsloggen; helheten är ännu öppen._
@@ -31,16 +29,19 @@
 - [ ] **LJUD-02 – Åtgärda ljud i Safari på mobil.** · [Detaljer](docs/TASK_DETAILS.md#ljud-02) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.**
 - [ ] **LJUD-03 – Fler effekter för spelhändelser.** · [Detaljer](docs/TASK_DETAILS.md#ljud-03) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.**
 - [ ] **LJUD-04 – Pruttigare bajsljud.** · [Detaljer](docs/TASK_DETAILS.md#ljud-04) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.**
-- [ ] **FÖR-02 – Andra barn.** · [Detaljer](docs/TASK_DETAILS.md#för-02) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.** _Kodad enligt äldre statusrad; slutverifiering återstod._
-- [ ] **FÖR-03 – Utomhusljud.** · [Detaljer](docs/TASK_DETAILS.md#för-03) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.** _Kodad enligt äldre statusrad; slutverifiering återstod._
-- [ ] **BAD-01 – Simning och dykning.** · [Detaljer](docs/TASK_DETAILS.md#bad-01) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.** _Kodad enligt äldre statusrad; slutverifiering återstod._
-- [ ] **BAD-02 – Hajar.** · [Detaljer](docs/TASK_DETAILS.md#bad-02) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.**
-- [ ] **BAD-03 – Vågskvalp.** · [Detaljer](docs/TASK_DETAILS.md#bad-03) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.**
 - [ ] **KARTA-01 – Utöka Rimforsakartan till mer av Kindabygden.** · [Detaljer](docs/TASK_DETAILS.md#karta-01) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.**
 
-## Tidigare avbockade uppgifter (22)
+## Tidigare avbockade uppgifter (29)
 
-Dessa har `[x]` i den tidigare roadmapen. Det innebär **inte** att den visuella SNES-standarden automatiskt är slutgranskad. Ändra bara status vid faktisk verifiering eller nya upptäckta brister.
+- [x] **BUTIK-01 – Prioritet hög: ICA som riktigt inomhusminispel.** · [Detaljer](docs/TASK_DETAILS.md#butik-01) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.**
+- [x] **BUTIK-02 – Prioritet hög: Pizzerian som riktigt inomhusminispel.** · [Detaljer](docs/TASK_DETAILS.md#butik-02) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.**
+- [x] **FÖR-02 – Andra barn.** · [Detaljer](docs/TASK_DETAILS.md#för-02) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.**
+- [x] **FÖR-03 – Utomhusljud.** · [Detaljer](docs/TASK_DETAILS.md#för-03) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.**
+- [x] **BAD-01 – Simning och dykning.** · [Detaljer](docs/TASK_DETAILS.md#bad-01) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.**
+- [x] **BAD-02 – Hajar.** · [Detaljer](docs/TASK_DETAILS.md#bad-02) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.**
+- [x] **BAD-03 – Vågskvalp.** · [Detaljer](docs/TASK_DETAILS.md#bad-03) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.**
+
+Den 19 november 2026 avbockades sju äldre öppna uppgifter efter kodgranskning av butiksscener, interaktionshantering, förskolebarn, ljudmotor och badspel. Det är **verifierad implementation i källkod**, inte ett genomspelningstest i fysisk mobil. Separata grafik-/UX-förbättringar i GRAF-01 fortsätter. Övriga kryss kommer från tidigare roadmap. Flytta tillbaka en punkt till öppna om dess verkliga acceptansvillkor visar sig ofullständiga.
 
 - [x] **NPC-02 – Unika utseenden för Oliver och Saga.** · [Detaljer](docs/TASK_DETAILS.md#npc-02) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.**
 - [x] **INV-02 – Tydligare bilder av föremål.** · [Detaljer](docs/TASK_DETAILS.md#inv-02) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.**
