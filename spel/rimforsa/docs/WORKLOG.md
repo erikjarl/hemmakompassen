@@ -1,5 +1,7 @@
 # Lage i Rimforsa – historisk arbetslogg
 
+- **2026-11-19 – Jobb lage / LJUD-03:** Lade till tre nya originalsyntetiserade spelhändelseljud i `audio.js`: rutschkanans avstamp (`slideLaunch`), landning (`slideLand`) och hajkollision (`sharkBump`). Kopplade händelser i `slide-minigame.js` och `swim-minigame.js` och höjde cacheversioner i `index.html`. GitHub bekräftade ändringarna och roadmapens rotationsfält har flyttats till LJUD-04. Inte verifierat genom avlyssning, faktisk Safari/webbläsare eller GitHub Pages; LJUD-03 kvarstår öppen.
+
 **Arkiv:** Här ligger de tidigare utvecklingsnoteringarna, med deras ursprungliga ordalydelse och eventuella dåtida verifieringsstatus. **Detta är inte en arbetskö.** Läs bara relevanta datum eller uppgifts-ID:n när du behöver historik. Arbetskön och dess status finns i [ROADMAP.md](../ROADMAP.md).
 
 ## Historisk statusrad vid uppdelningen, 19 november 2026
