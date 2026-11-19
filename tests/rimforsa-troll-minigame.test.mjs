@@ -11,7 +11,7 @@ test('troll game uses ten throws and five hits for success',()=>{
  assert.equal(g.throwPoop(),true);assert.equal(g.throwPoop(),false,'second throw waits for animation');
  let result;for(let i=0;i<22;i++)result=g.step(.05)||result;
  assert.equal(result.throws,1);assert.equal(g.snapshot().remaining,9);
- assert.equal(result.hit,typeof result.hit==='boolean');
+ assert.equal(typeof result.hit,'boolean');
  for(let round=1;round<10;round++){
    assert.equal(g.throwPoop(),true);
    let settled;for(let i=0;i<22;i++)settled=g.step(.05)||settled;
