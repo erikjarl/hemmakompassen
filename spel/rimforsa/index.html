@@ -276,7 +276,7 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
  const icaCanvas=document.getElementById('icaShopScene');
  function drawIcaScene(){window.RimforsaIcaScene.draw(icaCanvas,{balance:totalMoney(),owned:{paronglass:bag.has('paronglass'),vaniljglass:bag.has('vaniljglass')}});}
  function renderIca(){
-  const balance=totalMoney();icaBalance.textContent='Du har '+balance+' mynt att handla för ('+game.snapshot().balance+' skattmynt + '+farm.snapshot().balance+' potatismynt).';
+  const balance=totalMoney();icaBalance.textContent='Du har '+balance+' mynt att handla för ('+game.snapshot().balance+' skattmynt + '+rewardWallet.balance()+' minispelsmynt + '+farm.snapshot().balance+' potatismynt).';
    const stock=farm.snapshot().harvested;
    document.getElementById('farmSellStock').textContent='🥔 Potatis att sälja: '+stock+' · Sålda hittills: '+farm.snapshot().sold;
    document.getElementById('sellPotatoes').disabled=stock<3;
@@ -905,8 +905,9 @@ interact.addEventListener('click',()=>{
   message.innerHTML='<strong>'+near.symbol+' '+near.name+'</strong> – '+near.text+(found?' <strong>'+found.item.icon+' Du hittade '+found.item.name+'! Den finns i väskan.</strong>':'');
  state.messageLocked=true;title.textContent=near.name;interact.textContent='Besök igen ✨';
 });
-function reset(){
-  rewardWallet.clear();
+function reset({clearMoney=true}={}){
+  // Loading the page must preserve earned minigame coins.
+  if(clearMoney){rewardWallet.clear();farm.clearCoins();}
  pizzaOverlay.hidden=true;icaOverlay.hidden=true;winOverlay.hidden=true;hurtUntil=0;audio.setCarSpeed(0);audio.setCarActive(false);state.inCar=false;
  carPos.x=carDrive.HOME.x;carPos.y=carDrive.HOME.y;
  state.x=360;state.y=335;state.camX=360;state.camY=335;state.dir='down';
@@ -1120,7 +1121,7 @@ whole.addEventListener('pointerdown',ev=>{
 });
 mini.addEventListener('click',openMap);overlay.addEventListener('click',e=>{if(e.target===overlay)closeMap()});
 window.__rimforsaTest={swimGame:window.RimforsaSwimMinigame,slideGame:window.RimforsaSlideMinigame,openPizza,closePizza,renderPizza,PIZZA_PRICE,openIca,closeIca,renderIca,icePrices,dragon,bag,state,sites,npcSystem,game,poops:()=>poops.map(p=>({...p})),scatterPoops,checkPoops,showTreasureVictory,troll,nearTroll,visitTroll,carPos,carDrive,nearCar,enterCar,exitCar,canStand,pathTo,moveTo:(x,y)=>{state.x=x;state.y=y;updateMessage()},isReady:()=>maskLoaded&&imageLoaded,hasSprite:()=>spriteLoaded,frames:()=>frameCount,edgeClearance,edgeAssistedDirection,slideMove,coinCandidates:()=>coinCandidates.slice(),coins:()=>coins.map(c=>({...c})),coinCount:()=>coinCount,scatterCoins,collectCoins,reset,openBoatGame,closeBoatGame,boatState,boatHazards,boatReady:()=>boatChartLoaded,boatPixelWater,spawnBoatCoins};
-reset();
+reset({clearMoney:false});
 })();
 
 </script>
