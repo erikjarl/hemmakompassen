@@ -28,3 +28,11 @@ test('pizza scene uses existing money, purchase and bag path',()=>{
   'id="buyPizza"','game.spend(PIZZA_PRICE)',"bag.addPurchase('ananaspizza')",
   'game.refund(PIZZA_PRICE)'])assert.ok(html.includes(marker),marker);
 });
+
+test('tapping pizza when short of coins or already owned gives explanatory feedback',()=>{
+ assert.match(html,/if\(bag\.has\('ananaspizza'\)\)\{pizzaStatus\.textContent='Pizzan finns redan i väskan!/);
+ assert.match(html,/if\(game\.snapshot\(\)\.balance<PIZZA_PRICE\)/);
+ assert.match(html,/if\(target==='pizza'\)/);
+ assert.match(html,/if\(target==='chef'\)/);
+ assert.match(html,/if\(target==='oven'\)/);
+});
