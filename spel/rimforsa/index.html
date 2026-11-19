@@ -58,11 +58,16 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
 .boat-overlay,.boat-overlay *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
 .bag-dialog[hidden]{display:none!important}.bag-dialog{position:fixed;inset:0;z-index:40;background:#0b1815d9;display:grid;place-items:center;padding:12px}.bag-panel{width:min(420px,100%);border:4px solid #d3a45b;border-radius:12px;background:#203b31;color:#fff3d4;padding:17px;box-shadow:0 12px 30px #0008}.bag-panel h2{margin:0 0 9px}.bag-list{list-style:none;margin:12px 0;padding:0;display:grid;gap:8px}.bag-list li{padding:9px;background:#315444;border:2px solid #55745b;border-radius:6px}.bag-actions{display:flex;gap:10px;flex-wrap:wrap}.bag-note{font-size:12px;line-height:1.4;color:#e3dfb9}
 .ica-dialog[hidden]{display:none!important}.ica-dialog{position:fixed;inset:0;z-index:1200;display:grid;place-items:center;padding:12px;background:#071b15e8}.ica-panel{width:min(430px,100%);max-height:95dvh;overflow:auto;border:4px solid #e1b46a;background:#1c4235;color:#fff4d5;border-radius:12px;padding:17px;box-shadow:0 12px 36px #0009}.ica-panel h2{margin:0 0 10px}.ica-cashier{font-size:42px;text-align:center;margin:6px 0}.ica-products{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:14px 0}.ica-products button{display:grid;gap:5px;justify-items:center;border:3px solid #9e7139;border-radius:10px;background:#f5d788;color:#313322;padding:14px 6px;min-height:100px;font:900 15px system-ui;cursor:pointer}.ica-products button:disabled{opacity:.55;cursor:default}.ica-products button span{font-size:36px}.ica-products button:focus-visible{outline:3px solid white;outline-offset:3px}.ica-status{min-height:35px;line-height:1.35}
+.pizza-dialog[hidden]{display:none!important}.pizza-dialog{position:fixed;inset:0;z-index:1210;display:grid;place-items:center;padding:12px;background:#091b14e8}
+.pizza-panel{width:min(420px,100%);max-height:95dvh;overflow:auto;border:4px solid #dcb56f;border-radius:12px;background:#234336;color:#fff4d5;padding:18px;text-align:center;box-shadow:0 14px 32px #0009}
+.pizza-panel h2{margin:0 0 8px}.pizza-panel .pizza-art{font-size:66px;margin:12px 0}.pizza-panel .pizza-status{min-height:40px;line-height:1.4}
+.pizza-panel .pizza-buy{display:block;width:100%;min-height:52px;margin:12px 0;background:#f4d58b;color:#282d22;border:3px solid #916839;border-radius:10px;font:900 17px system-ui;cursor:pointer}.pizza-panel .pizza-buy:disabled{opacity:.55;cursor:default}
+.pizza-panel button:focus-visible{outline:3px solid #fff;outline-offset:2px}
 </style>
 </head>
 <body>
 <main class="shell">
- <header class="head"><div><h1>🌲 Lage i Rimforsa</h1><p class="subtitle">Ett 16-bitars promenadäventyr genom Rimforsa</p></div><div class="head-actions"><button type="button" class="smallBtn sound-toggle" data-sound-toggle aria-label="Slå på spelljud" aria-pressed="false">🔈 Ljud på</button><button type="button" class="smallBtn" id="showBag">🎒 Väska <span id="bagCount">0/6</span></button><button class="smallBtn" id="showMap">🗺️ Karta</button></div></header>
+ <header class="head"><div><h1>🌲 Lage i Rimforsa</h1><p class="subtitle">Ett 16-bitars promenadäventyr genom Rimforsa</p></div><div class="head-actions"><button type="button" class="smallBtn sound-toggle" data-sound-toggle aria-label="Slå på spelljud" aria-pressed="false">🔈 Ljud på</button><button type="button" class="smallBtn" id="showBag">🎒 Väska <span id="bagCount">0/7</span></button><button class="smallBtn" id="showMap">🗺️ Karta</button></div></header>
  <section class="game-frame" aria-label="Spelplan: utforska Rimforsa till fots">
   <canvas id="world" width="384" height="316" aria-label="Karta över Rimforsa där Lage går omkring"></canvas>
   <div class="hud">LAGE <span class="heart" id="landHearts" aria-label="Hjärtan kvar">♥♥♥</span> <span class="coinScore" id="coinScore" aria-label="Myntsaldo och insamlade guldmynt">🪙 0 · Hittade 0/20</span></div><div class="area" id="area">Rimforsa</div>
@@ -89,14 +94,21 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
   </div>
  </section>
  <div id="icaOverlay" class="ica-dialog" role="dialog" aria-modal="true" aria-label="Handla glass på ICA Melkers" hidden><div class="ica-panel"><h2>🛒 ICA Melkers</h2><div class="ica-cashier" aria-hidden="true">🧑‍💼</div><p><strong>ICA-personalen:</strong> Hej Lage! Vilken glass vill du köpa?</p><p id="icaBalance">Du har 0 mynt.</p><div class="ica-products"><button type="button" data-buy-ice="paronglass"><span aria-hidden="true">🍐</span>Päronglass · 3 mynt</button><button type="button" data-buy-ice="vaniljglass"><span aria-hidden="true">🍦</span>Vaniljglass · 4 mynt</button></div><p id="icaStatus" class="ica-status" role="status" aria-live="polite">Samla mynt längs vägarna om du vill köpa glass!</p><button type="button" id="closeIca" class="smallBtn">Tillbaka till Rimforsa ✕</button></div></div>
- <div id="bagOverlay" class="bag-dialog" role="dialog" aria-modal="true" aria-label="Lages väska" hidden><div class="bag-panel"><h2>🎒 Lages väska</h2><p>Hitta fyra saker och köp två olika glassar!</p><ul class="bag-list" id="bagList"></ul><p class="bag-note" id="bagStatus"></p><div class="bag-actions"><button class="smallBtn" type="button" id="closeBag">Tillbaka till spelet</button><button class="smallBtn" type="button" id="clearBag">Töm väskan</button></div></div></div>
+ <div id="pizzaOverlay" class="pizza-dialog" role="dialog" aria-modal="true" aria-label="Köp ananaspizza hos Bella Donna" hidden>
+ <div class="pizza-panel"><h2>🍕 Bella Donna</h2><p><strong>Pizzabagaren:</strong> Ciao Lage! Vill du ha en pizzaslice med ananas?</p>
+ <div class="pizza-art" aria-hidden="true">🍕🍍</div><p id="pizzaBalance">Du har 0 mynt.</p>
+ <button type="button" id="buyPizza" class="pizza-buy">Köp pizzaslice med ananas · 5 mynt</button>
+ <p id="pizzaStatus" class="pizza-status" role="status" aria-live="polite">En nybakad pizzaslice väntar!</p>
+ <button type="button" id="closePizza" class="smallBtn">Tillbaka till Rimforsa ✕</button></div>
+ </div>
+ <div id="bagOverlay" class="bag-dialog" role="dialog" aria-modal="true" aria-label="Lages väska" hidden><div class="bag-panel"><h2>🎒 Lages väska</h2><p>Hitta fyra saker, köp glass och prova ananaspizza!</p><ul class="bag-list" id="bagList"></ul><p class="bag-note" id="bagStatus"></p><div class="bag-actions"><button class="smallBtn" type="button" id="closeBag">Tillbaka till spelet</button><button class="smallBtn" type="button" id="clearBag">Töm väskan</button></div></div></div>
  <div class="tip" aria-live="polite"><span id="message"><strong>Nu börjar äventyret!</strong> Använd pilarna för att upptäcka Rimforsa.</span><button id="interact" class="action" hidden>Utforska ✨</button></div>
  <div class="controls"><div class="guide">Samla guldmynt! Vid hemmet står en vit bil – hoppa in med Kör bilen. Styr med pilar/WASD.</div><div class="dpad" aria-label="Styr Lage"><button type="button" data-dir="up" aria-label="Gå uppåt"></button><button type="button" data-dir="left" aria-label="Gå åt vänster"></button><button type="button" data-dir="down" aria-label="Gå nedåt"></button><button type="button" data-dir="right" aria-label="Gå åt höger"></button></div><button class="reset" id="reset">Börja om ↺</button></div>
  <div class="footer">Illustrerad spelvärld inspirerad av Rimforsa. Platserna ligger ungefär rätt, men kartan är inte skalenlig.</div>
 </main>
 <script src="./audio.js?v=4"></script>
 <script src="./gameplay.js?v=2"></script>
-<script src="./inventory.js?v=2"></script>
+<script src="./inventory.js?v=3"></script>
 <script src="./car.js?v=2"></script>
 <script src="./npc.js?v=1"></script>
 <script src="./dragon.js?v=1"></script>
@@ -153,6 +165,26 @@ const COIN_TARGET=20,POOP_TARGET=7,coinScore=document.getElementById('coinScore'
 const landHearts=document.getElementById('landHearts');
 const winOverlay=document.getElementById('winOverlay'),winCount=document.getElementById('winCount');
 const game=window.RimforsaGameplay.createSession(COIN_TARGET);
+ const pizzaOverlay=document.getElementById('pizzaOverlay'),pizzaBalance=document.getElementById('pizzaBalance'),pizzaStatus=document.getElementById('pizzaStatus'),pizzaBuy=document.getElementById('buyPizza');
+ const PIZZA_PRICE=5;
+ function renderPizza(){
+  const balance=game.snapshot().balance,owned=bag.has('ananaspizza');
+  pizzaBalance.textContent='Du har '+balance+' mynt att handla för.';
+  pizzaBuy.disabled=owned||balance<PIZZA_PRICE;
+  pizzaBuy.textContent=owned?'🍕 Pizzan ligger redan i väskan':balance<PIZZA_PRICE?'Samla '+(PIZZA_PRICE-balance)+' mynt till':'Köp pizzaslice med ananas · '+PIZZA_PRICE+' mynt';
+ }
+ function openPizza(){stop();pizzaStatus.textContent='En nybakad pizzaslice väntar!';renderPizza();pizzaOverlay.hidden=false;document.getElementById('closePizza').focus();}
+ function closePizza(){pizzaOverlay.hidden=true;state.nearKey=null;updateMessage();}
+ document.getElementById('closePizza').addEventListener('click',closePizza);
+ pizzaOverlay.addEventListener('click',event=>{if(event.target===pizzaOverlay)closePizza();});
+ pizzaBuy.addEventListener('click',()=>{
+  if(bag.has('ananaspizza')){pizzaStatus.textContent='Pizzan finns redan i väskan!';renderPizza();return;}
+  if(!game.spend(PIZZA_PRICE).paid){pizzaStatus.textContent='Du behöver minst fem mynt för att köpa pizzan.';renderPizza();return;}
+  const result=bag.addPurchase('ananaspizza');
+  if(!result.added){game.refund(PIZZA_PRICE);pizzaStatus.textContent='Det gick inte att lägga pizzan i väskan.';renderPizza();return;}
+  pizzaStatus.textContent='🍕 Mums! Pizzaslicen med ananas ligger i väskan.'+(result.saved?'':' Den kunde inte sparas till nästa besök.');
+  audio.coin();updateCoinScore();renderBag();renderPizza();
+ });
  const icaOverlay=document.getElementById('icaOverlay'),icaBalance=document.getElementById('icaBalance'),icaStatus=document.getElementById('icaStatus');
  const icePrices={paronglass:3,vaniljglass:4};
  function renderIca(){
@@ -594,7 +626,7 @@ function updateMessage(){
    message.innerHTML='<strong>💬 '+npcHere.name+'</strong> – någon vill prata med Lage. Tryck på Prata!';
  }else if(near){
    const isBoat=near.name==='Kinda Båtklubb';
-   interact.textContent=isBoat?'Kör båt 🛥️':near.name==='ICA Melkers'?'Köp glass 🍦':'Utforska ✨';
+   interact.textContent=isBoat?'Kör båt 🛥️':near.name==='ICA Melkers'?'Köp glass 🍦':near.name==='Bella Donna'?'Köp pizza 🍕':'Utforska ✨';
    message.innerHTML='<strong>'+near.symbol+' '+near.name+'</strong> – '+(isBoat?'tryck på Kör båt för att åka ut på sjön.':'tryck på Utforska för att besöka platsen.');
    title.textContent=near.name;
  }else{
@@ -619,13 +651,14 @@ interact.addEventListener('click',()=>{
  const near=nearestSite();if(!near)return;
  if(near.name==='Kinda Båtklubb'){openBoatGame();return;}
   if(near.name==='ICA Melkers'){openIca();return;}
+  if(near.name==='Bella Donna'){openPizza();return;}
  state.visited.add(near.name);
   const found=bag.collectAt(near.name);if(found)renderBag();
   message.innerHTML='<strong>'+near.symbol+' '+near.name+'</strong> – '+near.text+(found?' <strong>'+found.item.icon+' Du hittade '+found.item.name+'! Den finns i väskan.</strong>':'');
  state.messageLocked=true;title.textContent=near.name;interact.textContent='Besök igen ✨';
 });
 function reset(){
- icaOverlay.hidden=true;winOverlay.hidden=true;hurtUntil=0;audio.setCarSpeed(0);audio.setCarActive(false);state.inCar=false;
+ pizzaOverlay.hidden=true;icaOverlay.hidden=true;winOverlay.hidden=true;hurtUntil=0;audio.setCarSpeed(0);audio.setCarActive(false);state.inCar=false;
  carPos.x=carDrive.HOME.x;carPos.y=carDrive.HOME.y;
  state.x=360;state.y=335;state.camX=360;state.camY=335;state.dir='down';
  state.phase=0;state.visited.clear();state.path=[];state.near=null;state.nearKey=null;
@@ -661,7 +694,7 @@ for(const button of document.querySelectorAll('[data-dir]')){
  for(const evt of ['pointerup','pointercancel','lostpointercapture'])button.addEventListener(evt,release);
 }
 const inputMap={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',a:'left',s:'down',d:'right',W:'up',A:'left',S:'down',D:'right'};
-window.addEventListener('keydown',ev=>{const dir=inputMap[ev.key];if(isBoatOpen()){if(ev.key==='Escape'){ev.preventDefault();closeBoatGame();return}if(dir){ev.preventDefault();boatKeys[dir]=true;return}}if(!icaOverlay.hidden||!bagOverlay.hidden){if(ev.key==='Escape'){ev.preventDefault();if(!icaOverlay.hidden)closeIca();else closeBag();}return}if(overlay.classList.contains('show')){if(ev.key==='Escape')closeMap();return}if(!dir)return;ev.preventDefault();clearPath();keys[dir]=true});
+window.addEventListener('keydown',ev=>{const dir=inputMap[ev.key];if(isBoatOpen()){if(ev.key==='Escape'){ev.preventDefault();closeBoatGame();return}if(dir){ev.preventDefault();boatKeys[dir]=true;return}}if(!pizzaOverlay.hidden||!icaOverlay.hidden||!bagOverlay.hidden){if(ev.key==='Escape'){ev.preventDefault();if(!pizzaOverlay.hidden)closePizza();else if(!icaOverlay.hidden)closeIca();else closeBag();}return}if(overlay.classList.contains('show')){if(ev.key==='Escape')closeMap();return}if(!dir)return;ev.preventDefault();clearPath();keys[dir]=true});
 window.addEventListener('keyup',ev=>{let dir=inputMap[ev.key];if(!dir)return;if(isBoatOpen())boatKeys[dir]=false;else keys[dir]=false});
 function resize(){const r=canvas.getBoundingClientRect(),ratio=Math.min(1,450/Math.max(1,r.width));canvas.width=Math.round(Math.max(265,r.width*ratio));canvas.height=Math.round(Math.max(240,r.height*ratio));ctx.imageSmoothingEnabled=false}resize();window.addEventListener('resize',resize);
 // A* makes tapping anywhere on a street route around buildings instead of trying to walk through them.
@@ -673,7 +706,7 @@ const start=s[1]*NX+s[0],goal=t[1]*NX+t[0],prev=new Int32Array(MAX).fill(-1),dis
 dist[start]=0;push(start,0);let reached=false,expanded=0;const moves=[[1,0,1],[-1,0,1],[0,1,1],[0,-1,1],[1,1,1.414],[-1,1,1.414],[1,-1,1.414],[-1,-1,1.414]];
 while(heap.length&&expanded++<MAX){const id=pop();if(seen[id])continue;seen[id]=1;if(id===goal){reached=true;break}const cx=id%NX,cy=(id/NX)|0;for(const [dx,dy,cost] of moves){const nx=cx+dx,ny=cy+dy;if(!walkCell(nx,ny))continue;if(dx&&dy&&(!walkCell(cx+dx,cy)||!walkCell(cx,cy+dy)))continue;let nid=ny*NX+nx,nd=dist[id]+cost;if(nd>=dist[nid])continue;prev[nid]=id;dist[nid]=nd;const h=Math.hypot(t[0]-nx,t[1]-ny);push(nid,nd+h)}}
 if(!reached)return [];let ids=[];for(let i=goal;i!==-1;i=prev[i])ids.push(i);ids.reverse();return ids.slice(1).map(id=>({x:((id%NX)+.5)*STEP,y:((((id/NX)|0)+.5)*STEP)}))}
-canvas.addEventListener('pointerdown',ev=>{if(!maskLoaded||overlay.classList.contains('show')||!icaOverlay.hidden||!bagOverlay.hidden||window.RimforsaTrollMinigame.isOpen())return;ev.preventDefault();if(state.inCar)return;const r=canvas.getBoundingClientRect(),sx=(ev.clientX-r.left)*canvas.width/r.width,sy=(ev.clientY-r.top)*canvas.height/r.height;const x=state.camX-canvas.width/2+sx,y=state.camY-canvas.height/2+sy;state.path=pathTo(x,y)});
+canvas.addEventListener('pointerdown',ev=>{if(!maskLoaded||overlay.classList.contains('show')||!icaOverlay.hidden||!pizzaOverlay.hidden||!bagOverlay.hidden||window.RimforsaTrollMinigame.isOpen())return;ev.preventDefault();if(state.inCar)return;const r=canvas.getBoundingClientRect(),sx=(ev.clientX-r.left)*canvas.width/r.width,sy=(ev.clientY-r.top)*canvas.height/r.height;const x=state.camX-canvas.width/2+sx,y=state.camY-canvas.height/2+sy;state.path=pathTo(x,y)});
 function slideMove(dx,dy){
  if(!maskLoaded)return false;
  // Short substeps prevent tunneling through thin fences when the game briefly slows down.
@@ -725,7 +758,7 @@ let last=performance.now(),stepProgress=0;
 function tick(now){
  const dt=Math.min(.05,(now-last)/1000);last=now;
  updateBoat(dt);
- if(maskLoaded&&!isBoatOpen()&&winOverlay.hidden&&bagOverlay.hidden&&icaOverlay.hidden&&!window.RimforsaTrollMinigame.isOpen()){
+ if(maskLoaded&&!isBoatOpen()&&winOverlay.hidden&&bagOverlay.hidden&&icaOverlay.hidden&&pizzaOverlay.hidden&&!window.RimforsaTrollMinigame.isOpen()){
   npcSystem.update(dt,state.x,state.y);
   let dx=(+keys.right)-(+keys.left),dy=(+keys.down)-(+keys.up);
   if(state.inCar){
@@ -777,7 +810,7 @@ function openMap(){stop();overlay.classList.add('show');drawMap(wc,whole.width,w
 function closeMap(){overlay.classList.remove('show')}
 for(const id of ['showMap','miniMapBtn'])document.getElementById(id).addEventListener('click',openMap);
 document.getElementById('closeMap').addEventListener('click',closeMap);mini.addEventListener('click',openMap);overlay.addEventListener('click',e=>{if(e.target===overlay)closeMap()});
-window.__rimforsaTest={openIca,closeIca,renderIca,icePrices,dragon,bag,state,sites,npcSystem,game,poops:()=>poops.map(p=>({...p})),scatterPoops,checkPoops,showTreasureVictory,troll,nearTroll,visitTroll,carPos,carDrive,nearCar,enterCar,exitCar,canStand,pathTo,moveTo:(x,y)=>{state.x=x;state.y=y;updateMessage()},isReady:()=>maskLoaded&&imageLoaded,hasSprite:()=>spriteLoaded,frames:()=>frameCount,edgeClearance,edgeAssistedDirection,slideMove,coinCandidates:()=>coinCandidates.slice(),coins:()=>coins.map(c=>({...c})),coinCount:()=>coinCount,scatterCoins,collectCoins,reset,openBoatGame,closeBoatGame,boatState,boatHazards,boatReady:()=>boatChartLoaded,boatPixelWater,spawnBoatCoins};
+window.__rimforsaTest={openPizza,closePizza,renderPizza,PIZZA_PRICE,openIca,closeIca,renderIca,icePrices,dragon,bag,state,sites,npcSystem,game,poops:()=>poops.map(p=>({...p})),scatterPoops,checkPoops,showTreasureVictory,troll,nearTroll,visitTroll,carPos,carDrive,nearCar,enterCar,exitCar,canStand,pathTo,moveTo:(x,y)=>{state.x=x;state.y=y;updateMessage()},isReady:()=>maskLoaded&&imageLoaded,hasSprite:()=>spriteLoaded,frames:()=>frameCount,edgeClearance,edgeAssistedDirection,slideMove,coinCandidates:()=>coinCandidates.slice(),coins:()=>coins.map(c=>({...c})),coinCount:()=>coinCount,scatterCoins,collectCoins,reset,openBoatGame,closeBoatGame,boatState,boatHazards,boatReady:()=>boatChartLoaded,boatPixelWater,spawnBoatCoins};
 reset();
 })();
 
