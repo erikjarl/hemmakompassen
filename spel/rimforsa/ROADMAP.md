@@ -122,6 +122,9 @@ När användaren skriver **`jobb lage`**:
 - **Verifiering:** Lägg till tester för respektive uppgift, spela igenom huvudflödet och kontrollera samma publicerade URL. Redovisa separat om fysisk iPhone/Safari inte har testats.
 
 ## Arbetslogg
+- **2026-11-19 – Jobb lage / LJUD-01 (svensk uppläsning av NPC-repliker implementerad):** Dialog med Maja, Oliver och Saga läser nu upp den visade repliken via webbläsarens `speechSynthesis` efter spelarens klick på interaktionsknappen, om spelljud är aktiverat. Språket sätts till `sv-SE`, svensk röst väljs om den finns, och tidigare uppläsning avbryts vid ny replik, ljud av, byte av spelmiljö eller dold flik. Dialogtexten visas som tidigare även där talsyntes saknas. Endast `audio.js` och `index.html` ändrades; ingen grafik eller spelprogression berördes. Cacheversion `audio.js?v=8`. **GitHub accepterade commits** `339b50a` och `44372a2`. **Inte verifierat:** faktisk svensk röst på mobil/Safari, ljudnivå och timing tillsammans med musik, fullständig testsvit och Pages-publicering. LJUD-01 lämnas öppen för webbläsarkontroll.
+
+
 - **2026-11-19 – Jobb lage / LJUD-04 (ny prutteffekt):** En kort originalsyntetiserad prutteffekt har implementerats i `audio.js` med fallande baston, lågpassfilter och pulserad amplitud. Trollminispelet anropar nu `RimforsaAudio.poop()` vid varje lyckat kastkommando, medan träff-/missljud och spelets kast-/poänglogik bevaras. Effekten lyder gemensam ljudknapp och dold-sida-regel. Cacheversionerna höjdes till `audio.js?v=7` och `troll-minigame.js?v=4`. **GitHub-commits bekräftade:** `bf06c16`, `023c136`, `8db9bc0`. **Återstår:** syntax- och webbläsartest, lyssning på ljudet i riktig webbläsare/iPhone samt verifiering av senaste GitHub Pages-publicering. LJUD-04 är implementerad men lämnas öppen för ljudmässig QA. Ingen spelgrafik ändrades i detta pass.
 
 
