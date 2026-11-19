@@ -7,7 +7,7 @@ function boot(storage){const context={};vm.runInNewContext(script,context);retur
 function storage(){const map=new Map();return {getItem:k=>map.get(k)||null,setItem:(k,v)=>map.set(k,v),map};}
 test('objects are collected once, remain after reload, and are separate from coins',()=>{
  const s=storage(),bag=boot(s);
- assert.equal(bag.items().length,0);assert.equal(bag.total(),6);
+ assert.equal(bag.items().length,0);assert.equal(bag.total(),7);
  assert.equal(bag.collectAt('Hackelhallen').item.id,'fotboll');
  assert.equal(bag.collectAt('Hackelhallen'),null);
  assert.equal(boot(s).items()[0].id,'fotboll');
@@ -37,4 +37,14 @@ test('glass can only be added through a purchase and persists in the bag',()=>{
  assert.equal(bag.addPurchase('vaniljglass').added,true);
  assert.equal(bag.addPurchase('nyckelring').added,false,'found objects cannot be bought');
  assert.deepEqual(Array.from(boot(s).items(),x=>x.id),['paronglass','vaniljglass']);
+});
+
+test('pineapple pizza is purchasable once but cannot be collected for free',()=>{
+ const s=storage(),bag=boot(s);
+ assert.equal(bag.collectAt('Bella Donna'),null);
+ assert.equal(bag.addPurchase('ananaspizza').added,true);
+ assert.equal(bag.addPurchase('ananaspizza').added,false);
+ assert.equal(bag.has('ananaspizza'),true);
+ assert.equal(boot(s).has('ananaspizza'),true);
+ assert.equal(bag.total(),7);
 });
