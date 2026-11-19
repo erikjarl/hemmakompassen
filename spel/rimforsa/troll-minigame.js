@@ -56,14 +56,10 @@
   trollImage=new root.Image();trollImage.src='./troll-sprite.png?v=1';
  }
  function playSound(hit){
-  // Börjar endast vid kastinteraktion och endast om ljudknappen redan slagits på.
+  // Återanvänd den redan upplåsta spelljudmotorn; tyst om ljud är avstängt.
   if(!root.RimforsaAudio||!root.RimforsaAudio.status().enabled)return;
-  const AudioCtor=root.AudioContext||root.webkitAudioContext;if(!AudioCtor)return;
-  try{
-   const ac=new AudioCtor(),t=ac.currentTime;
-   const o=ac.createOscillator(),g=ac.createGain();o.type='square';o.frequency.value=hit?660:180;o.connect(g);g.connect(ac.destination);
-   g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(.055,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+.19);o.start(t);o.stop(t+.2);o.onended=()=>ac.close();
-  }catch(_){}
+  if(hit)root.RimforsaAudio.coin();
+  else root.RimforsaAudio.hit();
  }
  function reset(){game.start();notice.textContent='Sikta och försök träffa trollet!';render();lastFrame=0;}
  function throwNow(){if(!game.throwPoop())return;render();}
