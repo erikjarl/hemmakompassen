@@ -182,3 +182,9 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 - Rotationssteg från DRAKE-02 till MYNT-03. Hackelhallen ger nu upp till tre engångsmynt för mål 1–3, `football-0`–`football-2`, till den delade minispelsplånboken via callback vid mål. Belöningar som redan hämtats betalas inte ut igen vid omspelning eller efter omladdning så länge localStorage finns kvar. Belöningsgränsen och om mynt tilldelades visas i fotbollsspelet.
 - Huvudsidan godtar nu `football-*` i både inläsning från localStorage och när en belöning tilldelas. Redan befintligt gemensamt saldo för båt/dyk och utgifter återanvänds. Inga grafikändringar; måltextens missvisande +1 togs bort när inga nya mynt ges.
 - JavaScript-syntax kontrollerad i fotbollsmodul och huvudsidans inline-skript. Kopplingen mellan callback och plånbok källgranskad. Ingen riktig spelgenomgång i mobil/webbläsare, inga faktiska återladdnings-, köp- eller hjärtförlusttester utförda. MYNT-03 och HUV-05 förblir öppna. Nästa rotation HUV-05.
+
+### 2026-11-20 · Jobb Lage · HUV-05
+
+- Rotationspass efter MYNT-03. Två dödsvägar (drake och bajskorv) anropar nu samma `restartAfterGameOver(cause)` i huvudfilen. Den läser tidigare gemensamt saldo, återställer mynten genom befintligt `reset({clearMoney:true})`, uppdaterar HUD och visar förlorat antal samt att nästa omgång startar på 0.
+- Återställningen rensar kartmynt, minispelsbelöningar inklusive fotbollen och sparade potatisintäkter, men inte inventariet, potatisskörd eller växttid. Enstaka hjärtförlust följer fortsatt annan väg utan myntnollställning.
+- Syntaxkontroll av inline-JavaScript godkänd; källgranskning visar två spel-slut-anrop till gemensam rutin och inga äldre dödsvägar som direkt anropar `reset()`. Saknar riktig genomspelning och omladdningskontroll i webbläsare, därför är HUV-05 fortsatt öppen. Nästa rotationsuppgift HUV-06.
