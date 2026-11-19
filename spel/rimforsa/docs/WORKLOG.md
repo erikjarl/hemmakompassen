@@ -155,3 +155,11 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 - Detta avlägsnar en faktisk modellväxling mellan parkerings-/körläge, men påstår inte att samtliga ritade fram-/bakvyer är visuellt korrigerade. Båtens redan existerande åttavysfunktion är orörd.
 - Kodgranskning: källa och ritvillkor kontrollerade. Ingen visuell genomspelning på fysisk mobil/dator eller särskild bildgranskning utförd; uppgiften kvarstår öppen.
 - Nästa rotationsposition BRÄNSLE-02, alternativt nästa praktiskt genomförbara uppgift enligt roadmapen.
+
+
+## 2026-11-19 · Jobb Lage LJUD-02
+
+- BRÄNSLE-02 hoppades över eftersom dagsaktuellt stationspris för INGO Rimforsa inte kunde verifieras: kedjornas listpriser är inte lokala pumppriser. Skylten med okänt pris lämnades oförändrad.
+- `audio.js`: `AudioContext.onstatechange` meddelar huvudvyn så ljudknappen får rätt status när Safari asynkront återupptagit ljud; `enable()` återställer mastervolymen efter tidigare avstängning.
+- `index.html`: kompletterat gesthantering med passiv `touchstart` för äldre iOS-varianter och lyssnare för AudioContext-statushändelse. Användargesten respekteras fortsatt.
+- Kontroll: genomgång av eventflöden och bevarade ljudknappsvillkor; ingen faktisk iPhone/Safari-lyssning eller driftverifiering utförd. LJUD-02 är därför fortsatt öppen. Nästa huvuduppgift LJUD-03.
