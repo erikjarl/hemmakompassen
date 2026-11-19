@@ -206,11 +206,31 @@
     tone(220,t,.14,.07,'triangle');
     tone(164.81,t+.12,.24,.055,'triangle');
   }
+  // Kort originalsyntetiserad prutt: fallande baston med pulserad luft.
+  // Spelas endast när användaren aktiverat spelljud.
+  function poop(){
+    if(!enabled||!ctx||hidden)return;
+    const t=now()+.006,osc=oscillator('sawtooth',165),filter=ctx.createBiquadFilter(),g=gain(0);
+    filter.type='lowpass';filter.frequency.setValueAtTime(460,t);
+    filter.frequency.exponentialRampToValueAtTime(125,t+.36);
+    osc.frequency.setValueAtTime(165,t);
+    osc.frequency.exponentialRampToValueAtTime(64,t+.37);
+    osc.connect(filter);filter.connect(g);g.connect(master);
+    g.gain.setValueAtTime(.0001,t);
+    g.gain.linearRampToValueAtTime(.09,t+.025);
+    g.gain.setValueAtTime(.07,t+.08);
+    g.gain.linearRampToValueAtTime(.025,t+.12);
+    g.gain.linearRampToValueAtTime(.082,t+.17);
+    g.gain.linearRampToValueAtTime(.038,t+.24);
+    g.gain.exponentialRampToValueAtTime(.0001,t+.4);
+    osc.start(t);osc.stop(t+.41);
+    osc.onended=()=>{osc.disconnect();filter.disconnect();g.disconnect();};
+  }
   function setVisible(visible){
     hidden=!visible;
     stopScene();
     if(!hidden&&enabled){ensureContext();startScene();}
   }
   function status(){return {enabled,available:!!AudioCtor,scene,hidden,playingMusic:musicInterval!==null,playingWaves:!!waves,playingEngine:!!engine,playingCarEngine:!!carEngine,carActive,dragonNearby};}
-  root.RimforsaAudio={enable,disable,toggle,setScene,setBoatSpeed,setCarActive,setCarSpeed,setDragonNearby,coin,hit,victory,setVisible,status};
+  root.RimforsaAudio={enable,disable,toggle,setScene,setBoatSpeed,setCarActive,setCarSpeed,setDragonNearby,coin,hit,poop,victory,setVisible,status};
 })(window);
