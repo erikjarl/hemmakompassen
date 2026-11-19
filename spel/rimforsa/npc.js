@@ -9,6 +9,39 @@ const definitions=[
  {id:'saga',name:'Saga',x:680,y:750,filter:'hue-rotate(310deg) saturate(1.25)',color:'#f0afc9',
   lines:['Hallå Lage! Jag ska handla på ICA.','Jag undrar vilken glass som är godast, päron eller vanilj?','Jag har hört att det finns ett båtäventyr på Åsunden.']}
 ];
+// Original 16-bit-inspired 44x44 world sprites, not recoloured Lage frames.
+function drawFriend(ctx,p,x,y){
+ const px=(dx,dy,w,h,color)=>{ctx.fillStyle=color;ctx.fillRect(Math.round(x+dx),Math.round(y+dy),w,h)};
+ const step=Math.floor(p.phase)%4;
+ const moving=step===1||step===3,side=p.dir==='left'||p.dir==='right',back=p.dir==='up';
+ if(p.id==='oliver'){
+  // Oliver: rufsigt mörkt hår, röd keps med skärm, marinblå jacka,
+  // ljusblå ryggsäck och gröna byxor.
+  px(-8,-13,7,12,'#314d37');px(1,-13,7,12,'#35563d');
+  px(-10+(moving?-1:0),-3,9,4,'#342e29');px(1+(moving?1:0),-3,9,4,'#342e29');
+  px(-11,-28,22,17,'#273f68');px(-9,-26,18,13,'#3c628e');px(-2,-24,4,11,'#e1c77b');
+  px(-15,-25,5,13,'#d8ab7e');px(10,-25,5,13,'#d8ab7e');
+  px(-10,-40,20,15,'#dda77d');px(-8,-43,16,7,'#48312b');
+  px(-12,-44,24,7,'#bd4c42');px(-10,-47,18,5,'#df6553');
+  px(p.dir==='left'?-17:-1,-40,side?13:5,3,'#a33b35');
+  if(back){px(-8,-36,16,11,'#49322c');px(-8,-24,16,11,'#79b9c5');px(-5,-21,10,6,'#d6d2a6')}
+  else {if(!side){px(-5,-34,3,3,'#302823');px(3,-34,3,3,'#302823')}else px(p.dir==='right'?5:-7,-34,3,3,'#302823')}
+ }else{
+  // Saga: långt mörkt hår med två flätor, gul klänning, lila väst
+  // och små vinröda stövlar. Silhuetten skiljer sig helt från Lage.
+  px(-9,-10,7,10,'#704a50');px(2,-10,7,10,'#704a50');
+  px(-10+(moving?-1:0),-2,9,4,'#4e3036');px(1+(moving?1:0),-2,9,4,'#4e3036');
+  px(-12,-25,24,16,'#e6ad53');px(-15,-18,30,10,'#f3c764');
+  px(-10,-28,20,12,'#824b85');px(-7,-27,14,9,'#ae71a4');
+  px(-15,-26,5,12,'#e5b38b');px(10,-26,5,12,'#e5b38b');
+  px(-10,-41,20,17,'#e8b992');px(-11,-43,22,9,'#4d342f');
+  px(-12,-40,5,20,'#49322e');px(7,-40,5,20,'#49322e');
+  px(-13,-22,7,5,'#b98959');px(6,-22,7,5,'#b98959');
+  px(-7,-46,14,5,'#64433b');px(-4,-47,8,3,'#b77c9e');
+  if(!back){if(!side){px(-5,-34,3,3,'#362823');px(3,-34,3,3,'#362823')}else px(p.dir==='right'?5:-7,-34,3,3,'#362823')}
+  else px(-8,-31,16,7,'#4a302e');
+ }
+}
 function createSystem(canStand,random=Math.random){
  if(typeof canStand!=='function')throw Error('NPCs need a walkable terrain callback');
  const people=definitions.map(p=>({...p,homeX:p.x,homeY:p.y,ready:false,dir:'down',frame:0,phase:0,turnTime:0,wait:.3,angle:0,speechIndex:0}));
@@ -72,7 +105,9 @@ function createSystem(canStand,random=Math.random){
      if(x<-50||x>width+50||y<-60||y>height+60)continue;
      ctx.save();
      ctx.fillStyle='#132c2480';ctx.beginPath();ctx.ellipse(x,y-2,11,4,0,0,Math.PI*2);ctx.fill();
-     if(hasSprite){
+     if(p.id==='oliver'||p.id==='saga'){
+       drawFriend(ctx,p,x,y);
+     }else if(hasSprite){
        const row=p.dir==='down'?0:p.dir==='left'?1:p.dir==='right'?2:3;
        const frame=Math.floor(p.phase)%4;
        const oldFilter=ctx.filter,oldSmooth=ctx.imageSmoothingEnabled;
