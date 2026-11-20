@@ -78,7 +78,7 @@
     engine=null;
   }
   function startCarEngine(){
-    if(carEngine||!enabled||hidden||scene!=='land')return;
+    if(carEngine||!enabled||hidden||scene!=='land'||!ctx||ctx.state!=='running')return;
     const lo=oscillator('sawtooth',85),hi=oscillator('triangle',125),filter=ctx.createBiquadFilter(),g=gain(0);
     filter.type='lowpass';filter.frequency.value=340;
     lo.connect(filter);hi.connect(filter);filter.connect(g);g.connect(master);
@@ -159,8 +159,9 @@
   }
   // iOS Safari kan pausa/interruptera AudioContext vid flik- och appbyte.
   // Starta om schemalagda loopar först när ljudmotorn faktiskt kör igen.
-  function onContextStateChange(){
-    if(!ctx)return;
+  function onContextStateChange(event){
+    // Fördröjda events från en stängd Safari-kontext får inte ändra ny motor.
+    if(!ctx||(event&&event.target&&event.target!==ctx))return;
     // Behåll resumePending tills det pågående resume()-löftet har avslutats.
     // En statechange till interrupted/suspended får inte starta flera samtidiga resume-anrop.
     if(ctx.state==='running'){
@@ -193,22 +194,29 @@
   // Anropas bara som följd av ett aktivt fingertryck eller en tangentnedtryckning.
   // Inga försök att kringgå webbläsarens krav på användargest.
   function resumeFromGesture(){
-    if(!enabled||hidden||!ctx)return false;
-    if(ctx.state==='closed'){
+    if(!enabled||hidden)return false;
+    if(!ctx||ctx.state==='closed'){
       try{if(!ensureContext())return false;}catch(_){return false;}
     }
     if(ctx.state==='running'){startScene();return true;}
     if(resumePending)return false;
     try{
       resumePending=true;
-      const pending=ctx.resume();
+      const resumingContext=ctx;
+      const pending=resumingContext.resume();
       if(pending&&typeof pending.then==='function'){
         pending.then(()=>{
+          // Stale Promise från en äldre kontext får inte nollställa ny resume.
+          if(ctx!==resumingContext)return;
           resumePending=false;
-          if(ctx&&ctx.state==='running'&&enabled&&!hidden)startScene();
+          if(ctx.state==='running'&&enabled&&!hidden)startScene();
           notifyAudioState();
-        },()=>{resumePending=false;notifyAudioState();});
-      }else resumePending=false;
+        },()=>{
+          if(ctx!==resumingContext)return;
+          resumePending=false;
+          notifyAudioState();
+        });
+      }else if(ctx===resumingContext)resumePending=false;
       return true;
     }catch(_){resumePending=false;return false;}
   }
