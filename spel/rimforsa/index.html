@@ -108,7 +108,7 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
  <div class="controls"><div class="guide">Samla guldmynt! Vid hemmet står en vit bil – hoppa in med Kör bilen. Styr med pilar/WASD.</div><div class="dpad" aria-label="Styr Lage"><button type="button" data-dir="up" aria-label="Gå uppåt"></button><button type="button" data-dir="left" aria-label="Gå åt vänster"></button><button type="button" data-dir="down" aria-label="Gå nedåt"></button><button type="button" data-dir="right" aria-label="Gå åt höger"></button></div><button class="reset" id="reset">Börja om ↺</button></div>
  <div class="footer">Illustrerad spelvärld inspirerad av Rimforsa. Platserna ligger ungefär rätt, men kartan är inte skalenlig.</div>
 </main>
-<script src="./audio.js?v=15"></script>
+<script src="./audio.js?v=16"></script>
 <script src="./gameplay.js?v=2"></script>
 <script src="./inventory.js?v=3"></script>
 <script src="./item-art.js?v=1"></script>
@@ -633,7 +633,7 @@ function enterCar(){
  if(carFuel.snapshot().level<=0){message.textContent="Bilen har tom tank! Gå till Bensinmacken och tanka först.";return false;}
  if(!carDrive.ready()){message.textContent='Laddar vattenkartan till bilen…';return false;}
  state.inCar=true;state.x=carPos.x;state.y=carPos.y;state.path=[];state.nearKey=null;
- audio.setCarActive(true);audio.setCarSpeed(0);updateMessage();return true;
+ audio.setCarActive(true);audio.setCarSpeed(0);if(audio.carEnter)audio.carEnter();updateMessage();return true;
 }
 function nearbyExit(){
  if(canStand(state.x,state.y))return{x:state.x,y:state.y};
@@ -935,7 +935,7 @@ interact.addEventListener('click',()=>{
   if(near.name==='Förskolan Hackel'){stop();window.RimforsaSlideMinigame.start({returnToMap:()=>{state.nearKey=null;updateMessage();}});return;}
    if(near.name==='Åsundabadet'){stop();window.RimforsaSwimMinigame.start({onCoin:id=>awardMinigameCoin('swim-'+id),returnToMap:()=>{state.nearKey=null;updateMessage();}});return;}
  state.visited.add(near.name);
-  const found=bag.collectAt(near.name);if(found)renderBag();
+  const found=bag.collectAt(near.name);if(found){renderBag();if(audio.itemFound)audio.itemFound();}
   message.innerHTML='<strong>'+near.symbol+' '+near.name+'</strong> – '+near.text+(found?' <strong>'+found.item.icon+' Du hittade '+found.item.name+'! Den finns i väskan.</strong>':'');
  state.messageLocked=true;title.textContent=near.name;interact.textContent='Besök igen ✨';
 });
@@ -1123,7 +1123,7 @@ function tick(now){
  audio.setDragonNearby(dragon.update(dt,state.x,state.y,helicopter.position));
  if(dragon.strikeObject(helicopter.position.x,helicopter.position.y,28)){
   helicopter.hit(performance.now()/1000);
-  if(typeof audio.hit==="function")audio.hit();
+  if(typeof audio.helicopterHit==="function")audio.helicopterHit();
   coinNoticeUntil=performance.now()+2200;
   message.innerHTML="<strong>🚁 Träff på helikoptern!</strong> Drakens eldklot träffade rotorhuset. Helikoptern står kvar och repareras automatiskt.";
  }
