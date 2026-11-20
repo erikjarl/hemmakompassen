@@ -244,3 +244,8 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 - Hittade ett konkret glapp: `boatCrash()` hade separat game-over utan huvudkartans coin-reset. Nu stänger båtens tredje grundstötning båtspelet och anropar gemensamma `restartAfterGameOver('båten')`. Uppdaterad orsakstext visar båtolyckan, exakt förlorat saldo och 0 i ny omgång. Delvis båtskada nollställer inte mynt.
 - Extra vakt i `updateBoat` hindrar myntupptag efter game-over i samma renderingssteg. Myntbonusarnas localStorage och potatisförsäljning rensas genom befintlig gemensam reset; väskan och skördad potatis behålls.
 - ROADMAP: senast HUV-05, nästa HUV-06; ej avbockad eftersom verklig båt-/mobilgenomspelning, omladdning och saldon efter omstart ännu inte verifierats. Källkod finns på main; Pages-status ej kontrollerad.
+
+### 2026-11-20 – Jobb lage, HUV-06 (kontrast i bajskorvar)
+- `index.html`: förbättrade befintliga pixelritade bajskorvars struktur med 15 extra mycket små ljus-/skuggrektanglar. Mer läsbar trappad spiral, särskilt vid kontrast mot gräs och väg. Alla nya pixlar ligger inom befintlig spriteyta x=-11…11, y=-15…10 (23×26 px); kollision och skada är helt oförändrade.
+- `ROADMAP.md`: senast HUV-06, nästa KARTA-02. Ingen ny avbockning: verklig visuell bedömning av läsbarhet på gräs/väg i mobil och dator har inte gjorts.
+- Sparat på GitHub main och källkod återläst; publicerad Pages-version och praktisk spelkontroll inte verifierade.
