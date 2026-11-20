@@ -303,3 +303,8 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 - `swim-minigame.js`: visar huvudkartans totala spelmynt direkt inne i dykspelet, uppdaterar summan vid uppplockade sjömynt och berättar om fyndet är ett nytt bonusmynt eller redan har tilldelats vid ett tidigare försök. Spela om återställer bara dykomgångens lokala fynd, inte global bonusplånbok.
 - `index.html`: båda ingångarna till Åsundabadet skickar `getWalletBalance:totalMoney`, cacheversion `swim-minigame.js?v=7`.
 - ROADMAP roterad MYNT-03 → HUV-05. Källkodsankare kontrollerade, men faktisk simulering/genomspelning av mynt, köp, omladdning och sista hjärtat saknas, alltså fortsatt öppen. GitHub main sparad, Pages-leverans ej verifierad.
+
+### 2026-11-20 – Jobb lage, HUV-05 (förlustdialog och kvarhållna knappar)
+- `index.html`: drakens och bajskorvarnas skadehantering ignorerar spelaren medan förlustdialogen är öppen. Vid sista hjärtat släpps alla hållna gång-/båtknappar och planerad gångrutt avbryts före befintlig gemensam återställning av kart-/minispels-/potatismynt.
+- Myntregler, föremål, skörd och ljud/grafik är oförändrade. ROADMAP roterad HUV-05 → HUV-06. Inga nya avbockningar, eftersom verklig genomspelning och verifiering efter omladdning fortfarande saknas.
+- Sparat på GitHub main; mobil/dator och Pages-leverans ej kontrollerade.
