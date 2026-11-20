@@ -26,12 +26,32 @@
      shots.push({id:'dragon-fire-'+(++shotId),x:x+28,y:y-7,vx:(target.x-x)/distance*speed,vy:(target.y-y)/distance*speed,life:5});
     }
    }
-   for(let k=shots.length-1;k>=0;k--){const s=shots[k];s.x+=s.vx*dt;s.y+=s.vy*dt;s.life-=dt;if(s.life<=0||s.x<0||s.y<0||s.x>1448||s.y>1086)shots.splice(k,1);}
+   for(let k=shots.length-1;k>=0;k--){
+    const fire=shots[k];
+    // Bevara föregående position så ett snabbt eldklot inte kan hoppa förbi målet mellan två bildrutor.
+    fire.prevX=fire.x;fire.prevY=fire.y;
+    fire.x+=fire.vx*dt;fire.y+=fire.vy*dt;fire.life-=dt;
+    if(fire.life<=0||fire.x<0||fire.y<0||fire.x>1448||fire.y>1086)shots.splice(k,1);
+   }
    return near;
   }
-  function hazards(px,py){const contact=Math.hypot(px-x,py-y)<37;const fire=shots.find(s=>Math.hypot(px-s.x,py-s.y)<17);return contact?'dragon-contact':fire?fire.id:null;}
+  function passesThrough(fire,px,py,radius){
+   // Kortaste avståndet mellan målets mitt och projektilens senaste rörelsesegment.
+   const ax=fire.prevX??fire.x,ay=fire.prevY??fire.y,dx=fire.x-ax,dy=fire.y-ay;
+   const lengthSquared=dx*dx+dy*dy;
+   const fraction=lengthSquared?Math.max(0,Math.min(1,((px-ax)*dx+(py-ay)*dy)/lengthSquared)):0;
+   return Math.hypot(px-(ax+fraction*dx),py-(ay+fraction*dy))<radius;
+  }
+  function hazards(px,py){
+   const contact=Math.hypot(px-x,py-y)<37;
+   const fire=shots.find(s=>passesThrough(s,px,py,17));
+   return contact?'dragon-contact':fire?fire.id:null;
+  }
   function consume(id){const n=shots.findIndex(s=>s.id===id);if(n>=0)shots.splice(n,1);}
-  function strikeObject(px,py,radius){const index=shots.findIndex(s=>Math.hypot(px-s.x,py-s.y)<radius);if(index<0)return false;shots.splice(index,1);return true;}
+  function strikeObject(px,py,radius){
+   const index=shots.findIndex(s=>passesThrough(s,px,py,radius));
+   if(index<0)return false;shots.splice(index,1);return true;
+  }
   function snapshot(){return {x,y,near,breathing:Math.sin(t*2.25)>.28,proximity,warning:!!warningTarget};}
   function draw(ctx,camX,camY,w,h){
    const sx=Math.round(x-camX+w/2),sy=Math.round(y-camY+h/2);
