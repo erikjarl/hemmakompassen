@@ -699,6 +699,14 @@ function drawPoops(){
   ctx.fillStyle='#ffd28d';
   ctx.fillRect(x-8,y-5,2,1);ctx.fillRect(x-6,y+4,3,1);
   ctx.fillRect(x+1,y-10,2,1);
+  // Tre åtskilda spiralveck: ljus vänsterkant mot gräs och mörka
+  // veck till höger mot väg, helt innanför den befintliga silhuetten.
+  ctx.fillStyle='#ffe0a2';
+  ctx.fillRect(x-5,y-11,2,1);ctx.fillRect(x-8,y-3,2,1);
+  ctx.fillRect(x-6,y+5,3,1);
+  ctx.fillStyle='#301710';
+  ctx.fillRect(x+2,y-11,2,2);ctx.fillRect(x+4,y-3,3,2);
+  ctx.fillRect(x+4,y+5,3,2);
   // Minimal highlight på översta toppen för att förtydliga var silhuetten börjar.
   ctx.fillStyle='#ffdf9c';ctx.fillRect(x-1,y-13,1,1);
   // På nära håll växlar tre befintliga kantpixlar diskret i ljusstyrka.
