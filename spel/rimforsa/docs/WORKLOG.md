@@ -200,3 +200,9 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 - Rotationspass efter HUV-06. Minskade den osynliga fotkollisionens sidoprover från ±2 till ±1 pixel och den översta kontrollpunkten från -4 till -3 pixel. Kravet på giltig markmask för alla fem fotpunkter kvarstår och styrassistansens `edgeClearance` använder samma prover.
 - Finare A*-ruttnät (6 i stället för 8 kartpixlar) avsett att hitta smala gångbara passager oftare, utan förändring av ritad karta, maskbild eller vatten-/byggnadsregler.
 - Syntaxkontroll av huvudsidans inline-JavaScript godkänd; verifierat att samma gångprover används i kollisions- och kantfunktionerna samt att bild-/maskreferenser inte ändrats. Ej faktiskt genomspelat på mobil/tangentbord; passageframkomlighet, vattengränser och ruttprestanda behöver testas, så KARTA-02 förblir öppen. Nästa rotationsuppgift FORDON-02.
+
+### 2026-11-20 · Jobb Lage · FORDON-02
+
+- Rotationspass efter KARTA-02. För bilens åtta riktningar behålls den etablerade spritearkssidan för vänster/höger. Sex fram-/bak-/diagonalvyer använder nu omarbetad egen pixelritning i `car.js`, med gemensamma karossproportioner, fyra hjul, tak-/fönsterdetaljer, lyktor och Lage bakom vindrutan. Den gamla bildens inkonsekventa front/bak används därmed inte längre.
+- Höjde cacheversion till `car.js?v=5`. JavaScript-syntaxen i bilmodulen och huvudsidan godkänd, och bilens `draw()` körd i åtta riktningar med simulerad canvas utan fel. Ingen faktisk sidvidsida-visuell bedömning i webbläsare, mobil eller jämförelse med referensgrafik. Båtens grafik oförändrad. FORDON-02 kvar som öppen.
+- Nästa rotation BRÄNSLE-02 om verifierbar lokal prisdatakälla finns, annars LJUD-02.
