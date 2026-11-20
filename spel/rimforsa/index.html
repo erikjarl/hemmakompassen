@@ -1064,7 +1064,9 @@ function slideMove(dx,dy){
        for(const sign of [-1,1]){
          const sx=sideX*offset*sign,sy=sideY*offset*sign;
          const midX=state.x+sx,midY=state.y+sy;
-         if(canStand(midX,midY)&&canStand(midX+vx,midY+vy)){
+         // Kontrollera även delstegen så en tunn maskbarriär aldrig hoppas över.
+         const sideClear=[1,2,3].every(i=>canStand(state.x+sx*i/3,state.y+sy*i/3));
+         if(sideClear&&canStand(midX+vx,midY+vy)){
            state.x=midX+vx;state.y=midY+vy;moved=true;recovered=true;break;
          }
        }
