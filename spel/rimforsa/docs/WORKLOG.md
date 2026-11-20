@@ -288,3 +288,8 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 - `audio.js`: tre korta originalsyntetiserade toner/ljudsignaler för lyckad potatisförsäljning, att kliva ur/bärga bilen samt bekräftad tömning av väskan. Respekterar aktiv ljudknapp, synlig sida och körande AudioContext.
 - `index.html`: effekterna kopplade endast till genomförda handlingar, `audio.js?v=20`. Misslyckad försäljning eller avbruten tömning ska inte ge motsvarande ljud.
 - ROADMAP uppdaterad: LJUD-03 → GRAF-01. Inga nya avbockningar eftersom avlyssning och webbläsargenomspelning fortfarande saknas. Sparat på GitHub main; Pages-servering inte verifierad.
+
+### 2026-11-20 – Jobb lage, GRAF-01 (potatislandets pixelmiljö)
+- `farm.js`: förstärkt 480×288-bakgrunden med flera nyanser i träd, stammar och blad, gräspixlar, stenar och små jordkorn. Fårorna och potatisens fyra växtstadier ligger kvar över jordlagret. Inga ändringar i skörd, timer eller localStorage.
+- `index.html` laddar `farm.js?v=3`. ROADMAP roterad GRAF-01 → DRAKE-02. Ingen punkt avbockad; GRAF-01 omfattar fler scener och mobil-/datorskärmbilder kvarstår.
+- Commit sparad på main. Renderad visuell kontroll och faktisk GitHub Pages-leverans inte verifierade.
