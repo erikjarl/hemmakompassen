@@ -213,3 +213,9 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 - I `audio.js` spårar `sceneStarted` om en ljudscen redan är igång så att både enable, statechange och återupptagen Promise inte startar dubbla loopar/oscillatorer; `stopScene()` återställer markeringen. Tonfunktionen avstår från att köa toner när kontexten inte kör. `resumeFromGesture` håller reda på en pågående asynkron återupptagning och aviserar knappens status efter svar.
 - Huvudsidans `pageshow` hanterar återkomst från Safaris back/forward-cache genom `setVisible` och UI-uppdatering; inget automatiskt `resume()` utan användargest. Version `audio.js?v=15`.
 - JavaScript-syntax i audio.js och inline HTML kontrollerad, plus kodvillkor för ljudscensskydd/cacheversion. Faktiska iPhone/Safari-tester saknas, så LJUD-02 står kvar öppen. Nästa rotation LJUD-03.
+
+### 2026-11-20 · Jobb Lage · LJUD-03
+
+- Tre nya, korta originalsyntetiserade ljudeffekter i `audio.js`: `carEnter`, `itemFound`, `helicopterHit`. Integrerade vid bilinsteg, första fyndet av föremål i väskan och drakeldens träff på helikoptern. Effekter kräver aktiv, synlig, upplåst WebAudio-kontext. `audio.js?v=16`.
+- Åtgärdade separat liten tidsbugg i helikopterns träffanimation (`helicopter.js?v=2`): skadeindikatorn använder 1,1 sekunders nedräkning i stället för absolut tidsstämpel. Isolerad körning visade aktiv efter 0,5 s och inaktiv efter 1,11 s.
+- Syntaxkontroll utan fel i ljudmotor, helikoptermodul och inline-JavaScript. Ingen faktisk avlyssning eller spelgenomgång på mobil; LJUD-03 fortsatt öppen. Nästa rotation LJUD-04 om hörselprov är möjligt, annars GRAF-02. Inga nya kryss utan relevant verifiering.
