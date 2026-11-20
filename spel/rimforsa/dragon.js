@@ -3,23 +3,36 @@
  'use strict';
  function createDragon(){
   const home={x:115,y:780};
-  let t=0,x=home.x,y=home.y,near=false,shotTimer=1,shotId=0;const shots=[];
+  let t=0,x=home.x,y=home.y,near=false,shotTimer=1,shotId=0,warningTarget=null;const shots=[];
   const proximity=235;
   function update(dt,playerX,playerY,helicopter){
-   t+=Math.max(0,Math.min(.1,Number(dt)||0));
+   dt=Math.max(0,Math.min(.1,Number(dt)||0));
+   t+=dt;
    // Flyger i en liten slinga ovanför skogen; oberoende av vägarnas gångbarhet.
    x=home.x+Math.cos(t*.45)*75;
    y=home.y+Math.sin(t*.61)*53;
    near=Math.hypot(x-playerX,y-playerY)<proximity;
    shotTimer-=dt;
-   if(shotTimer<=0){shotTimer=2.7;const aimAtHelicopter=!!helicopter&&(shotId%3===0||Math.hypot(playerX-x,playerY-y)>430);const target=aimAtHelicopter?helicopter:{x:playerX,y:playerY};const distance=Math.hypot(target.x-x,target.y-y);if(distance>35&&distance<(aimAtHelicopter?780:430)){const speed=165;shots.push({id:'dragon-fire-'+(++shotId),x:x+28,y:y-7,vx:(target.x-x)/distance*speed,vy:(target.y-y)/distance*speed,life:5});}}
+   // Förvarningen använder samma mål som avfyrningen.
+   const aimAtHelicopter=!!helicopter&&(shotId%3===0||Math.hypot(playerX-x,playerY-y)>430);
+   const target=aimAtHelicopter?helicopter:{x:playerX,y:playerY};
+   const distance=Math.hypot(target.x-x,target.y-y);
+   const withinRange=distance>35&&distance<(aimAtHelicopter?780:430);
+   warningTarget=shotTimer>0&&shotTimer<=.65&&withinRange?{x:target.x,y:target.y}:null;
+   if(shotTimer<=0){
+    shotTimer=2.7;warningTarget=null;
+    if(withinRange){
+     const speed=165;
+     shots.push({id:'dragon-fire-'+(++shotId),x:x+28,y:y-7,vx:(target.x-x)/distance*speed,vy:(target.y-y)/distance*speed,life:5});
+    }
+   }
    for(let k=shots.length-1;k>=0;k--){const s=shots[k];s.x+=s.vx*dt;s.y+=s.vy*dt;s.life-=dt;if(s.life<=0||s.x<0||s.y<0||s.x>1448||s.y>1086)shots.splice(k,1);}
    return near;
   }
   function hazards(px,py){const contact=Math.hypot(px-x,py-y)<37;const fire=shots.find(s=>Math.hypot(px-s.x,py-s.y)<17);return contact?'dragon-contact':fire?fire.id:null;}
   function consume(id){const n=shots.findIndex(s=>s.id===id);if(n>=0)shots.splice(n,1);}
   function strikeObject(px,py,radius){const index=shots.findIndex(s=>Math.hypot(px-s.x,py-s.y)<radius);if(index<0)return false;shots.splice(index,1);return true;}
-  function snapshot(){return {x,y,near,breathing:Math.sin(t*2.25)>.28,proximity};}
+  function snapshot(){return {x,y,near,breathing:Math.sin(t*2.25)>.28,proximity,warning:!!warningTarget};}
   function draw(ctx,camX,camY,w,h){
    const sx=Math.round(x-camX+w/2),sy=Math.round(y-camY+h/2);
    if(!(sx< -100||sy< -100||sx>w+120||sy>h+100)){
@@ -52,9 +65,35 @@
     poly([42,-8,39+length*.65,-12,40+length*.55,-5,43,-5],'#ffcc47');
     for(let i=0;i<3;i++){ctx.fillStyle=i%2?'#ffd968':'#f5792d';ctx.fillRect(Math.round(51+i*11+Math.sin(t*11+i)*4),-12+i*4,4,4);}
    }
-   ctx.restore();
+   // Blinkande varningsflamma vid gapet och streckad siktlinje.
+   if(warningTarget){
+    ctx.fillStyle=Math.floor(t*14)%2?'#fff0a0':'#ffae49';
+    ctx.fillRect(37,-14,8,7);
+    ctx.fillStyle='#e95425';ctx.fillRect(43,-11,7,5);
+    ctx.fillStyle='#ffda64';ctx.fillRect(46,-13,4,3);
    }
-   for(const shot of shots){const fx=Math.round(shot.x-camX+w/2),fy=Math.round(shot.y-camY+h/2);ctx.fillStyle='#762818';ctx.fillRect(fx-9,fy-7,17,14);ctx.fillStyle='#ed5a22';ctx.fillRect(fx-8,fy-6,15,11);ctx.fillStyle='#ffbf47';ctx.fillRect(fx-5,fy-5,10,8);ctx.fillStyle='#fff0a0';ctx.fillRect(fx-2,fy-3,5,4);ctx.fillStyle='#fa7929';ctx.fillRect(fx-13,fy-2,5,4);}
+   ctx.restore();
+   if(warningTarget){
+    const targetX=Math.round(warningTarget.x-camX+w/2),targetY=Math.round(warningTarget.y-camY+h/2);
+    const dx=targetX-(sx+28),dy=targetY-(sy-7),dist=Math.hypot(dx,dy);
+    if(dist>0){
+     for(let d=18;d<Math.min(95,dist);d+=16){
+      const px=Math.round(sx+28+dx/dist*d),py=Math.round(sy-7+dy/dist*d);
+      ctx.fillStyle=Math.floor(d/16)%2?'#ff9e3e':'#ffe58f';
+      ctx.fillRect(px-2,py-2,4,4);
+      ctx.fillStyle='#9f3e25';ctx.fillRect(px+2,py,2,2);
+     }
+    }
+   }
+   }
+   for(const shot of shots){const fx=Math.round(shot.x-camX+w/2),fy=Math.round(shot.y-camY+h/2);ctx.fillStyle='#762818';ctx.fillRect(fx-9,fy-7,17,14);ctx.fillStyle='#ed5a22';ctx.fillRect(fx-8,fy-6,15,11);ctx.fillStyle='#ffbf47';ctx.fillRect(fx-5,fy-5,10,8);ctx.fillStyle='#fff0a0';ctx.fillRect(fx-2,fy-3,5,4);ctx.fillStyle='#fa7929';ctx.fillRect(fx-13,fy-2,5,4);
+    // Eldsvansen följer skottets verkliga rörelseriktning.
+    const mag=Math.hypot(shot.vx,shot.vy)||1;
+    for(let n=1;n<=3;n++){
+     const tx=Math.round(fx-shot.vx/mag*(n*7+7)),ty=Math.round(fy-shot.vy/mag*(n*7+7));
+     ctx.fillStyle=n===1?'#ffb83b':n===2?'#df652c':'#754031';
+     ctx.fillRect(tx-2,ty-2,Math.max(2,6-n),Math.max(2,6-n));
+    }}
   }
   return {update,draw,snapshot,hazards,consume,strikeObject,home};
  }
