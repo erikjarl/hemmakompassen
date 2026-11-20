@@ -214,7 +214,12 @@
     if(ctx.state==='running'){startScene();return true;}
     // En iOS-resume som aldrig avslutar sitt Promise får inte låsa ljudet för alltid.
     // Ny faktisk användargest kan prova igen efter 2,5 sekunder.
-    if(resumePending&&Date.now()-resumeStartedAt<2500)return false;
+    if(resumePending&&Date.now()-resumeStartedAt<2500){
+      // Safari kan missa en första upplåsningsgest medan resume() väntar.
+      // Nästa verkliga gest får starta en tyst källa, men inte ett andra resume().
+      primeFromGesture();
+      return false;
+    }
     try{
       resumePending=true;resumeStartedAt=Date.now();
       const attempt=++resumeSerial;
