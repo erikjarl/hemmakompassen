@@ -371,3 +371,10 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 - 2026-11-20 – Jobb lage, KARTA-02: Automatisk gång markeras som framme vid vägpunkt först inom 3 världspixlar (tidigare 9), för att inte avsluta vägsegment för tidigt nära entréer. Ingen ändring av gångmask, grafik, manuell kollision eller navigeringssökning. Koden och roadmapen sparade på main; verklig mobil-/tangentbordsgenomspelning och förbättrad tillgänglighet har ännu inte testats. Bildinventering: huvudkartans NPC och draken är fortfarande delvis kodritade, arbetet med bildsprites ligger kvar på GRAF-01. Inga nya uppgifter avbockade. Rotation -> FORDON-02.
 
 - 2026-11-20 – Jobb lage, FORDON-02: `boat-direction-art.js` orienterar nu förarens axlar och tröjpartier i båtens färdriktning; ansiktsdetaljer får förskjutning i diagonala vinklar. `index.html` laddar `boat-direction-art.js?v=4`. Åtta färdriktningar och befintlig båt-/bilfysik, kollisioner och belöningar oförändrade. GitHub-implementationen kodgranskad, men visuellt prov av åtta riktningar i mobil/dator saknas. Bildspriteinventering: båtföraren är alltjämt kodritad; fler genererade bildsprites behövs och återstår enligt GRAF-01. Ingen ny bildgenerering i detta pass och ingen ny avbockning. Rotation -> LJUD-02.
+
+### 2026-11-20 – LJUD-03: rutschkaneljud
+
+- Skapade två originalsyntetiserade WebAudio-effekter: `slideCharge` vid lyckad start av sats, `slideLongJump` när 200-metersbonusmyntet delas ut första gången.
+- Långhoppsljudet ersätter det normala landningsljudet just vid bonusutdelningen; upprepade långhopp får vanligt landningsljud. Inga ändringar i avståndsberäkning, myntlogik eller sprites.
+- Uppdaterade `audio.js?v=28` och `slide-minigame.js?v=9` i `index.html`; källkopplingar kontrollerade på `main`. Verklig Safari-/mobilavlyssning och visuell speltest inte utförda.
+- Roadmap: LJUD-03 fortfarande öppen, nästa rotation GRAF-01. Bildbaserade åskådare och Maja finns i fotbollsspelet, fyra barn i rutschkanan; ytterligare kodritade figurer behöver inventeras och ersättas vid GRAF-01.
