@@ -53,17 +53,37 @@ function make(dir){
   g.fillRect(Math.round(lx)-2,Math.round(ly)+1,4,1);
  }
  drawShape(g,hull(-20,-9,8,7),palette.seat);
- // Lage vid styrplatsen. Ansiktet har hår, hud, ögon och tröja i pixelrutor.
- const [hx,hy]=point(-13,2);
- g.fillStyle='#26342c';g.fillRect(Math.round(hx)-8,Math.round(hy)+7,17,5);
- g.fillStyle=palette.shirt;g.fillRect(Math.round(hx)-7,Math.round(hy)+2,15,10);
- g.fillStyle=palette.skin;g.fillRect(Math.round(hx)-6,Math.round(hy)-9,13,13);
- g.fillStyle=palette.hair;g.fillRect(Math.round(hx)-7,Math.round(hy)-12,15,5);
- g.fillRect(Math.round(hx)-7,Math.round(hy)-8,3,7);
- g.fillStyle='#362e2a';g.fillRect(Math.round(hx)-3,Math.round(hy)-3,2,2);g.fillRect(Math.round(hx)+3,Math.round(hy)-3,2,2);
- g.fillStyle='#bd866d';g.fillRect(Math.round(hx),Math.round(hy)+2,3,2);
- // Kapellkant/vindrutans ljusa överkant förblir visuellt ovanför Lages ansikte.
- g.fillStyle='#f8f3e4';g.fillRect(Math.round(hx)-9,Math.round(hy)-16,19,3);
+ // Lage sitter i förarplatsen och tittar mot fören i SAMTLIGA åtta vinklar.
+ // Hår, ansikte och tröja får därför olika synliga sidor när båten byter riktning.
+ const [hx,hy]=point(-13,2),px=Math.round(hx),py=Math.round(hy);
+ const facingFront=fy>.38,facingBack=fy<-.38;
+ const sideView=!facingFront&&!facingBack;
+ g.fillStyle='#26342c';g.fillRect(px-8,py+7,17,5);
+ g.fillStyle=palette.shirt;g.fillRect(px-7,py+2,15,10);
+ g.fillStyle=palette.skin;g.fillRect(px-6,py-9,13,13);
+ // Bakifrån syns hårets baksida; framifrån ögon och liten näsa.
+ g.fillStyle=palette.hair;
+ g.fillRect(px-7,py-12,15,facingBack?12:5);
+ g.fillRect(px-7,py-8,facingBack?4:3,7);
+ if(facingBack){
+  g.fillStyle='#8a5938';g.fillRect(px-4,py-4,8,3);
+  g.fillStyle='#4d3328';g.fillRect(px-5,py+1,10,2);
+ }else if(facingFront){
+  g.fillStyle='#362e2a';g.fillRect(px-3,py-3,2,2);g.fillRect(px+3,py-3,2,2);
+  g.fillStyle='#bd866d';g.fillRect(px,py+2,3,2);
+ }else if(sideView){
+  // Från sidan är bara ett öga synligt, på den sida som fören pekar mot.
+  const eyeX=fx>0?px+3:px-4;
+  g.fillStyle='#362e2a';g.fillRect(eyeX,py-3,2,2);
+  g.fillStyle='#bd866d';g.fillRect(fx>0?px+5:px-6,py+1,2,2);
+ }
+ // Armar och ratt följer båtens riktning; ingen lös del vänder sig mot kameran.
+ const [wheelX,wheelY]=point(-4,1),wx=Math.round(wheelX),wy=Math.round(wheelY);
+ g.fillStyle='#354851';g.fillRect(wx-3,wy-3,7,7);
+ g.fillStyle='#c4d4d0';g.fillRect(wx-2,wy-2,5,5);
+ g.fillStyle='#354851';g.fillRect(wx-1,wy-1,3,3);
+ // Vindrutans ljusa ram ligger i båtens koordinater och flyttas med fören.
+ drawShape(g,[point(2,-10),point(3,-10),point(3,10),point(2,10)],'#f8f3e4');
  return c;
 }
 function draw(ctx,x,y,angle,flash){
