@@ -5,6 +5,8 @@ const W=480,H=288;
 const zones={cashier:{x:300,y:88,w:150,h:147},pear:{x:32,y:116,w:99,h:119},vanilla:{x:134,y:116,w:100,h:119},potatoes:{x:310,y:234,w:155,h:54}};
 const rect=(c,x,y,w,h,color)=>{c.fillStyle=color;c.fillRect(Math.round(x),Math.round(y),w,h)};
  // Samma 56×56-originalsprite som huvudkartan, utan oskarp interpolation.
+ const cashierSprite=root.RimforsaIcaCashierSprite||null;
+ if(cashierSprite)cashierSprite.addEventListener('load',()=>{if(lastCanvas&&lastOptions)draw(lastCanvas,lastOptions);});
  const lageSprite=typeof root.Image==='function'?new root.Image():null;
  let lastCanvas=null,lastOptions=null;
  if(lageSprite){
@@ -67,7 +69,13 @@ function draw(canvas,options={}){
  // Kassadisk, kassapparat och personal.
  rect(c,288,169,177,76,'#805c3b');rect(c,285,168,182,17,'#bd8750');
  rect(c,307,186,145,43,'#956c43');
- person(c,373,132,'#c45649','#4c3b2b');
+ // Bildbaserad kassör: framsidan från fyrvinklat originalark.
+ // Reservfiguren används endast om bilden ännu inte kan läsas.
+ if(cashierSprite&&cashierSprite.complete&&cashierSprite.naturalWidth===160&&cashierSprite.naturalHeight===56){
+  c.save();c.imageSmoothingEnabled=false;
+  c.drawImage(cashierSprite,0,0,40,56,344,96,58,72);
+  c.restore();
+ }else person(c,373,132,'#c45649','#4c3b2b');
  rect(c,308,154,48,24,'#3c4944');rect(c,313,157,35,12,'#a8c8aa');
  rect(c,327,179,26,5,'#343c36');rect(c,410,155,25,10,'#daaa60');
  // Potatishörnan vid kassadisken – tre skördade potatisar kan säljas här.
