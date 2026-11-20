@@ -1024,7 +1024,19 @@ function restartAfterGameOver(cause){
 }
 function reset({clearMoney=true}={}){
   // Loading the page must preserve earned minigame coins.
-  if(clearMoney){rewardWallet.clear();farm.clearCoins();}
+  if(clearMoney){
+   rewardWallet.clear();farm.clearCoins();
+   // En förlorad omgång får inte behålla båtens tillfälliga fyndstatus.
+   // openBoatGame() skapar en ny uppsättning mynt vid nästa båttur.
+   boatState.collected=0;
+   boatState.coins=[];
+   boatState.done=false;
+   boatState.hearts=3;
+   boatState.invul=0;
+   boatState.flash=0;
+   boatState.vx=0;boatState.vy=0;
+   updateBoatHud();
+  }
  pizzaOverlay.hidden=true;icaOverlay.hidden=true;winOverlay.hidden=true;document.getElementById('lossOverlay').hidden=true;hurtUntil=0;audio.setCarSpeed(0);audio.setCarActive(false);state.inCar=false;
  carPos.x=carDrive.HOME.x;carPos.y=carDrive.HOME.y;
  state.x=360;state.y=335;state.camX=360;state.camY=335;state.dir='down';
