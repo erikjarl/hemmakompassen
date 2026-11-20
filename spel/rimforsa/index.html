@@ -1264,7 +1264,10 @@ function tick(now){
       }
       if(furthest)state.path.splice(0,furthest);
       let next=state.path[0],d=Math.hypot(next.x-state.x,next.y-state.y);
-      if(d<9){state.path.shift();next=state.path[0];}
+      // En vägpunkt ska inte hoppas över 9 px för tidigt: det kan lämna
+      // Lage framför en smal ingång i stället för på det valda målet.
+      // Tätare ankomstkontroll bevarar samma canStand()-kollisioner.
+      if(d<3){state.path.shift();next=state.path[0];}
       if(next){dx=next.x-state.x;dy=next.y-state.y;}
     }
     const len=Math.hypot(dx,dy);
