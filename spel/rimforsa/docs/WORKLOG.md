@@ -378,3 +378,9 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 - Långhoppsljudet ersätter det normala landningsljudet just vid bonusutdelningen; upprepade långhopp får vanligt landningsljud. Inga ändringar i avståndsberäkning, myntlogik eller sprites.
 - Uppdaterade `audio.js?v=28` och `slide-minigame.js?v=9` i `index.html`; källkopplingar kontrollerade på `main`. Verklig Safari-/mobilavlyssning och visuell speltest inte utförda.
 - Roadmap: LJUD-03 fortfarande öppen, nästa rotation GRAF-01. Bildbaserade åskådare och Maja finns i fotbollsspelet, fyra barn i rutschkanan; ytterligare kodritade figurer behöver inventeras och ersättas vid GRAF-01.
+
+### 2026-11-20 – två Jobb Lage-pass: GRAF-01 och DRAKE-02
+
+- **GRAF-01:** Tidigare genererade Oliver/Saga-figurer bearbetades till transparent 96×96 PNG (2 rader × 3 riktningar, ruta 32×48) och bäddades in i nya `friend-sprites.js`. `npc.js` ritar Oliver och Saga med bildsprites för framåt, vänster/höger och bakåt, med kvarvarande kodritad reserv. `index.html` laddar sprites före `npc.js?v=3`. Bilden är kodinkopplad men ännu inte granskad i verklig mobil-/datorrendering; inget avbockat.
+- **DRAKE-02:** Varningslinjen kompletterades med blinkande pixelmarkerad, låst målpunktsposition för eldklot. Spelhändelser, skadepaus, bränslemackens x-gräns, eldklotsräckvidd och helikopterträff bevaras. `dragon.js?v=10` laddas. Verkligt mobil- och tangentbordsprov återstår; inget avbockat.
+- **Rotation efter andra passet:** senast DRAKE-02, nästa MYNT-03. Fortsatt bildinventering: butikernas kassapersonal och pizzerians bagare kodritade, flera andra figurer återstår att konvertera. Kodkontroller är inte liktydiga med slutanvändartest eller bekräftad GitHub Pages-publicering.
