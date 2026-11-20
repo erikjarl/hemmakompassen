@@ -58,16 +58,36 @@ function draw(ctx,x,y,dir='right',occupied=false){
  if(directionFrame>=0&&directionSpriteReady()&&typeof ctx.drawImage==='function'){
   const smooth=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=false;
   ctx.drawImage(directionSprite,(directionFrame<0?CAR_DIRECTIONS.indexOf('right'):directionFrame)*DIRECTION_FRAME_WIDTH,0,DIRECTION_FRAME_WIDTH,DIRECTION_FRAME_HEIGHT,-48,-40,96,72);
-  // The shared eight-direction sheet has no separate occupied frames.
-  // Overlay Lage in the side window when occupied. Other angles retain their sprite view.
-  if(occupied&&(left||right)){
-   const facing=left?-1:1;
-   ctx.save();ctx.scale(facing,1);
-   rect(5,-15,9,9,'#243b46'); // dark outline inside the front side window
-   rect(6,-14,7,7,'#d9ae86'); // face
-   rect(5,-15,9,3,'#6b482f'); // Lage's brown hair
-   rect(11,-10,1,1,'#24323a'); // eye
-   rect(6,-7,7,2,'#bb5851'); // shirt
+  // The eight image directions share one parked sprite sheet.
+  // Add a tiny Lage in the cockpit only while driving, including the six
+  // front/rear/diagonal directions that previously showed an empty car.
+  if(occupied){
+   ctx.save();
+   if(left||right){
+    const facing=left?-1:1;
+    ctx.scale(facing,1);
+    rect(5,-15,9,9,'#243b46'); // side-window frame
+    rect(6,-14,7,7,'#d9ae86');
+    rect(5,-15,9,3,'#6b482f');
+    rect(11,-10,1,1,'#24323a');
+    rect(6,-7,7,2,'#bb5851');
+   }else{
+    // Keep details inside the common central cockpit area at all angles.
+    // Front-facing (down) directions show eyes, rear-facing (up) hair.
+    const front=dir.startsWith('down');
+    const diagonal=dir.includes('-');
+    const shift=diagonal?(dir.endsWith('right')?3:-3):0;
+    rect(shift-6,-14,12,12,'#293d47');
+    rect(shift-5,-12,10,8,front?'#deb48b':'#70492f');
+    rect(shift-5,-13,10,3,'#70492f');
+    if(front){
+     rect(shift-3,-8,2,2,'#303039');
+     rect(shift+2,-8,2,2,'#303039');
+    }else{
+     rect(shift-3,-7,6,2,'#94613f');
+    }
+    rect(shift-5,-4,10,3,'#b85653');
+   }
    ctx.restore();
   }
   ctx.imageSmoothingEnabled=smooth;ctx.restore();return;
