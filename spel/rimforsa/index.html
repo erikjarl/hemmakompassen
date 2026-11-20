@@ -224,11 +224,35 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
  const farm=window.RimforsaFarm;
  // Skattmynt och intäkter från odling redovisas separat.
  const rewardWallet=(()=>{
-  const key='rimforsa-minigame-coins-v1';let earned={},spent=0;
-  try{const s=JSON.parse(localStorage.getItem(key)||'{}');if(s&&typeof s==='object'){for(const id of Object.keys(s.earned||{}))if(/^(boat|swim|football|slide)-[0-9]+$/.test(id)&&s.earned[id]===true)earned[id]=true;spent=Math.min(Object.keys(earned).length,Math.max(0,Math.floor(Number(s.spent)||0)));}}catch(_){}
+  const key='rimforsa-minigame-coins-v1';
+  const validId=id=>/^(boat|swim|football|slide)-[0-9]+$/.test(id);
+  let earned=Object.create(null),spent=0;
+  // Läs samma sparade plånbok inför varje ändring så en äldre öppen
+  // spelflik inte i onödan skriver över mynt från en nyare flik.
+  function sync(){
+   let raw;
+   try{raw=localStorage.getItem(key);}catch(_){return;}
+   let data=null;
+   try{data=raw?JSON.parse(raw):null;}catch(_){return;}
+   if(data!==null&&(typeof data!=='object'||Array.isArray(data)))return;
+   const next=Object.create(null);
+   if(data&&data.earned&&typeof data.earned==='object'&&!Array.isArray(data.earned)){
+    for(const id of Object.keys(data.earned))if(validId(id)&&data.earned[id]===true)next[id]=true;
+   }
+   earned=next;
+   const count=Object.keys(earned).length;
+   const value=data?Number(data.spent):0;
+   spent=Math.min(count,Number.isFinite(value)?Math.max(0,Math.floor(value)):0);
+  }
+  sync();
   const balance=()=>Object.keys(earned).length-spent;
   const save=()=>{try{localStorage.setItem(key,JSON.stringify({earned,spent}));}catch(_){}};
-  return {balance,award(id){if(!/^(boat|swim|football|slide)-[0-9]+$/.test(id)||earned[id])return false;earned[id]=true;save();return true;},spend(n){if(!Number.isSafeInteger(n)||n<0||n>balance())return false;spent+=n;save();return true;},refund(n){if(!Number.isSafeInteger(n)||n<0||n>spent)return false;spent-=n;save();return true;},clear(){earned={};spent=0;try{localStorage.removeItem(key);}catch(_){}}};
+  return {balance,sync,
+   award(id){if(!validId(id))return false;sync();if(earned[id])return false;earned[id]=true;save();return true;},
+   spend(n){if(!Number.isSafeInteger(n)||n<0)return false;sync();if(n>balance())return false;spent+=n;save();return true;},
+   refund(n){if(!Number.isSafeInteger(n)||n<0)return false;sync();if(n>spent)return false;spent-=n;save();return true;},
+   clear(){earned=Object.create(null);spent=0;try{localStorage.removeItem(key);}catch(_){}}
+  };
  })();
  const awardMinigameCoin=id=>{if(rewardWallet.award(id)){updateCoinScore();return true;}return false;};
  const totalMoney=()=>game.snapshot().balance+rewardWallet.balance()+farm.snapshot().balance;
@@ -564,6 +588,12 @@ function checkPoops(){
  }
  return true;
 }
+// Andra flikar kan ha tilldelat eller använt bonusmynt medan denna var öppen.
+window.addEventListener('storage',event=>{
+ if(event.key!==null&&event.key!=='rimforsa-minigame-coins-v1')return;
+ rewardWallet.sync();
+ updateCoinScore();
+});
 function updateCoinScore(){coinScore.textContent='🪙 '+totalMoney()+' · Hittade '+coinCount+'/'+(coinCount+coins.length)+' · Minispel '+rewardWallet.balance()+' · 🥔 '+farm.snapshot().balance}
 function showTreasureVictory(){
  audio.victory();stop();
