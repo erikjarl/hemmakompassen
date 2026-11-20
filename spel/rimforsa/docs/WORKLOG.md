@@ -308,3 +308,8 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 - `index.html`: drakens och bajskorvarnas skadehantering ignorerar spelaren medan förlustdialogen är öppen. Vid sista hjärtat släpps alla hållna gång-/båtknappar och planerad gångrutt avbryts före befintlig gemensam återställning av kart-/minispels-/potatismynt.
 - Myntregler, föremål, skörd och ljud/grafik är oförändrade. ROADMAP roterad HUV-05 → HUV-06. Inga nya avbockningar, eftersom verklig genomspelning och verifiering efter omladdning fortfarande saknas.
 - Sparat på GitHub main; mobil/dator och Pages-leverans ej kontrollerade.
+
+### 2026-11-20 – Jobb lage, HUV-06 (bajskorvarnas kontrast)
+- `index.html` / `drawPoops()`: mörkare ytterkontur, tydligare brun färgseparation och ljusa kontrastpixlar inom befintliga gränser x=−11…11, y=−15…10. Ingen förstoring, flytt, ny kollision eller ändrad hjärtskada.
+- `ROADMAP.md`: huvuduppgift HUV-06, nästa KARTA-02. Ingen avbockning eftersom visuell jämförelse mot väg/gräs och mobil/datorrendering ännu saknas.
+- Sparat på GitHub main. Verklig grafisk rendering och GitHub Pages-leverans ej verifierade.
