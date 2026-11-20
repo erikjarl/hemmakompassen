@@ -389,6 +389,28 @@
     tone(523.25,t+.12,.10,.023,'square');
     tone(392,t+.23,.16,.018,'sine');
   }
+  // Tre korta originalsyntetiserade gränssnitts-/äventyrsljud.
+  // Används endast när spelaren själv öppnar väska, karta eller båtspel.
+  function bagOpen(){
+    if(!enabled||hidden||!ctx||ctx.state!=='running')return;
+    const t=now()+.01;
+    tone(293.66,t,.09,.029,'triangle');
+    tone(440,t+.075,.12,.031,'sine');
+  }
+  function mapOpen(){
+    if(!enabled||hidden||!ctx||ctx.state!=='running')return;
+    const t=now()+.01;
+    tone(392,t,.09,.025,'square');
+    tone(523.25,t+.08,.12,.028,'triangle');
+    tone(659.25,t+.17,.15,.022,'sine');
+  }
+  function boatLaunch(){
+    if(!enabled||hidden||!ctx||ctx.state!=='running')return;
+    const t=now()+.01;
+    tone(164.81,t,.13,.043,'triangle');
+    tone(196,t+.11,.15,.039,'triangle');
+    tone(261.63,t+.24,.20,.030,'sine');
+  }
   function boatGrounding(){
     if(!enabled||!ctx||hidden||ctx.state!=='running')return;
     const t=now()+.01;
@@ -443,5 +465,5 @@
     }catch(_){speechMusicVolume(volume);return false;}
   }
   function status(){return {enabled,available:!!AudioCtor,contextState:ctx?ctx.state:'not-created',scene,hidden,playingMusic:musicInterval!==null,playingWaves:!!waves,playingEngine:!!engine,playingCarEngine:!!carEngine,carActive,dragonNearby};}
-  root.RimforsaAudio={enable,disable,toggle,resumeFromGesture,setScene,setBoatSpeed,setCarActive,setCarSpeed,setDragonNearby,coin,hit,poop,victory,slideLaunch,slideLand,sharkBump,purchase,fuelFill,boatGrounding,carEnter,itemFound,helicopterHit,footballKick,footballSave,footballGoal,boatTreasure,speak,stopSpeech,setVisible,status};
+  root.RimforsaAudio={enable,disable,toggle,resumeFromGesture,setScene,setBoatSpeed,setCarActive,setCarSpeed,setDragonNearby,coin,hit,poop,victory,slideLaunch,slideLand,sharkBump,purchase,fuelFill,boatGrounding,carEnter,itemFound,helicopterHit,footballKick,footballSave,footballGoal,boatTreasure,bagOpen,mapOpen,boatLaunch,speak,stopSpeech,setVisible,status};
 })(window);
