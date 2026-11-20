@@ -161,7 +161,8 @@
   // Starta om schemalagda loopar först när ljudmotorn faktiskt kör igen.
   function onContextStateChange(){
     if(!ctx)return;
-    resumePending=false;
+    // Behåll resumePending tills det pågående resume()-löftet har avslutats.
+    // En statechange till interrupted/suspended får inte starta flera samtidiga resume-anrop.
     if(ctx.state==='running'){
       // Starta bara om om ingen aktiv scen finns; både resume() och enable()
       // kan ge en statechange på iOS, ibland efter att ljudet redan startat.
@@ -175,9 +176,16 @@
   }
   function ensureContext(){
     if(!AudioCtor)return false;
+    // Safari kan stänga en gammal AudioContext efter längre app-/flikpaus.
+    // En stängd kontext kan aldrig återupptas; skapa då en ny vid nästa användargest.
+    if(ctx&&ctx.state==='closed'){
+      stopScene();
+      ctx.onstatechange=null;
+      ctx=null;master=null;resumePending=false;
+    }
     if(!ctx){
       ctx=new AudioCtor();
-      master=gain(volume);master.connect(ctx.destination);
+      master=gain(enabled?volume:0);master.connect(ctx.destination);
       ctx.onstatechange=onContextStateChange;
     }
     return true;
@@ -186,8 +194,11 @@
   // Inga försök att kringgå webbläsarens krav på användargest.
   function resumeFromGesture(){
     if(!enabled||hidden||!ctx)return false;
-    if(ctx.state==='running')return true;
-    if(ctx.state==='closed'||resumePending)return false;
+    if(ctx.state==='closed'){
+      try{if(!ensureContext())return false;}catch(_){return false;}
+    }
+    if(ctx.state==='running'){startScene();return true;}
+    if(resumePending)return false;
     try{
       resumePending=true;
       const pending=ctx.resume();
