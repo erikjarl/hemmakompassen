@@ -1,5 +1,7 @@
 # Lage i Rimforsa – historisk arbetslogg
 
+- **2026-11-20 – Jobb lage / KARTA-02:** Förbättrade kartans pekstyrda ruttföljning med `canWalkStraight()` i `index.html`. Ruttens mellanpunkter kan hoppas över när hela segmentet ligger inom samma giltiga gångmask, provat var 2 px och med högst 90 px genväg. Vägar, vatten, byggnader, kollisioner, manuell styrning och kartgrafik är oförändrade. Uppdaterade roadmapens rotation till FORDON-02. Filerna är sparade på `main`; verklig genomspelning vid viktiga vägpassager på mobil och dator återstår, så KARTA-02 är fortsatt öppen.
+
 - **2026-11-20 – Jobb lage / HUV-06:** Lade till tio pixelrektanglar för tydligare ljus vänster-/överkant, mörk höger-/underkant och veck på bajskorvarnas sprite i `index.html`. Alla nytillkomna pixlar ryms inom ursprungliga 23×26 px; placering, antal, kollisionsradie och hjärtskada är oförändrade. Sparat på `main`; ingen visuell granskning mot gräs och väg i verklig mobil- eller datorwebbläsare har genomförts. Uppgiften förblir öppen; nästa KARTA-02.
 
 - **2026-11-20 – Jobb lage / HUV-05:** Ny fokuserad förlustdialog i `index.html` visar förlorat myntantal och nollställt saldo efter sista hjärtat, och låter spelaren återuppta med en tydlig knapp. Spelstyrning pausas medan dialogen är öppen. Befintliga reset-anrop för huvudkartan, minispelsmynt och potatismynt samt bibehållen väska/skörd är oförändrade. Ändringen committad på `main`, men webbläsartest och omladdningstest återstår; därför fortsatt öppen. Nästa rotation HUV-06.
