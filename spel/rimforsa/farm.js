@@ -50,11 +50,45 @@ function drawField(){
   const x=i*42-10;rect(x,60+(i%3)*6,42,84,'#457b57');rect(x+5,43+(i%3)*6,32,41,'#39714c');rect(x+13,28+(i%3)*5,18,27,'#589367');
  }
  rect(0,148,480,140,'#76a04d');rect(0,198,480,90,'#649244');
+ // Skuggade SNES-inspirerade trädkronor, stammar och små ljusglimtar bakom staketet.
+ for(let i=0;i<11;i++){
+  const x=i*48-12,top=32+(i%3)*7;
+  rect(x+16,top+40,9,61,'#473b30');
+  rect(x+19,top+43,3,53,'#896b48');
+  rect(x+2,top+13,38,34,'#2d6048');
+  rect(x+7,top+7,29,35,'#367453');
+  rect(x+13,top+2,20,16,'#4c9164');
+  rect(x+6,top+20,12,5,'#67a776');
+  rect(x+23,top+11,8,4,'#82bd89');
+  rect(x+28,top+37,8,5,'#214d3c');
+ }
+ // Fint pixelraster i gräset: varierade strån och stenar, aldrig mjuk suddighet.
+ for(let i=0;i<54;i++){
+  const x=(i*83+17)%480,y=180+(i*37)%108;
+  if(x>53&&x<424&&y>183)continue; // Spara odlingsytan.
+  rect(x,y,3,5,i%3===0?'#b2c87a':'#4f853e');
+  rect(x+4,y+2,2,3,'#3e7646');
+ }
+ for(const [x,y] of [[19,208],[35,251],[451,205],[463,277],[8,278]]){
+  rect(x,y+5,13,4,'#4c7045');
+  rect(x+2,y,10,6,'#849285');
+  rect(x+4,y,6,2,'#c4c8a0');
+ }
+
  // Staket och gärdsgård, helt i originalritade pixelblock.
  for(let i=0;i<9;i++){const x=i*62+2;rect(x,137,8,60,'#77543a');rect(x+2,139,3,46,'#bd9360')}
  rect(0,148,480,10,'#a67a4b');rect(0,172,480,8,'#946e46');
  // Väldefinierat jordland med tre separata potatisfåror.
  rect(63,185,354,95,'#5b3d2c');rect(69,191,342,81,'#78523a');
+ // Kantpixlar och jordkorn gör fårorna lika detaljrika som huvudkartans mark.
+ rect(63,185,354,4,'#382a24');rect(69,191,342,3,'#a1744d');
+ rect(63,185,4,95,'#3d2e25');rect(413,189,4,91,'#3d2e25');
+ for(let i=0;i<75;i++){
+  const x=78+(i*53)%322,y=197+(i*29)%72;
+  rect(x,y,3,2,i%4===0?'#be8e58':i%4===1?'#a0714c':'#4e3428');
+  if(i%5===0)rect(x+5,y+3,2,2,'#d1aa73');
+ }
+
  for(let row=0;row<3;row++){
   const yy=208+row*23;rect(77,yy,326,8,'#442e25');rect(77,yy+8,326,3,'#a6774c');
   for(let j=0;j<7;j++){
