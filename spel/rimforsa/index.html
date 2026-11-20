@@ -428,12 +428,11 @@ boatChart.addEventListener('load',()=>{
 boatChart.addEventListener('error',()=>{boatTip.textContent='Kunde inte ladda båtkartan. Ladda om sidan.';});
 for(const [image,label] of [[tiles,'kartan'],[maskImage,'gångbarhetskartan']])image.addEventListener('error',()=>{message.textContent='Kunde inte ladda '+label+'. Försök uppdatera sidan.'});
 function freePoint(x,y){if(!collision||x<8||y<8||x>=W-8||y>=H-8)return false;const px=Math.floor(x*maskW/W),py=Math.floor(y*maskH/H);const i=(py*maskW+px)*4;return collision[i]>200}
-// Keep Lage's position on the original land mask, but allow his feet to use more
-// of each narrow path. Only the invisible hitbox is reduced; water, buildings,
-// stones and other masked-out terrain still block movement.
+// Smalare osynlig fot-hitbox: mittpunkten och fötterna måste vara maskgodkända.
+// Bild, markmask och byggnads-/vattenhinder ändras inte.
+const WALK_FOOT_SAMPLES=[[0,1],[0,-1],[-1,-2],[1,-2],[0,-3]];
 function canStand(x,y){
- return freePoint(x,y+1)&&freePoint(x,y-2)&&
-        freePoint(x-2,y-2)&&freePoint(x+2,y-2)&&freePoint(x,y-4);
+ return WALK_FOOT_SAMPLES.every(([ox,oy])=>freePoint(x+ox,y+oy));
 }
 // A distance-to-wall field is generated once from the existing walkability mask.
 // Its gradient gently guides manual input along road edges WITHOUT making houses, water or forest walkable.
@@ -452,8 +451,8 @@ function buildEdgeDistance(){
 }
 function edgeClearance(x,y){
  if(!edgeDistance)return 0;
- let d=1e5;const pts=[[0,1],[0,-2],[-2,-2],[2,-2],[0,-4]];
- for(const [ox,oy] of pts){const px=Math.floor((x+ox)*maskW/W),py=Math.floor((y+oy)*maskH/H);
+ let d=1e5;
+ for(const [ox,oy] of WALK_FOOT_SAMPLES){const px=Math.floor((x+ox)*maskW/W),py=Math.floor((y+oy)*maskH/H);
    if(px<0||py<0||px>=maskW||py>=maskH)return 0;
    d=Math.min(d,edgeDistance[py*maskW+px]);
  }
@@ -990,7 +989,8 @@ window.addEventListener('keydown',ev=>{const dir=inputMap[ev.key];if(isBoatOpen(
 window.addEventListener('keyup',ev=>{let dir=inputMap[ev.key];if(!dir)return;if(isBoatOpen())boatKeys[dir]=false;else keys[dir]=false});
 function resize(){const r=canvas.getBoundingClientRect(),ratio=Math.min(1,450/Math.max(1,r.width));canvas.width=Math.round(Math.max(265,r.width*ratio));canvas.height=Math.round(Math.max(240,r.height*ratio));ctx.imageSmoothingEnabled=false}resize();window.addEventListener('resize',resize);
 // A* makes tapping anywhere on a street route around buildings instead of trying to walk through them.
-const STEP=8,NX=Math.ceil(W/STEP),NY=Math.ceil(H/STEP),MAX=NX*NY;
+// Finare ruttgrid så smala öppningar i vägmasken inte tappas mellan 8px-celler.
+const STEP=6,NX=Math.ceil(W/STEP),NY=Math.ceil(H/STEP),MAX=NX*NY;
 function walkCell(cx,cy){return cx>=1&&cy>=1&&cx<NX-1&&cy<NY-1&&canStand((cx+.5)*STEP,(cy+.5)*STEP)}
 function closestWalkable(tx,ty){const startX=Math.max(1,Math.min(NX-2,Math.floor(tx/STEP))),startY=Math.max(1,Math.min(NY-2,Math.floor(ty/STEP)));if(walkCell(startX,startY))return[startX,startY];for(let d=1;d<=18;d++){let best=null,bestDistance=Infinity;for(let yy=startY-d;yy<=startY+d;yy++)for(let xx=startX-d;xx<=startX+d;xx++){if(Math.abs(xx-startX)!==d&&Math.abs(yy-startY)!==d)continue;if(walkCell(xx,yy)){const v=(xx*STEP-tx)**2+(yy*STEP-ty)**2;if(v<bestDistance){best=[xx,yy];bestDistance=v}}}if(best)return best}return null}
 function pathTo(x,y){if(!maskLoaded)return [];const s=closestWalkable(state.x,state.y),t=closestWalkable(x,y);if(!s||!t)return [];
