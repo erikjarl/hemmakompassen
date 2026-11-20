@@ -398,3 +398,9 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 - `restartAfterGameOver()` uppdaterar bonusplånboken från sparat läge precis före förlustredovisningen, så sent inkomna bonusmynt inte missas i visad redovisning. Den existerande `stop()`-funktionen visade sig redan rensa både gång-/båtknapparnas held-klasser; ingen dubbel ändring gjordes.
 - Kartmynt, bonusmynt och potatisinkomster nollställs fortsatt med tidigare mekanik; sparade föremål, skörd och växande potatis lämnas oförändrade. Källkod inspekterad, men faktisk död, omladdning, mobil-/datorprov och tvåflikstester återstår. HUV-05 fortsatt öppen. Nästa rotation HUV-06.
 - Bildinventering: butikspersonal och pizzabagare är fortsatt kodritade; bildspritearbete återkommer i nästa GRAF-01-pass.
+
+### 2026-11-20 – HUV-06: tydligare spiralveck i bajskorvar
+
+- Sex små pixelrektanglar ger tre spiralnivåer tydligare ljus-/mörkseparation. Samtliga ligger innanför ursprunglig 23×26 px-yta; ingen ändrad storlek, kollisionsradie, hinderplacering eller hjärtskada.
+- `index.html` ändrad på main; källa och kontrastpositioner kodgranskade. Bildjämförelse på gräs/väg i verklig mobil och dator återstår. HUV-06 öppen; nästa rotationsposition KARTA-02.
+- Stående spriteinventering: ICA:s kassapersonal och pizzerians bagare återstår fortfarande som kodritade figurer. Inga nya bildgenererade figurer integrerades i detta pass.
