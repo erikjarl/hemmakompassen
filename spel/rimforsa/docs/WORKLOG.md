@@ -313,3 +313,5 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 - `index.html` / `drawPoops()`: mörkare ytterkontur, tydligare brun färgseparation och ljusa kontrastpixlar inom befintliga gränser x=−11…11, y=−15…10. Ingen förstoring, flytt, ny kollision eller ändrad hjärtskada.
 - `ROADMAP.md`: huvuduppgift HUV-06, nästa KARTA-02. Ingen avbockning eftersom visuell jämförelse mot väg/gräs och mobil/datorrendering ännu saknas.
 - Sparat på GitHub main. Verklig grafisk rendering och GitHub Pages-leverans ej verifierade.
+
+- **2026-11-20 – Jobb lage / KARTA-02:** Huvudkartans fotkollision använder nu tre kompakt placerade maskprover (mittpunkt och två sidoprover) i stället för fem. Ingen maskdilatering görs och ingen bildgrafik ändras; hus/vatten ska fortsatt vara blockerade enligt masken. Källa kodgranskad, faktisk spelning på mobil och dator samt väg- och entrékontroller återstår. Stående spriteprioritet granskad men ingen ny bild genererades eller integrerades i detta pass. Rotation framflyttad till FORDON-02.
