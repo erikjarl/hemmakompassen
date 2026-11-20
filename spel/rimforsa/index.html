@@ -1001,6 +1001,9 @@ interact.addEventListener('click',()=>{
  state.messageLocked=true;title.textContent=near.name;interact.textContent='Besök igen ✨';
 });
 function restartAfterGameOver(cause){
+ // Flera skadehändelser kan inträffa inom samma frame. Genomför bara
+ // en återställning tills spelaren bekräftat förlustdialogen.
+ if(!document.getElementById('lossOverlay').hidden)return;
  if(audio.gameOver)audio.gameOver();
  const lostCoins=totalMoney();
  // Släpp kvarhållna styrknappar innan omstart och förlustdialog.
@@ -1009,7 +1012,7 @@ function restartAfterGameOver(cause){
  clearPath();
  stop();
  reset({clearMoney:true});
- // Gemensam nollställning av kartmynt, båt-/dyk-/fotbollsmynt och potatisintäkter.
+ // Gemensam nollställning av kartmynt, båt-/dyk-/fotbolls-/rutschkanemynt och potatisintäkter.
  // Ingen återställning av väska, skörd eller pågående potatisodling.
  updateCoinScore();
  coinNoticeUntil=performance.now()+4300;
@@ -1017,7 +1020,7 @@ function restartAfterGameOver(cause){
  document.getElementById('lossSummary').textContent='Lage förlorade '+lostCoins+' mynt. Den nya skattjakten börjar hemma med '+remainingCoins+' mynt.';
  document.getElementById('lossOverlay').hidden=false;
  document.getElementById('closeLoss').focus();
- message.innerHTML='<strong>💔 Alla hjärtan tog slut!</strong> '+(cause==='draken'?'Draken':cause==='båten'?'Ett grund i båtspelet':'Bajskorvarna')+' tog det sista hjärtat. Lage förlorade '+lostCoins+' mynt och börjar om hemma med 0 mynt. Samla nya mynt och försök igen!';
+ message.innerHTML='<strong>💔 Alla hjärtan tog slut!</strong> '+(cause==='draken'?'Draken':cause==='båten'?'Ett grund i båtspelet':'Bajskorvarna')+' tog det sista hjärtat. Lage förlorade '+lostCoins+' mynt och börjar om hemma med '+remainingCoins+' mynt. Samla nya mynt och försök igen!';
 }
 function reset({clearMoney=true}={}){
   // Loading the page must preserve earned minigame coins.
