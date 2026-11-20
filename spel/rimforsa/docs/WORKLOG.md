@@ -219,3 +219,8 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 - Tre nya, korta originalsyntetiserade ljudeffekter i `audio.js`: `carEnter`, `itemFound`, `helicopterHit`. Integrerade vid bilinsteg, första fyndet av föremål i väskan och drakeldens träff på helikoptern. Effekter kräver aktiv, synlig, upplåst WebAudio-kontext. `audio.js?v=16`.
 - Åtgärdade separat liten tidsbugg i helikopterns träffanimation (`helicopter.js?v=2`): skadeindikatorn använder 1,1 sekunders nedräkning i stället för absolut tidsstämpel. Isolerad körning visade aktiv efter 0,5 s och inaktiv efter 1,11 s.
 - Syntaxkontroll utan fel i ljudmotor, helikoptermodul och inline-JavaScript. Ingen faktisk avlyssning eller spelgenomgång på mobil; LJUD-03 fortsatt öppen. Nästa rotation LJUD-04 om hörselprov är möjligt, annars GRAF-02. Inga nya kryss utan relevant verifiering.
+
+### 2026-11-20 – Jobb lage, GRAF-01
+- Rutschkanans förskolemiljö kompletterad med klätterställning, sandlåda, spade och hink i skarp pixelgrafik. Oförändrad spelmekanik, återanvänd Lage-sprite och samma canvas.
+- Ändrad `slide-minigame.js`, därefter uppdaterad `ROADMAP.md` (senast GRAF-01, nästa SPORT-01). Ingen öppen uppgift markerades färdig eftersom de återstående acceptansvillkoren inte är verifierade.
+- Källkodsändringen inskickad till main via GitHub. Faktisk mobil-/datorrendering, avlyssning och publicerad Pages-version är inte verifierade.
