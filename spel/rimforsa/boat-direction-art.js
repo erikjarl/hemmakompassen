@@ -22,6 +22,16 @@ function make(dir){
  drawShape(g,[point(-34,-10),point(-24,-17),point(16,-17),point(34,-4),point(34,4),point(16,17),point(-24,17),point(-34,10)],palette.shadow);
  drawShape(g,[point(-32,-9),point(-22,-15),point(15,-15),point(31,-3),point(31,3),point(15,15),point(-22,15),point(-32,9)],palette.white);
  drawShape(g,hull(-19,17,10,9),palette.deck);
+ // Samma reling och infällda skuggfogar på babord/styrbord i samtliga vyer.
+ // Små kvadratiska pixelpunkter följer båtens koordinater, inte en roterad bitmap.
+ for(const side of [-1,1]){
+  drawShape(g,[point(-26,side*15),point(14,side*15),point(17,side*13),point(-25,side*13)],'#e0e6dd');
+  drawShape(g,[point(-20,side*12),point(5,side*12),point(7,side*11),point(-19,side*11)],'#798d94');
+  for(const along of [-22,-7,8]){
+   const [rx,ry]=point(along,side*15);
+   g.fillStyle='#fefdf1';g.fillRect(Math.round(rx)-1,Math.round(ry)-1,3,3);
+  }
+ }
  // Fören i blankvit plast, med en liten ljusreflex nära spetsen.
  drawShape(g,[point(15,-13),point(31,-3),point(31,3),point(15,13),point(19,0)],palette.light);
  // Aktermonterad motor och propellerblock – samma position oavsett riktning.
@@ -31,6 +41,17 @@ function make(dir){
  drawShape(g,hull(-23,3,11,10),'#385c68');
  drawShape(g,hull(0,10,12,11),palette.glass);
  drawShape(g,hull(6,10,10,8),palette.glint);
+ // Vindrutans distinkta metallram och två glansstråk som följer förens riktning.
+ drawShape(g,[point(1,-12),point(4,-12),point(4,12),point(1,12)],'#283f4b');
+ drawShape(g,[point(5,-10),point(6,-10),point(6,10),point(5,10)],'#e9f0e8');
+ for(const side of [-1,1]){
+  const [lx,ly]=point(17,side*13);
+  // Grön styrbordslanterna, röd babordslanterna – samma placering i alla vyer.
+  g.fillStyle=side>0?'#44bc85':'#e75b55';
+  g.fillRect(Math.round(lx)-2,Math.round(ly)-2,4,4);
+  g.fillStyle='#233c44';
+  g.fillRect(Math.round(lx)-2,Math.round(ly)+1,4,1);
+ }
  drawShape(g,hull(-20,-9,8,7),palette.seat);
  // Lage vid styrplatsen. Ansiktet har hår, hud, ögon och tröja i pixelrutor.
  const [hx,hy]=point(-13,2);
