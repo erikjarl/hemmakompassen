@@ -254,3 +254,8 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 - `index.html`/`slideMove()`: vid blockerad direkt rörelse och misslyckad vanlig kantglidning provas ett litet sidosteg (0,75, 1,5 eller 2,25 px). Vardera delsteg samt efterföljande rörelse godkänns mot befintlig `canStand()`-mask. Avsikten är att passera små ojämnheter utan att släppa igenom förbjuden mark.
 - Ingen förändring av vägarnas utseende, gångbarhetsmask, NPC-rutter eller fart. ROADMAP senast KARTA-02, nästa FORDON-02. Status fortsatt öppen; faktisk genomspelning vid vatten, byggnader, vägkanter och entréer krävs för att bekräfta beteendet.
 - Ändringar sparade på GitHub main och textmässigt kontrollerade. Pages och mobilfunktion ej verifierade.
+
+### 2026-11-20 – Jobb lage, FORDON-02 (motorbåtens åtta riktningsvyer)
+- `boat-direction-art.js`: originalritade, konsekventa relingskanter och skuggfogar på båda sidor, små fästen, tydligare vindruteram samt röda/gröna navigationsljus som följer båtens lokala riktning i samtliga åtta genererade vinklar. Befintlig motor, kaross, Lage-sprite, rörelsefysik och vattenkollision oförändrade.
+- `index.html` använder `boat-direction-art.js?v=2` för att inte fastna på äldre cachad kod. `ROADMAP.md`: senast FORDON-02, nästa LJUD-02.
+- Källkoden sparades på GitHub main och kontrollerades efter uppdatering; verklig visuell jämförelse av alla åtta vyerna i mobil/dator och GitHub Pages-servad version ännu inte verifierade. FORDON-02 kvarstår öppen, inga uppgifter avbockade.
