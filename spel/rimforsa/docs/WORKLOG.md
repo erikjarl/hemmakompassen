@@ -1,5 +1,10 @@
 # Lage i Rimforsa – historisk arbetslogg
 
+### 2026-11-21 – Jobb lage, FORDON-02 (kupéfönster i åtta riktningar)
+- `car.js`: Begränsade den befintliga kodritade Lage-detaljen med `ctx.clip()` till fönsterytan för sidovy och övriga bilriktningar. Tak och kaross täcks därmed inte av förarens hår/ansikte/tröja när riktningsbilden används. Bilspritesheet, färdriktningar, fart och kollisionsregler oförändrade.
+- Kodcommit `6f6444f`; roadmapcommit `656d72a`. Verifierat genom återläsning av källfilen på main, inte med faktisk Canvas-rendering, mobil/Safari eller jämförelse mellan åtta vyer. Båtens riktningsvyer återstår. FORDON-02 fortsatt öppen. Nästa rotation LJUD-02.
+
+
 ### 2026-11-21 – Jobb lage, KARTA-02 (gångruttens A*-sökning)
 - Ändrat A*-sökningens stoppvillkor så att endast unika undersökta kartceller, inte inaktuella dubbletter i prioritetskön, räknas mot MAX. Det minskar risken för att gångrutter avbryts för tidigt på svårare kartsträckor.
 - Gångmask, diagonalspärrar, hinder, vägarnas synliga grafik och styrning har inte ändrats. Ändringen är sparad på main i kodcommit `4e8bde9` och dokumenterad i roadmapcommit `4c0c120`.
