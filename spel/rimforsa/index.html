@@ -1101,7 +1101,17 @@ function pathTo(x,y){
 const start=s[1]*NX+s[0],goal=t[1]*NX+t[0],prev=new Int32Array(MAX).fill(-1),dist=new Float32Array(MAX).fill(Infinity),seen=new Uint8Array(MAX);let heap=[];const push=(id,cost)=>{let i=heap.length;heap.push([cost,id]);while(i){const p=(i-1)>>1;if(heap[p][0]<=cost)break;heap[i]=heap[p];i=p}heap[i]=[cost,id]};const pop=()=>{let top=heap[0],last=heap.pop();if(heap.length){let i=0;while(true){let c=i*2+1;if(c>=heap.length)break;if(c+1<heap.length&&heap[c+1][0]<heap[c][0])c++;if(last[0]<=heap[c][0])break;heap[i]=heap[c];i=c}heap[i]=last}return top[1]};
 dist[start]=0;push(start,0);let reached=false,expanded=0;const moves=[[1,0,1],[-1,0,1],[0,1,1],[0,-1,1],[1,1,1.414],[-1,1,1.414],[1,-1,1.414],[-1,-1,1.414]];
 while(heap.length&&expanded++<MAX){const id=pop();if(seen[id])continue;seen[id]=1;if(id===goal){reached=true;break}const cx=id%NX,cy=(id/NX)|0;for(const [dx,dy,cost] of moves){const nx=cx+dx,ny=cy+dy;if(!walkCell(nx,ny))continue;if(dx&&dy&&(!walkCell(cx+dx,cy)||!walkCell(cx,cy+dy)))continue;let nid=ny*NX+nx,nd=dist[id]+cost;if(nd>=dist[nid])continue;prev[nid]=id;dist[nid]=nd;const h=Math.hypot(t[0]-nx,t[1]-ny);push(nid,nd+h)}}
-if(!reached)return [];let ids=[];for(let i=goal;i!==-1;i=prev[i])ids.push(i);ids.reverse();return ids.slice(1).map(id=>({x:((id%NX)+.5)*STEP,y:((((id/NX)|0)+.5)*STEP)}))}
+if(!reached)return [];
+let ids=[];for(let i=goal;i!==-1;i=prev[i])ids.push(i);ids.reverse();
+const route=ids.slice(1).map(id=>({x:((id%NX)+.5)*STEP,y:((((id/NX)|0)+.5)*STEP)}));
+// Rutnätet ger en säker väg runt hinder, men slutpunkten ska vara spelarens
+// utpekade position när även sista sträckan är helt gångbar.
+// Utan detta stannar Lage vid sista rutcellens mitt, ofta före en entré.
+const last=route.length?route[route.length-1]:{x:state.x,y:state.y};
+if(canStand(x,y)&&canWalkStraight(last.x,last.y,x,y)&&Math.hypot(last.x-x,last.y-y)>1){
+ route.push({x,y});
+}
+return route;}
 // Ruttföljning får bara hoppa över rutnoder när HELA sträckan är gångbar.
  // Tät sampling behåller hus, stenar, skog och vatten som hinder även i snäva kurvor.
 function canWalkStraight(x1,y1,x2,y2){
