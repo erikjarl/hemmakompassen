@@ -118,6 +118,40 @@ function render(){
  ctx.fillStyle='#dbbe81';ctx.fillRect(64,200,152,9);
  for(let n=0;n<18;n++){ctx.fillStyle=n%2?'#a78b5d':'#f0d59c';ctx.fillRect(69+n*8,204+(n%3)*2,4,2);}
 
+ // Detaljerad lekplatsutrustning bakom barnen, ritad i samma skarpa pixelskala.
+ // Den lilla klätterställningen ligger utanför rutschkanans start och landningszon.
+ ctx.fillStyle='#354e40';ctx.fillRect(245,190,67,5);
+ ctx.fillStyle='#735037';ctx.fillRect(250,139,7,53);ctx.fillRect(297,139,7,53);
+ ctx.fillStyle='#b7814a';ctx.fillRect(248,137,58,7);
+ ctx.fillStyle='#e3b56d';ctx.fillRect(252,138,50,3);
+ ctx.fillStyle='#315d6b';ctx.fillRect(261,145,6,42);ctx.fillRect(287,145,6,42);
+ ctx.fillStyle='#6599a5';ctx.fillRect(263,147,2,35);ctx.fillRect(289,147,2,35);
+ ctx.fillStyle='#d69a54';ctx.fillRect(266,176,22,6);
+ ctx.fillStyle='#f0c67a';ctx.fillRect(269,176,15,2);
+ // Stegar, skuggade klättergrepp och mörka skruvfästen.
+ for(let n=0;n<4;n++){
+  const yy=151+n*9;
+  ctx.fillStyle='#c18c58';ctx.fillRect(251,yy,51,3);
+  ctx.fillStyle='#efc47b';ctx.fillRect(255,yy,43,1);
+  ctx.fillStyle='#4f4537';ctx.fillRect(252,yy+1,2,2);ctx.fillRect(298,yy+1,2,2);
+ }
+ // Liten pixlad sandlåda med hörnstolpar och varierande sand, bakom barnen.
+ ctx.fillStyle='#624a33';ctx.fillRect(335,182,105,19);
+ ctx.fillStyle='#d3ae70';ctx.fillRect(340,184,95,12);
+ ctx.fillStyle='#e6c783';ctx.fillRect(344,185,84,6);
+ ctx.fillStyle='#9e7147';ctx.fillRect(333,180,9,24);ctx.fillRect(433,180,9,24);
+ ctx.fillStyle='#f5d28c';ctx.fillRect(334,180,7,3);ctx.fillRect(434,180,7,3);
+ for(let n=0;n<17;n++){
+  const sx=346+n*5,sy=188+(n*7)%7;
+  ctx.fillStyle=n%3===0?'#957548':'#f0daa4';ctx.fillRect(sx,sy,2,2);
+ }
+ // Sandspade och hink i konsekvent, konturskarp pixelgrafik.
+ ctx.fillStyle='#493c30';ctx.fillRect(385,177,4,12);
+ ctx.fillStyle='#d15f48';ctx.fillRect(382,185,11,8);
+ ctx.fillStyle='#f49b65';ctx.fillRect(384,186,7,3);
+ ctx.fillStyle='#4f7a8b';ctx.fillRect(408,179,3,12);
+ ctx.fillStyle='#8ec4c4';ctx.fillRect(405,188,9,4);
+
  // Förskolekompisar i bakgrunden: originalritade pixelbarn, utan kollisioner.
  // Figurerna är statiska så att den laddade flygrörelsen förblir tydlig.
  function drawPreschoolFriend(cx,ground,shirt,hair,skin,pose){
