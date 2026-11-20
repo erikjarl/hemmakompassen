@@ -293,3 +293,8 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 - `farm.js`: förstärkt 480×288-bakgrunden med flera nyanser i träd, stammar och blad, gräspixlar, stenar och små jordkorn. Fårorna och potatisens fyra växtstadier ligger kvar över jordlagret. Inga ändringar i skörd, timer eller localStorage.
 - `index.html` laddar `farm.js?v=3`. ROADMAP roterad GRAF-01 → DRAKE-02. Ingen punkt avbockad; GRAF-01 omfattar fler scener och mobil-/datorskärmbilder kvarstår.
 - Commit sparad på main. Renderad visuell kontroll och faktisk GitHub Pages-leverans inte verifierade.
+
+### 2026-11-20 – Jobb lage, DRAKE-02 (eldklotens sikte)
+- `dragon.js`: projektilernas riktning beräknas nu från mynningens faktiska koordinater (x+28, y−7), samma position som eldkloten skapas vid och varningslinjen ritas från. Före detta pass riktades hastigheten från drakens mitt, vilket kunde ge sned bana till målet.
+- `index.html`: uppdaterat till `dragon.js?v=5`. Ingen ändring av skaderadie, skadepaus, drakens patrull, helikopter eller världskollisioner.
+- ROADMAP uppdaterad DRAKE-02 → MYNT-03. Ingen avbockning: faktisk spelning och visuell/skademässig kontroll i mobil och dator saknas. Ändringar sparade på main; Pages leverans ej kontrollerad.
