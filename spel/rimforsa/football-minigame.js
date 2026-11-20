@@ -7,6 +7,8 @@ const W=480,H=300,keys={up:false,down:false,left:false,right:false};
 const player={x:115,y:215,dx:1,dy:0},ball={x:205,y:170,vx:0,vy:0};
 let goals=0,kicks=0,goalFlash=0,majaY=206,lageImage=null;
 const spectatorSprites=root.RimforsaPreschoolFriendsSprite||null;
+const majaSprite=root.RimforsaMajaSprite||null;
+if(majaSprite)majaSprite.addEventListener('load',()=>{if(overlay&&!overlay.hidden)render();});
 // Fyra tidigare bildgenererade 32×32-barn används som publik, inte kodritade personer.
 if(spectatorSprites)spectatorSprites.addEventListener('load',()=>{if(overlay&&!overlay.hidden)render();});
 const MAX_GOAL_COINS=3;
@@ -55,7 +57,7 @@ function sprite(x,y,row,frame=0){
   ctx.drawImage(lageImage,frame*56,row*56,56,56,Math.round(x-22),Math.round(y-45),44,44);
  else{rect(x-9,y-36,18,15,'#e5b58d');rect(x-10,y-40,20,6,'#725133');rect(x-11,y-20,22,17,'#b95d55');rect(x-8,y-3,6,7,'#2c4045');rect(x+2,y-3,6,7,'#2c4045');}
 }
-function drawMaja(x,y){
+function drawMajaFallback(x,y){
  rect(x-13,y-3,27,4,'#526b50');
  rect(x-11,y-17,9,18,'#3e5977');rect(x+3,y-17,9,18,'#3e5977');
  rect(x-14,y-38,28,23,'#9a5cb9');rect(x-19,y-34,5,17,'#e2ac84');rect(x+15,y-37,6,20,'#e2ac84');
@@ -63,6 +65,14 @@ function drawMaja(x,y){
  rect(x-14,y-54,5,15,'#603b31');rect(x+10,y-54,5,12,'#603b31');
  rect(x-5,y-47,3,3,'#302c2b');rect(x+5,y-47,3,3,'#302c2b');rect(x-2,y-41,6,2,'#b4776a');
  rect(x+18,y-61,7,5,'#e2ac84');
+}
+function drawMaja(x,y){
+ // Originalgenererat fyrariktningars spritesheet, 48×56 per ruta.
+ // Främre vyn används medan Maja vaktar målet.
+ // Tidigare pixelritning fungerar som reserv vid bildfel.
+ if(majaSprite&&majaSprite.complete&&majaSprite.naturalWidth===192&&majaSprite.naturalHeight===56){
+  ctx.drawImage(majaSprite,0,0,48,56,Math.round(x-24),Math.round(y-60),48,56);
+ }else drawMajaFallback(x,y);
 }
 function drawSpectators(){
  // Publiken står på den bortre läktarkanten. Ingen kollision eller spelmekanik ändras.
