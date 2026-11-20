@@ -16,14 +16,18 @@
    // Förvarningen använder samma mål som avfyrningen.
    const aimAtHelicopter=!!helicopter&&(shotId%3===0||Math.hypot(playerX-x,playerY-y)>430);
    const target=aimAtHelicopter?helicopter:{x:playerX,y:playerY};
-   const distance=Math.hypot(target.x-x,target.y-y);
+   // Samma mynning används för varningslinje, skottets start och dess riktning.
+   // Tidigare beräknades hastigheten från drakens mitt, vilket gav ett snett skott.
+   const mouthX=x+28,mouthY=y-7;
+   const dx=target.x-mouthX,dy=target.y-mouthY;
+   const distance=Math.hypot(dx,dy);
    const withinRange=distance>35&&distance<(aimAtHelicopter?780:430);
    warningTarget=shotTimer>0&&shotTimer<=.65&&withinRange?{x:target.x,y:target.y}:null;
    if(shotTimer<=0){
     shotTimer=2.7;warningTarget=null;
     if(withinRange){
      const speed=165;
-     shots.push({id:'dragon-fire-'+(++shotId),x:x+28,y:y-7,vx:(target.x-x)/distance*speed,vy:(target.y-y)/distance*speed,life:5});
+     shots.push({id:'dragon-fire-'+(++shotId),x:mouthX,y:mouthY,vx:dx/distance*speed,vy:dy/distance*speed,life:5});
     }
    }
    for(let k=shots.length-1;k>=0;k--){
