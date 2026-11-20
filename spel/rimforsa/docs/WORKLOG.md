@@ -224,3 +224,8 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 - Rutschkanans förskolemiljö kompletterad med klätterställning, sandlåda, spade och hink i skarp pixelgrafik. Oförändrad spelmekanik, återanvänd Lage-sprite och samma canvas.
 - Ändrad `slide-minigame.js`, därefter uppdaterad `ROADMAP.md` (senast GRAF-01, nästa SPORT-01). Ingen öppen uppgift markerades färdig eftersom de återstående acceptansvillkoren inte är verifierade.
 - Källkodsändringen inskickad till main via GitHub. Faktisk mobil-/datorrendering, avlyssning och publicerad Pages-version är inte verifierade.
+
+### 2026-11-20 – Jobb lage, SPORT-01
+- Hackelhallen: spelaren kan nu välja riktat skott mot övre eller nedre målhörnet via mobilknappar eller tangenterna 1/2. Mellanslag och standardknappen skjuter fortfarande i Lages rörelseriktning. Målvakten Majas förflyttning justerades till 52 px/s för mer spelbar balans.
+- GitHub-kod sparad: `football-minigame.js`; ROADMAP-rotation SPORT-01 → DRAKE-02 och statusnotering uppdaterad. Ingen ny avbockning: fullständig webbläsar-/mobilgenomspelning och grafikbedömning återstår.
+- Källkod kontrollerad efter commit, men faktiskt målskytte, tangent-/touchkontroller, ljud och Pages-serverad version är inte verifierade.
