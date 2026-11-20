@@ -108,7 +108,7 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
  <div class="controls"><div class="guide">Samla guldmynt! Vid hemmet står en vit bil – hoppa in med Kör bilen. Styr med pilar/WASD.</div><div class="dpad" aria-label="Styr Lage"><button type="button" data-dir="up" aria-label="Gå uppåt"></button><button type="button" data-dir="left" aria-label="Gå åt vänster"></button><button type="button" data-dir="down" aria-label="Gå nedåt"></button><button type="button" data-dir="right" aria-label="Gå åt höger"></button></div><button class="reset" id="reset">Börja om ↺</button></div>
  <div class="footer">Illustrerad spelvärld inspirerad av Rimforsa. Platserna ligger ungefär rätt, men kartan är inte skalenlig.</div>
 </main>
-<script src="./audio.js?v=17"></script>
+<script src="./audio.js?v=18"></script>
 <script src="./gameplay.js?v=2"></script>
 <script src="./inventory.js?v=3"></script>
 <script src="./item-art.js?v=1"></script>
@@ -360,7 +360,7 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
   bagStatus.textContent=bag.available()?'Föremålen sparas på den här enheten, även när spelet stängs. Mynten är separata.':'Föremålen finns kvar under det här besöket men kunde inte sparas i webbläsaren.';
  }
  function closeBag(){bagOverlay.hidden=true;}
- document.getElementById('showBag').addEventListener('click',()=>{stop();renderBag();bagOverlay.hidden=false;document.getElementById('closeBag').focus();});
+ document.getElementById('showBag').addEventListener('click',()=>{stop();renderBag();bagOverlay.hidden=false;if(audio.bagOpen)audio.bagOpen();document.getElementById('closeBag').focus();});
  document.getElementById('closeBag').addEventListener('click',closeBag);
  bagOverlay.addEventListener('click',e=>{if(e.target===bagOverlay)closeBag();});
  document.getElementById('clearBag').addEventListener('click',()=>{if(window.confirm('Vill du tömma väskan? Alla hittade föremål tas bort.')){bag.clear();renderBag();}});
@@ -799,7 +799,7 @@ function spawnBoatCoins(){
  updateBoatHud();
 }
 function resetBoatGame(){audio.setBoatSpeed(0);boatState.x=374;boatState.y=283;boatState.vx=0;boatState.vy=0;boatState.angle=0;boatState.hearts=3;boatState.flash=0;boatState.invul=0;boatState.done=false;boatState.message='';for(const k in boatKeys)boatKeys[k]=false;spawnBoatCoins();updateBoatHud();boatTip.textContent=boatFuel.snapshot().level>0?'Styr båten, samla mynt och undvik grunden.':'Båttanken är tom! Gå till Bensinmacken på huvudkartan och tanka båten.';}
-function openBoatGame(){if(!boatChartLoaded){boatTip.textContent='Laddar sjökartan…';}resetBoatGame();stop();audio.setScene('boat');boatState.active=true;boatOverlay.classList.add('show');boatOverlay.setAttribute('aria-hidden','false');boatTip.textContent=boatFuel.snapshot().level>0?'Kör ut från Kinda båtklubb och samla mynten utan att köra på grunden. Kartan är en fri 16-bitars-tolkning av Åsunden.':'Båten har tom tank! Gå till Bensinmacken på kartan och köp båtbensin. Välj Tillbaka för att gå dit.';}
+function openBoatGame(){if(!boatChartLoaded){boatTip.textContent='Laddar sjökartan…';}resetBoatGame();stop();audio.setScene('boat');if(audio.boatLaunch)audio.boatLaunch();boatState.active=true;boatOverlay.classList.add('show');boatOverlay.setAttribute('aria-hidden','false');boatTip.textContent=boatFuel.snapshot().level>0?'Kör ut från Kinda båtklubb och samla mynten utan att köra på grunden. Kartan är en fri 16-bitars-tolkning av Åsunden.':'Båten har tom tank! Gå till Bensinmacken på kartan och köp båtbensin. Välj Tillbaka för att gå dit.';}
 function closeBoatGame(){boatState.active=false;audio.setBoatSpeed(0);audio.setScene('land');boatOverlay.classList.remove('show');boatOverlay.setAttribute('aria-hidden','true');for(const k in boatKeys)boatKeys[k]=false;}
 function boatCrash(){
  if(boatState.invul>0||boatState.done)return;
@@ -1212,7 +1212,7 @@ function routeFromMap(x,y){
  message.innerHTML='<strong>🚶 Lage går!</strong> Följ stigen och använd pilarna om du vill styra själv.';
  return true;
 }
-function openMap(){stop();overlay.classList.add('show');drawMap(wc,whole.width,whole.height,true);document.getElementById('mapRouteHint').textContent='Tryck på kartan eller välj badplatsen för att gå dit.';document.getElementById('closeMap').focus()}
+function openMap(){stop();overlay.classList.add('show');if(audio.mapOpen)audio.mapOpen();drawMap(wc,whole.width,whole.height,true);document.getElementById('mapRouteHint').textContent='Tryck på kartan eller välj badplatsen för att gå dit.';document.getElementById('closeMap').focus()}
 function closeMap(){overlay.classList.remove('show')}
 for(const id of ['showMap','miniMapBtn'])document.getElementById(id).addEventListener('click',openMap);
 document.getElementById('closeMap').addEventListener('click',closeMap);
