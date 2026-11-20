@@ -43,7 +43,7 @@ function setup(){
  `;
  root.document.head.append(style);
  dialog=root.document.createElement('div');dialog.className='slide-dialog';dialog.hidden=true;dialog.setAttribute('role','dialog');dialog.setAttribute('aria-modal','true');dialog.setAttribute('aria-label','Rutschkanan på förskolan');
- dialog.innerHTML=`<div class="slide-panel"><h2>🛝 Lages rutschkana</h2><p>Håll inne knappen för att ta sats. Släpp för att flyga!</p><canvas width="480" height="270" aria-label="Lage åker nerför rutschkanan och landar på gräset"></canvas><p class="slide-message" data-slide-status role="status" aria-live="polite">Redo att åka!</p><p data-slide-metrics>Rekord: 0 meter</p><p data-slide-wallet aria-live="polite">🪙 Huvudkartans plånbok: 0 mynt · Första landningen ger 1 mynt</p><div class="slide-controls"><button type="button" class="slide-launch" data-slide-launch>HÅLL INNE FÖR FART!</button><button type="button" data-slide-reset>Åk igen ↺</button><button type="button" data-slide-close>Tillbaka ✕</button></div><p class="slide-hint">Mobil: håll fingret på knappen och släpp. Dator: håll mellanslag och släpp. Ingen förlorar hjärtan här.</p></div>`;
+ dialog.innerHTML=`<div class="slide-panel"><h2>🛝 Lages rutschkana</h2><p>Håll inne knappen för att ta sats. Släpp för att flyga!</p><canvas width="480" height="270" aria-label="Lage åker nerför rutschkanan och landar på gräset"></canvas><p class="slide-message" data-slide-status role="status" aria-live="polite">Redo att åka!</p><p data-slide-metrics>Rekord: 0 meter</p><p data-slide-wallet aria-live="polite">🪙 Huvudkartans plånbok: 0 mynt · Första landningen +1 · 200 m hopp +1</p><div class="slide-controls"><button type="button" class="slide-launch" data-slide-launch>HÅLL INNE FÖR FART!</button><button type="button" data-slide-reset>Åk igen ↺</button><button type="button" data-slide-close>Tillbaka ✕</button></div><p class="slide-hint">Mobil: håll fingret på knappen och släpp. Dator: håll mellanslag och släpp. Ingen förlorar hjärtan här.</p></div>`;
  root.document.body.append(dialog);canvas=dialog.querySelector('canvas');ctx=canvas.getContext('2d');button=dialog.querySelector('[data-slide-launch]');status=dialog.querySelector('[data-slide-status]');metrics=dialog.querySelector('[data-slide-metrics]');
  // Återanvänd exakt samma Lage-spritesheet som huvudkartan, även i luften.
  lageSprite=new root.Image();
@@ -210,7 +210,7 @@ function render(){
  metrics.textContent='Rekord: '+s.record+' meter · Åk: '+s.launches;
  const wallet=dialog.querySelector('[data-slide-wallet]');
  const amount=typeof getWalletBalance==='function'?Number(getWalletBalance()):0;
- wallet.textContent='🪙 Huvudkartans plånbok: '+(Number.isFinite(amount)?Math.max(0,Math.floor(amount)):0)+' mynt · Första landningen ger 1 mynt';
+ wallet.textContent='🪙 Huvudkartans plånbok: '+(Number.isFinite(amount)?Math.max(0,Math.floor(amount)):0)+' mynt · Första landningen +1 · 200 m hopp +1';
 }
 function frame(t){
  if(!session||dialog.hidden)return;
@@ -218,7 +218,12 @@ function frame(t){
  const was=session.snapshot().state,now=session.step(dt).state;
  if(was==='flying'&&now==='landed'){
   const earned=typeof onLandingCoin==='function'&&onLandingCoin(0)===true;
-  landingBonus=earned?'Du fick +1 mynt!':'Landningsmyntet är redan hämtat.';
+  const longJump=now==='landed'&&session.snapshot().distance>=200;
+  const longJumpEarned=longJump&&typeof onLandingCoin==='function'&&onLandingCoin(1)===true;
+  const rewards=(earned?1:0)+(longJumpEarned?1:0);
+  landingBonus=(rewards?'Du fick +'+rewards+' mynt! ':'')+
+   (earned?'Landningsmynt intjänat. ':'Landningsmynt redan hämtat. ')+
+   (longJump?(longJumpEarned?'Långhoppsbonus intjänad!':'Långhoppsbonus redan hämtad.'):'Hoppa minst 200 meter för ett extra mynt.');
   if(root.RimforsaAudio&&root.RimforsaAudio.status().enabled)(root.RimforsaAudio.slideLand?root.RimforsaAudio.slideLand():root.RimforsaAudio.coin());
  }
  render();frameId=root.requestAnimationFrame(frame);
