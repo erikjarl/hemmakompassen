@@ -337,3 +337,9 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 - Uppdaterade `boat-direction-art.js`: Lages ansikte/hår följer åtta båt-riktningar (framifrån, bakifrån och sidoprofil), med ratt och vindruteram. `index.html` laddar `boat-direction-art.js?v=3`.
 - Commitkod: `fade7cc1`, `a16e5f9`. Ett bildgenererat bil-åttavysark har skapats separat men **inte** uppladdats till eller aktiverats i spelet.
 - Verifieringsnivå: källkod och version finns på `main`; verklig mobil-/desktoprendering av alla åtta vyer och Pages-leverans ej verifierade. `FORDON-02` fortfarande öppen. Nästa huvuduppgift `LJUD-02`.
+
+
+### 2026-11-20 – Jobb Lage / LJUD-02 + bildbaserad bilrendering
+- `audio.js`: ny användargest kan påbörja ett nytt resume-försök om Safari fortfarande håller ett äldre resume-Promise efter 2,5 sekunder; sena Promise-svar identifieras med försökstoken. `audio.js?v=23`. Ingen fysisk Safari-lyssning genomförd.
+- `car.js`: befintliga `car-directions.png` renderas nu i alla åtta riktningar och kodritning är reserv. `car.js?v=8`. Nytt genererat bilark finns som separat lokal bildfil men har inte laddats upp till repot eller kopplats in; FORDON-02 fortfarande öppen.
+- GitHub-commits: `bacf0ad`, `33233ad`, `4aacf7e`, `2302c9d`; roadmap har ändrats till senaste `LJUD-02` och nästa `LJUD-03`. Källfiler verifierade på main, inte faktisk Pages-/mobilrendering.
