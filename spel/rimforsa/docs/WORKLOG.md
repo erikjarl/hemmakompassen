@@ -229,3 +229,8 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 - Hackelhallen: spelaren kan nu välja riktat skott mot övre eller nedre målhörnet via mobilknappar eller tangenterna 1/2. Mellanslag och standardknappen skjuter fortfarande i Lages rörelseriktning. Målvakten Majas förflyttning justerades till 52 px/s för mer spelbar balans.
 - GitHub-kod sparad: `football-minigame.js`; ROADMAP-rotation SPORT-01 → DRAKE-02 och statusnotering uppdaterad. Ingen ny avbockning: fullständig webbläsar-/mobilgenomspelning och grafikbedömning återstår.
 - Källkod kontrollerad efter commit, men faktiskt målskytte, tangent-/touchkontroller, ljud och Pages-serverad version är inte verifierade.
+
+### 2026-11-20 – Jobb lage, DRAKE-02 (eldklotsvarning)
+- `dragon.js`: pixelritad blinkande laddningsflamma och streckad varningslinje de sista 0,65 sekunderna före skott; projektilerna har riktningsberoende tredelad elds­vans. Samma målval (Lage/helikopter), kontakt, skada, träffkonsumtion och existerande lägen bevaras. Tidssteget klampas till högst 0,1 s vid flikpauser.
+- `index.html` hämtar `dragon.js?v=3`. `ROADMAP.md` uppdaterad med senast DRAKE-02 och nästa MYNT-03. Ingen ny avbockning eftersom återstående mobil-/datorgenomspelning, visuell kontroll och skade-/helikopterträff ännu inte verifierats.
+- Ändringar har sparats på GitHub main. Faktisk publicerad Pages-version och fysik/animation i webbläsare ej verifierade.
