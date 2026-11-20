@@ -384,3 +384,10 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 - **GRAF-01:** Tidigare genererade Oliver/Saga-figurer bearbetades till transparent 96×96 PNG (2 rader × 3 riktningar, ruta 32×48) och bäddades in i nya `friend-sprites.js`. `npc.js` ritar Oliver och Saga med bildsprites för framåt, vänster/höger och bakåt, med kvarvarande kodritad reserv. `index.html` laddar sprites före `npc.js?v=3`. Bilden är kodinkopplad men ännu inte granskad i verklig mobil-/datorrendering; inget avbockat.
 - **DRAKE-02:** Varningslinjen kompletterades med blinkande pixelmarkerad, låst målpunktsposition för eldklot. Spelhändelser, skadepaus, bränslemackens x-gräns, eldklotsräckvidd och helikopterträff bevaras. `dragon.js?v=10` laddas. Verkligt mobil- och tangentbordsprov återstår; inget avbockat.
 - **Rotation efter andra passet:** senast DRAKE-02, nästa MYNT-03. Fortsatt bildinventering: butikernas kassapersonal och pizzerians bagare kodritade, flera andra figurer återstår att konvertera. Kodkontroller är inte liktydiga med slutanvändartest eller bekräftad GitHub Pages-publicering.
+
+### 2026-11-20 – MYNT-03: gemensamma minispelsmynt mellan flikar
+
+- Ändrade bonusplånboken i `index.html`: före tilldelning, köp och återbetalning läses lagrat saldo/bonus-ID på nytt. Detta minskar risken för överskrivning när en äldre öppen flik gör nya transaktioner. Giltiga ID kontrolleras, och lagrade avdrag begränsas till antalet intjänade mynt.
+- `storage`-händelser från andra flikar gör att huvudkartans mynt-HUD uppdateras. Befintliga bonusvillkor, betalningsordning, spelregler och förluståterställning är oförändrade. Skyddar inte mot exakt samtidiga läs/skriv-race mellan flikar och garanterar inte sparning om webbläsaren blockerar lagring.
+- Källa kontrolleras på GitHub main; verklig tvåfliks-, köp-, mobil- och omladdningsprovning kvarstår. MYNT-03 öppen. Nästa rotation HUV-05.
+- Stående bildinventering: ICA-personal och Bella Donna-bagaren är fortsatt kodritade, bör ersättas med bildgenererade pixelartfigurer vid nästa GRAF-01-pass.
