@@ -29,6 +29,8 @@ function createSession(){
  return {snapshot,startCharge,step,release,reset};
 }
 let session=null,dialog=null,canvas=null,ctx=null,button=null,status=null,metrics=null,frameId=0,lastFrame=0,previousFocus=null,callback=null,previousState='',lageSprite=null;
+const preschoolFriendsSprite=root.RimforsaPreschoolFriendsSprite||null;
+if(preschoolFriendsSprite)preschoolFriendsSprite.addEventListener('load',()=>{if(dialog&&!dialog.hidden)render();});
 function setup(){
  if(dialog)return;
  const style=root.document.createElement('style');
@@ -152,10 +154,15 @@ function render(){
  ctx.fillStyle='#4f7a8b';ctx.fillRect(408,179,3,12);
  ctx.fillStyle='#8ec4c4';ctx.fillRect(405,188,9,4);
 
- // Förskolekompisar i bakgrunden: originalritade pixelbarn, utan kollisioner.
- // Figurerna är statiska så att den laddade flygrörelsen förblir tydlig.
- function drawPreschoolFriend(cx,ground,shirt,hair,skin,pose){
-  ctx.fillStyle='#314a3a';ctx.fillRect(cx-9,ground-3,19,4); // markskugga
+ // Förskolebarn från en riktig transparent PNG-sprite, baserad på genererad bild.
+ // Fyra unika barn i egna 32×32-rutor, uppskalade utan suddig interpolation.
+ function drawPreschoolFriend(cx,ground,frame,shirt,hair,skin,pose){
+  ctx.fillStyle='#314a3a';ctx.fillRect(cx-10,ground-3,20,4);
+  if(preschoolFriendsSprite&&preschoolFriendsSprite.complete&&preschoolFriendsSprite.naturalWidth===128&&preschoolFriendsSprite.naturalHeight===32){
+   ctx.drawImage(preschoolFriendsSprite,frame*32,0,32,32,Math.round(cx-24),ground-48,48,48);
+   return;
+  }
+  // Fallback medan den inbäddade PNG-bilden laddas.
   ctx.fillStyle='#344f72';ctx.fillRect(cx-7,ground-14,6,12);ctx.fillRect(cx+2,ground-14,6,12);
   ctx.fillStyle='#4c362d';ctx.fillRect(cx-8,ground-3,7,3);ctx.fillRect(cx+2,ground-3,7,3);
   ctx.fillStyle=shirt;ctx.fillRect(cx-10,ground-30,21,18);
@@ -166,10 +173,11 @@ function render(){
   if(pose==='wave'){ctx.fillRect(cx+11,ground-39,5,13);ctx.fillRect(cx+13,ground-43,6,6);ctx.fillRect(cx-14,ground-27,5,11);}
   else{ctx.fillRect(cx-14,ground-27,5,12);ctx.fillRect(cx+11,ground-27,5,12);}
  }
- // Barnen står längre bort än själva rutschkanan och påverkar aldrig poäng eller hjärtan.
- drawPreschoolFriend(310,198,'#a359be','#663d27','#f0bf92','wave');
- drawPreschoolFriend(377,198,'#4b90c5','#3c322d','#cb956d','stand');
- drawPreschoolFriend(446,198,'#e5a146','#b16e36','#e9b48c','stand');
+ // Barnen står på förskolegården utan att påverka Lages flygtur eller poäng.
+ drawPreschoolFriend(272,198,0,'#3472b7','#704730','#f1c9a5','stand');
+ drawPreschoolFriend(330,198,1,'#9d55bd','#edbc53','#f1c4a1','wave');
+ drawPreschoolFriend(391,198,2,'#51956b','#ae5a2d','#f1c1a0','stand');
+ drawPreschoolFriend(451,198,3,'#dfaf43','#76462d','#dca67c','stand');
  // Stolpar, trappa och den gula glidytan.
  ctx.fillStyle='#855535';ctx.fillRect(52,92,9,107);ctx.fillRect(139,153,9,46);ctx.fillRect(52,86,62,9);
  ctx.fillStyle='#a0a0a0';ctx.fillRect(68,105,15,7);ctx.fillRect(80,121,16,7);ctx.fillRect(94,139,16,7);
