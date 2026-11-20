@@ -28,7 +28,7 @@ function createSession(){
  function reset(){state='ready';charge=0;x=0;y=0;vx=0;vy=0;return snapshot();}
  return {snapshot,startCharge,step,release,reset};
 }
-let session=null,dialog=null,canvas=null,ctx=null,button=null,status=null,metrics=null,frameId=0,lastFrame=0,previousFocus=null,callback=null,previousState='',lageSprite=null;
+let session=null,dialog=null,canvas=null,ctx=null,button=null,status=null,metrics=null,frameId=0,lastFrame=0,previousFocus=null,callback=null,previousState='',lageSprite=null,onLandingCoin=null,getWalletBalance=null,landingBonus='';
 const preschoolFriendsSprite=root.RimforsaPreschoolFriendsSprite||null;
 if(preschoolFriendsSprite)preschoolFriendsSprite.addEventListener('load',()=>{if(dialog&&!dialog.hidden)render();});
 function setup(){
@@ -43,7 +43,7 @@ function setup(){
  `;
  root.document.head.append(style);
  dialog=root.document.createElement('div');dialog.className='slide-dialog';dialog.hidden=true;dialog.setAttribute('role','dialog');dialog.setAttribute('aria-modal','true');dialog.setAttribute('aria-label','Rutschkanan på förskolan');
- dialog.innerHTML=`<div class="slide-panel"><h2>🛝 Lages rutschkana</h2><p>Håll inne knappen för att ta sats. Släpp för att flyga!</p><canvas width="480" height="270" aria-label="Lage åker nerför rutschkanan och landar på gräset"></canvas><p class="slide-message" data-slide-status role="status" aria-live="polite">Redo att åka!</p><p data-slide-metrics>Rekord: 0 meter</p><div class="slide-controls"><button type="button" class="slide-launch" data-slide-launch>HÅLL INNE FÖR FART!</button><button type="button" data-slide-reset>Åk igen ↺</button><button type="button" data-slide-close>Tillbaka ✕</button></div><p class="slide-hint">Mobil: håll fingret på knappen och släpp. Dator: håll mellanslag och släpp. Ingen förlorar hjärtan här.</p></div>`;
+ dialog.innerHTML=`<div class="slide-panel"><h2>🛝 Lages rutschkana</h2><p>Håll inne knappen för att ta sats. Släpp för att flyga!</p><canvas width="480" height="270" aria-label="Lage åker nerför rutschkanan och landar på gräset"></canvas><p class="slide-message" data-slide-status role="status" aria-live="polite">Redo att åka!</p><p data-slide-metrics>Rekord: 0 meter</p><p data-slide-wallet aria-live="polite">🪙 Huvudkartans plånbok: 0 mynt · Första landningen ger 1 mynt</p><div class="slide-controls"><button type="button" class="slide-launch" data-slide-launch>HÅLL INNE FÖR FART!</button><button type="button" data-slide-reset>Åk igen ↺</button><button type="button" data-slide-close>Tillbaka ✕</button></div><p class="slide-hint">Mobil: håll fingret på knappen och släpp. Dator: håll mellanslag och släpp. Ingen förlorar hjärtan här.</p></div>`;
  root.document.body.append(dialog);canvas=dialog.querySelector('canvas');ctx=canvas.getContext('2d');button=dialog.querySelector('[data-slide-launch]');status=dialog.querySelector('[data-slide-status]');metrics=dialog.querySelector('[data-slide-metrics]');
  // Återanvänd exakt samma Lage-spritesheet som huvudkartan, även i luften.
  lageSprite=new root.Image();
@@ -206,14 +206,21 @@ function render(){
  if(s.state==='ready')status.textContent='Ställ dig i rutschkanan och håll inne knappen!';
  else if(s.state==='charging')status.textContent='Tar sats… '+Math.round(s.charge/s.maxCharge*100)+' %!';
  else if(s.state==='flying')status.textContent='Wiiii! Lage flyger!';
- else status.textContent='🎉 Lage flög '+s.distance+' meter! Klicka Åk igen.';
+ else status.textContent='🎉 Lage flög '+s.distance+' meter! '+landingBonus+' Klicka Åk igen.';
  metrics.textContent='Rekord: '+s.record+' meter · Åk: '+s.launches;
+ const wallet=dialog.querySelector('[data-slide-wallet]');
+ const amount=typeof getWalletBalance==='function'?Number(getWalletBalance()):0;
+ wallet.textContent='🪙 Huvudkartans plånbok: '+(Number.isFinite(amount)?Math.max(0,Math.floor(amount)):0)+' mynt · Första landningen ger 1 mynt';
 }
 function frame(t){
  if(!session||dialog.hidden)return;
  const dt=lastFrame?Math.min(.05,(t-lastFrame)/1000):0;lastFrame=t;
  const was=session.snapshot().state,now=session.step(dt).state;
- if(was==='flying'&&now==='landed'&&root.RimforsaAudio&&root.RimforsaAudio.status().enabled)(root.RimforsaAudio.slideLand?root.RimforsaAudio.slideLand():root.RimforsaAudio.coin());
+ if(was==='flying'&&now==='landed'){
+  const earned=typeof onLandingCoin==='function'&&onLandingCoin(0)===true;
+  landingBonus=earned?'Du fick +1 mynt!':'Landningsmyntet är redan hämtat.';
+  if(root.RimforsaAudio&&root.RimforsaAudio.status().enabled)(root.RimforsaAudio.slideLand?root.RimforsaAudio.slideLand():root.RimforsaAudio.coin());
+ }
  render();frameId=root.requestAnimationFrame(frame);
 }
 function start(options){
@@ -221,7 +228,9 @@ function start(options){
  if(!options||typeof options.returnToMap!=='function')return false;
  if(!dialog.hidden)close();
  previousFocus=root.document.activeElement;callback=options.returnToMap;
- session=createSession();dialog.hidden=false;
+ onLandingCoin=typeof options.onLandingCoin==='function'?options.onLandingCoin:null;
+ getWalletBalance=typeof options.getWalletBalance==='function'?options.getWalletBalance:null;
+ landingBonus='';session=createSession();dialog.hidden=false;
  if(root.RimforsaAudio&&typeof root.RimforsaAudio.setScene==='function')root.RimforsaAudio.setScene('preschool');
  lastFrame=0;render();button.focus();frameId=root.requestAnimationFrame(frame);return true;
 }
@@ -229,7 +238,7 @@ function close(){
  if(!session||dialog.hidden)return;
  session.reset();dialog.hidden=true;root.cancelAnimationFrame(frameId);
  if(root.RimforsaAudio&&typeof root.RimforsaAudio.setScene==='function')root.RimforsaAudio.setScene('land');
- const onReturn=callback;callback=null;
+ const onReturn=callback;callback=null;onLandingCoin=null;getWalletBalance=null;landingBonus='';
  if(typeof onReturn==='function')onReturn();
  if(previousFocus&&previousFocus.isConnected)previousFocus.focus();
 }
