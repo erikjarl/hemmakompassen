@@ -29,17 +29,23 @@
    // sluta skjuta mot Lage, även när han stod alldeles nära.
    const helicopterInRange=inFireRange(helicopter);
    const playerInRange=inFireRange(player);
-   const aimAtHelicopter=helicopterInRange&&(shotId%3===0||!playerInRange);
-   const target=aimAtHelicopter?helicopter:player;
-   const dx=target.x-mouthX,dy=target.y-mouthY;
-   const distance=Math.hypot(dx,dy);
-   const withinRange=aimAtHelicopter?helicopterInRange:playerInRange;
-   warningTarget=shotTimer>0&&shotTimer<=.65&&withinRange?{x:target.x,y:target.y}:null;
+   // Sikta endast en gång per skott. En låst varning ger Lage en
+   // begriplig chans att väja, i stället för att skottet följer varje steg.
+   if(shotTimer>0&&shotTimer<=.65&&!warningTarget){
+    const aimAtHelicopter=helicopterInRange&&(shotId%3===0||!playerInRange);
+    const target=aimAtHelicopter?helicopter:player;
+    if(inFireRange(target))warningTarget={x:target.x,y:target.y};
+   }
    if(shotTimer<=0){
+    const target=warningTarget;
     shotTimer=2.7;warningTarget=null;
-    if(withinRange){
-     const speed=165;
-     shots.push({id:'dragon-fire-'+(++shotId),x:mouthX,y:mouthY,vx:dx/distance*speed,vy:dy/distance*speed,travelled:0,life:5});
+    if(target){
+     const dx=target.x-mouthX,dy=target.y-mouthY;
+     const distance=Math.hypot(dx,dy);
+     if(distance>0){
+      const speed=165;
+      shots.push({id:'dragon-fire-'+(++shotId),x:mouthX,y:mouthY,vx:dx/distance*speed,vy:dy/distance*speed,travelled:0,life:5});
+     }
     }
    }
    for(let k=shots.length-1;k>=0;k--){
