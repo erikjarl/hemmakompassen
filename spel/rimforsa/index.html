@@ -247,7 +247,8 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
    spent=Math.min(count,Number.isFinite(value)?Math.max(0,Math.floor(value)):0);
   }
   sync();
-  const balance=()=>Object.keys(earned).length-spent;
+  // Läs senaste sparade saldo före varje visning och köpkontroll, även innan storage-event.
+  const balance=()=>{sync();return Object.keys(earned).length-spent;};
   const save=()=>{try{localStorage.setItem(key,JSON.stringify({earned,spent}));}catch(_){}};
   return {balance,sync,
    award(id){if(!validId(id))return false;sync();if(earned[id])return false;earned[id]=true;save();return true;},
