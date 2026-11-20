@@ -205,6 +205,7 @@ function updateFuelHud(){
 }
 updateFuelHud();
 const carPos={x:carDrive.HOME.x,y:carDrive.HOME.y};
+let parkedCarDir='right'; // Riktningsbilden behålls när bilen parkeras.
 // Strax nordväst om rondellen, ovanpå stenen. Separat minispel kan anslutas senare.
 const troll={id:'stone-troll',name:'Trollet vid stenen',x:464,y:454,interactionRadius:84,
  minigameId:'troll-poop-toss',minigameImplemented:true,sprite:'./troll-pixel.svg?v=2'};
@@ -743,13 +744,13 @@ function exitCar(){
  const exit=nearbyExit();
  if(!exit){
   // Kostnadsfri bärgning hindrar att Lage blir inlåst på otillgänglig mark.
-  state.inCar=false;carPos.x=carDrive.HOME.x;carPos.y=carDrive.HOME.y;
+  state.inCar=false;carPos.x=carDrive.HOME.x;carPos.y=carDrive.HOME.y;parkedCarDir='right';
   state.x=carDrive.HOME.x;state.y=carDrive.HOME.y;state.nearKey=null;
   audio.setCarSpeed(0);audio.setCarActive(false);if(audio.carExit)audio.carExit();updateMessage();
   message.textContent='Bilen har bärgats hem. Du kan gå vidare till fots!';
   return true;
  }
- carPos.x=state.x;carPos.y=state.y;
+ carPos.x=state.x;carPos.y=state.y;parkedCarDir=state.dir;
  state.inCar=false;state.x=exit.x;state.y=exit.y;state.nearKey=null;
  audio.setCarSpeed(0);audio.setCarActive(false);if(audio.carExit)audio.carExit();updateMessage();return true;
 }
@@ -1101,7 +1102,7 @@ function reset({clearMoney=true}={}){
    updateBoatHud();
   }
  pizzaOverlay.hidden=true;icaOverlay.hidden=true;winOverlay.hidden=true;document.getElementById('lossOverlay').hidden=true;hurtUntil=0;audio.setCarSpeed(0);audio.setCarActive(false);state.inCar=false;
- carPos.x=carDrive.HOME.x;carPos.y=carDrive.HOME.y;
+ carPos.x=carDrive.HOME.x;carPos.y=carDrive.HOME.y;parkedCarDir='right';
  state.x=360;state.y=335;state.camX=360;state.camY=335;state.dir='down';
  state.phase=0;state.visited.clear();state.path=[];state.near=null;state.nearKey=null;
  npcSystem.reset();scatterCoins();interact.textContent='Utforska ✨';interact.hidden=true;title.textContent='Hem – Ulrikavägen';
@@ -1278,7 +1279,7 @@ function drawIngoPriceSign(){
 function drawFarmMarker(){const s=sites.find(site=>site.name==='Potatislandet');const x=Math.round(s.x-state.camX+canvas.width/2),y=Math.round(s.y-state.camY+canvas.height/2);if(x<-50||y<-50||x>canvas.width+50||y>canvas.height+50)return;ctx.fillStyle='#59402e';ctx.fillRect(x-20,y-14,40,27);ctx.fillStyle='#91663e';ctx.fillRect(x-18,y-12,36,23);ctx.fillStyle='#d5b475';ctx.fillRect(x-15,y-9,30,16);ctx.fillStyle='#397444';ctx.fillRect(x-2,y-8,4,12);ctx.fillRect(x-7,y-8,6,5);ctx.fillRect(x+2,y-10,7,6);ctx.fillStyle='#9f7147';ctx.fillRect(x-2,y+13,4,12);}
 function draw(){const w=canvas.width,h=canvas.height;ctx.fillStyle='#305d42';ctx.fillRect(0,0,w,h);if(imageLoaded){const x=Math.round(w/2-state.camX),y=Math.round(h/2-state.camY);ctx.drawImage(tiles,x,y);ctx.save();ctx.translate(x,y);drawBeachAccess(ctx);ctx.restore();}drawIngoPriceSign();drawFarmMarker();drawCoins();drawPoops();drawTroll();helicopter.draw(ctx,state.camX,state.camY,w,h,performance.now()/1000);dragon.draw(ctx,state.camX,state.camY,w,h);npcSystem.draw(ctx,state.camX,state.camY,w,h,sprite);
 if(state.inCar){carDrive.draw(ctx,state.x-state.camX+w/2,state.y-state.camY+h/2,state.dir,true);}
-else{carDrive.draw(ctx,carPos.x-state.camX+w/2,carPos.y-state.camY+h/2,'right',false);drawPlayer();}
+else{carDrive.draw(ctx,carPos.x-state.camX+w/2,carPos.y-state.camY+h/2,parkedCarDir,false);drawPlayer();}
 ctx.strokeStyle='#1b3028';ctx.lineWidth=2;ctx.strokeRect(1,1,w-2,h-2);drawMap(mc,mini.width,mini.height);drawBoatGame()}
 let last=performance.now(),stepProgress=0;
 function tick(now){
