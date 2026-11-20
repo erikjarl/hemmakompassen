@@ -131,6 +131,17 @@
     const targetX=Math.round(warningTarget.x-camX+w/2),targetY=Math.round(warningTarget.y-camY+h/2);
     const dx=targetX-(sx+28),dy=targetY-(sy-7),dist=Math.hypot(dx,dy);
     if(dist>0){
+     // Målpunkten visar var eldkulan faktiskt siktar. Lage kan väja
+     // efter att målet låsts utan att varningen följer honom.
+     const blink=Math.floor(t*8)%2===0;
+     const primary=blink?'#ffe990':'#f49a40';
+     const shadow='#7b3427';
+     for(const [dx,dy] of [[-13,-13],[7,-13],[-13,7],[7,7]]){
+      ctx.fillStyle=shadow;ctx.fillRect(targetX+dx-1,targetY+dy-1,8,8);
+      ctx.fillStyle=primary;
+      ctx.fillRect(targetX+dx,targetY+dy,6,2);
+      ctx.fillRect(targetX+dx,targetY+dy,2,6);
+     }
      for(let d=18;d<Math.min(95,dist);d+=16){
       const px=Math.round(sx+28+dx/dist*d),py=Math.round(sy-7+dy/dist*d);
       ctx.fillStyle=Math.floor(d/16)%2?'#ff9e3e':'#ffe58f';
