@@ -525,6 +525,20 @@
     tone(523.25,t+.10,.11,.034,'square');
     tone(659.25,t+.20,.20,.030,'sine');
   }
+  // Förskolans rutschkana: ett kort satsljud och en separat långhoppsfanfar.
+  // Spelas endast från användargest respektive nytt intjänat bonusmynt.
+  function slideCharge(){
+    if(!enabled||hidden||!ctx||ctx.state!=='running')return;
+    const t=now()+.008;
+    tone(220,t,.07,.022,'triangle');
+    tone(277.18,t+.07,.10,.024,'sine');
+  }
+  function slideLongJump(){
+    if(!enabled||hidden||!ctx||ctx.state!=='running')return;
+    const t=now()+.01;
+    [523.25,659.25,783.99,1046.5].forEach((f,i)=>tone(f,t+i*.105,.20,.035,'triangle'));
+    tone(392,t+.34,.29,.022,'sine');
+  }
   function boatGrounding(){
     if(!enabled||!ctx||hidden||ctx.state!=='running')return;
     const t=now()+.01;
@@ -579,5 +593,5 @@
     }catch(_){speechMusicVolume(volume);return false;}
   }
   function status(){return {enabled,available:!!AudioCtor,contextState:ctx?ctx.state:'not-created',scene,hidden,playingMusic:musicInterval!==null,playingWaves:!!waves,playingEngine:!!engine,playingCarEngine:!!carEngine,carActive,dragonNearby};}
-  root.RimforsaAudio={enable,disable,toggle,resumeFromGesture,setScene,setBoatSpeed,setCarActive,setCarSpeed,setDragonNearby,coin,hit,poop,victory,slideLaunch,slideLand,sharkBump,purchase,fuelFill,boatGrounding,carEnter,itemFound,helicopterHit,footballKick,footballSave,footballGoal,boatTreasure,bagOpen,mapOpen,boatLaunch,potatoSale,carExit,bagClear,gameOver,shopEnter,mapClose,boatReturn,shopExit,routeSelected,potatoPlant,potatoHarvest,speak,stopSpeech,setVisible,status};
+  root.RimforsaAudio={enable,disable,toggle,resumeFromGesture,setScene,setBoatSpeed,setCarActive,setCarSpeed,setDragonNearby,coin,hit,poop,victory,slideLaunch,slideLand,slideCharge,slideLongJump,sharkBump,purchase,fuelFill,boatGrounding,carEnter,itemFound,helicopterHit,footballKick,footballSave,footballGoal,boatTreasure,bagOpen,mapOpen,boatLaunch,potatoSale,carExit,bagClear,gameOver,shopEnter,mapClose,boatReturn,shopExit,routeSelected,potatoPlant,potatoHarvest,speak,stopSpeech,setVisible,status};
 })(window);
