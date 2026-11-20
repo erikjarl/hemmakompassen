@@ -504,6 +504,22 @@
     tone(440,t,.075,.020,'square');
     tone(659.25,t+.075,.13,.021,'triangle');
   }
+  // Potatislandets egna subtila originalsyntetiserade ljud.
+  // Spela bara efter lyckad plantering/skörd, inte för spärrade knappar.
+  function potatoPlant(){
+    if(!enabled||hidden||!ctx||ctx.state!=='running')return;
+    const t=now()+.01;
+    tone(220,t,.09,.024,'triangle');
+    tone(164.81,t+.08,.15,.025,'sine');
+    tone(130.81,t+.16,.13,.017,'triangle');
+  }
+  function potatoHarvest(){
+    if(!enabled||hidden||!ctx||ctx.state!=='running')return;
+    const t=now()+.01;
+    tone(392,t,.095,.025,'triangle');
+    tone(523.25,t+.10,.11,.034,'square');
+    tone(659.25,t+.20,.20,.030,'sine');
+  }
   function boatGrounding(){
     if(!enabled||!ctx||hidden||ctx.state!=='running')return;
     const t=now()+.01;
@@ -558,5 +574,5 @@
     }catch(_){speechMusicVolume(volume);return false;}
   }
   function status(){return {enabled,available:!!AudioCtor,contextState:ctx?ctx.state:'not-created',scene,hidden,playingMusic:musicInterval!==null,playingWaves:!!waves,playingEngine:!!engine,playingCarEngine:!!carEngine,carActive,dragonNearby};}
-  root.RimforsaAudio={enable,disable,toggle,resumeFromGesture,setScene,setBoatSpeed,setCarActive,setCarSpeed,setDragonNearby,coin,hit,poop,victory,slideLaunch,slideLand,sharkBump,purchase,fuelFill,boatGrounding,carEnter,itemFound,helicopterHit,footballKick,footballSave,footballGoal,boatTreasure,bagOpen,mapOpen,boatLaunch,potatoSale,carExit,bagClear,gameOver,shopEnter,mapClose,boatReturn,shopExit,routeSelected,speak,stopSpeech,setVisible,status};
+  root.RimforsaAudio={enable,disable,toggle,resumeFromGesture,setScene,setBoatSpeed,setCarActive,setCarSpeed,setDragonNearby,coin,hit,poop,victory,slideLaunch,slideLand,sharkBump,purchase,fuelFill,boatGrounding,carEnter,itemFound,helicopterHit,footballKick,footballSave,footballGoal,boatTreasure,bagOpen,mapOpen,boatLaunch,potatoSale,carExit,bagClear,gameOver,shopEnter,mapClose,boatReturn,shopExit,routeSelected,potatoPlant,potatoHarvest,speak,stopSpeech,setVisible,status};
 })(window);
