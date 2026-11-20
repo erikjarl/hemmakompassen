@@ -4,7 +4,7 @@
   const AudioCtor = root.AudioContext || root.webkitAudioContext;
   let ctx=null,master=null,scene='land',enabled=false,hidden=false;
   let musicInterval=null,gullInterval=null,preschoolInterval=null,engine=null,waves=null,carEngine=null,carActive=false,melodyStep=0,volume=.55,dragonNearby=false;
-  let sceneStarted=false,resumePending=false;
+  let sceneStarted=false,resumePending=false,resumeStartedAt=0,resumeSerial=0;
   const melody=[392,440,523.25,440,392,329.63,349.23,392,440,392,329.63,293.66,329.63,349.23,392,0,
                  349.23,392,440,523.25,587.33,523.25,440,392,349.23,329.63,293.66,329.63,349.23,392,329.63,0];
   // Originalkomponerat molltema med låg bordun för drakens skog.
@@ -182,7 +182,7 @@
     if(ctx&&ctx.state==='closed'){
       stopScene();
       ctx.onstatechange=null;
-      ctx=null;master=null;resumePending=false;
+      ctx=null;master=null;resumePending=false;resumeSerial++;
     }
     if(!ctx){
       ctx=new AudioCtor();
@@ -199,24 +199,27 @@
       try{if(!ensureContext())return false;}catch(_){return false;}
     }
     if(ctx.state==='running'){startScene();return true;}
-    if(resumePending)return false;
+    // En iOS-resume som aldrig avslutar sitt Promise får inte låsa ljudet för alltid.
+    // Ny faktisk användargest kan prova igen efter 2,5 sekunder.
+    if(resumePending&&Date.now()-resumeStartedAt<2500)return false;
     try{
-      resumePending=true;
+      resumePending=true;resumeStartedAt=Date.now();
+      const attempt=++resumeSerial;
       const resumingContext=ctx;
       const pending=resumingContext.resume();
       if(pending&&typeof pending.then==='function'){
         pending.then(()=>{
           // Stale Promise från en äldre kontext får inte nollställa ny resume.
-          if(ctx!==resumingContext)return;
+          if(ctx!==resumingContext||attempt!==resumeSerial)return;
           resumePending=false;
           if(ctx.state==='running'&&enabled&&!hidden)startScene();
           notifyAudioState();
         },()=>{
-          if(ctx!==resumingContext)return;
+          if(ctx!==resumingContext||attempt!==resumeSerial)return;
           resumePending=false;
           notifyAudioState();
         });
-      }else if(ctx===resumingContext)resumePending=false;
+      }else if(ctx===resumingContext&&attempt===resumeSerial)resumePending=false;
       return true;
     }catch(_){resumePending=false;return false;}
   }
