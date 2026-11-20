@@ -56,7 +56,7 @@ function draw(ctx,x,y,dir='right',occupied=false){
  // Prioritera en enda bilmodell i ALLA lägen, även vid hemmet.
  // För okända riktningar används höger sidovy; gammal bild är bara fallback.
  const directionFrame=CAR_DIRECTIONS.indexOf(dir);
- if(directionSpriteReady()&&typeof ctx.drawImage==='function'){
+ if((left||right)&&directionSpriteReady()&&typeof ctx.drawImage==='function'){
   const smooth=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=false;
   ctx.drawImage(directionSprite,(directionFrame<0?CAR_DIRECTIONS.indexOf('right'):directionFrame)*DIRECTION_FRAME_WIDTH,0,DIRECTION_FRAME_WIDTH,DIRECTION_FRAME_HEIGHT,-48,-40,96,72);
   ctx.imageSmoothingEnabled=smooth;ctx.restore();return;
@@ -76,39 +76,67 @@ function draw(ctx,x,y,dir='right',occupied=false){
   rect(29,-5,5,7,'#f5e39a');rect(-34,-5,5,7,'#bf4645');
   ctx.restore();return;
  }
- const diagonal=dir.includes('-');
- const up=dir.startsWith('up'),down=dir.startsWith('down');
- const shift=dir.endsWith('left')?-1:1;
- // Alla former ritas i samma pixelgrid; bilens tak behåller sin övre yta.
- // Diagonalvyer har förskjuten motorhuv, sned vindruta och asymmetrisk skugga.
- const dx=diagonal?shift*8:0;
- rect(-21+dx/2,19,44,9,'#15251d88');
- rect(-25+dx/2,-17,9,14,'#242c34');rect(16+dx/2,-17,9,14,'#242c34');
- rect(-25+dx/2,12,9,14,'#242c34');rect(16+dx/2,12,9,14,'#242c34');
- rect(-22,-24,44,49,'#526069');
- rect(-20,-23,40,46,'#e8e9e5');
- rect(-18,-21,36,40,'#f8f7ed');
+ const diagonal=dir.includes('-'),up=dir.startsWith('up');
+ const sideShift=diagonal?(dir.endsWith('right')?7:-7):0;
+ const edge='#27383e',tire='#252f35',tireLight='#53616a',bodyShadow='#9baeb7',body='#f0f1e9',shine='#fffdf5';
+ const glass='#467e9e',glassLight='#8dd2e3',red='#bb4748',lamp='#f8e6a9';
+ // Samma kompakta vita kombimodell som sidovyn: fyra hjul, takräcken,
+ // mörka rutfoder, ljusgrå trösklar, röda bakljus och ljusa framlyktor.
+ // Taket är ALLTID överst; motorhuv/baklucka vänds framåt/bakåt i markplanet.
+ rect(-26,-25,52,55,'#19252a77');
+ rect(-25,-26,9,13,tire);rect(16,-26,9,13,tire);
+ rect(-25,11,9,14,tire);rect(16,11,9,14,tire);
+ rect(-23,-25,5,11,tireLight);rect(18,12,5,11,tireLight);
+ // Kant och kaross använder samma bredder oavsett up/down; diagonalen
+ // flyttar ENDAST fram- och bakändar medan kupéns bredd behålls.
+ rect(-23,-28,46,56,edge);
+ rect(-21,-27,42,54,bodyShadow);
+ rect(-19,-26,38,51,body);
+ rect(-18,-24,36,7,shine);
+ rect(-18,17,36,7,'#d4dce0');
+ const frontY=up?-27:17,backY=up?17:-27;
  if(diagonal){
-  // Frontpartiets förskjutning ger en tydlig tredimensionell 3/4-vy.
-  rect(dx>0?7:-23,down?12:-21,17,12,'#d0d6d5');
-  rect(dx>0?19:-24,-10,5,25,'#bac4c6');
-  rect(dx>0?20:-24,down?13:-19,4,8,'#f6e5ae');
+  // Förskjut kortändarna och hjulens färgskuggor: tydlig 3/4-vy,
+  // men tak, vindruta, fönster och proportioner förblir samma bil.
+  rect(sideShift>0?14:-23,frontY,9,11,edge);
+  rect(sideShift>0?15:-21,frontY+1,7,9,body);
+  rect(sideShift>0?-23:14,backY,9,10,bodyShadow);
+  rect(sideShift>0?19:-25,-13,5,28,'#687d86');
  }
- const windY=up?-15:9,backY=up?12:-16;
- rect(-15+dx/4,windY,30,10,'#497a96');
- rect(-12+dx/4,windY+2,24,5,'#86c7e3');
- rect(-16,backY,32,7,'#a7bfc8');
- rect(-13,-4,26,17,'#d6d9d6');
- rect(-11,-2,22,13,'#f3f0e6');
- rect(-8,0,16,8,'#c4cdd0');
- rect(-17,up?-23:20,9,4,up?'#e9dfc6':'#c34e46');
- rect(8,up?-23:20,9,4,up?'#e9dfc6':'#c34e46');
- rect(-17,up?20:-23,9,4,up?'#c34e46':'#f1e4a9');
- rect(8,up?20:-23,9,4,up?'#c34e46':'#f1e4a9');
+ // Två takräcken och mörk vindruteram går igen från den vita kombisidovyn.
+ rect(-14,-16,28,32,'#445e6b');
+ rect(-12,-14,24,28,'#d9e1df');
+ rect(-11,-12,22,12,glass);
+ rect(-9,-11,18,4,glassLight);
+ rect(-11,4,22,10,glass);
+ rect(-9,5,18,3,glassLight);
+ rect(-16,-17,3,34,edge);rect(13,-17,3,34,edge);
+ rect(-15,-18,30,3,bodyShadow);rect(-15,15,30,3,bodyShadow);
+ // Vindrutan ligger mot nosen; bakrutan mot bakluckan.
+ const frontGlassY=up?-14:4,backGlassY=up?4:-14;
+ rect(-11,frontGlassY,22,10,glass);
+ rect(-9,frontGlassY+1,18,3,glassLight);
+ rect(-11,backGlassY,22,8,'#5d849a');
+ rect(-9,backGlassY+2,18,2,'#b0d4dc');
+ // Samma nedre stötfångare / grillpaket och lyktenheter i alla riktningar.
+ rect(-18,frontY,36,4,'#d5dad7');
+ rect(-13,frontY+1,26,2,edge);
+ rect(-16,frontY,8,5,lamp);rect(8,frontY,8,5,lamp);
+ rect(-18,backY,36,4,'#d3d9d5');
+ rect(-17,backY,9,5,red);rect(8,backY,9,5,red);
+ // Registreringsskylt och skuggad bakluckeskarv.
+ rect(-5,backY+1,10,3,'#f1e3ba');
+ rect(-4,backY+2,8,1,'#5c7480');
+ // Små pixlade backspeglar och dörrhandtag.
+ rect(-26,-8,5,7,edge);rect(21,-8,5,7,edge);
+ rect(-24,-7,3,4,body);rect(21,-7,3,4,body);
+ rect(-20,4,3,2,'#71838a');rect(17,4,3,2,'#71838a');
  if(occupied){
-  // Föraren syns genom främre rutan i samma färger som Lage.
-  rect(-5,windY+3,10,5,'#e9c08e');
-  rect(-4,windY+2,8,3,'#8b643f');
+  // Lage syns genom framrutan: brunt hår, ansikte och röd tröja.
+  rect(-5,frontGlassY+2,10,6,'#d6ab82');
+  rect(-6,frontGlassY+1,12,3,'#68442d');
+  rect(-5,frontGlassY+7,10,2,'#c35b55');
+  rect(-2,frontGlassY+4,1,1,'#302f2e');rect(2,frontGlassY+4,1,1,'#302f2e');
  }
  ctx.restore();
 }
