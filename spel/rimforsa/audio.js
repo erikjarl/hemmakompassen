@@ -419,6 +419,27 @@
     tone(196,t+.11,.15,.039,'triangle');
     tone(261.63,t+.24,.20,.030,'sine');
   }
+  // Tre små originalsyntetiserade bekräftelseljud vid tydliga spelarhandlingar.
+  function potatoSale(){
+    if(!enabled||hidden||!ctx||ctx.state!=='running')return;
+    const t=now()+.01;
+    tone(440,t,.11,.032,'triangle');
+    tone(659.25,t+.11,.13,.040,'square');
+    tone(880,t+.24,.19,.030,'sine');
+  }
+  function carExit(){
+    if(!enabled||hidden||!ctx||ctx.state!=='running')return;
+    const t=now()+.01;
+    tone(280,t,.08,.035,'triangle');
+    tone(180,t+.065,.16,.026,'square');
+  }
+  function bagClear(){
+    if(!enabled||hidden||!ctx||ctx.state!=='running')return;
+    const t=now()+.01;
+    tone(523.25,t,.10,.026,'sine');
+    tone(392,t+.09,.11,.024,'triangle');
+    tone(261.63,t+.18,.17,.022,'sine');
+  }
   function boatGrounding(){
     if(!enabled||!ctx||hidden||ctx.state!=='running')return;
     const t=now()+.01;
@@ -473,5 +494,5 @@
     }catch(_){speechMusicVolume(volume);return false;}
   }
   function status(){return {enabled,available:!!AudioCtor,contextState:ctx?ctx.state:'not-created',scene,hidden,playingMusic:musicInterval!==null,playingWaves:!!waves,playingEngine:!!engine,playingCarEngine:!!carEngine,carActive,dragonNearby};}
-  root.RimforsaAudio={enable,disable,toggle,resumeFromGesture,setScene,setBoatSpeed,setCarActive,setCarSpeed,setDragonNearby,coin,hit,poop,victory,slideLaunch,slideLand,sharkBump,purchase,fuelFill,boatGrounding,carEnter,itemFound,helicopterHit,footballKick,footballSave,footballGoal,boatTreasure,bagOpen,mapOpen,boatLaunch,speak,stopSpeech,setVisible,status};
+  root.RimforsaAudio={enable,disable,toggle,resumeFromGesture,setScene,setBoatSpeed,setCarActive,setCarSpeed,setDragonNearby,coin,hit,poop,victory,slideLaunch,slideLand,sharkBump,purchase,fuelFill,boatGrounding,carEnter,itemFound,helicopterHit,footballKick,footballSave,footballGoal,boatTreasure,bagOpen,mapOpen,boatLaunch,potatoSale,carExit,bagClear,speak,stopSpeech,setVisible,status};
 })(window);
