@@ -1279,7 +1279,7 @@ function routeFromMap(x,y){
 function openMap(){stop();overlay.classList.add('show');if(audio.mapOpen)audio.mapOpen();drawMap(wc,whole.width,whole.height,true);document.getElementById('mapRouteHint').textContent='Tryck på kartan eller välj badplatsen för att gå dit.';document.getElementById('closeMap').focus()}
 function closeMap(silent=false){if(!overlay.classList.contains('show'))return;overlay.classList.remove('show');if(!silent&&audio.mapClose)audio.mapClose();}
 for(const id of ['showMap','miniMapBtn'])document.getElementById(id).addEventListener('click',openMap);
-document.getElementById('closeMap').addEventListener('click',closeMap);
+document.getElementById('closeMap').addEventListener('click',()=>closeMap());
 document.getElementById('goBeach').addEventListener('click',()=>routeFromMap(1220,740));
 document.getElementById('goFarm').addEventListener('click',()=>routeFromMap(565,928));
 document.getElementById('goBrokind').addEventListener('click',()=>{if(state.inCar){document.getElementById('mapRouteHint').textContent='Kliv ur bilen innan du går på skogsleden.';return;}closeMap();stop();window.RimforsaBrokindTrail.start({returnToMap:()=>{state.nearKey=null;updateMessage();}});});
