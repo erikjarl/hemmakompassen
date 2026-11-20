@@ -234,3 +234,8 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 - `dragon.js`: pixelritad blinkande laddningsflamma och streckad varningslinje de sista 0,65 sekunderna före skott; projektilerna har riktningsberoende tredelad elds­vans. Samma målval (Lage/helikopter), kontakt, skada, träffkonsumtion och existerande lägen bevaras. Tidssteget klampas till högst 0,1 s vid flikpauser.
 - `index.html` hämtar `dragon.js?v=3`. `ROADMAP.md` uppdaterad med senast DRAKE-02 och nästa MYNT-03. Ingen ny avbockning eftersom återstående mobil-/datorgenomspelning, visuell kontroll och skade-/helikopterträff ännu inte verifierats.
 - Ändringar har sparats på GitHub main. Faktisk publicerad Pages-version och fysik/animation i webbläsare ej verifierade.
+
+### 2026-11-20 – Jobb lage, MYNT-03 (båtmynt och gemensamt saldo)
+- `index.html`: båtspelets myntmätare visar även huvudkartans gemensamma plånbok. Vid myntupptag skiljer statusen på ny belöning (+1) och mynt vars bonus redan hämtats vid tidigare spelning; slutmeddelandet visar totalt saldo. Unika belönings-ID, localStorage, köp och game-over-nollställning ändrades inte.
+- `ROADMAP.md`: senast MYNT-03, nästa HUV-05. Ingen avbockning: verklig båtkörning, köp, omladdning och sista-hjärtat-nollställning har inte verifierats i webbläsare.
+- GitHub main uppdaterad; källkodskontroll utförd men publicerad Pages-version och fysisk mobilspelning ej verifierade.
