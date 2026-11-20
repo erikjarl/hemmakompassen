@@ -506,6 +506,14 @@
     tone(523.25,t,.085,.018,'triangle');
     tone(392,t+.07,.12,.022,'sine');
   }
+  // Två låga, avtagande tonsteg när en utpekad gångväg inte är möjlig.
+  // Originalsyntes, ingen automatisk uppspelning eller ny ljudmotor.
+  function routeBlocked(){
+    if(!enabled||hidden||!ctx||ctx.state!=='running')return;
+    const t=now()+.008;
+    tone(293.66,t,.11,.023,'triangle');
+    tone(196,t+.11,.16,.019,'sine');
+  }
   // Tre diskreta originalsignaler för att lämna miljöer och välja väg.
   // Spelas bara när ljudet är på och AudioContext är aktiv.
   function boatReturn(){
@@ -611,5 +619,5 @@
     }catch(_){speechMusicVolume(volume);return false;}
   }
   function status(){return {enabled,available:!!AudioCtor,contextState:ctx?ctx.state:'not-created',scene,hidden,playingMusic:musicInterval!==null,playingWaves:!!waves,playingEngine:!!engine,playingCarEngine:!!carEngine,carActive,dragonNearby};}
-  root.RimforsaAudio={enable,disable,toggle,resumeFromGesture,setScene,setBoatSpeed,setCarActive,setCarSpeed,setDragonNearby,coin,hit,poop,victory,slideLaunch,slideLand,slideCharge,slideLongJump,sharkBump,purchase,fuelFill,boatGrounding,carEnter,itemFound,helicopterHit,footballKick,footballSave,footballGoal,boatTreasure,bagOpen,mapOpen,boatLaunch,potatoSale,carExit,bagClear,gameOver,shopEnter,mapClose,boatReturn,shopExit,routeSelected,potatoPlant,potatoHarvest,speak,stopSpeech,setVisible,status};
+  root.RimforsaAudio={enable,disable,toggle,resumeFromGesture,setScene,setBoatSpeed,setCarActive,setCarSpeed,setDragonNearby,coin,hit,poop,victory,slideLaunch,slideLand,slideCharge,slideLongJump,sharkBump,purchase,fuelFill,boatGrounding,carEnter,itemFound,helicopterHit,footballKick,footballSave,footballGoal,boatTreasure,bagOpen,mapOpen,boatLaunch,potatoSale,carExit,bagClear,gameOver,shopEnter,mapClose,boatReturn,shopExit,routeSelected,routeBlocked,potatoPlant,potatoHarvest,speak,stopSpeech,setVisible,status};
 })(window);
