@@ -188,3 +188,9 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 - Rotationspass efter MYNT-03. Två dödsvägar (drake och bajskorv) anropar nu samma `restartAfterGameOver(cause)` i huvudfilen. Den läser tidigare gemensamt saldo, återställer mynten genom befintligt `reset({clearMoney:true})`, uppdaterar HUD och visar förlorat antal samt att nästa omgång startar på 0.
 - Återställningen rensar kartmynt, minispelsbelöningar inklusive fotbollen och sparade potatisintäkter, men inte inventariet, potatisskörd eller växttid. Enstaka hjärtförlust följer fortsatt annan väg utan myntnollställning.
 - Syntaxkontroll av inline-JavaScript godkänd; källgranskning visar två spel-slut-anrop till gemensam rutin och inga äldre dödsvägar som direkt anropar `reset()`. Saknar riktig genomspelning och omladdningskontroll i webbläsare, därför är HUV-05 fortsatt öppen. Nästa rotationsuppgift HUV-06.
+
+### 2026-11-20 · Jobb Lage · HUV-06
+
+- Rotationspass efter HUV-05. Förbättrade `drawPoops()` med varma kantpixlar, högdager och mörka skuggor i redan befintliga figurer, med huvudsakligt fokus på läsbarhet mot gräs och ljusa vägar. Ändrade inte kartbild, placering eller händelselogik.
+- Kontrollerade 37 pixelrektanglar: x=-11…11 och y=-15…10 (23×26 pixlar), samma som tidigare. Kollisionen har fortsatt radie 19. Inline-JavaScript syntaxkompilerat utan fel. Riktig visuell genomspelning på mobil/dator saknas; uppgiften förblir därför öppen.
+- Nästa rotationspunkt KARTA-02.
