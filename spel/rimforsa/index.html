@@ -601,13 +601,13 @@ function drawPoops(){
   if(x<-22||y<-25||x>canvas.width+22||y>canvas.height+25)continue;
   // Skarp SNES-pixelsiluett i samma 23×26 px-yta; endast färger och inre detaljer ändras.
   // Mörk, sammanhängande ytterkontur skiljer figuren från både gräs och väg.
-  ctx.fillStyle='#251711';ctx.fillRect(x-11,y-1,23,12);ctx.fillRect(x-8,y-9,17,10);ctx.fillRect(x-3,y-15,9,7);
+  ctx.fillStyle='#1c1310';ctx.fillRect(x-11,y-1,23,12);ctx.fillRect(x-8,y-9,17,10);ctx.fillRect(x-3,y-15,9,7);
   // Djup botten-/sidskugga och tre tydliga, trappade nivåer.
-  ctx.fillStyle='#4b2619';ctx.fillRect(x-9,y,19,9);ctx.fillRect(x-7,y-8,15,9);ctx.fillRect(x-2,y-14,7,8);
-  ctx.fillStyle='#88502b';ctx.fillRect(x-7,y-7,14,7);ctx.fillRect(x-8,y+1,17,6);ctx.fillRect(x-1,y-12,5,6);
-  ctx.fillStyle='#b77940';ctx.fillRect(x-6,y-6,9,3);ctx.fillRect(x-6,y+1,12,4);ctx.fillRect(x,y-11,3,4);
+  ctx.fillStyle='#442319';ctx.fillRect(x-9,y,19,9);ctx.fillRect(x-7,y-8,15,9);ctx.fillRect(x-2,y-14,7,8);
+  ctx.fillStyle='#98592f';ctx.fillRect(x-7,y-7,14,7);ctx.fillRect(x-8,y+1,17,6);ctx.fillRect(x-1,y-12,5,6);
+  ctx.fillStyle='#c38a4a';ctx.fillRect(x-6,y-6,9,3);ctx.fillRect(x-6,y+1,12,4);ctx.fillRect(x,y-11,3,4);
   // Varm, ljus pixelrand ger kontrast utan större sprite eller glöd runtom.
-  ctx.fillStyle='#e4ad69';ctx.fillRect(x-4,y-6,6,2);ctx.fillRect(x-5,y+1,8,2);ctx.fillRect(x,y-11,3,2);
+  ctx.fillStyle='#f2bd7c';ctx.fillRect(x-4,y-6,6,2);ctx.fillRect(x-5,y+1,8,2);ctx.fillRect(x,y-11,3,2);
   ctx.fillStyle='#f4cc91';ctx.fillRect(x-2,y-10,2,2);ctx.fillRect(x-4,y+1,3,1);
   // Små konturpixlar gör formen läsbar vid huvudkartans verkliga skala.
   ctx.fillStyle='#2d1912';ctx.fillRect(x-7,y+7,14,2);ctx.fillRect(x+7,y+2,2,5);ctx.fillRect(x-4,y-2,2,2);
@@ -650,6 +650,14 @@ function drawPoops(){
   ctx.fillRect(x+6,y-7,1,4);ctx.fillRect(x-7,y+8,3,1);
   ctx.fillStyle='#eab977';
   ctx.fillRect(x-4,y-4,5,1);ctx.fillRect(x-5,y+3,7,1);
+  // Smal mörk silhuett mot ljus väg och varma kontrastpixlar mot mörkt gräs.
+  // Alla tillägg ligger innanför den oförändrade 23×26-pixelrektangeln.
+  ctx.fillStyle='#21150f';
+  ctx.fillRect(x-11,y+3,1,6);ctx.fillRect(x+10,y+3,2,5);
+  ctx.fillRect(x-3,y-15,3,1);ctx.fillRect(x+6,y-8,2,2);
+  ctx.fillStyle='#ffd28d';
+  ctx.fillRect(x-8,y-5,2,1);ctx.fillRect(x-6,y+4,3,1);
+  ctx.fillRect(x+1,y-10,2,1);
   // Minimal highlight på översta toppen för att förtydliga var silhuetten börjar.
   ctx.fillStyle='#ffdf9c';ctx.fillRect(x-1,y-13,1,1);
  }
