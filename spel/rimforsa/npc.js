@@ -1,6 +1,7 @@
 /* Lage i Rimforsa: vandrande personer i Lages 16-bitars stil. */
 (function(root){
 'use strict';
+const friendSprites=root.RimforsaFriendSprites||null;
 const definitions=[
  {id:'maja',name:'Maja',x:585,y:410,filter:'hue-rotate(115deg) saturate(1.15)',color:'#7de2bd',
   lines:['Hej Lage! Jag är på väg till Hackelhallen. Vill du spela boll?','Det finns guldmynt gömda längs stigarna. Har du hittat några?','Jag såg ett troll borta vid den stora stenen!']},
@@ -105,7 +106,17 @@ function createSystem(canStand,random=Math.random){
      if(x<-50||x>width+50||y<-60||y>height+60)continue;
      ctx.save();
      ctx.fillStyle='#132c2480';ctx.beginPath();ctx.ellipse(x,y-2,11,4,0,0,Math.PI*2);ctx.fill();
-     if(p.id==='oliver'||p.id==='saga'){
+     const friendReady=!!(friendSprites&&friendSprites.complete&&friendSprites.naturalWidth===96&&friendSprites.naturalHeight===96);
+     if((p.id==='oliver'||p.id==='saga')&&friendReady){
+       // Två bildgenererade 3-riktningsfigurer, med spegling för vänster.
+       const col=p.dir==='up'?2:p.dir==='down'?0:1;
+       const row=p.id==='oliver'?0:1;
+       const mirrored=p.dir==='left';
+       const bob=Math.floor(p.phase)%4===1?1:0;
+       ctx.imageSmoothingEnabled=false;
+       if(mirrored){ctx.translate(x,0);ctx.scale(-1,1);ctx.drawImage(friendSprites,col*32,row*48,32,48,-19,y-48+bob,38,48);}
+       else ctx.drawImage(friendSprites,col*32,row*48,32,48,x-19,y-48+bob,38,48);
+     }else if(p.id==='oliver'||p.id==='saga'){
        drawFriend(ctx,p,x,y);
      }else if(hasSprite){
        const row=p.dir==='down'?0:p.dir==='left'?1:p.dir==='right'?2:3;
