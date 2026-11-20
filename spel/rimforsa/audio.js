@@ -175,15 +175,28 @@
     // when the actual context state changes, rather than after the initial tap only.
     notifyAudioState();
   }
+  // En fastnad eller avstängd Safari-kontext ska inte kunna förgifta nästa
+  // ljudstart. Stäng den gamla motorn, stoppa dess loopar och ignorera sena
+  // resume()-löften innan en ny skapas under nästa riktiga användargest.
+  function disposeContext(){
+    stopScene();
+    if(ctx){
+      const oldContext=ctx;
+      oldContext.onstatechange=null;
+      if(master){try{master.disconnect();}catch(_){}}
+      if(oldContext.state!=='closed'&&typeof oldContext.close==='function'){
+        try{
+          const closing=oldContext.close();
+          if(closing&&typeof closing.catch==='function')closing.catch(()=>{});
+        }catch(_){}
+      }
+    }
+    ctx=null;master=null;resumePending=false;resumeStartedAt=0;resumeSerial++;
+  }
   function ensureContext(){
     if(!AudioCtor)return false;
-    // Safari kan stänga en gammal AudioContext efter längre app-/flikpaus.
-    // En stängd kontext kan aldrig återupptas; skapa då en ny vid nästa användargest.
-    if(ctx&&ctx.state==='closed'){
-      stopScene();
-      ctx.onstatechange=null;
-      ctx=null;master=null;resumePending=false;resumeSerial++;
-    }
+    // En redan stängd kontext kan inte återupptas, inte ens på iOS.
+    if(ctx&&ctx.state==='closed')disposeContext();
     if(!ctx){
       ctx=new AudioCtor();
       master=gain(enabled?volume:0);master.connect(ctx.destination);
@@ -212,11 +225,15 @@
       try{if(!ensureContext())return false;}catch(_){return false;}
     }
     if(ctx.state==='running'){startScene();return true;}
-    // En iOS-resume som aldrig avslutar sitt Promise får inte låsa ljudet för alltid.
-    // Ny faktisk användargest kan prova igen efter 2,5 sekunder.
-    if(resumePending&&Date.now()-resumeStartedAt<2500){
-      // Safari kan missa en första upplåsningsgest medan resume() väntar.
-      // Nästa verkliga gest får starta en tyst källa, men inte ett andra resume().
+    // Safari kan lämna resume() olöst, eller lösa det utan att kontexten
+    // faktiskt börjar köra. Efter 2,5 sekunder bygger NÄSTA användargest
+    // om en fastnad motor i stället för att prova samma trasiga kontext igen.
+    if(resumeStartedAt&&Date.now()-resumeStartedAt>=2500){
+      disposeContext();
+      try{if(!ensureContext())return false;}catch(_){return false;}
+    }else if(resumePending){
+      // Inom tidsfönstret kan en andra gest hjälpa den första upplåsningen
+      // utan att två samtidiga resume()-anrop skickas.
       primeFromGesture();
       return false;
     }
@@ -255,17 +272,18 @@
       resumeFromGesture();
       if(ctx.state==='running')startScene();
       return true;
-    }catch(e){enabled=false;return false;}
+    }catch(e){enabled=false;disposeContext();return false;}
   }
   function disable(){
     stopSpeech();
-    if(!enabled)return;
-    enabled=false;stopScene();
-    if(master&&ctx)master.gain.setTargetAtTime(0,now(),.03);
+    enabled=false;
+    // Av/på-knappen fungerar även som en riktig återställning när Safari
+    // rapporterar "running" men högtalaren ändå har blivit tyst efter appbyte.
+    // Nästa På-tryck skapar en fräsch motor direkt från klickets användargest.
+    disposeContext();
   }
   function toggle(){
     if(enabled){disable();return false;}
-    if(master&&ctx)master.gain.setTargetAtTime(volume,now(),.03);
     return enable();
   }
   function setScene(next){
