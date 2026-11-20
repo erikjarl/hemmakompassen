@@ -343,3 +343,9 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 - `audio.js`: ny användargest kan påbörja ett nytt resume-försök om Safari fortfarande håller ett äldre resume-Promise efter 2,5 sekunder; sena Promise-svar identifieras med försökstoken. `audio.js?v=23`. Ingen fysisk Safari-lyssning genomförd.
 - `car.js`: befintliga `car-directions.png` renderas nu i alla åtta riktningar och kodritning är reserv. `car.js?v=8`. Nytt genererat bilark finns som separat lokal bildfil men har inte laddats upp till repot eller kopplats in; FORDON-02 fortfarande öppen.
 - GitHub-commits: `bacf0ad`, `33233ad`, `4aacf7e`, `2302c9d`; roadmap har ändrats till senaste `LJUD-02` och nästa `LJUD-03`. Källfiler verifierade på main, inte faktisk Pages-/mobilrendering.
+
+
+### 2026-11-20 – Jobb Lage / LJUD-03
+- Tre korta originalsyntetiserade effekter i `audio.js`: `boatReturn` (återkomst från båtspelet utan game-over), `shopExit` (lämna ICA/pizzerian) och `routeSelected` (giltigt gångvägsval). `index.html` kopplar dem till händelser, undviker dubblat kartstängningsljud vid vägval och behåller stängknappens ljud; `audio.js?v=24`.
+- Kod sparad i commits `3202c13`, `a55979e`, `f883644`; roadmap `adea4c4`. Källkoden kontrollerad på `main`, ingen faktisk mobil-/datoravlyssning eller Pages-kontroll. LJUD-03 förblir öppen. Nästa huvuduppgift GRAF-01.
+- Den senast genererade bilbilden är fortfarande inte uppladdad/inkopplad; den befintliga 8-riktningsbilden används sedan föregående pass. Grafikprioriteten kvarstår.
