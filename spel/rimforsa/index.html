@@ -640,6 +640,16 @@ function drawPoops(){
   ctx.fillRect(x-4,y-1,11,2);ctx.fillRect(x-8,y+5,3,2);
   ctx.fillStyle='#301c17';
   ctx.fillRect(x+7,y-1,2,3);ctx.fillRect(x-7,y+8,4,1);
+  // En tunn pixlad ljus-/mörkavgränsning ger bättre läsbarhet mot både gräs och väg.
+  // Alla nya pixlar ligger inom befintliga x=-11..11 och y=-15..10.
+  ctx.fillStyle='#f4d29b';
+  ctx.fillRect(x-9,y+1,1,5);ctx.fillRect(x-8,y-8,1,3);
+  ctx.fillRect(x-3,y-14,2,1);ctx.fillRect(x+1,y-12,2,1);
+  ctx.fillStyle='#1d1715';
+  ctx.fillRect(x+9,y+3,2,5);ctx.fillRect(x+5,y+9,5,1);
+  ctx.fillRect(x+6,y-7,1,4);ctx.fillRect(x-7,y+8,3,1);
+  ctx.fillStyle='#eab977';
+  ctx.fillRect(x-4,y-4,5,1);ctx.fillRect(x-5,y+3,7,1);
   // Minimal highlight på översta toppen för att förtydliga var silhuetten börjar.
   ctx.fillStyle='#ffdf9c';ctx.fillRect(x-1,y-13,1,1);
  }
