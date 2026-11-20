@@ -1,5 +1,7 @@
 # Lage i Rimforsa – historisk arbetslogg
 
+- **2026-11-20 – Jobb lage / DRAKE-02:** Uppdaterade `dragon.js` så eldklotens kollisionskontroll mäter avstånd till hela rörelsesegmentet mellan två bildrutor i stället för enbart slutpositionen. Både spelaren och helikoptern använder samma kontroll; målet är att undvika att projektiler missar vid lägre bildfrekvens. Cacheversion höjd till `dragon.js?v=4`. Koden committad till `main` och återläst från GitHub. Faktisk spelning, visuellt test och fysisk mobil/Safari samt publicerad Pages-version inte verifierade. DRAKE-02 fortfarande öppen; nästa MYNT-03.
+
 - **2026-11-20 – Jobb lage / GRAF-01:** Hackelhallen har fått en ny originalritad 16-bitarsinspirerad resultattavla med hallens namn, dynamisk visning av Lages mål och två dekorativa väggvimplar. `football-minigame.js` ändrades och cacheversionen höjdes till `v=4` i `index.html`. Källfilerna och rotationsfälten återlästes efter commit; ingen visuell mobil-/datorgenomspelning, full CI eller Pages-servering verifierad. Fysik, mynt och kontroller oförändrade. GRAF-01 fortsatt öppen; nästa DRAKE-02.
 
 - **2026-11-20 – Jobb lage / LJUD-03:** Tre korta originalsyntetiserade ljud har införts för öppning av väskan (`bagOpen`), stora kartan (`mapOpen`) och start av båtäventyr (`boatLaunch`). `audio.js` och `index.html` uppdaterades, cacheversion `v=18`. Återläsning från `main` bekräftade funktionsnamn, export, händelsekopplingar och roadmaprotation; ingen fysisk avlyssning, webbläsargenomspelning eller Pages-servering verifierad. LJUD-03 öppen; nästa GRAF-01.
