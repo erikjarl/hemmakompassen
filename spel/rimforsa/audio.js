@@ -191,6 +191,19 @@
     }
     return true;
   }
+  // Äldre mobil-Safari kan behöva en faktisk source.start() i samma
+  // användargest som resume(). Spela EN tyst sample utan hörbart ljud.
+  // Ingen timer, ingen automatisk unlock vid pageshow/visibilitychange.
+  function primeFromGesture(){
+    if(!ctx||ctx.state==='closed'||!master)return;
+    try{
+      const source=ctx.createBufferSource();
+      source.buffer=ctx.createBuffer(1,1,ctx.sampleRate);
+      source.connect(master);
+      source.onended=()=>{try{source.disconnect();}catch(_){}};
+      source.start(0);
+    }catch(_){}
+  }
   // Anropas bara som följd av ett aktivt fingertryck eller en tangentnedtryckning.
   // Inga försök att kringgå webbläsarens krav på användargest.
   function resumeFromGesture(){
@@ -206,6 +219,8 @@
       resumePending=true;resumeStartedAt=Date.now();
       const attempt=++resumeSerial;
       const resumingContext=ctx;
+      // Start within the actual gesture before calling asynchronous resume().
+      primeFromGesture();
       const pending=resumingContext.resume();
       if(pending&&typeof pending.then==='function'){
         pending.then(()=>{
