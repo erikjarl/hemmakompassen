@@ -1,5 +1,7 @@
 # Lage i Rimforsa – historisk arbetslogg
 
+- **2026-11-20 – Jobb lage / HUV-05:** Ny fokuserad förlustdialog i `index.html` visar förlorat myntantal och nollställt saldo efter sista hjärtat, och låter spelaren återuppta med en tydlig knapp. Spelstyrning pausas medan dialogen är öppen. Befintliga reset-anrop för huvudkartan, minispelsmynt och potatismynt samt bibehållen väska/skörd är oförändrade. Ändringen committad på `main`, men webbläsartest och omladdningstest återstår; därför fortsatt öppen. Nästa rotation HUV-06.
+
 - **2026-11-20 – Jobb lage / MYNT-03:** Hackelhallens fotbollsminispel visar nu huvudkartans delade myntsaldo genom en `getWalletBalance`-callback från `index.html`, som använder befintliga `totalMoney()`. Visningen uppdateras när minispel öppnas och efter mål, utan att ändra bonus-ID, målberäkning eller myntsparande. `football-minigame.js?v=5`. Koden sparad på `main`; full webbläsargenomspelning och fysisk mobil/Safari ännu inte verifierade. MYNT-03 fortsatt öppen, nästa HUV-05.
 
 - **2026-11-20 – Jobb lage / DRAKE-02:** Uppdaterade `dragon.js` så eldklotens kollisionskontroll mäter avstånd till hela rörelsesegmentet mellan två bildrutor i stället för enbart slutpositionen. Både spelaren och helikoptern använder samma kontroll; målet är att undvika att projektiler missar vid lägre bildfrekvens. Cacheversion höjd till `dragon.js?v=4`. Koden committad till `main` och återläst från GitHub. Faktisk spelning, visuellt test och fysisk mobil/Safari samt publicerad Pages-version inte verifierade. DRAKE-02 fortfarande öppen; nästa MYNT-03.
