@@ -194,3 +194,9 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 - Rotationspass efter HUV-05. Förbättrade `drawPoops()` med varma kantpixlar, högdager och mörka skuggor i redan befintliga figurer, med huvudsakligt fokus på läsbarhet mot gräs och ljusa vägar. Ändrade inte kartbild, placering eller händelselogik.
 - Kontrollerade 37 pixelrektanglar: x=-11…11 och y=-15…10 (23×26 pixlar), samma som tidigare. Kollisionen har fortsatt radie 19. Inline-JavaScript syntaxkompilerat utan fel. Riktig visuell genomspelning på mobil/dator saknas; uppgiften förblir därför öppen.
 - Nästa rotationspunkt KARTA-02.
+
+### 2026-11-20 · Jobb Lage · KARTA-02
+
+- Rotationspass efter HUV-06. Minskade den osynliga fotkollisionens sidoprover från ±2 till ±1 pixel och den översta kontrollpunkten från -4 till -3 pixel. Kravet på giltig markmask för alla fem fotpunkter kvarstår och styrassistansens `edgeClearance` använder samma prover.
+- Finare A*-ruttnät (6 i stället för 8 kartpixlar) avsett att hitta smala gångbara passager oftare, utan förändring av ritad karta, maskbild eller vatten-/byggnadsregler.
+- Syntaxkontroll av huvudsidans inline-JavaScript godkänd; verifierat att samma gångprover används i kollisions- och kantfunktionerna samt att bild-/maskreferenser inte ändrats. Ej faktiskt genomspelat på mobil/tangentbord; passageframkomlighet, vattengränser och ruttprestanda behöver testas, så KARTA-02 förblir öppen. Nästa rotationsuppgift FORDON-02.
