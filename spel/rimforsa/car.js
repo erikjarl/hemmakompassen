@@ -59,6 +59,18 @@ function draw(ctx,x,y,dir='right',occupied=false){
  if((left||right)&&directionSpriteReady()&&typeof ctx.drawImage==='function'){
   const smooth=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=false;
   ctx.drawImage(directionSprite,(directionFrame<0?CAR_DIRECTIONS.indexOf('right'):directionFrame)*DIRECTION_FRAME_WIDTH,0,DIRECTION_FRAME_WIDTH,DIRECTION_FRAME_HEIGHT,-48,-40,96,72);
+  // The shared eight-direction sheet has no separate occupied frames.
+  // Show Lage only while driving, keeping the established white car sprite.
+  if(occupied){
+   const facing=left?-1:1;
+   ctx.save();ctx.scale(facing,1);
+   rect(5,-15,9,9,'#243b46'); // dark outline inside the front side window
+   rect(6,-14,7,7,'#d9ae86'); // face
+   rect(5,-15,9,3,'#6b482f'); // Lage's brown hair
+   rect(11,-10,1,1,'#24323a'); // eye
+   rect(6,-7,7,2,'#bb5851'); // shirt
+   ctx.restore();
+  }
   ctx.imageSmoothingEnabled=smooth;ctx.restore();return;
  }
  if(left||right){
