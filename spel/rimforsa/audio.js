@@ -468,6 +468,27 @@
     tone(523.25,t,.085,.018,'triangle');
     tone(392,t+.07,.12,.022,'sine');
   }
+  // Tre diskreta originalsignaler för att lämna miljöer och välja väg.
+  // Spelas bara när ljudet är på och AudioContext är aktiv.
+  function boatReturn(){
+    if(!enabled||hidden||!ctx||ctx.state!=='running')return;
+    const t=now()+.01;
+    tone(329.63,t,.10,.030,'triangle');
+    tone(261.63,t+.09,.13,.024,'sine');
+    tone(196,t+.19,.17,.018,'sine');
+  }
+  function shopExit(){
+    if(!enabled||hidden||!ctx||ctx.state!=='running')return;
+    const t=now()+.01;
+    tone(587.33,t,.08,.019,'triangle');
+    tone(392,t+.075,.13,.018,'sine');
+  }
+  function routeSelected(){
+    if(!enabled||hidden||!ctx||ctx.state!=='running')return;
+    const t=now()+.01;
+    tone(440,t,.075,.020,'square');
+    tone(659.25,t+.075,.13,.021,'triangle');
+  }
   function boatGrounding(){
     if(!enabled||!ctx||hidden||ctx.state!=='running')return;
     const t=now()+.01;
@@ -522,5 +543,5 @@
     }catch(_){speechMusicVolume(volume);return false;}
   }
   function status(){return {enabled,available:!!AudioCtor,contextState:ctx?ctx.state:'not-created',scene,hidden,playingMusic:musicInterval!==null,playingWaves:!!waves,playingEngine:!!engine,playingCarEngine:!!carEngine,carActive,dragonNearby};}
-  root.RimforsaAudio={enable,disable,toggle,resumeFromGesture,setScene,setBoatSpeed,setCarActive,setCarSpeed,setDragonNearby,coin,hit,poop,victory,slideLaunch,slideLand,sharkBump,purchase,fuelFill,boatGrounding,carEnter,itemFound,helicopterHit,footballKick,footballSave,footballGoal,boatTreasure,bagOpen,mapOpen,boatLaunch,potatoSale,carExit,bagClear,gameOver,shopEnter,mapClose,speak,stopSpeech,setVisible,status};
+  root.RimforsaAudio={enable,disable,toggle,resumeFromGesture,setScene,setBoatSpeed,setCarActive,setCarSpeed,setDragonNearby,coin,hit,poop,victory,slideLaunch,slideLand,sharkBump,purchase,fuelFill,boatGrounding,carEnter,itemFound,helicopterHit,footballKick,footballSave,footballGoal,boatTreasure,bagOpen,mapOpen,boatLaunch,potatoSale,carExit,bagClear,gameOver,shopEnter,mapClose,boatReturn,shopExit,routeSelected,speak,stopSpeech,setVisible,status};
 })(window);
