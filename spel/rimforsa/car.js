@@ -63,6 +63,13 @@ function draw(ctx,x,y,dir='right',occupied=false){
   // front/rear/diagonal directions that previously showed an empty car.
   if(occupied){
    ctx.save();
+   // Begränsa Lage till kupéns fönster så hans ansikte och tröja inte
+   // ritas ovanpå tak, dörrar eller motorhuv i de åtta bilvyerna.
+   // Alla koordinater avser samma bilbild i lokal 96×72-pixelskala.
+   ctx.beginPath();
+   if(left||right)ctx.rect(-16,-16,32,12);
+   else ctx.rect(-11,-15,22,13);
+   ctx.clip();
    if(left||right){
     const facing=left?-1:1;
     ctx.scale(facing,1);
