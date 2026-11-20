@@ -114,7 +114,7 @@ function createSystem(canStand,random=Math.random){
        const mirrored=p.dir==='left';
        const bob=Math.floor(p.phase)%4===1?1:0;
        ctx.imageSmoothingEnabled=false;
-       if(mirrored){ctx.translate(x,0);ctx.scale(-1,1);ctx.drawImage(friendSprites,col*32,row*48,32,48,-19,y-48+bob,38,48);}
+       if(mirrored){ctx.save();ctx.translate(x,0);ctx.scale(-1,1);ctx.drawImage(friendSprites,col*32,row*48,32,48,-19,y-48+bob,38,48);ctx.restore();}
        else ctx.drawImage(friendSprites,col*32,row*48,32,48,x-19,y-48+bob,38,48);
      }else if(p.id==='oliver'||p.id==='saga'){
        drawFriend(ctx,p,x,y);
