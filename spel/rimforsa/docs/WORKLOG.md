@@ -1,5 +1,7 @@
 # Lage i Rimforsa – historisk arbetslogg
 
+- **2026-11-20 – LJUD-02 / mobil-Safari:** Ljudmotorn frigör numera avstängd eller fastnad AudioContext, inklusive schemalagda spel-loopar, och kan skapa ny motor från nästa faktiska användargest. Ljud av/på startar om ljudmotorn och sena Promise-svar från en gammal kontext ignoreras. `audio.js?v=29` samt riktat regressionstest tillagda på arbetsgren. Fysisk iPhone-lyssning, scenbyten och Pages-drift ej verifierade; LJUD-02 kvarstår öppen. Nästa rotation LJUD-03.
+
 - **2026-11-20 – Jobb lage / KARTA-02:** Förbättrade kartans pekstyrda ruttföljning med `canWalkStraight()` i `index.html`. Ruttens mellanpunkter kan hoppas över när hela segmentet ligger inom samma giltiga gångmask, provat var 2 px och med högst 90 px genväg. Vägar, vatten, byggnader, kollisioner, manuell styrning och kartgrafik är oförändrade. Uppdaterade roadmapens rotation till FORDON-02. Filerna är sparade på `main`; verklig genomspelning vid viktiga vägpassager på mobil och dator återstår, så KARTA-02 är fortsatt öppen.
 
 - **2026-11-20 – Jobb lage / HUV-06:** Lade till tio pixelrektanglar för tydligare ljus vänster-/överkant, mörk höger-/underkant och veck på bajskorvarnas sprite i `index.html`. Alla nytillkomna pixlar ryms inom ursprungliga 23×26 px; placering, antal, kollisionsradie och hjärtskada är oförändrade. Sparat på `main`; ingen visuell granskning mot gräs och väg i verklig mobil- eller datorwebbläsare har genomförts. Uppgiften förblir öppen; nästa KARTA-02.
