@@ -18,7 +18,7 @@ function install(){
  overlay=root.document.createElement('div');
  overlay.className='football-overlay';overlay.hidden=true;
  overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','Fotboll i Hackelhallen');
- overlay.innerHTML=`<div class="football-panel"><h2>⚽ Hackelhallen – spela med Maja</h2><p>Styr Lage till bollen och skjut mot målet till höger! Maja står i mål och försöker rädda dina skott.</p><canvas width="480" height="300" aria-label="Detaljerad pixelritad fotbollshall med Lage, Maja, boll och mål"></canvas><p data-status role="status" aria-live="polite">Mål: 0 · Skott: 0</p><div class="football-controls"><div class="football-pad" aria-label="Styr Lage"><button data-dir="up" aria-label="Gå upp">▲</button><button data-dir="left" aria-label="Gå vänster">◀</button><button data-dir="down" aria-label="Gå ned">▼</button><button data-dir="right" aria-label="Gå höger">▶</button></div><button type="button" data-kick>SKJUT ⚽</button><button type="button" data-reset>Spela om ↺</button><button type="button" data-close>Tillbaka ✕</button></div><p>De första tre målen kan ge ett mynt var till huvudkartans plånbok. Varje målbonus kan bara fås en gång per skattjakt.</p><p>Mobil: styr med pilarna och tryck Skjut nära bollen. Dator: pilar/WASD och mellanslag.</p></div>`;
+ overlay.innerHTML=`<div class="football-panel"><h2>⚽ Hackelhallen – spela med Maja</h2><p>Styr Lage till bollen och skjut mot målet till höger! Maja står i mål och försöker rädda dina skott.</p><canvas width="480" height="300" aria-label="Detaljerad pixelritad fotbollshall med Lage, Maja, boll och mål"></canvas><p data-status role="status" aria-live="polite">Mål: 0 · Skott: 0</p><div class="football-controls"><div class="football-pad" aria-label="Styr Lage"><button data-dir="up" aria-label="Gå upp">▲</button><button data-dir="left" aria-label="Gå vänster">◀</button><button data-dir="down" aria-label="Gå ned">▼</button><button data-dir="right" aria-label="Gå höger">▶</button></div><button type="button" data-kick>SKJUT ⚽</button><button type="button" data-aim="high" aria-label="Skjut mot övre hörnet">↗ Övre hörnet</button><button type="button" data-aim="low" aria-label="Skjut mot nedre hörnet">↘ Nedre hörnet</button><button type="button" data-reset>Spela om ↺</button><button type="button" data-close>Tillbaka ✕</button></div><p>De första tre målen kan ge ett mynt var till huvudkartans plånbok. Varje målbonus kan bara fås en gång per skattjakt.</p><p>Mobil: styr med pilarna. Skjut rakt eller välj övre/nedre hörnet nära bollen. Dator: pilar/WASD, mellanslag för rakt skott, 1 för övre hörnet och 2 för nedre hörnet.</p></div>`;
  root.document.body.append(overlay);canvas=overlay.querySelector('canvas');ctx=canvas.getContext('2d');status=overlay.querySelector('[data-status]');
  lageImage=new root.Image();lageImage.src='./lage-sprites.png';lageImage.onload=()=>{if(!overlay.hidden)render();};
  for(const button of overlay.querySelectorAll('[data-dir]')){
@@ -26,7 +26,8 @@ function install(){
   button.addEventListener('pointerdown',e=>{e.preventDefault();keys[dir]=true;try{button.setPointerCapture(e.pointerId)}catch(_){}});
   for(const type of ['pointerup','pointercancel','lostpointercapture'])button.addEventListener(type,release);
  }
- overlay.querySelector('[data-kick]').addEventListener('click',kick);
+ overlay.querySelector('[data-kick]').addEventListener('click',()=>kick());
+ for(const aimButton of overlay.querySelectorAll('[data-aim]'))aimButton.addEventListener('click',()=>kick(aimButton.dataset.aim));
  overlay.querySelector('[data-reset]').addEventListener('click',()=>{goals=kicks=0;goalFlash=0;resetPositions();status.textContent='Mål: 0 · Skott: 0';render();});
  overlay.querySelector('[data-close]').addEventListener('click',close);
  overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
@@ -35,6 +36,7 @@ function install(){
   const dir={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',a:'left',s:'down',d:'right',W:'up',A:'left',S:'down',D:'right'}[e.key];
   if(dir){e.preventDefault();e.stopImmediatePropagation();keys[dir]=true;}
   else if(e.key===' '){e.preventDefault();e.stopImmediatePropagation();if(!e.repeat)kick();}
+  else if(e.key==='1'||e.key==='2'){e.preventDefault();e.stopImmediatePropagation();if(!e.repeat)kick(e.key==='1'?'high':'low');}
   else if(e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();close();}
  },true);
  root.document.addEventListener('keyup',e=>{
@@ -97,13 +99,23 @@ function render(){
  if(goalFlash>0){rect(165,106,150,33,'#2e5d41');ctx.font='bold 17px monospace';ctx.fillStyle='#fff1a8';ctx.fillText('MÅÅÅL!',190,129);}
  rect(8,8,160,25,'#233f33');ctx.fillStyle='#f4d69c';ctx.font='bold 13px monospace';ctx.fillText('MÅL '+goals+'   SKOTT '+kicks,17,26);
 }
-function kick(){
+function kick(aim='straight'){ 
  if(!overlay||overlay.hidden)return false;
  const distance=Math.hypot(player.x-ball.x,player.y-ball.y);
  if(distance>44){status.textContent='Gå närmare bollen för att skjuta! Mål: '+goals;return false;}
- const vx=player.dx||1,vy=player.dy||0,n=Math.hypot(vx,vy)||1;
- ball.vx=vx/n*290;ball.vy=vy/n*290;kicks++;
- status.textContent='Bra skott! Mål: '+goals+' · Skott: '+kicks;
+ // Riktade hörnskott gör det möjligt att försöka överlista Majas målvaktsspel.
+ // Sikta på målets båda öppna hörn; rakt skott behåller Lages rörelseriktning.
+ if(aim==='high'||aim==='low'){
+  const targetY=aim==='high'?176:241;
+  const toGoal=Math.max(30,428-ball.x);
+  const slope=clamp((targetY-ball.y)/toGoal,-.8,.8);
+  ball.vx=290/Math.hypot(1,slope);ball.vy=ball.vx*slope;
+ }else{
+  const vx=player.dx||1,vy=player.dy||0,n=Math.hypot(vx,vy)||1;
+  ball.vx=vx/n*290;ball.vy=vy/n*290;
+ }
+ kicks++;
+ status.textContent=(aim==='high'?'Mot övre hörnet!':aim==='low'?'Mot nedre hörnet!':'Bra skott!')+' Mål: '+goals+' · Skott: '+kicks;
  if(root.RimforsaAudio&&root.RimforsaAudio.footballKick)root.RimforsaAudio.footballKick();
  return true;
 }
@@ -117,7 +129,7 @@ function frame(time){
   player.y=clamp(player.y+player.dy*116*dt,155,268);
  }
  // Maja är målvakt och försöker följa bollens rörelse i målområdet.
- majaY=clamp(majaY+clamp(ball.y-majaY,-78*dt,78*dt),187,249);
+ majaY=clamp(majaY+clamp(ball.y-majaY,-52*dt,52*dt),187,249);
  ball.x+=ball.vx*dt;ball.y+=ball.vy*dt;
  if(ball.vx>0&&ball.x>379&&ball.x<404&&Math.abs(ball.y-(majaY-10))<23){ball.x=378;ball.vx=-Math.max(125,Math.abs(ball.vx)*.68);ball.vy+=(ball.y-majaY)*2;status.textContent='Maja räddade! Försök igen. Mål: '+goals;if(root.RimforsaAudio&&root.RimforsaAudio.footballSave)root.RimforsaAudio.footballSave();}
 
