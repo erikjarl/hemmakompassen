@@ -46,9 +46,8 @@ function move(x,y,dx,dy,dt){
  }
  return {x,y,moved,speed:moved?SPEED:0};
 }
-// Riktningsanpassad originalpixelgrafik. Sidovyerna använder befintlig detaljsprite;
-// fram-/bak- och diagonala vyer ritas som egna topp-/3/4-perspektiv utan
-// att rotera sidobildens tak till en vägg.
+// Bildsprites för alla åtta riktningar är förstahandsvalet.
+// Den kodritade bilen nedan används enbart om bildarket saknas.
 function draw(ctx,x,y,dir='right',occupied=false){
  ctx.save();ctx.translate(Math.round(x),Math.round(y));
  const rect=(a,b,w,h,color)=>{ctx.fillStyle=color;ctx.fillRect(a,b,w,h);};
@@ -56,12 +55,12 @@ function draw(ctx,x,y,dir='right',occupied=false){
  // Prioritera en enda bilmodell i ALLA lägen, även vid hemmet.
  // För okända riktningar används höger sidovy; gammal bild är bara fallback.
  const directionFrame=CAR_DIRECTIONS.indexOf(dir);
- if((left||right)&&directionSpriteReady()&&typeof ctx.drawImage==='function'){
+ if(directionFrame>=0&&directionSpriteReady()&&typeof ctx.drawImage==='function'){
   const smooth=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=false;
   ctx.drawImage(directionSprite,(directionFrame<0?CAR_DIRECTIONS.indexOf('right'):directionFrame)*DIRECTION_FRAME_WIDTH,0,DIRECTION_FRAME_WIDTH,DIRECTION_FRAME_HEIGHT,-48,-40,96,72);
   // The shared eight-direction sheet has no separate occupied frames.
-  // Show Lage only while driving, keeping the established white car sprite.
-  if(occupied){
+  // Overlay Lage in the side window when occupied. Other angles retain their sprite view.
+  if(occupied&&(left||right)){
    const facing=left?-1:1;
    ctx.save();ctx.scale(facing,1);
    rect(5,-15,9,9,'#243b46'); // dark outline inside the front side window
