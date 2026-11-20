@@ -1,5 +1,11 @@
 # Lage i Rimforsa – historisk arbetslogg
 
+### 2026-11-21 – Jobb lage, KARTA-02 (gångruttens A*-sökning)
+- Ändrat A*-sökningens stoppvillkor så att endast unika undersökta kartceller, inte inaktuella dubbletter i prioritetskön, räknas mot MAX. Det minskar risken för att gångrutter avbryts för tidigt på svårare kartsträckor.
+- Gångmask, diagonalspärrar, hinder, vägarnas synliga grafik och styrning har inte ändrats. Ändringen är sparad på main i kodcommit `4e8bde9` och dokumenterad i roadmapcommit `4c0c120`.
+- Ingen faktisk gångprovning i mobil/dator eller på GitHub Pages under detta pass. KARTA-02 hålls öppen, nästa rotation FORDON-02.
+
+
 ### 2026-11-21 – Jobb lage, HUV-06 (igenkännbar hinderfigur)
 - Lade till två ljusa 3×3-pixelögon, mörka pupiller och en liten mundetalj i `drawPoops()`. Samtliga nya rektanglar ryms inom oförändrad spriteyta 23×26 px. Kollision, position, antal och hjärtskada är orörda.
 - Kontrollerat direkt på `main` att kod och roadmap sparats (kodcommit `5bcef5e`, roadmapcommit `2aa39c8`). Ingen faktisk webbläsar-/mobilgenomspelning eller visuell jämförelse utförd; HUV-06 kvarstår öppen. Nästa rotation: KARTA-02.
