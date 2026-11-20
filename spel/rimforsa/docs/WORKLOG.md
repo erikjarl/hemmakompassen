@@ -331,3 +331,9 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 - **2026-11-20 – Jobb lage / MYNT-03:** Lade till engångsbelöningen `slide-0` vid första landningen i förskolans rutschkanespel. Båda huvudkartingångarna skickar `onLandingCoin` och `getWalletBalance` till minispelsmodulen. Gemensam localStorage-plånbok accepterar nu `slide-`-ID; dess befintliga köpsystem och game-over-nollställning inkluderar därmed myntet. Minispelsvyn visar totalt saldo och skillnad mellan nytt och redan hämtat landningsmynt. `slide-minigame.js?v=7`. Bildbaserade förskolebarn kvar från tidigare pass, ej nya sprites detta pass. Kodankare kontrollerade, men faktisk mobil-/datorgenomspelning, omladdning och köp kvarstår. Rotation MYNT-03 → HUV-05.
 
 - **2026-11-20 – Jobb lage / HUV-05:** Skydd mot dubbel game-over: `restartAfterGameOver()` returnerar om förlustdialogen redan är öppen. Förlustmeddelandet använder det beräknade `remainingCoins` efter reset i stället för ett hårdkodat nollvärde. Verifierat i källkoden att nya rutschkanemyntet `slide-0` ingår i samma `rewardWallet.clear()` som båt-, dyk- och fotbollsbonusar. Inga nya bildsprites genererade under detta pass; bildbaserade förskolebarn är redan inkopplade, andra kodritade personer återstår. Koden sparad på GitHub main; inte verifierad genom faktisk genomspelning eller sidomladdning. Rotation HUV-05 → HUV-06.
+
+
+### 2026-11-20 – Jobb Lage / FORDON-02
+- Uppdaterade `boat-direction-art.js`: Lages ansikte/hår följer åtta båt-riktningar (framifrån, bakifrån och sidoprofil), med ratt och vindruteram. `index.html` laddar `boat-direction-art.js?v=3`.
+- Commitkod: `fade7cc1`, `a16e5f9`. Ett bildgenererat bil-åttavysark har skapats separat men **inte** uppladdats till eller aktiverats i spelet.
+- Verifieringsnivå: källkod och version finns på `main`; verklig mobil-/desktoprendering av alla åtta vyer och Pages-leverans ej verifierade. `FORDON-02` fortfarande öppen. Nästa huvuduppgift `LJUD-02`.
