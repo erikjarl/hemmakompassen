@@ -1003,7 +1003,7 @@ function reset({clearMoney=true}={}){
  updateMessage();
 }
 document.getElementById('reset').addEventListener('click',()=>{stop();reset()});
-document.getElementById('closeLoss').addEventListener('click',()=>{document.getElementById('lossOverlay').hidden=true;state.nearKey=null;updateMessage();});
+document.getElementById('closeLoss').addEventListener('click',()=>{document.getElementById('lossOverlay').hidden=true;stop();state.nearKey=null;updateMessage();});
 document.getElementById('closeWin').addEventListener('click',()=>{winOverlay.hidden=true;updateMessage();});
 document.getElementById('closeBoat').addEventListener('click',closeBoatGame);
 document.getElementById('boatRestart').addEventListener('click',resetBoatGame);
