@@ -2,7 +2,7 @@
    Originalritad SNES-inspirerad miljö. Egen temporär poäng, oförändrad huvudplånbok. */
 (function(root){
 'use strict';
-let overlay=null,canvas=null,ctx=null,status=null,previousFocus=null,returnToMap=null,onGoalCoin=null,raf=0,last=0;
+let overlay=null,canvas=null,ctx=null,status=null,previousFocus=null,returnToMap=null,onGoalCoin=null,getWalletBalance=null,raf=0,last=0;
 const W=480,H=300,keys={up:false,down:false,left:false,right:false};
 const player={x:115,y:215,dx:1,dy:0},ball={x:205,y:170,vx:0,vy:0};
 let goals=0,kicks=0,goalFlash=0,majaY=206,lageImage=null;
@@ -18,7 +18,7 @@ function install(){
  overlay=root.document.createElement('div');
  overlay.className='football-overlay';overlay.hidden=true;
  overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','Fotboll i Hackelhallen');
- overlay.innerHTML=`<div class="football-panel"><h2>⚽ Hackelhallen – spela med Maja</h2><p>Styr Lage till bollen och skjut mot målet till höger! Maja står i mål och försöker rädda dina skott.</p><canvas width="480" height="300" aria-label="Detaljerad pixelritad fotbollshall med Lage, Maja, boll och mål"></canvas><p data-status role="status" aria-live="polite">Mål: 0 · Skott: 0</p><div class="football-controls"><div class="football-pad" aria-label="Styr Lage"><button data-dir="up" aria-label="Gå upp">▲</button><button data-dir="left" aria-label="Gå vänster">◀</button><button data-dir="down" aria-label="Gå ned">▼</button><button data-dir="right" aria-label="Gå höger">▶</button></div><button type="button" data-kick>SKJUT ⚽</button><button type="button" data-aim="high" aria-label="Skjut mot övre hörnet">↗ Övre hörnet</button><button type="button" data-aim="low" aria-label="Skjut mot nedre hörnet">↘ Nedre hörnet</button><button type="button" data-reset>Spela om ↺</button><button type="button" data-close>Tillbaka ✕</button></div><p>De första tre målen kan ge ett mynt var till huvudkartans plånbok. Varje målbonus kan bara fås en gång per skattjakt.</p><p>Mobil: styr med pilarna. Skjut rakt eller välj övre/nedre hörnet nära bollen. Dator: pilar/WASD, mellanslag för rakt skott, 1 för övre hörnet och 2 för nedre hörnet.</p></div>`;
+ overlay.innerHTML=`<div class="football-panel"><h2>⚽ Hackelhallen – spela med Maja</h2><p>Styr Lage till bollen och skjut mot målet till höger! Maja står i mål och försöker rädda dina skott.</p><canvas width="480" height="300" aria-label="Detaljerad pixelritad fotbollshall med Lage, Maja, boll och mål"></canvas><p data-status role="status" aria-live="polite">Mål: 0 · Skott: 0</p><p data-wallet aria-live="polite">🪙 Huvudkartans plånbok: 0 mynt</p><div class="football-controls"><div class="football-pad" aria-label="Styr Lage"><button data-dir="up" aria-label="Gå upp">▲</button><button data-dir="left" aria-label="Gå vänster">◀</button><button data-dir="down" aria-label="Gå ned">▼</button><button data-dir="right" aria-label="Gå höger">▶</button></div><button type="button" data-kick>SKJUT ⚽</button><button type="button" data-aim="high" aria-label="Skjut mot övre hörnet">↗ Övre hörnet</button><button type="button" data-aim="low" aria-label="Skjut mot nedre hörnet">↘ Nedre hörnet</button><button type="button" data-reset>Spela om ↺</button><button type="button" data-close>Tillbaka ✕</button></div><p>De första tre målen kan ge ett mynt var till huvudkartans plånbok. Varje målbonus kan bara fås en gång per skattjakt.</p><p>Mobil: styr med pilarna. Skjut rakt eller välj övre/nedre hörnet nära bollen. Dator: pilar/WASD, mellanslag för rakt skott, 1 för övre hörnet och 2 för nedre hörnet.</p></div>`;
  root.document.body.append(overlay);canvas=overlay.querySelector('canvas');ctx=canvas.getContext('2d');status=overlay.querySelector('[data-status]');
  lageImage=new root.Image();lageImage.src='./lage-sprites.png';lageImage.onload=()=>{if(!overlay.hidden)render();};
  for(const button of overlay.querySelectorAll('[data-dir]')){
@@ -116,6 +116,11 @@ function render(){
  if(goalFlash>0){rect(165,106,150,33,'#2e5d41');ctx.font='bold 17px monospace';ctx.fillStyle='#fff1a8';ctx.fillText('MÅÅÅL!',190,129);}
  rect(8,8,160,25,'#233f33');ctx.fillStyle='#f4d69c';ctx.font='bold 13px monospace';ctx.fillText('MÅL '+goals+'   SKOTT '+kicks,17,26);
 }
+function updateWallet(){
+ if(!overlay)return;
+ const amount=getWalletBalance?Number(getWalletBalance()):0;
+ overlay.querySelector('[data-wallet]').textContent='🪙 Huvudkartans plånbok: '+(Number.isFinite(amount)?Math.max(0,Math.floor(amount)):0)+' mynt';
+}
 function kick(aim='straight'){ 
  if(!overlay||overlay.hidden)return false;
  const distance=Math.hypot(player.x-ball.x,player.y-ball.y);
@@ -157,6 +162,7 @@ function frame(time){
  if(ball.x>425&&ball.y>165&&ball.y<251&&ball.vx>0){
   goals++;goalFlash=1.15;
   const earned=goals<=MAX_GOAL_COINS&&typeof onGoalCoin==='function'&&onGoalCoin(goals-1)===true;
+  updateWallet();
   status.textContent='MÅL! Lage och Maja firar! '+goals+' mål på '+kicks+' skott.'+(earned?' +1 mynt till huvudkartan!':goals<=MAX_GOAL_COINS?' Målbonusen är redan hämtad.':' Alla tre målbonusar är utdelade.');
   if(root.RimforsaAudio&&root.RimforsaAudio.footballGoal)root.RimforsaAudio.footballGoal();
   ball.x=205;ball.y=205;ball.vx=ball.vy=0;player.x=115;player.y=215;
@@ -167,8 +173,8 @@ function frame(time){
 function start(options){
  if(!options||typeof options.returnToMap!=='function')return false;
  install();if(!overlay.hidden)close();
- previousFocus=root.document.activeElement;returnToMap=options.returnToMap;onGoalCoin=typeof options.onGoalCoin==='function'?options.onGoalCoin:null;
- clearKeys();resetPositions();goals=kicks=0;goalFlash=0;status.textContent='Mål: 0 · Skott: 0';
+ previousFocus=root.document.activeElement;returnToMap=options.returnToMap;onGoalCoin=typeof options.onGoalCoin==='function'?options.onGoalCoin:null;getWalletBalance=typeof options.getWalletBalance==='function'?options.getWalletBalance:null;
+ clearKeys();resetPositions();goals=kicks=0;goalFlash=0;status.textContent='Mål: 0 · Skott: 0';updateWallet();
  overlay.hidden=false;last=0;
  if(root.RimforsaAudio&&root.RimforsaAudio.setScene)root.RimforsaAudio.setScene('preschool');
  overlay.querySelector('[data-kick]').focus();raf=root.requestAnimationFrame(frame);return true;
@@ -177,7 +183,7 @@ function close(){
  if(!overlay||overlay.hidden)return;
  overlay.hidden=true;root.cancelAnimationFrame(raf);clearKeys();
  if(root.RimforsaAudio&&root.RimforsaAudio.setScene)root.RimforsaAudio.setScene('land');
- const cb=returnToMap;returnToMap=null;onGoalCoin=null;if(typeof cb==='function')cb();
+ const cb=returnToMap;returnToMap=null;onGoalCoin=null;getWalletBalance=null;if(typeof cb==='function')cb();
  if(previousFocus&&previousFocus.isConnected)previousFocus.focus();
 }
 root.RimforsaFootball={start,close,isOpen:()=>!!overlay&&!overlay.hidden};
