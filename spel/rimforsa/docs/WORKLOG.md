@@ -273,3 +273,8 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 - `boat-direction-art.js`: originalritade, konsekventa relingskanter och skuggfogar på båda sidor, små fästen, tydligare vindruteram samt röda/gröna navigationsljus som följer båtens lokala riktning i samtliga åtta genererade vinklar. Befintlig motor, kaross, Lage-sprite, rörelsefysik och vattenkollision oförändrade.
 - `index.html` använder `boat-direction-art.js?v=2` för att inte fastna på äldre cachad kod. `ROADMAP.md`: senast FORDON-02, nästa LJUD-02.
 - Källkoden sparades på GitHub main och kontrollerades efter uppdatering; verklig visuell jämförelse av alla åtta vyerna i mobil/dator och GitHub Pages-servad version ännu inte verifierade. FORDON-02 kvarstår öppen, inga uppgifter avbockade.
+
+### 2026-11-20 – Jobb lage, FORDON-02 (gemensamma detaljer på bilens riktningar)
+- `car.js`: sex kodritade fram-/bak-/diagonalvyer fick genomgående sidofönster, dörrskarvar, ljus taklist, takräckens detaljer och tydligare sidokant i diagonalvyerna. Sidobilder, motor, körfysik och kollisioner har inte ändrats.
+- `index.html` laddar `car.js?v=6`. ROADMAP-rotationen är FORDON-02 → LJUD-02. Alla 15 öppna punkter förblir öppna: inga nya acceptansvillkor kan betraktas som helt verifierade med den tillgängliga källkodskontrollen.
+- Ändringen sparad på GitHub main. Visuell jämförelse av de åtta riktningarna och mobil-/datorspelning samt Pages-leverans har inte verifierats.
