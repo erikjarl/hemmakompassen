@@ -206,3 +206,10 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 - Rotationspass efter KARTA-02. För bilens åtta riktningar behålls den etablerade spritearkssidan för vänster/höger. Sex fram-/bak-/diagonalvyer använder nu omarbetad egen pixelritning i `car.js`, med gemensamma karossproportioner, fyra hjul, tak-/fönsterdetaljer, lyktor och Lage bakom vindrutan. Den gamla bildens inkonsekventa front/bak används därmed inte längre.
 - Höjde cacheversion till `car.js?v=5`. JavaScript-syntaxen i bilmodulen och huvudsidan godkänd, och bilens `draw()` körd i åtta riktningar med simulerad canvas utan fel. Ingen faktisk sidvidsida-visuell bedömning i webbläsare, mobil eller jämförelse med referensgrafik. Båtens grafik oförändrad. FORDON-02 kvar som öppen.
 - Nästa rotation BRÄNSLE-02 om verifierbar lokal prisdatakälla finns, annars LJUD-02.
+
+### 2026-11-20 · Jobb Lage · LJUD-02 (BRÄNSLE-02 blockerad)
+
+- Började vid BRÄNSLE-02. Officiella INGO-stationssidan och Bensinpriser.nu saknar verifierbart aktuellt stationsspecifikt Rimforsapris. Ingen siffra påhittad; skylt med PRIS OKÄNT och separat fiktiv speltaxa bevarade. Därför rotation vidare till LJUD-02.
+- I `audio.js` spårar `sceneStarted` om en ljudscen redan är igång så att både enable, statechange och återupptagen Promise inte startar dubbla loopar/oscillatorer; `stopScene()` återställer markeringen. Tonfunktionen avstår från att köa toner när kontexten inte kör. `resumeFromGesture` håller reda på en pågående asynkron återupptagning och aviserar knappens status efter svar.
+- Huvudsidans `pageshow` hanterar återkomst från Safaris back/forward-cache genom `setVisible` och UI-uppdatering; inget automatiskt `resume()` utan användargest. Version `audio.js?v=15`.
+- JavaScript-syntax i audio.js och inline HTML kontrollerad, plus kodvillkor för ljudscensskydd/cacheversion. Faktiska iPhone/Safari-tester saknas, så LJUD-02 står kvar öppen. Nästa rotation LJUD-03.
