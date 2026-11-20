@@ -73,6 +73,23 @@ function render(){
   rect(x+5,62,67,15,'#628d91');rect(x+37,25,4,52,'#e8d8b1');rect(x+5,49,67,3,'#e8d8b1');
   rect(x+20,26,7,19,'#c7d7c8');rect(x+48,26,7,19,'#c7d7c8');
  }
+ // Hackelhallen får en egen väggmonterad pixelresultattavla och lagvimplar.
+ // Detaljerna ligger bakom spelplanen och påverkar aldrig bollens kollisioner.
+ for(const x of [102,362]){
+  rect(x,13,14,3,'#e8cf8a');rect(x+1,16,12,18,'#264e48');
+  rect(x+3,18,8,10,'#e2b978');rect(x+5,20,4,5,'#a45c43');
+  rect(x+3,31,8,2,'#193e39');
+ }
+ rect(171,12,138,64,'#304039');rect(175,15,130,57,'#b18a54');
+ rect(180,19,120,49,'#1b3431');rect(184,22,112,3,'#6b997d');
+ rect(188,30,104,13,'#315a4a');
+ ctx.font='bold 11px monospace';ctx.fillStyle='#f5e2ae';
+ ctx.fillText('HACKELHALLEN',194,40);
+ rect(195,48,40,16,'#091f21');rect(245,48,40,16,'#091f21');
+ ctx.font='bold 12px monospace';ctx.fillStyle='#f1c76d';
+ ctx.fillText('L '+String(goals).padStart(2,'0'),200,60);
+ ctx.fillText('M 00',250,60);
+ rect(174,75,132,3,'#3a5346');
  rect(0,88,W,25,'#9b7950');rect(0,91,W,4,'#d8b175');
  for(let i=0;i<32;i++)rect(i*15,98,2,15,'#6e563e');
  // Parkett med skuggor och tydliga linjer.
