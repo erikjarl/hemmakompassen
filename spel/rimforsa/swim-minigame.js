@@ -29,15 +29,15 @@ function createSession(){
  }
  return {snapshot,step,reset:()=>{x=52;y=74;elapsed=0;hearts=3;invul=0;finished=false;sharks=sharkStarts.map(s=>({...s}));coins=coinsAt.map(([cx,cy],i)=>({x:cx,y:cy,id:i,taken:false}));return snapshot();}};
 }
-let lageSprite=null,dialog=null,canvas,ctx,session,onCoin=null,paidInRun=new Set(),keys={up:false,down:false,left:false,right:false},raf=0,last=0,back=null,previousFocus=null,status,score;
+let lageSprite=null,dialog=null,canvas,ctx,session,onCoin=null,paidInRun=new Set(),keys={up:false,down:false,left:false,right:false},raf=0,last=0,back=null,previousFocus=null,status,score,walletLabel,getWalletBalance=null;
 function setup(){
  if(dialog)return;
  const style=root.document.createElement('style');
  style.textContent=`.swim-dialog[hidden]{display:none!important}.swim-dialog{position:fixed;inset:0;z-index:1450;display:grid;place-items:center;background:#082637e9;padding:9px}.swim-panel{width:min(650px,100%);max-height:97dvh;overflow:auto;background:#173e52;border:4px solid #e8bc79;border-radius:12px;padding:12px;color:#fff2cb;font:700 15px system-ui}.swim-panel h2{margin:0 0 5px}.swim-panel canvas{width:100%;height:auto;display:block;background:#1978b9;border:3px solid #d4b37d;image-rendering:pixelated;touch-action:none}.swim-actions{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin-top:10px}.swim-pad{display:grid;grid-template-columns:repeat(3,55px);grid-template-rows:repeat(2,50px);gap:4px;touch-action:none}.swim-pad button{border:2px solid #885923;border-radius:7px;background:#ecca7d;font-size:22px;touch-action:none;user-select:none}.swim-pad [data-swim=up]{grid-column:2}.swim-pad [data-swim=left]{grid-column:1;grid-row:2}.swim-pad [data-swim=down]{grid-column:2;grid-row:2}.swim-pad [data-swim=right]{grid-column:3;grid-row:2}.swim-panel button{min-height:42px;cursor:pointer}.swim-exit{padding:8px 12px;background:#f4d88d;border:2px solid #946228;border-radius:7px;font-weight:800}.swim-panel button:focus-visible{outline:3px solid #fff;outline-offset:2px}.swim-note{font-size:12px;line-height:1.4}`;
  root.document.head.append(style);
  dialog=root.document.createElement('div');dialog.hidden=true;dialog.className='swim-dialog';dialog.setAttribute('role','dialog');dialog.setAttribute('aria-modal','true');dialog.setAttribute('aria-label','Simma vid Åsundabadet');
- dialog.innerHTML=`<div class="swim-panel"><h2>🏖️ Dyk vid Åsundabadet</h2><button type="button" class="swim-exit" data-swim-sound aria-label="Slå på ljud i badspelet" aria-pressed="false">🔈 Ljud på</button><p>Simma ner och hitta fem mynt på sjöbotten!</p><canvas width="480" height="300" aria-label="Sidovy av sjön med vattenyta och sandbotten där Lage simmar och hittar mynt"></canvas><p data-swim-score aria-live="polite">♥♥♥ · Hittade 0 av 5 mynt</p><p data-swim-status role="status" aria-live="polite">Tryck nedåt för att dyka.</p><div class="swim-actions"><div class="swim-pad" aria-label="Styr simningen"><button type="button" data-swim="up" aria-label="Simma uppåt">↑</button><button type="button" data-swim="left" aria-label="Simma vänster">←</button><button type="button" data-swim="down" aria-label="Dyk nedåt">↓</button><button type="button" data-swim="right" aria-label="Simma höger">→</button></div><div><button type="button" class="swim-exit" data-swim-reset>Spela om ↺</button> <button type="button" class="swim-exit" data-swim-close>Tillbaka ✕</button></div></div><p class="swim-note">Håll knapparna nere eller använd piltangenter/WASD. Det här är ett fantasisimspel, inte simråd. Badet har egna tre hjärtan. Sjömynten sparas i huvudkartans plånbok, en gång per mynt.</p></div>`;
- root.document.body.append(dialog);lageSprite=new root.Image();lageSprite.onload=()=>{if(session&&!dialog.hidden)render();};lageSprite.src='./lage-sprites.png';canvas=dialog.querySelector('canvas');ctx=canvas.getContext('2d');score=dialog.querySelector('[data-swim-score]');status=dialog.querySelector('[data-swim-status]');
+ dialog.innerHTML=`<div class="swim-panel"><h2>🏖️ Dyk vid Åsundabadet</h2><button type="button" class="swim-exit" data-swim-sound aria-label="Slå på ljud i badspelet" aria-pressed="false">🔈 Ljud på</button><p>Simma ner och hitta fem mynt på sjöbotten!</p><canvas width="480" height="300" aria-label="Sidovy av sjön med vattenyta och sandbotten där Lage simmar och hittar mynt"></canvas><p data-swim-score aria-live="polite">♥♥♥ · Hittade 0 av 5 mynt</p><p data-swim-wallet role="status" aria-live="polite">🪙 Huvudkartans plånbok: 0 mynt</p><p data-swim-status role="status" aria-live="polite">Tryck nedåt för att dyka.</p><div class="swim-actions"><div class="swim-pad" aria-label="Styr simningen"><button type="button" data-swim="up" aria-label="Simma uppåt">↑</button><button type="button" data-swim="left" aria-label="Simma vänster">←</button><button type="button" data-swim="down" aria-label="Dyk nedåt">↓</button><button type="button" data-swim="right" aria-label="Simma höger">→</button></div><div><button type="button" class="swim-exit" data-swim-reset>Spela om ↺</button> <button type="button" class="swim-exit" data-swim-close>Tillbaka ✕</button></div></div><p class="swim-note">Håll knapparna nere eller använd piltangenter/WASD. Det här är ett fantasisimspel, inte simråd. Badet har egna tre hjärtan. Sjömynten sparas i huvudkartans plånbok, en gång per mynt.</p></div>`;
+ root.document.body.append(dialog);lageSprite=new root.Image();lageSprite.onload=()=>{if(session&&!dialog.hidden)render();};lageSprite.src='./lage-sprites.png';canvas=dialog.querySelector('canvas');ctx=canvas.getContext('2d');score=dialog.querySelector('[data-swim-score]');status=dialog.querySelector('[data-swim-status]');walletLabel=dialog.querySelector('[data-swim-wallet]');
  for(const b of dialog.querySelectorAll('[data-swim]')){
   const dir=b.dataset.swim;const up=()=>{keys[dir]=false;};
   b.addEventListener('pointerdown',e=>{e.preventDefault();keys[dir]=true;try{b.setPointerCapture(e.pointerId)}catch(_){}});
@@ -58,7 +58,7 @@ function setup(){
   if(root.RimforsaAudio&&root.RimforsaAudio.toggle)root.RimforsaAudio.toggle();
   updateSoundButton();
  });
- dialog.querySelector('[data-swim-reset]').addEventListener('click',()=>{paidInRun=new Set();session.reset();for(const dir in keys)keys[dir]=false;render();});
+ dialog.querySelector('[data-swim-reset]').addEventListener('click',()=>{paidInRun=new Set();session.reset();for(const dir in keys)keys[dir]=false;updateWallet();render();});
  dialog.querySelector('[data-swim-close]').addEventListener('click',close);
  dialog.addEventListener('click',e=>{if(e.target===dialog)close();});
 }
@@ -69,6 +69,11 @@ function updateSoundButton(){
  button.textContent=on?'🔊 Ljud av':'🔈 Ljud på';
  button.setAttribute('aria-label',on?'Stäng av ljud i badspelet':'Slå på ljud i badspelet');
  button.setAttribute('aria-pressed',String(on));
+}
+function updateWallet(message=''){
+  if(!walletLabel)return;
+  const amount=typeof getWalletBalance==='function'?Number(getWalletBalance()):0;
+  walletLabel.textContent='🪙 Huvudkartans plånbok: '+(Number.isFinite(amount)?Math.max(0,Math.floor(amount)):0)+' mynt'+(message?' · '+message:'');
 }
 function render(){
  if(!session||!ctx)return;
@@ -162,21 +167,21 @@ function frame(t){
  const dt=last?Math.min(.05,(t-last)/1000):0;last=t;
  const before=session.snapshot().found,after=session.step(dt,keys);
  if(after.damaged&&root.RimforsaAudio)(root.RimforsaAudio.sharkBump?root.RimforsaAudio.sharkBump():root.RimforsaAudio.hit());
- if(after.found>before){for(const coin of after.coins)if(coin.taken&&!paidInRun.has(coin.id)){paidInRun.add(coin.id);if(onCoin)onCoin(coin.id);}if(root.RimforsaAudio)root.RimforsaAudio.coin();}
+ if(after.found>before){for(const coin of after.coins)if(coin.taken&&!paidInRun.has(coin.id)){paidInRun.add(coin.id);const earned=typeof onCoin==='function'&&onCoin(coin.id)===true;updateWallet(earned?'Nytt sjömynt! +1':'Det här myntet är redan inräknat');}if(root.RimforsaAudio)root.RimforsaAudio.coin();}
  render();raf=root.requestAnimationFrame(frame);
 }
 function start(options){
  if(!options||typeof options.returnToMap!=='function')return false;
  setup();if(!dialog.hidden)close();
- previousFocus=root.document.activeElement;back=options.returnToMap;onCoin=typeof options.onCoin==='function'?options.onCoin:null;paidInRun=new Set();session=createSession();
+ previousFocus=root.document.activeElement;back=options.returnToMap;onCoin=typeof options.onCoin==='function'?options.onCoin:null;getWalletBalance=typeof options.getWalletBalance==='function'?options.getWalletBalance:null;paidInRun=new Set();session=createSession();
  if(root.RimforsaAudio&&root.RimforsaAudio.setScene)root.RimforsaAudio.setScene('swim');keys={up:false,down:false,left:false,right:false};dialog.hidden=false;last=0;
- render();dialog.querySelector('[data-swim=down]').focus();raf=root.requestAnimationFrame(frame);return true;
+ updateWallet();render();dialog.querySelector('[data-swim=down]').focus();raf=root.requestAnimationFrame(frame);return true;
 }
 function close(){
  if(!dialog||dialog.hidden)return;
  dialog.hidden=true;root.cancelAnimationFrame(raf);keys={up:false,down:false,left:false,right:false};
  if(root.RimforsaAudio&&root.RimforsaAudio.setScene)root.RimforsaAudio.setScene('land');
- const callback=back;back=null;onCoin=null;if(typeof callback==='function')callback();
+ const callback=back;back=null;onCoin=null;getWalletBalance=null;if(typeof callback==='function')callback();
  if(previousFocus&&previousFocus.isConnected)previousFocus.focus();
 }
 root.RimforsaSwimMinigame={createSession,start,close,isOpen:()=>!!dialog&&!dialog.hidden};
