@@ -53,26 +53,37 @@ function make(dir){
   g.fillRect(Math.round(lx)-2,Math.round(ly)+1,4,1);
  }
  drawShape(g,hull(-20,-9,8,7),palette.seat);
- // Lage sitter i förarplatsen och tittar mot fören i SAMTLIGA åtta vinklar.
- // Hår, ansikte och tröja får därför olika synliga sidor när båten byter riktning.
+ // Lage sitter i båtens förarplats. Huvudets placering, hårrand och
+ // axlar orienteras mot fören, även i mellanliggande diagonala vyer.
+ // Små separata pixelrektanglar förhindrar oskarp rotation av ansiktet.
  const [hx,hy]=point(-13,2),px=Math.round(hx),py=Math.round(hy);
  const facingFront=fy>.38,facingBack=fy<-.38;
  const sideView=!facingFront&&!facingBack;
- g.fillStyle='#26342c';g.fillRect(px-8,py+7,17,5);
- g.fillStyle=palette.shirt;g.fillRect(px-7,py+2,15,10);
- g.fillStyle=palette.skin;g.fillRect(px-6,py-9,13,13);
- // Bakifrån syns hårets baksida; framifrån ögon och liten näsa.
+ const frontX=Math.round(fx*3),frontY=Math.round(fy*3);
+ const [shoulderLx,shoulderLy]=point(-16,-5);
+ const [shoulderRx,shoulderRy]=point(-16,7);
+ g.fillStyle='#253b3e';
+ g.fillRect(px-8,py+6,17,5);
+ g.fillStyle=palette.shirt;
+ g.fillRect(Math.round(shoulderLx)-3,Math.round(shoulderLy)-3,7,7);
+ g.fillRect(Math.round(shoulderRx)-3,Math.round(shoulderRy)-3,7,7);
+ g.fillRect(px-6,py+1,13,10);
+ g.fillStyle=palette.skin;
+ g.fillRect(px-6,py-9,13,13);
  g.fillStyle=palette.hair;
  g.fillRect(px-7,py-12,15,facingBack?12:5);
- g.fillRect(px-7,py-8,facingBack?4:3,7);
+ // Håret bildar en tydlig bak-/sidokant när båten svänger.
+ g.fillRect(px-7,py-8,fx>=0?3:5,7);
  if(facingBack){
   g.fillStyle='#8a5938';g.fillRect(px-4,py-4,8,3);
   g.fillStyle='#4d3328';g.fillRect(px-5,py+1,10,2);
  }else if(facingFront){
-  g.fillStyle='#362e2a';g.fillRect(px-3,py-3,2,2);g.fillRect(px+3,py-3,2,2);
-  g.fillStyle='#bd866d';g.fillRect(px,py+2,3,2);
+  // Diagonala färdriktningar ger en liten förskjutning åt rätt sida.
+  g.fillStyle='#362e2a';
+  g.fillRect(px-3+frontX,py-3+frontY,2,2);
+  g.fillRect(px+3+frontX,py-3+frontY,2,2);
+  g.fillStyle='#bd866d';g.fillRect(px+frontX,py+2+frontY,3,2);
  }else if(sideView){
-  // Från sidan är bara ett öga synligt, på den sida som fören pekar mot.
   const eyeX=fx>0?px+3:px-4;
   g.fillStyle='#362e2a';g.fillRect(eyeX,py-3,2,2);
   g.fillStyle='#bd866d';g.fillRect(fx>0?px+5:px-6,py+1,2,2);
