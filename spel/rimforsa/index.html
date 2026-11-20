@@ -1053,6 +1053,25 @@ function slideMove(dx,dy){
        state.x+=tx;state.y+=ty;moved=true;continue;
      }
    }
+   // Små maskojämnheter vid vägkanten: prova en sidokorrigering.
+   // Varje sidosteg och den efterföljande rörelsen kräver godkänd gångmask.
+   // Tillåt aldrig genvägar genom hus, stenar eller vatten.
+   const speed=Math.hypot(vx,vy);
+   if(speed>.01){
+     const sideX=-vy/speed,sideY=vx/speed;
+     let recovered=false;
+     for(const offset of [0.75,1.5,2.25]){
+       for(const sign of [-1,1]){
+         const sx=sideX*offset*sign,sy=sideY*offset*sign;
+         const midX=state.x+sx,midY=state.y+sy;
+         if(canStand(midX,midY)&&canStand(midX+vx,midY+vy)){
+           state.x=midX+vx;state.y=midY+vy;moved=true;recovered=true;break;
+         }
+       }
+       if(recovered)break;
+     }
+     if(recovered)continue;
+   }
    // Last fallback for sharp corners / diagonal movement, never violating collision.
    if(Math.abs(vx)>=Math.abs(vy)){
      if(Math.abs(vx)>.01&&canStand(state.x+vx,state.y)){state.x+=vx;moved=true;continue}
