@@ -739,7 +739,7 @@ function visitTroll(){
 }
 
 function isBoatOpen(){return boatState.active}
-function updateBoatHud(){boatHearts.textContent='♥'.repeat(Math.max(0,boatState.hearts))||'–';boatCoinsLabel.textContent=boatState.collected+' / '+BOAT_COIN_TARGET;updateFuelHud();}
+function updateBoatHud(){boatHearts.textContent='♥'.repeat(Math.max(0,boatState.hearts))||'–';boatCoinsLabel.textContent=boatState.collected+' / '+BOAT_COIN_TARGET+' · Plånbok '+totalMoney();updateFuelHud();}
 function boatPixelWater(x,y){
  if(!boatWaterData||x<1||y<1||x>=boatW-1||y>=boatH-1)return false;
  const pts=[[0,0],[8,0],[-8,0],[0,8],[0,-8],[6,6],[-6,6],[6,-6],[-6,-6]];
@@ -833,12 +833,14 @@ function updateBoat(dt){
  if(boatHitsHazard(boatState.x,boatState.y))boatCrash();
  for(const coin of boatState.coins){
    if(!coin.taken&&Math.hypot(boatState.x-coin.x,boatState.y-coin.y)<24){
-     coin.taken=true;boatState.collected++;awardMinigameCoin('boat-'+coin.id);updateBoatHud();audio.coin();
-     boatTip.textContent='Mynt upphittat! '+boatState.collected+' av '+BOAT_COIN_TARGET+'.';
+     coin.taken=true;boatState.collected++;
+     const newlyEarned=awardMinigameCoin('boat-'+coin.id);
+     updateBoatHud();audio.coin();
+     boatTip.textContent=newlyEarned?'Nytt mynt! +1 till huvudkartans plånbok. Totalt '+totalMoney()+' mynt.':'Mynt hittat igen! Bonusen är redan hämtad och saldot är fortfarande '+totalMoney()+' mynt.';
    }
  }
  if(boatState.coins.length===BOAT_COIN_TARGET&&boatState.coins.every(c=>c.taken)){
-   boatState.done=true;audio.setBoatSpeed(0);if(audio.boatTreasure)audio.boatTreasure();boatTip.textContent='Klart! Du hittade alla mynt. Bra kört!';
+   boatState.done=true;audio.setBoatSpeed(0);if(audio.boatTreasure)audio.boatTreasure();boatTip.textContent='Klart! Du hittade alla åtta båtmynt. Huvudkartans plånbok innehåller nu '+totalMoney()+' mynt. Bonusmynt ges bara en gång per skattjakt.';
  }
 }
 function drawBoatGame(){
