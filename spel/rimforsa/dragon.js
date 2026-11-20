@@ -5,6 +5,9 @@
   const home={x:115,y:780};
   let t=0,x=home.x,y=home.y,near=false,shotTimer=1,shotId=0,warningTarget=null;const shots=[];
   const proximity=235;
+  // Bensinmacken ligger vid x=394. Eldklot får inte passera den mot öster,
+  // och kan aldrig färdas längre än 300 världspixlar från drakens mun.
+  const FIRE_MAX_DISTANCE=300,FIRE_EAST_LIMIT=394;
   function update(dt,playerX,playerY,helicopter){
    dt=Math.max(0,Math.min(.1,Number(dt)||0));
    t+=dt;
@@ -21,21 +24,24 @@
    const mouthX=x+28,mouthY=y-7;
    const dx=target.x-mouthX,dy=target.y-mouthY;
    const distance=Math.hypot(dx,dy);
-   const withinRange=distance>35&&distance<(aimAtHelicopter?780:430);
+   const withinRange=distance>35&&distance<=FIRE_MAX_DISTANCE&&target.x<=FIRE_EAST_LIMIT;
    warningTarget=shotTimer>0&&shotTimer<=.65&&withinRange?{x:target.x,y:target.y}:null;
    if(shotTimer<=0){
     shotTimer=2.7;warningTarget=null;
     if(withinRange){
      const speed=165;
-     shots.push({id:'dragon-fire-'+(++shotId),x:mouthX,y:mouthY,vx:dx/distance*speed,vy:dy/distance*speed,life:5});
+     shots.push({id:'dragon-fire-'+(++shotId),x:mouthX,y:mouthY,vx:dx/distance*speed,vy:dy/distance*speed,travelled:0,life:5});
     }
    }
    for(let k=shots.length-1;k>=0;k--){
     const fire=shots[k];
     // Bevara föregående position så ett snabbt eldklot inte kan hoppa förbi målet mellan två bildrutor.
     fire.prevX=fire.x;fire.prevY=fire.y;
-    fire.x+=fire.vx*dt;fire.y+=fire.vy*dt;fire.life-=dt;
-    if(fire.life<=0||fire.x<0||fire.y<0||fire.x>1448||fire.y>1086)shots.splice(k,1);
+    const step=Math.hypot(fire.vx,fire.vy)*dt;
+    fire.x+=fire.vx*dt;fire.y+=fire.vy*dt;fire.travelled+=step;fire.life-=dt;
+    // Ta bort skottet direkt vid gränsen, även om det fortsätter flyga mot
+    // ett gammalt mål efter att Lage rört sig bort.
+    if(fire.life<=0||fire.travelled>=FIRE_MAX_DISTANCE||fire.x>FIRE_EAST_LIMIT||fire.x<0||fire.y<0||fire.y>1086)shots.splice(k,1);
    }
    return near;
   }
