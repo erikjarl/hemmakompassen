@@ -6,6 +6,9 @@ let overlay=null,canvas=null,ctx=null,status=null,previousFocus=null,returnToMap
 const W=480,H=300,keys={up:false,down:false,left:false,right:false};
 const player={x:115,y:215,dx:1,dy:0},ball={x:205,y:170,vx:0,vy:0};
 let goals=0,kicks=0,goalFlash=0,majaY=206,lageImage=null;
+const spectatorSprites=root.RimforsaPreschoolFriendsSprite||null;
+// Fyra tidigare bildgenererade 32×32-barn används som publik, inte kodritade personer.
+if(spectatorSprites)spectatorSprites.addEventListener('load',()=>{if(overlay&&!overlay.hidden)render();});
 const MAX_GOAL_COINS=3;
 const clamp=(a,l,h)=>Math.max(l,Math.min(h,a));
 function resetPositions(){player.x=115;player.y=215;player.dx=1;player.dy=0;ball.x=205;ball.y=170;ball.vx=ball.vy=0;majaY=206;}
@@ -61,6 +64,22 @@ function drawMaja(x,y){
  rect(x-5,y-47,3,3,'#302c2b');rect(x+5,y-47,3,3,'#302c2b');rect(x-2,y-41,6,2,'#b4776a');
  rect(x+18,y-61,7,5,'#e2ac84');
 }
+function drawSpectators(){
+ // Publiken står på den bortre läktarkanten. Ingen kollision eller spelmekanik ändras.
+ const spectators=[{x:70,frame:0},{x:119,frame:1},{x:346,frame:2},{x:397,frame:3}];
+ for(const {x,frame} of spectators){
+  rect(x-17,105,34,16,'#4b604d');
+  rect(x-16,106,32,3,'#bda375');
+  rect(x-15,118,30,2,'#253e39');
+  if(spectatorSprites&&spectatorSprites.complete&&spectatorSprites.naturalWidth===128&&spectatorSprites.naturalHeight===32){
+   ctx.drawImage(spectatorSprites,frame*32,0,32,32,x-17,80,34,34);
+  }else{
+   // Silhuett under bildladdning, byts mot PNG så snart den finns.
+   rect(x-8,92,16,18,'#4a5d66');rect(x-6,82,12,12,'#c48b68');
+   rect(x-7,80,14,4,'#5b3c2c');
+  }
+ }
+}
 function render(){
  if(!ctx)return;
  ctx.imageSmoothingEnabled=false;
@@ -95,6 +114,7 @@ function render(){
  // Parkett med skuggor och tydliga linjer.
  rect(0,113,W,H-113,'#bd9259');rect(0,123,W,177,'#c8a16a');
  for(let j=0;j<10;j++){rect(0,130+j*20,W,2,'#a77e4c');for(let i=0;i<13;i++)rect((i*42+(j%2)*21)%W,130+j*20,2,19,'#e2b77b');}
+ drawSpectators();
  rect(18,127,444,159,'#d6af74');
  ctx.strokeStyle='#f4e3ba';ctx.lineWidth=3;ctx.strokeRect(33,136,413,139);
  ctx.beginPath();ctx.arc(240,205,32,0,Math.PI*2);ctx.stroke();
