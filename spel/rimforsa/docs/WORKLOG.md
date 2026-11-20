@@ -391,3 +391,10 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 - `storage`-händelser från andra flikar gör att huvudkartans mynt-HUD uppdateras. Befintliga bonusvillkor, betalningsordning, spelregler och förluståterställning är oförändrade. Skyddar inte mot exakt samtidiga läs/skriv-race mellan flikar och garanterar inte sparning om webbläsaren blockerar lagring.
 - Källa kontrolleras på GitHub main; verklig tvåfliks-, köp-, mobil- och omladdningsprovning kvarstår. MYNT-03 öppen. Nästa rotation HUV-05.
 - Stående bildinventering: ICA-personal och Bella Donna-bagaren är fortsatt kodritade, bör ersättas med bildgenererade pixelartfigurer vid nästa GRAF-01-pass.
+
+### 2026-11-20 – HUV-05: beständig nollställning vid sista hjärtat
+
+- Ändrade `rewardWallet.clear()` så att en uttryckligt tom bonusplånbok sparas i localStorage i stället för att bonusnyckeln raderas. Andra flikar kan därmed se ett konkret nollsaldo via befintlig `storage`-lyssnare. Ingen garanti för exakt samtidiga flikskrivningar eller spärrad lokal lagring.
+- `restartAfterGameOver()` uppdaterar bonusplånboken från sparat läge precis före förlustredovisningen, så sent inkomna bonusmynt inte missas i visad redovisning. Den existerande `stop()`-funktionen visade sig redan rensa både gång-/båtknapparnas held-klasser; ingen dubbel ändring gjordes.
+- Kartmynt, bonusmynt och potatisinkomster nollställs fortsatt med tidigare mekanik; sparade föremål, skörd och växande potatis lämnas oförändrade. Källkod inspekterad, men faktisk död, omladdning, mobil-/datorprov och tvåflikstester återstår. HUV-05 fortsatt öppen. Nästa rotation HUV-06.
+- Bildinventering: butikspersonal och pizzabagare är fortsatt kodritade; bildspritearbete återkommer i nästa GRAF-01-pass.
