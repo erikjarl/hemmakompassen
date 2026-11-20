@@ -46,7 +46,7 @@
     waves=null;
   }
   function gull(){
-    if(!enabled||scene!=='boat'||hidden||!ctx)return;
+    if(!enabled||scene!=='boat'||hidden||!ctx||ctx.state!=='running')return;
     const t=now()+.02, g=gain(0),o=oscillator('sine',980);
     o.connect(g);g.connect(master);
     o.frequency.setValueAtTime(980,t);
@@ -59,7 +59,7 @@
   }
   // Originalsyntetiserade lekfulla rop och fågelkvitter, utan inspelade barnröster.
   function preschoolSound(){
-    if(!enabled||scene!=='preschool'||hidden||!ctx)return;
+    if(!enabled||scene!=='preschool'||hidden||!ctx||ctx.state!=='running')return;
     const t=now()+.02;
     const pattern=[[784,988,784],[659,880,1046],[988,784,659]][Math.floor(Math.random()*3)];
     pattern.forEach((f,i)=>tone(f,t+i*.13,.17,.016,'sine'));
@@ -248,7 +248,12 @@
   function setScene(next){
     stopSpeech();
     const newScene=['boat','preschool','swim'].includes(next)?next:'land';
-    if(newScene===scene)return;
+    if(newScene===scene){
+      // Scene selection can be repeated after a Safari interruption.
+      // Resume only when the context really runs; do not duplicate loops.
+      if(!sceneStarted)startScene();
+      return;
+    }
     stopScene();scene=newScene;startScene();
   }
   function setDragonNearby(value){
