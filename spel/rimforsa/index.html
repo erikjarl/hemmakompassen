@@ -1056,6 +1056,18 @@ interact.addEventListener('click',()=>{
   message.innerHTML='<strong>'+near.symbol+' '+near.name+'</strong> – '+near.text+(found?' <strong>'+found.item.icon+' Du hittade '+found.item.name+'! Den finns i väskan.</strong>':'');
  state.messageLocked=true;title.textContent=near.name;interact.textContent='Besök igen ✨';
 });
+// Kontrollera nollställningen i beständig lagring utan att ändra övriga
+// föremål, grödor eller sparfiler. Om Safari blockerar localStorage varnas spelaren.
+function moneyResetPersisted(){
+ try{
+  const bonus=JSON.parse(localStorage.getItem('rimforsa-minigame-coins-v1')||'null');
+  const produce=JSON.parse(localStorage.getItem('lage-rimforsa-farm-v1')||'null');
+  return !!bonus&&!!produce&&bonus.earned&&
+   typeof bonus.earned==='object'&&!Array.isArray(bonus.earned)&&
+   Object.keys(bonus.earned).length===0&&bonus.spent===0&&
+   produce.earned===0&&produce.spent===0;
+ }catch(_){return false;}
+}
 function restartAfterGameOver(cause){
  // Flera skadehändelser kan inträffa inom samma frame. Genomför bara
  // en återställning tills spelaren bekräftat förlustdialogen.
@@ -1080,13 +1092,14 @@ function restartAfterGameOver(cause){
  updateCoinScore();
  coinNoticeUntil=performance.now()+4300;
  const remainingCoins=totalMoney();
+ const resetWarning=moneyResetPersisted()?'':' OBS! Nollställningen kunde inte bekräftas i sparminnet. Mynt kan återkomma efter omladdning.';
  document.getElementById('lossSummary').textContent=
   'Lage förlorade '+lostCoins+' mynt: '+lostBySource.map+' på kartan, '+
   lostBySource.minigames+' i minispel och '+lostBySource.potatoes+
-  ' från potatis. Ny skattjakt hemma: '+remainingCoins+' mynt.';
+  ' från potatis. Ny skattjakt hemma: '+remainingCoins+' mynt.'+resetWarning;
  document.getElementById('lossOverlay').hidden=false;
  document.getElementById('closeLoss').focus();
- message.innerHTML='<strong>💔 Alla hjärtan tog slut!</strong> '+(cause==='draken'?'Draken':cause==='båten'?'Ett grund i båtspelet':'Bajskorvarna')+' tog det sista hjärtat. Lage förlorade '+lostCoins+' mynt och börjar om hemma med '+remainingCoins+' mynt. Samla nya mynt och försök igen!';
+ message.innerHTML='<strong>💔 Alla hjärtan tog slut!</strong> '+(cause==='draken'?'Draken':cause==='båten'?'Ett grund i båtspelet':'Bajskorvarna')+' tog det sista hjärtat. Lage förlorade '+lostCoins+' mynt och börjar om hemma med '+remainingCoins+' mynt. Samla nya mynt och försök igen!'+resetWarning;
 }
 function reset({clearMoney=true}={}){
   // Loading the page must preserve earned minigame coins.
