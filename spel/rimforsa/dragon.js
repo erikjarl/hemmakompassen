@@ -16,15 +16,24 @@
    y=home.y+Math.sin(t*.61)*53;
    near=Math.hypot(x-playerX,y-playerY)<proximity;
    shotTimer-=dt;
-   // Förvarningen använder samma mål som avfyrningen.
-   const aimAtHelicopter=!!helicopter&&(shotId%3===0||Math.hypot(playerX-x,playerY-y)>430);
-   const target=aimAtHelicopter?helicopter:{x:playerX,y:playerY};
    // Samma mynning används för varningslinje, skottets start och dess riktning.
-   // Tidigare beräknades hastigheten från drakens mitt, vilket gav ett snett skott.
    const mouthX=x+28,mouthY=y-7;
+   const player={x:playerX,y:playerY};
+   const inFireRange=target=>{
+    if(!target||!Number.isFinite(target.x)||!Number.isFinite(target.y))return false;
+    const distance=Math.hypot(target.x-mouthX,target.y-mouthY);
+    return distance>35&&distance<=FIRE_MAX_DISTANCE&&target.x<=FIRE_EAST_LIMIT;
+   };
+   // Helikoptern prioriteras ibland, MEN aldrig om den ligger utanför
+   // räckvidden. Annars kunde draken fastna på ett omöjligt mål och
+   // sluta skjuta mot Lage, även när han stod alldeles nära.
+   const helicopterInRange=inFireRange(helicopter);
+   const playerInRange=inFireRange(player);
+   const aimAtHelicopter=helicopterInRange&&(shotId%3===0||!playerInRange);
+   const target=aimAtHelicopter?helicopter:player;
    const dx=target.x-mouthX,dy=target.y-mouthY;
    const distance=Math.hypot(dx,dy);
-   const withinRange=distance>35&&distance<=FIRE_MAX_DISTANCE&&target.x<=FIRE_EAST_LIMIT;
+   const withinRange=aimAtHelicopter?helicopterInRange:playerInRange;
    warningTarget=shotTimer>0&&shotTimer<=.65&&withinRange?{x:target.x,y:target.y}:null;
    if(shotTimer<=0){
     shotTimer=2.7;warningTarget=null;
