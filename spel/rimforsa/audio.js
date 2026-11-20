@@ -4,6 +4,7 @@
   const AudioCtor = root.AudioContext || root.webkitAudioContext;
   let ctx=null,master=null,scene='land',enabled=false,hidden=false;
   let musicInterval=null,gullInterval=null,preschoolInterval=null,engine=null,waves=null,carEngine=null,carActive=false,melodyStep=0,volume=.55,dragonNearby=false;
+  let sceneStarted=false,resumePending=false;
   const melody=[392,440,523.25,440,392,329.63,349.23,392,440,392,329.63,293.66,329.63,349.23,392,0,
                  349.23,392,440,523.25,587.33,523.25,440,392,349.23,329.63,293.66,329.63,349.23,392,329.63,0];
   // Originalkomponerat molltema med låg bordun för drakens skog.
@@ -14,7 +15,7 @@
   function gain(v=0){const n=ctx.createGain();n.gain.value=v;return n;}
   function oscillator(type,freq){const n=ctx.createOscillator();n.type=type;n.frequency.value=freq;return n;}
   function tone(freq,start,duration=0.15,level=.055,type='sine',destination=master){
-    if(!ctx||!freq||!enabled||hidden)return;
+    if(!ctx||ctx.state!=='running'||!freq||!enabled||hidden)return;
     const o=oscillator(type,freq),g=gain(0);
     o.connect(g);g.connect(destination);
     const t=Math.max(now(),start);g.gain.setValueAtTime(0,t);
@@ -130,9 +131,11 @@
     if(gullInterval!==null){root.clearInterval(gullInterval);gullInterval=null;}
     if(preschoolInterval!==null){root.clearInterval(preschoolInterval);preschoolInterval=null;}
     stopWaves();stopEngine();stopCarEngine();
+    sceneStarted=false;
   }
   function startScene(){
-    if(!enabled||!ctx||hidden||ctx.state!=='running')return;
+    if(sceneStarted||!enabled||!ctx||hidden||ctx.state!=='running')return;
+    sceneStarted=true;
     if(scene==='swim'){
       // Badet använder bara mjukt vågskvalp – inga måsar eller motorljud.
       startWaves();
@@ -149,20 +152,26 @@
       if(carActive)startCarEngine();
     }
   }
+  function notifyAudioState(){
+    if(typeof root.dispatchEvent==='function'&&typeof root.Event==='function'){
+      root.dispatchEvent(new root.Event('rimforsa-audio-state'));
+    }
+  }
   // iOS Safari kan pausa/interruptera AudioContext vid flik- och appbyte.
   // Starta om schemalagda loopar först när ljudmotorn faktiskt kör igen.
   function onContextStateChange(){
     if(!ctx)return;
+    resumePending=false;
     if(ctx.state==='running'){
-      if(enabled&&!hidden){stopScene();startScene();}
+      // Starta bara om om ingen aktiv scen finns; både resume() och enable()
+      // kan ge en statechange på iOS, ibland efter att ljudet redan startat.
+      if(enabled&&!hidden)startScene();
     }else{
       stopScene();
     }
     // Safari resolves resume() asynchronously. Refresh the visible sound button
     // when the actual context state changes, rather than after the initial tap only.
-    if(typeof root.dispatchEvent==='function'&&typeof root.Event==='function'){
-      root.dispatchEvent(new root.Event('rimforsa-audio-state'));
-    }
+    notifyAudioState();
   }
   function ensureContext(){
     if(!AudioCtor)return false;
@@ -178,12 +187,19 @@
   function resumeFromGesture(){
     if(!enabled||hidden||!ctx)return false;
     if(ctx.state==='running')return true;
-    if(ctx.state==='closed')return false;
+    if(ctx.state==='closed'||resumePending)return false;
     try{
+      resumePending=true;
       const pending=ctx.resume();
-      if(pending&&typeof pending.catch==='function')pending.catch(()=>{});
+      if(pending&&typeof pending.then==='function'){
+        pending.then(()=>{
+          resumePending=false;
+          if(ctx&&ctx.state==='running'&&enabled&&!hidden)startScene();
+          notifyAudioState();
+        },()=>{resumePending=false;notifyAudioState();});
+      }else resumePending=false;
       return true;
-    }catch(_){return false;}
+    }catch(_){resumePending=false;return false;}
   }
   function enable(){
     if(enabled){resumeFromGesture();return true;}
