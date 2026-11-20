@@ -4,7 +4,7 @@
  function createHelicopter(){
   const position={x:365,y:310};
   let hitUntil=0,impactCount=0;
-  function hit(now){hitUntil=now+1.1;impactCount++;return impactCount;}
+  function hit(){hitUntil=1.1;impactCount++;return impactCount;}
   function update(dt){hitUntil=Math.max(0,hitUntil-Math.max(0,dt||0));}
   function snapshot(){return {x:position.x,y:position.y,damaged:hitUntil>0,impacts:impactCount};}
   function draw(ctx,camX,camY,w,h,clock){
