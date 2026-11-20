@@ -239,3 +239,8 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 - `index.html`: båtspelets myntmätare visar även huvudkartans gemensamma plånbok. Vid myntupptag skiljer statusen på ny belöning (+1) och mynt vars bonus redan hämtats vid tidigare spelning; slutmeddelandet visar totalt saldo. Unika belönings-ID, localStorage, köp och game-over-nollställning ändrades inte.
 - `ROADMAP.md`: senast MYNT-03, nästa HUV-05. Ingen avbockning: verklig båtkörning, köp, omladdning och sista-hjärtat-nollställning har inte verifierats i webbläsare.
 - GitHub main uppdaterad; källkodskontroll utförd men publicerad Pages-version och fysisk mobilspelning ej verifierade.
+
+### 2026-11-20 – Jobb lage, HUV-05 (båten förlorar sista hjärtat)
+- Hittade ett konkret glapp: `boatCrash()` hade separat game-over utan huvudkartans coin-reset. Nu stänger båtens tredje grundstötning båtspelet och anropar gemensamma `restartAfterGameOver('båten')`. Uppdaterad orsakstext visar båtolyckan, exakt förlorat saldo och 0 i ny omgång. Delvis båtskada nollställer inte mynt.
+- Extra vakt i `updateBoat` hindrar myntupptag efter game-over i samma renderingssteg. Myntbonusarnas localStorage och potatisförsäljning rensas genom befintlig gemensam reset; väskan och skördad potatis behålls.
+- ROADMAP: senast HUV-05, nästa HUV-06; ej avbockad eftersom verklig båt-/mobilgenomspelning, omladdning och saldon efter omstart ännu inte verifierats. Källkod finns på main; Pages-status ej kontrollerad.
