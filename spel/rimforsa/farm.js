@@ -138,8 +138,16 @@ function install(){
  root.document.body.append(overlay);
  canvas=overlay.querySelector('canvas');ctx=canvas.getContext('2d');info=overlay.querySelector('[data-farm-info]');
  plantButton=overlay.querySelector('[data-farm-plant]');harvestButton=overlay.querySelector('[data-farm-harvest]');
- plantButton.addEventListener('click',()=>{farm.plant();render()});
- harvestButton.addEventListener('click',()=>{farm.harvest();render()});
+ plantButton.addEventListener('click',()=>{
+  const planted=farm.plant();
+  if(planted&&root.RimforsaAudio?.potatoPlant)root.RimforsaAudio.potatoPlant();
+  render();
+ });
+ harvestButton.addEventListener('click',()=>{
+  const harvested=farm.harvest();
+  if(harvested&&root.RimforsaAudio?.potatoHarvest)root.RimforsaAudio.potatoHarvest();
+  render();
+ });
  overlay.querySelector('[data-farm-close]').addEventListener('click',close);
  root.document.addEventListener('keydown',e=>{if(overlay&&!overlay.hidden&&e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();close()}},true);
 }
