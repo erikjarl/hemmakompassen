@@ -445,6 +445,26 @@
     tone(392,t+.09,.11,.024,'triangle');
     tone(261.63,t+.18,.17,.022,'sine');
   }
+  // Korta egenkomponerade signaler för tre tydliga spelhändelser.
+  // Alla använder den befintliga ljudknappen och samma WebAudio-master.
+  function gameOver(){
+    if(!enabled||hidden||!ctx||ctx.state!=='running')return;
+    const t=now()+.015;
+    [392,311.13,246.94,196].forEach((f,i)=>tone(f,t+i*.15,.18,.040,'triangle'));
+    tone(130.81,t+.47,.36,.024,'sine');
+  }
+  function shopEnter(){
+    if(!enabled||hidden||!ctx||ctx.state!=='running')return;
+    const t=now()+.012;
+    tone(659.25,t,.085,.023,'triangle');
+    tone(880,t+.10,.13,.027,'sine');
+  }
+  function mapClose(){
+    if(!enabled||hidden||!ctx||ctx.state!=='running')return;
+    const t=now()+.01;
+    tone(523.25,t,.085,.018,'triangle');
+    tone(392,t+.07,.12,.022,'sine');
+  }
   function boatGrounding(){
     if(!enabled||!ctx||hidden||ctx.state!=='running')return;
     const t=now()+.01;
@@ -499,5 +519,5 @@
     }catch(_){speechMusicVolume(volume);return false;}
   }
   function status(){return {enabled,available:!!AudioCtor,contextState:ctx?ctx.state:'not-created',scene,hidden,playingMusic:musicInterval!==null,playingWaves:!!waves,playingEngine:!!engine,playingCarEngine:!!carEngine,carActive,dragonNearby};}
-  root.RimforsaAudio={enable,disable,toggle,resumeFromGesture,setScene,setBoatSpeed,setCarActive,setCarSpeed,setDragonNearby,coin,hit,poop,victory,slideLaunch,slideLand,sharkBump,purchase,fuelFill,boatGrounding,carEnter,itemFound,helicopterHit,footballKick,footballSave,footballGoal,boatTreasure,bagOpen,mapOpen,boatLaunch,potatoSale,carExit,bagClear,speak,stopSpeech,setVisible,status};
+  root.RimforsaAudio={enable,disable,toggle,resumeFromGesture,setScene,setBoatSpeed,setCarActive,setCarSpeed,setDragonNearby,coin,hit,poop,victory,slideLaunch,slideLand,sharkBump,purchase,fuelFill,boatGrounding,carEnter,itemFound,helicopterHit,footballKick,footballSave,footballGoal,boatTreasure,bagOpen,mapOpen,boatLaunch,potatoSale,carExit,bagClear,gameOver,shopEnter,mapClose,speak,stopSpeech,setVisible,status};
 })(window);
