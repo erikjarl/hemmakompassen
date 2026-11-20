@@ -23,7 +23,7 @@ function install(){
  overlay=root.document.createElement('div');
  overlay.className='football-overlay';overlay.hidden=true;
  overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','Fotboll i Hackelhallen');
- overlay.innerHTML=`<div class="football-panel"><h2>⚽ Hackelhallen – spela med Maja</h2><p>Styr Lage till bollen och skjut mot målet till höger! Maja står i mål och försöker rädda dina skott.</p><canvas width="480" height="300" aria-label="Detaljerad pixelritad fotbollshall med Lage, Maja, boll och mål"></canvas><p data-status role="status" aria-live="polite">Mål: 0 · Skott: 0</p><p data-wallet aria-live="polite">🪙 Huvudkartans plånbok: 0 mynt</p><div class="football-controls"><div class="football-pad" aria-label="Styr Lage"><button data-dir="up" aria-label="Gå upp">▲</button><button data-dir="left" aria-label="Gå vänster">◀</button><button data-dir="down" aria-label="Gå ned">▼</button><button data-dir="right" aria-label="Gå höger">▶</button></div><button type="button" data-kick>SKJUT ⚽</button><button type="button" data-aim="high" aria-label="Skjut mot övre hörnet">↗ Övre hörnet</button><button type="button" data-aim="low" aria-label="Skjut mot nedre hörnet">↘ Nedre hörnet</button><button type="button" data-reset>Spela om ↺</button><button type="button" data-close>Tillbaka ✕</button></div><p>De första tre målen kan ge ett mynt var till huvudkartans plånbok. Varje målbonus kan bara fås en gång per skattjakt.</p><p>Mobil: styr med pilarna. Skjut rakt eller välj övre/nedre hörnet nära bollen. Dator: pilar/WASD, mellanslag för rakt skott, 1 för övre hörnet och 2 för nedre hörnet.</p></div>`;
+ overlay.innerHTML=`<div class="football-panel"><h2>⚽ Hackelhallen – spela med Maja</h2><p>Spring fram till bollen för att driva den, eller skjut mot målet till höger! Maja försöker rädda.</p><canvas width="480" height="300" aria-label="Detaljerad pixelritad fotbollshall med Lage, Maja, boll och mål"></canvas><p data-status role="status" aria-live="polite">Mål: 0 · Skott: 0</p><p data-wallet aria-live="polite">🪙 Huvudkartans plånbok: 0 mynt</p><div class="football-controls"><div class="football-pad" aria-label="Styr Lage"><button data-dir="up" aria-label="Gå upp">▲</button><button data-dir="left" aria-label="Gå vänster">◀</button><button data-dir="down" aria-label="Gå ned">▼</button><button data-dir="right" aria-label="Gå höger">▶</button></div><button type="button" data-kick>SKJUT ⚽</button><button type="button" data-aim="high" aria-label="Skjut mot övre hörnet">↗ Övre hörnet</button><button type="button" data-aim="low" aria-label="Skjut mot nedre hörnet">↘ Nedre hörnet</button><button type="button" data-reset>Spela om ↺</button><button type="button" data-close>Tillbaka ✕</button></div><p>De första tre målen kan ge ett mynt var till huvudkartans plånbok. Varje målbonus kan bara fås en gång per skattjakt.</p><p>Mobil: styr med pilarna. Skjut rakt eller välj övre/nedre hörnet nära bollen. Dator: pilar/WASD, mellanslag för rakt skott, 1 för övre hörnet och 2 för nedre hörnet.</p></div>`;
  root.document.body.append(overlay);canvas=overlay.querySelector('canvas');ctx=canvas.getContext('2d');status=overlay.querySelector('[data-status]');
  lageImage=new root.Image();lageImage.src='./lage-sprites.png';lageImage.onload=()=>{if(!overlay.hidden)render();};
  for(const button of overlay.querySelectorAll('[data-dir]')){
@@ -179,6 +179,18 @@ function frame(time){
   player.dx=dx/len;player.dy=dy/len;
   player.x=clamp(player.x+player.dx*116*dt,45,418);
   player.y=clamp(player.y+player.dy*116*dt,155,268);
+  // När Lage går fram till en långsam boll kan han driva den med fötterna.
+  // Detta påverkar inte ett redan avfyrat skott eller den vanliga skjutknappen.
+  const footX=player.x+player.dx*14,footY=player.y-11+player.dy*8;
+  const distance=Math.hypot(ball.x-footX,ball.y-footY);
+  if(distance<19&&Math.hypot(ball.vx,ball.vy)<105){
+   const directionX=(ball.x-footX)/(distance||1),directionY=(ball.y-footY)/(distance||1);
+   const pushX=directionX*.32+player.dx*.68,pushY=directionY*.32+player.dy*.68;
+   const length=Math.hypot(pushX,pushY)||1;
+   ball.vx=pushX/length*122;ball.vy=pushY/length*122;
+   ball.x=clamp(ball.x+pushX/length*2,43,424);
+   ball.y=clamp(ball.y+pushY/length*2,142,265);
+  }
  }
  // Maja är målvakt och försöker följa bollens rörelse i målområdet.
  majaY=clamp(majaY+clamp(ball.y-majaY,-52*dt,52*dt),187,249);
