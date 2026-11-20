@@ -353,6 +353,31 @@
     [523.25,659.25,880,1174.66].forEach((f,i)=>tone(f,t+i*.11,.19,.039,'square'));
     tone(440,t+.38,.38,.024,'sine');
   }
+  // Originalsyntetiserad kort återkoppling när Lage sätter sig i bilen.
+  function carEnter(){
+    if(!enabled||hidden||!ctx||ctx.state!=='running')return;
+    const t=now()+.012;
+    tone(310,t,.085,.034,'triangle');
+    tone(246.94,t+.072,.12,.041,'square');
+    tone(196,t+.16,.13,.032,'triangle');
+  }
+  // Ljust fyndljud för nya föremål i väskan – skiljs från myntljudet.
+  function itemFound(){
+    if(!enabled||hidden||!ctx||ctx.state!=='running')return;
+    const t=now()+.012;
+    tone(587.33,t,.13,.035,'sine');
+    tone(783.99,t+.11,.18,.045,'triangle');
+    tone(1174.66,t+.24,.24,.029,'sine');
+  }
+  // Drakeld träffar parkerad helikopter: dov smäll + kort metallisk efterklang.
+  function helicopterHit(){
+    if(!enabled||hidden||!ctx||ctx.state!=='running')return;
+    const t=now()+.008;
+    tone(110,t,.19,.065,'sawtooth');
+    tone(73.42,t+.07,.25,.052,'triangle');
+    tone(523.25,t+.12,.10,.023,'square');
+    tone(392,t+.23,.16,.018,'sine');
+  }
   function boatGrounding(){
     if(!enabled||!ctx||hidden||ctx.state!=='running')return;
     const t=now()+.01;
@@ -407,5 +432,5 @@
     }catch(_){speechMusicVolume(volume);return false;}
   }
   function status(){return {enabled,available:!!AudioCtor,contextState:ctx?ctx.state:'not-created',scene,hidden,playingMusic:musicInterval!==null,playingWaves:!!waves,playingEngine:!!engine,playingCarEngine:!!carEngine,carActive,dragonNearby};}
-  root.RimforsaAudio={enable,disable,toggle,resumeFromGesture,setScene,setBoatSpeed,setCarActive,setCarSpeed,setDragonNearby,coin,hit,poop,victory,slideLaunch,slideLand,sharkBump,purchase,fuelFill,boatGrounding,footballKick,footballSave,footballGoal,boatTreasure,speak,stopSpeech,setVisible,status};
+  root.RimforsaAudio={enable,disable,toggle,resumeFromGesture,setScene,setBoatSpeed,setCarActive,setCarSpeed,setDragonNearby,coin,hit,poop,victory,slideLaunch,slideLand,sharkBump,purchase,fuelFill,boatGrounding,carEnter,itemFound,helicopterHit,footballKick,footballSave,footballGoal,boatTreasure,speak,stopSpeech,setVisible,status};
 })(window);
