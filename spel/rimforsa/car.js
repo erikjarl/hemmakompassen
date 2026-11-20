@@ -127,6 +127,29 @@ function draw(ctx,x,y,dir='right',occupied=false){
  // Registreringsskylt och skuggad bakluckeskarv.
  rect(-5,backY+1,10,3,'#f1e3ba');
  rect(-4,backY+2,8,1,'#5c7480');
+ // Samma karossdetaljer följer med i de sex fram-/bak-/diagonalvyerna:
+ // ljus taklist, dörrskarvar, sidorutor och tydlig linje mellan kaross och underrede.
+ // Alla pixlar är axelparallella så perspektiven förblir skarpa på liten skärm.
+ for(const side of [-1,1]){
+  const outerX=side<0?-20:17;
+  rect(outerX,-15,3,30,'#8299a2');
+  rect(outerX,-13,3,8,'#c5e0e6');
+  rect(outerX,-2,3,2,'#304d5b');
+  rect(outerX,8,3,3,'#607a83');
+ }
+ rect(-13,-21,26,2,shine);
+ rect(-13,19,26,2,'#81979f');
+ // Takräckenas små ljus- och skuggpixlar speglar sidovyns metallräcken.
+ rect(-17,-19,3,36,'#f5f7f0');
+ rect(14,-19,3,36,'#9baeb4');
+ rect(-16,-18,2,4,'#6c8792');rect(15,11,2,4,'#6c8792');
+ if(diagonal){
+  // Ytterligare karosskant syns på den sida som vetter mot betraktaren.
+  const nearX=sideShift>0?18:-21;
+  rect(nearX,-12,3,27,'#c6d3d5');
+  rect(nearX,-8,3,5,'#89a9b6');
+  rect(nearX,5,3,2,'#536a75');
+ }
  // Små pixlade backspeglar och dörrhandtag.
  rect(-26,-8,5,7,edge);rect(21,-8,5,7,edge);
  rect(-24,-7,3,4,body);rect(21,-7,3,4,body);
