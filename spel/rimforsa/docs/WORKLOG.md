@@ -298,3 +298,8 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 - `dragon.js`: projektilernas riktning beräknas nu från mynningens faktiska koordinater (x+28, y−7), samma position som eldkloten skapas vid och varningslinjen ritas från. Före detta pass riktades hastigheten från drakens mitt, vilket kunde ge sned bana till målet.
 - `index.html`: uppdaterat till `dragon.js?v=5`. Ingen ändring av skaderadie, skadepaus, drakens patrull, helikopter eller världskollisioner.
 - ROADMAP uppdaterad DRAKE-02 → MYNT-03. Ingen avbockning: faktisk spelning och visuell/skademässig kontroll i mobil och dator saknas. Ändringar sparade på main; Pages leverans ej kontrollerad.
+
+### 2026-11-20 – Jobb lage, MYNT-03 (dykspelets plånbok)
+- `swim-minigame.js`: visar huvudkartans totala spelmynt direkt inne i dykspelet, uppdaterar summan vid uppplockade sjömynt och berättar om fyndet är ett nytt bonusmynt eller redan har tilldelats vid ett tidigare försök. Spela om återställer bara dykomgångens lokala fynd, inte global bonusplånbok.
+- `index.html`: båda ingångarna till Åsundabadet skickar `getWalletBalance:totalMoney`, cacheversion `swim-minigame.js?v=7`.
+- ROADMAP roterad MYNT-03 → HUV-05. Källkodsankare kontrollerade, men faktisk simulering/genomspelning av mynt, köp, omladdning och sista hjärtat saknas, alltså fortsatt öppen. GitHub main sparad, Pages-leverans ej verifierad.
