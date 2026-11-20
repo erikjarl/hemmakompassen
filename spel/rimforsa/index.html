@@ -786,7 +786,24 @@ function spawnBoatCoins(){
 function resetBoatGame(){audio.setBoatSpeed(0);boatState.x=374;boatState.y=283;boatState.vx=0;boatState.vy=0;boatState.angle=0;boatState.hearts=3;boatState.flash=0;boatState.invul=0;boatState.done=false;boatState.message='';for(const k in boatKeys)boatKeys[k]=false;spawnBoatCoins();updateBoatHud();boatTip.textContent=boatFuel.snapshot().level>0?'Styr båten, samla mynt och undvik grunden.':'Båttanken är tom! Gå till Bensinmacken på huvudkartan och tanka båten.';}
 function openBoatGame(){if(!boatChartLoaded){boatTip.textContent='Laddar sjökartan…';}resetBoatGame();stop();audio.setScene('boat');boatState.active=true;boatOverlay.classList.add('show');boatOverlay.setAttribute('aria-hidden','false');boatTip.textContent=boatFuel.snapshot().level>0?'Kör ut från Kinda båtklubb och samla mynten utan att köra på grunden. Kartan är en fri 16-bitars-tolkning av Åsunden.':'Båten har tom tank! Gå till Bensinmacken på kartan och köp båtbensin. Välj Tillbaka för att gå dit.';}
 function closeBoatGame(){boatState.active=false;audio.setBoatSpeed(0);audio.setScene('land');boatOverlay.classList.remove('show');boatOverlay.setAttribute('aria-hidden','true');for(const k in boatKeys)boatKeys[k]=false;}
-function boatCrash(){if(boatState.invul>0||boatState.done)return;(audio.boatGrounding||audio.hit)();audio.setBoatSpeed(0);boatState.hearts--;boatState.invul=1.1;boatState.flash=.7;boatState.vx=boatState.vy=0;boatState.x=374;boatState.y=283;updateBoatHud();if(boatState.hearts<=0){boatState.done=true;boatTip.textContent='Aj! Alla hjärtan är slut. Tryck på Spela om för att försöka igen.';}else boatTip.textContent='Aj! Du körde på ett grund och tappade ett hjärta.';}
+function boatCrash(){
+ if(boatState.invul>0||boatState.done)return;
+ (audio.boatGrounding||audio.hit)();
+ audio.setBoatSpeed(0);
+ boatState.hearts--;
+ boatState.invul=1.1;boatState.flash=.7;
+ boatState.vx=boatState.vy=0;boatState.x=374;boatState.y=283;
+ updateBoatHud();
+ if(boatState.hearts<=0){
+  // Båtens sista hjärta avslutar samma skattjakt som drake/bajskorvar:
+  // även minispelsmynt och potatisintäkter ska försvinna.
+  boatState.done=true;
+  closeBoatGame();
+  restartAfterGameOver('båten');
+ }else{
+  boatTip.textContent='Aj! Du körde på ett grund och tappade ett hjärta.';
+ }
+}
 function updateBoat(dt){
  if(!boatState.active||!boatChartLoaded)return;
  if(boatState.flash>0)boatState.flash=Math.max(0,boatState.flash-dt);
@@ -831,6 +848,8 @@ function updateBoat(dt){
  }
  audio.setBoatSpeed(Math.hypot(boatState.vx,boatState.vy)/155);
  if(boatHitsHazard(boatState.x,boatState.y))boatCrash();
+ // En dödsolycka stänger båtspelet: samla inte in nya mynt i samma frame.
+ if(!boatState.active||boatState.done)return;
  for(const coin of boatState.coins){
    if(!coin.taken&&Math.hypot(boatState.x-coin.x,boatState.y-coin.y)<24){
      coin.taken=true;boatState.collected++;
@@ -949,7 +968,7 @@ function restartAfterGameOver(cause){
  // Ingen återställning av väska, skörd eller pågående potatisodling.
  updateCoinScore();
  coinNoticeUntil=performance.now()+4300;
- message.innerHTML='<strong>💔 Alla hjärtan tog slut!</strong> '+(cause==='draken'?'Draken':'Bajskorvarna')+' tog det sista hjärtat. Lage förlorade '+lostCoins+' mynt och börjar om hemma med 0 mynt. Samla nya mynt och försök igen!';
+ message.innerHTML='<strong>💔 Alla hjärtan tog slut!</strong> '+(cause==='draken'?'Draken':cause==='båten'?'Ett grund i båtspelet':'Bajskorvarna')+' tog det sista hjärtat. Lage förlorade '+lostCoins+' mynt och börjar om hemma med 0 mynt. Samla nya mynt och försök igen!';
 }
 function reset({clearMoney=true}={}){
   // Loading the page must preserve earned minigame coins.
