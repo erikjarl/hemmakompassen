@@ -17,6 +17,7 @@ canvas#world{display:block;width:100%;height:min(57svh,520px);min-height:315px;t
 .hud{position:absolute;left:8px;top:8px;display:flex;align-items:center;gap:7px;padding:6px 10px;border:3px solid #cda15e;border-radius:4px;background:#19362de9;color:#fff3c5;text-shadow:1px 1px #171a12;font:800 13px/1.2 ui-monospace,monospace;box-shadow:0 3px 0 #08241a;pointer-events:none}.heart{color:#ee6a65;font-size:17px;letter-spacing:-2px}.coinScore{color:#ffe089;white-space:nowrap;font-weight:900;margin-left:6px;text-shadow:1px 1px #5c340a}
 .win-overlay{position:absolute;inset:0;z-index:9;display:flex;align-items:center;justify-content:center;background:#0e271cc9;padding:18px;text-align:center}
 .win-overlay[hidden]{display:none}
+.loss-overlay[hidden]{display:none!important}.loss-overlay{position:absolute;inset:0;z-index:12;display:grid;place-items:center;background:#0e271ce8;padding:16px;text-align:center}.loss-panel{width:min(100%,325px);border:4px solid #f0c67d;border-radius:10px;background:#224d3d;padding:19px 12px;box-shadow:0 8px 0 #10281e;color:#fff2ce}.loss-panel h2{font-size:23px;margin:4px 0 8px}.loss-panel p{font-size:15px;line-height:1.5;margin:6px 0 14px}.loss-panel button{min-height:48px;white-space:normal}
 .win-panel{width:min(100%,310px);border:4px solid #ecc069;border-radius:10px;padding:22px 14px;background:linear-gradient(#255f49,#153d32);box-shadow:0 9px 0 #10281e,0 20px 40px #08160f99;color:#fff0be}
 .win-panel h2{font-size:clamp(21px,5vw,29px);margin:6px 0 8px;text-shadow:2px 3px #0a2d23}
 .win-panel p{font-size:15px;margin:8px 0 16px;line-height:1.5}
@@ -92,6 +93,7 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
       <button class="smallBtn" type="button" id="closeWin">Fortsätt äventyret ✨</button>
     </div>
   </div>
+  <div id="lossOverlay" class="loss-overlay" role="dialog" aria-modal="true" aria-labelledby="lossTitle" hidden><div class="loss-panel"><h2 id="lossTitle">Alla hjärtan tog slut!</h2><p id="lossSummary">Du förlorade dina mynt. Ny omgång: 0 mynt.</p><button type="button" class="smallBtn" id="closeLoss">Spela vidare med 0 mynt</button></div></div>
  </section>
  <div id="icaOverlay" class="ica-dialog" role="dialog" aria-modal="true" aria-label="Handla glass på ICA Melkers" hidden><div class="ica-panel"><h2>🛒 ICA Melkers</h2><canvas id="icaShopScene" class="ica-shop-scene" width="480" height="288" aria-label="Pixelritad ICA-butik med glassfrys, varuhyllor, Lage och kassapersonal. Tryck på en glass i frysen eller använd köpknapparna."></canvas><p class="ica-shop-hint">Tryck på päronglassen eller vaniljglassen i frysen, eller välj med knapparna nedanför. Kassapersonalen hjälper dig!</p><p><strong>ICA-personalen:</strong> Hej Lage! Vilken glass vill du köpa?</p><p id="icaBalance">Du har 0 mynt.</p><div class="farm-sale"><p id="farmSellStock">🥔 Potatis att sälja: 0</p><button type="button" id="sellPotatoes" class="smallBtn">Sälj 3 potatisar · få 6 mynt</button></div><div class="ica-products"><button type="button" data-buy-ice="paronglass"><span aria-hidden="true">🍐</span>Päronglass · 3 mynt</button><button type="button" data-buy-ice="vaniljglass"><span aria-hidden="true">🍦</span>Vaniljglass · 4 mynt</button></div><p id="icaStatus" class="ica-status" role="status" aria-live="polite">Samla mynt längs vägarna om du vill köpa glass!</p><button type="button" id="closeIca" class="smallBtn">Tillbaka till Rimforsa ✕</button></div></div>
  <div id="pizzaOverlay" class="pizza-dialog" role="dialog" aria-modal="true" aria-label="Köp ananaspizza hos Bella Donna" hidden>
@@ -983,12 +985,16 @@ function restartAfterGameOver(cause){
  // Ingen återställning av väska, skörd eller pågående potatisodling.
  updateCoinScore();
  coinNoticeUntil=performance.now()+4300;
+ const remainingCoins=totalMoney();
+ document.getElementById('lossSummary').textContent='Lage förlorade '+lostCoins+' mynt. Den nya skattjakten börjar hemma med '+remainingCoins+' mynt.';
+ document.getElementById('lossOverlay').hidden=false;
+ document.getElementById('closeLoss').focus();
  message.innerHTML='<strong>💔 Alla hjärtan tog slut!</strong> '+(cause==='draken'?'Draken':cause==='båten'?'Ett grund i båtspelet':'Bajskorvarna')+' tog det sista hjärtat. Lage förlorade '+lostCoins+' mynt och börjar om hemma med 0 mynt. Samla nya mynt och försök igen!';
 }
 function reset({clearMoney=true}={}){
   // Loading the page must preserve earned minigame coins.
   if(clearMoney){rewardWallet.clear();farm.clearCoins();}
- pizzaOverlay.hidden=true;icaOverlay.hidden=true;winOverlay.hidden=true;hurtUntil=0;audio.setCarSpeed(0);audio.setCarActive(false);state.inCar=false;
+ pizzaOverlay.hidden=true;icaOverlay.hidden=true;winOverlay.hidden=true;document.getElementById('lossOverlay').hidden=true;hurtUntil=0;audio.setCarSpeed(0);audio.setCarActive(false);state.inCar=false;
  carPos.x=carDrive.HOME.x;carPos.y=carDrive.HOME.y;
  state.x=360;state.y=335;state.camX=360;state.camY=335;state.dir='down';
  state.phase=0;state.visited.clear();state.path=[];state.near=null;state.nearKey=null;
@@ -997,6 +1003,7 @@ function reset({clearMoney=true}={}){
  updateMessage();
 }
 document.getElementById('reset').addEventListener('click',()=>{stop();reset()});
+document.getElementById('closeLoss').addEventListener('click',()=>{document.getElementById('lossOverlay').hidden=true;state.nearKey=null;updateMessage();});
 document.getElementById('closeWin').addEventListener('click',()=>{winOverlay.hidden=true;updateMessage();});
 document.getElementById('closeBoat').addEventListener('click',closeBoatGame);
 document.getElementById('boatRestart').addEventListener('click',resetBoatGame);
@@ -1125,7 +1132,7 @@ let last=performance.now(),stepProgress=0;
 function tick(now){
  const dt=Math.min(.05,(now-last)/1000);last=now;
  updateBoat(dt);
- if(maskLoaded&&(!fuelDialog||fuelDialog.hidden)&&!isBoatOpen()&&winOverlay.hidden&&bagOverlay.hidden&&icaOverlay.hidden&&pizzaOverlay.hidden&&!window.RimforsaSlideMinigame.isOpen()&&!window.RimforsaSwimMinigame.isOpen()&&!window.RimforsaTrollMinigame.isOpen()&&!window.RimforsaFarm.isOpen()&&!window.RimforsaBrokindTrail.isOpen()&&!window.RimforsaFootball.isOpen()){
+ if(maskLoaded&&(!fuelDialog||fuelDialog.hidden)&&!isBoatOpen()&&winOverlay.hidden&&document.getElementById('lossOverlay').hidden&&bagOverlay.hidden&&icaOverlay.hidden&&pizzaOverlay.hidden&&!window.RimforsaSlideMinigame.isOpen()&&!window.RimforsaSwimMinigame.isOpen()&&!window.RimforsaTrollMinigame.isOpen()&&!window.RimforsaFarm.isOpen()&&!window.RimforsaBrokindTrail.isOpen()&&!window.RimforsaFootball.isOpen()){
   npcSystem.update(dt,state.x,state.y);
   let dx=(+keys.right)-(+keys.left),dy=(+keys.down)-(+keys.up);
   if(state.inCar){
