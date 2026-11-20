@@ -542,7 +542,7 @@ function scatterPoops(){
  }
 }
 function checkPoops(){
- if(state.inCar||boatState.active||!maskLoaded||!winOverlay.hidden){game.touchHazard(null);return false;}
+ if(state.inCar||boatState.active||!maskLoaded||!winOverlay.hidden||!document.getElementById('lossOverlay').hidden){game.touchHazard(null);return false;}
  const hazard=poops.find(p=>Math.hypot(state.x-p.x,state.y-p.y)<19);
  if(!hazard){game.touchHazard(null);return false;}
  if(performance.now()<hurtUntil)return false;
@@ -989,6 +989,10 @@ interact.addEventListener('click',()=>{
 });
 function restartAfterGameOver(cause){
  const lostCoins=totalMoney();
+ // Släpp kvarhållna styrknappar innan omstart och förlustdialog.
+ for(const dir of Object.keys(keys))keys[dir]=false;
+ for(const dir of Object.keys(boatKeys))boatKeys[dir]=false;
+ clearPath();
  stop();
  reset({clearMoney:true});
  // Gemensam nollställning av kartmynt, båt-/dyk-/fotbollsmynt och potatisintäkter.
@@ -1222,7 +1226,7 @@ function tick(now){
   coinNoticeUntil=performance.now()+2200;
   message.innerHTML="<strong>🚁 Träff på helikoptern!</strong> Drakens eldklot träffade rotorhuset. Helikoptern står kvar och repareras automatiskt.";
  }
-  if(!state.inCar&&!boatState.active&&winOverlay.hidden&&performance.now()>=hurtUntil){
+  if(!state.inCar&&!boatState.active&&winOverlay.hidden&&document.getElementById('lossOverlay').hidden&&performance.now()>=hurtUntil){
    const danger=dragon.hazards(state.x,state.y);
    if(danger){const hit=game.touchHazard(danger);if(hit.damaged){dragon.consume(danger);audio.hit();updateLandHearts();hurtUntil=performance.now()+1500;
     if(hit.gameOver){restartAfterGameOver('draken');}
