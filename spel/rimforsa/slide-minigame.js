@@ -49,7 +49,7 @@ function setup(){
  lageSprite=new root.Image();
  lageSprite.onload=()=>{if(session&&!dialog.hidden)render();};
  lageSprite.src='./lage-sprites.png';
- function charge(e){if(e&&e.cancelable)e.preventDefault();if(!session||dialog.hidden)return;session.startCharge();render();}
+ function charge(e){if(e&&e.cancelable)e.preventDefault();if(!session||dialog.hidden)return;const started=session.startCharge();if(started&&root.RimforsaAudio&&root.RimforsaAudio.slideCharge)root.RimforsaAudio.slideCharge();render();}
  function release(e){if(e&&e.cancelable)e.preventDefault();if(!session||dialog.hidden)return;const launched=session.release();if(launched&&root.RimforsaAudio&&root.RimforsaAudio.slideLaunch)root.RimforsaAudio.slideLaunch();render();}
  button.addEventListener('pointerdown',e=>{charge(e);try{button.setPointerCapture(e.pointerId)}catch(_){}});
  for(const name of ['pointerup','pointercancel','lostpointercapture'])button.addEventListener(name,release);
@@ -224,7 +224,12 @@ function frame(t){
   landingBonus=(rewards?'Du fick +'+rewards+' mynt! ':'')+
    (earned?'Landningsmynt intjänat. ':'Landningsmynt redan hämtat. ')+
    (longJump?(longJumpEarned?'Långhoppsbonus intjänad!':'Långhoppsbonus redan hämtad.'):'Hoppa minst 200 meter för ett extra mynt.');
-  if(root.RimforsaAudio&&root.RimforsaAudio.status().enabled)(root.RimforsaAudio.slideLand?root.RimforsaAudio.slideLand():root.RimforsaAudio.coin());
+  if(root.RimforsaAudio&&root.RimforsaAudio.status().enabled){
+   const sound=root.RimforsaAudio;
+   if(longJumpEarned&&sound.slideLongJump)sound.slideLongJump();
+   else if(sound.slideLand)sound.slideLand();
+   else sound.coin();
+  }
  }
  render();frameId=root.requestAnimationFrame(frame);
 }
