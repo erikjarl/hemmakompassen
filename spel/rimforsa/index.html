@@ -367,6 +367,8 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
  bagOverlay.addEventListener('click',e=>{if(e.target===bagOverlay)closeBag();});
  document.getElementById('clearBag').addEventListener('click',()=>{if(window.confirm('Vill du tömma väskan? Alla hittade föremål tas bort.')){bag.clear();renderBag();if(audio.bagClear)audio.bagClear();}});
  renderBag();
+// NPC-systemet anropar canStand() vid skapandet. Proverna måste vara definierade redan här.
+const WALK_FOOT_SAMPLES=[[0,0],[-1,-1],[1,-1]];
 const npcSystem=window.RimforsaNPC.createSystem(canStand);
 const dragon=window.RimforsaDragon.createDragon();
 const helicopter=window.RimforsaHelicopter.createHelicopter();
@@ -438,7 +440,6 @@ function freePoint(x,y){if(!collision||x<8||y<8||x>=W-8||y>=H-8)return false;con
 // A compact, three-point foot contact area makes narrow paths more forgiving without
 // painting extra walkable pixels into buildings or water. All samples still
 // require the original collision mask to allow standing.
-const WALK_FOOT_SAMPLES=[[0,0],[-1,-1],[1,-1]];
 function canStand(x,y){
  return WALK_FOOT_SAMPLES.every(([ox,oy])=>freePoint(x+ox,y+oy));
 }
