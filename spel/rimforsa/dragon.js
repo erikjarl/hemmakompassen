@@ -46,11 +46,20 @@
     const fire=shots[k];
     // Bevara föregående position så ett snabbt eldklot inte kan hoppa förbi målet mellan två bildrutor.
     fire.prevX=fire.x;fire.prevY=fire.y;
-    const step=Math.hypot(fire.vx,fire.vy)*dt;
-    fire.x+=fire.vx*dt;fire.y+=fire.vy*dt;fire.travelled+=step;fire.life-=dt;
-    // Ta bort skottet direkt vid gränsen, även om det fortsätter flyga mot
-    // ett gammalt mål efter att Lage rört sig bort.
-    if(fire.life<=0||fire.travelled>=FIRE_MAX_DISTANCE||fire.x>FIRE_EAST_LIMIT||fire.x<0||fire.y<0||fire.y>1086)shots.splice(k,1);
+    // Ett skott som nått gränsen försvinner först nästa uppdatering.
+    // Då hinner hazards()/strikeObject() kontrollera det sista rörelsesegmentet.
+    if(fire.expired){shots.splice(k,1);continue;}
+    const speed=Math.hypot(fire.vx,fire.vy);
+    const remaining=Math.max(0,FIRE_MAX_DISTANCE-fire.travelled);
+    let duration=speed?Math.min(dt,remaining/speed):0;
+    // Klipp rörelsen vid mackens västra gräns, inte en bildruta efter den.
+    if(fire.vx>0)duration=Math.min(duration,Math.max(0,(FIRE_EAST_LIMIT-fire.x)/fire.vx));
+    if(fire.vx<0)duration=Math.min(duration,Math.max(0,(0-fire.x)/fire.vx));
+    if(fire.vy>0)duration=Math.min(duration,Math.max(0,(1086-fire.y)/fire.vy));
+    if(fire.vy<0)duration=Math.min(duration,Math.max(0,(0-fire.y)/fire.vy));
+    fire.x+=fire.vx*duration;fire.y+=fire.vy*duration;
+    fire.travelled+=speed*duration;fire.life-=dt;
+    fire.expired=fire.life<=0||duration<dt||fire.travelled>=FIRE_MAX_DISTANCE;
    }
    return near;
   }
