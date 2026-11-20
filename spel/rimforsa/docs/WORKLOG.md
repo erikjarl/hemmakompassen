@@ -278,3 +278,8 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 - `car.js`: sex kodritade fram-/bak-/diagonalvyer fick genomgående sidofönster, dörrskarvar, ljus taklist, takräckens detaljer och tydligare sidokant i diagonalvyerna. Sidobilder, motor, körfysik och kollisioner har inte ändrats.
 - `index.html` laddar `car.js?v=6`. ROADMAP-rotationen är FORDON-02 → LJUD-02. Alla 15 öppna punkter förblir öppna: inga nya acceptansvillkor kan betraktas som helt verifierade med den tillgängliga källkodskontrollen.
 - Ändringen sparad på GitHub main. Visuell jämförelse av de åtta riktningarna och mobil-/datorspelning samt Pages-leverans har inte verifierats.
+
+### 2026-11-20 – Jobb lage, LJUD-02 (Safari-återupptagning)
+- `audio.js`: blockerar gamla kontexters `statechange` och försenade `resume()`-löften från att påverka en ny ljudkontext. Om aktivt ljud saknar kontext kan nästa användargest skapa en. Bilens motoroscillator skapas bara när kontexten är `running`.
+- `index.html` laddar `audio.js?v=19`. Roadmapens rotation är LJUD-02 → LJUD-03. Ingen punkt avbockades: ljudtest i fysisk iPhone/Safari saknas fortsatt.
+- Källkod sparad på main. Ingen faktisk avlyssning, Safari-körning eller Pages-distribution har verifierats.
