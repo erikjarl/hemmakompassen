@@ -251,7 +251,7 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
    award(id){if(!validId(id))return false;sync();if(earned[id])return false;earned[id]=true;save();return true;},
    spend(n){if(!Number.isSafeInteger(n)||n<0)return false;sync();if(n>balance())return false;spent+=n;save();return true;},
    refund(n){if(!Number.isSafeInteger(n)||n<0)return false;sync();if(n>spent)return false;spent-=n;save();return true;},
-   clear(){earned=Object.create(null);spent=0;try{localStorage.removeItem(key);}catch(_){}}
+   clear(){earned=Object.create(null);spent=0;save();}
   };
  })();
  const awardMinigameCoin=id=>{if(rewardWallet.award(id)){updateCoinScore();return true;}return false;};
@@ -1050,6 +1050,8 @@ function restartAfterGameOver(cause){
  // en återställning tills spelaren bekräftat förlustdialogen.
  if(!document.getElementById('lossOverlay').hidden)return;
  if(audio.gameOver)audio.gameOver();
+ // Räkna även bonusmynt som nyligen sparats i en annan öppen spelflik.
+ rewardWallet.sync();
  const lostBySource={
   map:game.snapshot().balance,
   minigames:rewardWallet.balance(),
