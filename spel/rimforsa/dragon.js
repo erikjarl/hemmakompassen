@@ -3,8 +3,10 @@
  'use strict';
  function createDragon(){
   const home={x:115,y:780};
-  let t=0,x=home.x,y=home.y,near=false,shotTimer=1,shotId=0,warningTarget=null;const shots=[];
+  let t=0,x=home.x,y=home.y,near=false,shotTimer=1,shotId=0,warningTarget=null,playerDistance=Infinity;const shots=[];
   const proximity=235;
+  // Varningen växer tydligare fram under de 0,65 sekunderna före ett låst skott.
+  const FIRE_WARNING_SECONDS=.65;
   // Bensinmacken ligger vid x=394. Eldklot får inte passera den mot öster,
   // och kan aldrig färdas längre än 300 världspixlar från drakens mun.
   const FIRE_MAX_DISTANCE=300,FIRE_EAST_LIMIT=394;
@@ -14,7 +16,7 @@
    // Flyger i en liten slinga ovanför skogen; oberoende av vägarnas gångbarhet.
    x=home.x+Math.cos(t*.45)*75;
    y=home.y+Math.sin(t*.61)*53;
-   near=Math.hypot(x-playerX,y-playerY)<proximity;
+   playerDistance=Math.hypot(x-playerX,y-playerY);near=playerDistance<proximity;
    shotTimer-=dt;
    // Samma mynning används för varningslinje, skottets start och dess riktning.
    const mouthX=x+28,mouthY=y-7;
@@ -31,7 +33,7 @@
    const playerInRange=inFireRange(player);
    // Sikta endast en gång per skott. En låst varning ger Lage en
    // begriplig chans att väja, i stället för att skottet följer varje steg.
-   if(shotTimer>0&&shotTimer<=.65&&!warningTarget){
+   if(shotTimer>0&&shotTimer<=FIRE_WARNING_SECONDS&&!warningTarget){
     const aimAtHelicopter=helicopterInRange&&(shotId%3===0||!playerInRange);
     const target=aimAtHelicopter?helicopter:player;
     if(inFireRange(target))warningTarget={x:target.x,y:target.y};
@@ -94,6 +96,14 @@
    // Pixelformer med heltalspunkter och kantig siluett i 16-bitarsstil.
    const poly=(points,color)=>{ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(points[0],points[1]);for(let i=2;i<points.length;i+=2)ctx.lineTo(points[i],points[i+1]);ctx.closePath();ctx.fill();};
    ctx.fillStyle='#182d2366';ctx.beginPath();ctx.ellipse(0,40,31,7,0,0,Math.PI*2);ctx.fill();
+   // När Lage är nära kontaktzonen visas en diskret varningskontur på marken.
+   // Den är enbart visuell: samma 37 px kontaktavstånd gäller fortfarande.
+   if(playerDistance<72){
+    const blink=Math.floor(t*5)%2===0;
+    ctx.strokeStyle=blink?'#f2b75d':'#a95b34';
+    ctx.lineWidth=2;
+    ctx.beginPath();ctx.ellipse(0,32,35,12,0,0,Math.PI*2);ctx.stroke();
+   }
    const flap=Math.sin(t*8)*13;
    poly([-12,-4,-47,-36-flap,-32,-12-flap,-39,10,-8,12],'#183b37');
    poly([-12,-8,-44,-34-flap,-30,-12-flap,-31,8,-8,8],'#398d68');
@@ -136,6 +146,15 @@
      const blink=Math.floor(t*8)%2===0;
      const primary=blink?'#ffe990':'#f49a40';
      const shadow='#7b3427';
+     // Fyra indragande pixelhörn visar när det låsta skottet närmar sig.
+     const progress=Math.max(0,Math.min(1,1-shotTimer/FIRE_WARNING_SECONDS));
+     const inset=Math.round(progress*7);
+     const edge=21-inset;
+     ctx.fillStyle=shadow;
+     ctx.fillRect(targetX-edge-2,targetY-edge-2,7,3);
+     ctx.fillRect(targetX+edge-5,targetY-edge-2,7,3);
+     ctx.fillRect(targetX-edge-2,targetY+edge,7,3);
+     ctx.fillRect(targetX+edge-5,targetY+edge,7,3);
      for(const [dx,dy] of [[-13,-13],[7,-13],[-13,7],[7,7]]){
       ctx.fillStyle=shadow;ctx.fillRect(targetX+dx-1,targetY+dy-1,8,8);
       ctx.fillStyle=primary;
