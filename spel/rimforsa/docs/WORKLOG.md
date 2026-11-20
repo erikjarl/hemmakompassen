@@ -283,3 +283,8 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 - `audio.js`: blockerar gamla kontexters `statechange` och försenade `resume()`-löften från att påverka en ny ljudkontext. Om aktivt ljud saknar kontext kan nästa användargest skapa en. Bilens motoroscillator skapas bara när kontexten är `running`.
 - `index.html` laddar `audio.js?v=19`. Roadmapens rotation är LJUD-02 → LJUD-03. Ingen punkt avbockades: ljudtest i fysisk iPhone/Safari saknas fortsatt.
 - Källkod sparad på main. Ingen faktisk avlyssning, Safari-körning eller Pages-distribution har verifierats.
+
+### 2026-11-20 – Jobb lage, LJUD-03 (försäljning, bilutstigning och väska)
+- `audio.js`: tre korta originalsyntetiserade toner/ljudsignaler för lyckad potatisförsäljning, att kliva ur/bärga bilen samt bekräftad tömning av väskan. Respekterar aktiv ljudknapp, synlig sida och körande AudioContext.
+- `index.html`: effekterna kopplade endast till genomförda handlingar, `audio.js?v=20`. Misslyckad försäljning eller avbruten tömning ska inte ge motsvarande ljud.
+- ROADMAP uppdaterad: LJUD-03 → GRAF-01. Inga nya avbockningar eftersom avlyssning och webbläsargenomspelning fortfarande saknas. Sparat på GitHub main; Pages-servering inte verifierad.
