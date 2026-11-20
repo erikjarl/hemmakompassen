@@ -665,6 +665,16 @@ function drawPoops(){
   ctx.fillRect(x+1,y-10,2,1);
   // Minimal highlight på översta toppen för att förtydliga var silhuetten börjar.
   ctx.fillStyle='#ffdf9c';ctx.fillRect(x-1,y-13,1,1);
+  // På nära håll växlar tre befintliga kantpixlar diskret i ljusstyrka.
+  // Allt ligger INOM 23×26 px: ingen ny halo, storlek eller kollisionsyta.
+  // Samma lugna rytm för alla hinder, men spridda faser så de inte blinkar samtidigt.
+  if(Math.hypot(state.x-p.x,state.y-p.y)<112){
+   const phase=Math.floor(performance.now()/360+p.x/71+p.y/89)%2;
+   ctx.fillStyle=phase?'#ffe2a4':'#a36736';
+   ctx.fillRect(x-5,y-7,2,1);
+   ctx.fillRect(x-2,y-12,2,1);
+   ctx.fillRect(x-6,y+2,2,1);
+  }
  }
 }
 function clearPath(){state.path=[]}
