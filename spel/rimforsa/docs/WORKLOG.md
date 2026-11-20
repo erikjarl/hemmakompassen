@@ -249,3 +249,8 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 - `index.html`: förbättrade befintliga pixelritade bajskorvars struktur med 15 extra mycket små ljus-/skuggrektanglar. Mer läsbar trappad spiral, särskilt vid kontrast mot gräs och väg. Alla nya pixlar ligger inom befintlig spriteyta x=-11…11, y=-15…10 (23×26 px); kollision och skada är helt oförändrade.
 - `ROADMAP.md`: senast HUV-06, nästa KARTA-02. Ingen ny avbockning: verklig visuell bedömning av läsbarhet på gräs/väg i mobil och dator har inte gjorts.
 - Sparat på GitHub main och källkod återläst; publicerad Pages-version och praktisk spelkontroll inte verifierade.
+
+### 2026-11-20 – Jobb lage, KARTA-02 (gångbarhet vid vägkant)
+- `index.html`/`slideMove()`: vid blockerad direkt rörelse och misslyckad vanlig kantglidning provas ett litet sidosteg (0,75, 1,5 eller 2,25 px). Vardera delsteg samt efterföljande rörelse godkänns mot befintlig `canStand()`-mask. Avsikten är att passera små ojämnheter utan att släppa igenom förbjuden mark.
+- Ingen förändring av vägarnas utseende, gångbarhetsmask, NPC-rutter eller fart. ROADMAP senast KARTA-02, nästa FORDON-02. Status fortsatt öppen; faktisk genomspelning vid vatten, byggnader, vägkanter och entréer krävs för att bekräfta beteendet.
+- Ändringar sparade på GitHub main och textmässigt kontrollerade. Pages och mobilfunktion ej verifierade.
