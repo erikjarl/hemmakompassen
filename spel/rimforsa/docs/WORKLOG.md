@@ -1,5 +1,11 @@
 # Lage i Rimforsa – historisk arbetslogg
 
+### 2026-11-21 – Jobb lage, MYNT-03 (saldo vid återgång från minispel)
+- `index.html`: `closeBoatGame()` uppdaterar nu huvudkartans gemensamma mynt-HUD när spelaren lämnar båtspelet, även om spelaren lämnar i förtid. Båda ingångarna till Potatislandet uppdaterar samma HUD direkt efter minispelsscenen avslutats. Fotboll/rutschkana/dykning gjorde redan detta.
+- Ändrat endast visningsuppdateringen: intjänade och sparade bonusmynt, unika bonus-ID, köpordning, sparformat och game-over-nollställning är oförändrade. Kodcommit `c0c0288`, roadmapcommit `0173b8a`.
+- Kodkopplingar kontrollerade på main, men verklig båt-/odlingsgenomspelning och mobil-/datorrendering inte verifierad. MYNT-03 fortsatt öppen. Nästa rotation HUV-05.
+
+
 ### 2026-11-21 – Jobb lage, DRAKE-02 (helikoptern inom räckvidd)
 - Granskning av `dragon.js` och `helicopter.js` visade att helikoptern vid (365,310) låg längre än 300 världspixlar från drakens patrullområde kring (115,780). Tidigare kunde därför inga skott riktas mot helikoptern, trots att ritning och träffreaktion var implementerade.
 - Draken tilldelar nu skott mot helikoptern max 600 pixlar och skott mot Lage max 300 pixlar. Varningen låser fortfarande målpunkten före skott; båda skotttyperna klipps vid x=394 vid macken och spelkartans gränser. Inga ändringar av grafiken, kontaktskada eller skadepaus. Kodcommits `4efa524` och `0c39ff8`; roadmapcommit `9e92e89`.
