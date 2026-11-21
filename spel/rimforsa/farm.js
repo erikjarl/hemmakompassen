@@ -172,5 +172,5 @@ function start({returnToMap:cb}={}){
  loop=root.setInterval(render,1000);
  plantButton.focus();return true;
 }
-root.RimforsaFarm={start,close,isOpen:()=>!!overlay&&!overlay.hidden,createFarm,snapshot:()=>farm.snapshot(),sell:quantity=>farm.sell(quantity),spendCoins:amount=>farm.spendCoins(amount),refundCoins:amount=>farm.refundCoins(amount),clearCoins:()=>farm.clearCoins()};
+root.RimforsaFarm={start,close,isOpen:()=>!!overlay&&!overlay.hidden,createFarm,snapshot:()=>farm.snapshot(),sell:quantity=>farm.sell(quantity),spendCoins:amount=>farm.spendCoins(amount),refundCoins:amount=>farm.refundCoins(amount),clearCoins:()=>farm.clearCoins(),syncCoins:()=>farm.syncCoins(),key:KEY};
 })(typeof window!=='undefined'?window:globalThis);
