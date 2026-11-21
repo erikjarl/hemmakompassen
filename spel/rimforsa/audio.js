@@ -4,7 +4,7 @@
   const AudioCtor = root.AudioContext || root.webkitAudioContext;
   let ctx=null,master=null,scene='land',enabled=false,hidden=false;
   let musicInterval=null,gullInterval=null,preschoolInterval=null,engine=null,waves=null,carEngine=null,carActive=false,melodyStep=0,volume=.55,dragonNearby=false;
-  let sceneStarted=false,resumePending=false,resumeStartedAt=0,resumeSerial=0;
+  let sceneStarted=false,resumePending=false,resumeStartedAt=0,resumeSerial=0,resumeFailed=false;
   const melody=[392,440,523.25,440,392,329.63,349.23,392,440,392,329.63,293.66,329.63,349.23,392,0,
                  349.23,392,440,523.25,587.33,523.25,440,392,349.23,329.63,293.66,329.63,349.23,392,329.63,0];
   // Originalkomponerat molltema med låg bordun för drakens skog.
@@ -191,7 +191,7 @@
         }catch(_){}
       }
     }
-    ctx=null;master=null;resumePending=false;resumeStartedAt=0;resumeSerial++;
+    ctx=null;master=null;resumePending=false;resumeStartedAt=0;resumeFailed=false;resumeSerial++;
   }
   function ensureContext(){
     if(!AudioCtor)return false;
@@ -224,7 +224,13 @@
     if(!ctx||ctx.state==='closed'){
       try{if(!ensureContext())return false;}catch(_){return false;}
     }
-    if(ctx.state==='running'){startScene();return true;}
+    if(ctx.state==='running'){resumeFailed=false;startScene();return true;}
+    // Ett avslutat resume()-löfte kan lämna Safari kvar i suspended/interrupted.
+    // Först NÄSTA användargest återskapar då kontexten, utan automatisk uppspelning.
+    if(resumeFailed){
+      disposeContext();
+      try{if(!ensureContext())return false;}catch(_){return false;}
+    }
     // Safari kan lämna resume() olöst, eller lösa det utan att kontexten
     // faktiskt börjar köra. Efter 2,5 sekunder bygger NÄSTA användargest
     // om en fastnad motor i stället för att prova samma trasiga kontext igen.
@@ -238,7 +244,7 @@
       return false;
     }
     try{
-      resumePending=true;resumeStartedAt=Date.now();
+      resumePending=true;resumeStartedAt=Date.now();resumeFailed=false;
       const attempt=++resumeSerial;
       const resumingContext=ctx;
       // Start within the actual gesture before calling asynchronous resume().
@@ -251,19 +257,22 @@
           resumePending=false;
           resumeStartedAt=0; // Ett avslutat försök är inte en fastnad Safari-upplåsning.
           if(ctx.state==='running'&&enabled&&!hidden)startScene();
+          else if(ctx.state!=='running')resumeFailed=true;
           notifyAudioState();
         },()=>{
           if(ctx!==resumingContext||attempt!==resumeSerial)return;
           resumePending=false;
           resumeStartedAt=0;
+          resumeFailed=true;
           notifyAudioState();
         });
       }else if(ctx===resumingContext&&attempt===resumeSerial){
         resumePending=false;
         resumeStartedAt=0;
+        if(ctx.state!=='running')resumeFailed=true;
       }
       return true;
-    }catch(_){resumePending=false;resumeStartedAt=0;return false;}
+    }catch(_){resumePending=false;resumeStartedAt=0;resumeFailed=true;return false;}
   }
   function enable(){
     if(enabled){resumeFromGesture();return true;}
