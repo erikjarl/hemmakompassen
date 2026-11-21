@@ -510,3 +510,7 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 ### 2026-11-21 – Jobb lage, LJUD-02 (ljudknapp vid Safari-avbrott)
 - Huvudsidans ljudknapp är åter en konsekvent av/på-knapp även om WebAudio-kontexten är `suspended` eller `interrupted`. Tidigare blev knappen i dessa lägen enbart "Återuppta ljud" och gick inte att använda för att stänga av.
 - Återupptagning via nästa användargest i spelet finns kvar och inga ljudfiler eller WebAudio-motorregler ändrades. Källkod sparad på main och återläst; faktiskt iPhone/Safari-test av av/på, bakgrundsmusik, effekter, tal och appbyte återstår. LJUD-02 öppen, nästa LJUD-03. Ingen ny bildsprite integrerades i detta pass.
+
+### 2026-11-21 – Jobb lage, LJUD-03 (båten får en egen tom-tank-signal)
+- Nytt kort originalsyntetiserat tretonsljud `boatOutOfFuel()` i `audio.js`, aktiverat bara när ljudmotorn är igång och sidan synlig. Båtens spel-loop jämför nivån före och efter förbrukning så signalen spelas en gång vid övergång till tom tank, inte i varje bildruta vid bryggan. `index.html` laddar nu `audio.js?v=36`.
+- Ingen ändring av bränsleförbrukning, bogsering, rörelse, kollisioner eller belöningsregler. Källkoppling sparad till main; fysisk ljudavlyssning och spelning med bränslestopp återstår. LJUD-03 öppet, nästa GRAF-01. Bildinventering: koden ritar fortfarande bl.a. vissa bakgrundsfigurer; inga nya bildsprites integrerades i detta ljudpass.
