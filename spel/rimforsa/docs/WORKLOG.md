@@ -500,3 +500,7 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 ### 2026-11-21 – Jobb lage, FORDON-02 (riktad turbulens bakom båten)
 - I `boat-direction-art.js` har kölvattnet kompletterats med 2–4 små originalritade pixelstråk från propellern, som följer båtens åtta riktningar och syns enbart under färd. `index.html` hämtar nu `boat-direction-art.js?v=7`.
 - Ingen ändring i bränsle, båtens fysik, kollisioner eller mynt. Källfiler sparade på main. Faktiskt båttest på mobil/dator och visuell jämförelse med bilens vyer återstår, så FORDON-02 är fortfarande öppen. Inga nya bildgenererade resurser tillkom i detta pass. Nästa rotationsuppgift LJUD-02.
+
+### 2026-11-21 – Jobb lage, LJUD-02 (ljudknapp vid Safari-avbrott)
+- Huvudsidans ljudknapp är åter en konsekvent av/på-knapp även om WebAudio-kontexten är `suspended` eller `interrupted`. Tidigare blev knappen i dessa lägen enbart "Återuppta ljud" och gick inte att använda för att stänga av.
+- Återupptagning via nästa användargest i spelet finns kvar och inga ljudfiler eller WebAudio-motorregler ändrades. Källkod sparad på main och återläst; faktiskt iPhone/Safari-test av av/på, bakgrundsmusik, effekter, tal och appbyte återstår. LJUD-02 öppen, nästa LJUD-03. Ingen ny bildsprite integrerades i detta pass.
