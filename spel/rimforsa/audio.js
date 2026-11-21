@@ -249,16 +249,21 @@
           // Stale Promise från en äldre kontext får inte nollställa ny resume.
           if(ctx!==resumingContext||attempt!==resumeSerial)return;
           resumePending=false;
+          resumeStartedAt=0; // Ett avslutat försök är inte en fastnad Safari-upplåsning.
           if(ctx.state==='running'&&enabled&&!hidden)startScene();
           notifyAudioState();
         },()=>{
           if(ctx!==resumingContext||attempt!==resumeSerial)return;
           resumePending=false;
+          resumeStartedAt=0;
           notifyAudioState();
         });
-      }else if(ctx===resumingContext&&attempt===resumeSerial)resumePending=false;
+      }else if(ctx===resumingContext&&attempt===resumeSerial){
+        resumePending=false;
+        resumeStartedAt=0;
+      }
       return true;
-    }catch(_){resumePending=false;return false;}
+    }catch(_){resumePending=false;resumeStartedAt=0;return false;}
   }
   function enable(){
     if(enabled){resumeFromGesture();return true;}
