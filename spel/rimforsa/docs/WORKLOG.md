@@ -464,3 +464,7 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 ### 2026-11-21 – Jobb lage, KARTA-02 (bredare gångmarginal)
 - Bytte huvudkartans gångkontroll från tre fotprover (`[0,0],[-1,-1],[1,-1]`) till två centrala prover (`[0,0],[0,-1]`). Det minskar osynlig bredd runt Lages fötter, vilket ger cirka en världspixel extra utrymme per sida längs smala gångbara vägar. Både punkterna kräver fortfarande giltig originalmask; varken bakgrundsbilder eller gångmask ändrades.
 - Inline-JavaScript syntaxkontrollerat före commit; återstår faktisk provgång på vägar, vid viktiga minispelsentréer och på hus-/sten-/vattenkanter i mobil och dator. Ingen bildgenererad person integrerad i detta pass; återstående kodritade reservfigurer och NPC:er är en del av öppna GRAF-01. KARTA-02 fortsatt öppen; nästa FORDON-02.
+
+### 2026-11-21 – Jobb lage, FORDON-02 (riktat kölvatten)
+- Lade till `drawWake` i båtens redan existerande åttariktade sprite-modul: skarpa vita/turkosa pixelrader placeras bakom aktern i båtens aktuella kvantiserade riktning. Stillastående båt får inget kölvatten; rörelsehastighet styr 2–4 rader. Huvudscenen skickar befintlig fartvektor till ritningen; cacheversion för båtmodulen höjd till 5.
+- Javascript-syntax och källkoppling har kontrollerats efter commit. Ingen faktisk visuell mobil-/datorprovning eller live-Pages-kontroll, ingen ny bildgenererad figur integrerad. Bilens vyer och åttariktat bildbaserat båtark behöver fortfarande granskas; FORDON-02 hålls öppen. Nästa rotationsposition LJUD-02.
