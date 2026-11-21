@@ -14,6 +14,18 @@ function createFarm(storage,clock=()=>Date.now()){
    if(Number.isSafeInteger(saved.spent)&&saved.spent>=0&&saved.spent<=earned)spent=saved.spent;
   }
  }catch{}
+ // Läs nyaste potatismynt från andra flikar innan denna flik sparar annan data.
+ // Bevara odlings-/skördestatus; nollställningen avser bara mynt.
+ function syncCoins(){
+  try{
+   const saved=JSON.parse(storage?.getItem(KEY)||'null');
+   if(!saved||typeof saved!=='object'||Array.isArray(saved))return;
+   if(Number.isSafeInteger(saved.earned)&&saved.earned>=0&&
+      Number.isSafeInteger(saved.spent)&&saved.spent>=0&&saved.spent<=saved.earned){
+    earned=saved.earned;spent=saved.spent;
+   }
+  }catch{}
+ }
  function persist(){
   try{storage?.setItem(KEY,JSON.stringify({plantedAt,harvested,sold,earned,spent}));return true}catch{return false}
  }
@@ -21,22 +33,25 @@ function createFarm(storage,clock=()=>Date.now()){
   const age=plantedAt===null?0:Math.max(0,clock()-plantedAt);
   return {plantedAt,harvested,sold,earned,spent,balance:earned-spent,age,stage:plantedAt===null?0:age>=GROW_MS?4:Math.max(1,Math.ceil(age/(GROW_MS/3))),remaining:plantedAt===null?0:Math.max(0,GROW_MS-age),ready:plantedAt!==null&&age>=GROW_MS};
  }
- function plant(){if(plantedAt!==null)return false;plantedAt=clock();persist();return true}
- function harvest(){if(!snapshot().ready)return false;plantedAt=null;harvested+=3;persist();return true}
+ function plant(){if(plantedAt!==null)return false;syncCoins();plantedAt=clock();persist();return true}
+ function harvest(){if(!snapshot().ready)return false;syncCoins();plantedAt=null;harvested+=3;persist();return true}
  function sell(quantity=3){
+  syncCoins();
   if(!Number.isSafeInteger(quantity)||quantity<=0||harvested<quantity||earned>Number.MAX_SAFE_INTEGER-quantity*2)return {...snapshot(),success:false};
   harvested-=quantity;sold+=quantity;earned+=quantity*2;persist();return {...snapshot(),success:true,coins:quantity*2};
  }
  function spendCoins(amount){
+  syncCoins();
   if(!Number.isSafeInteger(amount)||amount<=0||amount>earned-spent)return false;
   spent+=amount;persist();return true;
  }
  function clearCoins(){earned=0;spent=0;persist();return snapshot();}
  function refundCoins(amount){
+  syncCoins();
   if(!Number.isSafeInteger(amount)||amount<=0||amount>spent)return false;
   spent-=amount;persist();return true;
  }
- return {snapshot,plant,harvest,sell,spendCoins,refundCoins,clearCoins,key:KEY};
+ return {snapshot,plant,harvest,sell,spendCoins,refundCoins,clearCoins,syncCoins,key:KEY};
 }
 let overlay=null,canvas=null,ctx=null,info=null,plantButton=null,harvestButton=null,loop=null,previousFocus=null,returnToMap=null;
 let farm=createFarm((()=>{try{return root.localStorage}catch{return null}})());
