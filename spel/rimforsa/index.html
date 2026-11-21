@@ -719,8 +719,12 @@ function drawPoops(){
   // varm ljusgul och orange, utan att flytta eller förstora spriteytan.
   ctx.fillStyle=isNear?(lightPhase?'#fff3b8':'#ffb14e'):'#fff0cb';
   ctx.fillRect(x-4,y-3,3,3);ctx.fillRect(x+2,y-3,3,3);
+  // Pupillerna följer Lage ett pixelsteg åt vänster eller höger när
+  // han kommer nära: en tydligare varningssignal utan större sprite.
+  // Alla pupillpixlar stannar inom respektive befintligt 3×3-öga.
+  const pupilShift=isNear?(state.x>p.x+8?1:state.x<p.x-8?-1:0):0;
   ctx.fillStyle='#201310';
-  ctx.fillRect(x-3,y-2,1,2);ctx.fillRect(x+3,y-2,1,2);
+  ctx.fillRect(x-3+pupilShift,y-2,1,2);ctx.fillRect(x+3+pupilShift,y-2,1,2);
   // Två skarpa ögonbryn och ett litet gap vid närhet gör hotet läsbart
   // även när själva färgerna liknar jord eller grus på kartan.
   ctx.fillRect(x-5,y-5,4,1);ctx.fillRect(x+2,y-5,4,1);
