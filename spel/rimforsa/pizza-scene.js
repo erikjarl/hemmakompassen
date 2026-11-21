@@ -24,6 +24,18 @@ const rect=(c,x,y,w,h,color)=>{c.fillStyle=color;c.fillRect(Math.round(x),Math.r
   c.restore();
   return true;
  }
+ // Maja är samma originalgenererade bildfigur som på huvudkartan och i
+ // Hackelhallen. Hon står som besökare på pizzerians fria golvyta.
+ // Ingen kodritad reservperson: bilden visas först när den har laddats.
+ const majaSprite=root.RimforsaMajaSprite||null;
+ if(majaSprite)majaSprite.addEventListener('load',()=>{if(lastCanvas&&lastOptions)draw(lastCanvas,lastOptions);});
+ function drawMajaVisitor(c){
+  if(!majaSprite||!majaSprite.complete||majaSprite.naturalWidth!==192||majaSprite.naturalHeight!==56)return;
+  c.save();c.imageSmoothingEnabled=false;
+  rect(c,65,264,42,4,'#3a403555');
+  c.drawImage(majaSprite,0,0,48,56,62,210,48,56);
+  c.restore();
+ }
  const lageSprite=typeof root.Image==='function'?new root.Image():null;
  let lastCanvas=null,lastOptions=null;
  if(lageSprite){
@@ -106,6 +118,8 @@ function draw(canvas,options={}){
  // Kassa på disken och pizzabagare med kockmössa bakom.
  rect(c,308,148,45,20,'#3b5145');rect(c,313,151,33,10,'#aac8a6');
  if(!drawChef(c,392,128))character(c,392,128,{shirt:'#9e634a',hair:'#684b34',hat:true});
+ // Besökande Maja använder sin riktiga sprite från huvudkartan, inte en kodfigur.
+ drawMajaVisitor(c);
  // Lage står framför disken.
  if(!drawLage(c,275,236))character(c,275,236,{shirt:'#c66356',hair:'#795335'});
  rect(c,9,7,156,22,'#293d35');c.fillStyle='#fff1c7';c.font='bold 15px monospace';c.fillText('MYNT: '+balance,18,23);
