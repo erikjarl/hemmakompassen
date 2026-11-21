@@ -15,8 +15,12 @@ function make(dir){
  const theta=dir*Math.PI/4,fx=Math.cos(theta),fy=Math.sin(theta),sx=-fy,sy=fx;
  const point=(along,side)=>[48+fx*along+sx*side,48+fy*along+sy*side];
  const hull=(a,b,halfA,halfB)=>[point(a,-halfA),point(b,-halfB),point(b,halfB),point(a,halfA)];
- // Mörk vattenskugga är enbart förankrad under båten och roteras inte som bild.
- g.fillStyle='#173b5677';g.fillRect(22,71,51,8);g.fillStyle='#26638477';g.fillRect(27,79,41,3);
+ // Den förankrade vattenskuggan följer skrovets åtta riktningar.
+ // Den lilla bildskärmsförskjutningen nedåt ger djup utan en lös,
+ // horisontell skuggremsa när båten pekar uppåt eller diagonalt.
+ const shadowPoint=(along,side)=>{const [x,y]=point(along,side);return [x,y+4];};
+ drawShape(g,[shadowPoint(-35,-14),shadowPoint(-22,-22),shadowPoint(18,-20),shadowPoint(39,-5),shadowPoint(39,5),shadowPoint(18,20),shadowPoint(-22,22),shadowPoint(-35,14)],'#173b5677');
+ drawShape(g,[shadowPoint(-29,-11),shadowPoint(17,-13),shadowPoint(34,0),shadowPoint(17,13),shadowPoint(-29,11)],'#26638455');
  // Akter, reling, förstäv och bredare mittsektion skapar samma båtmodell i varje vy.
  drawShape(g,[point(-37,-13),point(-27,-21),point(18,-20),point(38,-5),point(38,5),point(18,20),point(-27,21),point(-37,13)],palette.edge);
  drawShape(g,[point(-34,-10),point(-24,-17),point(16,-17),point(34,-4),point(34,4),point(16,17),point(-24,17),point(-34,10)],palette.shadow);
