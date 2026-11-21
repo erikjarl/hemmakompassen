@@ -97,11 +97,34 @@ function make(dir){
  drawShape(g,[point(2,-10),point(3,-10),point(3,10),point(2,10)],'#f8f3e4');
  return c;
 }
-function draw(ctx,x,y,angle,flash){
+// Originalritat, diskret kölvatten bakom aktern. Varje pixelblock placeras i
+// färdriktningens koordinater – ingen roterad eller utsmetad bitmap.
+// Hastigheten påverkar bara antalet skumrader, aldrig båtens spelmekanik.
+function drawWake(ctx,x,y,angle,speed){
+ if(!Number.isFinite(speed)||speed<12)return;
+ const heading=index(angle)*Math.PI/4;
+ const fx=Math.cos(heading),fy=Math.sin(heading),sx=-fy,sy=fx;
+ const px=Math.round(x),py=Math.round(y);
+ const rows=speed>90?4:speed>46?3:2;
+ for(let row=0;row<rows;row++){
+  const aft=-43-row*8;
+  const width=12+row*3;
+  for(const side of [-1,1]){
+   const wx=Math.round(px+fx*aft+sx*side*width);
+   const wy=Math.round(py+fy*aft+sy*side*width);
+   ctx.fillStyle=row%2===0?'#d9f4eb':'#9cddd9';
+   ctx.fillRect(wx-2,wy-1,5,3);
+   ctx.fillStyle='#f8fff3';
+   ctx.fillRect(wx,wy-1,2,1);
+  }
+ }
+}
+function draw(ctx,x,y,angle,flash,speed=0){
  if(!root.document)return;
  const d=index(angle);
  if(!cache[d])cache[d]=make(d);
  ctx.save();ctx.imageSmoothingEnabled=false;
+ drawWake(ctx,x,y,angle,speed);
  ctx.globalAlpha=flash?.5:1;
  ctx.drawImage(cache[d],Math.round(x)-48,Math.round(y)-48);
  ctx.restore();
