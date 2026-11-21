@@ -765,6 +765,17 @@ function drawPoops(){
   // Två små prickar ligger på originalfiguren och ändrar inte kollisionen.
   ctx.fillStyle=isNear?'#b94d2c':'#6b3521';
   ctx.fillRect(x-8,y-1,2,2);ctx.fillRect(x+7,y-1,2,2);
+  // Tre tydliga övergångar mellan spiralens nivåer. Alternera
+  // varm högdager och mörkt veck för kontrast på både asfalt och gräs.
+  // Helt inom originalets x=-11..11 och y=-15..10.
+  ctx.fillStyle='#f7ca81';
+  ctx.fillRect(x-5,y-8,4,1);
+  ctx.fillRect(x-8,y-1,3,1);
+  ctx.fillRect(x+3,y+4,3,1);
+  ctx.fillStyle='#281811';
+  ctx.fillRect(x+1,y-8,4,1);
+  ctx.fillRect(x+4,y-1,3,1);
+  ctx.fillRect(x-3,y+7,4,1);
   // Minimal highlight på översta toppen för att förtydliga var silhuetten börjar.
   ctx.fillStyle='#ffdf9c';ctx.fillRect(x-1,y-13,1,1);
   // På nära håll växlar tre befintliga kantpixlar diskret i ljusstyrka.
