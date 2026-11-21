@@ -1,5 +1,11 @@
 # Lage i Rimforsa – historisk arbetslogg
 
+### 2026-11-21 – Jobb lage, LJUD-02 (Safari WebAudio-resume)
+- `audio.js`: återställer `resumeStartedAt` till noll när det aktuella `resume()`-anropet är klart, både vid lyckat och avvisat Promise, samt vid synkront avslut/fel. Tidigare tidsstämpel kunde göra att ett senare normalt avbrott behandlades som ett 2,5-sekunders fastnat försök. Fastnade försök som faktiskt väntar skyddas fortfarande av samma tröskel och nästa användargest.
+- Huvudsidan laddar nu `audio.js?v=31`. Kodcommits: `951c15a`, `677749d`. Roadmapcommit: `f68c3e3`.
+- Källfilerna kontrolleras på main, men ingen fysisk iPhone-/Safari-avlyssning eller verifierad Pages-rendering. LJUD-02 fortsatt öppen. Nästa rotation: LJUD-03.
+
+
 ### 2026-11-21 – Jobb lage, FORDON-02 (kupéfönster i åtta riktningar)
 - `car.js`: Begränsade den befintliga kodritade Lage-detaljen med `ctx.clip()` till fönsterytan för sidovy och övriga bilriktningar. Tak och kaross täcks därmed inte av förarens hår/ansikte/tröja när riktningsbilden används. Bilspritesheet, färdriktningar, fart och kollisionsregler oförändrade.
 - Kodcommit `6f6444f`; roadmapcommit `656d72a`. Verifierat genom återläsning av källfilen på main, inte med faktisk Canvas-rendering, mobil/Safari eller jämförelse mellan åtta vyer. Båtens riktningsvyer återstår. FORDON-02 fortsatt öppen. Nästa rotation LJUD-02.
