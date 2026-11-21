@@ -460,3 +460,7 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 ### 2026-11-21 – Jobb lage, HUV-06 (varningsansikte på små hinder)
 - Bajskorvarna har nu markerade ögonbryn och ett varningsuttryck på nära håll. Ögonen varierar mellan ljusgult och orange i den redan befintliga kontrastfasen. Alla nya pixelrektanglar ligger inom samma 23×26-pixelgränser och ändrar inte kollisions-/skadelogik.
 - Källkoden återläst på main och kollisionsankare kontrollerat. Ingen riktig mobil-/datorgenomspelning eller bildjämförelse på gräs/väg; HUV-06 kvarstår öppen. Bildsprite-prioriteten inventerad men ingen ytterligare person konverterades i detta pass. Nästa rotationsposition KARTA-02.
+
+### 2026-11-21 – Jobb lage, KARTA-02 (bredare gångmarginal)
+- Bytte huvudkartans gångkontroll från tre fotprover (`[0,0],[-1,-1],[1,-1]`) till två centrala prover (`[0,0],[0,-1]`). Det minskar osynlig bredd runt Lages fötter, vilket ger cirka en världspixel extra utrymme per sida längs smala gångbara vägar. Både punkterna kräver fortfarande giltig originalmask; varken bakgrundsbilder eller gångmask ändrades.
+- Inline-JavaScript syntaxkontrollerat före commit; återstår faktisk provgång på vägar, vid viktiga minispelsentréer och på hus-/sten-/vattenkanter i mobil och dator. Ingen bildgenererad person integrerad i detta pass; återstående kodritade reservfigurer och NPC:er är en del av öppna GRAF-01. KARTA-02 fortsatt öppen; nästa FORDON-02.
