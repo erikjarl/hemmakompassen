@@ -12,7 +12,7 @@ const rect=(c,x,y,w,h,color)=>{c.fillStyle=color;c.fillRect(Math.round(x),Math.r
  const chefSprite=typeof root.Image==='function'?new root.Image():null;
  if(chefSprite){
   chefSprite.onload=()=>{if(lastCanvas&&lastOptions)draw(lastCanvas,lastOptions);};
-  chefSprite.src='./pizza-chef-spritesheet.png?v=1';
+  chefSprite.src='./pizza-chef-spritesheet.png?v=2';
  }
  function drawChef(c,x,y){
   if(!chefSprite||!chefSprite.complete||chefSprite.naturalWidth!==160||chefSprite.naturalHeight!==56)return false;
