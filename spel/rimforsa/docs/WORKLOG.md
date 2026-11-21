@@ -476,3 +476,7 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 ### 2026-11-21 – Jobb lage, LJUD-03 (väska och bensinmack)
 - Två nya korta, egenkomponerade WebAudio-signaler: `bagClose` vid verklig stängning av väskan och `fuelStationEnter` vid öppning av bensinmackens fönster. Båda respekterar ljudknappen, den synliga fliken och AudioContext `running`. Ljudfilens cacheversion höjd till 34.
 - Kod syntaktiskt kontrollerad och återläst från main. Ingen faktisk avlyssning på iPhone/Safari eller desktop; nivåbalansen och användarupplevelsen är inte verifierade. Inga nya bildgenererade NPC-resurser integrerade i detta pass. Nästa rotationsposition GRAF-01.
+
+### 2026-11-21 – Jobb lage, GRAF-01 (Maja som samma bildfigur i två scener)
+- Huvudkartans Maja använder nu det befintliga originalbildgenererade transparenta fyrariktade Maja-arket från Hackelhallen, inte den tidigare hue-filtrerade Lage-bilden. `npc.js` väljer fram/vänster/bak/höger efter gångriktning och läser bildmodulen vid teckning, eftersom `maja-sprites.js` laddas senare än `npc.js`. Små skarpa gångstudsar bevarar den redan befintliga rörelsen.
+- JavaScript-syntax och källkoppling återlästa och verifierade på main. Ingen ny genererad bildfil eller ändrad spelmekanik; faktiskt mobil-/datorrendering och skärmbildsjämförelse återstår. GRAF-01 öppen, nästa DRAKE-02.
