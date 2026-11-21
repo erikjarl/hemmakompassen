@@ -1392,7 +1392,7 @@ function tick(now){
  updateBoat(dt);
  // Draken och spelaren ska använda samma pausvillkor: ingen eld när
  // huvudkartan är dold bakom butik, minispel, väska eller förlustdialog.
- const worldPlaying=maskLoaded&&(!fuelDialog||fuelDialog.hidden)&&!isBoatOpen()&&winOverlay.hidden&&document.getElementById('lossOverlay').hidden&&bagOverlay.hidden&&icaOverlay.hidden&&pizzaOverlay.hidden&&!window.RimforsaSlideMinigame.isOpen()&&!window.RimforsaSwimMinigame.isOpen()&&!window.RimforsaTrollMinigame.isOpen()&&!window.RimforsaFarm.isOpen()&&!window.RimforsaBrokindTrail.isOpen()&&!window.RimforsaFootball.isOpen();
+ const worldPlaying=maskLoaded&&!overlay.classList.contains('show')&&(!fuelDialog||fuelDialog.hidden)&&!isBoatOpen()&&winOverlay.hidden&&document.getElementById('lossOverlay').hidden&&bagOverlay.hidden&&icaOverlay.hidden&&pizzaOverlay.hidden&&!window.RimforsaSlideMinigame.isOpen()&&!window.RimforsaSwimMinigame.isOpen()&&!window.RimforsaTrollMinigame.isOpen()&&!window.RimforsaFarm.isOpen()&&!window.RimforsaBrokindTrail.isOpen()&&!window.RimforsaFootball.isOpen();
  if(worldPlaying){
   npcSystem.update(dt,state.x,state.y);
   let dx=(+keys.right)-(+keys.left),dy=(+keys.down)-(+keys.up);
