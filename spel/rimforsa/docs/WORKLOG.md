@@ -480,3 +480,7 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 ### 2026-11-21 – Jobb lage, GRAF-01 (Maja som samma bildfigur i två scener)
 - Huvudkartans Maja använder nu det befintliga originalbildgenererade transparenta fyrariktade Maja-arket från Hackelhallen, inte den tidigare hue-filtrerade Lage-bilden. `npc.js` väljer fram/vänster/bak/höger efter gångriktning och läser bildmodulen vid teckning, eftersom `maja-sprites.js` laddas senare än `npc.js`. Små skarpa gångstudsar bevarar den redan befintliga rörelsen.
 - JavaScript-syntax och källkoppling återlästa och verifierade på main. Ingen ny genererad bildfil eller ändrad spelmekanik; faktiskt mobil-/datorrendering och skärmbildsjämförelse återstår. GRAF-01 öppen, nästa DRAKE-02.
+
+### 2026-11-21 – Jobb lage, DRAKE-02 (målval vid bilkörning)
+- Draken väljer inte längre Lage som nytt eldklotsmål när han sitter i bilen eller båtspelet är aktivt. En låst men ännu ej avfyrad varning riktad mot Lage upphör då, medan målval mot helikoptern och redan avfyrade projektiler lämnas oförändrade. `index.html` överför spelarens sårbarhet till `dragon.update`; `dragon.js?v=13` används.
+- Källfiler kontrollerade på main. JavaScript-syntax godkänd; liten direkt funktionskontroll verifierade frånvaro av varning mot bil-Lage och att befintlig varning mot gående Lage avbryts vid växling till bil. Full genomspelning och visualisering i Safari/mobil/dator saknas; DRAKE-02 fortsatt öppen, nästa MYNT-03. Inga nya bildgenererade NPC-resurser integrerades detta pass.
