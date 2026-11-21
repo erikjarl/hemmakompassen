@@ -1,5 +1,11 @@
 # Lage i Rimforsa – historisk arbetslogg
 
+### 2026-11-21 – Jobb lage, GRAF-01 (bildbaserad pizzabagare)
+- Skapade en originalbildgenererad pizzabagare i SNES-inspirerad pixelstil med fyra riktningar, efterbehandlad till kompakt transparent 160×56 PNG (40×56 per riktning). Lagt upp `pizza-chef-spritesheet.png` på main via Git-blob och commit `7a6e634`.
+- `pizza-scene.js` ritar nu framåtvyn med `drawImage` utan utjämning och använder den gamla kodritade figuren endast när bildresursen inte kan läsas. Bildens `onload` ritar om senaste scenen. `index.html` använder `pizza-scene.js?v=4`. Kodcommits `0e1aee4` och `aec933a`, roadmapcommit `7bbbd73`.
+- Bekräftat på main att PNG-filen går att hämta och att JavaScript-filen och sidans cachekoppling är sparade. Ej verifierat i fysisk mobil/dator eller faktisk Pages, så skala och SNES-enhetlighet är inte slutbedömda. GRAF-01 fortsatt öppen; nästa rotation DRAKE-02.
+
+
 ### 2026-11-21 – Jobb lage, LJUD-03 (samtalssignal)
 - Lade till den korta, egenkomponerade tvåtonssignalen `npcTalk()` i `audio.js` för lyckade samtal med huvudkartans NPC:er. Den används i `index.html` innan det redan befintliga upplästa talet och fungerar även utan installerad svensk talröst. Respekterar ljudknapp, dold sida och krav på aktiv WebAudio-kontext. Inga nya ljudfiler eller ändrade samtalsrepliker.
 - Kodcommits `58ca730` och `c812cf7`; roadmapcommit `0ae65ae`. Källkoppling sparad på main; fysisk Safari-/mobil- eller datoravlyssning och ljudbalans har inte verifierats. LJUD-03 öppen, nästa rotation GRAF-01.
