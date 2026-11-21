@@ -1,6 +1,6 @@
-# Lage i Rimforsa – detaljerade uppgifter
+# Lage i Rimforsa – kravspecifikation (både öppna och färdiga uppgifter)
 
-**Läsanvisning:** Hämta bara avsnittet för uppgifts-ID:t från [den aktiva arbetskön](../ROADMAP.md). Uppgiftsstatus och prioriterad ordning hålls **endast** i `ROADMAP.md`; här finns funktionella krav och detaljer. Samtliga uppgifter omfattas av den bindande [grafik- och spelstandarden](GAME_RULES.md) oavsett om grafik nämns i brödtexten.
+**OBS: DETTA ÄR INTE EN ATT-GÖRA-LISTA.** Många av kraven nedan är redan genomförda. **Endast** [ROADMAP.md](../ROADMAP.md) visar vad som återstår och prioritetsordningen. Avslutade uppgifter är flyttade till [COMPLETED_TASKS.md](COMPLETED_TASKS.md). Här finns bara funktionella krav och referensbeskrivningar: använd uppgifts-ID för att läsa rätt avsnitt, och behandla inte rubriker eller gamla beskrivningar som nya öppna uppgifter. Alla synliga ändringar omfattas fortfarande av [grafik- och spelstandarden](GAME_RULES.md).
 
 ## Gemensam grafik och minispelsmiljöer
 
@@ -116,7 +116,7 @@ Skapa många men välavvägda originalskapade ljudeffekter.
 Ersätt den nuvarande ljudeffekten med ett kort, originalskapat pruttljud.
 
 
-## Att göra – Kinda båtklubb
+## Kravbeskrivningar – Kinda båtklubb
 
 #### BÅT-01
 
@@ -131,7 +131,7 @@ Lägg till bakgrundsljud med **vågskvalp och fiskmåsar** när man befinner sig
 Lägg till **båtmotorljud när motorbåten kör**. Ljudet ska följa körningen, och stanna när båten stannar eller minispelet lämnas.
 
 
-## Att göra – huvudkartan
+## Kravbeskrivningar – huvudkartan
 
 #### HUV-01
 
@@ -243,7 +243,7 @@ Lägg ett troll på den befintliga stenen nordväst om rondellen, med transparen
 Bygg ett separat minispel där Lage kastar bajs på trollet. Återanvänd trollets fasta världspunkt och ingången `window.RimforsaTrollMinigame.start({troll,player,returnToMap})`. Kaststyrning, poäng, grafik, ljud och återgång till huvudkartan är nu implementerade med särskild minispelsmodul och regressionstester.
 
 
-## Att göra – nya minispel
+## Kravbeskrivningar – minispel
 
 ### ICA-affären
 #### ICA-01
