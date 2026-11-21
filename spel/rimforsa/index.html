@@ -110,7 +110,7 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
  <div class="controls"><div class="guide">Samla guldmynt! Vid hemmet står en vit bil – hoppa in med Kör bilen. Styr med pilar/WASD.</div><div class="dpad" aria-label="Styr Lage"><button type="button" data-dir="up" aria-label="Gå uppåt"></button><button type="button" data-dir="left" aria-label="Gå åt vänster"></button><button type="button" data-dir="down" aria-label="Gå nedåt"></button><button type="button" data-dir="right" aria-label="Gå åt höger"></button></div><button class="reset" id="reset">Börja om ↺</button></div>
  <div class="footer">Illustrerad spelvärld inspirerad av Rimforsa. Platserna ligger ungefär rätt, men kartan är inte skalenlig.</div>
 </main>
-<script src="./audio.js?v=33"></script>
+<script src="./audio.js?v=34"></script>
 <script src="./gameplay.js?v=2"></script>
 <script src="./inventory.js?v=3"></script>
 <script src="./item-art.js?v=1"></script>
@@ -391,7 +391,7 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
   }
   bagStatus.textContent=bag.available()?'Föremålen sparas på den här enheten, även när spelet stängs. Mynten är separata.':'Föremålen finns kvar under det här besöket men kunde inte sparas i webbläsaren.';
  }
- function closeBag(){bagOverlay.hidden=true;}
+ function closeBag(){if(bagOverlay.hidden)return;bagOverlay.hidden=true;if(audio.bagClose)audio.bagClose();}
  document.getElementById('showBag').addEventListener('click',()=>{stop();renderBag();bagOverlay.hidden=false;if(audio.bagOpen)audio.bagOpen();document.getElementById('closeBag').focus();});
  document.getElementById('closeBag').addEventListener('click',closeBag);
  bagOverlay.addEventListener('click',e=>{if(e.target===bagOverlay)closeBag();});
@@ -779,7 +779,7 @@ function exitCar(){
 // Bensinstationen: egen detaljerad pixelritad interaktiv miljö.
 let fuelDialog=null;
 function openFuelStation(){
- stop();
+ stop();if(audio.fuelStationEnter)audio.fuelStationEnter();
  if(!fuelDialog){
   fuelDialog=document.createElement('div');fuelDialog.className='fuel-dialog';fuelDialog.setAttribute('role','dialog');
   fuelDialog.setAttribute('aria-modal','true');fuelDialog.setAttribute('aria-label','Bensinmackens tankstation');
