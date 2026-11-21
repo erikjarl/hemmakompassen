@@ -468,3 +468,7 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 ### 2026-11-21 – Jobb lage, FORDON-02 (riktat kölvatten)
 - Lade till `drawWake` i båtens redan existerande åttariktade sprite-modul: skarpa vita/turkosa pixelrader placeras bakom aktern i båtens aktuella kvantiserade riktning. Stillastående båt får inget kölvatten; rörelsehastighet styr 2–4 rader. Huvudscenen skickar befintlig fartvektor till ritningen; cacheversion för båtmodulen höjd till 5.
 - Javascript-syntax och källkoppling har kontrollerats efter commit. Ingen faktisk visuell mobil-/datorprovning eller live-Pages-kontroll, ingen ny bildgenererad figur integrerad. Bilens vyer och åttariktat bildbaserat båtark behöver fortfarande granskas; FORDON-02 hålls öppen. Nästa rotationsposition LJUD-02.
+
+### 2026-11-21 – Jobb lage, LJUD-02 (Safari AudioContext efter avslutat men tyst resume)
+- `resumeFromGesture()` markerar nu en avvisad eller avslutad men fortsatt pausad/interrupted AudioContext som misslyckad. Vid nästa faktiska användargest stängs den och en ny WebAudio-kontext skapas; om ljudet redan hunnit bli `running` behålls befintlig motor. Återupptagningsförsökens identitets- och ordningsvakter gäller fortsatt. Ny cacheversion `audio.js?v=33` i index.
+- Källkoden återläst från main och JavaScript-syntax verifierad. Verklig iPhone/Safari-lyssning, mobilens musik/effekter/tal och upplevd stabilitet ej testade. Inga bildgenererade figurer integrerades; kvarstående GRAF-01-figurer återstår. LJUD-02 öppen; nästa LJUD-03.
