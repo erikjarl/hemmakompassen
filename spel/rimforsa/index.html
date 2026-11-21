@@ -1260,9 +1260,10 @@ function closestWalkable(tx,ty){const startX=Math.max(1,Math.min(NX-2,Math.floor
 // den ordinarie ruttplaneringen kontrollerar sedan hela vägen dit.
 function safeTapTarget(x,y){
  if(canStand(x,y))return {x,y};
- // En pekning bredvid en smal väg kan ha flera tillåtna kandidater.
- // Välj i första hand en kort, direkt nåbar punkt och undvik att
- // snäppa över ett hus, en sten eller vatten till fel sida av hindret.
+ // Ett fingertryck strax utanför en väg ska i första hand hamna nära
+ // SJÄLVA trycket, inte på den sida som ligger närmast Lage.
+ // Alla kandidater måste godkännas av originalmaskens canStand().
+ // För korta, fria sträckor prioriteras en direkt nåbar punkt.
  let fallback=null;
  for(const radius of [3,6,9,12,15,18]){
   let bestDirect=null,bestDirectScore=Infinity;
@@ -1270,14 +1271,20 @@ function safeTapTarget(x,y){
   for(let n=0;n<24;n++){
    const angle=n*Math.PI/12,px=x+Math.cos(angle)*radius,py=y+Math.sin(angle)*radius;
    if(!canStand(px,py))continue;
-   const score=Math.hypot(px-state.x,py-state.y);
-   if(score<bestFallbackScore){bestFallback={x:px,y:py};bestFallbackScore=score;}
-   if(score<=90&&canWalkStraight(state.x,state.y,px,py)&&score<bestDirectScore){
+   const fromPlayer=Math.hypot(px-state.x,py-state.y);
+   // Föredra den närmaste gångbara punkten till fingertrycket.
+   // Liten utslagsfaktor från spelaren bryter lika avstånd i samma ring.
+   const score=Math.hypot(px-x,py-y)+fromPlayer*.001;
+   if(score<bestFallbackScore){
+    bestFallback={x:px,y:py};bestFallbackScore=score;
+   }
+   if(fromPlayer<=90&&canWalkStraight(state.x,state.y,px,py)&&score<bestDirectScore){
     bestDirect={x:px,y:py};bestDirectScore=score;
    }
   }
   if(bestDirect)return bestDirect;
-  // För längre eller blockerade vägar får ordinarie A* prova kandidater.
+  // Längre rutter måste fortfarande hittas av A*; ingen genväg genom
+  // hus, skog, stenar eller vatten öppnas av den större pektoleransen.
   if(!fallback&&bestFallback)fallback=bestFallback;
  }
  return fallback;
