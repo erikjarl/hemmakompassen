@@ -448,6 +448,15 @@
     tone(523.25,t+.12,.10,.023,'square');
     tone(392,t+.23,.16,.018,'sine');
   }
+  // Diskret dialogsignal när Lage pratar med en figur. Även när svensk
+  // talsyntes saknas hörs en kort, egenkomponerad bekräftelse.
+  // Spelas bara vid interaktion och när WebAudio redan är upplåst.
+  function npcTalk(){
+    if(!enabled||hidden||!ctx||ctx.state!=='running')return;
+    const t=now()+.008;
+    tone(587.33,t,.075,.018,'triangle');
+    tone(739.99,t+.07,.10,.015,'sine');
+  }
   // Tre korta originalsyntetiserade gränssnitts-/äventyrsljud.
   // Används endast när spelaren själv öppnar väska, karta eller båtspel.
   function bagOpen(){
@@ -624,5 +633,5 @@
     }catch(_){speechMusicVolume(volume);return false;}
   }
   function status(){return {enabled,available:!!AudioCtor,contextState:ctx?ctx.state:'not-created',scene,hidden,playingMusic:musicInterval!==null,playingWaves:!!waves,playingEngine:!!engine,playingCarEngine:!!carEngine,carActive,dragonNearby};}
-  root.RimforsaAudio={enable,disable,toggle,resumeFromGesture,setScene,setBoatSpeed,setCarActive,setCarSpeed,setDragonNearby,coin,hit,poop,victory,slideLaunch,slideLand,slideCharge,slideLongJump,sharkBump,purchase,fuelFill,boatGrounding,carEnter,itemFound,helicopterHit,footballKick,footballSave,footballGoal,boatTreasure,bagOpen,mapOpen,boatLaunch,potatoSale,carExit,bagClear,gameOver,shopEnter,mapClose,boatReturn,shopExit,routeSelected,routeBlocked,potatoPlant,potatoHarvest,speak,stopSpeech,setVisible,status};
+  root.RimforsaAudio={enable,disable,toggle,resumeFromGesture,setScene,setBoatSpeed,setCarActive,setCarSpeed,setDragonNearby,coin,hit,poop,victory,slideLaunch,slideLand,slideCharge,slideLongJump,sharkBump,purchase,fuelFill,boatGrounding,carEnter,itemFound,helicopterHit,footballKick,footballSave,footballGoal,boatTreasure,npcTalk,bagOpen,mapOpen,boatLaunch,potatoSale,carExit,bagClear,gameOver,shopEnter,mapClose,boatReturn,shopExit,routeSelected,routeBlocked,potatoPlant,potatoHarvest,speak,stopSpeech,setVisible,status};
 })(window);
