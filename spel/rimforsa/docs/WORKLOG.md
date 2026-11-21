@@ -1,5 +1,10 @@
 # Lage i Rimforsa – historisk arbetslogg
 
+### 2026-11-21 – Jobb lage, LJUD-03 (samtalssignal)
+- Lade till den korta, egenkomponerade tvåtonssignalen `npcTalk()` i `audio.js` för lyckade samtal med huvudkartans NPC:er. Den används i `index.html` innan det redan befintliga upplästa talet och fungerar även utan installerad svensk talröst. Respekterar ljudknapp, dold sida och krav på aktiv WebAudio-kontext. Inga nya ljudfiler eller ändrade samtalsrepliker.
+- Kodcommits `58ca730` och `c812cf7`; roadmapcommit `0ae65ae`. Källkoppling sparad på main; fysisk Safari-/mobil- eller datoravlyssning och ljudbalans har inte verifierats. LJUD-03 öppen, nästa rotation GRAF-01.
+
+
 ### 2026-11-21 – Jobb lage, LJUD-02 (Safari WebAudio-resume)
 - `audio.js`: återställer `resumeStartedAt` till noll när det aktuella `resume()`-anropet är klart, både vid lyckat och avvisat Promise, samt vid synkront avslut/fel. Tidigare tidsstämpel kunde göra att ett senare normalt avbrott behandlades som ett 2,5-sekunders fastnat försök. Fastnade försök som faktiskt väntar skyddas fortfarande av samma tröskel och nästa användargest.
 - Huvudsidan laddar nu `audio.js?v=31`. Kodcommits: `951c15a`, `677749d`. Roadmapcommit: `f68c3e3`.
