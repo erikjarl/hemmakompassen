@@ -122,6 +122,18 @@ function drawWake(ctx,x,y,angle,speed){
    ctx.fillRect(wx,wy-1,2,1);
   }
  }
+ // Motorns smala turbulensstråk ligger precis bakom aktern och följer
+ // samma kvantiserade riktning som skrovet i alla åtta vyer.
+ // Det syns bara när båten faktiskt rör sig och ändrar ingen fysik.
+ const foamCount=speed>90?4:speed>46?3:2;
+ for(let i=0;i<foamCount;i++){
+  const aft=-46-i*7;
+  const fxp=Math.round(px+fx*aft),fyp=Math.round(py+fy*aft);
+  ctx.fillStyle=i%2?'#b4e3df':'#f0faf0';
+  ctx.fillRect(fxp-2,fyp-1,4,3);
+  ctx.fillStyle='#538f9a';
+  ctx.fillRect(fxp,fyp+1,2,1);
+ }
 }
 function draw(ctx,x,y,angle,flash,speed=0){
  if(!root.document)return;
