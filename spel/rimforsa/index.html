@@ -176,6 +176,9 @@ document.addEventListener('touchstart',resumeAudioGesture,{capture:true,passive:
 document.addEventListener('keydown',resumeAudioGesture,true);
 window.addEventListener('rimforsa-audio-state',showAudioState);
 document.addEventListener('visibilitychange',()=>{audio.setVisible(!document.hidden);showAudioState();});
+// Safari kan skicka pagehide, inklusive vid bfcache, utan visibilitychange.
+// Stoppa scenljud och tal när sidan lämnas; återstart kräver vid behov en gest.
+window.addEventListener('pagehide',()=>{audio.setVisible(false);showAudioState();});
 // Safari kan återställa sidan från back/forward-cache utan visibilitychange.
 // Återbygg ljudscenen om kontexten fortfarande kör; avbruten kontext kräver ny gest.
 window.addEventListener('pageshow',()=>{audio.setVisible(!document.hidden);showAudioState();});
