@@ -472,3 +472,7 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 ### 2026-11-21 – Jobb lage, LJUD-02 (Safari AudioContext efter avslutat men tyst resume)
 - `resumeFromGesture()` markerar nu en avvisad eller avslutad men fortsatt pausad/interrupted AudioContext som misslyckad. Vid nästa faktiska användargest stängs den och en ny WebAudio-kontext skapas; om ljudet redan hunnit bli `running` behålls befintlig motor. Återupptagningsförsökens identitets- och ordningsvakter gäller fortsatt. Ny cacheversion `audio.js?v=33` i index.
 - Källkoden återläst från main och JavaScript-syntax verifierad. Verklig iPhone/Safari-lyssning, mobilens musik/effekter/tal och upplevd stabilitet ej testade. Inga bildgenererade figurer integrerades; kvarstående GRAF-01-figurer återstår. LJUD-02 öppen; nästa LJUD-03.
+
+### 2026-11-21 – Jobb lage, LJUD-03 (väska och bensinmack)
+- Två nya korta, egenkomponerade WebAudio-signaler: `bagClose` vid verklig stängning av väskan och `fuelStationEnter` vid öppning av bensinmackens fönster. Båda respekterar ljudknappen, den synliga fliken och AudioContext `running`. Ljudfilens cacheversion höjd till 34.
+- Kod syntaktiskt kontrollerad och återläst från main. Ingen faktisk avlyssning på iPhone/Safari eller desktop; nivåbalansen och användarupplevelsen är inte verifierade. Inga nya bildgenererade NPC-resurser integrerade i detta pass. Nästa rotationsposition GRAF-01.
