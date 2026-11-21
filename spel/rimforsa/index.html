@@ -714,11 +714,21 @@ function drawPoops(){
   // Två små, tydligt avgränsade ansiktsdetaljer gör hindret lättare att
   // känna igen bland kartans bruna stenar och jord, utan att öka spriteytan.
   // Ögonens ljusa tvåpixelrutor och mörka pupiller ligger inom 23×26 px.
-  ctx.fillStyle='#fff0cb';
+  // Fara känns igen på tydliga ögon: vid närhet växlar de mellan
+  // varm ljusgul och orange, utan att flytta eller förstora spriteytan.
+  ctx.fillStyle=isNear?(lightPhase?'#fff3b8':'#ffb14e'):'#fff0cb';
   ctx.fillRect(x-4,y-3,3,3);ctx.fillRect(x+2,y-3,3,3);
   ctx.fillStyle='#201310';
   ctx.fillRect(x-3,y-2,1,2);ctx.fillRect(x+3,y-2,1,2);
-  ctx.fillRect(x-1,y+4,3,1);
+  // Två skarpa ögonbryn och ett litet gap vid närhet gör hotet läsbart
+  // även när själva färgerna liknar jord eller grus på kartan.
+  ctx.fillRect(x-5,y-5,4,1);ctx.fillRect(x+2,y-5,4,1);
+  if(isNear){
+   ctx.fillRect(x-1,y+3,3,3);
+   ctx.fillStyle='#ffd58a';ctx.fillRect(x,y+5,1,1);
+  }else{
+   ctx.fillRect(x-1,y+4,3,1);
+  }
   // Minimal highlight på översta toppen för att förtydliga var silhuetten börjar.
   ctx.fillStyle='#ffdf9c';ctx.fillRect(x-1,y-13,1,1);
   // På nära håll växlar tre befintliga kantpixlar diskret i ljusstyrka.
