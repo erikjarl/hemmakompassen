@@ -1,5 +1,11 @@
 # Lage i Rimforsa – historisk arbetslogg
 
+### 2026-11-21 – Städning av Lages att-göra-listor (utan nytt utvecklingspass)
+- Gick igenom den aktiva `ROADMAP.md` och de 45 specificerade uppgifts-ID:na. Totalt **30 redan avbockade uppgifter** flyttades ur roadmapen till `docs/COMPLETED_TASKS.md`; inga nya uppgifter markerades färdiga enbart på antaganden. **14 ofärdiga** uppgifter behölls med konkret kvarvarande arbete. `MINI-01` flyttades ur checklistan till stående kvalitetspolicy, eftersom den inte är ett avslutningsbart utvecklingsärende.
+- Tog bort gamla datumstämplade implementationstexter från de aktiva checklistans rader; historiska delsteg finns kvar i denna logg och i Git-historiken. De detaljerade kraven bytte vilseledande \"Att göra\"-rubriker till \"Kravbeskrivningar\" och förklarar nu att filen inte har uppgiftsstatus. Uppdaterade `spel/rimforsa/AGENTS.md` för att förebygga att listan växer med gammal historik igen.
+- Behöll senaste/nästa-rotation i `ROADMAP.md` oförändrade (LJUD-02 → LJUD-03). Inga nya spelmekaniker implementerades och ingen mobilgenomspelning genomfördes. Uppgifternas status bedömdes försiktigt utifrån kod-/uppgiftsbeskrivningar och tidigare dokumenterade verifieringsbegränsningar.
+
+
 ### 2026-11-21 – Jobb lage, MYNT-03 (saldo vid återgång från minispel)
 - `index.html`: `closeBoatGame()` uppdaterar nu huvudkartans gemensamma mynt-HUD när spelaren lämnar båtspelet, även om spelaren lämnar i förtid. Båda ingångarna till Potatislandet uppdaterar samma HUD direkt efter minispelsscenen avslutats. Fotboll/rutschkana/dykning gjorde redan detta.
 - Ändrat endast visningsuppdateringen: intjänade och sparade bonusmynt, unika bonus-ID, köpordning, sparformat och game-over-nollställning är oförändrade. Kodcommit `c0c0288`, roadmapcommit `0173b8a`.
