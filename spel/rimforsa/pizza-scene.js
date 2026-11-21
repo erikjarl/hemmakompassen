@@ -9,6 +9,21 @@ const zones=Object.freeze({
 });
 const rect=(c,x,y,w,h,color)=>{c.fillStyle=color;c.fillRect(Math.round(x),Math.round(y),w,h)};
  // Samma 56×56-originalsprite som huvudkartan, utan oskarp interpolation.
+ const chefSprite=typeof root.Image==='function'?new root.Image():null;
+ if(chefSprite){
+  chefSprite.onload=()=>{if(lastCanvas&&lastOptions)draw(lastCanvas,lastOptions);};
+  chefSprite.src='./pizza-chef-spritesheet.png?v=1';
+ }
+ function drawChef(c,x,y){
+  if(!chefSprite||!chefSprite.complete||chefSprite.naturalWidth!==160||chefSprite.naturalHeight!==56)return false;
+  c.save();
+  c.imageSmoothingEnabled=false;
+  // Originalbild, fyra 40×56-vyer: fram, vänster, bak, höger.
+  // Kassadisken täcker figurens nedre del precis som tidigare.
+  c.drawImage(chefSprite,0,0,40,56,Math.round(x-30),Math.round(y-66),60,90);
+  c.restore();
+  return true;
+ }
  const lageSprite=typeof root.Image==='function'?new root.Image():null;
  let lastCanvas=null,lastOptions=null;
  if(lageSprite){
@@ -90,7 +105,7 @@ function draw(canvas,options={}){
  rect(c,308,183,145,45,'#906a45');
  // Kassa på disken och pizzabagare med kockmössa bakom.
  rect(c,308,148,45,20,'#3b5145');rect(c,313,151,33,10,'#aac8a6');
- character(c,392,128,{shirt:'#9e634a',hair:'#684b34',hat:true});
+ if(!drawChef(c,392,128))character(c,392,128,{shirt:'#9e634a',hair:'#684b34',hat:true});
  // Lage står framför disken.
  if(!drawLage(c,275,236))character(c,275,236,{shirt:'#c66356',hair:'#795335'});
  rect(c,9,7,156,22,'#293d35');c.fillStyle='#fff1c7';c.font='bold 15px monospace';c.fillText('MYNT: '+balance,18,23);
