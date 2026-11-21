@@ -452,3 +452,7 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 - Sex små pixelrektanglar ger tre spiralnivåer tydligare ljus-/mörkseparation. Samtliga ligger innanför ursprunglig 23×26 px-yta; ingen ändrad storlek, kollisionsradie, hinderplacering eller hjärtskada.
 - `index.html` ändrad på main; källa och kontrastpositioner kodgranskade. Bildjämförelse på gräs/väg i verklig mobil och dator återstår. HUV-06 öppen; nästa rotationsposition KARTA-02.
 - Stående spriteinventering: ICA:s kassapersonal och pizzerians bagare återstår fortfarande som kodritade figurer. Inga nya bildgenererade figurer integrerades i detta pass.
+
+### 2026-11-21 – Jobb lage, HUV-05 (potatismynt i flera öppna flikar)
+- Synkroniserar sparad potatisplånbok före farmens ändringar som annars kunde skriva tillbaka gammalt myntsaldo efter sista-hjärtat-nollställning i en annan flik. Exponerar `syncCoins` och `key` till huvudkartans storage-lyssnare och uppdaterar kartans mynt-HUD vid ändrade potatismynt.
+- Förlustkontrollen verifierar dessutom att kartans aktuella saldo och hela gemensamma saldot är noll. Endast källkod och kopplingar granskade; inget autentiskt tvåfliks-/mobilspeltest genomfört. HUV-05 fortsatt öppen; nästa HUV-06. Inga nya bildsprites genererades eller integrerades i detta pass.
