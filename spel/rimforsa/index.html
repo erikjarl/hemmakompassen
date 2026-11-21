@@ -147,17 +147,19 @@ function showAudioState(){
  const s=audio.status();
  for(const button of document.querySelectorAll('[data-sound-toggle]')){
   const needsResume=s.enabled&&s.contextState!=='running';
-  button.textContent=needsResume?'🔈 Återuppta ljud':s.enabled?'🔊 Ljud av':'🔈 Ljud på';
+  // Ljudknappen är ALLTID av/på, också när Safari har pausat AudioContext.
+  // Återupptagning erbjuds via nästa riktiga spelgest utan att låsa av-knappen.
+  button.textContent=s.enabled?'🔊 Ljud av':'🔈 Ljud på';
   button.setAttribute('aria-pressed',String(s.enabled));
-  button.setAttribute('aria-label',needsResume?'Återuppta spelljud':s.enabled?'Stäng av spelljud':'Slå på spelljud');
+  button.setAttribute('aria-label',s.enabled?'Stäng av spelljud':'Slå på spelljud');
   button.disabled=!s.available;
-  button.title=!s.available?'Ljud stöds inte av den här webbläsaren':needsResume?'Tryck för att återuppta ljudmotorn':'';
+  button.title=!s.available?'Ljud stöds inte av den här webbläsaren':needsResume?'Ljudet är pausat av webbläsaren. Tryck i spelet för att försöka återuppta, eller här för att stänga av.':'';
  }
 }
 for(const button of document.querySelectorAll('[data-sound-toggle]'))button.addEventListener('click',()=>{
- const s=audio.status();
- if(s.enabled&&s.contextState!=='running'&&audio.resumeFromGesture)audio.resumeFromGesture();
- else audio.toggle();
+ // Ett av-tryck måste alltid fungera även om Safari har stoppat ljudmotorn.
+ // Nästa på-tryck skapar vid behov en ny WebAudio-kontext från klickgesten.
+ audio.toggle();
  showAudioState();
 });
 // iOS Safari kan avbryta WebAudio efter appbyte. Försök återuppta bara efter
