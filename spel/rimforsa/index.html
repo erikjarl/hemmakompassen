@@ -889,7 +889,10 @@ function spawnBoatCoins(){
 }
 function resetBoatGame(){audio.setBoatSpeed(0);boatState.x=374;boatState.y=283;boatState.vx=0;boatState.vy=0;boatState.angle=0;boatState.hearts=3;boatState.flash=0;boatState.invul=0;boatState.done=false;boatState.message='';for(const k in boatKeys)boatKeys[k]=false;spawnBoatCoins();updateBoatHud();boatTip.textContent=boatFuel.snapshot().level>0?'Styr båten, samla mynt och undvik grunden.':'Båttanken är tom! Gå till Bensinmacken på huvudkartan och tanka båten.';}
 function openBoatGame(){if(!boatChartLoaded){boatTip.textContent='Laddar sjökartan…';}resetBoatGame();stop();audio.setScene('boat');if(audio.boatLaunch)audio.boatLaunch();boatState.active=true;boatOverlay.classList.add('show');boatOverlay.setAttribute('aria-hidden','false');boatTip.textContent=boatFuel.snapshot().level>0?'Kör ut från Kinda båtklubb och samla mynten utan att köra på grunden. Kartan är en fri 16-bitars-tolkning av Åsunden.':'Båten har tom tank! Gå till Bensinmacken på kartan och köp båtbensin. Välj Tillbaka för att gå dit.';}
-function closeBoatGame(){const returning=boatState.active&&!boatState.done;boatState.active=false;audio.setBoatSpeed(0);audio.setScene('land');if(returning&&audio.boatReturn)audio.boatReturn();boatOverlay.classList.remove('show');boatOverlay.setAttribute('aria-hidden','true');for(const k in boatKeys)boatKeys[k]=false;}
+function closeBoatGame(){const returning=boatState.active&&!boatState.done;boatState.active=false;audio.setBoatSpeed(0);audio.setScene('land');if(returning&&audio.boatReturn)audio.boatReturn();boatOverlay.classList.remove('show');boatOverlay.setAttribute('aria-hidden','true');for(const k in boatKeys)boatKeys[k]=false;
+ // Återvänd till kartan med det faktiskt sparade gemensamma saldot,
+ // även om båtspelet avslutades innan samtliga mynt hittades.
+ updateCoinScore();}
 function boatCrash(){
  if(boatState.invul>0||boatState.done)return;
  (audio.boatGrounding||audio.hit)();
@@ -1039,7 +1042,7 @@ interact.addEventListener('click',()=>{
  if(nearestSite()?.name==='Hackelhallen'){stop();window.RimforsaFootball.start({onGoalCoin:id=>awardMinigameCoin('football-'+id),getWalletBalance:totalMoney,returnToMap:()=>{state.nearKey=null;updateCoinScore();updateMessage();}});return;}
  if(nearestSite()?.name==='Förskolan Hackel'){stop();window.RimforsaSlideMinigame.start({onLandingCoin:id=>awardMinigameCoin('slide-'+id),getWalletBalance:totalMoney,returnToMap:()=>{state.nearKey=null;updateCoinScore();updateMessage();}});return;}
   if(nearestSite()?.name==='Åsundabadet'){stop();window.RimforsaSwimMinigame.start({onCoin:id=>awardMinigameCoin('swim-'+id),getWalletBalance:totalMoney,returnToMap:()=>{state.nearKey=null;updateCoinScore();updateMessage();}});return;}
-  if(nearestSite()?.name==='Potatislandet'){stop();window.RimforsaFarm.start({returnToMap:()=>{state.nearKey=null;updateMessage();}});return;}
+  if(nearestSite()?.name==='Potatislandet'){stop();window.RimforsaFarm.start({returnToMap:()=>{state.nearKey=null;updateCoinScore();updateMessage();}});return;}
  const npcHere=npcSystem.near(state.x,state.y);
  if(npcHere){
    const dialogue=npcSystem.talk(npcHere.id);
@@ -1057,7 +1060,7 @@ interact.addEventListener('click',()=>{
  if(near.name==='Kinda Båtklubb'){openBoatGame();return;}
   if(near.name==='ICA Melkers'){openIca();return;}
   if(near.name==='Bella Donna'){openPizza();return;}
-   if(near.name==='Potatislandet'){stop();window.RimforsaFarm.start({returnToMap:()=>{state.nearKey=null;updateMessage();}});return;}
+   if(near.name==='Potatislandet'){stop();window.RimforsaFarm.start({returnToMap:()=>{state.nearKey=null;updateCoinScore();updateMessage();}});return;}
   if(near.name==='Förskolan Hackel'){stop();window.RimforsaSlideMinigame.start({onLandingCoin:id=>awardMinigameCoin('slide-'+id),getWalletBalance:totalMoney,returnToMap:()=>{state.nearKey=null;updateCoinScore();updateMessage();}});return;}
    if(near.name==='Åsundabadet'){stop();window.RimforsaSwimMinigame.start({onCoin:id=>awardMinigameCoin('swim-'+id),getWalletBalance:totalMoney,returnToMap:()=>{state.nearKey=null;updateCoinScore();updateMessage();}});return;}
  state.visited.add(near.name);
