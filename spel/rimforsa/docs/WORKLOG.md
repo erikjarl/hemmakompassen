@@ -488,3 +488,7 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 ### 2026-11-21 – Jobb lage, HUV-05 (färska potatismynt vid sista hjärtat)
 - `restartAfterGameOver()` anropar nu både `rewardWallet.sync()` och `farm.syncCoins()` innan förlustsaldot beräknas. Detta minskar risken att ett potatisförsäljningssaldo från en annan öppen flik saknas i förlustsammanställningen.
 - Ingen ändring av gemensamma nollställningen, sparformat, grödor, föremål eller grafik. Kodkoppling återläst på `main`; verkligt tvåflikstest, mobil och omladdning saknas. HUV-05 fortsatt öppen, nästa HUV-06. Bildbaserade personer tillkom inte under detta pass.
+
+### 2026-11-21 – Jobb lage, HUV-06 (kontrast på befintliga bajskorvar)
+- `drawPoops()` har fått två tunna, ljus-/mörkseparerade veck på nederdelen och två små kindpixlar som tydligare visar fara när Lage är nära. Originalets 23×26-pixelgräns, placering, 19-pixelskollision och hjärtförlust är oförändrade.
+- GitHub-kod sparad och återläst; inga nya bildbaserade sprites genererade i detta pass. Faktisk visuell kontroll på gräs/väg i mobil och dator krävs fortfarande. HUV-06 öppen; nästa huvuduppgift KARTA-02.
