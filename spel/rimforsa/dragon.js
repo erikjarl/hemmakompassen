@@ -10,7 +10,7 @@
   // Bensinmacken ligger vid x=394. Eldklot får inte passera den mot öster,
   // och kan aldrig färdas längre än 300 världspixlar från drakens mun.
   const FIRE_MAX_DISTANCE=300,HELICOPTER_FIRE_DISTANCE=600,FIRE_EAST_LIMIT=394;
-  function update(dt,playerX,playerY,helicopter){
+  function update(dt,playerX,playerY,helicopter,playerTargetable=true){
    dt=Math.max(0,Math.min(.1,Number(dt)||0));
    t+=dt;
    // Flyger i en liten slinga ovanför skogen; oberoende av vägarnas gångbarhet.
@@ -32,12 +32,14 @@
    // Helikoptern står norr om skogen, bortom Lages vanliga 300-pixelsräckvidd.
    // Den får nås på längre avstånd, men inte öster om mackens gräns.
    const helicopterInRange=inFireRange(helicopter,HELICOPTER_FIRE_DISTANCE);
-   const playerInRange=inFireRange(player);
+   // I bilen eller ett minispel kan Lage inte träffas av draken och ska därför
+   // inte dra till sig eldklot. Helikoptern förblir ett möjligt mål.
+   const playerInRange=playerTargetable&&inFireRange(player);
    // Sikta endast en gång per skott. En låst varning ger Lage en
    // begriplig chans att väja, i stället för att skottet följer varje steg.
    if(shotTimer>0&&shotTimer<=FIRE_WARNING_SECONDS&&!warningTarget){
     const aimAtHelicopter=helicopterInRange&&(shotId%3===0||!playerInRange);
-    const target=aimAtHelicopter?helicopter:player;
+    const target=aimAtHelicopter?helicopter:playerInRange?player:null;
     if(inFireRange(target,aimAtHelicopter?HELICOPTER_FIRE_DISTANCE:FIRE_MAX_DISTANCE)){
      warningTarget={x:target.x,y:target.y,maxDistance:aimAtHelicopter?HELICOPTER_FIRE_DISTANCE:FIRE_MAX_DISTANCE};
     }
