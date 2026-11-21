@@ -511,6 +511,22 @@
   }
   // Korta egenkomponerade signaler för tre tydliga spelhändelser.
   // Alla använder den befintliga ljudknappen och samma WebAudio-master.
+  // Korta originalsyntetiserade startljud, enbart från spelarens knappar.
+  // Spelas inte när ljudet är av eller Safari-kontexten är pausad.
+  function newHunt(){
+    if(!enabled||hidden||!ctx||ctx.state!=='running')return;
+    const t=now()+.012;
+    tone(392,t,.10,.027,'triangle');
+    tone(523.25,t+.10,.14,.031,'triangle');
+    tone(659.25,t+.23,.20,.029,'sine');
+  }
+  function boatRetry(){
+    if(!enabled||hidden||!ctx||ctx.state!=='running')return;
+    const t=now()+.012;
+    tone(196,t,.12,.027,'triangle');
+    tone(293.66,t+.13,.13,.031,'square');
+    tone(392,t+.27,.18,.025,'sine');
+  }
   function gameOver(){
     if(!enabled||hidden||!ctx||ctx.state!=='running')return;
     const t=now()+.015;
@@ -657,5 +673,5 @@
     }catch(_){speechMusicVolume(volume);return false;}
   }
   function status(){return {enabled,available:!!AudioCtor,contextState:ctx?ctx.state:'not-created',scene,hidden,playingMusic:musicInterval!==null,playingWaves:!!waves,playingEngine:!!engine,playingCarEngine:!!carEngine,carActive,dragonNearby};}
-  root.RimforsaAudio={enable,disable,toggle,resumeFromGesture,setScene,setBoatSpeed,setCarActive,setCarSpeed,setDragonNearby,coin,hit,poop,victory,slideLaunch,slideLand,slideCharge,slideLongJump,sharkBump,purchase,fuelFill,boatGrounding,carEnter,itemFound,helicopterHit,footballKick,footballSave,footballGoal,boatTreasure,npcTalk,bagOpen,bagClose,fuelStationEnter,mapOpen,boatLaunch,potatoSale,carExit,bagClear,gameOver,shopEnter,mapClose,boatReturn,shopExit,routeSelected,routeBlocked,potatoPlant,potatoHarvest,speak,stopSpeech,setVisible,status};
+  root.RimforsaAudio={enable,disable,toggle,resumeFromGesture,setScene,setBoatSpeed,setCarActive,setCarSpeed,setDragonNearby,coin,hit,poop,victory,slideLaunch,slideLand,slideCharge,slideLongJump,sharkBump,purchase,fuelFill,boatGrounding,carEnter,itemFound,helicopterHit,footballKick,footballSave,footballGoal,boatTreasure,npcTalk,bagOpen,bagClose,fuelStationEnter,mapOpen,boatLaunch,potatoSale,carExit,bagClear,newHunt,boatRetry,gameOver,shopEnter,mapClose,boatReturn,shopExit,routeSelected,routeBlocked,potatoPlant,potatoHarvest,speak,stopSpeech,setVisible,status};
 })(window);
