@@ -484,3 +484,7 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 ### 2026-11-21 – Jobb lage, DRAKE-02 (målval vid bilkörning)
 - Draken väljer inte längre Lage som nytt eldklotsmål när han sitter i bilen eller båtspelet är aktivt. En låst men ännu ej avfyrad varning riktad mot Lage upphör då, medan målval mot helikoptern och redan avfyrade projektiler lämnas oförändrade. `index.html` överför spelarens sårbarhet till `dragon.update`; `dragon.js?v=13` används.
 - Källfiler kontrollerade på main. JavaScript-syntax godkänd; liten direkt funktionskontroll verifierade frånvaro av varning mot bil-Lage och att befintlig varning mot gående Lage avbryts vid växling till bil. Full genomspelning och visualisering i Safari/mobil/dator saknas; DRAKE-02 fortsatt öppen, nästa MYNT-03. Inga nya bildgenererade NPC-resurser integrerades detta pass.
+
+### 2026-11-21 – Jobb lage, HUV-05 (färska potatismynt vid sista hjärtat)
+- `restartAfterGameOver()` anropar nu både `rewardWallet.sync()` och `farm.syncCoins()` innan förlustsaldot beräknas. Detta minskar risken att ett potatisförsäljningssaldo från en annan öppen flik saknas i förlustsammanställningen.
+- Ingen ändring av gemensamma nollställningen, sparformat, grödor, föremål eller grafik. Kodkoppling återläst på `main`; verkligt tvåflikstest, mobil och omladdning saknas. HUV-05 fortsatt öppen, nästa HUV-06. Bildbaserade personer tillkom inte under detta pass.
