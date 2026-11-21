@@ -9,7 +9,7 @@
   const FIRE_WARNING_SECONDS=.65;
   // Bensinmacken ligger vid x=394. Eldklot får inte passera den mot öster,
   // och kan aldrig färdas längre än 300 världspixlar från drakens mun.
-  const FIRE_MAX_DISTANCE=300,FIRE_EAST_LIMIT=394;
+  const FIRE_MAX_DISTANCE=300,HELICOPTER_FIRE_DISTANCE=600,FIRE_EAST_LIMIT=394;
   function update(dt,playerX,playerY,helicopter){
    dt=Math.max(0,Math.min(.1,Number(dt)||0));
    t+=dt;
@@ -21,22 +21,26 @@
    // Samma mynning används för varningslinje, skottets start och dess riktning.
    const mouthX=x+28,mouthY=y-7;
    const player={x:playerX,y:playerY};
-   const inFireRange=target=>{
+   const inFireRange=(target,maxDistance=FIRE_MAX_DISTANCE)=>{
     if(!target||!Number.isFinite(target.x)||!Number.isFinite(target.y))return false;
     const distance=Math.hypot(target.x-mouthX,target.y-mouthY);
-    return distance>35&&distance<=FIRE_MAX_DISTANCE&&target.x<=FIRE_EAST_LIMIT;
+    return distance>35&&distance<=maxDistance&&target.x<=FIRE_EAST_LIMIT;
    };
    // Helikoptern prioriteras ibland, MEN aldrig om den ligger utanför
    // räckvidden. Annars kunde draken fastna på ett omöjligt mål och
    // sluta skjuta mot Lage, även när han stod alldeles nära.
-   const helicopterInRange=inFireRange(helicopter);
+   // Helikoptern står norr om skogen, bortom Lages vanliga 300-pixelsräckvidd.
+   // Den får nås på längre avstånd, men inte öster om mackens gräns.
+   const helicopterInRange=inFireRange(helicopter,HELICOPTER_FIRE_DISTANCE);
    const playerInRange=inFireRange(player);
    // Sikta endast en gång per skott. En låst varning ger Lage en
    // begriplig chans att väja, i stället för att skottet följer varje steg.
    if(shotTimer>0&&shotTimer<=FIRE_WARNING_SECONDS&&!warningTarget){
     const aimAtHelicopter=helicopterInRange&&(shotId%3===0||!playerInRange);
     const target=aimAtHelicopter?helicopter:player;
-    if(inFireRange(target))warningTarget={x:target.x,y:target.y};
+    if(inFireRange(target,aimAtHelicopter?HELICOPTER_FIRE_DISTANCE:FIRE_MAX_DISTANCE)){
+     warningTarget={x:target.x,y:target.y,maxDistance:aimAtHelicopter?HELICOPTER_FIRE_DISTANCE:FIRE_MAX_DISTANCE};
+    }
    }
    if(shotTimer<=0){
     const target=warningTarget;
@@ -46,7 +50,7 @@
      const distance=Math.hypot(dx,dy);
      if(distance>0){
       const speed=165;
-      shots.push({id:'dragon-fire-'+(++shotId),x:mouthX,y:mouthY,vx:dx/distance*speed,vy:dy/distance*speed,travelled:0,life:5});
+      shots.push({id:'dragon-fire-'+(++shotId),x:mouthX,y:mouthY,vx:dx/distance*speed,vy:dy/distance*speed,travelled:0,maxDistance:target.maxDistance,life:5});
      }
     }
    }
@@ -58,7 +62,7 @@
     // Då hinner hazards()/strikeObject() kontrollera det sista rörelsesegmentet.
     if(fire.expired){shots.splice(k,1);continue;}
     const speed=Math.hypot(fire.vx,fire.vy);
-    const remaining=Math.max(0,FIRE_MAX_DISTANCE-fire.travelled);
+    const remaining=Math.max(0,fire.maxDistance-fire.travelled);
     let duration=speed?Math.min(dt,remaining/speed):0;
     // Klipp rörelsen vid mackens västra gräns, inte en bildruta efter den.
     if(fire.vx>0)duration=Math.min(duration,Math.max(0,(FIRE_EAST_LIMIT-fire.x)/fire.vx));
@@ -67,7 +71,7 @@
     if(fire.vy<0)duration=Math.min(duration,Math.max(0,(0-fire.y)/fire.vy));
     fire.x+=fire.vx*duration;fire.y+=fire.vy*duration;
     fire.travelled+=speed*duration;fire.life-=dt;
-    fire.expired=fire.life<=0||duration<dt||fire.travelled>=FIRE_MAX_DISTANCE;
+    fire.expired=fire.life<=0||duration<dt||fire.travelled>=fire.maxDistance;
    }
    return near;
   }
