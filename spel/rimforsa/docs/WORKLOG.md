@@ -456,3 +456,7 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 ### 2026-11-21 – Jobb lage, HUV-05 (potatismynt i flera öppna flikar)
 - Synkroniserar sparad potatisplånbok före farmens ändringar som annars kunde skriva tillbaka gammalt myntsaldo efter sista-hjärtat-nollställning i en annan flik. Exponerar `syncCoins` och `key` till huvudkartans storage-lyssnare och uppdaterar kartans mynt-HUD vid ändrade potatismynt.
 - Förlustkontrollen verifierar dessutom att kartans aktuella saldo och hela gemensamma saldot är noll. Endast källkod och kopplingar granskade; inget autentiskt tvåfliks-/mobilspeltest genomfört. HUV-05 fortsatt öppen; nästa HUV-06. Inga nya bildsprites genererades eller integrerades i detta pass.
+
+### 2026-11-21 – Jobb lage, HUV-06 (varningsansikte på små hinder)
+- Bajskorvarna har nu markerade ögonbryn och ett varningsuttryck på nära håll. Ögonen varierar mellan ljusgult och orange i den redan befintliga kontrastfasen. Alla nya pixelrektanglar ligger inom samma 23×26-pixelgränser och ändrar inte kollisions-/skadelogik.
+- Källkoden återläst på main och kollisionsankare kontrollerat. Ingen riktig mobil-/datorgenomspelning eller bildjämförelse på gräs/väg; HUV-06 kvarstår öppen. Bildsprite-prioriteten inventerad men ingen ytterligare person konverterades i detta pass. Nästa rotationsposition KARTA-02.
