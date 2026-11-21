@@ -534,3 +534,7 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 ### 2026-11-21 – Jobb lage, HUV-06 (spiralveck med oförändrad storlek)
 - Förstärkt de tre synliga spiralnivåerna på huvudkartans bajskorvar med sex små ljusa/mörka rektanglar inom samma 23×26-pixelyta. Inga ändringar av koordinater, vägars gångbarhet, kollisionsradie, hjärtskada eller figurernas spawn.
 - JavaScript-syntax och källkoppling kontrolleras. Faktisk visuell jämförelse mot ljus väg och mörkt gräs på dator/mobil återstår. HUV-06 öppen, nästa KARTA-02. Inga nya bildsprites integrerades under detta pass.
+
+### 2026-11-21 – Jobb lage, KARTA-02 (pekstyrning vid vägkanter)
+- `safeTapTarget()` prioriterar nu en godkänd punkt nära det faktiska fingertrycket i stället för att inom en samplingsring föredra punkten närmast Lage. Direkt nåbara mål används för korta sträckor; i övrigt gör befintlig A* samma gångmaskkontroll som tidigare. Den osynliga pektoleransen är fortsatt högst 18 världspixlar; ändringen ändrar inte kartbild, faktisk gångmask, hus-, sten- eller vattenkollision.
+- Koden sparad till main; syntaxkontroll och källkontroll görs. Faktisk mobil-/datorprovning av entréer, Åsundabadet och vägkanter återstår. Ingen ny bildsprite integrerades. KARTA-02 öppen; nästa rotationsuppgift FORDON-02.
