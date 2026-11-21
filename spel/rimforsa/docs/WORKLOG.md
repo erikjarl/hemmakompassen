@@ -526,3 +526,7 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 ### 2026-11-21 – Jobb lage, MYNT-03 (färskt potatissaldo i gemensam plånbok)
 - `totalMoney()` hämtar nu aktuella potatismynt med `farm.syncCoins()` innan kartmynt, minispelsbonus och potatismynt summeras. Detta gäller både köp och saldo som visas på huvudkartan och i minispelen. Minispelsbonus lästes redan om vid varje `rewardWallet.balance()`.
 - Koden är sparad på main; syntax- och källkontroll genomförs. Faktiska tvåfliksfall, omladdning, omspelning, köp och game over återstår att genomspela. MYNT-03 hålls öppen. Ingen ny bildsprite har integrerats under detta pass. Nästa rotationsuppgift HUV-05.
+
+### 2026-11-21 – Jobb lage, HUV-05 (game over i flera flikar)
+- Efter att sista hjärtat förlorats och kart-, minispels- och potatismyntens nollställning verifierats i sparminnet, skriver `restartAfterGameOver()` en separat `rimforsa-loss-reset-v1`-signal. Andra öppna flikar får `storage`-event och laddar om spelet, så deras lokalt insamlade kartmynt och pågående minispelsomgång inte kan fortsätta på gamla saldon. Den förlorande fliken laddas inte om. En vanlig myntuppdatering utlöser inte omladdning.
+- JavaScript-syntax och relevanta kopplingar kontrolleras i repositoryt. Faktiskt flerflikstest, omladdning och full genomspelning med båt, drake och bajskorvar återstår; HUV-05 hålls öppen. Ingen ny bildsprite integrerad under detta pass. Nästa rotation HUV-06.
