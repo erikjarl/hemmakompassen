@@ -606,7 +606,15 @@ function checkPoops(){
  return true;
 }
 // Andra flikar kan ha tilldelat eller använt bonusmynt medan denna var öppen.
+const LOSS_RESET_KEY='rimforsa-loss-reset-v1';
 window.addEventListener('storage',event=>{
+ // Efter förlorat sista hjärtat i en annan flik räcker det inte att
+ // synka mynten: varje flik har dessutom egna insamlade kartmynt.
+ // Ladda om den andra fliken så även dess spelomgång börjar om.
+ if(event.key===LOSS_RESET_KEY&&event.newValue){
+  window.location.reload();
+  return;
+ }
  if(event.key!==null&&event.key!=='rimforsa-minigame-coins-v1'&&event.key!==farm.key)return;
  if(event.key===null||event.key==='rimforsa-minigame-coins-v1')rewardWallet.sync();
  if(event.key===null||event.key===farm.key)farm.syncCoins();
@@ -1158,6 +1166,12 @@ function restartAfterGameOver(cause){
   farm.clearCoins();
   resetSaved=moneyResetPersisted();
   updateCoinScore();
+ }
+ // Meddela andra öppna spelflikar när nollställningen är bekräftad.
+ // storage-event skickas bara till ANDRA flikar, inte till denna.
+ // Det nollställda sparminnet finns redan innan signalen skrivs.
+ if(resetSaved){
+  try{localStorage.setItem(LOSS_RESET_KEY,String(Date.now())+'-'+Math.random());}catch(_){}
  }
  const remainingCoins=totalMoney();
  const resetWarning=resetSaved?'':' OBS! Nollställningen kunde inte bekräftas i sparminnet efter ett nytt försök. Mynt kan återkomma efter omladdning.';
