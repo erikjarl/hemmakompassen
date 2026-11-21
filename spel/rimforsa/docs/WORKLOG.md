@@ -492,3 +492,7 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 ### 2026-11-21 – Jobb lage, HUV-06 (kontrast på befintliga bajskorvar)
 - `drawPoops()` har fått två tunna, ljus-/mörkseparerade veck på nederdelen och två små kindpixlar som tydligare visar fara när Lage är nära. Originalets 23×26-pixelgräns, placering, 19-pixelskollision och hjärtförlust är oförändrade.
 - GitHub-kod sparad och återläst; inga nya bildbaserade sprites genererade i detta pass. Faktisk visuell kontroll på gräs/väg i mobil och dator krävs fortfarande. HUV-06 öppen; nästa huvuduppgift KARTA-02.
+
+### 2026-11-21 – Jobb lage, KARTA-02 (pekmål på smala vägkanter)
+- `safeTapTarget()` prövar nu först om en tillåten punkt intill pekningen är direkt nåbar på högst 90 världspixlar med hela rörelsesträckan kontrollerad av `canWalkStraight()`. Kandidater som inte kan nås direkt används bara som fallback till befintlig A*-rutt. Den maximala snäppradien är fortsatt 18 pixlar.
+- Kartbild, gångmask, hus-, sten- och vattenhinder samt manuell styrning är oförändrade. Koden finns på main och har återlästs; riktig touch-/tangentbordstest vid entréer saknas. KARTA-02 hålls öppen, nästa FORDON-02. Ingen ny bildsprite tillkom i detta pass.
