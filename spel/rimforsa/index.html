@@ -254,8 +254,10 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
   sync();
   // Läs senaste sparade saldo före varje visning och köpkontroll, även innan storage-event.
   const balance=()=>{sync();return Object.keys(earned).length-spent;};
+  // Räknar redan hittade engångsbonusar även efter att mynt använts i en butik.
+  const collectedCount=()=>{sync();return Object.keys(earned).length;};
   const save=()=>{try{localStorage.setItem(key,JSON.stringify({earned,spent}));}catch(_){}};
-  return {balance,sync,
+  return {balance,collectedCount,sync,
    award(id){if(!validId(id))return false;sync();if(earned[id])return false;earned[id]=true;save();return true;},
    spend(n){if(!Number.isSafeInteger(n)||n<0)return false;sync();if(n>balance())return false;spent+=n;save();return true;},
    refund(n){if(!Number.isSafeInteger(n)||n<0)return false;sync();if(n>spent)return false;spent-=n;save();return true;},
@@ -603,7 +605,7 @@ window.addEventListener('storage',event=>{
  if(event.key===null||event.key===farm.key)farm.syncCoins();
  updateCoinScore();
 });
-function updateCoinScore(){coinScore.textContent='🪙 '+totalMoney()+' · Hittade '+coinCount+'/'+(coinCount+coins.length)+' · Minispel '+rewardWallet.balance()+' · 🥔 '+farm.snapshot().balance}
+function updateCoinScore(){coinScore.textContent='🪙 '+totalMoney()+' · Hittade '+coinCount+'/'+(coinCount+coins.length)+' · Minispel '+rewardWallet.balance()+' (hittade '+rewardWallet.collectedCount()+'/18) · 🥔 '+farm.snapshot().balance}
 function showTreasureVictory(){
  audio.victory();stop();
  winCount.textContent=String(coinCount);
