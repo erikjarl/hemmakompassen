@@ -2,7 +2,7 @@
 (function(root){
 'use strict';
 const friendSprites=root.RimforsaFriendSprites||null;
-const majaSprite=root.RimforsaMajaSprite||null;
+// Majas bildark laddas senare än npc.js på huvudkartan; läs det vid rendering.
 const definitions=[
  {id:'maja',name:'Maja',x:585,y:410,filter:'hue-rotate(115deg) saturate(1.15)',color:'#7de2bd',
   lines:['Hej Lage! Jag är på väg till Hackelhallen. Vill du spela boll?','Det finns guldmynt gömda längs stigarna. Har du hittat några?','Jag såg ett troll borta vid den stora stenen!']},
@@ -119,13 +119,13 @@ function createSystem(canStand,random=Math.random){
        else ctx.drawImage(friendSprites,col*32,row*48,32,48,x-19,y-48+bob,38,48);
      }else if(p.id==='oliver'||p.id==='saga'){
        drawFriend(ctx,p,x,y);
-     }else if(p.id==='maja'&&majaSprite&&majaSprite.complete&&majaSprite.naturalWidth===192&&majaSprite.naturalHeight===56){
+     }else if(p.id==='maja'&&root.RimforsaMajaSprite&&root.RimforsaMajaSprite.complete&&root.RimforsaMajaSprite.naturalWidth===192&&root.RimforsaMajaSprite.naturalHeight===56){
        // Samma originalbild som Hackelhallens Maja: fram/vänster/bak/höger.
        // Välj bildriktning och lätt gångstuds utan att färgfiltrera Lages sprite.
        const col=p.dir==='left'?1:p.dir==='up'?2:p.dir==='right'?3:0;
        const bob=Math.floor(p.phase)%4===1?1:0;
        const oldSmooth=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=false;
-       ctx.drawImage(majaSprite,col*48,0,48,56,x-22,y-51+bob,44,51);
+       ctx.drawImage(root.RimforsaMajaSprite,col*48,0,48,56,x-22,y-51+bob,44,51);
        ctx.imageSmoothingEnabled=oldSmooth;
      }else if(hasSprite){
        const row=p.dir==='down'?0:p.dir==='left'?1:p.dir==='right'?2:3;
