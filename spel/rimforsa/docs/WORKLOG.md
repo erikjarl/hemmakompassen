@@ -522,3 +522,7 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 ### 2026-11-21 – Jobb lage, DRAKE-02 (pausa eldstrid vid scenbyte)
 - Huvudkartans befintliga spelvillkor lyfts till `worldPlaying`, som styr både spelarrörelse och drakens uppdatering/träffar. När karta, väska, butik, minispel eller förlustdialog visas fryser drakens eldklot och nya varningar/attacker startar inte. Drakens närvaroljud stängs under pausen och återgår när kartan spelas igen.
 - Drakens maxavstånd (300 världspixlar mot Lage, 600 mot helikoptern), östra gräns vid macken, skadeintervall och helikoptereffekter är oförändrade. Inline-JavaScript syntaxkontrollerat utan fel efter commit; verklig genomspelning, mobil och visuell/hörbar kontroll återstår. DRAKE-02 hålls öppen, nästa MYNT-03. Inga nya bildsprites integrerades i detta pass.
+
+### 2026-11-21 – Jobb lage, MYNT-03 (färskt potatissaldo i gemensam plånbok)
+- `totalMoney()` hämtar nu aktuella potatismynt med `farm.syncCoins()` innan kartmynt, minispelsbonus och potatismynt summeras. Detta gäller både köp och saldo som visas på huvudkartan och i minispelen. Minispelsbonus lästes redan om vid varje `rewardWallet.balance()`.
+- Koden är sparad på main; syntax- och källkontroll genomförs. Faktiska tvåfliksfall, omladdning, omspelning, köp och game over återstår att genomspela. MYNT-03 hålls öppen. Ingen ny bildsprite har integrerats under detta pass. Nästa rotationsuppgift HUV-05.
