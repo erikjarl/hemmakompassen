@@ -120,7 +120,7 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
 <script src="./friend-sprites.js?v=1"></script>
 <script src="./npc.js?v=4"></script>
 <script src="./farm.js?v=4"></script>
-<script src="./dragon.js?v=12"></script>
+<script src="./dragon.js?v=13"></script>
 <script src="./helicopter.js?v=2"></script>
 <script src="./troll-minigame.js?v=8"></script>
 <script src="./preschool-friends-sprites.js?v=1"></script>
@@ -1391,7 +1391,7 @@ function tick(now){
  }
  checkPoops();
  helicopter.update(dt);
- audio.setDragonNearby(dragon.update(dt,state.x,state.y,helicopter.position));
+ audio.setDragonNearby(dragon.update(dt,state.x,state.y,helicopter.position,!state.inCar&&!boatState.active));
  if(dragon.strikeObject(helicopter.position.x,helicopter.position.y,28)){
   helicopter.hit(performance.now()/1000);
   if(typeof audio.helicopterHit==="function")audio.helicopterHit();
