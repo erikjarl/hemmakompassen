@@ -227,7 +227,8 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
  // Skattmynt och intäkter från odling redovisas separat.
  const rewardWallet=(()=>{
   const key='rimforsa-minigame-coins-v1';
-  const validId=id=>/^(boat|swim|football|slide)-[0-9]+$/.test(id);
+  // Acceptera bara faktiska engångsbonusar från de fyra minispelen.
+  const validId=id=>typeof id==='string'&&/^(?:boat-[0-7]|swim-[0-4]|football-[0-2]|slide-[0-1])$/.test(id);
   let earned=Object.create(null),spent=0;
   // Läs samma sparade plånbok inför varje ändring så en äldre öppen
   // spelflik inte i onödan skriver över mynt från en nyare flik.
