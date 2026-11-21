@@ -626,6 +626,15 @@
     tone(117,t+.085,.22,.052,'triangle');
     tone(82.41,t+.20,.24,.035,'sine');
   }
+  // En kort, låg varningssignal när båten kör slut på sitt bränsle.
+  // Utlöses endast vid övergång från bensin kvar till tom tank.
+  function boatOutOfFuel(){
+    if(!enabled||hidden||!ctx||ctx.state!=='running')return;
+    const t=now()+.012;
+    tone(294,t,.12,.035,'triangle');
+    tone(220,t+.15,.15,.039,'triangle');
+    tone(147,t+.34,.22,.029,'sine');
+  }
   function setVisible(visible){
     if(!visible)stopSpeech();
     hidden=!visible;
@@ -673,5 +682,5 @@
     }catch(_){speechMusicVolume(volume);return false;}
   }
   function status(){return {enabled,available:!!AudioCtor,contextState:ctx?ctx.state:'not-created',scene,hidden,playingMusic:musicInterval!==null,playingWaves:!!waves,playingEngine:!!engine,playingCarEngine:!!carEngine,carActive,dragonNearby};}
-  root.RimforsaAudio={enable,disable,toggle,resumeFromGesture,setScene,setBoatSpeed,setCarActive,setCarSpeed,setDragonNearby,coin,hit,poop,victory,slideLaunch,slideLand,slideCharge,slideLongJump,sharkBump,purchase,fuelFill,boatGrounding,carEnter,itemFound,helicopterHit,footballKick,footballSave,footballGoal,boatTreasure,npcTalk,bagOpen,bagClose,fuelStationEnter,mapOpen,boatLaunch,potatoSale,carExit,bagClear,newHunt,boatRetry,gameOver,shopEnter,mapClose,boatReturn,shopExit,routeSelected,routeBlocked,potatoPlant,potatoHarvest,speak,stopSpeech,setVisible,status};
+  root.RimforsaAudio={enable,disable,toggle,resumeFromGesture,setScene,setBoatSpeed,setCarActive,setCarSpeed,setDragonNearby,coin,hit,poop,victory,slideLaunch,slideLand,slideCharge,slideLongJump,sharkBump,purchase,fuelFill,boatGrounding,boatOutOfFuel,carEnter,itemFound,helicopterHit,footballKick,footballSave,footballGoal,boatTreasure,npcTalk,bagOpen,bagClose,fuelStationEnter,mapOpen,boatLaunch,potatoSale,carExit,bagClear,newHunt,boatRetry,gameOver,shopEnter,mapClose,boatReturn,shopExit,routeSelected,routeBlocked,potatoPlant,potatoHarvest,speak,stopSpeech,setVisible,status};
 })(window);
