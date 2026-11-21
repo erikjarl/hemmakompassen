@@ -593,8 +593,9 @@ function checkPoops(){
 }
 // Andra flikar kan ha tilldelat eller använt bonusmynt medan denna var öppen.
 window.addEventListener('storage',event=>{
- if(event.key!==null&&event.key!=='rimforsa-minigame-coins-v1')return;
- rewardWallet.sync();
+ if(event.key!==null&&event.key!=='rimforsa-minigame-coins-v1'&&event.key!==farm.key)return;
+ if(event.key===null||event.key==='rimforsa-minigame-coins-v1')rewardWallet.sync();
+ if(event.key===null||event.key===farm.key)farm.syncCoins();
  updateCoinScore();
 });
 function updateCoinScore(){coinScore.textContent='🪙 '+totalMoney()+' · Hittade '+coinCount+'/'+(coinCount+coins.length)+' · Minispel '+rewardWallet.balance()+' · 🥔 '+farm.snapshot().balance}
@@ -1074,7 +1075,8 @@ function moneyResetPersisted(){
  try{
   const bonus=JSON.parse(localStorage.getItem('rimforsa-minigame-coins-v1')||'null');
   const produce=JSON.parse(localStorage.getItem('lage-rimforsa-farm-v1')||'null');
-  return !!bonus&&!!produce&&bonus.earned&&
+  return game.snapshot().balance===0&&totalMoney()===0&&
+   !!bonus&&!!produce&&bonus.earned&&
    typeof bonus.earned==='object'&&!Array.isArray(bonus.earned)&&
    Object.keys(bonus.earned).length===0&&bonus.spent===0&&
    produce.earned===0&&produce.spent===0;
