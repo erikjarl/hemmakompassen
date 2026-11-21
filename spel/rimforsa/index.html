@@ -1109,8 +1109,10 @@ function restartAfterGameOver(cause){
  // en återställning tills spelaren bekräftat förlustdialogen.
  if(!document.getElementById('lossOverlay').hidden)return;
  if(audio.gameOver)audio.gameOver();
- // Räkna även bonusmynt som nyligen sparats i en annan öppen spelflik.
+ // Räkna även minispels- och potatismynt som nyligen sparats i en annan flik.
+ // Läs in båda källorna före förlustsammanställning och gemensam nollställning.
  rewardWallet.sync();
+ farm.syncCoins();
  const lostBySource={
   map:game.snapshot().balance,
   minigames:rewardWallet.balance(),
