@@ -1390,7 +1390,10 @@ let last=performance.now(),stepProgress=0;
 function tick(now){
  const dt=Math.min(.05,(now-last)/1000);last=now;
  updateBoat(dt);
- if(maskLoaded&&(!fuelDialog||fuelDialog.hidden)&&!isBoatOpen()&&winOverlay.hidden&&document.getElementById('lossOverlay').hidden&&bagOverlay.hidden&&icaOverlay.hidden&&pizzaOverlay.hidden&&!window.RimforsaSlideMinigame.isOpen()&&!window.RimforsaSwimMinigame.isOpen()&&!window.RimforsaTrollMinigame.isOpen()&&!window.RimforsaFarm.isOpen()&&!window.RimforsaBrokindTrail.isOpen()&&!window.RimforsaFootball.isOpen()){
+ // Draken och spelaren ska använda samma pausvillkor: ingen eld när
+ // huvudkartan är dold bakom butik, minispel, väska eller förlustdialog.
+ const worldPlaying=maskLoaded&&(!fuelDialog||fuelDialog.hidden)&&!isBoatOpen()&&winOverlay.hidden&&document.getElementById('lossOverlay').hidden&&bagOverlay.hidden&&icaOverlay.hidden&&pizzaOverlay.hidden&&!window.RimforsaSlideMinigame.isOpen()&&!window.RimforsaSwimMinigame.isOpen()&&!window.RimforsaTrollMinigame.isOpen()&&!window.RimforsaFarm.isOpen()&&!window.RimforsaBrokindTrail.isOpen()&&!window.RimforsaFootball.isOpen();
+ if(worldPlaying){
   npcSystem.update(dt,state.x,state.y);
   let dx=(+keys.right)-(+keys.left),dy=(+keys.down)-(+keys.up);
   if(state.inCar){
@@ -1454,6 +1457,7 @@ function tick(now){
  }
  checkPoops();
  helicopter.update(dt);
+ if(worldPlaying){
  audio.setDragonNearby(dragon.update(dt,state.x,state.y,helicopter.position,!state.inCar&&!boatState.active));
  if(dragon.strikeObject(helicopter.position.x,helicopter.position.y,28)){
   helicopter.hit(performance.now()/1000);
@@ -1468,6 +1472,11 @@ function tick(now){
     else{coinNoticeUntil=performance.now()+2200;message.innerHTML='<strong>🔥 Akta draken!</strong> Lage tappade ett hjärta. '+hit.hearts+' kvar!';}
    }}else game.touchHazard(null);
   }
+ }else{
+  // Pausade kartscener behåller projektilernas position men skapar inga
+  // nya attacker och kan inte ge överraskande skada bakom en dialog.
+  audio.setDragonNearby(false);
+ }
  const clampedX=Math.max(canvas.width/2,Math.min(W-canvas.width/2,state.x));
  const clampedY=Math.max(canvas.height/2,Math.min(H-canvas.height/2,state.y));
  state.camX+=(clampedX-state.camX)*Math.min(1,dt*14);
