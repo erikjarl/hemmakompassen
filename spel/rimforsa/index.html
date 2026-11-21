@@ -1117,8 +1117,17 @@ function restartAfterGameOver(cause){
  // Ingen återställning av väska, skörd eller pågående potatisodling.
  updateCoinScore();
  coinNoticeUntil=performance.now()+4300;
+ // Gör ett extra sparförsök om den första nollställningen inte fastnade.
+ // Bara myntnollställningen upprepas; föremål och grödor rörs inte.
+ let resetSaved=moneyResetPersisted();
+ if(!resetSaved){
+  rewardWallet.clear();
+  farm.clearCoins();
+  resetSaved=moneyResetPersisted();
+  updateCoinScore();
+ }
  const remainingCoins=totalMoney();
- const resetWarning=moneyResetPersisted()?'':' OBS! Nollställningen kunde inte bekräftas i sparminnet. Mynt kan återkomma efter omladdning.';
+ const resetWarning=resetSaved?'':' OBS! Nollställningen kunde inte bekräftas i sparminnet efter ett nytt försök. Mynt kan återkomma efter omladdning.';
  document.getElementById('lossSummary').textContent=
   'Lage förlorade '+lostCoins+' mynt: '+lostBySource.map+' på kartan, '+
   lostBySource.minigames+' i minispel och '+lostBySource.potatoes+
