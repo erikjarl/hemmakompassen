@@ -5,6 +5,7 @@
 - `pizza-scene.js` ritar nu framåtvyn med `drawImage` utan utjämning och använder den gamla kodritade figuren endast när bildresursen inte kan läsas. Bildens `onload` ritar om senaste scenen. `index.html` använder `pizza-scene.js?v=4`. Kodcommits `0e1aee4` och `aec933a`, roadmapcommit `7bbbd73`.
 - Bekräftat på main att PNG-filen går att hämta och att JavaScript-filen och sidans cachekoppling är sparade. Ej verifierat i fysisk mobil/dator eller faktisk Pages, så skala och SNES-enhetlighet är inte slutbedömda. GRAF-01 fortsatt öppen; nästa rotation DRAKE-02.
 
+- Efter granskning av den lokala spritebilden korrigerades den första för hårt beskurna exporten till fullkroppsvyer och färgkvantiserad 160×56 PNG (`9ef6e63`). Cacheversioner höjdes till chef-v2/scen-v5 (`1ae93f8`, `8392c1b`). Bilden har ännu inte kontrollerats visuellt i faktiskt spel; kanter/transparens och skalenhet behöver särskilt granskas. Roadmap uppdaterad (`411c4d9`).
 
 ### 2026-11-21 – Jobb lage, LJUD-03 (samtalssignal)
 - Lade till den korta, egenkomponerade tvåtonssignalen `npcTalk()` i `audio.js` för lyckade samtal med huvudkartans NPC:er. Den används i `index.html` innan det redan befintliga upplästa talet och fungerar även utan installerad svensk talröst. Respekterar ljudknapp, dold sida och krav på aktiv WebAudio-kontext. Inga nya ljudfiler eller ändrade samtalsrepliker.
