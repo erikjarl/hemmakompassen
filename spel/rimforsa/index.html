@@ -398,7 +398,9 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
  document.getElementById('clearBag').addEventListener('click',()=>{if(window.confirm('Vill du tömma väskan? Alla hittade föremål tas bort.')){bag.clear();renderBag();if(audio.bagClear)audio.bagClear();}});
  renderBag();
 // NPC-systemet anropar canStand() vid skapandet. Proverna måste vara definierade redan här.
-const WALK_FOOT_SAMPLES=[[0,0],[-1,-1],[1,-1]];
+// Two centerline foot samples give a little more usable width at narrow road edges.
+// Both samples still have to be inside the original walkability mask.
+const WALK_FOOT_SAMPLES=[[0,0],[0,-1]];
 const npcSystem=window.RimforsaNPC.createSystem(canStand);
 const dragon=window.RimforsaDragon.createDragon();
 const helicopter=window.RimforsaHelicopter.createHelicopter();
@@ -465,11 +467,9 @@ boatChart.addEventListener('load',()=>{
 boatChart.addEventListener('error',()=>{boatTip.textContent='Kunde inte ladda båtkartan. Ladda om sidan.';});
 for(const [image,label] of [[tiles,'kartan'],[maskImage,'gångbarhetskartan']])image.addEventListener('error',()=>{message.textContent='Kunde inte ladda '+label+'. Försök uppdatera sidan.'});
 function freePoint(x,y){if(!collision||x<8||y<8||x>=W-8||y>=H-8)return false;const px=Math.floor(x*maskW/W),py=Math.floor(y*maskH/H);const i=(py*maskW+px)*4;return collision[i]>200}
-// Smalare osynlig fot-hitbox: mittpunkten och fötterna måste vara maskgodkända.
-// Bild, markmask och byggnads-/vattenhinder ändras inte.
-// A compact, three-point foot contact area makes narrow paths more forgiving without
-// painting extra walkable pixels into buildings or water. All samples still
-// require the original collision mask to allow standing.
+// En smal fotlinje på två punkter i mitten ger bredare gångmarginal längs vägkanten.
+// Båda punkterna måste vara godkända i ORIGINALMASKEN: inget hus, vatten eller sten
+// görs gångbart och kartans bild lämnas oförändrad.
 function canStand(x,y){
  return WALK_FOOT_SAMPLES.every(([ox,oy])=>freePoint(x+ox,y+oy));
 }
