@@ -267,7 +267,12 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
   };
  })();
  const awardMinigameCoin=id=>{if(rewardWallet.award(id)){updateCoinScore();return true;}return false;};
- const totalMoney=()=>game.snapshot().balance+rewardWallet.balance()+farm.snapshot().balance;
+ // Synkronisera båda sparade bonuskällorna även om en annan flik
+ // har tjänat eller använt mynt. Kartmynten är lokala för pågående omgång.
+ const totalMoney=()=>{
+  farm.syncCoins();
+  return game.snapshot().balance+rewardWallet.balance()+farm.snapshot().balance;
+ };
  function payCoins(amount){
   if(!Number.isSafeInteger(amount)||amount<=0||totalMoney()<amount)return null;
   const treasure=Math.min(amount,game.snapshot().balance),bonus=Math.min(amount-treasure,rewardWallet.balance()),produce=amount-treasure-bonus;
