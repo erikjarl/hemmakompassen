@@ -1200,14 +1200,16 @@ function resize(){const r=canvas.getBoundingClientRect(),ratio=Math.min(1,450/Ma
 const STEP=6,NX=Math.ceil(W/STEP),NY=Math.ceil(H/STEP),MAX=NX*NY;
 function walkCell(cx,cy){return cx>=1&&cy>=1&&cx<NX-1&&cy<NY-1&&canStand((cx+.5)*STEP,(cy+.5)*STEP)}
 function closestWalkable(tx,ty){const startX=Math.max(1,Math.min(NX-2,Math.floor(tx/STEP))),startY=Math.max(1,Math.min(NY-2,Math.floor(ty/STEP)));if(walkCell(startX,startY))return[startX,startY];for(let d=1;d<=18;d++){let best=null,bestDistance=Infinity;for(let yy=startY-d;yy<=startY+d;yy++)for(let xx=startX-d;xx<=startX+d;xx++){if(Math.abs(xx-startX)!==d&&Math.abs(yy-startY)!==d)continue;if(walkCell(xx,yy)){const v=(xx*STEP-tx)**2+(yy*STEP-ty)**2;if(v<bestDistance){best=[xx,yy];bestDistance=v}}}if(best)return best}return null}
-// Pekningar precis utanför en smal gångbar kant flyttas högst 12 px in på
-// befintlig gångmask. Ingen maskpixel ändras och inga hinder blir gångbara.
+// Ett finger kan hamna något utanför vägens osynliga kant. Sök upp till 18 px
+// efter en tillåten punkt, med tätare vinkelprover i varje ring.
+// En punkt väljs bara om originalmaskens canStand() godkänner den;
+// den ordinarie ruttplaneringen kontrollerar sedan hela vägen dit.
 function safeTapTarget(x,y){
  if(canStand(x,y))return {x,y};
- for(const radius of [3,6,9,12]){
+ for(const radius of [3,6,9,12,15,18]){
   let best=null,bestScore=Infinity;
-  for(let n=0;n<16;n++){
-   const angle=n*Math.PI/8,px=x+Math.cos(angle)*radius,py=y+Math.sin(angle)*radius;
+  for(let n=0;n<24;n++){
+   const angle=n*Math.PI/12,px=x+Math.cos(angle)*radius,py=y+Math.sin(angle)*radius;
    if(!canStand(px,py))continue;
    const score=Math.hypot(px-state.x,py-state.y);
    if(score<bestScore){best={x:px,y:py};bestScore=score;}
