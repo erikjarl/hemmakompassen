@@ -740,6 +740,16 @@ function drawPoops(){
   }else{
    ctx.fillRect(x-1,y+4,3,1);
   }
+  // Skarpa tvåtonade veck som skiljer nederdelen från vägens ljusa grus
+  // och gräsets mörka pixlar. Samma ursprungliga 23×26-pixelsprite.
+  ctx.fillStyle='#21150f';
+  ctx.fillRect(x-8,y+6,5,1);ctx.fillRect(x+3,y+6,5,1);
+  ctx.fillStyle='#ffda91';
+  ctx.fillRect(x-7,y+5,3,1);ctx.fillRect(x+4,y+5,3,1);
+  // Ansiktets mörka kinder ger tydlig tecknad fara utan ny yttermarginal.
+  // Två små prickar ligger på originalfiguren och ändrar inte kollisionen.
+  ctx.fillStyle=isNear?'#b94d2c':'#6b3521';
+  ctx.fillRect(x-8,y-1,2,2);ctx.fillRect(x+7,y-1,2,2);
   // Minimal highlight på översta toppen för att förtydliga var silhuetten börjar.
   ctx.fillStyle='#ffdf9c';ctx.fillRect(x-1,y-13,1,1);
   // På nära håll växlar tre befintliga kantpixlar diskret i ljusstyrka.
