@@ -126,6 +126,7 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
 <script src="./preschool-friends-sprites.js?v=1"></script>
 <script src="./slide-minigame.js?v=9"></script>
 <script src="./maja-sprites.js?v=1"></script>
+<script src="./harbor-visitor-sprites.js?v=1"></script>
 <script src="./football-minigame.js?v=7"></script>
 <script src="./swim-minigame.js?v=7"></script>
 <script src="./brokind-trail.js?v=1"></script>
@@ -1337,8 +1338,21 @@ function drawIngoPriceSign(){
  ctx.font='bold 8px monospace';ctx.fillText('PRIS OKÄNT',x,y+10);
  ctx.restore();
 }
+// Bildgenererad hamnbesökare på bryggan; dekorativ och utan kollisionsyta.
+function drawHarborVisitor(){
+ const art=window.RimforsaHarborVisitorSprite;
+ if(!art||!art.complete||art.naturalWidth!==160||art.naturalHeight!==56)return;
+ const x=Math.round(1035-state.camX+canvas.width/2);
+ const y=Math.round(162-state.camY+canvas.height/2);
+ if(x<-45||y<-65||x>canvas.width+45||y>canvas.height+15)return;
+ const facing=Math.floor(performance.now()/3500)%4;
+ ctx.save();ctx.imageSmoothingEnabled=false;
+ ctx.fillStyle='#193a3580';ctx.fillRect(x-12,y-3,24,4);
+ ctx.drawImage(art,facing*40,0,40,56,x-19,y-55,38,53);
+ ctx.restore();
+}
 function drawFarmMarker(){const s=sites.find(site=>site.name==='Potatislandet');const x=Math.round(s.x-state.camX+canvas.width/2),y=Math.round(s.y-state.camY+canvas.height/2);if(x<-50||y<-50||x>canvas.width+50||y>canvas.height+50)return;ctx.fillStyle='#59402e';ctx.fillRect(x-20,y-14,40,27);ctx.fillStyle='#91663e';ctx.fillRect(x-18,y-12,36,23);ctx.fillStyle='#d5b475';ctx.fillRect(x-15,y-9,30,16);ctx.fillStyle='#397444';ctx.fillRect(x-2,y-8,4,12);ctx.fillRect(x-7,y-8,6,5);ctx.fillRect(x+2,y-10,7,6);ctx.fillStyle='#9f7147';ctx.fillRect(x-2,y+13,4,12);}
-function draw(){const w=canvas.width,h=canvas.height;ctx.fillStyle='#305d42';ctx.fillRect(0,0,w,h);if(imageLoaded){const x=Math.round(w/2-state.camX),y=Math.round(h/2-state.camY);ctx.drawImage(tiles,x,y);ctx.save();ctx.translate(x,y);drawBeachAccess(ctx);ctx.restore();}drawIngoPriceSign();drawFarmMarker();drawCoins();drawPoops();drawTroll();helicopter.draw(ctx,state.camX,state.camY,w,h,performance.now()/1000);dragon.draw(ctx,state.camX,state.camY,w,h);npcSystem.draw(ctx,state.camX,state.camY,w,h,sprite);
+function draw(){const w=canvas.width,h=canvas.height;ctx.fillStyle='#305d42';ctx.fillRect(0,0,w,h);if(imageLoaded){const x=Math.round(w/2-state.camX),y=Math.round(h/2-state.camY);ctx.drawImage(tiles,x,y);ctx.save();ctx.translate(x,y);drawBeachAccess(ctx);ctx.restore();}drawIngoPriceSign();drawFarmMarker();drawHarborVisitor();drawCoins();drawPoops();drawTroll();helicopter.draw(ctx,state.camX,state.camY,w,h,performance.now()/1000);dragon.draw(ctx,state.camX,state.camY,w,h);npcSystem.draw(ctx,state.camX,state.camY,w,h,sprite);
 if(state.inCar){carDrive.draw(ctx,state.x-state.camX+w/2,state.y-state.camY+h/2,state.dir,true);}
 else{carDrive.draw(ctx,carPos.x-state.camX+w/2,carPos.y-state.camY+h/2,parkedCarDir,false);drawPlayer();}
 ctx.strokeStyle='#1b3028';ctx.lineWidth=2;ctx.strokeRect(1,1,w-2,h-2);drawMap(mc,mini.width,mini.height);drawBoatGame()}
