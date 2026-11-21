@@ -1,5 +1,11 @@
 # Lage i Rimforsa – historisk arbetslogg
 
+### 2026-11-21 – Jobb lage, DRAKE-02 (helikoptern inom räckvidd)
+- Granskning av `dragon.js` och `helicopter.js` visade att helikoptern vid (365,310) låg längre än 300 världspixlar från drakens patrullområde kring (115,780). Tidigare kunde därför inga skott riktas mot helikoptern, trots att ritning och träffreaktion var implementerade.
+- Draken tilldelar nu skott mot helikoptern max 600 pixlar och skott mot Lage max 300 pixlar. Varningen låser fortfarande målpunkten före skott; båda skotttyperna klipps vid x=394 vid macken och spelkartans gränser. Inga ändringar av grafiken, kontaktskada eller skadepaus. Kodcommits `4efa524` och `0c39ff8`; roadmapcommit `9e92e89`.
+- Källkoden verifierad på main. Ingen faktisk träff-/lyssnings-/mobil- eller desktopgenomspelning genomfördes, därför DRAKE-02 öppen. Nästa rotation MYNT-03.
+
+
 ### 2026-11-21 – Jobb lage, GRAF-01 (bildbaserad pizzabagare)
 - Skapade en originalbildgenererad pizzabagare i SNES-inspirerad pixelstil med fyra riktningar, efterbehandlad till kompakt transparent 160×56 PNG (40×56 per riktning). Lagt upp `pizza-chef-spritesheet.png` på main via Git-blob och commit `7a6e634`.
 - `pizza-scene.js` ritar nu framåtvyn med `drawImage` utan utjämning och använder den gamla kodritade figuren endast när bildresursen inte kan läsas. Bildens `onload` ritar om senaste scenen. `index.html` använder `pizza-scene.js?v=4`. Kodcommits `0e1aee4` och `aec933a`, roadmapcommit `7bbbd73`.
