@@ -496,3 +496,7 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 ### 2026-11-21 – Jobb lage, KARTA-02 (pekmål på smala vägkanter)
 - `safeTapTarget()` prövar nu först om en tillåten punkt intill pekningen är direkt nåbar på högst 90 världspixlar med hela rörelsesträckan kontrollerad av `canWalkStraight()`. Kandidater som inte kan nås direkt används bara som fallback till befintlig A*-rutt. Den maximala snäppradien är fortsatt 18 pixlar.
 - Kartbild, gångmask, hus-, sten- och vattenhinder samt manuell styrning är oförändrade. Koden finns på main och har återlästs; riktig touch-/tangentbordstest vid entréer saknas. KARTA-02 hålls öppen, nästa FORDON-02. Ingen ny bildsprite tillkom i detta pass.
+
+### 2026-11-21 – Jobb lage, FORDON-02 (riktad turbulens bakom båten)
+- I `boat-direction-art.js` har kölvattnet kompletterats med 2–4 små originalritade pixelstråk från propellern, som följer båtens åtta riktningar och syns enbart under färd. `index.html` hämtar nu `boat-direction-art.js?v=7`.
+- Ingen ändring i bränsle, båtens fysik, kollisioner eller mynt. Källfiler sparade på main. Faktiskt båttest på mobil/dator och visuell jämförelse med bilens vyer återstår, så FORDON-02 är fortfarande öppen. Inga nya bildgenererade resurser tillkom i detta pass. Nästa rotationsuppgift LJUD-02.
