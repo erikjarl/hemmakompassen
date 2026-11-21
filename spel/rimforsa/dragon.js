@@ -35,13 +35,16 @@
    // I bilen eller ett minispel kan Lage inte träffas av draken och ska därför
    // inte dra till sig eldklot. Helikoptern förblir ett möjligt mål.
    const playerInRange=playerTargetable&&inFireRange(player);
+   // Avbryt en redan låst varning mot Lage om han kliver in i bilen
+   // innan avfyrning. Varningar mot helikoptern påverkas inte.
+   if(!playerTargetable&&warningTarget&&warningTarget.kind==='player')warningTarget=null;
    // Sikta endast en gång per skott. En låst varning ger Lage en
    // begriplig chans att väja, i stället för att skottet följer varje steg.
    if(shotTimer>0&&shotTimer<=FIRE_WARNING_SECONDS&&!warningTarget){
     const aimAtHelicopter=helicopterInRange&&(shotId%3===0||!playerInRange);
     const target=aimAtHelicopter?helicopter:playerInRange?player:null;
     if(inFireRange(target,aimAtHelicopter?HELICOPTER_FIRE_DISTANCE:FIRE_MAX_DISTANCE)){
-     warningTarget={x:target.x,y:target.y,maxDistance:aimAtHelicopter?HELICOPTER_FIRE_DISTANCE:FIRE_MAX_DISTANCE};
+     warningTarget={x:target.x,y:target.y,maxDistance:aimAtHelicopter?HELICOPTER_FIRE_DISTANCE:FIRE_MAX_DISTANCE,kind:aimAtHelicopter?'helicopter':'player'};
     }
    }
    if(shotTimer<=0){
