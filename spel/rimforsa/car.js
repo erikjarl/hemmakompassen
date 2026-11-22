@@ -68,7 +68,7 @@ function draw(ctx,x,y,dir='right',occupied=false){
    ctx.save();
    // Begränsa Lage till kupéns fönster så hans ansikte och tröja inte
    // ritas ovanpå tak, dörrar eller motorhuv i de åtta bilvyerna.
-   // Alla koordinater avser samma bilbild i lokal 96×72-pixelskala.
+   // Alla koordinater avser riktningsbildens lokala 80×60-pixelskala.
    ctx.beginPath();
    if(left||right)ctx.rect(-16,-16,32,12);
    else ctx.rect(-11,-15,22,13);
@@ -107,7 +107,9 @@ function draw(ctx,x,y,dir='right',occupied=false){
   rect(-38,19,76,9,'#15251d88');
   if(spriteReady()&&typeof ctx.drawImage==='function'){
    const smooth=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=false;
-   ctx.drawImage(carSprite,occupied?CAR_FRAME_WIDTH:0,0,CAR_FRAME_WIDTH,CAR_FRAME_HEIGHT,-45,-30,90,56);
+   // Reservbilden har 88×55 källpixlar: rita i native skala även här.
+   // Den tidigare 90×56-renderingen gav ojämn pixelstorlek mot 80×60-vyerna.
+   ctx.drawImage(carSprite,occupied?CAR_FRAME_WIDTH:0,0,CAR_FRAME_WIDTH,CAR_FRAME_HEIGHT,-44,-28,CAR_FRAME_WIDTH,CAR_FRAME_HEIGHT);
    ctx.imageSmoothingEnabled=smooth;ctx.restore();return;
   }
   // Ritad sidovy om bildfilen saknas.
