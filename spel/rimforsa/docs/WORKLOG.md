@@ -664,3 +664,9 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 - `football-minigame.js`: målvaktsträff kontrollerar nu om bollen korsar x=390 och interpolerar y vid passagen, i stället för att enbart testa om bollen råkar ligga inom ett smalt x-intervall efter uppdateringen. Minskar risken att snabba skott passerar utan räddningskontroll. Befintlig räddningsrekyl, ljud, mål- och myntlogik bevarade.
 - Fyra befintliga bildbaserade åskådare ritas nu i originalstorleken 32×32 (tidigare 34×34), utan ojämn pixeluppskalning. De är bildbaserade, medan den kodritade tillfälliga fallbacken finns kvar om bilden inte laddas; ingen ny bildfil genererades under detta pass.
 - `index.html`: cacheversionen för fotbollsmodulen höjd till v8. Ändringar sparade på GitHub main. Kodens nya villkor har granskats men fullständig spelgenomgång på mobil/dator, renderingsgranskning och bekräftad Pages-distribution har inte genomförts. SPORT-01 hålls öppen. 14 öppna uppgifter, 30 färdigmarkerade. Nästa huvuduppgift DRAKE-02.
+
+### 2026-11-22 – Jobb Lage: DRAKE-02, räckviddskontroll vid avfyrning
+
+- `dragon.js`: drakens varningsmål låses fortfarande i förväg, men räckvidd och östra gräns kontrolleras på nytt från den aktuella mynningen i avfyrningsögonblicket. När draken hinner flytta sig för långt sedan målet låstes skapas inget omöjligt skott. Befintliga gränser på 300/600 världspixlar, mackgränsen x=394, projektilkollisioner och pauslogik är oförändrade.
+- `index.html`: cacheversionen för drakmodulen höjd från v13 till v14.
+- Koden sparad i GitHub main. Ingen faktisk spelgenomgång på mobil/dator eller bekräftad Pages-driftsättning; DRAKE-02 förblir öppen med uttryckliga återstående kontroller. Inga nya sprites genererades i detta pass; draken är fortfarande kodritad och bör inventeras i framtida grafikpass. Rotation: senast DRAKE-02, nästa MYNT-03. Fortfarande 14 öppna och 30 arkiverade.
