@@ -103,6 +103,15 @@
    const index=shots.findIndex(s=>passesThrough(s,px,py,radius));
    if(index<0)return false;shots.splice(index,1);return true;
   }
+  // Ny skattjakt får inte ärva eldklot eller låsta skottvarningar från
+  // förra spelomgången. Låt drakens vanliga patrull fortsätta ostörd.
+  function resetAttacks(){
+   shots.length=0;
+   warningTarget=null;
+   shotTimer=2.7;
+   near=false;
+   playerDistance=Infinity;
+  }
   function snapshot(){return {x,y,near,breathing:Math.sin(t*2.25)>.28,proximity,warning:!!warningTarget};}
   function draw(ctx,camX,camY,w,h){
    const sx=Math.round(x-camX+w/2),sy=Math.round(y-camY+h/2);
@@ -194,7 +203,7 @@
      ctx.fillRect(tx-2,ty-2,Math.max(2,6-n),Math.max(2,6-n));
     }}
   }
-  return {update,draw,snapshot,hazards,consume,strikeObject,home};
+  return {update,draw,snapshot,hazards,consume,strikeObject,resetAttacks,home};
  }
  root.RimforsaDragon={createDragon};
 })(typeof window!=='undefined'?window:globalThis);
