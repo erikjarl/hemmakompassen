@@ -126,7 +126,9 @@ function createSystem(canStand,random=Math.random){
        const col=p.dir==='left'?1:p.dir==='up'?2:p.dir==='right'?3:0;
        const bob=Math.floor(p.phase)%4===1?1:0;
        const oldSmooth=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=false;
-       ctx.drawImage(root.RimforsaMajaSprite,col*48,0,48,56,x-22,y-51+bob,44,51);
+       // Bevara originalrutans 48×56 pixlar: 44×51 skalade om varje pixel
+       // och fick Maja att se mjukare/smalare ut än Oliver och Saga.
+       ctx.drawImage(root.RimforsaMajaSprite,col*48,0,48,56,x-24,y-56+bob,48,56);
        ctx.imageSmoothingEnabled=oldSmooth;
      }else if(hasSprite){
        const row=p.dir==='down'?0:p.dir==='left'?1:p.dir==='right'?2:3;
@@ -142,7 +144,9 @@ function createSystem(canStand,random=Math.random){
      }
      ctx.font='bold 10px system-ui,sans-serif';
      ctx.textAlign='center';ctx.lineWidth=3;ctx.strokeStyle='#13342a';
-     ctx.strokeText(p.name,x,y-49);ctx.fillStyle=p.color;ctx.fillText(p.name,x,y-49);
+     // Namnet placeras ovanför hela bildspriten, inte på Majas/kompisarnas hår.
+     const labelY=(p.id==='maja'||((p.id==='oliver'||p.id==='saga')&&friendReady))?y-59:y-49;
+     ctx.strokeText(p.name,x,labelY);ctx.fillStyle=p.color;ctx.fillText(p.name,x,labelY);
      ctx.restore();
    }
  }
