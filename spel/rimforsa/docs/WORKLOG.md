@@ -677,3 +677,10 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 - `index.html`: befintlig `refreshSharedCoinViews()` anropar alla tre spelens `refreshWallet` vid storage-händelser, pageshow, synlig flik och fönsterfokus. Samma rutin uppdaterar sedan huvudkartans HUD och öppna butiker. Skriptversioner höjda för simning, rutschkana och fotboll.
 - Inga nya mynt, bonus-ID:n, köpprioriteringar eller regler för nollställning ändrades. Ingen ny bildsprite genererades; tidigare bildbaserade publiksprites i fotboll är kvar, medan kodritade fallbackfigurer återstår i flera scener.
 - Ändringar inskrivna på GitHub main; återläsning av kod är möjlig men flerflikstest, faktiskt mobil-/datorspeltest, race mellan samtidiga skrivningar och GitHub Pages-driftsättning är **inte** verifierade. Uppgiften MYNT-03 är därför fortfarande öppen. Status 14 öppna, 30 arkiverade. Nästa rotation HUV-05.
+
+### 2026-11-22 – Jobb Lage: HUV-05, blockera fördröjda transaktioner efter förlust i annan flik
+
+- `index.html`: `awardMinigameCoin` kontrollerar nu förlustsignalen genom `reloadAfterOtherTabLoss()` precis före belöning. `payCoins` gör samma kontroll före butiksköp. Om den äldre fliken upptäcker en game-over-signal från en annan flik begär den omladdning och skriver inte sin gamla bonus eller sitt gamla köp till lagringen.
+- Ändringen tar sikte på fördröjda `storage`-event i särskilt sovande flikar. Den gör inte lokala `localStorage`-transaktioner atomiska och är ingen fullständig lösning på samtidiga skrivningar.
+- Befintlig nollställning av kartmynt, minispelsbonusar och potatisintäkter ändrades inte. Ingen ny bildfil skapades; kodritade fallbackfigurer kvarstår som grafiskt arbete.
+- Koden är sparad på GitHub main. Kodåterläsning är gjord, men faktisk spelgenomgång, test av flera flikar/iPhone och Pages-publicering har inte bekräftats. HUV-05 är fortsatt öppen. 14 öppna och 30 arkiverade uppgifter; nästa rotation HUV-06.
