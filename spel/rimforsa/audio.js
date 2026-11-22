@@ -402,6 +402,14 @@
     tone(659.25,t+.09,.13,.042,'triangle');
     tone(783.99,t+.19,.19,.036,'sine');
   }
+  // Kort låg dubbelton för ett aktivt köp som inte kan genomföras.
+  // Spelas aldrig automatiskt eller när ljudmotorn är pausad.
+  function purchaseDenied(){
+    if(!enabled||hidden||!ctx||ctx.state!=='running')return;
+    const t=now()+.01;
+    tone(246.94,t,.10,.025,'triangle');
+    tone(185,t+.105,.15,.022,'sine');
+  }
   function fuelFill(){
     if(!enabled||!ctx||hidden||ctx.state!=='running')return;
     const t=now()+.01;
@@ -698,5 +706,5 @@
     }catch(_){speechMusicVolume(volume);return false;}
   }
   function status(){return {enabled,available:!!AudioCtor,contextState:ctx?ctx.state:'not-created',scene,hidden,sceneStarted,playingMusic:musicInterval!==null,playingWaves:!!waves,playingEngine:!!engine,playingCarEngine:!!carEngine,carActive,dragonNearby};}
-  root.RimforsaAudio={enable,disable,toggle,resumeFromGesture,setScene,setBoatSpeed,setCarActive,setCarSpeed,setDragonNearby,coin,hit,poop,victory,slideLaunch,slideLand,slideCharge,slideLongJump,sharkBump,purchase,fuelFill,boatGrounding,boatOutOfFuel,carEnter,itemFound,helicopterHit,footballKick,footballSave,footballGoal,boatTreasure,npcTalk,bagOpen,bagClose,fuelStationEnter,mapOpen,boatLaunch,potatoSale,carExit,bagClear,newHunt,boatRetry,gameOver,shopEnter,mapClose,boatReturn,shopExit,routeSelected,routeBlocked,potatoPlant,potatoHarvest,speak,stopSpeech,setVisible,status};
+  root.RimforsaAudio={enable,disable,toggle,resumeFromGesture,setScene,setBoatSpeed,setCarActive,setCarSpeed,setDragonNearby,coin,hit,poop,victory,slideLaunch,slideLand,slideCharge,slideLongJump,sharkBump,purchase,purchaseDenied,fuelFill,boatGrounding,boatOutOfFuel,carEnter,itemFound,helicopterHit,footballKick,footballSave,footballGoal,boatTreasure,npcTalk,bagOpen,bagClose,fuelStationEnter,mapOpen,boatLaunch,potatoSale,carExit,bagClear,newHunt,boatRetry,gameOver,shopEnter,mapClose,boatReturn,shopExit,routeSelected,routeBlocked,potatoPlant,potatoHarvest,speak,stopSpeech,setVisible,status};
 })(window);
