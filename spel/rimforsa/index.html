@@ -1572,8 +1572,14 @@ function routeFromMap(x,y){
  if(state.inCar){hint.textContent='Kliv ur bilen innan du väljer en gångväg.';return false}
  const route=pathTo(x,y);
  if(!route.length){
-  if(Math.hypot(state.x-x,state.y-y)<65){closeMap(true);if(audio.routeSelected)audio.routeSelected();updateMessage();return true}
-  hint.textContent='Ingen gångväg hittades. Prova att välja en väg eller en annan plats.';if(audio.routeBlocked)audio.routeBlocked();
+  // Att vara nära räcker inte: ett hus, en sten eller vatten kan ligga
+  // mellan Lage och målet. Acceptera bara ett redan nått, gångbart mål.
+  const snapped=safeTapTarget(x,y);
+  if(snapped&&Math.hypot(state.x-snapped.x,state.y-snapped.y)<8&&
+     canWalkStraight(state.x,state.y,snapped.x,snapped.y)){
+   closeMap(true);if(audio.routeSelected)audio.routeSelected();updateMessage();return true;
+  }
+  hint.textContent='Ingen gångväg hittades. Prova att välja en öppen stig nära målet.';if(audio.routeBlocked)audio.routeBlocked();
   return false;
  }
  state.path=route;closeMap(true);if(audio.routeSelected)audio.routeSelected();
