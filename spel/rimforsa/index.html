@@ -795,8 +795,15 @@ function drawPoops(){
   ctx.fillRect(x-7,y+5,3,1);ctx.fillRect(x+4,y+5,3,1);
   // Ansiktets mörka kinder ger tydlig tecknad fara utan ny yttermarginal.
   // Två små prickar ligger på originalfiguren och ändrar inte kollisionen.
-  ctx.fillStyle=isNear?'#b94d2c':'#6b3521';
+  ctx.fillStyle=isNear?(lightPhase?'#ff7343':'#b94d2c'):'#6b3521';
   ctx.fillRect(x-8,y-1,2,2);ctx.fillRect(x+7,y-1,2,2);
+  // Två extra varningspixlar i kindernas befintliga yta när Lage
+  // närmar sig. Ger en synlig orange blinkning mot mörkt gräs utan
+  // ny glöd, större silhuett eller ändrad träffyta.
+  if(isNear&&lightPhase){
+   ctx.fillStyle='#ffe2a2';
+   ctx.fillRect(x-8,y-1,1,1);ctx.fillRect(x+8,y-1,1,1);
+  }
   // Tre tydliga övergångar mellan spiralens nivåer. Alternera
   // varm högdager och mörkt veck för kontrast på både asfalt och gräs.
   // Helt inom originalets x=-11..11 och y=-15..10.
