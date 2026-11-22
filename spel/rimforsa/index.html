@@ -1495,8 +1495,10 @@ function tick(now){
   }
  }
  checkPoops();
- helicopter.update(dt);
  if(worldPlaying){
+  // Träffrökens 2,8 sekunders reaktion ska bara räknas ned när
+  // huvudkartan spelas, precis som drakens eldklot och animation.
+  helicopter.update(dt);
  audio.setDragonNearby(dragon.update(dt,state.x,state.y,helicopter.position,!state.inCar&&!boatState.active));
  if(dragon.strikeObject(helicopter.position.x,helicopter.position.y,28)){
   helicopter.hit(performance.now()/1000);
