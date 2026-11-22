@@ -76,7 +76,9 @@ function draw(canvas,options={}){
  if(visitorSprites&&visitorSprites.complete&&visitorSprites.naturalWidth===128&&visitorSprites.naturalHeight===32){
   c.save();c.imageSmoothingEnabled=false;
   rect(c,258,168,30,3,'#554c3a55');
-  c.drawImage(visitorSprites,32,0,32,32,256,134,36,36);
+  // Rita besökaren i bildarkets ursprungliga 32×32-pixlar.
+  // 36×36 gav ojämna pixelbredder och avvek från huvudkartans skärpa.
+  c.drawImage(visitorSprites,32,0,32,32,258,138,32,32);
   c.restore();
  }
  // Kassadisk, kassapparat och personal.
