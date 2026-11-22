@@ -110,13 +110,14 @@ function createSystem(canStand,random=Math.random){
      const friendReady=!!(friendSprites&&friendSprites.complete&&friendSprites.naturalWidth===96&&friendSprites.naturalHeight===96);
      if((p.id==='oliver'||p.id==='saga')&&friendReady){
        // Två bildgenererade 3-riktningsfigurer, med spegling för vänster.
+       // Rita 32×48 utan horisontell förstoring så pixelstorlek och proportioner bevaras.
        const col=p.dir==='up'?2:p.dir==='down'?0:1;
        const row=p.id==='oliver'?0:1;
        const mirrored=p.dir==='left';
        const bob=Math.floor(p.phase)%4===1?1:0;
        ctx.imageSmoothingEnabled=false;
-       if(mirrored){ctx.save();ctx.translate(x,0);ctx.scale(-1,1);ctx.drawImage(friendSprites,col*32,row*48,32,48,-19,y-48+bob,38,48);ctx.restore();}
-       else ctx.drawImage(friendSprites,col*32,row*48,32,48,x-19,y-48+bob,38,48);
+       if(mirrored){ctx.save();ctx.translate(x,0);ctx.scale(-1,1);ctx.drawImage(friendSprites,col*32,row*48,32,48,-16,y-48+bob,32,48);ctx.restore();}
+       else ctx.drawImage(friendSprites,col*32,row*48,32,48,x-16,y-48+bob,32,48);
      }else if(p.id==='oliver'||p.id==='saga'){
        drawFriend(ctx,p,x,y);
      }else if(p.id==='maja'&&root.RimforsaMajaSprite&&root.RimforsaMajaSprite.complete&&root.RimforsaMajaSprite.naturalWidth===192&&root.RimforsaMajaSprite.naturalHeight===56){
