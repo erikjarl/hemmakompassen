@@ -1,4 +1,11 @@
 # Lage i Rimforsa – historisk arbetslogg
+### 2026-11-22 – Begärd kartexpansion / KARTA-01
+- Användaren prioriterade upp regional kartutbyggnad. `ROADMAP.md` flyttar KARTA-01 från långsiktigt arbete till aktiv kartutbyggnad och specificerar kvarstående sömlös integration.
+- Skapade `regional-map.js`: spelbar 960×760 värld med kameraföljning, gångbara vägar, kollisionsspärr mot sjöar, fyra ortsmarkörer (Rimforsa, Brokind, Kättilstad och Björkfors), tre utforskningsmål, mobilknappar, tangentbord och översiktsminikarta. Befintlig Lage-sprite återanvänds. Källor för ortrelationer: Kinda kommuns kartguide, Kinda Turisms kartöversikt och Länsstyrelsens beskrivning av Brokind. Sjö-/vägformer är förenklade spelformer och inte skalenliga.
+- `index.html`: ny startknapp från stora kartmenyn och pausar huvudkartan när regionen är öppen. Källkodskopplingar och GitHub-filer återlästa; ingen faktisk webbläsar-/mobilgenomspelning, bildupplevelse eller GitHub Pages-leverans kontrollerad. Ursprungliga huvudkartans 1448×1086-bild utökades inte; utflyktsregionen är separat tills framtida sömlös integrering.
+- Ingen ny bildgenererad personsprite; Lages befintliga sprite återanvänds, och öppna GRAF-01-uppgifter kvarstår.
+- Commits: `c32698c3`, `fb7ec9d7`, `eb8c2eb4`, `131101a3`. Huvuduppgiften KARTA-01 förblir öppen.
+
 ### 2026-11-22 – Jobb lage / LJUD-02
 - `audio.js`: ett upprepat val av samma ljudscen avbryter inte längre pågående NPC-tal i onödan. `stopSpeech()` körs vid verkligt scenbyte men inte vid samma scen; befintlig återstart av ljudloopar vid Safari-avbrott bevarad. `index.html` uppdaterad till `audio.js?v=41`.
 - Källkod och ändringens avgränsning kontrollerade; ingen faktisk iPhone/Safari-avlyssning eller mobilgenomspelning utförd. LJUD-02 behålls öppen enligt acceptanskraven. Inga nya bildsprites skapade eller integrerade i detta pass; GRAF-01 fortsatt öppen.
