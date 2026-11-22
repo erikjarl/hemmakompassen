@@ -1,4 +1,10 @@
 # Lage i Rimforsa – historisk arbetslogg
+### 2026-11-22 – Jobb lage / MYNT-03
+- `index.html`: båtmynt markeras inte längre som upptaget om minispelbonusens persistenta skrivning misslyckas; det ligger kvar för senare försök och ger tydligt meddelande. Redan registrerad engångsbonus känns igen genom `rewardWallet.has(id)` och återutdelas inte.
+- När annan flik ändrar gemensamma plånboken uppdateras även den öppna båt-HUD:en genom `updateBoatHud()` i `refreshSharedCoinViews()`.
+- Källkod på GitHub återläst och commit bekräftad. Ingen verklig båttur, lagringsfelssimulering, mobilgenomspelning eller multi-tab-timing har körts; därför kvarstår MYNT-03 öppen. De andra 13 öppna uppgifterna har inte heller fått tillräcklig verifiering för avbockning.
+- Stående grafikprioritet: ingen ny bildsprite integrerad under detta myntpass; kodritade reservkaraktärer återstår. Rotation MYNT-03 → HUV-05. Kodcommit `5e34c49e`.
+
 ### 2026-11-22 – Jobb lage / DRAKE-02
 - `dragon.js`: nytt `resetAttacks()` rensar aktiva eldklot och låsta varningsmål, återställer skottnedräkningen och närhetsstatusen. Drakens patrull och befintliga räckviddsgränser ändras inte.
 - `index.html`: `reset()` anropar nu `dragon.resetAttacks()` och stänger av drakens närhetsmusik. Gäller både manuell omstart och omstart vid sista hjärtat. Cacheversion `dragon.js?v=15`.
