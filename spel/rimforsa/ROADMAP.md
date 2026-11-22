@@ -35,6 +35,8 @@
 
 ### Aktivt genomförande och kontroll (10)
 
+**Kartexpansion är nu aktivt utvecklingsarbete, inte en senareläggning.** Regional utforskning finns i separat spelbar scen; sammanhängande världskarta återstår.
+
 - [ ] **GRAF-01 – Enhetlig grafik i alla scener.** · [Krav](docs/TASK_DETAILS.md#graf-01) · **Kvar:** Bildgranska Maja i originalstorlek 48×56, ICA-kunden i 32×32 och Oliver/Saga i 32×48 på mobil/dator; granska återstående kodritade reservpersoner, Majas pizzeriasprite samt ansikten och detaljnivå mellan scener.
 - [ ] **SPORT-01 – Fotboll med Maja i Hackelhallen.** · [Krav](docs/TASK_DETAILS.md#sport-01) · **Kvar:** Genomspela en hel match på mobil och tangentbord; kontrollera särskilt målvaktens nya passagebaserade räddning, riktade skott, målbonusar, återgång och publikens bildskärpa.
 - [ ] **DRAKE-02 – Farlig drake och helikopterträffar.** · [Krav](docs/TASK_DETAILS.md#drake-02) · **Kvar:** Genomspela drakkontakt, eldklot mot Lage/helikopter inklusive den nya räckviddskontrollen vid avfyrning, skadepaus, mackgränsen och att attacker/helikopterreaktion pausas vid karta, butik, väska och minispel.
@@ -52,9 +54,9 @@
 - [ ] **BRÄNSLE-02 – Verifierat dagspris på Ingo-skylten.** · [Krav](docs/TASK_DETAILS.md#bränsle-02) · **Blockerat:** Saknar verifierbart stationsspecifikt dagspris och pålitlig uppdateringsmetod. Visa inte regionala snitt som lokalt pris och ändra inte speltaxan på gissning.
 - [ ] **LJUD-04 – Bättre pruttljud.** · [Krav](docs/TASK_DETAILS.md#ljud-04) · **Kvar:** Den nya syntetiska effekten finns i kod, men faktiskt hörselprov och kontroll av volymbalans krävs för att bedöma om ljudet uppfyller önskemålet.
 
-### Långsiktigt efter övriga uppgifter (1)
+### Aktiv kartutbyggnad (1)
 
-- [ ] **KARTA-01 – Utöka den sammanhängande Rimforsakartan.** · [Krav](docs/TASK_DETAILS.md#karta-01) · **Kvar:** Bygg vidare med geografiskt förankrade, sammanhängande områden, vägar, kollisioner och minikarta. Den existerande Brokindsutflykten räknas som ett delmoment, inte en färdig utbyggd värld.
+- [ ] **KARTA-01 – Utöka Rimforsa och omgivningarna (aktiv prioritet).** · [Krav](docs/TASK_DETAILS.md#karta-01) · **Kvar:** Den nya spelbara regionskartan innehåller Brokind, Kättilstad och Björkfors som förenklade geografiskt förankrade utflyktsmål. Gör nästa steg med sömlösa övergångar från huvudkartans värld, tydligare verklighetstrogna väg- och sjöformer, fler platser, sammanhängande mynt/inventariehändelser samt mobil- och datorgenomspelning. Behåll arbetsuppgiften öppen tills regionen ingår i den sammanhängande spelvärlden.
 
 ## Stående regel – inte en ofärdig uppgift
 
@@ -72,4 +74,4 @@
 - [WORKLOG.md](docs/WORKLOG.md) – hela tidigare arbetsloggen och historiska statusnoteringar. Läs **bara vid behov**.
 - `AGENTS.md` i denna mapp och repo-roten – kortkommando, befogenheter och arbetsmetod.
 
-**Långsiktigt:** `KARTA-01` är lågprioriterad tills övriga konkreta uppgifter är klara och är därefter återkommande världsexpansion. `MINI-01` är en stående kvalitetsregel och ligger därför inte bland de 14 öppna uppgifterna.
+**Ny prioritet 22 november 2026 på användarens begäran:** `KARTA-01` är aktiv kartutbyggnad och ska inte längre vänta på övriga uppgifter. Kartarbete väljs återkommande i rotationen och får utgöra eget utvecklingspass; grundregeln om att inte välja samma huvuduppgift två pass i rad gäller fortsatt. Utbyggnaden ska utgå från verkliga kartkällor, med spelbara förenklingar tydligt markerade. `MINI-01` är en stående kvalitetsregel och ligger därför inte bland de 14 öppna uppgifterna.
