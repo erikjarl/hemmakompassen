@@ -672,6 +672,9 @@ window.addEventListener('pageshow',refreshSharedCoinViews);
 document.addEventListener('visibilitychange',()=>{
  if(!document.hidden)refreshSharedCoinViews();
 });
+// En annan redan synlig flik kan återfå fokus utan pageshow/visibilitychange.
+// Kontrollera förlustsignalen även när spelaren växlar tillbaka till fönstret.
+window.addEventListener('focus',refreshSharedCoinViews);
 function updateCoinScore(){coinScore.textContent='🪙 '+totalMoney()+' · Hittade '+coinCount+'/'+(coinCount+coins.length)+' · Minispel '+rewardWallet.balance()+' (hittade '+rewardWallet.collectedCount()+'/18) · 🥔 '+farm.snapshot().balance}
 function showTreasureVictory(){
  audio.victory();stop();
