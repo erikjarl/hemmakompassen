@@ -1,4 +1,10 @@
 # Lage i Rimforsa – historisk arbetslogg
+### 2026-11-22 – Jobb lage / DRAKE-02
+- `dragon.js`: nytt `resetAttacks()` rensar aktiva eldklot och låsta varningsmål, återställer skottnedräkningen och närhetsstatusen. Drakens patrull och befintliga räckviddsgränser ändras inte.
+- `index.html`: `reset()` anropar nu `dragon.resetAttacks()` och stänger av drakens närhetsmusik. Gäller både manuell omstart och omstart vid sista hjärtat. Cacheversion `dragon.js?v=15`.
+- Källkoden återläst och commits bekräftade på main; ingen faktisk browser-/mobilgenomspelning av game-over, skott eller helikopter. DRAKE-02 kvarstår därför öppen. Inga andra öppna punkter avbockade utan verifiering.
+- Spriteinventering: draken och helikoptern är fortsatt kodritade; ingen bildgenererad karaktär integrerad under detta pass. Rotation DRAKE-02 → MYNT-03. Kodcommits `6e329971`, `bafe0d8a`.
+
 ### 2026-11-22 – Jobb lage / GRAF-01
 - `pizza-scene.js`: pizzabagaren ritas nu i ursprungsrutans 40×56 pixlar i stället för förstorat till 60×90. Lage i samma scen ritas 56×56 i stället för 60×60. Befintliga spritebilder återanvänds; kassadisk och köpfunktioner oförändrade.
 - `ica-scene.js`: kassören ritas i källans 40×56 i stället för 58×72. Lage ritas även här i 56×56 i stället för 60×60. Förankringarna har justerats så figurerna fortfarande slutar vid tidigare fotnivå.
