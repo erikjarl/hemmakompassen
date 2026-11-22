@@ -684,3 +684,9 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 - Ändringen tar sikte på fördröjda `storage`-event i särskilt sovande flikar. Den gör inte lokala `localStorage`-transaktioner atomiska och är ingen fullständig lösning på samtidiga skrivningar.
 - Befintlig nollställning av kartmynt, minispelsbonusar och potatisintäkter ändrades inte. Ingen ny bildfil skapades; kodritade fallbackfigurer kvarstår som grafiskt arbete.
 - Koden är sparad på GitHub main. Kodåterläsning är gjord, men faktisk spelgenomgång, test av flera flikar/iPhone och Pages-publicering har inte bekräftats. HUV-05 är fortsatt öppen. 14 öppna och 30 arkiverade uppgifter; nästa rotation HUV-06.
+
+### 2026-11-22 – Jobb Lage: HUV-06, tydligare bajskorvskanter
+
+- `index.html` / `drawPoops()`: förstärkte befintliga ljusa kantpixlar mot mörkt gräs och mörka kantpixlar mot ljus väg, inklusive tvåtonade kantdetaljer inom exakt den tidigare 23×26-pixelrektangeln. Inga förändringar av positioner, spridning, `checkPoops()` eller skadeavståndet 19 pixlar.
+- Befintliga ansikten, närhetsblinkning och SNES-inspirerad pixelritning behölls. Ingen ny bildsprite genererades under detta pass; övriga kodritade figurer återstår för grafikrotationen.
+- Kodändring och ROADMAP-rotation sparade på GitHub main. Verklig rendering mot både gräs/väg på mobil och dator samt faktisk träffprovning saknas. HUV-06 förblir öppen; 14 öppna, 30 arkiverade. Nästa uppgift KARTA-02.
