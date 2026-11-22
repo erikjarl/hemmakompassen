@@ -1,4 +1,10 @@
 # Lage i Rimforsa – historisk arbetslogg
+### 2026-11-22 – Jobb lage / FORDON-02
+- `car.js`: bilens fallback-sidobild i 88×55 ritas i oförändrad källpixelskala (tidigare 90×56). Även felaktig kommentar om kupéns 96×72-pixelskala rättad till riktningsbildens faktiska 80×60. Huvudarket med åtta bildriktningar och bilens styrning/kollision är oförändrade.
+- Kodändring committad (`2980247d`); källkod och befintlig båtriktning granskade. Ingen visuell sida-vid-sida-granskning av bilens åtta riktningar, båtvyer eller mobilskärm; FORDON-02 hålls öppen.
+- Stående spriteprioritet inventerad: fotbollsspelets åskådare har bildsprites, men kodritade reservpersoner återstår i andra scener. Ingen ny bildsprite skapad/integrerad i detta pass.
+- Rotation FORDON-02 → LJUD-02.
+
 ### 2026-11-22 – Jobb lage / KARTA-02
 - `index.html`: ny `walkableEndpoint` letar efter närliggande rutnätsceller vars hela sista väg till spelarens pekklick är gångbar. `pathTo` använder denna slutcell i stället för att välja närmaste rutcell även bakom hus, sten eller vatten. Originalmask, väggkollisioner och kartbild är oförändrade.
 - Kodändring committad (`4d94f915`) och ankare kontrollerade vid uppdatering. Ingen faktisk genomspelning i mobil/dator av entréer, smala vägar eller Åsundabadet. KARTA-02 lämnas öppen.
