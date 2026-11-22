@@ -1,5 +1,10 @@
 # Lage i Rimforsa – historisk arbetslogg
 
+### 2026-11-22 – Jobb lage / MYNT-03
+- Implementerade `refreshSharedCoinViews()` i `spel/rimforsa/index.html`: vid `pageshow`, återgång från dold flik samt lagringshändelser synkas plånbok och potatismynt, kartans myntvisning och eventuella öppna ICA-/pizzeriavyers priser. Befintlig `payCoins`-kontroll vid köp behålls.
+- Kodgranskning: uppdateringsfunktionen och de anropade butiksfunktionerna finns på main. Ingen genomspelning i mobil/Safari eller dubbel-flikstest utfördes; MYNT-03 är därför fortfarande öppen. Inga nya bildsprites genererades; återstående kodritade personer hanteras av GRAF-01.
+- Rotation: MYNT-03 → HUV-05. Commit: `ef156a0a`.
+
 ### 2026-11-21 – Städning av Lages att-göra-listor (utan nytt utvecklingspass)
 - Gick igenom den aktiva `ROADMAP.md` och de 45 specificerade uppgifts-ID:na. Totalt **30 redan avbockade uppgifter** flyttades ur roadmapen till `docs/COMPLETED_TASKS.md`; inga nya uppgifter markerades färdiga enbart på antaganden. **14 ofärdiga** uppgifter behölls med konkret kvarvarande arbete. `MINI-01` flyttades ur checklistan till stående kvalitetspolicy, eftersom den inte är ett avslutningsbart utvecklingsärende.
 - Tog bort gamla datumstämplade implementationstexter från de aktiva checklistans rader; historiska delsteg finns kvar i denna logg och i Git-historiken. De detaljerade kraven bytte vilseledande \"Att göra\"-rubriker till \"Kravbeskrivningar\" och förklarar nu att filen inte har uppgiftsstatus. Uppdaterade `spel/rimforsa/AGENTS.md` för att förebygga att listan växer med gammal historik igen.
