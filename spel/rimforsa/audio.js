@@ -178,6 +178,9 @@
       // kan ge en statechange på iOS, ibland efter att ljudet redan startat.
       if(enabled&&!hidden){startScene();confirmEnabledSound();}
     }else{
+      // En avbruten WebAudio-kontext ska inte lämna kvar en talröst
+      // eller bakgrundsmusiken nedskruvad efter app-/flikbyte i Safari.
+      stopSpeech();
       stopScene();
     }
     // Safari resolves resume() asynchronously. Refresh the visible sound button
@@ -687,7 +690,7 @@
     speechMusicVolume(volume);
   }
   function speak(text,speaker){
-    if(!enabled||hidden||scene!=='land'||!root.speechSynthesis||!root.SpeechSynthesisUtterance)return false;
+    if(!enabled||hidden||scene!=='land'||!ctx||ctx.state!=='running'||!root.speechSynthesis||!root.SpeechSynthesisUtterance)return false;
     const words=String(text||'').trim();
     if(!words)return false;
     stopSpeech();
