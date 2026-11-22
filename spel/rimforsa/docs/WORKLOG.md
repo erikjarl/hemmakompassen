@@ -753,3 +753,10 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 - I `index.html` / `drawPoops()` har varje bajshinder fått fler fasta ljusa trappkantspixlar på vänster-/ovansidan och mörka skuggpixlar på höger-/undersidan, så silhuetten inte är beroende av närhetsblinkningen. Alla nya pixelrektanglar håller sig inom befintliga 23×26 px (x −11..11, y −15..10); skadekontrollen använder fortsatt oförändrad radie 19 och antalet hinder ändrades inte.
 - Kodens ankare och oförändrade kollisionsuttryck kontrollerades. Ingen verklig pixelgranskning på ljus väg/mörkt gräs, mobil-/datorgenomspelning eller Pages-distributionskontroll har genomförts. Därför ligger HUV-06 kvar som öppen punkt, 14 öppna totalt och 30 arkiverade.
 - Bildsprites: ingen ny bild genererades eller kopplades in i detta pass; tidigare identifierade kodritade reservpersoner kvarstår. Nästa rotationsuppgift KARTA-02. KARTA-01 är fortsatt aktiv kartutbyggnad.
+
+
+### 2026-11-23 – Jobb Lage: KARTA-02, säker startanslutning i A*
+
+- `index.html`: ny `walkableStart()` väljer endast A*-startcentrum som har en fullständigt gångbar linje från Lages verkliga position. `pathTo()` använder den i stället för enbart närmaste geometriska rutcell. Vid behov läggs startcellens mitt till som första ruttpunkt så första rörelsen inte diagonalt hoppar över den kontrollerade anslutningen. Befintliga kollisionsregler, pektolerans och kartgrafik ändras inte.
+- Verifierat genom kontroll av ändrade kodstycken och att GitHub returnerat commit; ingen faktisk webbläsar-/mobilgenomspelning, visuell kontroll, syntaxkörning eller bekräftad GitHub Pages-publicering har gjorts. KARTA-02 lämnas öppen tills smala stigar, entréer och Åsundabadet provgåtts och hinder kontrollerats.
+- Ingen ny bildsprite skapades; kodritade reservfigurer finns kvar, bland annat reservtrollet när sprite inte laddar. Totalt 14 öppna, 30 arkiverade. Nästa huvudrotation FORDON-02; KARTA-01 fortsatt aktiv utbyggnad.
