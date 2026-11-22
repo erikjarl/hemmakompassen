@@ -1361,6 +1361,26 @@ function safeTapTarget(x,y){
  }
  return fallback;
 }
+// Välj en slutcell vars raka anslutning till fingertrycket verkligen är fri.
+// När en entré ligger nära en husvägg kan närmaste rutmitt annars hamna på
+// fel sida av väggen: A* hittar dit, men Lage stannar innan själva entrén.
+function walkableEndpoint(tx,ty){
+ const cx=Math.floor(tx/STEP),cy=Math.floor(ty/STEP);
+ let best=null,bestDistance=Infinity;
+ for(let radius=0;radius<=4;radius++){
+  for(let dy=-radius;dy<=radius;dy++)for(let dx=-radius;dx<=radius;dx++){
+   if(Math.max(Math.abs(dx),Math.abs(dy))!==radius)continue;
+   const gx=cx+dx,gy=cy+dy;
+   if(!walkCell(gx,gy))continue;
+   const px=(gx+.5)*STEP,py=(gy+.5)*STEP;
+   if(!canWalkStraight(px,py,tx,ty))continue;
+   const distance=Math.hypot(px-tx,py-ty);
+   if(distance<bestDistance){best=[gx,gy];bestDistance=distance;}
+  }
+  if(best)return best;
+ }
+ return null;
+}
 function pathTo(x,y){
  if(!maskLoaded)return [];
  const target=safeTapTarget(x,y);
@@ -1369,7 +1389,7 @@ function pathTo(x,y){
  // Korta pekrutter behöver inte tvingas till 6px-rutnätets mittpunkter.
  // Tillåt exakt pekmål på smala men fria stråk, endast om hela linjen är gångbar.
  if(canStand(x,y)&&canWalkStraight(state.x,state.y,x,y))return [{x,y}];
- const s=closestWalkable(state.x,state.y),t=closestWalkable(x,y);if(!s||!t)return [];
+ const s=closestWalkable(state.x,state.y),t=walkableEndpoint(x,y);if(!s||!t)return [];
 const start=s[1]*NX+s[0],goal=t[1]*NX+t[0],prev=new Int32Array(MAX).fill(-1),dist=new Float32Array(MAX).fill(Infinity),seen=new Uint8Array(MAX);let heap=[];const push=(id,cost)=>{let i=heap.length;heap.push([cost,id]);while(i){const p=(i-1)>>1;if(heap[p][0]<=cost)break;heap[i]=heap[p];i=p}heap[i]=[cost,id]};const pop=()=>{let top=heap[0],last=heap.pop();if(heap.length){let i=0;while(true){let c=i*2+1;if(c>=heap.length)break;if(c+1<heap.length&&heap[c+1][0]<heap[c][0])c++;if(last[0]<=heap[c][0])break;heap[i]=heap[c];i=c}heap[i]=last}return top[1]};
 dist[start]=0;push(start,0);let reached=false,expanded=0;const moves=[[1,0,1],[-1,0,1],[0,1,1],[0,-1,1],[1,1,1.414],[-1,1,1.414],[1,-1,1.414],[-1,-1,1.414]];
 // Räkna endast unika utforskade celler mot sökgränsen. A* kan ha flera
