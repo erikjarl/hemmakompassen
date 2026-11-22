@@ -620,7 +620,20 @@ window.addEventListener('storage',event=>{
  if(event.key!==null&&event.key!=='rimforsa-minigame-coins-v1'&&event.key!==farm.key)return;
  if(event.key===null||event.key==='rimforsa-minigame-coins-v1')rewardWallet.sync();
  if(event.key===null||event.key===farm.key)farm.syncCoins();
+ refreshSharedCoinViews();
+});
+// När en sovande mobilflik väcks kan lagringshändelser ha fördröjts.
+// Uppdatera även öppna butikers priser så de följer det gemensamma saldot.
+function refreshSharedCoinViews(){
+ rewardWallet.sync();
+ farm.syncCoins();
  updateCoinScore();
+ if(!pizzaOverlay.hidden){renderPizza();drawPizzaScene();}
+ if(!icaOverlay.hidden){renderIca();drawIcaScene();}
+}
+window.addEventListener('pageshow',refreshSharedCoinViews);
+document.addEventListener('visibilitychange',()=>{
+ if(!document.hidden)refreshSharedCoinViews();
 });
 function updateCoinScore(){coinScore.textContent='🪙 '+totalMoney()+' · Hittade '+coinCount+'/'+(coinCount+coins.length)+' · Minispel '+rewardWallet.balance()+' (hittade '+rewardWallet.collectedCount()+'/18) · 🥔 '+farm.snapshot().balance}
 function showTreasureVictory(){
