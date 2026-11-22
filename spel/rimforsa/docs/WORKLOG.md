@@ -1,4 +1,9 @@
 # Lage i Rimforsa – historisk arbetslogg
+### 2026-11-22 – Jobb lage / LJUD-02
+- `audio.js`: ett upprepat val av samma ljudscen avbryter inte längre pågående NPC-tal i onödan. `stopSpeech()` körs vid verkligt scenbyte men inte vid samma scen; befintlig återstart av ljudloopar vid Safari-avbrott bevarad. `index.html` uppdaterad till `audio.js?v=41`.
+- Källkod och ändringens avgränsning kontrollerade; ingen faktisk iPhone/Safari-avlyssning eller mobilgenomspelning utförd. LJUD-02 behålls öppen enligt acceptanskraven. Inga nya bildsprites skapade eller integrerade i detta pass; GRAF-01 fortsatt öppen.
+- Kodcommits `f378b80c` och `80cf634b`; rotation LJUD-02 → LJUD-03.
+
 ### 2026-11-22 – Jobb lage / LJUD-03
 - `index.html`: befintlig, kort nekad-köp-signal används nu även när pizzan/glassen redan ägs och när `bag.addPurchase` misslyckas. Gäller både klick på själva butiksscenen och direkta köpknappar; ett enskilt försök ger bara en signal i den aktuella hanteraren.
 - Kodändring sparad i GitHub-commit `aeb0836f`. Kontroll av befintliga ljudanrop och avgränsad källkod gjord; ingen faktisk provlyssning på mobil/dator eller volymbalansering. LJUD-03 hålls öppen.
