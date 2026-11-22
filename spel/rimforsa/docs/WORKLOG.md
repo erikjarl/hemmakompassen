@@ -1,4 +1,11 @@
 # Lage i Rimforsa – historisk arbetslogg
+### 2026-11-22 – Jobb lage / GRAF-01
+- `pizza-scene.js`: pizzabagaren ritas nu i ursprungsrutans 40×56 pixlar i stället för förstorat till 60×90. Lage i samma scen ritas 56×56 i stället för 60×60. Befintliga spritebilder återanvänds; kassadisk och köpfunktioner oförändrade.
+- `ica-scene.js`: kassören ritas i källans 40×56 i stället för 58×72. Lage ritas även här i 56×56 i stället för 60×60. Förankringarna har justerats så figurerna fortfarande slutar vid tidigare fotnivå.
+- `index.html`: cacheversioner uppdaterade för båda butiksscenerna. Kod och GitHub-commits verifierade, men ingen faktisk Canvas-rendering eller visuell mobil-/desktopkontroll utförd. `GRAF-01` kvarstår öppen; övriga öppna ärenden saknar verifiering för avbockning.
+- Spriteinventering: Maja, Oliver, Saga, ICA-kunden, kocken och kassören har redan bildsprites; kodritade reservfigurer finns fortfarande och inga nya bildgenererade filer integrerades detta pass. Rotation GRAF-01 → DRAKE-02.
+- Commits `e2cbdca0`, `77b4bf96`, `b70c711e`, `f59bf87c`, `7929a7d2`.
+
 ### 2026-11-22 – Två Jobb lage-pass / LJUD-03 och KARTA-01
 - Pass 1 (LJUD-03): nytt eget fyrtonsljud `regionArrival()` i `audio.js`, utlöses vid första ankomst till vart och ett av regionens tre ortsmål. Inget nät- eller upphovsrättsberoende. LJUD-03 är fortsatt öppen för verklig avlyssning och balansering. Kodcommit `59f50a0c`.
 - Pass 2 (KARTA-01): `regional-map.js` har vägledd förflyttning vid val av Brokind, Kättilstad och Björkfors. Rutten går via befintligt vägsegment och centrala korsningen; styrning med knappar/tangentbord avbryter rutten. `index.html` skyddar huvudspelets tangentstyrning under regionutflykten och uppdaterar cache för båda skripten. Kodcommits `4398b55c`, `858531e1`.
