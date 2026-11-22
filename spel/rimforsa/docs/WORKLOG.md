@@ -1,4 +1,11 @@
 # Lage i Rimforsa – historisk arbetslogg
+### 2026-11-22 – Jobb lage / LJUD-02
+- `audio.js`: när Safari rapporterar `suspended`/`interrupted`/`closed` via WebAudio-statechange avbryts nu också pågående talsyntes och musikvolymen återställs. Nytt tal startar bara om AudioContext är `running`. Ljudupplåsning sker fortfarande endast efter användargest.
+- `index.html`: ljudskriptets cacheversion ändrad från 39 till 40 så ny kod laddas vid nästa besök.
+- GitHub-kodcommits `5027ec25`, `b93f7d27`. Kodens förutsättningar granskade, men varken faktisk iPhone/Safari, hörselprov eller scenövergångar har provspelats. LJUD-02 förblir öppen.
+- Stående spriteprioritet: ingen ny bildsprite integrerad; kvarvarande kodritade reservpersoner finns i GRAF-01.
+- Rotation LJUD-02 → LJUD-03.
+
 ### 2026-11-22 – Jobb lage / FORDON-02
 - `car.js`: bilens fallback-sidobild i 88×55 ritas i oförändrad källpixelskala (tidigare 90×56). Även felaktig kommentar om kupéns 96×72-pixelskala rättad till riktningsbildens faktiska 80×60. Huvudarket med åtta bildriktningar och bilens styrning/kollision är oförändrade.
 - Kodändring committad (`2980247d`); källkod och befintlig båtriktning granskade. Ingen visuell sida-vid-sida-granskning av bilens åtta riktningar, båtvyer eller mobilskärm; FORDON-02 hålls öppen.
