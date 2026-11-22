@@ -1,4 +1,9 @@
 # Lage i Rimforsa – historisk arbetslogg
+### 2026-11-22 – Jobb lage / GRAF-01
+- `npc.js`: Oliver och Saga är sedan tidigare bildbaserade genom `RimforsaFriendSprites` med källrutor 32×48. Både normal och horisontellt speglad rendering har korrigerats från utsträckt 38×48 till originalets 32×48, centrerat kring samma markposition. Kodritade reservfigurer behålls om bilden inte laddats. `index.html` uppdaterat till `npc.js?v=5`.
+- Källkodskontroll av bilddimensioner och ritkoordinater. Ingen visuell webbläsargranskning av mobil/dator och ingen faktisk bildgenerering eller integration av nya sprites denna gång; GRAF-01 kvarstår öppen för resterande NPC-/butiksfigurer och visuell jämförelse.
+- Rotation GRAF-01 → DRAKE-02. Kodcommits `2abfb85b`, `ecbe6770`.
+
 ### 2026-11-22 – Jobb lage / LJUD-03
 - Ny originalsyntetiserad låg dubbelsignal `purchaseDenied()` i `audio.js`, endast när ljud är på och AudioContext kör. Kopplad till nekade köp på pizzerian, ICA och bensinmacken; köpfunktioner och myntdragning oförändrade.
 - `index.html` laddar `audio.js?v=39`. Kodkontroll av samtliga sex felköpsgrenar och exporterad ljudfunktion genomförd. Ingen ljuduppspelning/hörseltest eller faktisk mobilgenomspelning verifierad; LJUD-03 kvarstår öppen.
