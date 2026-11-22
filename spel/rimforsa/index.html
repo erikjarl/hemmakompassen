@@ -110,7 +110,7 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
  <div class="controls"><div class="guide">Samla guldmynt! Vid hemmet står en vit bil – hoppa in med Kör bilen. Styr med pilar/WASD.</div><div class="dpad" aria-label="Styr Lage"><button type="button" data-dir="up" aria-label="Gå uppåt"></button><button type="button" data-dir="left" aria-label="Gå åt vänster"></button><button type="button" data-dir="down" aria-label="Gå nedåt"></button><button type="button" data-dir="right" aria-label="Gå åt höger"></button></div><button class="reset" id="reset">Börja om ↺</button></div>
  <div class="footer">Illustrerad spelvärld inspirerad av Rimforsa. Platserna ligger ungefär rätt, men kartan är inte skalenlig.</div>
 </main>
-<script src="./audio.js?v=38"></script>
+<script src="./audio.js?v=39"></script>
 <script src="./gameplay.js?v=2"></script>
 <script src="./inventory.js?v=3"></script>
 <script src="./item-art.js?v=1"></script>
@@ -312,14 +312,14 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
   if(target==='oven'){pizzaStatus.textContent='Titta! Här gräddas pizzorna i en varm stenugn.';return;}
   if(target==='pizza'){
    if(bag.has('ananaspizza')){pizzaStatus.textContent='Pizzan finns redan i väskan!';return;}
-   if(totalMoney()<PIZZA_PRICE){pizzaStatus.textContent='Du behöver '+(PIZZA_PRICE-totalMoney())+' mynt till för att köpa pizzan.';return;}
+   if(totalMoney()<PIZZA_PRICE){pizzaStatus.textContent='Du behöver '+(PIZZA_PRICE-totalMoney())+' mynt till för att köpa pizzan.';if(audio.purchaseDenied)audio.purchaseDenied();return;}
    pizzaBuy.click();
   }
  });
  pizzaBuy.addEventListener('click',()=>{
   if(bag.has('ananaspizza')){pizzaStatus.textContent='Pizzan finns redan i väskan!';renderPizza();return;}
   const refund=payCoins(PIZZA_PRICE);
-   if(!refund){pizzaStatus.textContent='Du behöver minst fem mynt för att köpa pizzan.';renderPizza();return;}
+   if(!refund){pizzaStatus.textContent='Du behöver minst fem mynt för att köpa pizzan.';if(audio.purchaseDenied)audio.purchaseDenied();renderPizza();return;}
   const result=bag.addPurchase('ananaspizza');
   if(!result.added){refund();pizzaStatus.textContent='Det gick inte att lägga pizzan i väskan.';renderPizza();return;}
   pizzaStatus.textContent='🍕 Mums! Pizzaslicen med ananas ligger i väskan.'+(result.saved?'':' Den kunde inte sparas till nästa besök.');
@@ -362,7 +362,7 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
   if(id){
    if(bag.has(id)){icaStatus.textContent='Den glassen finns redan i väskan!';return;}
    const missing=icePrices[id]-totalMoney();
-   if(missing>0){icaStatus.textContent='Du behöver '+missing+' mynt till för att köpa den glassen.';return;}
+   if(missing>0){icaStatus.textContent='Du behöver '+missing+' mynt till för att köpa den glassen.';if(audio.purchaseDenied)audio.purchaseDenied();return;}
    icaOverlay.querySelector('[data-buy-ice="'+id+'"]').click();
   }
  });
@@ -370,7 +370,7 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
    const id=button.dataset.buyIce,cost=icePrices[id];
    if(bag.has(id)){icaStatus.textContent='Den glassen finns redan i väskan!';renderIca();return;}
    const refund=payCoins(cost);
-   if(!refund){icaStatus.textContent='Du behöver fler guldmynt för att köpa den glassen.';renderIca();return;}
+   if(!refund){icaStatus.textContent='Du behöver fler guldmynt för att köpa den glassen.';if(audio.purchaseDenied)audio.purchaseDenied();renderIca();return;}
    const added=bag.addPurchase(id);
    if(!added.added){refund();icaStatus.textContent='Det gick inte att lägga glassen i väskan.';renderIca();return;}
    const name=id==='paronglass'?'päronglass':'vaniljglass';
@@ -874,13 +874,13 @@ function openFuelStation(){
   fuelDialog.querySelector('[data-fuel-buy]').addEventListener('click',()=>{
    if(carFuel.snapshot().level>=100){fuelDialog.querySelector('[data-fuel-status]').textContent='Tanken är redan full!';return;}
    const refund=payCoins(carFuel.COST);
-   if(!refund){fuelDialog.querySelector('[data-fuel-status]').textContent='Du behöver två spelmynt. Samla mynt på kartan eller sälj potatis på ICA.';return;}
+   if(!refund){fuelDialog.querySelector('[data-fuel-status]').textContent='Du behöver två spelmynt. Samla mynt på kartan eller sälj potatis på ICA.';if(audio.purchaseDenied)audio.purchaseDenied();return;}
    carFuel.fill();(audio.fuelFill||audio.coin)();updateFuelHud();renderFuelStation();
   });
   fuelDialog.querySelector('[data-fuel-boat]').addEventListener('click',()=>{
    if(boatFuel.snapshot().level>=100){fuelDialog.querySelector('[data-fuel-status]').textContent='Båtens tank är redan full!';return;}
    const refund=payCoins(carFuel.COST);
-   if(!refund){fuelDialog.querySelector('[data-fuel-status]').textContent='Du behöver två spelmynt för att tanka båten.';return;}
+   if(!refund){fuelDialog.querySelector('[data-fuel-status]').textContent='Du behöver två spelmynt för att tanka båten.';if(audio.purchaseDenied)audio.purchaseDenied();return;}
    boatFuel.fill();(audio.fuelFill||audio.coin)();updateFuelHud();renderFuelStation();
   });
   fuelDialog.querySelector('[data-fuel-close]').addEventListener('click',()=>{fuelDialog.hidden=true;state.nearKey=null;updateMessage();});
