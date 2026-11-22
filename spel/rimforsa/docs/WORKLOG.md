@@ -670,3 +670,10 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 - `dragon.js`: drakens varningsmål låses fortfarande i förväg, men räckvidd och östra gräns kontrolleras på nytt från den aktuella mynningen i avfyrningsögonblicket. När draken hinner flytta sig för långt sedan målet låstes skapas inget omöjligt skott. Befintliga gränser på 300/600 världspixlar, mackgränsen x=394, projektilkollisioner och pauslogik är oförändrade.
 - `index.html`: cacheversionen för drakmodulen höjd från v13 till v14.
 - Koden sparad i GitHub main. Ingen faktisk spelgenomgång på mobil/dator eller bekräftad Pages-driftsättning; DRAKE-02 förblir öppen med uttryckliga återstående kontroller. Inga nya sprites genererades i detta pass; draken är fortfarande kodritad och bör inventeras i framtida grafikpass. Rotation: senast DRAKE-02, nästa MYNT-03. Fortfarande 14 öppna och 30 arkiverade.
+
+### 2026-11-22 – Jobb Lage: MYNT-03, uppdatering av minispelens gemensamma saldo
+
+- `swim-minigame.js`, `slide-minigame.js` och `football-minigame.js` exponerar nu en `refreshWallet`-funktion som uppdaterar saldovisningen om respektive minispel är öppet. Simning och fotboll uppdaterar etiketten; rutschkanan anropar sin befintliga rendering som redan bygger etiketten från aktuell plånbok.
+- `index.html`: befintlig `refreshSharedCoinViews()` anropar alla tre spelens `refreshWallet` vid storage-händelser, pageshow, synlig flik och fönsterfokus. Samma rutin uppdaterar sedan huvudkartans HUD och öppna butiker. Skriptversioner höjda för simning, rutschkana och fotboll.
+- Inga nya mynt, bonus-ID:n, köpprioriteringar eller regler för nollställning ändrades. Ingen ny bildsprite genererades; tidigare bildbaserade publiksprites i fotboll är kvar, medan kodritade fallbackfigurer återstår i flera scener.
+- Ändringar inskrivna på GitHub main; återläsning av kod är möjlig men flerflikstest, faktiskt mobil-/datorspeltest, race mellan samtidiga skrivningar och GitHub Pages-driftsättning är **inte** verifierade. Uppgiften MYNT-03 är därför fortfarande öppen. Status 14 öppna, 30 arkiverade. Nästa rotation HUV-05.
