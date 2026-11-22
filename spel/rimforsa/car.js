@@ -57,7 +57,10 @@ function draw(ctx,x,y,dir='right',occupied=false){
  const directionFrame=CAR_DIRECTIONS.indexOf(dir);
  if(directionFrame>=0&&directionSpriteReady()&&typeof ctx.drawImage==='function'){
   const smooth=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=false;
-  ctx.drawImage(directionSprite,(directionFrame<0?CAR_DIRECTIONS.indexOf('right'):directionFrame)*DIRECTION_FRAME_WIDTH,0,DIRECTION_FRAME_WIDTH,DIRECTION_FRAME_HEIGHT,-48,-40,96,72);
+  // Rita en källpixel som en kartpixel: 96×72 gav en icke-heltalig
+  // 1,2×-skalning av 80×60-arket och ojämn pixelstorlek mellan vyerna.
+  // Behåll bilens centrum och riktning; ingen kör- eller kollisionskod ändras.
+  ctx.drawImage(directionSprite,directionFrame*DIRECTION_FRAME_WIDTH,0,DIRECTION_FRAME_WIDTH,DIRECTION_FRAME_HEIGHT,-40,-32,80,60);
   // The eight image directions share one parked sprite sheet.
   // Add a tiny Lage in the cockpit only while driving, including the six
   // front/rear/diagonal directions that previously showed an empty car.
