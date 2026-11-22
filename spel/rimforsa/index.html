@@ -124,11 +124,11 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
 <script src="./helicopter.js?v=2"></script>
 <script src="./troll-minigame.js?v=8"></script>
 <script src="./preschool-friends-sprites.js?v=1"></script>
-<script src="./slide-minigame.js?v=9"></script>
+<script src="./slide-minigame.js?v=10"></script>
 <script src="./maja-sprites.js?v=1"></script>
 <script src="./harbor-visitor-sprites.js?v=1"></script>
-<script src="./football-minigame.js?v=8"></script>
-<script src="./swim-minigame.js?v=7"></script>
+<script src="./football-minigame.js?v=9"></script>
+<script src="./swim-minigame.js?v=8"></script>
 <script src="./brokind-trail.js?v=1"></script>
 <script src="./ica-cashier-sprites.js?v=1"></script>
 <script src="./ica-scene.js?v=7"></script>
@@ -665,6 +665,11 @@ function refreshSharedCoinViews(){
  rewardWallet.sync();
  farm.syncCoins();
  updateCoinScore();
+ // Även ett redan öppet minispel måste visa den gemensamma plånboken
+ // när andra flikar har tjänat eller spenderat mynt.
+ for(const scene of [window.RimforsaSwimMinigame,window.RimforsaSlideMinigame,window.RimforsaFootball]){
+  if(scene&&typeof scene.refreshWallet==='function')scene.refreshWallet();
+ }
  if(!pizzaOverlay.hidden){renderPizza();drawPizzaScene();}
  if(!icaOverlay.hidden){renderIca();drawIcaScene();}
 }
