@@ -1,4 +1,10 @@
 # Lage i Rimforsa – historisk arbetslogg
+### 2026-11-22 – Två Jobb lage-pass / LJUD-03 och KARTA-01
+- Pass 1 (LJUD-03): nytt eget fyrtonsljud `regionArrival()` i `audio.js`, utlöses vid första ankomst till vart och ett av regionens tre ortsmål. Inget nät- eller upphovsrättsberoende. LJUD-03 är fortsatt öppen för verklig avlyssning och balansering. Kodcommit `59f50a0c`.
+- Pass 2 (KARTA-01): `regional-map.js` har vägledd förflyttning vid val av Brokind, Kättilstad och Björkfors. Rutten går via befintligt vägsegment och centrala korsningen; styrning med knappar/tangentbord avbryter rutten. `index.html` skyddar huvudspelets tangentstyrning under regionutflykten och uppdaterar cache för båda skripten. Kodcommits `4398b55c`, `858531e1`.
+- Uppgiftsbeskrivningen ändrades så KARTA-01 inte längre beskrivs som lågprioriterad. Rotation LJUD-03 → KARTA-01 → nästa GRAF-01. Inga öppna uppgifter kunde verifieras helt klara; inga avbockningar.
+- GitHub-ändringar verifierades via sparade commits. Ingen faktisk spelning i webbläsare, iPhone/Safari eller kontroll av utgiven Pages-version; därför kvarstår KARTA-01 och LJUD-03. Ingen ny bildsprite skapades; GRAF-01:s återstående kodritade figurer finns kvar.
+
 ### 2026-11-22 – Begärd kartexpansion / KARTA-01
 - Användaren prioriterade upp regional kartutbyggnad. `ROADMAP.md` flyttar KARTA-01 från långsiktigt arbete till aktiv kartutbyggnad och specificerar kvarstående sömlös integration.
 - Skapade `regional-map.js`: spelbar 960×760 värld med kameraföljning, gångbara vägar, kollisionsspärr mot sjöar, fyra ortsmarkörer (Rimforsa, Brokind, Kättilstad och Björkfors), tre utforskningsmål, mobilknappar, tangentbord och översiktsminikarta. Befintlig Lage-sprite återanvänds. Källor för ortrelationer: Kinda kommuns kartguide, Kinda Turisms kartöversikt och Länsstyrelsens beskrivning av Brokind. Sjö-/vägformer är förenklade spelformer och inte skalenliga.
