@@ -27,7 +27,7 @@ function walkable(px,py){
 }
 function inWater(px,py){
  // Järnlunden ligger norr om Rimforsa; Åsunden sträcker sig söderut.
- if(py<340&&px>565&&px<755&&Math.pow((px-660)/100,2)+Math.pow((py-125)/205,2)<1)return true;
+ if(py<340&&px>565&&px<755&&Math.pow((px-661)/74,2)+Math.pow((py-126)/116,2)<1)return true;
  if(py>360&&px>704&&Math.pow((px-850)/145,2)+Math.pow((py-565)/255,2)<1)return true;
  return false;
 }
@@ -66,7 +66,7 @@ function render(){
  for(let i=0;i<12;i++){const fx=(i*173+39)%W,fy=(i*137+61)%H;rect(fx,fy,78,36,i%2?'#73974e':'#7b9e58');for(let j=0;j<5;j++)rect(fx+j*14,fy+7,3,23,'#9fb86b');}
  for(let py=22;py<H;py+=43)for(let px=16;px<W;px+=53){const ix=px+((py*7)%25),iy=py+((px*3)%17);if(!isRoad(ix,iy)&&!inWater(ix,iy)&&((px+py)%5!==0))tree(ix,iy,px+py);}
  // Lakes, with crisp shores and reflective highlights.
- for(const [cx,cy,rx,ry] of [[660,125,104,209],[850,565,150,263]]){
+ for(const [cx,cy,rx,ry] of [[661,126,74,116],[850,565,150,263]]){
   g.fillStyle='#d6c792';g.beginPath();g.ellipse(cx,cy,rx+8,ry+8,0,0,Math.PI*2);g.fill();
   g.fillStyle='#236b99';g.beginPath();g.ellipse(cx,cy,rx,ry,0,0,Math.PI*2);g.fill();
   g.fillStyle='#3389b4';g.beginPath();g.ellipse(cx+7,cy,rx-15,ry-14,0,0,Math.PI*2);g.fill();
