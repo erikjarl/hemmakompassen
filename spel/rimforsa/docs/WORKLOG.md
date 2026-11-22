@@ -550,3 +550,7 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 ### 2026-11-22 – Jobb lage, LJUD-03 (ljud för bajskorvsträff)
 - Huvudkartans `checkPoops()` anropar nu det redan originalsyntetiserade `audio.poop()` (med `audio.hit()` som fallback) i stället för enbart generellt skadeljud, men bara när `game.touchHazard()` bekräftat verklig hjärtskada. Detta undviker två samtidiga effekter och bevarar skadepaus, skaderäknare och nollställning vid sista hjärtat. Andra faror använder fortsatt det vanliga skadeljudet.
 - JavaScript-syntax/källkoppling kontrolleras; ingen faktisk ljudprovning på iPhone/Safari utförd. LJUD-03 kvarstår som öppen för provlyssning och balans; nästa GRAF-01. Ingen ny bildsprite integrerades under detta pass.
+
+### 2026-11-22 – Jobb lage, GRAF-01 (bildbaserad ICA-kund)
+- ICA-miljön (`ica-scene.js`) visar nu en extra kund från befintliga originalgenererade `RimforsaPreschoolFriendsSprite` (andra rutan i 128×32-arket), identiskt bildmaterial som redan används som publik i Hackelhallen. Bilden placeras vid kassagången och ritningen görs om när den laddats. Ingen ny kodritad person används för kunden.
+- `index.html` laddar `ica-scene.js?v=6`. Kundens bild påverkar inte glassar, kassaklick, myntsaldo eller priser. Inga nygenererade bildfiler tillkom. Syntax- och källkontroll genomförs, men faktisk visuell jämförelse på mobil och dator återstår. GRAF-01 kvarstår öppen; nästa DRAKE-02.
