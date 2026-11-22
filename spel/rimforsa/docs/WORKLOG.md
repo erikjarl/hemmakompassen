@@ -696,3 +696,10 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 - `index.html` / `pathTo()`: A*-sökningen kräver nu `canWalkStraight` mellan varje par av intilliggande rutcentra innan steget accepteras. Tidigare kunde två godkända rutcentra ändå ha en blockerad pixelsträcka mellan sig, särskilt vid diagonala hushörn eller smala sten-/vattenkanter. Förhindrar att planerade rutter väljer just sådana blockerade segment. Oförändrad 6-pixelsruttgrid, gångmask, strandstig, originalgrafik och handstyrning.
 - Behållit originalmask och `safeTapTarget()`-kontroll; ändringen öppnar inga nya passager genom hus, vatten eller sten. Detta är en kodgranskad förbättring, inte ett verifierat spelresultat. Faktisk provgång med mobil/tangentbord och tillgänglighet till entréer samt Åsundabadet återstår. Prestanda vid långa A*-sökningar bör även bedömas i webbläsare.
 - Ingen ny bildfil genererades. Trollfallbacken i `drawTroll()` är fortfarande kodritad när spritesheet inte laddas; normalt används befintlig bildsprite. 14 öppna och 30 arkiverade uppgifter. Nästa huvuduppgift FORDON-02.
+
+### 2026-11-22 – Jobb Lage: FORDON-02, gemensamma sidodetaljer på båten
+
+- `boat-direction-art.js`: lagt till en diskret röd skrovmarkering och ljus pixelaccent på båda sidor. Markeringen definieras i båtens lokala skrovkoordinater och ritas med samma form i alla åtta riktningar, utan att rotera bitmappar eller påverka båtens fysik.
+- `index.html`: höjt cacheversionen för `boat-direction-art.js` från v8 till v9.
+- Bilens befintliga `car-directions.png` i åtta native 80×60-vyer och Lages befintliga spelkaraktär behölls oförändrade. Ingen ny bildfil har genererats; båtens vyer är fortfarande procedurgenererade canvasbilder, inte en extern sprite-PNG. Kodritade reservpersoner finns fortfarande i flera scener.
+- Ändringar sparade på GitHub main; mobil-/datorspeltest, visuell jämförelse av samtliga fordonsvyer och bekräftad Pages-publicering återstår. FORDON-02 behålls öppen. 14 öppna, 30 arkiverade, nästa rotation LJUD-02.
