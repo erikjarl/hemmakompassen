@@ -82,7 +82,8 @@ function drawSpectators(){
   rect(x-16,106,32,3,'#bda375');
   rect(x-15,118,30,2,'#253e39');
   if(spectatorSprites&&spectatorSprites.complete&&spectatorSprites.naturalWidth===128&&spectatorSprites.naturalHeight===32){
-   ctx.drawImage(spectatorSprites,frame*32,0,32,32,x-17,80,34,34);
+   // Behåll originalarkets 32×32-pixlar utan ojämn uppskalning.
+   ctx.drawImage(spectatorSprites,frame*32,0,32,32,x-16,82,32,32);
   }else{
    // Silhuett under bildladdning, byts mot PNG så snart den finns.
    rect(x-8,92,16,18,'#4a5d66');rect(x-6,82,12,12,'#c48b68');
@@ -194,8 +195,22 @@ function frame(time){
  }
  // Maja är målvakt och försöker följa bollens rörelse i målområdet.
  majaY=clamp(majaY+clamp(ball.y-majaY,-52*dt,52*dt),187,249);
+ const previousBallX=ball.x,previousBallY=ball.y;
  ball.x+=ball.vx*dt;ball.y+=ball.vy*dt;
- if(ball.vx>0&&ball.x>379&&ball.x<404&&Math.abs(ball.y-(majaY-10))<23){ball.x=378;ball.vx=-Math.max(125,Math.abs(ball.vx)*.68);ball.vy+=(ball.y-majaY)*2;status.textContent='Maja räddade! Försök igen. Mål: '+goals;if(root.RimforsaAudio&&root.RimforsaAudio.footballSave)root.RimforsaAudio.footballSave();}
+ // Testa bollens passage förbi målvakten i stället för ett smalt
+ // positionsintervall; snabba skott ska inte kunna tunnla förbi Maja.
+ const keeperLine=390;
+ if(ball.vx>0&&previousBallX<=keeperLine&&ball.x>=keeperLine){
+  const fraction=clamp((keeperLine-previousBallX)/(ball.x-previousBallX||1),0,1);
+  const crossingY=previousBallY+(ball.y-previousBallY)*fraction;
+  if(Math.abs(crossingY-(majaY-10))<23){
+   ball.x=keeperLine-12;ball.y=crossingY;
+   ball.vx=-Math.max(125,Math.abs(ball.vx)*.68);
+   ball.vy+=(crossingY-majaY)*2;
+   status.textContent='Maja räddade! Försök igen. Mål: '+goals;
+   if(root.RimforsaAudio&&root.RimforsaAudio.footballSave)root.RimforsaAudio.footballSave();
+  }
+ }
 
  const drag=Math.pow(.988,dt*60);ball.vx*=drag;ball.vy*=drag;
  if(ball.y<142){ball.y=142;ball.vy=Math.abs(ball.vy)*.58;}
