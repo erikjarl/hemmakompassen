@@ -760,3 +760,11 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 - `index.html`: ny `walkableStart()` väljer endast A*-startcentrum som har en fullständigt gångbar linje från Lages verkliga position. `pathTo()` använder den i stället för enbart närmaste geometriska rutcell. Vid behov läggs startcellens mitt till som första ruttpunkt så första rörelsen inte diagonalt hoppar över den kontrollerade anslutningen. Befintliga kollisionsregler, pektolerans och kartgrafik ändras inte.
 - Verifierat genom kontroll av ändrade kodstycken och att GitHub returnerat commit; ingen faktisk webbläsar-/mobilgenomspelning, visuell kontroll, syntaxkörning eller bekräftad GitHub Pages-publicering har gjorts. KARTA-02 lämnas öppen tills smala stigar, entréer och Åsundabadet provgåtts och hinder kontrollerats.
 - Ingen ny bildsprite skapades; kodritade reservfigurer finns kvar, bland annat reservtrollet när sprite inte laddar. Totalt 14 öppna, 30 arkiverade. Nästa huvudrotation FORDON-02; KARTA-01 fortsatt aktiv utbyggnad.
+
+
+### 2026-11-23 – Jobb Lage: FORDON-02, samma fördäck i alla båtvyer
+
+- `boat-direction-art.js`: lagt till en infälld lucka med kontrasterande ram och två små beslag på fördäcket. Samtliga delar definieras med `point(along,side)` och byggs därmed med samma lokala skrovkoordinater i alla åtta båtriktningar, utan förändring av skrovstorlek, kollisionsregler eller båtens fysik.
+- `index.html`: ändrade cacheversion för båtens riktningsgrafik från v9 till v10 så nytt skript kan laddas.
+- Bilens åtta befintliga 80×60-bildvyer ändrades inte. Ingen ny separat bildsprite skapades under passet; kodritade reservpersoner är fortfarande en öppen grafikkvalitetsfråga (exempelvis reservtrollet om dess bild inte laddar).
+- Verifieringsnivå: GitHub-bekräftade commits och kodkontroll av riktnings- och koordinatlogik. Ingen verklig bildgranskning, mobil-/datorprovkörning, kontroll av webbläsarkonsol eller bekräftad GitHub Pages-publicering. FORDON-02 ligger därför kvar som öppen; 14 öppna, 30 arkiverade uppgifter. Nästa huvudrotation LJUD-02. KARTA-01 fortfarande aktivt utbyggnadsarbete.
