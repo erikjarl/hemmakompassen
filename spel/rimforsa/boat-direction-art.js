@@ -41,6 +41,18 @@ function make(dir){
  // Aktermonterad motor och propellerblock – samma position oavsett riktning.
  drawShape(g,hull(-41,-31,8,8),palette.motor);
  drawShape(g,hull(-39,-33,5,5),'#8599a1');
+ // Motorhuv och ventiler har exakt samma lokala position i alla åtta vyer:
+ // skarpa mörka/ljust metalliska pixlar skiljer motorn från den vita aktern.
+ // Ingen ny ytterkontur som ändrar skrovets storlek eller förflyttning.
+ drawShape(g,[point(-39,-5),point(-34,-5),point(-34,5),point(-39,5)],'#394b54');
+ for(const side of [-3,0,3]){
+  const [vx,vy]=point(-36,side);
+  g.fillStyle='#c4d1ce';g.fillRect(Math.round(vx),Math.round(vy),2,2);
+ }
+ const [motorX,motorY]=point(-40,0);
+ g.fillStyle='#e9f1ea';g.fillRect(Math.round(motorX)-1,Math.round(motorY)-1,3,2);
+ // Mörk akterspegel skiljer propellermotorn från den ljusa vita båten.
+ drawShape(g,[point(-31,-9),point(-29,-9),point(-29,9),point(-31,9)],'#324750');
  // Mörk cockpit, vindruta och två likadana röda säten.
  drawShape(g,hull(-23,3,11,10),'#385c68');
  drawShape(g,hull(0,10,12,11),palette.glass);
