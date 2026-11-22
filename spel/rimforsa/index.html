@@ -120,7 +120,7 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
 <script src="./friend-sprites.js?v=1"></script>
 <script src="./npc.js?v=6"></script>
 <script src="./farm.js?v=4"></script>
-<script src="./dragon.js?v=14"></script>
+<script src="./dragon.js?v=15"></script>
 <script src="./helicopter.js?v=2"></script>
 <script src="./troll-minigame.js?v=8"></script>
 <script src="./preschool-friends-sprites.js?v=1"></script>
@@ -1292,6 +1292,9 @@ function restartAfterGameOver(cause){
  message.innerHTML='<strong>💔 Alla hjärtan tog slut!</strong> '+(cause==='draken'?'Draken':cause==='båten'?'Ett grund i båtspelet':'Bajskorvarna')+' tog det sista hjärtat. Lage förlorade '+lostCoins+' mynt och börjar om hemma med '+remainingCoins+' mynt. Samla nya mynt och försök igen!'+resetWarning;
 }
 function reset({clearMoney=true}={}){
+  // Inga kvarvarande eldklot eller låsta attacker får följa med till en ny omgång.
+  dragon.resetAttacks();
+  audio.setDragonNearby(false);
   // Loading the page must preserve earned minigame coins.
   if(clearMoney){
    rewardWallet.clear();farm.clearCoins();
