@@ -658,3 +658,9 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 - `npc.js`: Majas 48×56-sprite ritas nu i ursprunglig 48×56-storlek i huvudkartan i stället för 44×51, med oförändrat riktningsval och rörelse. Namnetiketter för bildbaserade figurer placeras ovanför håret i stället för över sprites.
 - `ica-scene.js`: den befintliga bildbaserade ICA-besökaren ritas i 32×32 utan ojämn förstoring till 36×36; klickytor, köp och butikspersonal oförändrade.
 - `index.html`: skriptversionerna för `npc.js` och `ica-scene.js` höjdes för cacheuppdatering. Kontrollerat genom GitHub-filskrivning; faktisk visuell mobil-/datorgranskning och GitHub Pages-distribution är inte verifierade. Inga uppgifter avbockade; 14 öppna/30 arkiverade. Nästa rotation SPORT-01.
+
+### 2026-11-22 – Jobb Lage: SPORT-01, målvaktsräddning och publik
+
+- `football-minigame.js`: målvaktsträff kontrollerar nu om bollen korsar x=390 och interpolerar y vid passagen, i stället för att enbart testa om bollen råkar ligga inom ett smalt x-intervall efter uppdateringen. Minskar risken att snabba skott passerar utan räddningskontroll. Befintlig räddningsrekyl, ljud, mål- och myntlogik bevarade.
+- Fyra befintliga bildbaserade åskådare ritas nu i originalstorleken 32×32 (tidigare 34×34), utan ojämn pixeluppskalning. De är bildbaserade, medan den kodritade tillfälliga fallbacken finns kvar om bilden inte laddas; ingen ny bildfil genererades under detta pass.
+- `index.html`: cacheversionen för fotbollsmodulen höjd till v8. Ändringar sparade på GitHub main. Kodens nya villkor har granskats men fullständig spelgenomgång på mobil/dator, renderingsgranskning och bekräftad Pages-distribution har inte genomförts. SPORT-01 hålls öppen. 14 öppna uppgifter, 30 färdigmarkerade. Nästa huvuduppgift DRAKE-02.
