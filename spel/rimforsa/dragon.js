@@ -54,9 +54,12 @@
     const target=warningTarget;
     shotTimer=2.7;warningTarget=null;
     if(target){
+     // Draken rör sig medan varningsmarkeringen är låst.
+     // Kontrollera räckvidden igen från den VERKLIGA mynningen vid skottögonblicket,
+     // så varningen aldrig kan skapa ett skott mot ett nu oåtkomligt mål.
      const dx=target.x-mouthX,dy=target.y-mouthY;
      const distance=Math.hypot(dx,dy);
-     if(distance>0){
+     if(distance>35&&distance<=target.maxDistance&&target.x<=FIRE_EAST_LIMIT){
       const speed=165;
       shots.push({id:'dragon-fire-'+(++shotId),x:mouthX,y:mouthY,vx:dx/distance*speed,vy:dy/distance*speed,travelled:0,maxDistance:target.maxDistance,life:5});
      }
