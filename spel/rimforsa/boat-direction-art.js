@@ -36,6 +36,14 @@ function make(dir){
    g.fillStyle='#fefdf1';g.fillRect(Math.round(rx)-1,Math.round(ry)-1,3,3);
   }
  }
+ // En liten röd sidorand hör till samma båtmodell i alla åtta vyer.
+ // Lägg den mellan ytterreling och däck i lokala skrovkoordinater;
+ // körfysik, skrovstorlek och skärpa påverkas inte.
+ for(const side of [-1,1]){
+  drawShape(g,[point(-23,side*17),point(11,side*17),point(14,side*16),point(-21,side*16)],'#ad4e4b');
+  const [markX,markY]=point(-8,side*17);
+  g.fillStyle='#f2ddad';g.fillRect(Math.round(markX),Math.round(markY),2,2);
+ }
  // Fören i blankvit plast, med en liten ljusreflex nära spetsen.
  drawShape(g,[point(15,-13),point(31,-3),point(31,3),point(15,13),point(19,0)],palette.light);
  // Aktermonterad motor och propellerblock – samma position oavsett riktning.
