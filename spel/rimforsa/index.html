@@ -286,7 +286,13 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
    clear(){earned=Object.create(null);spent=0;return save();}
   };
  })();
- const awardMinigameCoin=id=>{if(rewardWallet.award(id)){updateCoinScore();return true;}return false;};
+ const awardMinigameCoin=id=>{
+  // En äldre flik får inte återinföra ett bonusmynt efter game over i en annan flik.
+  // Jämför omstartssignalen före varje ny belöning, även om storage-event fördröjts.
+  if(reloadAfterOtherTabLoss())return false;
+  if(rewardWallet.award(id)){updateCoinScore();return true;}
+  return false;
+ };
  // Synkronisera båda sparade bonuskällorna även om en annan flik
  // har tjänat eller använt mynt. Kartmynten är lokala för pågående omgång.
  const totalMoney=()=>{
@@ -294,6 +300,8 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
   return game.snapshot().balance+rewardWallet.balance()+farm.snapshot().balance;
  };
  function payCoins(amount){
+  // Skydda också köp i en flik vars gamla spelomgång redan nollställts.
+  if(reloadAfterOtherTabLoss())return null;
   if(!Number.isSafeInteger(amount)||amount<=0||totalMoney()<amount)return null;
   const treasure=Math.min(amount,game.snapshot().balance),bonus=Math.min(amount-treasure,rewardWallet.balance()),produce=amount-treasure-bonus;
   if(treasure&&!game.spend(treasure).paid)return null;
