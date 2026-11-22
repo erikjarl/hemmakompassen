@@ -331,17 +331,17 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
   if(target==='chef'){pizzaStatus.textContent='Pizzabagaren: Ciao Lage! Vill du ha en pizzaslice med ananas för 5 mynt?';return;}
   if(target==='oven'){pizzaStatus.textContent='Titta! Här gräddas pizzorna i en varm stenugn.';return;}
   if(target==='pizza'){
-   if(bag.has('ananaspizza')){pizzaStatus.textContent='Pizzan finns redan i väskan!';return;}
+   if(bag.has('ananaspizza')){pizzaStatus.textContent='Pizzan finns redan i väskan!';if(audio.purchaseDenied)audio.purchaseDenied();return;}
    if(totalMoney()<PIZZA_PRICE){pizzaStatus.textContent='Du behöver '+(PIZZA_PRICE-totalMoney())+' mynt till för att köpa pizzan.';if(audio.purchaseDenied)audio.purchaseDenied();return;}
    pizzaBuy.click();
   }
  });
  pizzaBuy.addEventListener('click',()=>{
-  if(bag.has('ananaspizza')){pizzaStatus.textContent='Pizzan finns redan i väskan!';renderPizza();return;}
+  if(bag.has('ananaspizza')){pizzaStatus.textContent='Pizzan finns redan i väskan!';if(audio.purchaseDenied)audio.purchaseDenied();renderPizza();return;}
   const refund=payCoins(PIZZA_PRICE);
    if(!refund){pizzaStatus.textContent='Du behöver minst fem mynt för att köpa pizzan.';if(audio.purchaseDenied)audio.purchaseDenied();renderPizza();return;}
   const result=bag.addPurchase('ananaspizza');
-  if(!result.added){refund();pizzaStatus.textContent='Det gick inte att lägga pizzan i väskan.';renderPizza();return;}
+  if(!result.added){refund();pizzaStatus.textContent='Det gick inte att lägga pizzan i väskan.';if(audio.purchaseDenied)audio.purchaseDenied();renderPizza();return;}
   pizzaStatus.textContent='🍕 Mums! Pizzaslicen med ananas ligger i väskan.'+(result.saved?'':' Den kunde inte sparas till nästa besök.');
   (audio.purchase||audio.coin)();updateCoinScore();renderBag();renderPizza();drawPizzaScene();
  });
@@ -380,7 +380,7 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
    }
   const id=location==='pear'?'paronglass':location==='vanilla'?'vaniljglass':null;
   if(id){
-   if(bag.has(id)){icaStatus.textContent='Den glassen finns redan i väskan!';return;}
+   if(bag.has(id)){icaStatus.textContent='Den glassen finns redan i väskan!';if(audio.purchaseDenied)audio.purchaseDenied();return;}
    const missing=icePrices[id]-totalMoney();
    if(missing>0){icaStatus.textContent='Du behöver '+missing+' mynt till för att köpa den glassen.';if(audio.purchaseDenied)audio.purchaseDenied();return;}
    icaOverlay.querySelector('[data-buy-ice="'+id+'"]').click();
@@ -388,11 +388,11 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
  });
  for(const button of icaOverlay.querySelectorAll('[data-buy-ice]'))button.addEventListener('click',()=>{
    const id=button.dataset.buyIce,cost=icePrices[id];
-   if(bag.has(id)){icaStatus.textContent='Den glassen finns redan i väskan!';renderIca();return;}
+   if(bag.has(id)){icaStatus.textContent='Den glassen finns redan i väskan!';if(audio.purchaseDenied)audio.purchaseDenied();renderIca();return;}
    const refund=payCoins(cost);
    if(!refund){icaStatus.textContent='Du behöver fler guldmynt för att köpa den glassen.';if(audio.purchaseDenied)audio.purchaseDenied();renderIca();return;}
    const added=bag.addPurchase(id);
-   if(!added.added){refund();icaStatus.textContent='Det gick inte att lägga glassen i väskan.';renderIca();return;}
+   if(!added.added){refund();icaStatus.textContent='Det gick inte att lägga glassen i väskan.';if(audio.purchaseDenied)audio.purchaseDenied();renderIca();return;}
    const name=id==='paronglass'?'päronglass':'vaniljglass';
    icaStatus.textContent='🍨 Tack för köpet! Du fick en '+name+' i väskan.'+(added.saved?'':' Den kunde inte sparas till nästa besök.');
    (audio.purchase||audio.coin)();updateCoinScore();renderBag();renderIca();drawIcaScene();
