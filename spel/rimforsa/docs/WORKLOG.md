@@ -542,3 +542,7 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 ### 2026-11-22 – Jobb lage, FORDON-02 (åtta vyer med samstämmig båtmotor)
 - `boat-direction-art.js`: aktermotorn har fått samma pixelritade mörka motorhuv, metalliska ventiler, liten ljusreflex och tydlig akterspegel i samtliga åtta riktningar. Delarna byggs i båtens lokala längd-/sidokoordinater, vilket behåller proportioner och placering även diagonalt. `index.html` hämtar `boat-direction-art.js?v=8`.
 - Ingen ändring av båtens fysik, kollisionsyta, bränsle eller spelregler. Bilens befintliga åttavinkelark lämnades oförändrat eftersom faktisk jämförelse av bilderna saknas. Syntax och kodkoppling kontrolleras; mobil-/visuell verifiering återstår. FORDON-02 kvarstår som öppen. Nästa huvuduppgift LJUD-02. Ingen ny bildgenererad spritefil tillkom.
+
+### 2026-11-22 – Jobb lage, LJUD-02 (hörbar bekräftelse på aktiverat ljud)
+- `audio.js` spelar en kort, originalsyntetiserad tvåtonsbekräftelse en gång efter att spelaren själv slagit på ljud och WebAudio-kontexten faktiskt är i tillståndet `running`. Ett avbrutet/asynkront Safari-`resume()` hanteras både vid `statechange`, avslutat resume-löfte och direkt running, med gemensam engångsflagga så ljudet inte dubbleras. Flaggan nollställs vid ljud av och aktiveras inte av `pageshow`/`visibilitychange`; inga autostartregler kringgås.
+- `index.html` läser `audio.js?v=37`. Faktisk lyssning i Safari/iPhone, appbyte, tal och musik kvarstår. Ingen ny bildsprite integrerad under detta pass; uppgift LJUD-02 öppen, nästa LJUD-03.
