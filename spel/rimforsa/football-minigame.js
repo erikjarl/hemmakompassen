@@ -243,5 +243,5 @@ function close(){
  const cb=returnToMap;returnToMap=null;onGoalCoin=null;getWalletBalance=null;if(typeof cb==='function')cb();
  if(previousFocus&&previousFocus.isConnected)previousFocus.focus();
 }
-root.RimforsaFootball={start,close,isOpen:()=>!!overlay&&!overlay.hidden};
+root.RimforsaFootball={start,close,isOpen:()=>!!overlay&&!overlay.hidden,refreshWallet:()=>{if(overlay&&!overlay.hidden)updateWallet();}};
 })(typeof window!=='undefined'?window:globalThis);
