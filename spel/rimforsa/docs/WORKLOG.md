@@ -1,4 +1,10 @@
 # Lage i Rimforsa – historisk arbetslogg
+### 2026-11-22 – Jobb lage / LJUD-03
+- Ny originalsyntetiserad låg dubbelsignal `purchaseDenied()` i `audio.js`, endast när ljud är på och AudioContext kör. Kopplad till nekade köp på pizzerian, ICA och bensinmacken; köpfunktioner och myntdragning oförändrade.
+- `index.html` laddar `audio.js?v=39`. Kodkontroll av samtliga sex felköpsgrenar och exporterad ljudfunktion genomförd. Ingen ljuduppspelning/hörseltest eller faktisk mobilgenomspelning verifierad; LJUD-03 kvarstår öppen.
+- Stående spriteprioritet: inga nya originalpersonsprites bildgenererade eller integrerade under detta ljudpass. GRAF-01 har ännu öppna reservpersoner.
+- Rotation LJUD-03 → GRAF-01. Kodcommits `49b7923c` och `72cf4ac6`.
+
 ### 2026-11-22 – Jobb lage / LJUD-02
 - `audio.js`: `setVisible()` gör inte längre en full stop/start av ljudlooparna när `pageshow` och `visibilitychange` skickar samma synlighetsläge. Om ljudscenen trots det saknas när kontexten kör startas den igen. `status()` exponerar `sceneStarted`.
 - `index.html`: befintlig användargesthantering anropar `resumeFromGesture()` också när AudioContext är `running` men scenen inte startad; scriptcache `audio.js?v=38`. Ingen automatiserad Safari-upplåsning eller bypass av användargestkrav.
