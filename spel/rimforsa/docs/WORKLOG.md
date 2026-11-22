@@ -1,4 +1,10 @@
 # Lage i Rimforsa – historisk arbetslogg
+### 2026-11-22 – Jobb lage / HUV-05
+- `index.html`: förlust- och myntsynkronisering kontrolleras nu även vid `window.focus`. Redan synliga spelfönster som återfår fokus kan upptäcka nollställning efter förlust i en annan flik, även utan `pageshow` eller `visibilitychange`.
+- Befintlig funktion kontrollerad i källkod: förlust från drake, bajskorv och båt går till `restartAfterGameOver`; nollställning försöker rensa minispels-/odlingsmynt och signalerar andra flikar efter verifierad lagring. Ny kod committad (`2b7b2437`). Ingen verklig genomspelning, flerflikstest eller Safari-test; HUV-05 lämnas därför öppen.
+- Stående sprites: ingen ny bildsprite genererad eller integrerad i detta pass; kvarvarande kodritade reservpersoner finns fortsatt under GRAF-01.
+- Rotation HUV-05 → HUV-06.
+
 ### 2026-11-22 – Jobb lage / MYNT-03
 - `index.html`: minispelsplånbokens `award`, `spend` och `refund` rapporterar inte längre en lyckad ändring om localStorage-sparning kastar undantag; lokala tillståndet återställs vid fel. `clear` rapporterar om sparningen lyckades. Förhindrar falska besked om sparade belöningar vid blockerad lagring.
 - Källkod jämförd före ändring och GitHub-commit bekräftad (`50694137`). Ingen faktisk genomspelning i mobil/Safari eller flerflikstest; MYNT-03 kvarstår öppen. Övriga öppna uppgifter kan ännu inte avbockas med tillgänglig verifiering.
