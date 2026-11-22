@@ -88,7 +88,7 @@ function draw(canvas,options={}){
  // Reservfiguren används endast om bilden ännu inte kan läsas.
  if(cashierSprite&&cashierSprite.complete&&cashierSprite.naturalWidth===160&&cashierSprite.naturalHeight===56){
   c.save();c.imageSmoothingEnabled=false;
-  c.drawImage(cashierSprite,0,0,40,56,344,96,58,72);
+  c.drawImage(cashierSprite,0,0,40,56,353,112,40,56);
   c.restore();
  }else person(c,373,132,'#c45649','#4c3b2b');
  rect(c,308,154,48,24,'#3c4944');rect(c,313,157,35,12,'#a8c8aa');
