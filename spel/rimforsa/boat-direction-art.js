@@ -46,6 +46,13 @@ function make(dir){
  }
  // Fören i blankvit plast, med en liten ljusreflex nära spetsen.
  drawShape(g,[point(15,-13),point(31,-3),point(31,3),point(15,13),point(19,0)],palette.light);
+ // Samma infällda fördäckslucka och två metallbeslag i alla åtta vyer.
+ // Alla detaljer har fasta lokala positioner på skrovet och följer därmed
+ // fören i sid-, diagonal-, fram- och bakvyer utan att rotera en bitmap.
+ drawShape(g,[point(20,-5),point(26,-3),point(26,3),point(20,5)],'#849aa0');
+ drawShape(g,[point(21,-3),point(25,-2),point(25,2),point(21,3)],'#dce4db');
+ drawShape(g,[point(20,-6),point(22,-6),point(22,-4),point(20,-4)],'#3e5962');
+ drawShape(g,[point(20,4),point(22,4),point(22,6),point(20,6)],'#3e5962');
  // Aktermonterad motor och propellerblock – samma position oavsett riktning.
  drawShape(g,hull(-41,-31,8,8),palette.motor);
  drawShape(g,hull(-39,-33,5,5),'#8599a1');
