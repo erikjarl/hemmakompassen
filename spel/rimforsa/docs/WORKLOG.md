@@ -690,3 +690,9 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 - `index.html` / `drawPoops()`: förstärkte befintliga ljusa kantpixlar mot mörkt gräs och mörka kantpixlar mot ljus väg, inklusive tvåtonade kantdetaljer inom exakt den tidigare 23×26-pixelrektangeln. Inga förändringar av positioner, spridning, `checkPoops()` eller skadeavståndet 19 pixlar.
 - Befintliga ansikten, närhetsblinkning och SNES-inspirerad pixelritning behölls. Ingen ny bildsprite genererades under detta pass; övriga kodritade figurer återstår för grafikrotationen.
 - Kodändring och ROADMAP-rotation sparade på GitHub main. Verklig rendering mot både gräs/väg på mobil och dator samt faktisk träffprovning saknas. HUV-06 förblir öppen; 14 öppna, 30 arkiverade. Nästa uppgift KARTA-02.
+
+### 2026-11-22 – Jobb Lage: KARTA-02, säkrare rutt över smala hörn
+
+- `index.html` / `pathTo()`: A*-sökningen kräver nu `canWalkStraight` mellan varje par av intilliggande rutcentra innan steget accepteras. Tidigare kunde två godkända rutcentra ändå ha en blockerad pixelsträcka mellan sig, särskilt vid diagonala hushörn eller smala sten-/vattenkanter. Förhindrar att planerade rutter väljer just sådana blockerade segment. Oförändrad 6-pixelsruttgrid, gångmask, strandstig, originalgrafik och handstyrning.
+- Behållit originalmask och `safeTapTarget()`-kontroll; ändringen öppnar inga nya passager genom hus, vatten eller sten. Detta är en kodgranskad förbättring, inte ett verifierat spelresultat. Faktisk provgång med mobil/tangentbord och tillgänglighet till entréer samt Åsundabadet återstår. Prestanda vid långa A*-sökningar bör även bedömas i webbläsare.
+- Ingen ny bildfil genererades. Trollfallbacken i `drawTroll()` är fortfarande kodritad när spritesheet inte laddas; normalt används befintlig bildsprite. 14 öppna och 30 arkiverade uppgifter. Nästa huvuduppgift FORDON-02.
