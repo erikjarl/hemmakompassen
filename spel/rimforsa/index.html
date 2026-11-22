@@ -1431,6 +1431,25 @@ function walkableEndpoint(tx,ty){
  }
  return null;
 }
+// Hitta en rutmitt som faktiskt har fri anslutning från spelarens fötter.
+// Sök i ringar för att bevara smala gångpassager utan att öppna hinder.
+function walkableStart(x,y){
+ const cx=Math.floor(x/STEP),cy=Math.floor(y/STEP);
+ let best=null,bestDistance=Infinity;
+ for(let radius=0;radius<=4;radius++){
+  for(let dy=-radius;dy<=radius;dy++)for(let dx=-radius;dx<=radius;dx++){
+   if(Math.max(Math.abs(dx),Math.abs(dy))!==radius)continue;
+   const gx=cx+dx,gy=cy+dy;
+   if(!walkCell(gx,gy))continue;
+   const px=(gx+.5)*STEP,py=(gy+.5)*STEP;
+   if(!canWalkStraight(x,y,px,py))continue;
+   const distance=Math.hypot(px-x,py-y);
+   if(distance<bestDistance){best=[gx,gy];bestDistance=distance;}
+  }
+  if(best)return best;
+ }
+ return null;
+}
 function pathTo(x,y){
  if(!maskLoaded)return [];
  const target=safeTapTarget(x,y);
@@ -1439,7 +1458,10 @@ function pathTo(x,y){
  // Korta pekrutter behöver inte tvingas till 6px-rutnätets mittpunkter.
  // Tillåt exakt pekmål på smala men fria stråk, endast om hela linjen är gångbar.
  if(canStand(x,y)&&canWalkStraight(state.x,state.y,x,y))return [{x,y}];
- const s=closestWalkable(state.x,state.y),t=walkableEndpoint(x,y);if(!s||!t)return [];
+ // Startcellen måste gå att nå från Lages faktiska position.
+ // Annars kan första A*-steget skära genom ett hushörn när han står
+ // strax utanför rutnätets mittpunkt vid en smal entré.
+ const s=walkableStart(state.x,state.y),t=walkableEndpoint(x,y);if(!s||!t)return [];
 const start=s[1]*NX+s[0],goal=t[1]*NX+t[0],prev=new Int32Array(MAX).fill(-1),dist=new Float32Array(MAX).fill(Infinity),seen=new Uint8Array(MAX);let heap=[];const push=(id,cost)=>{let i=heap.length;heap.push([cost,id]);while(i){const p=(i-1)>>1;if(heap[p][0]<=cost)break;heap[i]=heap[p];i=p}heap[i]=[cost,id]};const pop=()=>{let top=heap[0],last=heap.pop();if(heap.length){let i=0;while(true){let c=i*2+1;if(c>=heap.length)break;if(c+1<heap.length&&heap[c+1][0]<heap[c][0])c++;if(last[0]<=heap[c][0])break;heap[i]=heap[c];i=c}heap[i]=last}return top[1]};
 dist[start]=0;push(start,0);let reached=false,expanded=0;const moves=[[1,0,1],[-1,0,1],[0,1,1],[0,-1,1],[1,1,1.414],[-1,1,1.414],[1,-1,1.414],[-1,-1,1.414]];
 // Räkna endast unika utforskade celler mot sökgränsen. A* kan ha flera
@@ -1454,6 +1476,10 @@ while(heap.length&&expanded<MAX){const id=pop();if(seen[id])continue;seen[id]=1;
 if(!reached)return [];
 let ids=[];for(let i=goal;i!==-1;i=prev[i])ids.push(i);ids.reverse();
 const route=ids.slice(1).map(id=>({x:((id%NX)+.5)*STEP,y:((((id/NX)|0)+.5)*STEP)}));
+// Ta med första rutcentrum även när ruttsökningen startar utanför centrum.
+// Annars kan ruttföljaren försöka gå diagonalt direkt mot nod två.
+const startPoint={x:(s[0]+.5)*STEP,y:(s[1]+.5)*STEP};
+if(Math.hypot(startPoint.x-state.x,startPoint.y-state.y)>1)route.unshift(startPoint);
 // Rutnätet ger en säker väg runt hinder, men slutpunkten ska vara spelarens
 // utpekade position när även sista sträckan är helt gångbar.
 // Utan detta stannar Lage vid sista rutcellens mitt, ofta före en entré.
