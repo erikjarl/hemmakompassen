@@ -6,11 +6,11 @@
 
 ## Obligatorisk rotation mellan utvecklingspass
 
-**SENAST BEARBETAD HUVUDUPPGIFT: `LJUD-02` – engångssignal efter användarstyrd ljudstart i Safari (22 november 2026).**
+**SENAST BEARBETAD HUVUDUPPGIFT: `LJUD-03` – särskilt pruttljud vid bajskorvsträff på huvudkartan (22 november 2026).**
 
-**NÄSTA ROTATIONSPOSITION: `LJUD-03` – nästa öppna roterande huvuduppgift.**
+**NÄSTA ROTATIONSPOSITION: `GRAF-01` – nästa öppna roterande huvuduppgift.**
 
-**ALDRIG SAMMA HUVUDUPPGIFT TVÅ `JOBB LAGE` I FÖLJD.** Följ ordningen bland öppna, genomförbara uppgifter nedan med cirkulär rotation. Starta på angiven nästa position, hoppa över avbockade punkter, stående kvalitetsregler som `MINI-01` (dessa gäller ändå varje pass) och tillfälligt blockerade uppgifter. Bearbeta olika delar av spelet mellan varven: grafik, fordon, bränsle, ljud och andra spelmekaniker. Om inget praktiskt kan göras på nästa punkt, gå vidare till följande **annan** uppgift; återvänd först efter andra utvecklingspass. Prioritet betyder vikt inom rotationen, **inte** rätt att välja samma uppgift igen direkt. När ett pass med faktisk spelutveckling slutförts, uppdatera **båda fälten ovan** till den verkliga huvuduppgiften och efterföljande öppna rotationsposition innan passet avslutas. Rapportera vilka fält som ändrades. Att kontrollera kryssrutor eller åtgärda ett akut blockerande fel räknas inte som att byta huvuduppgift. **Aktuell rotation:** DRAKE-02 → MYNT-03 → HUV-05 → HUV-06 → KARTA-02 → FORDON-02 → LJUD-02 → LJUD-03 → GRAF-01 (20 nov). BRÄNSLE-02 saknade verifierbar prisuppgift; LJUD-04 kräver hörselprov och GRAF-02 är spärrad som nästa huvudfokus. Nästa position LJUD-03.
+**ALDRIG SAMMA HUVUDUPPGIFT TVÅ `JOBB LAGE` I FÖLJD.** Följ ordningen bland öppna, genomförbara uppgifter nedan med cirkulär rotation. Starta på angiven nästa position, hoppa över avbockade punkter, stående kvalitetsregler som `MINI-01` (dessa gäller ändå varje pass) och tillfälligt blockerade uppgifter. Bearbeta olika delar av spelet mellan varven: grafik, fordon, bränsle, ljud och andra spelmekaniker. Om inget praktiskt kan göras på nästa punkt, gå vidare till följande **annan** uppgift; återvänd först efter andra utvecklingspass. Prioritet betyder vikt inom rotationen, **inte** rätt att välja samma uppgift igen direkt. När ett pass med faktisk spelutveckling slutförts, uppdatera **båda fälten ovan** till den verkliga huvuduppgiften och efterföljande öppna rotationsposition innan passet avslutas. Rapportera vilka fält som ändrades. Att kontrollera kryssrutor eller åtgärda ett akut blockerande fel räknas inte som att byta huvuduppgift. **Aktuell rotation:** DRAKE-02 → MYNT-03 → HUV-05 → HUV-06 → KARTA-02 → FORDON-02 → LJUD-02 → LJUD-03 → GRAF-01 (20 nov). BRÄNSLE-02 saknade verifierbar prisuppgift; LJUD-04 kräver hörselprov och GRAF-02 är spärrad som nästa huvudfokus. Nästa position GRAF-01.
 
 ## Obligatorisk avbockning – vid VARJE `jobb lage`
 
@@ -44,7 +44,7 @@
 - [ ] **KARTA-02 – Bredare gångbara vägar och åtkomst.** · [Krav](docs/TASK_DETAILS.md#karta-02) · **Kvar:** Kontrollera förbättrat pekmål vid smala vägkanter samt faktisk gångmarginal, entréer och Åsundabadet med mobil/tangentbord; bevara hindren för hus, sten och vatten utan ändrad vägkonst.
 - [ ] **FORDON-02 – Samstämmiga bil- och båtvyer.** · [Krav](docs/TASK_DETAILS.md#fordon-02) · **Kvar:** Bildgranska bilens fram-, bak-, sido- och diagonalvyer sida vid sida, samt båtens åtta riktningar med nya motordetaljer; prova i mobilvy och korrigera konstaterade skillnader.
 - [ ] **LJUD-02 – Fungerande ljud på iPhone/Safari.** · [Krav](docs/TASK_DETAILS.md#ljud-02) · **Kvar:** Kontrollera den nya engångssignalen vid ljud på samt musik, effekter och tal vid av/på, app-/flikbyte, scenbyte och återgång i verklig iPhone/Safari; åtgärda konstaterade tysta lägen.
-- [ ] **LJUD-03 – Fler och välavvägda händelseljud.** · [Krav](docs/TASK_DETAILS.md#ljud-03) · **Kvar:** Provlyssna alla händelseljud inklusive ny engångssignal vid båtens bränslestopp (`boatOutOfFuel`), justera volymbalans och lägg till ljud bara där återkoppling saknas.
+- [ ] **LJUD-03 – Fler och välavvägda händelseljud.** · [Krav](docs/TASK_DETAILS.md#ljud-03) · **Kvar:** Provlyssna pruttljudet vid faktisk bajskorvsträff och övriga händelseljud inklusive båtens bränslestopp (`boatOutOfFuel`); balansera volym och åtgärda återstående tysta händelser.
 
 ### Pausat eller väntar på underlag (3)
 
