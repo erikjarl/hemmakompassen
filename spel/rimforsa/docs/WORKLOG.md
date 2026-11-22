@@ -1,4 +1,10 @@
 # Lage i Rimforsa – historisk arbetslogg
+### 2026-11-22 – Jobb lage / HUV-05
+- Identifierade kvarvarande risk för att en föråldrad öppen ICA-flik kunde sälja potatis efter en förlust i en annan flik, eftersom köpvägen kontrollerade förlustsignalen men försäljning inte gjorde det. `index.html` anropar nu `reloadAfterOtherTabLoss()` före försäljning.
+- `farm.js`: `start()` tar emot frivillig `verifyCurrentRound`-kontroll från huvudspelet; samma kontroll görs före plantering och skörd, så sovande flikar inte utför gamla åtgärder efter förlust. Behåller odling/ägodelar i övrigt. Farm-skriptets cacheversion höjd till v5.
+- Kod sparad och därefter källkod kontrollerad på GitHub. Ingen verklig iPhone/Safari-, tvåfliks- eller förlustgenomspelning genomförd. `HUV-05` förblir öppen; 14 öppna punkter eftersom inga fulla acceptansvillkor kunde verifieras klara. Nästa rotationsuppgift `HUV-06`.
+- Stående bildprioritet: inga nya sprites genererade eller integrerade i detta pass; kodritade reservpersoner återstår. Kodcommits `c22f0629`, `67e97fea`.
+
 ### 2026-11-22 – Jobb lage / MYNT-03
 - `index.html`: båtmynt markeras inte längre som upptaget om minispelbonusens persistenta skrivning misslyckas; det ligger kvar för senare försök och ger tydligt meddelande. Redan registrerad engångsbonus känns igen genom `rewardWallet.has(id)` och återutdelas inte.
 - När annan flik ändrar gemensamma plånboken uppdateras även den öppna båt-HUD:en genom `updateBoatHud()` i `refreshSharedCoinViews()`.
