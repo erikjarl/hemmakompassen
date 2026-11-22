@@ -554,3 +554,7 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 ### 2026-11-22 – Jobb lage, GRAF-01 (bildbaserad ICA-kund)
 - ICA-miljön (`ica-scene.js`) visar nu en extra kund från befintliga originalgenererade `RimforsaPreschoolFriendsSprite` (andra rutan i 128×32-arket), identiskt bildmaterial som redan används som publik i Hackelhallen. Bilden placeras vid kassagången och ritningen görs om när den laddats. Ingen ny kodritad person används för kunden.
 - `index.html` laddar `ica-scene.js?v=6`. Kundens bild påverkar inte glassar, kassaklick, myntsaldo eller priser. Inga nygenererade bildfiler tillkom. Syntax- och källkontroll genomförs, men faktisk visuell jämförelse på mobil och dator återstår. GRAF-01 kvarstår öppen; nästa DRAKE-02.
+
+### 2026-11-22 – Jobb lage, DRAKE-02 (pausad helikopterreaktion)
+- `index.html`: flyttat `helicopter.update(dt)` in i samma `worldPlaying`-villkor som `dragon.update()`, skottkollisioner och skadekontroll. När karta, butik, inventarium eller minispel pausar huvudvärlden ligger även helikopterns tidsbegränsade träffrök/gnistor kvar i sin reaktion i stället för att ta slut bakom dialogen. Efter återgång räknas reaktionstiden ned igen.
+- Inga ändringar av drakens räckvidd, skadevärden, träffytor eller spritegrafik. Kodsyntax och källkoppling kontrolleras, men verklig genomspelning med eldklot och pauser återstår. DRAKE-02 hålls öppen; nästa MYNT-03. Ingen ny bildsprite integrerades.
