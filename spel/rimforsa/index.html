@@ -596,7 +596,9 @@ function checkPoops(){
  if(performance.now()<hurtUntil)return false;
  const result=game.touchHazard(hazard.id);
  if(!result.damaged)return false;
- audio.hit();updateLandHearts();hurtUntil=performance.now()+1500;
+ // Bajskorven har ett eget kort originalljud. Spela inte det vanliga
+ // skadeljudet samtidigt; en skadeträff ska ge en enda tydlig effekt.
+ (audio.poop||audio.hit)();updateLandHearts();hurtUntil=performance.now()+1500;
  if(result.gameOver){
   restartAfterGameOver('bajskorvarna');
  }else{
