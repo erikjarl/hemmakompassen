@@ -7,6 +7,10 @@ const rect=(c,x,y,w,h,color)=>{c.fillStyle=color;c.fillRect(Math.round(x),Math.r
  // Samma 56×56-originalsprite som huvudkartan, utan oskarp interpolation.
  const cashierSprite=root.RimforsaIcaCashierSprite||null;
  if(cashierSprite)cashierSprite.addEventListener('load',()=>{if(lastCanvas&&lastOptions)draw(lastCanvas,lastOptions);});
+ // Återanvänd redan bildbaserade besökare från förskolan/fotbollsspelet.
+ // Kunden är en dekoration och förändrar inga köpytor.
+ const visitorSprites=root.RimforsaPreschoolFriendsSprite||null;
+ if(visitorSprites)visitorSprites.addEventListener('load',()=>{if(lastCanvas&&lastOptions)draw(lastCanvas,lastOptions);});
  const lageSprite=typeof root.Image==='function'?new root.Image():null;
  let lastCanvas=null,lastOptions=null;
  if(lageSprite){
@@ -66,6 +70,15 @@ function draw(canvas,options={}){
  rect(c,31,202,98,17,'#2f7250');rect(c,137,202,98,17,'#486b83');
  rect(c,31,202,98,17,owned.paronglass?'#526753':'#317653');
  rect(c,137,202,98,17,owned.vaniljglass?'#606969':'#3f7190');
+ // En kund väntar vid kassan. Befintligt 32×32-bildark från
+ // Hackelhallen ger samma ansiktsdetaljer och skarpa SNES-pixlar.
+ // Kunden placeras mellan frysen och kassan, bakom den främre disken.
+ if(visitorSprites&&visitorSprites.complete&&visitorSprites.naturalWidth===128&&visitorSprites.naturalHeight===32){
+  c.save();c.imageSmoothingEnabled=false;
+  rect(c,258,168,30,3,'#554c3a55');
+  c.drawImage(visitorSprites,32,0,32,32,256,134,36,36);
+  c.restore();
+ }
  // Kassadisk, kassapparat och personal.
  rect(c,288,169,177,76,'#805c3b');rect(c,285,168,182,17,'#bd8750');
  rect(c,307,186,145,43,'#956c43');
