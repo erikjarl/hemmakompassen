@@ -252,5 +252,5 @@ function close(){
  if(typeof onReturn==='function')onReturn();
  if(previousFocus&&previousFocus.isConnected)previousFocus.focus();
 }
-root.RimforsaSlideMinigame={createSession,start,close,isOpen:()=>!!dialog&&!dialog.hidden};
+root.RimforsaSlideMinigame={createSession,start,close,isOpen:()=>!!dialog&&!dialog.hidden,refreshWallet:()=>{if(dialog&&!dialog.hidden)render();}};
 })(typeof window!=='undefined'?window:globalThis);
