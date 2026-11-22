@@ -20,7 +20,7 @@ const rect=(c,x,y,w,h,color)=>{c.fillStyle=color;c.fillRect(Math.round(x),Math.r
   c.imageSmoothingEnabled=false;
   // Originalbild, fyra 40×56-vyer: fram, vänster, bak, höger.
   // Kassadisken täcker figurens nedre del precis som tidigare.
-  c.drawImage(chefSprite,0,0,40,56,Math.round(x-30),Math.round(y-66),60,90);
+  c.drawImage(chefSprite,0,0,40,56,Math.round(x-20),Math.round(y-32),40,56);
   c.restore();
   return true;
  }
