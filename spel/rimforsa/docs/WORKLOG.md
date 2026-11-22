@@ -1,4 +1,10 @@
 # Lage i Rimforsa – historisk arbetslogg
+### 2026-11-22 – Jobb lage / FORDON-02
+- Bilens riktningsbilder i `car.js` ändrade till exakt 80×60 kartpixlar från källarkets 80×60 rutor, i stället för icke-heltalig skalning till 96×72. Det undviker ojämn pixelbredd i de åtta riktningsvyerna; spelpositionens mittpunkt, körning, bränsle och vattenkollisioner har inte ändrats. Cacheversionen för `car.js` höjd i `index.html`.
+- Källkodskontroll av dimensioner och renderingsanrop genomförd. Ingen faktisk visuell jämförelse i browser/mobil, och båtens åtta vyer har inte visuellt verifierats. FORDON-02 lämnas öppen.
+- Spriteprioriteten kvarstår: inga nya personbilder genererade eller installerade i detta pass; öppna reservpersoner hör fortfarande till GRAF-01.
+- Rotation: FORDON-02 → LJUD-02. Kodcommit `f4e2ea33`.
+
 ### 2026-11-22 – Jobb lage / KARTA-02
 - Förbättrade `routeFromMap()` i `spel/rimforsa/index.html`: om `pathTo()` inte hittar någon gångbar rutt får spelaren inte längre godkänt destinationsval endast genom att vara inom 65 px från målet. Kräver nu att ett gångbart snäppmål finns inom 8 px och kan nås längs helt fri gånglinje; annars visas vägledning att välja en öppen stig. Hindermasken, vägkonsten och styrningen är oförändrade.
 - Källkodskontroll av `safeTapTarget()`, `canWalkStraight()`, `pathTo()` och den nya fallback-grenen. Ingen verklig karta/entré-/Åsundabadet-genomspelning eller mobil-/tangentbordsverifiering genomfördes. KARTA-02 är därför fortsatt öppen.
