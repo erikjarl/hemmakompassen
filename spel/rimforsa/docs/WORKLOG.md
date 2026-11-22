@@ -538,3 +538,7 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 ### 2026-11-21 – Jobb lage, KARTA-02 (pekstyrning vid vägkanter)
 - `safeTapTarget()` prioriterar nu en godkänd punkt nära det faktiska fingertrycket i stället för att inom en samplingsring föredra punkten närmast Lage. Direkt nåbara mål används för korta sträckor; i övrigt gör befintlig A* samma gångmaskkontroll som tidigare. Den osynliga pektoleransen är fortsatt högst 18 världspixlar; ändringen ändrar inte kartbild, faktisk gångmask, hus-, sten- eller vattenkollision.
 - Koden sparad till main; syntaxkontroll och källkontroll görs. Faktisk mobil-/datorprovning av entréer, Åsundabadet och vägkanter återstår. Ingen ny bildsprite integrerades. KARTA-02 öppen; nästa rotationsuppgift FORDON-02.
+
+### 2026-11-22 – Jobb lage, FORDON-02 (åtta vyer med samstämmig båtmotor)
+- `boat-direction-art.js`: aktermotorn har fått samma pixelritade mörka motorhuv, metalliska ventiler, liten ljusreflex och tydlig akterspegel i samtliga åtta riktningar. Delarna byggs i båtens lokala längd-/sidokoordinater, vilket behåller proportioner och placering även diagonalt. `index.html` hämtar `boat-direction-art.js?v=8`.
+- Ingen ändring av båtens fysik, kollisionsyta, bränsle eller spelregler. Bilens befintliga åttavinkelark lämnades oförändrat eftersom faktisk jämförelse av bilderna saknas. Syntax och kodkoppling kontrolleras; mobil-/visuell verifiering återstår. FORDON-02 kvarstår som öppen. Nästa huvuduppgift LJUD-02. Ingen ny bildgenererad spritefil tillkom.
