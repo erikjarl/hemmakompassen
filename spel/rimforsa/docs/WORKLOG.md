@@ -746,3 +746,10 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 - `index.html`: höjt cacheversionen för `boat-direction-art.js` från v8 till v9.
 - Bilens befintliga `car-directions.png` i åtta native 80×60-vyer och Lages befintliga spelkaraktär behölls oförändrade. Ingen ny bildfil har genererats; båtens vyer är fortfarande procedurgenererade canvasbilder, inte en extern sprite-PNG. Kodritade reservpersoner finns fortfarande i flera scener.
 - Ändringar sparade på GitHub main; mobil-/datorspeltest, visuell jämförelse av samtliga fordonsvyer och bekräftad Pages-publicering återstår. FORDON-02 behålls öppen. 14 öppna, 30 arkiverade, nästa rotation LJUD-02.
+
+
+### 2026-11-23 – Jobb Lage: HUV-06, permanent läsbar silhuett
+
+- I `index.html` / `drawPoops()` har varje bajshinder fått fler fasta ljusa trappkantspixlar på vänster-/ovansidan och mörka skuggpixlar på höger-/undersidan, så silhuetten inte är beroende av närhetsblinkningen. Alla nya pixelrektanglar håller sig inom befintliga 23×26 px (x −11..11, y −15..10); skadekontrollen använder fortsatt oförändrad radie 19 och antalet hinder ändrades inte.
+- Kodens ankare och oförändrade kollisionsuttryck kontrollerades. Ingen verklig pixelgranskning på ljus väg/mörkt gräs, mobil-/datorgenomspelning eller Pages-distributionskontroll har genomförts. Därför ligger HUV-06 kvar som öppen punkt, 14 öppna totalt och 30 arkiverade.
+- Bildsprites: ingen ny bild genererades eller kopplades in i detta pass; tidigare identifierade kodritade reservpersoner kvarstår. Nästa rotationsuppgift KARTA-02. KARTA-01 är fortsatt aktiv kartutbyggnad.
