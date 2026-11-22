@@ -1,4 +1,10 @@
 # Lage i Rimforsa – historisk arbetslogg
+### 2026-11-22 – Jobb lage / DRAKE-02
+- `dragon.js`: nära-draken-varning och faroljud aktiveras inte när Lage sitter i bilen och är skyddad från attacker. Helikopter som mål, eldklotens räckvidd och skadesystem lämnas oförändrade.
+- Källkoden granskad och den isolerade ändringen committad (`4aafa49f`). Ingen verklig spelgenomgång eller mobilverifiering utförd: DRAKE-02 hålls öppen enligt kvarvarande acceptansvillkor.
+- Stående spriteprioritet inventerad: draken och helikoptern är fortfarande kodritade; inga nya bildsprites genererade eller integrerade i detta pass.
+- Rotation DRAKE-02 → MYNT-03.
+
 ### 2026-11-22 – Jobb lage / GRAF-01
 - `npc.js`: Oliver och Saga är sedan tidigare bildbaserade genom `RimforsaFriendSprites` med källrutor 32×48. Både normal och horisontellt speglad rendering har korrigerats från utsträckt 38×48 till originalets 32×48, centrerat kring samma markposition. Kodritade reservfigurer behålls om bilden inte laddats. `index.html` uppdaterat till `npc.js?v=5`.
 - Källkodskontroll av bilddimensioner och ritkoordinater. Ingen visuell webbläsargranskning av mobil/dator och ingen faktisk bildgenerering eller integration av nya sprites denna gång; GRAF-01 kvarstår öppen för resterande NPC-/butiksfigurer och visuell jämförelse.
