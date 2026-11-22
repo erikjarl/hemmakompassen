@@ -1,4 +1,10 @@
 # Lage i Rimforsa – historisk arbetslogg
+### 2026-11-22 – Jobb lage / KARTA-02
+- Förbättrade `routeFromMap()` i `spel/rimforsa/index.html`: om `pathTo()` inte hittar någon gångbar rutt får spelaren inte längre godkänt destinationsval endast genom att vara inom 65 px från målet. Kräver nu att ett gångbart snäppmål finns inom 8 px och kan nås längs helt fri gånglinje; annars visas vägledning att välja en öppen stig. Hindermasken, vägkonsten och styrningen är oförändrade.
+- Källkodskontroll av `safeTapTarget()`, `canWalkStraight()`, `pathTo()` och den nya fallback-grenen. Ingen verklig karta/entré-/Åsundabadet-genomspelning eller mobil-/tangentbordsverifiering genomfördes. KARTA-02 är därför fortsatt öppen.
+- Stående grafikprioritet: inga nya personsprites genererade eller implementerade inom detta navigationspass; öppna reservpersoner kvarstår i GRAF-01.
+- Rotation KARTA-02 → FORDON-02. Kodcommit `af9b3a77`.
+
 ### 2026-11-22 – Jobb lage / HUV-06
 - Förstärkte varningskontrast i bajskorvarnas befintliga `drawPoops()`: orange kinder växlar färg vid närhet och två 1×1-pixlars ljusglimtar visas under den redan existerande nära-animationens ljusa fas. Samtliga tillägg ritas inom originalfiguren. Position, `scatterPoops()`, `checkPoops()`, radie <19 och hjärtmekanik har inte ändrats.
 - Källkodskontroll: nya rektanglarna ligger på samma befintliga kindkoordinater; inga spelmekanikändringar. Ingen bildgranskning på riktig skärm, mobil eller genomspelning utförd. Därför förblir HUV-06 öppen.
