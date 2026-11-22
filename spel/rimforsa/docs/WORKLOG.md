@@ -1,4 +1,10 @@
 # Lage i Rimforsa – historisk arbetslogg
+### 2026-11-22 – Jobb lage / HUV-06
+- `index.html`: fast mörk kontur i bajskorvens övre och nedre silhuett och tydligare permanenta varma högdagrar; alla ändringar inom samma 23×26-pixelområde. Ingen ändring i `checkPoops`, dess 19-pixelträffradie eller hjärtförlust.
+- Källkodens placering och avgränsade ändring kontrollerade; commit `b422097f`. Ingen visuell webbläsargranskning av gräs och väg på mobil/dator eller spelgenomgång; HUV-06 behålls öppen.
+- Stående spriteprioritet: kvarvarande kodritade personer behöver fortfarande bildsprites; ingen ny personbild skapad eller integrerad under detta pass.
+- Rotation HUV-06 → KARTA-02.
+
 ### 2026-11-22 – Jobb lage / HUV-05
 - `index.html`: förlust- och myntsynkronisering kontrolleras nu även vid `window.focus`. Redan synliga spelfönster som återfår fokus kan upptäcka nollställning efter förlust i en annan flik, även utan `pageshow` eller `visibilitychange`.
 - Befintlig funktion kontrollerad i källkod: förlust från drake, bajskorv och båt går till `restartAfterGameOver`; nollställning försöker rensa minispels-/odlingsmynt och signalerar andra flikar efter verifierad lagring. Ny kod committad (`2b7b2437`). Ingen verklig genomspelning, flerflikstest eller Safari-test; HUV-05 lämnas därför öppen.
