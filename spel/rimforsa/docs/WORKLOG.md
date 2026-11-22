@@ -1,4 +1,10 @@
 # Lage i Rimforsa – historisk arbetslogg
+### 2026-11-22 – Jobb lage / LJUD-02
+- `audio.js`: `setVisible()` gör inte längre en full stop/start av ljudlooparna när `pageshow` och `visibilitychange` skickar samma synlighetsläge. Om ljudscenen trots det saknas när kontexten kör startas den igen. `status()` exponerar `sceneStarted`.
+- `index.html`: befintlig användargesthantering anropar `resumeFromGesture()` också när AudioContext är `running` men scenen inte startad; scriptcache `audio.js?v=38`. Ingen automatiserad Safari-upplåsning eller bypass av användargestkrav.
+- Kontroll av källkodsförekomst och anrop genomförd. Ingen körning i faktisk iPhone/Safari, inga hörselprov eller syntakstester genomförda; därför fortsatt öppen LJUD-02.
+- Bildprioritet: inga nya bildbaserade personsprites skapades/integrerades i detta ljudpass, öppna GRAF-01-krav kvarstår. Rotation LJUD-02 → LJUD-03. Kodcommits `98b84a6c`, `ae7e0010`.
+
 ### 2026-11-22 – Jobb lage / FORDON-02
 - Bilens riktningsbilder i `car.js` ändrade till exakt 80×60 kartpixlar från källarkets 80×60 rutor, i stället för icke-heltalig skalning till 96×72. Det undviker ojämn pixelbredd i de åtta riktningsvyerna; spelpositionens mittpunkt, körning, bränsle och vattenkollisioner har inte ändrats. Cacheversionen för `car.js` höjd i `index.html`.
 - Källkodskontroll av dimensioner och renderingsanrop genomförd. Ingen faktisk visuell jämförelse i browser/mobil, och båtens åtta vyer har inte visuellt verifierats. FORDON-02 lämnas öppen.
