@@ -1,4 +1,9 @@
 # Lage i Rimforsa – historisk arbetslogg
+### 2026-11-22 – Jobb lage / HUV-06
+- Förstärkte varningskontrast i bajskorvarnas befintliga `drawPoops()`: orange kinder växlar färg vid närhet och två 1×1-pixlars ljusglimtar visas under den redan existerande nära-animationens ljusa fas. Samtliga tillägg ritas inom originalfiguren. Position, `scatterPoops()`, `checkPoops()`, radie <19 och hjärtmekanik har inte ändrats.
+- Källkodskontroll: nya rektanglarna ligger på samma befintliga kindkoordinater; inga spelmekanikändringar. Ingen bildgranskning på riktig skärm, mobil eller genomspelning utförd. Därför förblir HUV-06 öppen.
+- Bildspriteinventering: inga nya personsprites skapade eller implementerade detta pass; GRAF-01:s återstående reservpersoner ligger kvar. Rotation HUV-06 → KARTA-02. Kodcommit `44e2ac65`.
+
 ### 2026-11-22 – Jobb lage / HUV-05
 - `spel/rimforsa/index.html`: sparar senaste observerade `rimforsa-loss-reset-v1` per flik, och jämför den vid `pageshow` och när fliken återkommer från dolt läge. Om game over inträffat i en annan flik laddas den gamla spelomgången om, även när ett tidigare `storage`-event missats på mobil. Vid förlust uppdateras markören i samma flik så den inte triggar egen omladdning.
 - Avgränsad källkodskontroll: funktioner och anropsplatser finns i den uppdaterade filen. Ingen faktisk flerflikskörning eller iPhone/Safari-genomspelning utförd, varför HUV-05 fortfarande är öppen.
