@@ -4,7 +4,7 @@
   const AudioCtor = root.AudioContext || root.webkitAudioContext;
   let ctx=null,master=null,scene='land',enabled=false,hidden=false;
   let musicInterval=null,gullInterval=null,preschoolInterval=null,engine=null,waves=null,carEngine=null,carActive=false,melodyStep=0,volume=.55,dragonNearby=false;
-  let sceneStarted=false,resumePending=false,resumeStartedAt=0,resumeSerial=0,resumeFailed=false;
+  let sceneStarted=false,resumePending=false,resumeStartedAt=0,resumeSerial=0,resumeFailed=false,startChimePending=false;
   const melody=[392,440,523.25,440,392,329.63,349.23,392,440,392,329.63,293.66,329.63,349.23,392,0,
                  349.23,392,440,523.25,587.33,523.25,440,392,349.23,329.63,293.66,329.63,349.23,392,329.63,0];
   // Originalkomponerat molltema med låg bordun för drakens skog.
@@ -159,6 +159,15 @@
   }
   // iOS Safari kan pausa/interruptera AudioContext vid flik- och appbyte.
   // Starta om schemalagda loopar först när ljudmotorn faktiskt kör igen.
+  // Bekräftelsen hör till ett aktivt på-tryck, aldrig till flikbyte.
+  // Den schemaläggs först när AudioContext verkligen är running.
+  function confirmEnabledSound(){
+    if(!startChimePending||!enabled||hidden||!ctx||ctx.state!=='running')return;
+    startChimePending=false;
+    const t=now()+.025;
+    tone(659.25,t,.12,.027,'triangle');
+    tone(880,t+.13,.19,.029,'triangle');
+  }
   function onContextStateChange(event){
     // Fördröjda events från en stängd Safari-kontext får inte ändra ny motor.
     if(!ctx||(event&&event.target&&event.target!==ctx))return;
@@ -167,7 +176,7 @@
     if(ctx.state==='running'){
       // Starta bara om om ingen aktiv scen finns; både resume() och enable()
       // kan ge en statechange på iOS, ibland efter att ljudet redan startat.
-      if(enabled&&!hidden)startScene();
+      if(enabled&&!hidden){startScene();confirmEnabledSound();}
     }else{
       stopScene();
     }
@@ -224,7 +233,7 @@
     if(!ctx||ctx.state==='closed'){
       try{if(!ensureContext())return false;}catch(_){return false;}
     }
-    if(ctx.state==='running'){resumeFailed=false;startScene();return true;}
+    if(ctx.state==='running'){resumeFailed=false;startScene();confirmEnabledSound();return true;}
     // Ett avslutat resume()-löfte kan lämna Safari kvar i suspended/interrupted.
     // Först NÄSTA användargest återskapar då kontexten, utan automatisk uppspelning.
     if(resumeFailed){
@@ -256,7 +265,7 @@
           if(ctx!==resumingContext||attempt!==resumeSerial)return;
           resumePending=false;
           resumeStartedAt=0; // Ett avslutat försök är inte en fastnad Safari-upplåsning.
-          if(ctx.state==='running'&&enabled&&!hidden)startScene();
+          if(ctx.state==='running'&&enabled&&!hidden){startScene();confirmEnabledSound();}
           else if(ctx.state!=='running')resumeFailed=true;
           notifyAudioState();
         },()=>{
@@ -280,17 +289,17 @@
       if(!ensureContext())return false;
       // Restore volume even if sound was previously disabled outside toggle().
       master.gain.setTargetAtTime(volume,now(),.03);
-      enabled=true;
+      enabled=true;startChimePending=true;
       // Vid ett klick på ljudknappen får Safari starta motorn från denna gest.
       // Statechange återbygger ljudscenen när kontexten övergår till running.
       resumeFromGesture();
-      if(ctx.state==='running')startScene();
+      if(ctx.state==='running'){startScene();confirmEnabledSound();}
       return true;
     }catch(e){enabled=false;disposeContext();return false;}
   }
   function disable(){
     stopSpeech();
-    enabled=false;
+    enabled=false;startChimePending=false;
     // Av/på-knappen fungerar även som en riktig återställning när Safari
     // rapporterar "running" men högtalaren ändå har blivit tyst efter appbyte.
     // Nästa På-tryck skapar en fräsch motor direkt från klickets användargest.
