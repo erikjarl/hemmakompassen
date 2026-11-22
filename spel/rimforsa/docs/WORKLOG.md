@@ -1,4 +1,10 @@
 # Lage i Rimforsa – historisk arbetslogg
+### 2026-11-22 – Jobb lage / HUV-05
+- `spel/rimforsa/index.html`: sparar senaste observerade `rimforsa-loss-reset-v1` per flik, och jämför den vid `pageshow` och när fliken återkommer från dolt läge. Om game over inträffat i en annan flik laddas den gamla spelomgången om, även när ett tidigare `storage`-event missats på mobil. Vid förlust uppdateras markören i samma flik så den inte triggar egen omladdning.
+- Avgränsad källkodskontroll: funktioner och anropsplatser finns i den uppdaterade filen. Ingen faktisk flerflikskörning eller iPhone/Safari-genomspelning utförd, varför HUV-05 fortfarande är öppen.
+- Stående spriteinventering: inga nya bildsprites skapade eller kopplade till renderingen under detta spelmekanikpass. GRAF-01 behåller öppna reservpersoner.
+- Rotation: HUV-05 → HUV-06. Kodcommit `581bce5a`.
+
 
 ### 2026-11-22 – Jobb lage / MYNT-03
 - Implementerade `refreshSharedCoinViews()` i `spel/rimforsa/index.html`: vid `pageshow`, återgång från dold flik samt lagringshändelser synkas plånbok och potatismynt, kartans myntvisning och eventuella öppna ICA-/pizzeriavyers priser. Befintlig `payCoins`-kontroll vid köp behålls.
