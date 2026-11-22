@@ -1418,7 +1418,13 @@ const start=s[1]*NX+s[0],goal=t[1]*NX+t[0],prev=new Int32Array(MAX).fill(-1),dis
 dist[start]=0;push(start,0);let reached=false,expanded=0;const moves=[[1,0,1],[-1,0,1],[0,1,1],[0,-1,1],[1,1,1.414],[-1,1,1.414],[1,-1,1.414],[-1,-1,1.414]];
 // Räkna endast unika utforskade celler mot sökgränsen. A* kan ha flera
 // köposter för samma cell; dessa får inte stoppa en möjlig gångrutt i förtid.
-while(heap.length&&expanded<MAX){const id=pop();if(seen[id])continue;seen[id]=1;expanded++;if(id===goal){reached=true;break}const cx=id%NX,cy=(id/NX)|0;for(const [dx,dy,cost] of moves){const nx=cx+dx,ny=cy+dy;if(!walkCell(nx,ny))continue;if(dx&&dy&&(!walkCell(cx+dx,cy)||!walkCell(cx,cy+dy)))continue;let nid=ny*NX+nx,nd=dist[id]+cost;if(nd>=dist[nid])continue;prev[nid]=id;dist[nid]=nd;const h=Math.hypot(t[0]-nx,t[1]-ny);push(nid,nd+h)}}
+while(heap.length&&expanded<MAX){const id=pop();if(seen[id])continue;seen[id]=1;expanded++;if(id===goal){reached=true;break}const cx=id%NX,cy=(id/NX)|0;for(const [dx,dy,cost] of moves){const nx=cx+dx,ny=cy+dy;if(!walkCell(nx,ny))continue;if(dx&&dy&&(!walkCell(cx+dx,cy)||!walkCell(cx,cy+dy)))continue;
+ // Rutcentra kan båda vara tillåtna trots att segmentet mellan dem skär
+ // ett hörn i originalmasken. Kontrollera hela steget innan A* väljer det.
+ const fromX=(cx+.5)*STEP,fromY=(cy+.5)*STEP;
+ const toX=(nx+.5)*STEP,toY=(ny+.5)*STEP;
+ if(!canWalkStraight(fromX,fromY,toX,toY))continue;
+ let nid=ny*NX+nx,nd=dist[id]+cost;if(nd>=dist[nid])continue;prev[nid]=id;dist[nid]=nd;const h=Math.hypot(t[0]-nx,t[1]-ny);push(nid,nd+h)}}
 if(!reached)return [];
 let ids=[];for(let i=goal;i!==-1;i=prev[i])ids.push(i);ids.reverse();
 const route=ids.slice(1).map(id=>({x:((id%NX)+.5)*STEP,y:((((id/NX)|0)+.5)*STEP)}));
