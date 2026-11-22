@@ -184,5 +184,5 @@ function close(){
  const callback=back;back=null;onCoin=null;getWalletBalance=null;if(typeof callback==='function')callback();
  if(previousFocus&&previousFocus.isConnected)previousFocus.focus();
 }
-root.RimforsaSwimMinigame={createSession,start,close,isOpen:()=>!!dialog&&!dialog.hidden};
+root.RimforsaSwimMinigame={createSession,start,close,isOpen:()=>!!dialog&&!dialog.hidden,refreshWallet:()=>{if(dialog&&!dialog.hidden)updateWallet();}};
 })(typeof window!=='undefined'?window:globalThis);
