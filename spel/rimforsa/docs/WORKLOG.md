@@ -1,4 +1,10 @@
 # Lage i Rimforsa – historisk arbetslogg
+### 2026-11-22 – Jobb lage / MYNT-03
+- `index.html`: minispelsplånbokens `award`, `spend` och `refund` rapporterar inte längre en lyckad ändring om localStorage-sparning kastar undantag; lokala tillståndet återställs vid fel. `clear` rapporterar om sparningen lyckades. Förhindrar falska besked om sparade belöningar vid blockerad lagring.
+- Källkod jämförd före ändring och GitHub-commit bekräftad (`50694137`). Ingen faktisk genomspelning i mobil/Safari eller flerflikstest; MYNT-03 kvarstår öppen. Övriga öppna uppgifter kan ännu inte avbockas med tillgänglig verifiering.
+- Stående grafikgranskning: fotbollsspelets åskådare använder redan bildsprites; kvarvarande kodritade figurer i övriga scener kräver separat bildgenerering och integrering, ej utförd i detta pass.
+- Rotation MYNT-03 → HUV-05.
+
 ### 2026-11-22 – Jobb lage / DRAKE-02
 - `dragon.js`: nära-draken-varning och faroljud aktiveras inte när Lage sitter i bilen och är skyddad från attacker. Helikopter som mål, eldklotens räckvidd och skadesystem lämnas oförändrade.
 - Källkoden granskad och den isolerade ändringen committad (`4aafa49f`). Ingen verklig spelgenomgång eller mobilverifiering utförd: DRAKE-02 hålls öppen enligt kvarvarande acceptansvillkor.
