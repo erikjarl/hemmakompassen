@@ -652,3 +652,9 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 ### 2026-11-22 – Jobb lage, DRAKE-02 (pausad helikopterreaktion)
 - `index.html`: flyttat `helicopter.update(dt)` in i samma `worldPlaying`-villkor som `dragon.update()`, skottkollisioner och skadekontroll. När karta, butik, inventarium eller minispel pausar huvudvärlden ligger även helikopterns tidsbegränsade träffrök/gnistor kvar i sin reaktion i stället för att ta slut bakom dialogen. Efter återgång räknas reaktionstiden ned igen.
 - Inga ändringar av drakens räckvidd, skadevärden, träffytor eller spritegrafik. Kodsyntax och källkoppling kontrolleras, men verklig genomspelning med eldklot och pauser återstår. DRAKE-02 hålls öppen; nästa MYNT-03. Ingen ny bildsprite integrerades.
+
+### 2026-11-22 – Jobb Lage: GRAF-01, pixeltrogen karaktärsrendering
+
+- `npc.js`: Majas 48×56-sprite ritas nu i ursprunglig 48×56-storlek i huvudkartan i stället för 44×51, med oförändrat riktningsval och rörelse. Namnetiketter för bildbaserade figurer placeras ovanför håret i stället för över sprites.
+- `ica-scene.js`: den befintliga bildbaserade ICA-besökaren ritas i 32×32 utan ojämn förstoring till 36×36; klickytor, köp och butikspersonal oförändrade.
+- `index.html`: skriptversionerna för `npc.js` och `ica-scene.js` höjdes för cacheuppdatering. Kontrollerat genom GitHub-filskrivning; faktisk visuell mobil-/datorgranskning och GitHub Pages-distribution är inte verifierade. Inga uppgifter avbockade; 14 öppna/30 arkiverade. Nästa rotation SPORT-01.
