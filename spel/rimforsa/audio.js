@@ -645,8 +645,15 @@
     tone(147,t+.34,.22,.029,'sine');
   }
   function setVisible(visible){
-    if(!visible)stopSpeech();
-    hidden=!visible;
+    const nextHidden=!visible;
+    // Safari kan skicka pageshow och visibilitychange för samma återkomst.
+    // Starta inte om en redan körande scen vid en sådan dubbel signal.
+    if(hidden===nextHidden){
+      if(!hidden&&enabled&&ctx&&ctx.state==='running')startScene();
+      return;
+    }
+    if(nextHidden)stopSpeech();
+    hidden=nextHidden;
     stopScene();
     if(!hidden&&enabled&&ctx&&ctx.state==='running')startScene();
   }
@@ -690,6 +697,6 @@
       return true;
     }catch(_){speechMusicVolume(volume);return false;}
   }
-  function status(){return {enabled,available:!!AudioCtor,contextState:ctx?ctx.state:'not-created',scene,hidden,playingMusic:musicInterval!==null,playingWaves:!!waves,playingEngine:!!engine,playingCarEngine:!!carEngine,carActive,dragonNearby};}
+  function status(){return {enabled,available:!!AudioCtor,contextState:ctx?ctx.state:'not-created',scene,hidden,sceneStarted,playingMusic:musicInterval!==null,playingWaves:!!waves,playingEngine:!!engine,playingCarEngine:!!carEngine,carActive,dragonNearby};}
   root.RimforsaAudio={enable,disable,toggle,resumeFromGesture,setScene,setBoatSpeed,setCarActive,setCarSpeed,setDragonNearby,coin,hit,poop,victory,slideLaunch,slideLand,slideCharge,slideLongJump,sharkBump,purchase,fuelFill,boatGrounding,boatOutOfFuel,carEnter,itemFound,helicopterHit,footballKick,footballSave,footballGoal,boatTreasure,npcTalk,bagOpen,bagClose,fuelStationEnter,mapOpen,boatLaunch,potatoSale,carExit,bagClear,newHunt,boatRetry,gameOver,shopEnter,mapClose,boatReturn,shopExit,routeSelected,routeBlocked,potatoPlant,potatoHarvest,speak,stopSpeech,setVisible,status};
 })(window);
