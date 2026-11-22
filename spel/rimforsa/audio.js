@@ -313,7 +313,6 @@
     return enable();
   }
   function setScene(next){
-    stopSpeech();
     const newScene=['boat','preschool','swim'].includes(next)?next:'land';
     if(newScene===scene){
       // Scene selection can be repeated after a Safari interruption.
@@ -321,6 +320,9 @@
       if(!sceneStarted)startScene();
       return;
     }
+    // A real scene transition ends the old NPC line; a repeated scene
+    // selection must not cut off speech already playing on mobile Safari.
+    stopSpeech();
     stopScene();scene=newScene;startScene();
   }
   function setDragonNearby(value){
