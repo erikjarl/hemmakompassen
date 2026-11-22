@@ -1,4 +1,10 @@
 # Lage i Rimforsa – historisk arbetslogg
+### 2026-11-22 – Jobb lage / LJUD-03
+- `index.html`: befintlig, kort nekad-köp-signal används nu även när pizzan/glassen redan ägs och när `bag.addPurchase` misslyckas. Gäller både klick på själva butiksscenen och direkta köpknappar; ett enskilt försök ger bara en signal i den aktuella hanteraren.
+- Kodändring sparad i GitHub-commit `aeb0836f`. Kontroll av befintliga ljudanrop och avgränsad källkod gjord; ingen faktisk provlyssning på mobil/dator eller volymbalansering. LJUD-03 hålls öppen.
+- Stående spriteprioritet: ingen ny bildsprite integrerades. Kvarvarande kodritade reservpersoner återstår inom GRAF-01.
+- Rotation LJUD-03 → GRAF-01.
+
 ### 2026-11-22 – Jobb lage / LJUD-02
 - `audio.js`: när Safari rapporterar `suspended`/`interrupted`/`closed` via WebAudio-statechange avbryts nu också pågående talsyntes och musikvolymen återställs. Nytt tal startar bara om AudioContext är `running`. Ljudupplåsning sker fortfarande endast efter användargest.
 - `index.html`: ljudskriptets cacheversion ändrad från 39 till 40 så ny kod laddas vid nästa besök.
