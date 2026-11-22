@@ -53,7 +53,7 @@ function createFarm(storage,clock=()=>Date.now()){
  }
  return {snapshot,plant,harvest,sell,spendCoins,refundCoins,clearCoins,syncCoins,key:KEY};
 }
-let overlay=null,canvas=null,ctx=null,info=null,plantButton=null,harvestButton=null,loop=null,previousFocus=null,returnToMap=null;
+let overlay=null,canvas=null,ctx=null,info=null,plantButton=null,harvestButton=null,loop=null,previousFocus=null,returnToMap=null,verifyCurrentRound=null;
 let farm=createFarm((()=>{try{return root.localStorage}catch{return null}})());
 function rect(x,y,w,h,color){ctx.fillStyle=color;ctx.fillRect(x,y,w,h)}
 function drawField(){
@@ -135,7 +135,7 @@ function close(){
  if(!overlay||overlay.hidden)return;
  overlay.hidden=true;
  if(loop!==null){root.clearInterval(loop);loop=null}
- const cb=returnToMap;returnToMap=null;
+ const cb=returnToMap;returnToMap=null;verifyCurrentRound=null;
  if(previousFocus&&previousFocus.isConnected)previousFocus.focus();
  if(typeof cb==='function')cb();
 }
@@ -154,11 +154,14 @@ function install(){
  canvas=overlay.querySelector('canvas');ctx=canvas.getContext('2d');info=overlay.querySelector('[data-farm-info]');
  plantButton=overlay.querySelector('[data-farm-plant]');harvestButton=overlay.querySelector('[data-farm-harvest]');
  plantButton.addEventListener('click',()=>{
+  // Förhindra att en sovande flik skriver över data från en förlorad omgång.
+  if(verifyCurrentRound&&verifyCurrentRound()===false)return;
   const planted=farm.plant();
   if(planted&&root.RimforsaAudio?.potatoPlant)root.RimforsaAudio.potatoPlant();
   render();
  });
  harvestButton.addEventListener('click',()=>{
+  if(verifyCurrentRound&&verifyCurrentRound()===false)return;
   const harvested=farm.harvest();
   if(harvested&&root.RimforsaAudio?.potatoHarvest)root.RimforsaAudio.potatoHarvest();
   render();
@@ -166,8 +169,11 @@ function install(){
  overlay.querySelector('[data-farm-close]').addEventListener('click',close);
  root.document.addEventListener('keydown',e=>{if(overlay&&!overlay.hidden&&e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();close()}},true);
 }
-function start({returnToMap:cb}={}){
- install();previousFocus=root.document.activeElement;returnToMap=cb;overlay.hidden=false;render();
+function start({returnToMap:cb,verifyCurrentRound:checkRound}={}){
+ install();previousFocus=root.document.activeElement;returnToMap=cb;
+ verifyCurrentRound=typeof checkRound==='function'?checkRound:null;
+ if(verifyCurrentRound&&verifyCurrentRound()===false){verifyCurrentRound=null;return false;}
+ overlay.hidden=false;render();
  if(loop!==null)root.clearInterval(loop);
  loop=root.setInterval(render,1000);
  plantButton.focus();return true;
