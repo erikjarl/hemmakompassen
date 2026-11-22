@@ -6,11 +6,11 @@
 
 ## Obligatorisk rotation mellan utvecklingspass
 
-**SENAST BEARBETAD HUVUDUPPGIFT: `LJUD-03` – originalsignal vid nekade köp i pizzeria, ICA och bensinmack (22 november 2026).**
+**SENAST BEARBETAD HUVUDUPPGIFT: `GRAF-01` – Oliver och Saga visas i sina bildsprites ursprungliga proportioner (22 november 2026).**
 
-**NÄSTA ROTATIONSPOSITION: `GRAF-01` – nästa öppna roterande huvuduppgift.**
+**NÄSTA ROTATIONSPOSITION: `DRAKE-02` – nästa öppna roterande huvuduppgift.**
 
-**ALDRIG SAMMA HUVUDUPPGIFT TVÅ `JOBB LAGE` I FÖLJD.** Följ ordningen bland öppna, genomförbara uppgifter nedan med cirkulär rotation. Starta på angiven nästa position, hoppa över avbockade punkter, stående kvalitetsregler som `MINI-01` (dessa gäller ändå varje pass) och tillfälligt blockerade uppgifter. Bearbeta olika delar av spelet mellan varven: grafik, fordon, bränsle, ljud och andra spelmekaniker. Om inget praktiskt kan göras på nästa punkt, gå vidare till följande **annan** uppgift; återvänd först efter andra utvecklingspass. Prioritet betyder vikt inom rotationen, **inte** rätt att välja samma uppgift igen direkt. När ett pass med faktisk spelutveckling slutförts, uppdatera **båda fälten ovan** till den verkliga huvuduppgiften och efterföljande öppna rotationsposition innan passet avslutas. Rapportera vilka fält som ändrades. Att kontrollera kryssrutor eller åtgärda ett akut blockerande fel räknas inte som att byta huvuduppgift. **Aktuell rotation:** DRAKE-02 → MYNT-03 → HUV-05 → HUV-06 → KARTA-02 → FORDON-02 → LJUD-02 → LJUD-03 → GRAF-01 (20 nov). BRÄNSLE-02 saknade verifierbar prisuppgift; LJUD-04 kräver hörselprov och GRAF-02 är spärrad som nästa huvudfokus. Nästa position GRAF-01.
+**ALDRIG SAMMA HUVUDUPPGIFT TVÅ `JOBB LAGE` I FÖLJD.** Följ ordningen bland öppna, genomförbara uppgifter nedan med cirkulär rotation. Starta på angiven nästa position, hoppa över avbockade punkter, stående kvalitetsregler som `MINI-01` (dessa gäller ändå varje pass) och tillfälligt blockerade uppgifter. Bearbeta olika delar av spelet mellan varven: grafik, fordon, bränsle, ljud och andra spelmekaniker. Om inget praktiskt kan göras på nästa punkt, gå vidare till följande **annan** uppgift; återvänd först efter andra utvecklingspass. Prioritet betyder vikt inom rotationen, **inte** rätt att välja samma uppgift igen direkt. När ett pass med faktisk spelutveckling slutförts, uppdatera **båda fälten ovan** till den verkliga huvuduppgiften och efterföljande öppna rotationsposition innan passet avslutas. Rapportera vilka fält som ändrades. Att kontrollera kryssrutor eller åtgärda ett akut blockerande fel räknas inte som att byta huvuduppgift. **Aktuell rotation:** DRAKE-02 → MYNT-03 → HUV-05 → HUV-06 → KARTA-02 → FORDON-02 → LJUD-02 → LJUD-03 → GRAF-01 (20 nov). BRÄNSLE-02 saknade verifierbar prisuppgift; LJUD-04 kräver hörselprov och GRAF-02 är spärrad som nästa huvudfokus. Nästa position DRAKE-02.
 
 ## Obligatorisk avbockning – vid VARJE `jobb lage`
 
@@ -35,7 +35,7 @@
 
 ### Aktivt genomförande och kontroll (10)
 
-- [ ] **GRAF-01 – Enhetlig grafik i alla scener.** · [Krav](docs/TASK_DETAILS.md#graf-01) · **Kvar:** Granska ICA-kunden från delat bildark, ersätt återstående kodritade reservpersoner där det behövs och verifiera Majas pizzeriasprite samt ansikten, skala och detaljer på mobil och dator.
+- [ ] **GRAF-01 – Enhetlig grafik i alla scener.** · [Krav](docs/TASK_DETAILS.md#graf-01) · **Kvar:** Kontrollera Oliver och Saga i korrigerad 32×48-originalskala på mobil/dator; granska ICA-kunden, återstående kodritade reservpersoner och Majas pizzeriasprite samt ansikten och detaljnivå mellan scener.
 - [ ] **SPORT-01 – Fotboll med Maja i Hackelhallen.** · [Krav](docs/TASK_DETAILS.md#sport-01) · **Kvar:** Genomspela en hel match: rörelse, skott, räddningar, mål och återgång med både mobilkontroller och tangentbord; rätta eventuella faktiska fel och grafikavvikelser.
 - [ ] **DRAKE-02 – Farlig drake och helikopterträffar.** · [Krav](docs/TASK_DETAILS.md#drake-02) · **Kvar:** Genomspela drakkontakt, eldklot mot Lage/helikopter, skadepaus, avståndsgränsen före macken och att både attacker och helikopterns skadereaktion pausas vid karta, butik, väska och minispel.
 - [ ] **MYNT-03 – Minispelsmynt i gemensam plånbok.** · [Krav](docs/TASK_DETAILS.md#mynt-03) · **Kvar:** Återupptagsuppdatering av saldo och öppna butiker är implementerad; genomspela båt, dykning, rutschkana och fotboll med återgång, omladdning och omspelning; kontrollera köp, flerflikssynkronisering, inga dubbla bonusar och nollställning vid förlust.
