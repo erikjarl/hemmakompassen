@@ -16,7 +16,10 @@
    // Flyger i en liten slinga ovanför skogen; oberoende av vägarnas gångbarhet.
    x=home.x+Math.cos(t*.45)*75;
    y=home.y+Math.sin(t*.61)*53;
-   playerDistance=Math.hypot(x-playerX,y-playerY);near=playerDistance<proximity;
+   playerDistance=playerTargetable?Math.hypot(x-playerX,y-playerY):Infinity;
+   // Bilen skyddar Lage: visa inte heller en missvisande närhetsvarning
+   // eller spela upp drakens faroljud när han inte kan bli attackerad.
+   near=playerTargetable&&playerDistance<proximity;
    shotTimer-=dt;
    // Samma mynning används för varningslinje, skottets start och dess riktning.
    const mouthX=x+28,mouthY=y-7;
