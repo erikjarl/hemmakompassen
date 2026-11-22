@@ -119,7 +119,7 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
 <script src="./fuel.js?v=2"></script>
 <script src="./friend-sprites.js?v=1"></script>
 <script src="./npc.js?v=6"></script>
-<script src="./farm.js?v=4"></script>
+<script src="./farm.js?v=5"></script>
 <script src="./dragon.js?v=15"></script>
 <script src="./helicopter.js?v=2"></script>
 <script src="./troll-minigame.js?v=8"></script>
@@ -408,6 +408,8 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
    (audio.purchase||audio.coin)();updateCoinScore();renderBag();renderIca();drawIcaScene();
  });
  document.getElementById('sellPotatoes').addEventListener('click',()=>{
+   // En gammal flik får inte sälja potatis efter att en annan flik förlorat.
+   if(reloadAfterOtherTabLoss())return;
    const sale=farm.sell(3);
    if(!sale.success){icaStatus.textContent='Du behöver tre skördade potatisar för att sälja.';renderIca();return;}
    icaStatus.textContent='🥔 ICA-personalen köpte tre potatisar! Du fick 6 potatismynt att handla för.';
@@ -1209,7 +1211,7 @@ interact.addEventListener('click',()=>{
  if(nearestSite()?.name==='Hackelhallen'){stop();window.RimforsaFootball.start({onGoalCoin:id=>awardMinigameCoin('football-'+id),getWalletBalance:totalMoney,returnToMap:()=>{state.nearKey=null;updateCoinScore();updateMessage();}});return;}
  if(nearestSite()?.name==='Förskolan Hackel'){stop();window.RimforsaSlideMinigame.start({onLandingCoin:id=>awardMinigameCoin('slide-'+id),getWalletBalance:totalMoney,returnToMap:()=>{state.nearKey=null;updateCoinScore();updateMessage();}});return;}
   if(nearestSite()?.name==='Åsundabadet'){stop();window.RimforsaSwimMinigame.start({onCoin:id=>awardMinigameCoin('swim-'+id),getWalletBalance:totalMoney,returnToMap:()=>{state.nearKey=null;updateCoinScore();updateMessage();}});return;}
-  if(nearestSite()?.name==='Potatislandet'){stop();window.RimforsaFarm.start({returnToMap:()=>{state.nearKey=null;updateCoinScore();updateMessage();}});return;}
+  if(nearestSite()?.name==='Potatislandet'){stop();window.RimforsaFarm.start({verifyCurrentRound:()=>!reloadAfterOtherTabLoss(),returnToMap:()=>{state.nearKey=null;updateCoinScore();updateMessage();}});return;}
  const npcHere=npcSystem.near(state.x,state.y);
  if(npcHere){
    const dialogue=npcSystem.talk(npcHere.id);
