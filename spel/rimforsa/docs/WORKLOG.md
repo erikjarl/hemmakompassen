@@ -1,4 +1,10 @@
 # Lage i Rimforsa – historisk arbetslogg
+### 2026-11-22 – Jobb lage / KARTA-02
+- `index.html`: ny `walkableEndpoint` letar efter närliggande rutnätsceller vars hela sista väg till spelarens pekklick är gångbar. `pathTo` använder denna slutcell i stället för att välja närmaste rutcell även bakom hus, sten eller vatten. Originalmask, väggkollisioner och kartbild är oförändrade.
+- Kodändring committad (`4d94f915`) och ankare kontrollerade vid uppdatering. Ingen faktisk genomspelning i mobil/dator av entréer, smala vägar eller Åsundabadet. KARTA-02 lämnas öppen.
+- Stående bildprioritet: inga nya bildsprites skapade eller integrerade under detta navigationspass; kodritade reservpersoner återstår i GRAF-01.
+- Rotation KARTA-02 → FORDON-02.
+
 ### 2026-11-22 – Jobb lage / HUV-06
 - `index.html`: fast mörk kontur i bajskorvens övre och nedre silhuett och tydligare permanenta varma högdagrar; alla ändringar inom samma 23×26-pixelområde. Ingen ändring i `checkPoops`, dess 19-pixelträffradie eller hjärtförlust.
 - Källkodens placering och avgränsade ändring kontrollerade; commit `b422097f`. Ingen visuell webbläsargranskning av gräs och väg på mobil/dator eller spelgenomgång; HUV-06 behålls öppen.
