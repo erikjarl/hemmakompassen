@@ -609,12 +609,26 @@ function checkPoops(){
 }
 // Andra flikar kan ha tilldelat eller använt bonusmynt medan denna var öppen.
 const LOSS_RESET_KEY='rimforsa-loss-reset-v1';
+// En flik som legat i bakgrunden (särskilt på mobil) kan missa storage-event.
+// Minns därför vilken förlustomgång den öppnades med och jämför vid återkomst.
+function savedLossReset(){
+ try{return localStorage.getItem(LOSS_RESET_KEY);}catch(_){return null;}
+}
+let observedLossReset=savedLossReset();
+function reloadAfterOtherTabLoss(){
+ const current=savedLossReset();
+ if(current===observedLossReset)return false;
+ // Ignorera borttagen lagringsnyckel; den är inte en ny game-over-händelse.
+ if(current===null){observedLossReset=null;return false;}
+ window.location.reload();
+ return true;
+}
 window.addEventListener('storage',event=>{
  // Efter förlorat sista hjärtat i en annan flik räcker det inte att
  // synka mynten: varje flik har dessutom egna insamlade kartmynt.
  // Ladda om den andra fliken så även dess spelomgång börjar om.
  if(event.key===LOSS_RESET_KEY&&event.newValue){
-  window.location.reload();
+  reloadAfterOtherTabLoss();
   return;
  }
  if(event.key!==null&&event.key!=='rimforsa-minigame-coins-v1'&&event.key!==farm.key)return;
@@ -625,6 +639,9 @@ window.addEventListener('storage',event=>{
 // När en sovande mobilflik väcks kan lagringshändelser ha fördröjts.
 // Uppdatera även öppna butikers priser så de följer det gemensamma saldot.
 function refreshSharedCoinViews(){
+ // Vid återkomst från en sovande flik måste även kartmynt och hjärtan
+ // återställas, inte bara den delade plånboken.
+ if(reloadAfterOtherTabLoss())return;
  rewardWallet.sync();
  farm.syncCoins();
  updateCoinScore();
@@ -1197,7 +1214,11 @@ function restartAfterGameOver(cause){
  // storage-event skickas bara till ANDRA flikar, inte till denna.
  // Det nollställda sparminnet finns redan innan signalen skrivs.
  if(resetSaved){
-  try{localStorage.setItem(LOSS_RESET_KEY,String(Date.now())+'-'+Math.random());}catch(_){}
+  try{
+   const signal=String(Date.now())+'-'+Math.random();
+   localStorage.setItem(LOSS_RESET_KEY,signal);
+   observedLossReset=signal; // Den här fliken ska inte ladda om sin egen omgång.
+  }catch(_){}
  }
  const remainingCoins=totalMoney();
  const resetWarning=resetSaved?'':' OBS! Nollställningen kunde inte bekräftas i sparminnet efter ett nytt försök. Mynt kan återkomma efter omladdning.';
