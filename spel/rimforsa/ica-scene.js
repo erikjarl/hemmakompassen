@@ -22,7 +22,7 @@ const rect=(c,x,y,w,h,color)=>{c.fillStyle=color;c.fillRect(Math.round(x),Math.r
    c.save();
    c.imageSmoothingEnabled=false;
    rect(c,x-24,y+17,48,6,'#3a403555');
-   c.drawImage(lageSprite,0,0,56,56,Math.round(x-30),Math.round(y-43),60,60);
+   c.drawImage(lageSprite,0,0,56,56,Math.round(x-28),Math.round(y-39),56,56);
    c.restore();
   }else{
    // Visuell reserv om spritefilen inte laddats; riktiga spriten ersätter vid onload.
