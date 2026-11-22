@@ -263,6 +263,7 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
   // Annars skulle en privat/sparblockerad flik visa en bonus som försvinner vid omladdning.
   const save=()=>{try{localStorage.setItem(key,JSON.stringify({earned,spent}));return true;}catch(_){return false;}};
   return {balance,collectedCount,sync,
+   has(id){if(!validId(id))return false;sync();return earned[id]===true;},
    award(id){
     if(!validId(id))return false;
     sync();if(earned[id])return false;
@@ -674,6 +675,8 @@ function refreshSharedCoinViews(){
  rewardWallet.sync();
  farm.syncCoins();
  updateCoinScore();
+ // Båtens HUD visar också den delade plånboken under pågående färd.
+ if(boatState.active)updateBoatHud();
  // Även ett redan öppet minispel måste visa den gemensamma plånboken
  // när andra flikar har tjänat eller spenderat mynt.
  for(const scene of [window.RimforsaSwimMinigame,window.RimforsaSlideMinigame,window.RimforsaFootball]){
@@ -1114,8 +1117,16 @@ function updateBoat(dt){
  if(!boatState.active||boatState.done)return;
  for(const coin of boatState.coins){
    if(!coin.taken&&Math.hypot(boatState.x-coin.x,boatState.y-coin.y)<24){
+     const bonusId='boat-'+coin.id;
+     // Ett mynt får bara försvinna om bonusen redan är sparad eller
+     // precis kunde sparas. Nekad lagring får inte låsa belöningen.
+     const previouslyEarned=rewardWallet.has(bonusId);
+     const newlyEarned=!previouslyEarned&&awardMinigameCoin(bonusId);
+     if(!previouslyEarned&&!newlyEarned){
+       boatTip.textContent='Myntet kunde inte sparas. Prova igen när lagring fungerar.';
+       continue;
+     }
      coin.taken=true;boatState.collected++;
-     const newlyEarned=awardMinigameCoin('boat-'+coin.id);
      updateBoatHud();audio.coin();
      boatTip.textContent=newlyEarned?'Nytt mynt! +1 till huvudkartans plånbok. Totalt '+totalMoney()+' mynt.':'Mynt hittat igen! Bonusen är redan hämtad och saldot är fortfarande '+totalMoney()+' mynt.';
    }
