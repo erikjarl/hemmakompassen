@@ -178,6 +178,12 @@ document.addEventListener('pointerdown',resumeAudioGesture,{capture:true,passive
 // Anropet är idempotent om båda händelserna kommer för samma fingertryck.
 document.addEventListener('touchstart',resumeAudioGesture,{capture:true,passive:true});
 document.addEventListener('keydown',resumeAudioGesture,true);
+// VoiceOver och andra hjälpmedel kan aktivera knappar via ett riktigt klick
+// utan föregående pointerdown/touchstart/keydown. Återuppta endast som följd
+// av klickgesten; ljudknappens egna av/på-logik hanteras separat ovan.
+// Upprepade klick efter pekhändelser är ofarliga: ljudmotorn kontrollerar
+// redan running/pågående resume och startar inte dubbla scenloopar.
+document.addEventListener('click',resumeAudioGesture,true);
 window.addEventListener('rimforsa-audio-state',showAudioState);
 document.addEventListener('visibilitychange',()=>{audio.setVisible(!document.hidden);showAudioState();});
 // Safari kan skicka pagehide, inklusive vid bfcache, utan visibilitychange.
