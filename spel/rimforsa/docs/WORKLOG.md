@@ -782,3 +782,10 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 - `index.html`: huvudkartans direkta tryck-för-att-gå använder nu den redan originalsyntetiserade signalen `audio.routeBlocked()` när `pathTo()` inte hittar en rutt till ett mål över 24 bildpunkter från spelaren. Tidigare gav sådana tryck inget ljud (signalen användes bara från den större kartvyn). En 550 ms spärr hindrar att upprepade feltryck staplar varningsljud.
 - Ingen ny ljudfil, ingen ny ljudmotor eller förändring av gångbarhetsmask/ruttberäkning. Ljudet fortsätter respektera spelets ljudknapp och aktiv WebAudio-kontext enligt befintliga `routeBlocked()`.
 - GitHub-commit och återläsning av kod är verifieringsnivån; verklig hörselkontroll på mobil/dator, volymbalans och publicering på GitHub Pages är inte bekräftade. LJUD-03 kvar som öppen. Ingen ny bildsprite skapades: reservtrollet vid misslyckad sprite-inläsning är fortfarande kodritat. 14 öppna, 30 arkiverade; nästa GRAF-01. KARTA-01 fortsatt aktiv prioritet.
+
+
+### 2026-11-23 – Jobb Lage: GRAF-01, hamnbesökare i naturlig pixelskala
+
+- `index.html` / `drawHarborVisitor()`: tidigare ritades hamnbesökarens riktiga fyra 40×56-bildrutor i 38×53, vilket gav en ojämn skalningsfaktor. Nu ritas varje bildruta i källans 40×56 pixlar, centrerad på befintlig förankringspunkt, utan att ändra beteende eller plats.
+- Inventering: hamnbesökaren är bildbaserad. Oliver och Saga använder befintligt bildark med kodritad fallback; Maja använder bildsprite; trollfiguren har fortfarande en grov kodritad fallback om SVG-resursen inte laddas. Ingen ny bild genererades eller kopplades in detta pass, och ingen tidigare figur får räknas som ny sprite.
+- Kontrollerat i GitHub-kod: ny destination och källruta är båda 40×56; GitHub bekräftade commit. Faktisk rendering i mobil/dator, visuella jämförelser mellan scener och Pages-distribution är inte verifierade. GRAF-01 kvar öppen. 14 öppna och 30 arkiverade; nästa huvuduppgift KARTA-01, kartutbyggnad aktiv enligt användarens prioritet.
