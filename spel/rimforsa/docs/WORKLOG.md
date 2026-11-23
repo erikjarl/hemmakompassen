@@ -1,3 +1,9 @@
+### 2026-11-23 – Jobb lage / KARTA-02 (en omplanering när gångrutt fastnar)
+- `index.html`: automatiska gångrutter från tryck på huvudkarta eller stor karta tillåts nu högst ett A*-omplaneringsförsök när rörelsen stannar vid en vägkant. Sökningen görs från Lages aktuella position till sista återstående ruttnoden och använder samma originalmask, canStand/canWalkStraight och A*-kontroller; inga nya gångytor, öppnade hinder eller grafiska vägbredder.
+- `routeRetriesLeft` nollställs vid manuellt avbruten rutt och får värdet ett vid nytt kartval. Om omplanering misslyckas avbryts rutten i stället för att försöka i varje bildruta.
+- GitHub main: `06abdcc` spel, `1693c2c` roadmap. Efterläsning av aktuell källkod bekräftade omplaneringsspärr, användning av samma pathTo och rotationsuppdatering. Ingen verklig spelgenomgång av smala passager eller mobil/dator, inga navigeringsregressionstester och ingen Pages-verifiering är genomförd; KARTA-02 är öppen.
+- Bildinventering: kodritade reserv-NPC:er och drakens polygoner finns fortsatt. Ingen ny bildsprite skapad eller integrerad i detta pass. Nästa rotation FORDON-02; KARTA-01 fortsatt aktiv utbyggnadsprioritet.
+
 ### 2026-11-23 – Jobb lage / HUV-06 (fast kontrast i bajskorvens 23×26-sprite)
 - `index.html`: tre mörka spiralveck och tre varma pixelreflexer lades inne i befintliga bajskorvssiluetten för tydligare nivåskillnad utan beroende av animerad närhetsblinkning. Ingen förändring i yttre spritegräns, kollisionsradie (19 px), position eller skadelogik.
 - GitHub main: `ce73e16` (grafik) och `6f96301` (roadmap). Endast kodgranskning av målområdet och ändrade rader genomfördes. Visuell kontroll på ljus väg/mörkt gräs, mobil och dator, minskad rörelse, genomspelning samt publiceringsstatus är inte verifierade; HUV-06 förblir öppen.
