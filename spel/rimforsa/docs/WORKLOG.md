@@ -1,4 +1,10 @@
 # Lage i Rimforsa – historisk arbetslogg
+### 2026-11-23 – Jobb lage / FORDON-02 (enhetlig bilbild även vid okänd riktning)
+- `car.js`: om en okänd riktningskod når bilens bildrenderare används nu högerbildrutan från det befintliga 640×60-arket i stället för den enklare kodritade reservbilen. Alla åtta riktningars ordning, bilens proportioner, takorientering, skala, körning och kollisionsmask behålls.
+- `tests/rimforsa-car.test.mjs`: kompletterat Canvas-mock med klippningsmetoder som den redan befintliga förarbilden använder; korrigerat ett föråldrat antagande om att parkerad bil skulle använda ruta 0 även när åttariktningsarket är laddat. Testar också fallback för okänd riktningskod.
+- Koden och testerna har skrivits på GitHub main och lästs tillbaka. Testsviten har inte körts i Node under passet och bildmässig jämförelse av bilens åtta vyer och båtens vyer på riktig mobil/dator återstår. Uppgiften hålls öppen. Bildbaserade reservpersoner (GRAF-01) har inte ersatts i detta pass.
+- Nästa rotationsposition LJUD-02. Fortfarande 14 öppna och 30 arkiverade.
+
 ### 2026-11-23 – Jobb lage / två separata pass: HUV-06 → KARTA-02
 - HUV-06: `index.html` fick extra pixeldetaljer i bajskorvens befintliga 23×26-yta: ljus över-/vänsterkant och mörka högerskuggor. Varken placering, siluettens mått, skadekontroll eller hjärtregler ändrades. Visuell jämförelse mot ljus väg/mörkt gräs på mobil och dator återstår; uppgiften hålls öppen.
 - KARTA-02: `safeTapTarget()` provar nu 48 vinklar i stället för 24 och söker till 24 pixlar i stället för 18 från ett fingertryck. Alla kandidater måste fortfarande passera `canStand()` i originalmasken; kartbild, gångkollision och A*-vägkontroller har inte breddats eller ersatts. Praktiska rutter vid trånga entréer/Åsundabadet återstår; uppgiften hålls öppen.
