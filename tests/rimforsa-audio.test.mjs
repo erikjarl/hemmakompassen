@@ -179,3 +179,23 @@ test('Återupptagning från en ny spelgest behåller friska ljudloopar utan dubl
  audio.disable();
  assert.equal(clocks.size,0);
 });
+
+test('Tom tank ger två korta toner enbart när ljudet är på',()=>{
+ const {audio,starts}=audioFixture();
+ const before=starts();
+ audio.fuelEmpty();
+ assert.equal(starts(),before,'Ingen effekt när ljudet är av');
+ audio.enable();
+ const running=starts();
+ audio.fuelEmpty();
+ assert.equal(starts(),running+2,'Två originalsyntetiserade varningstoner');
+ audio.setVisible(false);
+ const hidden=starts();
+ audio.fuelEmpty();
+ assert.equal(starts(),hidden,'Ingen effekt när fliken är dold');
+ audio.disable();
+});
+test('Tom tank i bil och båt använder varningsljud, inte vanlig startfanfar',()=>{
+ assert.match(html,/if\(carFuel\.snapshot\(\)\.level<=0\)\{[^\n]*audio\.fuelEmpty\(\)/);
+ assert.match(html,/if\(boatFuel\.snapshot\(\)\.level<=0\)\{if\(audio\.fuelEmpty\)audio\.fuelEmpty\(\);\}else if\(audio\.boatLaunch\)audio\.boatLaunch\(\)/);
+});
