@@ -1,3 +1,8 @@
+### 2026-11-23 – Nya önskemål och NPC-frizon vid entréer
+- `npc.js`: tillförde 85 kartpixlars avstånd till Hackelhallen, förskola, bensinmack, ICA, pizzeria, bad, båtklubb och trollspelet vid både NPC-start och vandring. `index.html` laddar nu npc.js v7.
+- Öppnade sju konkreta krav i roadmapen (NPC-02 återöppnad efter skärpt krav på ny GPT-genererad bildfil; sex helt nya uppgifts-ID:n). 21 öppna, 29 avbockade, plus MINI-01 som stående regel. Helikopterflygning, bilens vägbegränsning, gång till macken och hopp är dokumenterade men inte implementerade.
+- GitHub main-skrivningar bekräftade. Ingen spelvisuell kontroll i mobil/dator eller verifierad Pages-publicering; NPC-03 hålls därför öppen för praktisk kontroll. Rotationsfält lämnade oförändrade eftersom detta främst var användarstyrd kravregistrering och mindre kodfix.
+
 ### 2026-11-23 – Jobb lage / FORDON-02 (båtens fördäck i åtta riktningar)
 - `boat-direction-art.js`: lade till samma två förtöjningsknapar och markerad mittsöm på den vita båtens fördäck, ritade i båtens egna koordinater för att följa alla åtta riktningar med skarpa pixelblock. Befintligt skrov, förflyttning, bränsle och svall är oförändrade.
 - `index.html`: höjde cacheversionen för båtens riktningsgrafik till v12.
