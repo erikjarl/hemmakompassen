@@ -1,4 +1,10 @@
 # Lage i Rimforsa – historisk arbetslogg
+### 2026-11-23 – Jobb lage / LJUD-02 (reparera ofullständig Safari-ljudscen)
+- `audio.js`: när AudioContext åter blir `running` efter Safari-avbrott kontrolleras nu även om ljudscenen är fullständig med `sceneHealthy()`; saknade timers, vågor eller motorloopar repareras med `stopScene()` följt av `startScene()` i stället för att `sceneStarted` felaktigt blockerar ljudet. Även upprepad `pageshow`/`visibilitychange` med oförändrad synlighet reparerar en ofullständig scen. Redan fungerande scener startas inte dubbelt.
+- `index.html`: höjt ljudscriptets cacheversion från v44 till v45. Ljudstartens användargestskrav har inte kringgåtts: återuppbyggnad görs bara när WebAudio-kontexten redan är `running`.
+- Verifiering: källkod och sparade GitHub-filer kontrollerade. Ingen fysisk iPhone/Safari-testning, hörselprov eller separat Pages-verifiering. LJUD-02 förblir öppen; nästa LJUD-03.
+- Bildinventering: kodritade drake och helikopter återstår. Inga nya bildsprites skapades eller integrerades i detta ljudpass.
+
 ### 2026-11-23 – Två Jobb lage / KARTA-02 och FORDON-02
 - **Pass 1 KARTA-02:** `index.html`: sökningen efter rutnätsanslutningar vid både start och mål utökades från fyra till sju rutringar (upp till 42 px vid 6 px steg). `walkableStart()` och `walkableEndpoint()` kräver fortfarande `walkCell()` samt `canWalkStraight()` genom befintlig gångmask. Inga vägbilder eller kollisionsmasker ändrades. Commit `bb69412e`.
 - **Pass 2 FORDON-02:** `boat-direction-art.js`: lade till brutna tvåfärgade svallpixlar på båda sidor bakom aktern över 46 hastighetsenheter, med fler vid över 90. Skummet beräknas i lokal båtriktning för alla åtta vyer. `index.html` uppdaterat till cacheversion v11. Båtens rörelse/fysik oförändrad.
