@@ -915,6 +915,17 @@ function drawPoops(){
   ctx.fillRect(x-9,y-1,1,3);
   ctx.fillStyle='#261711';
   ctx.fillRect(x+9,y-2,1,5);
+  // Fast tvåtonad spiral-separation: läsbar också utan animerad varning.
+  // Mörk fog mitt i översta nivån och varm reflex intill; varken ytterkontur
+  // eller den separata 19-pixels kollisionsradien ändras.
+  ctx.fillStyle='#24140f';
+  ctx.fillRect(x-2,y-9,5,1);
+  ctx.fillRect(x-6,y-4,3,1);
+  ctx.fillRect(x+2,y+3,4,1);
+  ctx.fillStyle='#ffe0a0';
+  ctx.fillRect(x-4,y-10,3,1);
+  ctx.fillRect(x-7,y-5,2,1);
+  ctx.fillRect(x-5,y+2,3,1);
   // På nära håll växlar tre befintliga kantpixlar diskret i ljusstyrka.
   // Allt ligger INOM 23×26 px: ingen ny halo, storlek eller kollisionsyta.
   // Samma lugna rytm för alla hinder, men spridda faser så de inte blinkar samtidigt.
