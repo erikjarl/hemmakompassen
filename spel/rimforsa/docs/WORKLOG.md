@@ -775,3 +775,10 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 - `index.html`: tillagd `click`-lyssnare som anropar befintliga `resumeAudioGesture` i capture-fas. Detta ger Safari/VoiceOver och andra hjälpmedelsaktiveringar en väg att återuppta WebAudio även utan föregående `pointerdown`, `touchstart` eller `keydown`. Ljudknappens av/på-klick undantas redan av funktionen; inga automatiska försök vid `pageshow` eller timers introduceras.
 - Befintlig ljudmotor hanterar upprepade gester genom kontroll av running/pågående resume; koden återanvänder samma skydd och skapar inte separata ljudloopar.
 - Kontroll: ändringen och befintliga skydd lästes i koden, GitHub bekräftade commit. Ingen verklig iPhone/Safari-/VoiceOver-provning, hörselkontroll eller bekräftad Pages-publicering. LJUD-02 är därför fortfarande öppen. Ingen ny bildsprite skapades; tidigare kodritade reservpersoner är kvar. Totalt 14 öppna och 30 arkiverade. Nästa rotationsuppgift LJUD-03, KARTA-01 fortsatt aktiv.
+
+
+### 2026-11-23 – Jobb Lage: LJUD-03, återkoppling för omöjligt pekmål
+
+- `index.html`: huvudkartans direkta tryck-för-att-gå använder nu den redan originalsyntetiserade signalen `audio.routeBlocked()` när `pathTo()` inte hittar en rutt till ett mål över 24 bildpunkter från spelaren. Tidigare gav sådana tryck inget ljud (signalen användes bara från den större kartvyn). En 550 ms spärr hindrar att upprepade feltryck staplar varningsljud.
+- Ingen ny ljudfil, ingen ny ljudmotor eller förändring av gångbarhetsmask/ruttberäkning. Ljudet fortsätter respektera spelets ljudknapp och aktiv WebAudio-kontext enligt befintliga `routeBlocked()`.
+- GitHub-commit och återläsning av kod är verifieringsnivån; verklig hörselkontroll på mobil/dator, volymbalans och publicering på GitHub Pages är inte bekräftade. LJUD-03 kvar som öppen. Ingen ny bildsprite skapades: reservtrollet vid misslyckad sprite-inläsning är fortfarande kodritat. 14 öppna, 30 arkiverade; nästa GRAF-01. KARTA-01 fortsatt aktiv prioritet.
