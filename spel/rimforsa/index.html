@@ -1443,13 +1443,14 @@ function safeTapTarget(x,y){
  }
  return fallback;
 }
+// Sök upp till 42 px efter en rutmitt, men acceptera endast hinderfria raka anslutningar.
 // Välj en slutcell vars raka anslutning till fingertrycket verkligen är fri.
 // När en entré ligger nära en husvägg kan närmaste rutmitt annars hamna på
 // fel sida av väggen: A* hittar dit, men Lage stannar innan själva entrén.
 function walkableEndpoint(tx,ty){
  const cx=Math.floor(tx/STEP),cy=Math.floor(ty/STEP);
  let best=null,bestDistance=Infinity;
- for(let radius=0;radius<=4;radius++){
+ for(let radius=0;radius<=7;radius++){
   for(let dy=-radius;dy<=radius;dy++)for(let dx=-radius;dx<=radius;dx++){
    if(Math.max(Math.abs(dx),Math.abs(dy))!==radius)continue;
    const gx=cx+dx,gy=cy+dy;
@@ -1468,7 +1469,7 @@ function walkableEndpoint(tx,ty){
 function walkableStart(x,y){
  const cx=Math.floor(x/STEP),cy=Math.floor(y/STEP);
  let best=null,bestDistance=Infinity;
- for(let radius=0;radius<=4;radius++){
+ for(let radius=0;radius<=7;radius++){
   for(let dy=-radius;dy<=radius;dy++)for(let dx=-radius;dx<=radius;dx++){
    if(Math.max(Math.abs(dx),Math.abs(dy))!==radius)continue;
    const gx=cx+dx,gy=cy+dy;
