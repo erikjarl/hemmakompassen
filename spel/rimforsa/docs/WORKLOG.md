@@ -1,4 +1,9 @@
 # Lage i Rimforsa – historisk arbetslogg
+### 2026-11-23 – Jobb lage / HUV-06 (kontrast utan blink vid minskad rörelse)
+- `index.html`: `drawPoops()` respekterar nu `prefers-reduced-motion: reduce`. Om inställningen är aktiv förblir närhetsvarningens ljusa pixlar stadigt synliga i stället för att blinka; för övriga används befintlig rytm. Samma 23×26 px-yttergräns, position och kollisionsradie (19 px) behålls.
+- Kodändringen är sparad på GitHub `main` och källkopplingen kontrollerad. Ingen faktisk bildjämförelse, mobilgenomspelning eller körd automatisk test under detta pass. `HUV-06` fortsatt öppen för verklig bild-/kollisionskontroll; nästa `KARTA-02`.
+- Stående bildinventering: kodritade drake och helikopter återstår; ingen ny bildsprite integrerades i detta pass.
+
 ### 2026-11-23 – Jobb lage / HUV-05 (inga mynt bakom förlustdialogen)
 - `index.html`: `awardMinigameCoin()` returnerar nu falskt medan förlustdialogen är öppen, så fördröjda minispelsåterkopplingar inte återintroducerar bonusmynt under game over. `payCoins()` returnerar `null` i samma läge, för att köp inte ska ändra saldot bakom dialogen. Ingen ändring av normal belöning eller köp efter dialogen.
 - GitHub-källan och ändringarnas placering kontrollerade. Ingen faktisk mobil-/datorgenomspelning, ingen exekverad regressionstestning och ingen separat Pages-verifiering under detta pass. HUV-05 kvarstår öppen; särskilt kontrollera fördröjd belöning efter att förlustdialogen stängts. Nästa HUV-06.
