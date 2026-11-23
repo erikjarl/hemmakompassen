@@ -1,3 +1,9 @@
+### 2026-11-23 – Jobb lage / SPORT-01 (Majas räddningar syns)
+- `football-minigame.js`: Maja använder nu redan integrerade riktningsvyer från sin 48×56-bildsprite (bakifrån vid förflyttning uppåt, framifrån vid förflyttning nedåt) i stället för samma frontbild hela tiden. Lagt till `saves` som bara ökar när bollen verkligen bryter målvaktslinjen och den befintliga räddningskollisionen lyckas. Hallens resultattavla och HUD visar räddningar; omstart och ny match nollställer dem. Myntregler, bolls hastighet, träffvillkor, redovisade mål och styrning är oförändrade.
+- `index.html`: script-cache v11→v12.
+- GitHub main: `02c5189` (spel), `339b136` (cache), `7dd606c` (roadmap). Efterkontroll av publicerad GitHub-kod bekräftar att räknare, båda återställningarna, målvaktens riktning och resultatfält finns. Ingen faktisk mobil-/tangentbordsmatch, renderingsskärmbild, automatiserat JavaScript-test eller Pages-release har verifierats; SPORT-01 lämnas öppen.
+- Bildinventering: publikens fyra 32×32-figurer och Majas 48×56-sprite använder befintliga bildark. Kodritade reservfigurer finns fortsatt om bildladdning misslyckas; ingen ny genererad bild integrerades i detta pass. Nästa rotation DRAKE-02.
+
 ### 2026-11-23 – Jobb lage / GRAF-01 (Lage och Maja i Hackelhallen)
 - `football-minigame.js`: Lages befintliga 56×56-spritesheet ritas nu i originalets 56×56 i stället för nedskalade 44×44. Figuren förankras vid spelkoordinatens fotposition (`x-28,y-56`). Majas 48×56-bildsprite får samma fotankare (`y-56`, tidigare `y-60`). Inga ändringar i spelmekanik, kollisionsberäkning eller poäng.
 - `index.html`: fotbollsskriptets cacheversion höjd v10→v11.
