@@ -267,7 +267,15 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
   const collectedCount=()=>{sync();return Object.keys(earned).length;};
   // Bekräfta en myntändring först när den faktiskt finns i lagringen.
   // Annars skulle en privat/sparblockerad flik visa en bonus som försvinner vid omladdning.
-  const save=()=>{try{localStorage.setItem(key,JSON.stringify({earned,spent}));return true;}catch(_){return false;}};
+  const save=()=>{
+   // En lyckad setItem utan undantag räcker inte om lagring skrivs över
+   // av en annan flik innan belöningen kan bekräftas.
+   const expected=JSON.stringify({earned,spent});
+   try{
+    localStorage.setItem(key,expected);
+    return localStorage.getItem(key)===expected;
+   }catch(_){return false;}
+  };
   return {balance,collectedCount,sync,
    has(id){if(!validId(id))return false;sync();return earned[id]===true;},
    award(id){
