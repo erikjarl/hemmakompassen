@@ -53,6 +53,20 @@ function make(dir){
  drawShape(g,[point(21,-3),point(25,-2),point(25,2),point(21,3)],'#dce4db');
  drawShape(g,[point(20,-6),point(22,-6),point(22,-4),point(20,-4)],'#3e5962');
  drawShape(g,[point(20,4),point(22,4),point(22,6),point(20,6)],'#3e5962');
+ // Fördäckets mittsöm och två separata förtöjningsknapar gör samma vita
+ // båt igenkännbar i sid-, diagonal- och fram/bakvy. Allt följer den
+ // lokala längdaxeln och förblir skarpa, axelparallella pixelblock.
+ for(const along of [14,18]){
+  const [seamX,seamY]=point(along,0);
+  g.fillStyle=along===14?'#9cb1b1':'#e3ece4';
+  g.fillRect(Math.round(seamX),Math.round(seamY),2,2);
+ }
+ for(const side of [-1,1]){
+  const [cleatX,cleatY]=point(10,side*15);
+  const cx=Math.round(cleatX),cy=Math.round(cleatY);
+  g.fillStyle='#344b55';g.fillRect(cx-2,cy-1,5,2);
+  g.fillStyle='#f7f9ed';g.fillRect(cx-1,cy-2,3,1);
+ }
  // Aktermonterad motor och propellerblock – samma position oavsett riktning.
  drawShape(g,hull(-41,-31,8,8),palette.motor);
  drawShape(g,hull(-39,-33,5,5),'#8599a1');
