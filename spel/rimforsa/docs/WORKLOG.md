@@ -1,3 +1,8 @@
+### 2026-11-23 – Jobb lage / LJUD-03 (överlappar inte varningsljud)
+- `audio.js`: begränsade nekad-köp- och blockerad-ruttljud till ett ljud var 320 ms per typ, så snabba upprepade tryck inte lägger flera nästan identiska dubbeltoner ovanpå varandra. Spärren nollställs vid ny AudioContext efter Safari-återstart; annan musik och övriga effekter är oförändrade.
+- `index.html`: ljudfilens cacheversion v45 → v46 så mobilwebbläsaren begär uppdaterad kod.
+- GitHub main: ljudkod `2b18c55`, cache `b893e59`, roadmaprotation `63c6e87`. Kontroll: GitHub-filerna har skrivits utan API-fel, men inget lokalt automatiskt JavaScript-test eller verkligt hörselprov/iPhone-test har körts. LJUD-03 fortsatt öppet. Bildinventering från tidigare pass kvarstår (kodritade reservpersoner i flera scener); ingen ny bildsprite integrerades i detta ljudpass. Nästa huvuduppgift: GRAF-01.
+
 # Lage i Rimforsa – historisk arbetslogg
 ### 2026-11-23 – Jobb lage / LJUD-02 (reparera ofullständig Safari-ljudscen)
 - `audio.js`: när AudioContext åter blir `running` efter Safari-avbrott kontrolleras nu även om ljudscenen är fullständig med `sceneHealthy()`; saknade timers, vågor eller motorloopar repareras med `stopScene()` följt av `startScene()` i stället för att `sceneStarted` felaktigt blockerar ljudet. Även upprepad `pageshow`/`visibilitychange` med oförändrad synlighet reparerar en ofullständig scen. Redan fungerande scener startas inte dubbelt.
