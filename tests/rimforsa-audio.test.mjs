@@ -162,3 +162,20 @@ test('Swimming uses waves but never boat engine or gull timer, and respects togg
  assert.equal(audio.status().playingMusic,true);
  audio.disable();
 });
+
+test('Återupptagning från en ny spelgest behåller friska ljudloopar utan dubletter',()=>{
+ const {audio,clocks}=audioFixture();
+ audio.enable();
+ assert.equal(clocks.size,1);
+ const original=[...clocks.keys()][0];
+ assert.equal(audio.resumeFromGesture(),true);
+ assert.equal(clocks.size,1);
+ assert.equal([...clocks.keys()][0],original,'music interval must not restart when healthy');
+ audio.setScene('boat');
+ const boatTimer=[...clocks.keys()][0];
+ assert.equal(audio.resumeFromGesture(),true);
+ assert.equal(clocks.size,1);
+ assert.equal([...clocks.keys()][0],boatTimer,'gull timer must not duplicate');
+ audio.disable();
+ assert.equal(clocks.size,0);
+});
