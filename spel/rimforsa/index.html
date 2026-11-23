@@ -120,7 +120,7 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
 <script src="./friend-sprites.js?v=1"></script>
 <script src="./npc.js?v=6"></script>
 <script src="./farm.js?v=5"></script>
-<script src="./dragon.js?v=15"></script>
+<script src="./dragon.js?v=16"></script>
 <script src="./helicopter.js?v=2"></script>
 <script src="./troll-minigame.js?v=8"></script>
 <script src="./preschool-friends-sprites.js?v=1"></script>
@@ -1654,7 +1654,7 @@ function tick(now){
  updateBoat(dt);
  // Draken och spelaren ska använda samma pausvillkor: ingen eld när
  // huvudkartan är dold bakom butik, minispel, väska eller förlustdialog.
- const worldPlaying=maskLoaded&&!overlay.classList.contains('show')&&(!fuelDialog||fuelDialog.hidden)&&!isBoatOpen()&&winOverlay.hidden&&document.getElementById('lossOverlay').hidden&&bagOverlay.hidden&&icaOverlay.hidden&&pizzaOverlay.hidden&&!window.RimforsaSlideMinigame.isOpen()&&!window.RimforsaSwimMinigame.isOpen()&&!window.RimforsaTrollMinigame.isOpen()&&!window.RimforsaFarm.isOpen()&&!window.RimforsaBrokindTrail.isOpen()&&!window.RimforsaRegionalMap.isOpen()&&!window.RimforsaFootball.isOpen();
+ const worldPlaying=!document.hidden&&maskLoaded&&!overlay.classList.contains('show')&&(!fuelDialog||fuelDialog.hidden)&&!isBoatOpen()&&winOverlay.hidden&&document.getElementById('lossOverlay').hidden&&bagOverlay.hidden&&icaOverlay.hidden&&pizzaOverlay.hidden&&!window.RimforsaSlideMinigame.isOpen()&&!window.RimforsaSwimMinigame.isOpen()&&!window.RimforsaTrollMinigame.isOpen()&&!window.RimforsaFarm.isOpen()&&!window.RimforsaBrokindTrail.isOpen()&&!window.RimforsaRegionalMap.isOpen()&&!window.RimforsaFootball.isOpen();
  if(worldPlaying){
   npcSystem.update(dt,state.x,state.y);
   let dx=(+keys.right)-(+keys.left),dy=(+keys.down)-(+keys.up);
