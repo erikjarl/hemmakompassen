@@ -937,7 +937,10 @@ function drawPoops(){
   }
  }
 }
-function clearPath(){state.path=[]}
+// Högst en omplanering per vald gångrutt, så ett omöjligt mål inte
+// orsakar oändliga A*-försök vid en blockerad vägkant.
+let routeRetriesLeft=0;
+function clearPath(){state.path=[];routeRetriesLeft=0;}
 function nearCar(){return !state.inCar&&Math.hypot(state.x-carPos.x,state.y-carPos.y)<78;}
 function enterCar(){
  if(carFuel.snapshot().level<=0){message.textContent="Bilen har tom tank! Gå till Bensinmacken och tanka först.";if(audio.fuelEmpty)audio.fuelEmpty();return false;}
@@ -1563,6 +1566,7 @@ canvas.addEventListener('pointerdown',ev=>{
  const x=state.camX-canvas.width/2+sx,y=state.camY-canvas.height/2+sy;
  const route=pathTo(x,y);
  state.path=route;
+ routeRetriesLeft=route.length?1:0;
  // Ge ett kort besked om ett tydligt utpekat mål inte är nåbart.
  // Undvik varningsljud när spelaren bara trycker nära Lages fötter.
  if(!route.length&&Math.hypot(x-state.x,y-state.y)>24){
@@ -1742,7 +1746,18 @@ function tick(now){
       const step=Math.min(143*dt,byKeys?143*dt:len);
       const direction=byKeys?edgeAssistedDirection(dx,dy):{x:dx,y:dy};
       const moved=slideMove(direction.x*step,direction.y*step);
-      if(!moved&&!byKeys)clearPath();
+      if(!moved&&!byKeys){
+       // Om en liten sidokorrigering har flyttat Lage från den planerade
+       // rutten, prova en gång från hans VERKLIGA position till slutmålet.
+       // pathTo() kräver fortfarande hinderfri anslutning och A*-kanter.
+       if(routeRetriesLeft>0&&state.path.length){
+        routeRetriesLeft--;
+        const goal=state.path[state.path.length-1];
+        const repaired=pathTo(goal.x,goal.y);
+        if(repaired.length)state.path=repaired;
+        else clearPath();
+       }else clearPath();
+      }
       if(moved){
         collectCoins();
         state.dir=Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up');
@@ -1803,7 +1818,7 @@ function routeFromMap(x,y){
   hint.textContent='Ingen gångväg hittades. Prova att välja en öppen stig nära målet.';if(audio.routeBlocked)audio.routeBlocked();
   return false;
  }
- state.path=route;closeMap(true);if(audio.routeSelected)audio.routeSelected();
+ state.path=route;routeRetriesLeft=1;closeMap(true);if(audio.routeSelected)audio.routeSelected();
  message.innerHTML='<strong>🚶 Lage går!</strong> Följ stigen och använd pilarna om du vill styra själv.';
  return true;
 }
