@@ -29,3 +29,21 @@ test('a storage overwrite detected by readback is not reported as an awarded coi
  assert.equal(wallet.award('boat-0'),false);
  assert.equal(wallet.balance(),0);
 });
+
+test('unreadable saved wallet does not allow a coin award or spending',()=>{
+ const values=new Map([['rimforsa-minigame-coins-v1',JSON.stringify({earned:{'boat-0':true},spent:0})]]);
+ let writes=0;
+ const storage={getItem:()=>{throw new Error('read denied');},setItem:()=>{writes++;}};
+ const wallet=walletWith(storage);
+ assert.equal(wallet.award('boat-1'),false);
+ assert.equal(wallet.spend(1),false);
+ assert.equal(wallet.refund(1),false);
+ assert.equal(writes,0);
+});
+test('malformed saved wallet is not overwritten by a new bonus',()=>{
+ let writes=0;
+ const storage={getItem:()=>'{broken json',setItem:()=>{writes++;}};
+ const wallet=walletWith(storage);
+ assert.equal(wallet.award('swim-0'),false);
+ assert.equal(writes,0);
+});
