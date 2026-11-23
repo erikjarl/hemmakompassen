@@ -754,14 +754,16 @@ function drawCoinBush(c){
  ctx.fillStyle='#194b2d';ctx.fillRect(x-13,y+1,27,4);
 }
 function drawCoins(){for(const coin of coins)drawCoinBush(coin)}
+// Följ systemets inställning för minskad rörelse: starka kontraster utan blink.
 function drawPoops(){
+ const reducedMotion=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
  for(const p of poops){
   const x=Math.round(p.x-state.camX+canvas.width/2),y=Math.round(p.y-state.camY+canvas.height/2);
   if(x<-22||y<-25||x>canvas.width+22||y>canvas.height+25)continue;
   // Kontrastväxling använder enbart redan existerande färgfält INOM 23×26 px.
   // Den mörka ytterkonturen lämnas orörd så figuren fortfarande syns på ljusa vägar.
   const isNear=Math.hypot(state.x-p.x,state.y-p.y)<112;
-  const lightPhase=isNear&&Math.floor(performance.now()/650+p.x/71+p.y/89)%2===0;
+  const lightPhase=isNear&&(reducedMotion||Math.floor(performance.now()/650+p.x/71+p.y/89)%2===0);
   // Skarp SNES-pixelsiluett i samma 23×26 px-yta; endast färger och inre detaljer ändras.
   // Mörk, sammanhängande ytterkontur skiljer figuren från både gräs och väg.
   ctx.fillStyle='#1c1310';ctx.fillRect(x-11,y-1,23,12);ctx.fillRect(x-8,y-9,17,10);ctx.fillRect(x-3,y-15,9,7);
