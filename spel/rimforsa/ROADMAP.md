@@ -6,11 +6,11 @@
 
 ## Obligatorisk rotation mellan utvecklingspass
 
-**SENAST BEARBETAD HUVUDUPPGIFT: `LJUD-02` – återstart via tillgängliga klickgester i Safari (23 november 2026).**
+**SENAST BEARBETAD HUVUDUPPGIFT: `LJUD-03` – blockerad pekrutt får diskret ljudåterkoppling (23 november 2026).**
 
-**NÄSTA ROTATIONSPOSITION: `LJUD-03` – nästa öppna roterande huvuduppgift.**
+**NÄSTA ROTATIONSPOSITION: `GRAF-01` – nästa öppna roterande huvuduppgift.**
 
-**ALDRIG SAMMA HUVUDUPPGIFT TVÅ `JOBB LAGE` I FÖLJD.** Följ ordningen bland öppna, genomförbara uppgifter nedan med cirkulär rotation. Starta på angiven nästa position, hoppa över avbockade punkter, stående kvalitetsregler som `MINI-01` (dessa gäller ändå varje pass) och tillfälligt blockerade uppgifter. Bearbeta olika delar av spelet mellan varven: grafik, fordon, bränsle, ljud och andra spelmekaniker. Om inget praktiskt kan göras på nästa punkt, gå vidare till följande **annan** uppgift; återvänd först efter andra utvecklingspass. Prioritet betyder vikt inom rotationen, **inte** rätt att välja samma uppgift igen direkt. När ett pass med faktisk spelutveckling slutförts, uppdatera **båda fälten ovan** till den verkliga huvuduppgiften och efterföljande öppna rotationsposition innan passet avslutas. Rapportera vilka fält som ändrades. Att kontrollera kryssrutor eller åtgärda ett akut blockerande fel räknas inte som att byta huvuduppgift. **Aktuell rotation:** DRAKE-02 → MYNT-03 → HUV-05 → HUV-06 → KARTA-02 → FORDON-02 → LJUD-02 → LJUD-03 → GRAF-01 (20 nov). BRÄNSLE-02 saknade verifierbar prisuppgift; LJUD-04 kräver hörselprov och GRAF-02 är spärrad som nästa huvudfokus. Nästa position LJUD-03.
+**ALDRIG SAMMA HUVUDUPPGIFT TVÅ `JOBB LAGE` I FÖLJD.** Följ ordningen bland öppna, genomförbara uppgifter nedan med cirkulär rotation. Starta på angiven nästa position, hoppa över avbockade punkter, stående kvalitetsregler som `MINI-01` (dessa gäller ändå varje pass) och tillfälligt blockerade uppgifter. Bearbeta olika delar av spelet mellan varven: grafik, fordon, bränsle, ljud och andra spelmekaniker. Om inget praktiskt kan göras på nästa punkt, gå vidare till följande **annan** uppgift; återvänd först efter andra utvecklingspass. Prioritet betyder vikt inom rotationen, **inte** rätt att välja samma uppgift igen direkt. När ett pass med faktisk spelutveckling slutförts, uppdatera **båda fälten ovan** till den verkliga huvuduppgiften och efterföljande öppna rotationsposition innan passet avslutas. Rapportera vilka fält som ändrades. Att kontrollera kryssrutor eller åtgärda ett akut blockerande fel räknas inte som att byta huvuduppgift. **Aktuell rotation:** DRAKE-02 → MYNT-03 → HUV-05 → HUV-06 → KARTA-02 → FORDON-02 → LJUD-02 → LJUD-03 → GRAF-01 (20 nov). BRÄNSLE-02 saknade verifierbar prisuppgift; LJUD-04 kräver hörselprov och GRAF-02 är spärrad som nästa huvudfokus. Nästa position GRAF-01.
 
 ## Obligatorisk avbockning – vid VARJE `jobb lage`
 
@@ -46,7 +46,7 @@
 - [ ] **KARTA-02 – Bredare gångbara vägar och åtkomst.** · [Krav](docs/TASK_DETAILS.md#karta-02) · **Kvar:** Genomspela smala vägar, entréer och Åsundabadet med mobil/tangentbord; kontrollera att A*-kantkontrollen och den nya säkra anslutningen från Lages faktiska position inte blockerar smala passager, att vägkantstoleransen hjälper och att mål bakom hus, sten eller vatten inte nås felaktigt.
 - [ ] **FORDON-02 – Samstämmiga bil- och båtvyer.** · [Krav](docs/TASK_DETAILS.md#fordon-02) · **Kvar:** Bildgranska bilens åtta 80×60-vyer mot sidovyn (tak, fönster, proportioner), och båtens åtta vyer inklusive skrovmarkeringar och fördäckslucka; prova båda fordonen i mobilvy och korrigera upptäckta skillnader.
 - [ ] **LJUD-02 – Fungerande ljud på iPhone/Safari.** · [Krav](docs/TASK_DETAILS.md#ljud-02) · **Kvar:** Testa i verklig iPhone/Safari att även hjälpmedelsaktiverade klick återupptar ljudet, att dubbla återkomsthändelser inte avbryter ljud, att nästa spelgest återstartar en saknad scen och att på-signal, musik, effekter samt tal fungerar vid av/på, app-/flikbyte och scenbyte.
-- [ ] **LJUD-03 – Fler och välavvägda händelseljud.** · [Krav](docs/TASK_DETAILS.md#ljud-03) · **Kvar:** Lyssna på regionskartans nya ankomstsignal, nekad-köp-signalen i pizzeria/ICA/mack och båtens bränslestopp (`boatOutOfFuel`) samt övriga effekter; balansera volym efter verkligt hörselprov och åtgärda tysta händelser.
+- [ ] **LJUD-03 – Fler och välavvägda händelseljud.** · [Krav](docs/TASK_DETAILS.md#ljud-03) · **Kvar:** Hörselprova huvudkartans blockerad-pekväg-signal, regionskartans ankomstsignal, nekad-köp-signalen i pizzeria/ICA/mack, båtens bränslestopp (`boatOutOfFuel`) och övriga effekter; balansera volym och åtgärda ytterligare tysta händelser.
 
 ### Pausat eller väntar på underlag (3)
 
