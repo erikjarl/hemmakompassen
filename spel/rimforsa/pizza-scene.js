@@ -36,6 +36,17 @@ const rect=(c,x,y,w,h,color)=>{c.fillStyle=color;c.fillRect(Math.round(x),Math.r
   c.drawImage(majaSprite,0,0,48,56,62,210,48,56);
   c.restore();
  }
+ // Bildbaserad besökare från samma originalark som förskolan och Hackelhallen.
+ // En dekorativ figur på den fria golvytan; köpzoner och interaktion påverkas inte.
+ const preschoolVisitors=root.RimforsaPreschoolFriendsSprite||null;
+ if(preschoolVisitors)preschoolVisitors.addEventListener('load',()=>{if(lastCanvas&&lastOptions)draw(lastCanvas,lastOptions);});
+ function drawPreschoolVisitor(c){
+  if(!preschoolVisitors||!preschoolVisitors.complete||preschoolVisitors.naturalWidth!==128||preschoolVisitors.naturalHeight!==32)return;
+  c.save();c.imageSmoothingEnabled=false;
+  rect(c,131,263,28,3,'#3a403555');
+  c.drawImage(preschoolVisitors,64,0,32,32,129,232,32,32);
+  c.restore();
+ }
  const lageSprite=typeof root.Image==='function'?new root.Image():null;
  let lastCanvas=null,lastOptions=null;
  if(lageSprite){
@@ -120,6 +131,8 @@ function draw(canvas,options={}){
  if(!drawChef(c,392,128))character(c,392,128,{shirt:'#9e634a',hair:'#684b34',hat:true});
  // Besökande Maja använder sin riktiga sprite från huvudkartan, inte en kodfigur.
  drawMajaVisitor(c);
+ // En extra person från bildarket ersätter behovet av en kodritad bakgrundsfigur.
+ drawPreschoolVisitor(c);
  // Lage står framför disken.
  if(!drawLage(c,275,236))character(c,275,236,{shirt:'#c66356',hair:'#795335'});
  rect(c,9,7,156,22,'#293d35');c.fillStyle='#fff1c7';c.font='bold 15px monospace';c.fillText('MYNT: '+balance,18,23);
