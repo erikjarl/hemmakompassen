@@ -1,4 +1,9 @@
 # Lage i Rimforsa – historisk arbetslogg
+### 2026-11-23 – Jobb lage / MYNT-03 (kontrolläsning av sparade minispelsmynt)
+- `index.html`: plånbokens `save()` jämför nu `localStorage.getItem()` direkt efter `setItem()` med det avsedda värdet. Om skrivningen inte kan bekräftas signaleras misslyckande till belönings-, köp- och återbetalningsvägarna i stället för falsk framgång. Detta minskar risken för tyst förlorade belöningar men är ingen fullständig transaktionsgaranti mellan flikar.
+- Nytt `tests/rimforsa-wallet-save.test.mjs` testar engångstilldelning, återläsning i ny session och simulerad lagring som inte behåller skrivningen.
+- GitHub tog emot kod- och testcommits. Testet har inte körts i Node under detta pass; verklig flik-/mobil-/spelgenomspelning och Pages-distribution är inte verifierade. MYNT-03 är därför fortfarande öppen; 14 öppna, 30 färdiga. Ingen bildsprite har lagts till; GRAF-01:s kodritade reservpersoner återstår. Nästa huvuduppgift HUV-05.
+
 ### 2026-11-22 – Jobb lage / HUV-05
 - Identifierade kvarvarande risk för att en föråldrad öppen ICA-flik kunde sälja potatis efter en förlust i en annan flik, eftersom köpvägen kontrollerade förlustsignalen men försäljning inte gjorde det. `index.html` anropar nu `reloadAfterOtherTabLoss()` före försäljning.
 - `farm.js`: `start()` tar emot frivillig `verifyCurrentRound`-kontroll från huvudspelet; samma kontroll görs före plantering och skörd, så sovande flikar inte utför gamla åtgärder efter förlust. Behåller odling/ägodelar i övrigt. Farm-skriptets cacheversion höjd till v5.
