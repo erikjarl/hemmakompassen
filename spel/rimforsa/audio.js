@@ -427,10 +427,21 @@
     tone(659.25,t+.09,.13,.042,'triangle');
     tone(783.99,t+.19,.19,.036,'sine');
   }
+  // Snabba upprepade pektryck får inte stapla varningssignaler ovanpå varandra.
+  // Använd ljudkontextens klocka och återställ spärren när Safari skapar en ny kontext.
+  let warningContext=null;
+  const warningLast={};
+  function allowWarning(kind,seconds){
+    if(warningContext!==ctx){warningContext=ctx;warningLast.route=-Infinity;warningLast.purchase=-Infinity;}
+    const t=now();
+    if(t-warningLast[kind]<seconds)return false;
+    warningLast[kind]=t;
+    return true;
+  }
   // Kort låg dubbelton för ett aktivt köp som inte kan genomföras.
   // Spelas aldrig automatiskt eller när ljudmotorn är pausad.
   function purchaseDenied(){
-    if(!enabled||hidden||!ctx||ctx.state!=='running')return;
+    if(!enabled||hidden||!ctx||ctx.state!=='running'||!allowWarning('purchase',.32))return;
     const t=now()+.01;
     tone(246.94,t,.10,.025,'triangle');
     tone(185,t+.105,.15,.022,'sine');
@@ -590,7 +601,7 @@
   // Två låga, avtagande tonsteg när en utpekad gångväg inte är möjlig.
   // Originalsyntes, ingen automatisk uppspelning eller ny ljudmotor.
   function routeBlocked(){
-    if(!enabled||hidden||!ctx||ctx.state!=='running')return;
+    if(!enabled||hidden||!ctx||ctx.state!=='running'||!allowWarning('route',.32))return;
     const t=now()+.008;
     tone(293.66,t,.11,.023,'triangle');
     tone(196,t+.11,.16,.019,'sine');
