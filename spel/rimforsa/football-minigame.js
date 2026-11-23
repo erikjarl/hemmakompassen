@@ -5,7 +5,7 @@
 let overlay=null,canvas=null,ctx=null,status=null,previousFocus=null,returnToMap=null,onGoalCoin=null,getWalletBalance=null,raf=0,last=0;
 const W=480,H=300,keys={up:false,down:false,left:false,right:false};
 const player={x:115,y:215,dx:1,dy:0},ball={x:205,y:170,vx:0,vy:0};
-let goals=0,kicks=0,goalFlash=0,saveFlash=0,majaY=206,lageImage=null;
+let goals=0,kicks=0,saves=0,goalFlash=0,saveFlash=0,majaY=206,majaDirection='down',lageImage=null;
 const spectatorSprites=root.RimforsaPreschoolFriendsSprite||null;
 const majaSprite=root.RimforsaMajaSprite||null;
 if(majaSprite)majaSprite.addEventListener('load',()=>{if(overlay&&!overlay.hidden)render();});
@@ -13,7 +13,7 @@ if(majaSprite)majaSprite.addEventListener('load',()=>{if(overlay&&!overlay.hidde
 if(spectatorSprites)spectatorSprites.addEventListener('load',()=>{if(overlay&&!overlay.hidden)render();});
 const MAX_GOAL_COINS=3;
 const clamp=(a,l,h)=>Math.max(l,Math.min(h,a));
-function resetPositions(){player.x=115;player.y=215;player.dx=1;player.dy=0;ball.x=205;ball.y=170;ball.vx=ball.vy=0;majaY=206;}
+function resetPositions(){player.x=115;player.y=215;player.dx=1;player.dy=0;ball.x=205;ball.y=170;ball.vx=ball.vy=0;majaY=206;majaDirection='down';}
 function clearKeys(){Object.keys(keys).forEach(k=>keys[k]=false);}
 function install(){
  if(overlay)return;
@@ -33,7 +33,7 @@ function install(){
  }
  overlay.querySelector('[data-kick]').addEventListener('click',()=>kick());
  for(const aimButton of overlay.querySelectorAll('[data-aim]'))aimButton.addEventListener('click',()=>kick(aimButton.dataset.aim));
- overlay.querySelector('[data-reset]').addEventListener('click',()=>{goals=kicks=0;goalFlash=saveFlash=0;resetPositions();status.textContent='Mål: 0 · Skott: 0';render();});
+ overlay.querySelector('[data-reset]').addEventListener('click',()=>{goals=kicks=saves=0;goalFlash=saveFlash=0;resetPositions();status.textContent='Mål: 0 · Skott: 0 · Majas räddningar: 0';render();});
  overlay.querySelector('[data-close]').addEventListener('click',close);
  overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
  root.document.addEventListener('keydown',e=>{
@@ -74,7 +74,10 @@ function drawMaja(x,y){
  // Främre vyn används medan Maja vaktar målet.
  // Tidigare pixelritning fungerar som reserv vid bildfel.
  if(majaSprite&&majaSprite.complete&&majaSprite.naturalWidth===192&&majaSprite.naturalHeight===56){
-  ctx.drawImage(majaSprite,0,0,48,56,Math.round(x-24),Math.round(y-56),48,56);
+  // Samma bildark som på huvudkartan: bakifrån när Maja springer uppåt,
+  // framifrån när hon springer nedåt. Inga enklare kodritade gångfigurer.
+  const col=majaDirection==='up'?2:0;
+  ctx.drawImage(majaSprite,col*48,0,48,56,Math.round(x-24),Math.round(y-56),48,56);
  }else drawMajaFallback(x,y);
 }
 function drawSpectators(){
@@ -121,7 +124,8 @@ function render(){
  rect(195,48,40,16,'#091f21');rect(245,48,40,16,'#091f21');
  ctx.font='bold 12px monospace';ctx.fillStyle='#f1c76d';
  ctx.fillText('L '+String(goals).padStart(2,'0'),200,60);
- ctx.fillText('M 00',250,60);
+ // Resultattavlans M visar Majas faktiska räddningar, inte en låst nolla.
+ ctx.fillText('M '+String(saves).padStart(2,'0'),250,60);
  rect(174,75,132,3,'#3a5346');
  rect(0,88,W,25,'#9b7950');rect(0,91,W,4,'#d8b175');
  for(let i=0;i<32;i++)rect(i*15,98,2,15,'#6e563e');
@@ -155,7 +159,7 @@ function render(){
  rect(bx-9,by-8,18,17,'#33413c');rect(bx-7,by-8,14,16,'#f0ead8');
  rect(bx-3,by-4,7,7,'#35434a');rect(bx-6,by+3,4,4,'#40505a');rect(bx+4,by+2,3,4,'#40505a');
  if(goalFlash>0){rect(165,106,150,33,'#2e5d41');ctx.font='bold 17px monospace';ctx.fillStyle='#fff1a8';ctx.fillText('MÅÅÅL!',190,129);}
- rect(8,8,160,25,'#233f33');ctx.fillStyle='#f4d69c';ctx.font='bold 13px monospace';ctx.fillText('MÅL '+goals+'   SKOTT '+kicks,17,26);
+ rect(8,8,168,25,'#233f33');ctx.fillStyle='#f4d69c';ctx.font='bold 12px monospace';ctx.fillText('MÅL '+goals+' SKOTT '+kicks+' R '+saves,13,25);
 }
 function updateWallet(){
  if(!overlay)return;
@@ -207,6 +211,8 @@ function frame(time){
  // Kom ihåg startpositionen så hennes läge kan interpoleras vid bollpassagen.
  const previousMajaY=majaY;
  majaY=clamp(majaY+clamp(ball.y-majaY,-52*dt,52*dt),187,249);
+ if(majaY<previousMajaY-.1)majaDirection='up';
+ else if(majaY>previousMajaY+.1)majaDirection='down';
  const previousBallX=ball.x,previousBallY=ball.y;
  ball.x+=ball.vx*dt;ball.y+=ball.vy*dt;
  // Testa bollens passage förbi målvakten i stället för ett smalt
@@ -221,7 +227,8 @@ function frame(time){
    ball.vx=-Math.max(125,Math.abs(ball.vx)*.68);
    ball.vy+=(crossingY-keeperAtCrossing)*2;
    saveFlash=.65;
-   status.textContent='Maja räddade! Försök igen. Mål: '+goals;
+   saves++;
+   status.textContent='Maja räddade! Försök igen. Mål: '+goals+' · Majas räddningar: '+saves;
    if(root.RimforsaAudio&&root.RimforsaAudio.footballSave)root.RimforsaAudio.footballSave();
   }
  }
@@ -246,7 +253,7 @@ function start(options){
  if(!options||typeof options.returnToMap!=='function')return false;
  install();if(!overlay.hidden)close();
  previousFocus=root.document.activeElement;returnToMap=options.returnToMap;onGoalCoin=typeof options.onGoalCoin==='function'?options.onGoalCoin:null;getWalletBalance=typeof options.getWalletBalance==='function'?options.getWalletBalance:null;
- clearKeys();resetPositions();goals=kicks=0;goalFlash=saveFlash=0;status.textContent='Mål: 0 · Skott: 0';updateWallet();
+ clearKeys();resetPositions();goals=kicks=saves=0;goalFlash=saveFlash=0;status.textContent='Mål: 0 · Skott: 0 · Majas räddningar: 0';updateWallet();
  overlay.hidden=false;last=0;
  if(root.RimforsaAudio&&root.RimforsaAudio.setScene)root.RimforsaAudio.setScene('preschool');
  overlay.querySelector('[data-kick]').focus();raf=root.requestAnimationFrame(frame);return true;
