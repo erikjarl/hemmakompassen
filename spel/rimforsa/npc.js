@@ -11,6 +11,19 @@ const definitions=[
  {id:'saga',name:'Saga',x:680,y:750,filter:'hue-rotate(310deg) saturate(1.25)',color:'#f0afc9',
   lines:['Hallå Lage! Jag ska handla på ICA.','Jag undrar vilken glass som är godast, päron eller vanilj?','Jag har hört att det finns ett båtäventyr på Åsunden.']}
 ];
+// Keep walking NPCs away from entrances, shops and minigame start areas.
+// The radius also applies when searching for spawn positions and while wandering.
+const busySites=[
+ [667,418], // Hackelhallen
+ [1002,480], // förskolans rutschkana
+ [394,641], // bensinmack
+ [699,783], // ICA
+ [921,813], // Bella Donna
+ [1220,740], // badet
+ [1100,116], // båtklubben
+ [464,454] // trollspektaklet
+];
+const npcMayStand=(x,y,canStand)=>canStand(x,y)&&busySites.every(([sx,sy])=>Math.hypot(x-sx,y-sy)>=85);
 // Original 16-bit-inspired 44x44 world sprites, not recoloured Lage frames.
 function drawFriend(ctx,p,x,y){
  const px=(dx,dy,w,h,color)=>{ctx.fillStyle=color;ctx.fillRect(Math.round(x+dx),Math.round(y+dy),w,h)};
@@ -48,11 +61,11 @@ function createSystem(canStand,random=Math.random){
  if(typeof canStand!=='function')throw Error('NPCs need a walkable terrain callback');
  const people=definitions.map(p=>({...p,homeX:p.x,homeY:p.y,ready:false,dir:'down',frame:0,phase:0,turnTime:0,wait:.3,angle:0,speechIndex:0}));
  function locate(x,y){
-   if(canStand(x,y))return {x,y};
+   if(npcMayStand(x,y,canStand))return {x,y};
    for(const r of [12,24,36,48,64,88,110,140,180]){
      for(let i=0;i<24;i++){
        const a=i*Math.PI/12,px=x+Math.cos(a)*r,py=y+Math.sin(a)*r;
-       if(canStand(px,py))return{x:px,y:py};
+       if(npcMayStand(px,py,canStand))return{x:px,y:py};
      }
    }
    return null;
@@ -91,7 +104,7 @@ function createSystem(canStand,random=Math.random){
      p.turnTime-=dt;
      const dx=Math.cos(p.angle),dy=Math.sin(p.angle),speed=19;
      const nx=p.x+dx*speed*dt,ny=p.y+dy*speed*dt;
-     if(Math.hypot(nx-p.homeX,ny-p.homeY)>82||!canStand(nx,ny)){
+     if(Math.hypot(nx-p.homeX,ny-p.homeY)>82||!npcMayStand(nx,ny,canStand)){
        p.turnTime=0;p.wait=.15+random()*.35;continue;
      }
      p.x=nx;p.y=ny;
