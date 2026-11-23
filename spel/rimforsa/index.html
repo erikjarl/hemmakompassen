@@ -305,6 +305,8 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
   };
  })();
  const awardMinigameCoin=id=>{
+  // Sena återkopplingar från minispel får inte lägga tillbaka mynt under förlustdialogen.
+  if(!document.getElementById('lossOverlay').hidden)return false;
   // En äldre flik får inte återinföra ett bonusmynt efter game over i en annan flik.
   // Jämför omstartssignalen före varje ny belöning, även om storage-event fördröjts.
   if(reloadAfterOtherTabLoss())return false;
@@ -318,6 +320,8 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
   return game.snapshot().balance+rewardWallet.balance()+farm.snapshot().balance;
  };
  function payCoins(amount){
+  // Inga köp ska kunna genomföras bakom förlustdialogen.
+  if(!document.getElementById('lossOverlay').hidden)return null;
   // Skydda också köp i en flik vars gamla spelomgång redan nollställts.
   if(reloadAfterOtherTabLoss())return null;
   if(!Number.isSafeInteger(amount)||amount<=0||totalMoney()<amount)return null;
