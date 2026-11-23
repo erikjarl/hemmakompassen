@@ -7,9 +7,11 @@
   const proximity=235;
   // Varningen växer tydligare fram under de 0,65 sekunderna före ett låst skott.
   const FIRE_WARNING_SECONDS=.65;
-  // Bensinmacken ligger vid x=394. Eldklot får inte passera den mot öster,
-  // och kan aldrig färdas längre än 300 världspixlar från drakens mun.
-  const FIRE_MAX_DISTANCE=300,HELICOPTER_FIRE_DISTANCE=600,FIRE_EAST_LIMIT=394;
+  // Bensinmacken ligger vid x=394. Hela eldklotets synliga framkant
+  // måste stanna före macken, och Lageskott har högst 300 px räckvidd.
+  // Eldklotet är 17 px brett och sträcker sig 9 px framför centrum.
+  // Stoppa dess synliga framkant minst 1 px före mackens x=394.
+  const FIRE_MAX_DISTANCE=300,HELICOPTER_FIRE_DISTANCE=600,FIRE_EAST_LIMIT=384;
   function update(dt,playerX,playerY,helicopter,playerTargetable=true){
    dt=Math.max(0,Math.min(.1,Number(dt)||0));
    t+=dt;
