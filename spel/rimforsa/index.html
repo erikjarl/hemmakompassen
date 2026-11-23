@@ -1506,7 +1506,25 @@ function canWalkStraight(x1,y1,x2,y2){
  }
  return true;
 }
-canvas.addEventListener('pointerdown',ev=>{if(!maskLoaded||overlay.classList.contains('show')||!icaOverlay.hidden||!pizzaOverlay.hidden||!bagOverlay.hidden||window.RimforsaSlideMinigame.isOpen()||window.RimforsaSwimMinigame.isOpen()||window.RimforsaTrollMinigame.isOpen()||window.RimforsaFarm.isOpen()||window.RimforsaBrokindTrail.isOpen()||window.RimforsaFootball.isOpen())return;ev.preventDefault();if(state.inCar)return;const r=canvas.getBoundingClientRect(),sx=(ev.clientX-r.left)*canvas.width/r.width,sy=(ev.clientY-r.top)*canvas.height/r.height;const x=state.camX-canvas.width/2+sx,y=state.camY-canvas.height/2+sy;state.path=pathTo(x,y)});
+// Ljudsignalen för blockerad rutt ska inte kunna staplas av många snabba tryck.
+let lastTapRouteFeedback=0;
+canvas.addEventListener('pointerdown',ev=>{
+ if(!maskLoaded||overlay.classList.contains('show')||!icaOverlay.hidden||!pizzaOverlay.hidden||!bagOverlay.hidden||window.RimforsaSlideMinigame.isOpen()||window.RimforsaSwimMinigame.isOpen()||window.RimforsaTrollMinigame.isOpen()||window.RimforsaFarm.isOpen()||window.RimforsaBrokindTrail.isOpen()||window.RimforsaFootball.isOpen())return;
+ ev.preventDefault();if(state.inCar)return;
+ const r=canvas.getBoundingClientRect(),sx=(ev.clientX-r.left)*canvas.width/r.width,sy=(ev.clientY-r.top)*canvas.height/r.height;
+ const x=state.camX-canvas.width/2+sx,y=state.camY-canvas.height/2+sy;
+ const route=pathTo(x,y);
+ state.path=route;
+ // Ge ett kort besked om ett tydligt utpekat mål inte är nåbart.
+ // Undvik varningsljud när spelaren bara trycker nära Lages fötter.
+ if(!route.length&&Math.hypot(x-state.x,y-state.y)>24){
+  const t=performance.now();
+  if(t-lastTapRouteFeedback>=550){
+   lastTapRouteFeedback=t;
+   if(audio.routeBlocked)audio.routeBlocked();
+  }
+ }
+});
 function slideMove(dx,dy){
  if(!maskLoaded)return false;
  // Short substeps prevent tunneling through thin fences when the game briefly slows down.
