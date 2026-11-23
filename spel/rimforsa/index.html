@@ -120,7 +120,7 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
 <script src="./friend-sprites.js?v=1"></script>
 <script src="./npc.js?v=6"></script>
 <script src="./farm.js?v=5"></script>
-<script src="./dragon.js?v=16"></script>
+<script src="./dragon.js?v=17"></script>
 <script src="./helicopter.js?v=2"></script>
 <script src="./troll-minigame.js?v=8"></script>
 <script src="./preschool-friends-sprites.js?v=1"></script>
@@ -1746,8 +1746,9 @@ function tick(now){
    }}else game.touchHazard(null);
   }
  }else{
-  // Pausade kartscener behåller projektilernas position men skapar inga
-  // nya attacker och kan inte ge överraskande skada bakom en dialog.
+  // Pausade kartscener fryser projektilerna och avbryter låst varning,
+  // så ingen redan laddad attack kommer direkt efter att en meny stängs.
+  dragon.pauseAttacks();
   audio.setDragonNearby(false);
  }
  const clampedX=Math.max(canvas.width/2,Math.min(W-canvas.width/2,state.x));
