@@ -5,7 +5,7 @@
 let overlay=null,canvas=null,ctx=null,status=null,previousFocus=null,returnToMap=null,onGoalCoin=null,getWalletBalance=null,raf=0,last=0;
 const W=480,H=300,keys={up:false,down:false,left:false,right:false};
 const player={x:115,y:215,dx:1,dy:0},ball={x:205,y:170,vx:0,vy:0};
-let goals=0,kicks=0,goalFlash=0,majaY=206,lageImage=null;
+let goals=0,kicks=0,goalFlash=0,saveFlash=0,majaY=206,lageImage=null;
 const spectatorSprites=root.RimforsaPreschoolFriendsSprite||null;
 const majaSprite=root.RimforsaMajaSprite||null;
 if(majaSprite)majaSprite.addEventListener('load',()=>{if(overlay&&!overlay.hidden)render();});
@@ -33,7 +33,7 @@ function install(){
  }
  overlay.querySelector('[data-kick]').addEventListener('click',()=>kick());
  for(const aimButton of overlay.querySelectorAll('[data-aim]'))aimButton.addEventListener('click',()=>kick(aimButton.dataset.aim));
- overlay.querySelector('[data-reset]').addEventListener('click',()=>{goals=kicks=0;goalFlash=0;resetPositions();status.textContent='Mål: 0 · Skott: 0';render();});
+ overlay.querySelector('[data-reset]').addEventListener('click',()=>{goals=kicks=0;goalFlash=saveFlash=0;resetPositions();status.textContent='Mål: 0 · Skott: 0';render();});
  overlay.querySelector('[data-close]').addEventListener('click',close);
  overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
  root.document.addEventListener('keydown',e=>{
@@ -137,6 +137,13 @@ function render(){
  rect(426,158,37,7,'#f3efe2');rect(426,158,7,99,'#f3efe2');rect(426,250,37,7,'#f3efe2');
  // Maja står i målet och försöker aktivt blockera inkommande bollar.
  drawMaja(397,majaY);
+ if(saveFlash>0){
+  // Kort pixelmarkering för en faktisk räddning – ingen ny person-placeholder.
+  rect(365,Math.round(majaY-77),65,19,'#204d42');
+  rect(367,Math.round(majaY-75),61,15,'#f1d291');
+  ctx.fillStyle='#254b3d';ctx.font='bold 12px monospace';
+  ctx.fillText('RÄDDAT!',371,Math.round(majaY-63));
+ }
  rect(player.x-11,player.y-3,23,4,'#674e39');
  const row=Math.abs(player.dx)>Math.abs(player.dy)?(player.dx>0?2:1):(player.dy>0?0:3);
  sprite(player.x,player.y,row,Math.floor(Date.now()/180)%4);
@@ -194,6 +201,8 @@ function frame(time){
   }
  }
  // Maja är målvakt och försöker följa bollens rörelse i målområdet.
+ // Kom ihåg startpositionen så hennes läge kan interpoleras vid bollpassagen.
+ const previousMajaY=majaY;
  majaY=clamp(majaY+clamp(ball.y-majaY,-52*dt,52*dt),187,249);
  const previousBallX=ball.x,previousBallY=ball.y;
  ball.x+=ball.vx*dt;ball.y+=ball.vy*dt;
@@ -203,10 +212,12 @@ function frame(time){
  if(ball.vx>0&&previousBallX<=keeperLine&&ball.x>=keeperLine){
   const fraction=clamp((keeperLine-previousBallX)/(ball.x-previousBallX||1),0,1);
   const crossingY=previousBallY+(ball.y-previousBallY)*fraction;
-  if(Math.abs(crossingY-(majaY-10))<23){
+  const keeperAtCrossing=previousMajaY+(majaY-previousMajaY)*fraction;
+  if(Math.abs(crossingY-(keeperAtCrossing-10))<23){
    ball.x=keeperLine-12;ball.y=crossingY;
    ball.vx=-Math.max(125,Math.abs(ball.vx)*.68);
-   ball.vy+=(crossingY-majaY)*2;
+   ball.vy+=(crossingY-keeperAtCrossing)*2;
+   saveFlash=.65;
    status.textContent='Maja räddade! Försök igen. Mål: '+goals;
    if(root.RimforsaAudio&&root.RimforsaAudio.footballSave)root.RimforsaAudio.footballSave();
   }
@@ -225,13 +236,14 @@ function frame(time){
   ball.x=205;ball.y=205;ball.vx=ball.vy=0;player.x=115;player.y=215;
  }else if(ball.x>424){ball.x=424;ball.vx=-Math.abs(ball.vx)*.58;}
  goalFlash=Math.max(0,goalFlash-dt);
+ saveFlash=Math.max(0,saveFlash-dt);
  render();raf=root.requestAnimationFrame(frame);
 }
 function start(options){
  if(!options||typeof options.returnToMap!=='function')return false;
  install();if(!overlay.hidden)close();
  previousFocus=root.document.activeElement;returnToMap=options.returnToMap;onGoalCoin=typeof options.onGoalCoin==='function'?options.onGoalCoin:null;getWalletBalance=typeof options.getWalletBalance==='function'?options.getWalletBalance:null;
- clearKeys();resetPositions();goals=kicks=0;goalFlash=0;status.textContent='Mål: 0 · Skott: 0';updateWallet();
+ clearKeys();resetPositions();goals=kicks=0;goalFlash=saveFlash=0;status.textContent='Mål: 0 · Skott: 0';updateWallet();
  overlay.hidden=false;last=0;
  if(root.RimforsaAudio&&root.RimforsaAudio.setScene)root.RimforsaAudio.setScene('preschool');
  overlay.querySelector('[data-kick]').focus();raf=root.requestAnimationFrame(frame);return true;
