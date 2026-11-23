@@ -1,4 +1,11 @@
 # Lage i Rimforsa – historisk arbetslogg
+### 2026-11-23 – Jobb lage / LJUD-03 (tom tank vid bil och båt)
+- `audio.js`: ny originalsyntetiserad, kort dubbelton `fuelEmpty()` för en aktiv handling med tom tank. Samma spelmotor och av/på-/synlighetsregler som övriga effekter; `boatOutOfFuel()` vid övergång till tom tank under pågående båtfärd är oförändrad.
+- `index.html`: vid försök att kliva in i en bensintom bil hörs varningsljudet om ljud är på. Vid öppning av båtspelet med tom tank spelas varningsljudet i stället för den vanliga startfanfar som annars gav missvisande återkoppling. `audio.js` cacheversion höjd till v44.
+- `tests/rimforsa-audio.test.mjs`: tester för två ljudtoner, avstängt/dolt läge och koppling till båda handlingarna.
+- GitHub tog emot kod och tester; ingen faktisk Node-körning, hörselkontroll eller fysisk iPhone/Safari-genomspelning i detta pass. LJUD-03 hålls öppen tills effekterna har hörselprovats och balanserats. Inga nya bildbaserade personresurser har skapats eller kopplats in; reservpersoner kvarstår i GRAF-01.
+- Status oförändrad: 14 öppna och 30 arkiverade. Nästa huvuduppgift GRAF-01.
+
 ### 2026-11-23 – Jobb lage / LJUD-02 (scenåterhämtning vid användargest)
 - `audio.js`: en ny kontroll av `sceneHealthy()` verifierar att rätt musik-/ljudloopar och motorljud finns för aktuell scen. `resumeFromGesture()` kan återbygga en ofullständig scen när WebAudio redan är `running`, men gör inget om scenen är komplett. Ingen automatisk ljudupplåsning sker vid flikåterkomst; den befintliga användargestregeln gäller fortfarande.
 - `index.html`: `audio.js` cacheversion uppdaterad från v42 till v43. `tests/rimforsa-audio.test.mjs`: nytt test för att upprepade återupptagningsgester inte dubblar loopar i land-/båtscenerna.
