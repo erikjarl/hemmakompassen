@@ -768,3 +768,10 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 - `index.html`: ändrade cacheversion för båtens riktningsgrafik från v9 till v10 så nytt skript kan laddas.
 - Bilens åtta befintliga 80×60-bildvyer ändrades inte. Ingen ny separat bildsprite skapades under passet; kodritade reservpersoner är fortfarande en öppen grafikkvalitetsfråga (exempelvis reservtrollet om dess bild inte laddar).
 - Verifieringsnivå: GitHub-bekräftade commits och kodkontroll av riktnings- och koordinatlogik. Ingen verklig bildgranskning, mobil-/datorprovkörning, kontroll av webbläsarkonsol eller bekräftad GitHub Pages-publicering. FORDON-02 ligger därför kvar som öppen; 14 öppna, 30 arkiverade uppgifter. Nästa huvudrotation LJUD-02. KARTA-01 fortfarande aktivt utbyggnadsarbete.
+
+
+### 2026-11-23 – Jobb Lage: LJUD-02, stöd för klick från hjälpmedel
+
+- `index.html`: tillagd `click`-lyssnare som anropar befintliga `resumeAudioGesture` i capture-fas. Detta ger Safari/VoiceOver och andra hjälpmedelsaktiveringar en väg att återuppta WebAudio även utan föregående `pointerdown`, `touchstart` eller `keydown`. Ljudknappens av/på-klick undantas redan av funktionen; inga automatiska försök vid `pageshow` eller timers introduceras.
+- Befintlig ljudmotor hanterar upprepade gester genom kontroll av running/pågående resume; koden återanvänder samma skydd och skapar inte separata ljudloopar.
+- Kontroll: ändringen och befintliga skydd lästes i koden, GitHub bekräftade commit. Ingen verklig iPhone/Safari-/VoiceOver-provning, hörselkontroll eller bekräftad Pages-publicering. LJUD-02 är därför fortfarande öppen. Ingen ny bildsprite skapades; tidigare kodritade reservpersoner är kvar. Totalt 14 öppna och 30 arkiverade. Nästa rotationsuppgift LJUD-03, KARTA-01 fortsatt aktiv.
