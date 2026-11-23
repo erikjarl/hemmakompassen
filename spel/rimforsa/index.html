@@ -718,6 +718,8 @@ function showTreasureVictory(){
 }
 
 function collectCoins(){
+ // Hämta inte lokala kartmynt från en omgång som redan förlorats i en annan flik.
+ if(reloadAfterOtherTabLoss())return false;
  if(!coins.length)return false;
  const before=coins.length;
  coins=coins.filter(c=>Math.hypot(state.x-c.x,state.y-c.y)>=19);
@@ -1632,9 +1634,15 @@ function draw(){const w=canvas.width,h=canvas.height;ctx.fillStyle='#305d42';ctx
 if(state.inCar){carDrive.draw(ctx,state.x-state.camX+w/2,state.y-state.camY+h/2,state.dir,true);}
 else{carDrive.draw(ctx,carPos.x-state.camX+w/2,carPos.y-state.camY+h/2,parkedCarDir,false);drawPlayer();}
 ctx.strokeStyle='#1b3028';ctx.lineWidth=2;ctx.strokeRect(1,1,w-2,h-2);drawMap(mc,mini.width,mini.height);drawBoatGame()}
-let last=performance.now(),stepProgress=0;
+let last=performance.now(),stepProgress=0,lastLossCheck=last;
 function tick(now){
  const dt=Math.min(.05,(now-last)/1000);last=now;
+ // Långvarigt öppna flikar kan missa storage/focus/pageshow på vissa enheter.
+ // Kontrollera omgångssignalen varje sekund, även mitt under spel eller båtresa.
+ if(now-lastLossCheck>=1000){
+  lastLossCheck=now;
+  if(reloadAfterOtherTabLoss())return;
+ }
  updateBoat(dt);
  // Draken och spelaren ska använda samma pausvillkor: ingen eld när
  // huvudkartan är dold bakom butik, minispel, väska eller förlustdialog.
