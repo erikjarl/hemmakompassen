@@ -6,11 +6,11 @@
 
 ## Obligatorisk rotation mellan utvecklingspass
 
-**SENAST BEARBETAD HUVUDUPPGIFT: `GRAF-01` – hamnbesökarens sprite återställd till originalskala (23 november 2026).**
+**SENAST BEARBETAD HUVUDUPPGIFT: `KARTA-01` – Tjärstads kyrka som fjärde regionala utflyktsmål (23 november 2026).**
 
-**NÄSTA ROTATIONSPOSITION: `KARTA-01` – aktiv kartutbyggnad som nästa huvuduppgift.**
+**NÄSTA ROTATIONSPOSITION: `SPORT-01` – nästa öppna roterande huvuduppgift.**
 
-**ALDRIG SAMMA HUVUDUPPGIFT TVÅ `JOBB LAGE` I FÖLJD.** Följ ordningen bland öppna, genomförbara uppgifter nedan med cirkulär rotation. Starta på angiven nästa position, hoppa över avbockade punkter, stående kvalitetsregler som `MINI-01` (dessa gäller ändå varje pass) och tillfälligt blockerade uppgifter. Bearbeta olika delar av spelet mellan varven: grafik, fordon, bränsle, ljud och andra spelmekaniker. Om inget praktiskt kan göras på nästa punkt, gå vidare till följande **annan** uppgift; återvänd först efter andra utvecklingspass. Prioritet betyder vikt inom rotationen, **inte** rätt att välja samma uppgift igen direkt. När ett pass med faktisk spelutveckling slutförts, uppdatera **båda fälten ovan** till den verkliga huvuduppgiften och efterföljande öppna rotationsposition innan passet avslutas. Rapportera vilka fält som ändrades. Att kontrollera kryssrutor eller åtgärda ett akut blockerande fel räknas inte som att byta huvuduppgift. **Aktuell rotation:** DRAKE-02 → MYNT-03 → HUV-05 → HUV-06 → KARTA-02 → FORDON-02 → LJUD-02 → LJUD-03 → GRAF-01 (20 nov). BRÄNSLE-02 saknade verifierbar prisuppgift; LJUD-04 kräver hörselprov och GRAF-02 är spärrad som nästa huvudfokus. Nästa position KARTA-01.
+**ALDRIG SAMMA HUVUDUPPGIFT TVÅ `JOBB LAGE` I FÖLJD.** Följ ordningen bland öppna, genomförbara uppgifter nedan med cirkulär rotation. Starta på angiven nästa position, hoppa över avbockade punkter, stående kvalitetsregler som `MINI-01` (dessa gäller ändå varje pass) och tillfälligt blockerade uppgifter. Bearbeta olika delar av spelet mellan varven: grafik, fordon, bränsle, ljud och andra spelmekaniker. Om inget praktiskt kan göras på nästa punkt, gå vidare till följande **annan** uppgift; återvänd först efter andra utvecklingspass. Prioritet betyder vikt inom rotationen, **inte** rätt att välja samma uppgift igen direkt. När ett pass med faktisk spelutveckling slutförts, uppdatera **båda fälten ovan** till den verkliga huvuduppgiften och efterföljande öppna rotationsposition innan passet avslutas. Rapportera vilka fält som ändrades. Att kontrollera kryssrutor eller åtgärda ett akut blockerande fel räknas inte som att byta huvuduppgift. **Aktuell rotation:** DRAKE-02 → MYNT-03 → HUV-05 → HUV-06 → KARTA-02 → FORDON-02 → LJUD-02 → LJUD-03 → GRAF-01 (20 nov). BRÄNSLE-02 saknade verifierbar prisuppgift; LJUD-04 kräver hörselprov och GRAF-02 är spärrad som nästa huvudfokus. Nästa position SPORT-01.
 
 ## Obligatorisk avbockning – vid VARJE `jobb lage`
 
@@ -56,7 +56,7 @@
 
 ### Aktiv kartutbyggnad (1)
 
-- [ ] **KARTA-01 – Utöka Rimforsa och omgivningarna (aktiv prioritet).** · [Krav](docs/TASK_DETAILS.md#karta-01) · **Kvar:** Regionens tre utflyktsmål har nu automatiska vägrutter. Gör nästa steg med sömlös övergång från huvudkartan, säkrare ruttval vid vägkorsningar, mer geografiskt korrekta vägar/sjöar, fler platser, sammanhängande mynt/inventariehändelser och verklig mobil- och datorgenomspelning. Behåll arbetsuppgiften öppen tills regionen ingår i den sammanhängande spelvärlden.
+- [ ] **KARTA-01 – Utöka Rimforsa och omgivningarna (aktiv prioritet).** · [Krav](docs/TASK_DETAILS.md#karta-01) · **Kvar:** Regionens fyra utflyktsmål har kod för automatiska vägrutter; genomspela särskilt nya Tjärstads kyrka och korsningarna. Skapa sömlös övergång från huvudkartan, säkrare ruttval vid vägkorsningar, mer geografiskt korrekta vägar/sjöar, fler platser, sammanhängande mynt/inventariehändelser och verklig mobil- och datorgenomspelning. Behåll arbetsuppgiften öppen tills regionen ingår i den sammanhängande spelvärlden.
 
 ## Stående regel – inte en ofärdig uppgift
 
