@@ -1670,7 +1670,12 @@ function tick(now){
   lastLossCheck=now;
   if(reloadAfterOtherTabLoss())return;
  }
- updateBoat(dt);
+ // Den gömda fliken ska inte fortsätta båtens rörelse eller grundkollisioner.
+ // Släpp kvarhållna båtknappar när fliken döljs; annars kan båten köra iväg vid återkomst.
+ if(document.hidden){
+  for(const dir of Object.keys(boatKeys))boatKeys[dir]=false;
+  audio.setBoatSpeed(0);
+ }else updateBoat(dt);
  // Draken och spelaren ska använda samma pausvillkor: ingen eld när
  // huvudkartan är dold bakom butik, minispel, väska eller förlustdialog.
  const worldPlaying=!document.hidden&&maskLoaded&&!overlay.classList.contains('show')&&(!fuelDialog||fuelDialog.hidden)&&!isBoatOpen()&&winOverlay.hidden&&document.getElementById('lossOverlay').hidden&&bagOverlay.hidden&&icaOverlay.hidden&&pizzaOverlay.hidden&&!window.RimforsaSlideMinigame.isOpen()&&!window.RimforsaSwimMinigame.isOpen()&&!window.RimforsaTrollMinigame.isOpen()&&!window.RimforsaFarm.isOpen()&&!window.RimforsaBrokindTrail.isOpen()&&!window.RimforsaRegionalMap.isOpen()&&!window.RimforsaFootball.isOpen();
@@ -1736,7 +1741,10 @@ function tick(now){
     }else state.phase=0;
   }
  }
- checkPoops();
+ // Bajskorvar får inte ta hjärtan medan huvudkartan är pausad bakom
+ // butiker, väska, minispel eller en dold webbläsarflik.
+ if(worldPlaying)checkPoops();
+ else game.touchHazard(null);
  if(worldPlaying){
   // Träffrökens 2,8 sekunders reaktion ska bara räknas ned när
   // huvudkartan spelas, precis som drakens eldklot och animation.
