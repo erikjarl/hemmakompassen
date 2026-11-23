@@ -1038,7 +1038,14 @@ function visitTroll(){
 }
 
 function isBoatOpen(){return boatState.active}
-function updateBoatHud(){boatHearts.textContent='♥'.repeat(Math.max(0,boatState.hearts))||'–';boatCoinsLabel.textContent=boatState.collected+' / '+BOAT_COIN_TARGET+' · Plånbok '+totalMoney();updateFuelHud();}
+function updateBoatHud(){
+ boatHearts.textContent='♥'.repeat(Math.max(0,boatState.hearts))||'–';
+ // Skilj mynt upplockade under denna tur från de engångsbonusar som
+ // verkligen har sparats till den gemensamma plånboken.
+ const savedBoatBonuses=Array.from({length:BOAT_COIN_TARGET},(_,i)=>rewardWallet.has('boat-'+i)).filter(Boolean).length;
+ boatCoinsLabel.textContent=boatState.collected+' / '+BOAT_COIN_TARGET+' · Sparade båtbonusar '+savedBoatBonuses+'/'+BOAT_COIN_TARGET+' · Plånbok '+totalMoney();
+ updateFuelHud();
+}
 function boatPixelWater(x,y){
  if(!boatWaterData||x<1||y<1||x>=boatW-1||y>=boatH-1)return false;
  const pts=[[0,0],[8,0],[-8,0],[0,8],[0,-8],[6,6],[-6,6],[6,-6],[-6,-6]];
@@ -1156,6 +1163,9 @@ function updateBoat(dt){
  if(boatHitsHazard(boatState.x,boatState.y))boatCrash();
  // En dödsolycka stänger båtspelet: samla inte in nya mynt i samma frame.
  if(!boatState.active||boatState.done)return;
+ // Kontrollera även här en förlust i annan flik, precis före upplockning.
+ // Annars kan redan erhållna bonusar uppfattas som giltiga i en gammal omgång.
+ if(reloadAfterOtherTabLoss())return;
  for(const coin of boatState.coins){
    if(!coin.taken&&Math.hypot(boatState.x-coin.x,boatState.y-coin.y)<24){
      const bonusId='boat-'+coin.id;
