@@ -1409,11 +1409,13 @@ function safeTapTarget(x,y){
  // Alla kandidater måste godkännas av originalmaskens canStand().
  // För korta, fria sträckor prioriteras en direkt nåbar punkt.
  let fallback=null;
- for(const radius of [3,6,9,12,15,18]){
+ // Tätare vinkelprov och något större fingertolerans hjälper vid smala
+ // entréer. Varje prov måste fortfarande ligga i ORIGINALMASKENS fria yta.
+ for(const radius of [3,6,9,12,15,18,21,24]){
   let bestDirect=null,bestDirectScore=Infinity;
   let bestFallback=null,bestFallbackScore=Infinity;
-  for(let n=0;n<24;n++){
-   const angle=n*Math.PI/12,px=x+Math.cos(angle)*radius,py=y+Math.sin(angle)*radius;
+  for(let n=0;n<48;n++){
+   const angle=n*Math.PI/24,px=x+Math.cos(angle)*radius,py=y+Math.sin(angle)*radius;
    if(!canStand(px,py))continue;
    const fromPlayer=Math.hypot(px-state.x,py-state.y);
    // Föredra den närmaste gångbara punkten till fingertrycket.
