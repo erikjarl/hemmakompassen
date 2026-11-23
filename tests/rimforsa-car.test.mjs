@@ -123,6 +123,7 @@ test('Nytt spritesheet visar samma bil i åtta riktningar utan utjämning',()=>{
  assert.equal(car.directionSpriteReady(),true);
  const draws=[];
  const ctx={save(){},restore(){},translate(){},scale(){},fillRect(){},
+  beginPath(){},rect(){},clip(){},
   imageSmoothingEnabled:true,drawImage(...args){draws.push(args);}
  };
  const dirs=['down','down-right','left','up-left','up','up-right','right','down-left'];
@@ -135,5 +136,7 @@ test('Nytt spritesheet visar samma bil i åtta riktningar utan utjämning',()=>{
  });
  assert.equal(ctx.imageSmoothingEnabled,true);
  car.draw(ctx,120,120,'right',false);
- assert.equal(draws.at(-1)[1],0,'Original parked car remains unchanged');
+ assert.equal(draws.at(-1)[1],480,'Parked right-side car uses the same directional image');
+ car.draw(ctx,120,120,'unknown',false);
+ assert.equal(draws.at(-1)[1],480,'Unknown direction falls back to right-facing directional sprite');
 });
