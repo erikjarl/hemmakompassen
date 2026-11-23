@@ -133,6 +133,21 @@
     stopWaves();stopEngine();stopCarEngine();
     sceneStarted=false;
   }
+  // Safari kan ibland behålla en körande kontext trots att en scenloop
+  // har försvunnit. Återskapa i så fall scenen vid nästa spelgest,
+  // men låt en redan komplett scen fortsätta utan dubbla timers.
+  function sceneHealthy(){
+    if(!sceneStarted)return false;
+    if(scene==='boat')return !!waves&&!!engine&&gullInterval!==null;
+    if(scene==='swim')return !!waves;
+    if(scene==='preschool')return preschoolInterval!==null;
+    return musicInterval!==null&&(!carActive||!!carEngine);
+  }
+  function restoreSceneFromGesture(){
+    if(!enabled||hidden||!ctx||ctx.state!=='running')return;
+    if(!sceneHealthy())stopScene();
+    startScene();
+  }
   function startScene(){
     if(sceneStarted||!enabled||!ctx||hidden||ctx.state!=='running')return;
     sceneStarted=true;
@@ -236,7 +251,7 @@
     if(!ctx||ctx.state==='closed'){
       try{if(!ensureContext())return false;}catch(_){return false;}
     }
-    if(ctx.state==='running'){resumeFailed=false;startScene();confirmEnabledSound();return true;}
+    if(ctx.state==='running'){resumeFailed=false;restoreSceneFromGesture();confirmEnabledSound();return true;}
     // Ett avslutat resume()-löfte kan lämna Safari kvar i suspended/interrupted.
     // Först NÄSTA användargest återskapar då kontexten, utan automatisk uppspelning.
     if(resumeFailed){
