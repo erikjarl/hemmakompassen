@@ -191,7 +191,12 @@
     if(ctx.state==='running'){
       // Starta bara om om ingen aktiv scen finns; både resume() och enable()
       // kan ge en statechange på iOS, ibland efter att ljudet redan startat.
-      if(enabled&&!hidden){startScene();confirmEnabledSound();}
+      if(enabled&&!hidden){
+        // En running-kontext kan sakna en timer eller motor efter iOS-avbrott.
+        // Återställ då enbart den trasiga scenen; friska scener får ingen dublett.
+        if(!sceneHealthy())stopScene();
+        startScene();confirmEnabledSound();
+      }
     }else{
       // En avbruten WebAudio-kontext ska inte lämna kvar en talröst
       // eller bakgrundsmusiken nedskruvad efter app-/flikbyte i Safari.
@@ -695,13 +700,19 @@
     // Safari kan skicka pageshow och visibilitychange för samma återkomst.
     // Starta inte om en redan körande scen vid en sådan dubbel signal.
     if(hidden===nextHidden){
-      if(!hidden&&enabled&&ctx&&ctx.state==='running')startScene();
+      if(!hidden&&enabled&&ctx&&ctx.state==='running'){
+        if(!sceneHealthy())stopScene();
+        startScene();
+      }
       return;
     }
     if(nextHidden)stopSpeech();
     hidden=nextHidden;
     stopScene();
-    if(!hidden&&enabled&&ctx&&ctx.state==='running')startScene();
+    if(!hidden&&enabled&&ctx&&ctx.state==='running'){
+        if(!sceneHealthy())stopScene();
+        startScene();
+      }
   }
   // Tal startas bara efter spelarens klick och med spelljudet aktiverat.
   // Samma repliker finns alltid kvar som text, även utan svensk systemröst.
