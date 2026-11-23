@@ -2,7 +2,7 @@
 
 **Projekt:** `erikjarl/hemmakompassen` · **Spel:** `spel/rimforsa/index.html`  
 **Publicerad adress:** https://erikjarl.github.io/hemmakompassen/spel/rimforsa/  
-**Senast rensad:** 2026-11-21 · **Källa för uppgiftsstatus och arbetsordning:** denna fil.
+**Senast rensad:** 2026-11-23 · **Källa för uppgiftsstatus och arbetsordning:** denna fil.
 
 ## Obligatorisk rotation mellan utvecklingspass
 
@@ -31,7 +31,7 @@
 
 ## Kvar att göra – aktiv arbetskö (21)
 
-**Översikt 23 november 2026:** 21 öppna uppgifter, 30 tidigare avbockade i [färdigarkivet](docs/COMPLETED_TASKS.md) och 1 ständig kvalitetsregel (MINI-01). **Endast ofärdiga delar står nedan.** Utförda delmoment och tidigare rapporter finns i [arbetsloggen](docs/WORKLOG.md), [uppgiftskraven](docs/TASK_DETAILS.md) och Git-historiken. Lägg **aldrig** till långa historiska uppdateringar på dessa rader.
+**Översikt 23 november 2026:** 21 öppna uppgifter, 29 tidigare avbockade i [färdigarkivet](docs/COMPLETED_TASKS.md) och 1 ständig kvalitetsregel (MINI-01). **Endast ofärdiga delar står nedan.** Utförda delmoment och tidigare rapporter finns i [arbetsloggen](docs/WORKLOG.md), [uppgiftskraven](docs/TASK_DETAILS.md) och Git-historiken. Lägg **aldrig** till långa historiska uppdateringar på dessa rader.
 
 ### Aktivt genomförande och kontroll (17)
 
@@ -72,13 +72,13 @@
 
 ## Färdiga uppgifter – flyttade ur att-göra-listan
 
-**30 tidigare färdigmarkerade uppgifter** finns i [COMPLETED_TASKS.md](docs/COMPLETED_TASKS.md). De ska **inte** återkomma i den aktiva kön såvida ett saknat acceptansvillkor påvisas. Alla 30 task-ID:n är borttagna från denna aktiva lista, men kraven finns kvar som referens i `TASK_DETAILS.md`.
+**29 tidigare färdigmarkerade uppgifter** finns i [COMPLETED_TASKS.md](docs/COMPLETED_TASKS.md). De ska **inte** återkomma i den aktiva kön såvida ett saknat acceptansvillkor påvisas. Alla 30 task-ID:n är borttagna från denna aktiva lista, men kraven finns kvar som referens i `TASK_DETAILS.md`.
 
 ## Dokumentation och principer
 
-- [TASK_DETAILS.md](docs/TASK_DETAILS.md) – fullständig beskrivning och acceptansvillkor för samtliga 45 uppgifts-ID:n (inklusive stående MINI-01), utan parallella statuskryssrutor.
+- [TASK_DETAILS.md](docs/TASK_DETAILS.md) – fullständig beskrivning och acceptansvillkor för samtliga 50 uppgifts-ID:n (inklusive stående MINI-01), utan parallella statuskryssrutor.
 - [GAME_RULES.md](docs/GAME_RULES.md) – bindande grafik-/minispelsregler och gemensamma tekniska hänsyn.
-- [COMPLETED_TASKS.md](docs/COMPLETED_TASKS.md) – separat historik över 30 avbockade uppgifter.
+- [COMPLETED_TASKS.md](docs/COMPLETED_TASKS.md) – separat historik över 29 avbockade uppgifter.
 - [WORKLOG.md](docs/WORKLOG.md) – hela tidigare arbetsloggen och historiska statusnoteringar. Läs **bara vid behov**.
 - `AGENTS.md` i denna mapp och repo-roten – kortkommando, befogenheter och arbetsmetod.
 
