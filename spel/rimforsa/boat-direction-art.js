@@ -149,6 +149,23 @@ function drawWake(ctx,x,y,angle,speed){
    ctx.fillRect(wx,wy-1,2,1);
   }
  }
+ // När båten färdas snabbare framträder korta, brutna svallpixlar
+ // utanför aktern. Placera allt i båtens lokala riktning så båda
+ // sidorna får samma proportioner även diagonalt.
+ if(speed>46){
+  for(const side of [-1,1]){
+   for(let step=0;step<(speed>90?3:2);step++){
+    const behind=-49-step*11;
+    const spread=20+step*5;
+    const rx=Math.round(px+fx*behind+sx*spread*side);
+    const ry=Math.round(py+fy*behind+sy*spread*side);
+    ctx.fillStyle=step%2===0?'#eaf9ed':'#a9dfdc';
+    ctx.fillRect(rx-1,ry-1,3,2);
+    ctx.fillStyle='#5ba2ad';
+    ctx.fillRect(rx+side,ry+1,2,1);
+   }
+  }
+ }
  // Motorns smala turbulensstråk ligger precis bakom aktern och följer
  // samma kvantiserade riktning som skrovet i alla åtta vyer.
  // Det syns bara när båten faktiskt rör sig och ändrar ingen fysik.
