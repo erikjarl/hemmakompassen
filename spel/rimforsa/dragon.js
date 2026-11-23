@@ -42,7 +42,14 @@
    const playerInRange=playerTargetable&&inFireRange(player);
    // Avbryt en redan låst varning mot Lage om han kliver in i bilen
    // innan avfyrning. Varningar mot helikoptern påverkas inte.
-   if(!playerTargetable&&warningTarget&&warningTarget.kind==='player')warningTarget=null;
+   if(!playerTargetable){
+    if(warningTarget&&warningTarget.kind==='player')warningTarget=null;
+    // När Lage stiger in i bilen upphör redan avfyrade Lageskott.
+    // Helikopterns egna skott måste däremot kunna fortsätta och träffa.
+    for(let i=shots.length-1;i>=0;i--){
+     if(shots[i].kind==='player')shots.splice(i,1);
+    }
+   }
    // Sikta endast en gång per skott. En låst varning ger Lage en
    // begriplig chans att väja, i stället för att skottet följer varje steg.
    if(shotTimer>0&&shotTimer<=FIRE_WARNING_SECONDS&&!warningTarget){
@@ -63,7 +70,7 @@
      const distance=Math.hypot(dx,dy);
      if(distance>35&&distance<=target.maxDistance&&target.x<=FIRE_EAST_LIMIT){
       const speed=165;
-      shots.push({id:'dragon-fire-'+(++shotId),x:mouthX,y:mouthY,vx:dx/distance*speed,vy:dy/distance*speed,travelled:0,maxDistance:target.maxDistance,life:5});
+      shots.push({id:'dragon-fire-'+(++shotId),kind:target.kind,x:mouthX,y:mouthY,vx:dx/distance*speed,vy:dy/distance*speed,travelled:0,maxDistance:target.maxDistance,life:5});
      }
     }
    }
@@ -107,6 +114,9 @@
    const index=shots.findIndex(s=>passesThrough(s,px,py,radius));
    if(index<0)return false;shots.splice(index,1);return true;
   }
+  // Menyer och minispel pausar redan flygande eldklot. Rensa den låsta
+  // varningen så den inte avfyras överraskande direkt när Lage återkommer.
+  function pauseAttacks(){warningTarget=null;}
   // Ny skattjakt får inte ärva eldklot eller låsta skottvarningar från
   // förra spelomgången. Låt drakens vanliga patrull fortsätta ostörd.
   function resetAttacks(){
@@ -207,7 +217,7 @@
      ctx.fillRect(tx-2,ty-2,Math.max(2,6-n),Math.max(2,6-n));
     }}
   }
-  return {update,draw,snapshot,hazards,consume,strikeObject,resetAttacks,home};
+  return {update,draw,snapshot,hazards,consume,strikeObject,pauseAttacks,resetAttacks,home};
  }
  root.RimforsaDragon={createDragon};
 })(typeof window!=='undefined'?window:globalThis);
