@@ -76,7 +76,7 @@
 
 ## Dokumentation och principer
 
-- [TASK_DETAILS.md](docs/TASK_DETAILS.md) – fullständig beskrivning och acceptansvillkor för samtliga 50 uppgifts-ID:n (inklusive stående MINI-01), utan parallella statuskryssrutor.
+- [TASK_DETAILS.md](docs/TASK_DETAILS.md) – fullständig beskrivning och acceptansvillkor för samtliga 51 uppgifts-ID:n (inklusive stående MINI-01), utan parallella statuskryssrutor.
 - [GAME_RULES.md](docs/GAME_RULES.md) – bindande grafik-/minispelsregler och gemensamma tekniska hänsyn.
 - [COMPLETED_TASKS.md](docs/COMPLETED_TASKS.md) – separat historik över 29 avbockade uppgifter.
 - [WORKLOG.md](docs/WORKLOG.md) – hela tidigare arbetsloggen och historiska statusnoteringar. Läs **bara vid behov**.
