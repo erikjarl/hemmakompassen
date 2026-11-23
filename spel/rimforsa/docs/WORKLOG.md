@@ -1,4 +1,10 @@
 # Lage i Rimforsa – historisk arbetslogg
+### 2026-11-23 – Jobb lage / HUV-05 (förlust från annan flik under aktivt spel)
+- `index.html`: spel-loopen kontrollerar den sparade förlustsignalen ungefär en gång i sekunden, även under båtfärd. Om en annan flik har förlorat avbryts den föråldrade omgångens speluppdatering och sidomladdning begärs. `collectCoins()` kontrollerar samma signal innan lokala kartmynt plockas bort.
+- Nytt `tests/rimforsa-loss-cross-tab.test.mjs` innehåller statiska regressionstester för att säkerställa placering av kontrollerna före båtuppdatering och kartmyntshämtning.
+- Båda kodfilerna sparades på main och har återlästs som källkod. Node-test, verklig iPhone/Safari-, tvåfliks- och game-over-genomspelning är inte utförda. Lokal lagring ger fortfarande ingen atomär tvåflikstransaktion. Ingen ny bildsprite i detta pass; GRAF-01 kvarstår.
+- HUV-05 hålls öppen och nästa huvuduppgift är HUV-06. Fortfarande 14 öppna uppgifter och 30 arkiverade.
+
 ### 2026-11-23 – Jobb lage / MYNT-03 (kontrolläsning av sparade minispelsmynt)
 - `index.html`: plånbokens `save()` jämför nu `localStorage.getItem()` direkt efter `setItem()` med det avsedda värdet. Om skrivningen inte kan bekräftas signaleras misslyckande till belönings-, köp- och återbetalningsvägarna i stället för falsk framgång. Detta minskar risken för tyst förlorade belöningar men är ingen fullständig transaktionsgaranti mellan flikar.
 - Nytt `tests/rimforsa-wallet-save.test.mjs` testar engångstilldelning, återläsning i ny session och simulerad lagring som inte behåller skrivningen.
