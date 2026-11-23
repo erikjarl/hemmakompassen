@@ -1,4 +1,10 @@
 # Lage i Rimforsa – historisk arbetslogg
+### 2026-11-23 – Två Jobb lage / KARTA-02 och FORDON-02
+- **Pass 1 KARTA-02:** `index.html`: sökningen efter rutnätsanslutningar vid både start och mål utökades från fyra till sju rutringar (upp till 42 px vid 6 px steg). `walkableStart()` och `walkableEndpoint()` kräver fortfarande `walkCell()` samt `canWalkStraight()` genom befintlig gångmask. Inga vägbilder eller kollisionsmasker ändrades. Commit `bb69412e`.
+- **Pass 2 FORDON-02:** `boat-direction-art.js`: lade till brutna tvåfärgade svallpixlar på båda sidor bakom aktern över 46 hastighetsenheter, med fler vid över 90. Skummet beräknas i lokal båtriktning för alla åtta vyer. `index.html` uppdaterat till cacheversion v11. Båtens rörelse/fysik oförändrad.
+- **Kontroll:** Ändringarna sparade på GitHub `main`; existerande kollisionskontroller kvarstår i koden. Ingen exekverad webbläsar-, mobil-, grafik- eller kollisionstest under dessa två pass, ingen separat Pages-verifiering. Uppgifterna förblir öppna. Rotation: HUV-06 → KARTA-02 → FORDON-02 → **LJUD-02**.
+- **Bildinventering:** `car.js` använder `car-directions.png` för åtta vinklar, `boat-direction-art.js` använder canvasritade åttavinkelbilder; kodritade figurer, bland annat drake och helikopter, återstår att byta mot riktiga bildsprites. Ingen ny bildfil genererad eller integrerad under dessa pass.
+
 ### 2026-11-23 – Jobb lage / HUV-06 (kontrast utan blink vid minskad rörelse)
 - `index.html`: `drawPoops()` respekterar nu `prefers-reduced-motion: reduce`. Om inställningen är aktiv förblir närhetsvarningens ljusa pixlar stadigt synliga i stället för att blinka; för övriga används befintlig rytm. Samma 23×26 px-yttergräns, position och kollisionsradie (19 px) behålls.
 - Kodändringen är sparad på GitHub `main` och källkopplingen kontrollerad. Ingen faktisk bildjämförelse, mobilgenomspelning eller körd automatisk test under detta pass. `HUV-06` fortsatt öppen för verklig bild-/kollisionskontroll; nästa `KARTA-02`.
