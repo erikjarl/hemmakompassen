@@ -1,4 +1,8 @@
 # Lage i Rimforsa – historisk arbetslogg
+### 2026-11-23 – Jobb lage / GRAF-01 (bildbaserad besökare i pizzerian)
+- `pizza-scene.js`: ytterligare en dekorativ besökare visas från befintligt originalark `RimforsaPreschoolFriendsSprite` (tredje rutan, 32×32). Bilden ritas pixelklart med skugga på pizzerians golv och renderingen uppdateras när arket laddats. Besökaren är inte en ny kodritad figur; inga nya bildfiler genererades.
+- `index.html`: versionsparameter för pizzeriascenen höjd till `v=8`. Inga köpytor, priser, mynt eller styrregler ändrade. Källkod och koppling kontrollerade; slutlig spel- och bildgranskning på mobil/dator saknas. `GRAF-01` står därför kvar öppen; nästa rotation `DRAKE-02`.
+
 ### 2026-11-23 – Jobb lage / LJUD-03 (tom tank vid bil och båt)
 - `audio.js`: ny originalsyntetiserad, kort dubbelton `fuelEmpty()` för en aktiv handling med tom tank. Samma spelmotor och av/på-/synlighetsregler som övriga effekter; `boatOutOfFuel()` vid övergång till tom tank under pågående båtfärd är oförändrad.
 - `index.html`: vid försök att kliva in i en bensintom bil hörs varningsljudet om ljud är på. Vid öppning av båtspelet med tom tank spelas varningsljudet i stället för den vanliga startfanfar som annars gav missvisande återkoppling. `audio.js` cacheversion höjd till v44.
