@@ -663,6 +663,14 @@
     tone(117,t+.085,.22,.052,'triangle');
     tone(82.41,t+.20,.24,.035,'sine');
   }
+  // Tom tank redan vid ett aktivt start-/påstigningsförsök.
+  // Två mjuka pulser skiljer sig från bränslestopp under körning.
+  function fuelEmpty(){
+    if(!enabled||hidden||!ctx||ctx.state!=='running')return;
+    const t=now()+.012;
+    tone(220,t,.12,.026,'triangle');
+    tone(185,t+.19,.17,.024,'sine');
+  }
   // En kort, låg varningssignal när båten kör slut på sitt bränsle.
   // Utlöses endast vid övergång från bensin kvar till tom tank.
   function boatOutOfFuel(){
@@ -736,5 +744,5 @@
     }catch(_){speechMusicVolume(volume);return false;}
   }
   function status(){return {enabled,available:!!AudioCtor,contextState:ctx?ctx.state:'not-created',scene,hidden,sceneStarted,playingMusic:musicInterval!==null,playingWaves:!!waves,playingEngine:!!engine,playingCarEngine:!!carEngine,carActive,dragonNearby};}
-  root.RimforsaAudio={enable,disable,toggle,resumeFromGesture,setScene,setBoatSpeed,setCarActive,setCarSpeed,setDragonNearby,coin,hit,poop,victory,slideLaunch,slideLand,slideCharge,slideLongJump,sharkBump,purchase,purchaseDenied,fuelFill,boatGrounding,boatOutOfFuel,regionArrival,carEnter,itemFound,helicopterHit,footballKick,footballSave,footballGoal,boatTreasure,npcTalk,bagOpen,bagClose,fuelStationEnter,mapOpen,boatLaunch,potatoSale,carExit,bagClear,newHunt,boatRetry,gameOver,shopEnter,mapClose,boatReturn,shopExit,routeSelected,routeBlocked,potatoPlant,potatoHarvest,speak,stopSpeech,setVisible,status};
+  root.RimforsaAudio={enable,disable,toggle,resumeFromGesture,setScene,setBoatSpeed,setCarActive,setCarSpeed,setDragonNearby,coin,hit,poop,victory,slideLaunch,slideLand,slideCharge,slideLongJump,sharkBump,purchase,purchaseDenied,fuelFill,fuelEmpty,boatGrounding,boatOutOfFuel,regionArrival,carEnter,itemFound,helicopterHit,footballKick,footballSave,footballGoal,boatTreasure,npcTalk,bagOpen,bagClose,fuelStationEnter,mapOpen,boatLaunch,potatoSale,carExit,bagClear,newHunt,boatRetry,gameOver,shopEnter,mapClose,boatReturn,shopExit,routeSelected,routeBlocked,potatoPlant,potatoHarvest,speak,stopSpeech,setVisible,status};
 })(window);
