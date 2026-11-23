@@ -320,3 +320,26 @@ Lägg till **vågskvalpsljud i bakgrunden** vid Åsundabadet.
 
 
   **Arbetsprincip (uppdaterad 22 november 2026):** Denna punkt har **aktiv prioritet och ska bearbetas återkommande parallellt med övriga speluppgifter**. Därefter är den ett **öppet, nästan obegränsat fortsättningsarbete** för kommande `jobb lage`-pass: utöka en sammanhängande region åt gången, återkom till punkten upprepade gånger och markera den inte slutligt färdig bara för att en enskild utbyggnad publicerats. Planera kartladdning, gångbarhet, bilens vattenmask, minikarta, NPC-rutter och myntplacering så att världens storlek kan växa utan att befintliga sparade framsteg förstörs. Använd geografiska källor som får användas och dokumentera källor/licenser innan kartmaterial anpassas.
+
+## Nya krav från 23 november 2026
+
+#### NPC-02 – Bildbaserade Saga och Oliver
+Använd GPT-genererade originalbilder som sparas som bildresurser i GitHub och verkligen laddas av spelet. Inventera tidigare bildark innan ersättning. Olika utseenden, rätt animationsriktningar, transparent bakgrund och huvudkartans 16-bitars SNES-stil.
+
+#### HELI-01 – Bildbaserad helikopter
+Generera och spara originalsprite i GitHub; ersätt kodritad helikopter i faktisk rendering och kontrollera riktning, skalning och mobilvisning.
+
+#### HELI-02 – Flygbar helikopter och drakstrid
+Lage ska kunna flyga helikoptern med egen tank, längre räckvidd än bilen och priset 7 kr per tydligt visad bränsleenhet. Drakens eldklot kan krascha helikoptern. Helikoptern skjuter isbollar; tre träffar gör att draken flyr i 20 minuter och lämnar en skatt på 20 mynt. Återkomsttid och engångsbelöning ska fungera efter omladdning. Inga dubbla mynt.
+
+#### FORDON-03 – Bilen begränsad till körbara vägar
+Bilen får köra på bilvägar och lite utanför vägen, inklusive infarter/parkering och mack. Inte fritt över övrigt gräs eller skog. Vatten ska fortsätta vara spärrat.
+
+#### NPC-03 – Håll figurer borta från affärer/minispel
+Vandrande NPC:er ska inte placeras eller gå nära ingångar/interaktionsytor för affärer och minispel, så att Lage får fri passage. Testa både startpositioner och vandring.
+
+#### KARTA-03 – Lättare att nå macken
+Gångvägar ska ansluta mackens interaktionspunkt. Tillåt också gång över utpekade träd- och gräsytor öster om macken, men inte genom byggnader, sjö eller hela skogen. Testa pekrutt och manuell styrning.
+
+#### HUV-07 – Hopp över små hinder
+Inför hoppknapp på mobil och tangent på dator, med synlig hoppanimation. Hoppning över bajskorvar ska undvika skada när Lage är i luften, och begränsade små hinder ska kunna passeras. Hoppa aldrig över byggnader eller vatten. Testa landning, skada och återgång till gångläge.
