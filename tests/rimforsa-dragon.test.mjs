@@ -25,3 +25,24 @@ test('dragon does not modify coins, hearts, or collision',()=>{
  const d=create();d.update(1,500,800);
  const state=d.snapshot();assert.equal('damage' in state,false);assert.equal('coins' in state,false);
 });
+
+test('dragon fireball artwork stops before the gas station at x=394',()=>{
+ const d=create(),fireRects=[];
+ let fillStyle='';
+ const ctx={
+  save(){},restore(){},translate(){},beginPath(){},moveTo(){},lineTo(){},
+  closePath(){},fill(){},stroke(){},ellipse(){},fillRect(x,y,w,h){
+   if(fillStyle==='#762818')fireRects.push({x,w});
+  },
+  set fillStyle(value){fillStyle=value;},set strokeStyle(value){},
+  set lineWidth(value){},set imageSmoothingEnabled(value){}
+ };
+ // Viewport origin aligned to world coordinates so drawn x is world x.
+ for(let i=0;i<200;i++){
+  d.update(.05,380,780);
+  d.draw(ctx,200,200,400,400);
+ }
+ assert.ok(fireRects.length>0,'the dragon should fire toward Lage near the station');
+ assert.ok(fireRects.every(({x,w})=>x+w<=394),
+  'the painted fireball body must remain west of the gas station');
+});
