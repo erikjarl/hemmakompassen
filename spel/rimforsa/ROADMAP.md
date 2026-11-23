@@ -6,11 +6,11 @@
 
 ## Obligatorisk rotation mellan utvecklingspass
 
-**SENAST BEARBETAD HUVUDUPPGIFT: `KARTA-02` – finare pekmålssampling på smala gångstråk (23 november 2026).**
+**SENAST BEARBETAD HUVUDUPPGIFT: `FORDON-02` – enhetlig bilsprite vid okänd riktning (23 november 2026).**
 
-**NÄSTA ROTATIONSPOSITION: `FORDON-02` – nästa öppna roterande huvuduppgift.**
+**NÄSTA ROTATIONSPOSITION: `LJUD-02` – nästa öppna roterande huvuduppgift.**
 
-**ALDRIG SAMMA HUVUDUPPGIFT TVÅ `JOBB LAGE` I FÖLJD.** Följ ordningen bland öppna, genomförbara uppgifter nedan med cirkulär rotation. Starta på angiven nästa position, hoppa över avbockade punkter, stående kvalitetsregler som `MINI-01` (dessa gäller ändå varje pass) och tillfälligt blockerade uppgifter. Bearbeta olika delar av spelet mellan varven: grafik, fordon, bränsle, ljud och andra spelmekaniker. Om inget praktiskt kan göras på nästa punkt, gå vidare till följande **annan** uppgift; återvänd först efter andra utvecklingspass. Prioritet betyder vikt inom rotationen, **inte** rätt att välja samma uppgift igen direkt. När ett pass med faktisk spelutveckling slutförts, uppdatera **båda fälten ovan** till den verkliga huvuduppgiften och efterföljande öppna rotationsposition innan passet avslutas. Rapportera vilka fält som ändrades. Att kontrollera kryssrutor eller åtgärda ett akut blockerande fel räknas inte som att byta huvuduppgift. **Aktuell rotation:** DRAKE-02 → MYNT-03 → HUV-05 → HUV-06 → KARTA-02 → FORDON-02 → LJUD-02 → LJUD-03 → GRAF-01 (20 nov). BRÄNSLE-02 saknade verifierbar prisuppgift; LJUD-04 kräver hörselprov och GRAF-02 är spärrad som nästa huvudfokus. Nästa position FORDON-02.
+**ALDRIG SAMMA HUVUDUPPGIFT TVÅ `JOBB LAGE` I FÖLJD.** Följ ordningen bland öppna, genomförbara uppgifter nedan med cirkulär rotation. Starta på angiven nästa position, hoppa över avbockade punkter, stående kvalitetsregler som `MINI-01` (dessa gäller ändå varje pass) och tillfälligt blockerade uppgifter. Bearbeta olika delar av spelet mellan varven: grafik, fordon, bränsle, ljud och andra spelmekaniker. Om inget praktiskt kan göras på nästa punkt, gå vidare till följande **annan** uppgift; återvänd först efter andra utvecklingspass. Prioritet betyder vikt inom rotationen, **inte** rätt att välja samma uppgift igen direkt. När ett pass med faktisk spelutveckling slutförts, uppdatera **båda fälten ovan** till den verkliga huvuduppgiften och efterföljande öppna rotationsposition innan passet avslutas. Rapportera vilka fält som ändrades. Att kontrollera kryssrutor eller åtgärda ett akut blockerande fel räknas inte som att byta huvuduppgift. **Aktuell rotation:** DRAKE-02 → MYNT-03 → HUV-05 → HUV-06 → KARTA-02 → FORDON-02 → LJUD-02 → LJUD-03 → GRAF-01 (20 nov). BRÄNSLE-02 saknade verifierbar prisuppgift; LJUD-04 kräver hörselprov och GRAF-02 är spärrad som nästa huvudfokus. Nästa position LJUD-02.
 
 ## Obligatorisk avbockning – vid VARJE `jobb lage`
 
