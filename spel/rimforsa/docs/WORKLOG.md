@@ -1,4 +1,10 @@
 # Lage i Rimforsa – historisk arbetslogg
+### 2026-11-23 – Jobb lage / två separata pass: HUV-06 → KARTA-02
+- HUV-06: `index.html` fick extra pixeldetaljer i bajskorvens befintliga 23×26-yta: ljus över-/vänsterkant och mörka högerskuggor. Varken placering, siluettens mått, skadekontroll eller hjärtregler ändrades. Visuell jämförelse mot ljus väg/mörkt gräs på mobil och dator återstår; uppgiften hålls öppen.
+- KARTA-02: `safeTapTarget()` provar nu 48 vinklar i stället för 24 och söker till 24 pixlar i stället för 18 från ett fingertryck. Alla kandidater måste fortfarande passera `canStand()` i originalmasken; kartbild, gångkollision och A*-vägkontroller har inte breddats eller ersatts. Praktiska rutter vid trånga entréer/Åsundabadet återstår; uppgiften hålls öppen.
+- `tests/rimforsa-poop-path-tolerance.test.mjs` tillagt för statisk spritekontroll och isolerad kontroll av pekmål på en smal gångbar remsa. GitHub accepterade commits; testsuiten har ännu inte körts i denna session. Ingen ny figur ersattes av bildsprite; kodritade reservpersoner enligt GRAF-01 kvarstår.
+- Status: fortfarande 14 öppna/30 tidigare färdiga; nästa roterande fokus FORDON-02. KARTA-01:s aktiva kartutbyggnad ligger kvar separat.
+
 ### 2026-11-23 – Jobb lage / HUV-05 (förlust från annan flik under aktivt spel)
 - `index.html`: spel-loopen kontrollerar den sparade förlustsignalen ungefär en gång i sekunden, även under båtfärd. Om en annan flik har förlorat avbryts den föråldrade omgångens speluppdatering och sidomladdning begärs. `collectCoins()` kontrollerar samma signal innan lokala kartmynt plockas bort.
 - Nytt `tests/rimforsa-loss-cross-tab.test.mjs` innehåller statiska regressionstester för att säkerställa placering av kontrollerna före båtuppdatering och kartmyntshämtning.
