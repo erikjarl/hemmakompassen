@@ -759,6 +759,12 @@ function drawPoops(){
   // Skarp SNES-pixelsiluett i samma 23×26 px-yta; endast färger och inre detaljer ändras.
   // Mörk, sammanhängande ytterkontur skiljer figuren från både gräs och väg.
   ctx.fillStyle='#1c1310';ctx.fillRect(x-11,y-1,23,12);ctx.fillRect(x-8,y-9,17,10);ctx.fillRect(x-3,y-15,9,7);
+  // Håll den yttre mörka siluetten exakt lika stor men lägg ljus
+  // riktad från övre vänster inne i konturen för läsbarhet på gräs.
+  ctx.fillStyle=lightPhase?'#f6d5a0':'#e7b87e';
+  ctx.fillRect(x-2,y-14,3,1);ctx.fillRect(x-7,y-8,3,1);
+  ctx.fillStyle='#291811';
+  ctx.fillRect(x+6,y-8,2,4);ctx.fillRect(x+9,y+5,2,4);
   // Djup botten-/sidskugga och tre tydliga, trappade nivåer.
   ctx.fillStyle='#442319';ctx.fillRect(x-9,y,19,9);ctx.fillRect(x-7,y-8,15,9);ctx.fillRect(x-2,y-14,7,8);
   ctx.fillStyle=lightPhase?'#b8753c':'#98592f';ctx.fillRect(x-7,y-7,14,7);ctx.fillRect(x-8,y+1,17,6);ctx.fillRect(x-1,y-12,5,6);
