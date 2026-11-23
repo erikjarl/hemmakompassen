@@ -1,3 +1,8 @@
+### 2026-11-23 – Jobb lage / FORDON-02 (båtens fördäck i åtta riktningar)
+- `boat-direction-art.js`: lade till samma två förtöjningsknapar och markerad mittsöm på den vita båtens fördäck, ritade i båtens egna koordinater för att följa alla åtta riktningar med skarpa pixelblock. Befintligt skrov, förflyttning, bränsle och svall är oförändrade.
+- `index.html`: höjde cacheversionen för båtens riktningsgrafik till v12.
+- GitHub main-commits `d2d33e4` och `4ff1ce4` kontrollerade vid skrivning. Ingen verklig visuell genomspelning, Safari/mobilkontroll eller verifierad GitHub Pages-publicering utförd. FORDON-02 är fortsatt öppen för bildgranskning av bil och båt i åtta riktningar samt provkörning. Inga äldre öppna punkter kunde styrkas som helt färdiga inom detta kodpass (14 öppna, 30 färdiga). Ingen ny bildgenererad person integrerades. Nästa rotation LJUD-02. KARTA-01 kvarstår aktiv.
+
 ### 2026-11-23 – Jobb lage / KARTA-02 (en omplanering när gångrutt fastnar)
 - `index.html`: automatiska gångrutter från tryck på huvudkarta eller stor karta tillåts nu högst ett A*-omplaneringsförsök när rörelsen stannar vid en vägkant. Sökningen görs från Lages aktuella position till sista återstående ruttnoden och använder samma originalmask, canStand/canWalkStraight och A*-kontroller; inga nya gångytor, öppnade hinder eller grafiska vägbredder.
 - `routeRetriesLeft` nollställs vid manuellt avbruten rutt och får värdet ett vid nytt kartval. Om omplanering misslyckas avbryts rutten i stället för att försöka i varje bildruta.
