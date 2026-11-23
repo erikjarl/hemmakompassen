@@ -1,4 +1,9 @@
 # Lage i Rimforsa – historisk arbetslogg
+### 2026-11-23 – Jobb lage / DRAKE-02 (paus vid dold flik)
+- `index.html`: huvudkartans `worldPlaying` kräver nu också `!document.hidden`, vilket stoppar drakens uppdatering/skott och helikopterns träfftimer när sidan ligger i bakgrunden. Påverkar inte synliga minispel eller vanliga pausregler.
+- `dragon.js`: kommentaren för sista projektilsegmentets kollision förtydligad utan ändrad mekanik. Cacheversion höjd till `v=16`.
+- Källkoppling kontrollerad genom GitHub. Ingen fysisk mobil-/datorgenomspelning eller livepubliceringskontroll utförd. `DRAKE-02` kvarstår öppen; nästa `MYNT-03`. Bildinventering: draken och helikoptern ritas fortfarande i kod, bildsprites för dessa har inte genererats eller kopplats in i detta pass.
+
 ### 2026-11-23 – Jobb lage / GRAF-01 (bildbaserad besökare i pizzerian)
 - `pizza-scene.js`: ytterligare en dekorativ besökare visas från befintligt originalark `RimforsaPreschoolFriendsSprite` (tredje rutan, 32×32). Bilden ritas pixelklart med skugga på pizzerians golv och renderingen uppdateras när arket laddats. Besökaren är inte en ny kodritad figur; inga nya bildfiler genererades.
 - `index.html`: versionsparameter för pizzeriascenen höjd till `v=8`. Inga köpytor, priser, mynt eller styrregler ändrade. Källkod och koppling kontrollerade; slutlig spel- och bildgranskning på mobil/dator saknas. `GRAF-01` står därför kvar öppen; nästa rotation `DRAKE-02`.
