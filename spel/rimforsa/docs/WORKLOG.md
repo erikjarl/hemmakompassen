@@ -1,4 +1,9 @@
 # Lage i Rimforsa – historisk arbetslogg
+### 2026-11-23 – Jobb lage / HUV-05 (inga mynt bakom förlustdialogen)
+- `index.html`: `awardMinigameCoin()` returnerar nu falskt medan förlustdialogen är öppen, så fördröjda minispelsåterkopplingar inte återintroducerar bonusmynt under game over. `payCoins()` returnerar `null` i samma läge, för att köp inte ska ändra saldot bakom dialogen. Ingen ändring av normal belöning eller köp efter dialogen.
+- GitHub-källan och ändringarnas placering kontrollerade. Ingen faktisk mobil-/datorgenomspelning, ingen exekverad regressionstestning och ingen separat Pages-verifiering under detta pass. HUV-05 kvarstår öppen; särskilt kontrollera fördröjd belöning efter att förlustdialogen stängts. Nästa HUV-06.
+- Bildinventering: drake och helikopter är fortfarande kodritade i `dragon.js`/`helicopter.js`. Ingen ny bildsprite har genererats eller integrerats i detta pass.
+
 ### 2026-11-23 – Jobb lage / MYNT-03 (säker synk vid läsfel)
 - `index.html`: `rewardWallet.sync()` returnerar nu felstatus när lokal lagring inte kan läsas eller när sparat JSON/plånboksformat är trasigt. `award`, `spend` och `refund` stoppar då ändringen i stället för att skriva över annan data utifrån ett gammalt lokalt saldo. Normal sparning och engångs-ID:n lämnas oförändrade.
 - `tests/rimforsa-wallet-save.test.mjs`: regressionstester för läsundantag och felaktigt JSON tillagda. Testerna har inte exekverats i en lokal Node-miljö under detta pass; GitHub-källan och ändringarna har kontrollerats. Mobilgenomspelning och flerflikstest återstår. MYNT-03 är fortsatt öppen; nästa HUV-05.
