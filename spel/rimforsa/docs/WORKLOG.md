@@ -1,4 +1,10 @@
 # Lage i Rimforsa – historisk arbetslogg
+### 2026-11-23 – Jobb lage / LJUD-02 (scenåterhämtning vid användargest)
+- `audio.js`: en ny kontroll av `sceneHealthy()` verifierar att rätt musik-/ljudloopar och motorljud finns för aktuell scen. `resumeFromGesture()` kan återbygga en ofullständig scen när WebAudio redan är `running`, men gör inget om scenen är komplett. Ingen automatisk ljudupplåsning sker vid flikåterkomst; den befintliga användargestregeln gäller fortfarande.
+- `index.html`: `audio.js` cacheversion uppdaterad från v42 till v43. `tests/rimforsa-audio.test.mjs`: nytt test för att upprepade återupptagningsgester inte dubblar loopar i land-/båtscenerna.
+- GitHub bekräftade skrivning av kod, test och versionshöjning; faktisk testkörning och iPhone/Safari-lyssning har inte genomförts i detta pass. Kontroll av tal och ljudavbrott kvarstår enligt roadmap. Inga nya bildsprites gjordes i denna ljuduppgift; kodritade reservpersoner kvarstår för GRAF-01. 14 öppna och 30 färdigarkiverade uppgifter.
+- Nästa roterande huvuduppgift: LJUD-03.
+
 ### 2026-11-23 – Jobb lage / FORDON-02 (enhetlig bilbild även vid okänd riktning)
 - `car.js`: om en okänd riktningskod når bilens bildrenderare används nu högerbildrutan från det befintliga 640×60-arket i stället för den enklare kodritade reservbilen. Alla åtta riktningars ordning, bilens proportioner, takorientering, skala, körning och kollisionsmask behålls.
 - `tests/rimforsa-car.test.mjs`: kompletterat Canvas-mock med klippningsmetoder som den redan befintliga förarbilden använder; korrigerat ett föråldrat antagande om att parkerad bil skulle använda ruta 0 även när åttariktningsarket är laddat. Testar också fallback för okänd riktningskod.
