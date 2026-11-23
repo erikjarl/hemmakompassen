@@ -84,6 +84,8 @@
     if(fire.vy<0)duration=Math.min(duration,Math.max(0,(0-fire.y)/fire.vy));
     fire.x+=fire.vx*duration;fire.y+=fire.vy*duration;
     fire.travelled+=speed*duration;fire.life-=dt;
+    // Ett eldklot som stoppats vid kartans kant kan fortfarande kollidera
+    // på sista rörelsesegmentet, men ska inte ligga kvar som synlig låga.
     fire.expired=fire.life<=0||duration<dt||fire.travelled>=fire.maxDistance;
    }
    return near;
