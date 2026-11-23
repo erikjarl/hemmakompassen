@@ -53,10 +53,13 @@ function install(){
 function rect(x,y,w,h,color){ctx.fillStyle=color;ctx.fillRect(Math.round(x),Math.round(y),w,h);}
 function line(x,y,x2,y2,color){ctx.strokeStyle=color;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x2,y2);ctx.stroke();}
 function sprite(x,y,row,frame=0){
+ // Behåll Lages 56×56 originalpixlar, med fötterna vid spelpositionen.
+ // 44×44-nedskalning gav annan detaljskärpa än huvudkartans sprite.
  if(lageImage&&lageImage.complete&&lageImage.naturalWidth>=224&&lageImage.naturalHeight>=224)
-  ctx.drawImage(lageImage,frame*56,row*56,56,56,Math.round(x-22),Math.round(y-45),44,44);
+  ctx.drawImage(lageImage,frame*56,row*56,56,56,Math.round(x-28),Math.round(y-56),56,56);
  else{rect(x-9,y-36,18,15,'#e5b58d');rect(x-10,y-40,20,6,'#725133');rect(x-11,y-20,22,17,'#b95d55');rect(x-8,y-3,6,7,'#2c4045');rect(x+2,y-3,6,7,'#2c4045');}
 }
+// Reservritning behåller samma ankarpunkt vid fötterna som bildspriten.
 function drawMajaFallback(x,y){
  rect(x-13,y-3,27,4,'#526b50');
  rect(x-11,y-17,9,18,'#3e5977');rect(x+3,y-17,9,18,'#3e5977');
@@ -71,7 +74,7 @@ function drawMaja(x,y){
  // Främre vyn används medan Maja vaktar målet.
  // Tidigare pixelritning fungerar som reserv vid bildfel.
  if(majaSprite&&majaSprite.complete&&majaSprite.naturalWidth===192&&majaSprite.naturalHeight===56){
-  ctx.drawImage(majaSprite,0,0,48,56,Math.round(x-24),Math.round(y-60),48,56);
+  ctx.drawImage(majaSprite,0,0,48,56,Math.round(x-24),Math.round(y-56),48,56);
  }else drawMajaFallback(x,y);
 }
 function drawSpectators(){
