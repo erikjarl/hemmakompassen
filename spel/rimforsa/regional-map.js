@@ -8,12 +8,14 @@ const places=[
  {name:'Rimforsa',x:475,y:378,desc:'Här börjar resan mellan sjöarna.'},
  {name:'Brokind',x:260,y:116,desc:'Norrut mot Brokind och naturen vid Järnlunden.'},
  {name:'Kättilstad',x:804,y:234,desc:'Österut mot Kättilstad och landsbygden.'},
- {name:'Björkfors',x:552,y:650,desc:'Söderut längs Åsunden mot Björkfors.'}
+ {name:'Björkfors',x:552,y:650,desc:'Söderut längs Åsunden mot Björkfors.'},
+ {name:'Tjärstads kyrka',x:670,y:610,desc:'Sydost om Rimforsa ligger Tjärstads kyrka. Vägen är en fri speltolkning.'}
 ];
 const roads=[
  [[475,378],[417,328],[360,256],[306,183],[260,116]],
  [[475,378],[586,339],[689,295],[804,234]],
- [[475,378],[491,458],[518,553],[552,650]]
+ [[475,378],[491,458],[518,553],[552,650]],
+ [[475,378],[520,435],[576,508],[626,565],[670,610]]
 ];
 let modal,canvas,g,hero,raf=0,last=0,x=475,y=378,back,priorFocus,visited=new Set(),facing='down',phase=0;
 let keys={up:false,down:false,left:false,right:false};
@@ -57,7 +59,7 @@ function setup(){
  document.head.append(st);
  modal=document.createElement('div');modal.className='regional-map';modal.hidden=true;
  modal.setAttribute('role','dialog');modal.setAttribute('aria-modal','true');modal.setAttribute('aria-label','Större karta kring Rimforsa');
- modal.innerHTML='<div class="regional-card"><h2>🌲 Rimforsa och omgivningarna</h2><p>Utforska Brokind, Kättilstad och Björkfors! Vägar och sjöar är fritt tolkade från verkliga kartor.</p><canvas width="480" height="340" aria-label="Spelbar regional pixelkarta, följ vägarna till platserna"></canvas><p class="regional-info" role="status" aria-live="polite">Följ vägarna. Besök 3 platser!</p><div class="regional-controls"><div class="regional-pad"><button data-dir="up" aria-label="Norr">▲</button><button data-dir="left" aria-label="Väster">◀</button><button data-dir="down" aria-label="Söder">▼</button><button data-dir="right" aria-label="Öster">▶</button></div><div><div class="regional-locations"><button data-target="Brokind">Brokind</button><button data-target="Kättilstad">Kättilstad</button><button data-target="Björkfors">Björkfors</button></div><button data-close>Återvänd till Rimforsa ✕</button></div></div><p>Styr med pilar, WASD eller knapparna. Välj ett ortnamn för att låta Lage följa vägen dit, eller styr själv. Detta är en spelkarta, inte en vägvisning i verkligheten.</p></div>';
+ modal.innerHTML='<div class="regional-card"><h2>🌲 Rimforsa och omgivningarna</h2><p>Utforska Brokind, Kättilstad, Björkfors och Tjärstads kyrka! Vägar och sjöar är fritt tolkade från verkliga kartor.</p><canvas width="480" height="340" aria-label="Spelbar regional pixelkarta, följ vägarna till platserna"></canvas><p class="regional-info" role="status" aria-live="polite">Följ vägarna. Besök 4 platser!</p><div class="regional-controls"><div class="regional-pad"><button data-dir="up" aria-label="Norr">▲</button><button data-dir="left" aria-label="Väster">◀</button><button data-dir="down" aria-label="Söder">▼</button><button data-dir="right" aria-label="Öster">▶</button></div><div><div class="regional-locations"><button data-target="Brokind">Brokind</button><button data-target="Kättilstad">Kättilstad</button><button data-target="Björkfors">Björkfors</button><button data-target="Tjärstads kyrka">Tjärstads kyrka</button></div><button data-close>Återvänd till Rimforsa ✕</button></div></div><p>Styr med pilar, WASD eller knapparna. Välj ett ortnamn för att låta Lage följa vägen dit, eller styr själv. Detta är en spelkarta, inte en vägvisning i verkligheten.</p></div>';
  document.body.append(modal);canvas=modal.querySelector('canvas');g=canvas.getContext('2d');
  hero=new Image();hero.src='./lage-sprites.png';hero.onload=()=>{if(!modal.hidden)render();};
  for(const b of modal.querySelectorAll('[data-dir]')){
@@ -98,7 +100,7 @@ function render(){
  for(const p of places){
   rect(p.x-14,p.y-35,28,23,'#64442f');rect(p.x-12,p.y-33,24,19,'#e2c28a');
   rect(p.x-18,p.y-42,36,10,'#8b493a');rect(p.x-10,p.y-25,6,7,'#4f796f');rect(p.x+4,p.y-26,5,12,'#79573e');
-  rect(p.x-49,p.y+9,98,17,'#213c30');g.fillStyle='#fff1bc';g.font='bold 11px monospace';g.textAlign='center';g.fillText(p.name,p.x,p.y+21);
+  rect(p.x-72,p.y+9,144,17,'#213c30');g.fillStyle='#fff1bc';g.font='bold 11px monospace';g.textAlign='center';g.fillText(p.name,p.x,p.y+21);
  }
  rect(x-12,y-4,24,4,'#2e4c35');
  if(hero.complete&&hero.naturalWidth>=224){const row=facing==='down'?0:facing==='left'?1:facing==='right'?2:3;g.drawImage(hero,(Math.floor(phase)%4)*56,row*56,56,56,Math.round(x-22),Math.round(y-46),44,44);}
@@ -109,7 +111,7 @@ function render(){
  g.strokeStyle='#e9d19f';g.lineWidth=1;
  for(const route of roads){g.beginPath();route.forEach((p,i)=>i?g.lineTo(CW-103+p[0]*93/W,11+p[1]*71/H):g.moveTo(CW-103+p[0]*93/W,11+p[1]*71/H));g.stroke();}
  rect(CW-105+x*93/W,9+y*71/H,5,5,'#eb4f59');
- rect(5,5,155,20,'#1a392d');g.font='bold 11px monospace';g.textAlign='left';g.fillStyle='#f3dfb2';g.fillText('OMRÅDEN '+visited.size+'/3',12,19);
+ rect(5,5,155,20,'#1a392d');g.font='bold 11px monospace';g.textAlign='left';g.fillStyle='#f3dfb2';g.fillText('OMRÅDEN '+visited.size+'/'+(places.length-1),12,19);
 }
 function tick(t){
  if(!modal||modal.hidden)return;
@@ -123,10 +125,10 @@ function tick(t){
  }
  if(d){if(Math.abs(dx)>Math.abs(dy))facing=dx>0?'right':'left';else facing=dy>0?'down':'up';phase+=dt*9;const nx=x+dx/d*speed*dt,ny=y+dy/d*speed*dt;if(walkable(nx,ny)){x=nx;y=ny;}else if(walkable(nx,y))x=nx;else if(walkable(x,ny))y=ny;}
  if(destination&&!waypoints.length&&Math.hypot(x-places.find(p=>p.name===destination).x,y-places.find(p=>p.name===destination).y)<15)destination=null;
- for(const p of places.slice(1))if(Math.hypot(x-p.x,y-p.y)<38&&!visited.has(p.name)){visited.add(p.name);modal.querySelector('.regional-info').textContent='Du kom till '+p.name+'! '+p.desc+' · '+visited.size+'/3 platser besökta.';if(root.RimforsaAudio?.regionArrival)root.RimforsaAudio.regionArrival();}
+ for(const p of places.slice(1))if(Math.hypot(x-p.x,y-p.y)<38&&!visited.has(p.name)){visited.add(p.name);modal.querySelector('.regional-info').textContent='Du kom till '+p.name+'! '+p.desc+' · '+visited.size+'/'+(places.length-1)+' platser besökta.';if(root.RimforsaAudio?.regionArrival)root.RimforsaAudio.regionArrival();}
  render();raf=requestAnimationFrame(tick);
 }
-function start(opts){if(!opts||typeof opts.returnToMap!=='function')return false;setup();if(!modal.hidden)close();back=opts.returnToMap;priorFocus=document.activeElement;keys={up:false,down:false,left:false,right:false};x=475;y=378;facing='down';phase=0;visited=new Set();destination=null;waypoints=[];modal.querySelector('.regional-info').textContent='Följ vägarna. Besök 3 platser!';modal.hidden=false;last=0;modal.querySelector('[data-dir=up]').focus();raf=requestAnimationFrame(tick);return true;}
+function start(opts){if(!opts||typeof opts.returnToMap!=='function')return false;setup();if(!modal.hidden)close();back=opts.returnToMap;priorFocus=document.activeElement;keys={up:false,down:false,left:false,right:false};x=475;y=378;facing='down';phase=0;visited=new Set();destination=null;waypoints=[];modal.querySelector('.regional-info').textContent='Följ vägarna. Besök '+(places.length-1)+' platser!';modal.hidden=false;last=0;modal.querySelector('[data-dir=up]').focus();raf=requestAnimationFrame(tick);return true;}
 function close(){if(!modal||modal.hidden)return;modal.hidden=true;cancelAnimationFrame(raf);keys={up:false,down:false,left:false,right:false};destination=null;waypoints=[];const cb=back;back=null;if(typeof cb==='function')cb();if(priorFocus?.isConnected)priorFocus.focus();}
 root.RimforsaRegionalMap={start,close,isOpen:()=>!!modal&&!modal.hidden};
 })(window);
