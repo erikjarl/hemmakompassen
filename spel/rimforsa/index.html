@@ -247,10 +247,11 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
   // spelflik inte i onödan skriver över mynt från en nyare flik.
   function sync(){
    let raw;
-   try{raw=localStorage.getItem(key);}catch(_){return;}
+   try{raw=localStorage.getItem(key);}catch(_){return false;}
    let data=null;
-   try{data=raw?JSON.parse(raw):null;}catch(_){return;}
-   if(data!==null&&(typeof data!=='object'||Array.isArray(data)))return;
+   try{data=raw?JSON.parse(raw):null;}catch(_){return false;}
+   if(data!==null&&(typeof data!=='object'||Array.isArray(data)))return false;
+   if(data&&(!data.earned||typeof data.earned!=='object'||Array.isArray(data.earned)))return false;
    const next=Object.create(null);
    if(data&&data.earned&&typeof data.earned==='object'&&!Array.isArray(data.earned)){
     for(const id of Object.keys(data.earned))if(validId(id)&&data.earned[id]===true)next[id]=true;
@@ -259,6 +260,7 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
    const count=Object.keys(earned).length;
    const value=data?Number(data.spent):0;
    spent=Math.min(count,Number.isFinite(value)?Math.max(0,Math.floor(value)):0);
+   return true;
   }
   sync();
   // Läs senaste sparade saldo före varje visning och köpkontroll, även innan storage-event.
@@ -280,21 +282,21 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
    has(id){if(!validId(id))return false;sync();return earned[id]===true;},
    award(id){
     if(!validId(id))return false;
-    sync();if(earned[id])return false;
+    if(!sync()||earned[id])return false;
     earned[id]=true;
     if(!save()){delete earned[id];return false;}
     return true;
    },
    spend(n){
     if(!Number.isSafeInteger(n)||n<0)return false;
-    sync();if(n>Object.keys(earned).length-spent)return false;
+    if(!sync()||n>Object.keys(earned).length-spent)return false;
     spent+=n;
     if(!save()){spent-=n;return false;}
     return true;
    },
    refund(n){
     if(!Number.isSafeInteger(n)||n<0)return false;
-    sync();if(n>spent)return false;
+    if(!sync()||n>spent)return false;
     spent-=n;
     if(!save()){spent+=n;return false;}
     return true;
