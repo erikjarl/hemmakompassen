@@ -1,3 +1,9 @@
+### 2026-11-23 – Jobb lage / DRAKE-02 (bilskydd och pausade varningar)
+- `dragon.js`: märk varje eldklot med låst måltyp (Lage/helikopter). När Lage är skyddad av bilen rensas redan avfyrade skott riktade mot honom; helikopterskott lämnas kvar. Avbryt även en låst skottvarning mot Lage vid bilskydd. Ny `pauseAttacks()` släpper en låst varning när huvudvärlden är pausad, men befintliga projektiler behåller sin frysta position.
+- `index.html`: anropa `dragon.pauseAttacks()` när den befintliga centrala pauslogiken stänger av huvudvärlden; script-cache v16→v17. Den tidigare eldklotsgränsen `FIRE_EAST_LIMIT=384`, skottfysiken och helikopterträffar ändras inte.
+- GitHub main: `80cc85c` (drake), `8a2be3c` (integration), `397d208` (roadmap). Efterläsning bekräftade att skott märkts, spelarskott rensas selektivt, pausmetoden är kopplad, omstartsreset finns kvar och v17 laddas. Ingen verklig webbläsargenomspelning, syntaxkörning, fysisk mobilkontroll eller Pages-publiceringskontroll gjordes. DRAKE-02 är därför öppen.
+- Bildinventering: draken ritas fortfarande via kodade polygoner, trots önskan om enhetliga bildsprites; inga nya bildgenererade sprites integrerades i detta pass. Nästa rotationsuppgift MYNT-03.
+
 ### 2026-11-23 – Jobb lage / SPORT-01 (Majas räddningar syns)
 - `football-minigame.js`: Maja använder nu redan integrerade riktningsvyer från sin 48×56-bildsprite (bakifrån vid förflyttning uppåt, framifrån vid förflyttning nedåt) i stället för samma frontbild hela tiden. Lagt till `saves` som bara ökar när bollen verkligen bryter målvaktslinjen och den befintliga räddningskollisionen lyckas. Hallens resultattavla och HUD visar räddningar; omstart och ny match nollställer dem. Myntregler, bolls hastighet, träffvillkor, redovisade mål och styrning är oförändrade.
 - `index.html`: script-cache v11→v12.
