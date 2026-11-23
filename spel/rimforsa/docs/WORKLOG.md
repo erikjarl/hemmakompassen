@@ -1,3 +1,8 @@
+### 2026-11-23 – Jobb lage / HUV-06 (fast kontrast i bajskorvens 23×26-sprite)
+- `index.html`: tre mörka spiralveck och tre varma pixelreflexer lades inne i befintliga bajskorvssiluetten för tydligare nivåskillnad utan beroende av animerad närhetsblinkning. Ingen förändring i yttre spritegräns, kollisionsradie (19 px), position eller skadelogik.
+- GitHub main: `ce73e16` (grafik) och `6f96301` (roadmap). Endast kodgranskning av målområdet och ändrade rader genomfördes. Visuell kontroll på ljus väg/mörkt gräs, mobil och dator, minskad rörelse, genomspelning samt publiceringsstatus är inte verifierade; HUV-06 förblir öppen.
+- Bildinventering: draken är fortfarande polygonritad, och kodritade reservpersoner finns i scener. Ingen ny bildsprite genererades eller integrerades under detta pass. Nästa rotationsposition KARTA-02, med fortsatt aktiv kartutbyggnad KARTA-01 enligt tidigare användarprioritet.
+
 ### 2026-11-23 – Jobb lage / HUV-05 (ingen oavsiktlig skada i pausad spelvärld)
 - `index.html`: båtens `updateBoat(dt)` körs inte längre medan `document.hidden` gäller; kvarhållna båtknappar nollställs och motorns fartljud tystas. Detta avser i synnerhet att en bakgrundsflik inte ska fortsätta köra på grund och ta båtens sista hjärta.
 - Bajskorvskollision `checkPoops()` körs nu endast när samma `worldPlaying`-villkor som draken och spelaren är sant. När huvudvärlden pausas rensas hazard-kontakten, utan att några mynt- eller hjärtregler ändras.
