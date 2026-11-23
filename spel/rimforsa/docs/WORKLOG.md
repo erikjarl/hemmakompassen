@@ -1,3 +1,8 @@
+### 2026-11-23 – Jobb lage / GRAF-01 (Lage och Maja i Hackelhallen)
+- `football-minigame.js`: Lages befintliga 56×56-spritesheet ritas nu i originalets 56×56 i stället för nedskalade 44×44. Figuren förankras vid spelkoordinatens fotposition (`x-28,y-56`). Majas 48×56-bildsprite får samma fotankare (`y-56`, tidigare `y-60`). Inga ändringar i spelmekanik, kollisionsberäkning eller poäng.
+- `index.html`: fotbollsskriptets cacheversion höjd v10→v11.
+- GitHub main: `eb790d7` (spelscen), `fe27a32` (cache), `3925dec` (roadmap). Kodens exakta ersättningar kontrollerades vid skrivning, men faktisk mobil-/desktopbild, webbläsarspelning och GitHub Pages-publicering har inte verifierats. GRAF-01 är därför öppen. Ingen ny bild genererades eller integrerades: kodritade fallback-personer finns fortfarande, framför allt vid felaktig spritesheet-laddning. Nästa rotation SPORT-01.
+
 ### 2026-11-23 – Jobb lage / LJUD-03 (överlappar inte varningsljud)
 - `audio.js`: begränsade nekad-köp- och blockerad-ruttljud till ett ljud var 320 ms per typ, så snabba upprepade tryck inte lägger flera nästan identiska dubbeltoner ovanpå varandra. Spärren nollställs vid ny AudioContext efter Safari-återstart; annan musik och övriga effekter är oförändrade.
 - `index.html`: ljudfilens cacheversion v45 → v46 så mobilwebbläsaren begär uppdaterad kod.
