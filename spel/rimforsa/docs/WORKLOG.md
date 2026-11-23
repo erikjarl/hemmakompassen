@@ -1,4 +1,9 @@
 # Lage i Rimforsa – historisk arbetslogg
+### 2026-11-23 – Jobb lage / MYNT-03 (säker synk vid läsfel)
+- `index.html`: `rewardWallet.sync()` returnerar nu felstatus när lokal lagring inte kan läsas eller när sparat JSON/plånboksformat är trasigt. `award`, `spend` och `refund` stoppar då ändringen i stället för att skriva över annan data utifrån ett gammalt lokalt saldo. Normal sparning och engångs-ID:n lämnas oförändrade.
+- `tests/rimforsa-wallet-save.test.mjs`: regressionstester för läsundantag och felaktigt JSON tillagda. Testerna har inte exekverats i en lokal Node-miljö under detta pass; GitHub-källan och ändringarna har kontrollerats. Mobilgenomspelning och flerflikstest återstår. MYNT-03 är fortsatt öppen; nästa HUV-05.
+- Bildinventering: i `dragon.js` och `helicopter.js` finns fortfarande kodritade figurer; inga bildsprites genererades eller integrerades i detta pass.
+
 ### 2026-11-23 – Jobb lage / DRAKE-02 (paus vid dold flik)
 - `index.html`: huvudkartans `worldPlaying` kräver nu också `!document.hidden`, vilket stoppar drakens uppdatering/skott och helikopterns träfftimer när sidan ligger i bakgrunden. Påverkar inte synliga minispel eller vanliga pausregler.
 - `dragon.js`: kommentaren för sista projektilsegmentets kollision förtydligad utan ändrad mekanik. Cacheversion höjd till `v=16`.
