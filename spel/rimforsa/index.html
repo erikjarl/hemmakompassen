@@ -1613,7 +1613,10 @@ function drawHarborVisitor(){
  const facing=Math.floor(performance.now()/3500)%4;
  ctx.save();ctx.imageSmoothingEnabled=false;
  ctx.fillStyle='#193a3580';ctx.fillRect(x-12,y-3,24,4);
- ctx.drawImage(art,facing*40,0,40,56,x-19,y-55,38,53);
+ // Rita besökarens 40×56 originalruta i naturlig pixelskala.
+ // Föregående 38×53-skalning gav ojämna, utjämnade pixelproportioner
+ // jämfört med Maja och de andra bildbaserade personerna på kartan.
+ ctx.drawImage(art,facing*40,0,40,56,x-20,y-56,40,56);
  ctx.restore();
 }
 function drawFarmMarker(){const s=sites.find(site=>site.name==='Potatislandet');const x=Math.round(s.x-state.camX+canvas.width/2),y=Math.round(s.y-state.camY+canvas.height/2);if(x<-50||y<-50||x>canvas.width+50||y>canvas.height+50)return;ctx.fillStyle='#59402e';ctx.fillRect(x-20,y-14,40,27);ctx.fillStyle='#91663e';ctx.fillRect(x-18,y-12,36,23);ctx.fillStyle='#d5b475';ctx.fillRect(x-15,y-9,30,16);ctx.fillStyle='#397444';ctx.fillRect(x-2,y-8,4,12);ctx.fillRect(x-7,y-8,6,5);ctx.fillRect(x+2,y-10,7,6);ctx.fillStyle='#9f7147';ctx.fillRect(x-2,y+13,4,12);}
