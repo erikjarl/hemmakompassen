@@ -797,3 +797,10 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 - Geografiskt underlag: Östergötlands museums rapport 2016:204 beskriver Tjärstads kyrka cirka 3 km sydost om Rimforsa; vidare jämfördes Kinda kommuns och turismens regionkartor samt öppna ortsbeskrivningar. Inget kartbildmaterial kopierades; all ritning är befintlig originalpixelkonst med ny väg enligt spelregler. Referenser: https://gammal.ostergotlandsmuseum.se/system/reports/pdfs/000/000/382/original/2016-204.pdf ; https://www.kindaturism.se/download/18.abb7ea91969f422b246dd/1746431737823/kinda_svensk_turistbroschyr_2025_16sid_250407_webb.pdf
 - `index.html`: cacheversion för `regional-map.js` höjd från v2 till v3.
 - GitHub-bekräftade commits och kodgranskning av ny plats/knapp/rutt/räknare. Faktiskt speltest med mobil/dator, bildgranskning, verifierad full rutt vid korsningar samt bekräftad GitHub Pages-publicering saknas. `KARTA-01` kvar som öppen, 14 öppna och 30 arkiverade. Ingen ny bildgenererad sprite kopplades in; kodritade reservfigurer kvar. Nästa huvudrotation `SPORT-01`.
+
+
+### 2026-11-23 – Jobb Lage: SPORT-01, rätt målvaktsposition vid bollpassage
+
+- `football-minigame.js`: sparar Majas position före varje animeringssteg och interpolerar målvaktspositionen till den exakta tidpunkten när skottet passerar x=390; bedömer då räddningen mot den interpolerade positionen i stället för positionen i slutet av bildrutan. Studsen använder samma korrekta position. Visar en kort pixlad `RÄDDAT!`-markering när Maja blockerar skottet, nollställer signalen vid omspelning/ny match och låter den tona bort enligt tidssteg. Inga ändringar i mynt eller målintjäningsregler.
+- `index.html`: cacheversionen för `football-minigame.js` höjd från v9 till v10 så ändringen kan laddas.
+- Kod och GitHub-commit kontrollerade. Ingen faktisk match genomspelad på mobil/tangentbord, ingen visuell skärmtestning eller verifierad Pages-distribution. SPORT-01 kvarstår öppen; 14 öppna, 30 arkiverade. Existerande bildbaserad Maja och publik återanvänds, ingen ny sprite genererades eller integrerades. Nästa huvudrotation DRAKE-02; KARTA-01 fortsätter aktivt.
