@@ -54,8 +54,11 @@ function draw(ctx,x,y,dir='right',occupied=false){
  const left=dir==='left',right=dir==='right';
  // Prioritera en enda bilmodell i ALLA lägen, även vid hemmet.
  // För okända riktningar används höger sidovy; gammal bild är bara fallback.
- const directionFrame=CAR_DIRECTIONS.indexOf(dir);
- if(directionFrame>=0&&directionSpriteReady()&&typeof ctx.drawImage==='function'){
+ // Okänd eller tillfälligt saknad riktningskod får inte byta bilmodell.
+ // Använd samma högupplösta sidovy i riktningsarket som reserv.
+ const foundFrame=CAR_DIRECTIONS.indexOf(dir);
+ const directionFrame=foundFrame>=0?foundFrame:CAR_DIRECTIONS.indexOf('right');
+ if(directionSpriteReady()&&typeof ctx.drawImage==='function'){
   const smooth=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=false;
   // Rita en källpixel som en kartpixel: 96×72 gav en icke-heltalig
   // 1,2×-skalning av 80×60-arket och ojämn pixelstorlek mellan vyerna.
