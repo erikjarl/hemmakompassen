@@ -1,3 +1,9 @@
+### 2026-11-23 – Jobb lage / MYNT-03 (säkrare båtmynt och tydligare plånbok)
+- `index.html`: Båtens HUD skiljer nu upptagna mynt denna tur från antalet faktiskt sparade båtbonusar (0–8), samtidigt som gemensamt plånbokssaldo visas. Antal sparade bonusar läses via befintliga `rewardWallet.has()` och påverkar inte tilldelning eller köp.
+- Precis innan båtspelet behandlar myntupplockning anropas nu `reloadAfterOtherTabLoss()`. En äldre öppen båtflik ska därmed inte fortsätta behandla lokala mynt efter att en annan flik skrivit förlustsignalen. Den befintliga kontrollen vid `awardMinigameCoin` finns kvar.
+- GitHub main: `5980ab2` (spelkod) och `7739246` (roadmap). Efterläsning bekräftar integration och att tidigare bonuslagring kvarstår. Faktiska synkrona flikkollisioner, lagringsfel, riktiga mobil-/desktopflöden och GitHub Pages-publicering har inte verifierats. MYNT-03 är fortfarande öppen.
+- Bildinventering: båtscenens befintliga figurer ändrades inte; kvarvarande kodritade reservpersoner behöver fortsatt ersättas med egna bildsprites. Ingen bildsprite genererades eller integrerades detta pass. Nästa rotation HUV-05.
+
 ### 2026-11-23 – Jobb lage / DRAKE-02 (bilskydd och pausade varningar)
 - `dragon.js`: märk varje eldklot med låst måltyp (Lage/helikopter). När Lage är skyddad av bilen rensas redan avfyrade skott riktade mot honom; helikopterskott lämnas kvar. Avbryt även en låst skottvarning mot Lage vid bilskydd. Ny `pauseAttacks()` släpper en låst varning när huvudvärlden är pausad, men befintliga projektiler behåller sin frysta position.
 - `index.html`: anropa `dragon.pauseAttacks()` när den befintliga centrala pauslogiken stänger av huvudvärlden; script-cache v16→v17. Den tidigare eldklotsgränsen `FIRE_EAST_LIMIT=384`, skottfysiken och helikopterträffar ändras inte.
