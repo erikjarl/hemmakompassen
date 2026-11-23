@@ -1,3 +1,9 @@
+### 2026-11-23 – Jobb lage / HUV-05 (ingen oavsiktlig skada i pausad spelvärld)
+- `index.html`: båtens `updateBoat(dt)` körs inte längre medan `document.hidden` gäller; kvarhållna båtknappar nollställs och motorns fartljud tystas. Detta avser i synnerhet att en bakgrundsflik inte ska fortsätta köra på grund och ta båtens sista hjärta.
+- Bajskorvskollision `checkPoops()` körs nu endast när samma `worldPlaying`-villkor som draken och spelaren är sant. När huvudvärlden pausas rensas hazard-kontakten, utan att några mynt- eller hjärtregler ändras.
+- GitHub main: `96db1c6` spelkod, `78c6f57` roadmap. Efterläsning verifierade att båtens dolda flik-guard och bajskorvarnas världspaus är inkopplade, samt att befintlig sista-hjärtat-reset kvarstår. Faktiskt speltest av förlust i drak-/båt-/bajsscen, flera flikar, fysisk Safari och Pages-publicering saknas; HUV-05 är öppen.
+- Bildinventering: draken använder fortfarande kodritade polygoner; reservfigurer i andra miljöer är fortfarande kodritade när sprite-laddning misslyckas. Ingen ny bildsprite genererades/integrerades under detta pass. Nästa rotation HUV-06.
+
 ### 2026-11-23 – Jobb lage / MYNT-03 (säkrare båtmynt och tydligare plånbok)
 - `index.html`: Båtens HUD skiljer nu upptagna mynt denna tur från antalet faktiskt sparade båtbonusar (0–8), samtidigt som gemensamt plånbokssaldo visas. Antal sparade bonusar läses via befintliga `rewardWallet.has()` och påverkar inte tilldelning eller köp.
 - Precis innan båtspelet behandlar myntupplockning anropas nu `reloadAfterOtherTabLoss()`. En äldre öppen båtflik ska därmed inte fortsätta behandla lokala mynt efter att en annan flik skrivit förlustsignalen. Den befintliga kontrollen vid `awardMinigameCoin` finns kvar.
