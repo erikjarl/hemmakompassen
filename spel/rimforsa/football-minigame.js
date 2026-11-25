@@ -14,7 +14,14 @@ if(spectatorSprites)spectatorSprites.addEventListener('load',()=>{if(overlay&&!o
 const MAX_GOAL_COINS=3;
 const clamp=(a,l,h)=>Math.max(l,Math.min(h,a));
 function resetPositions(){player.x=115;player.y=215;player.dx=1;player.dy=0;ball.x=205;ball.y=170;ball.vx=ball.vy=0;majaY=206;majaDirection='down';}
-function clearKeys(){Object.keys(keys).forEach(k=>keys[k]=false);}
+// Track individual input sources instead of sticky shared booleans.
+function createDirections(keys){
+ const pointers=new Map(),keyboard=new Map();
+ function sync(){for(const d of Object.keys(keys))keys[d]=[...pointers.values(),...keyboard.values()].includes(d);}
+ return {pressPointer(id,dir){pointers.set(id,dir);sync();},releasePointer(id){pointers.delete(id);sync();},pressKey(id,dir){keyboard.set(id,dir);sync();},releaseKey(id){keyboard.delete(id);sync();},clear(){pointers.clear();keyboard.clear();sync();}};
+}
+const directions=createDirections(keys);
+function clearKeys(){directions.clear();}
 function install(){
  if(overlay)return;
  const style=root.document.createElement('style');
@@ -27,19 +34,25 @@ function install(){
  root.document.body.append(overlay);canvas=overlay.querySelector('canvas');ctx=canvas.getContext('2d');status=overlay.querySelector('[data-status]');
  lageImage=new root.Image();lageImage.onload=()=>{if(!overlay.hidden)render();};lageImage.src='./lage-sprites.png';
  for(const button of overlay.querySelectorAll('[data-dir]')){
-  const dir=button.dataset.dir;const release=()=>keys[dir]=false;
-  button.addEventListener('pointerdown',e=>{e.preventDefault();keys[dir]=true;try{button.setPointerCapture(e.pointerId)}catch(_){}});
-  for(const type of ['pointerup','pointercancel','lostpointercapture'])button.addEventListener(type,release);
+  const dir=button.dataset.dir;
+  button.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button!==0)return;e.preventDefault();directions.pressPointer(e.pointerId,dir);try{button.setPointerCapture(e.pointerId)}catch(_){}});
+  button.addEventListener('lostpointercapture',e=>directions.releasePointer(e.pointerId));
  }
+ // Capture releases even outside a button or if pointer capture failed.
+ for(const type of ['pointerup','pointercancel'])root.addEventListener(type,e=>directions.releasePointer(e.pointerId),true);
+ root.addEventListener('pointermove',e=>{if(e.pointerType==='mouse'&&e.buttons===0)directions.releasePointer(e.pointerId);},true);
+ root.addEventListener('blur',clearKeys);
+ root.addEventListener('pagehide',clearKeys);
+ root.document.addEventListener('visibilitychange',()=>{if(root.document.hidden)clearKeys();});
  overlay.querySelector('[data-kick]').addEventListener('click',()=>kick());
  for(const aimButton of overlay.querySelectorAll('[data-aim]'))aimButton.addEventListener('click',()=>kick(aimButton.dataset.aim));
- overlay.querySelector('[data-reset]').addEventListener('click',()=>{goals=kicks=saves=0;goalFlash=saveFlash=0;resetPositions();status.textContent='Mål: 0 · Skott: 0 · Majas räddningar: 0';render();});
+ overlay.querySelector('[data-reset]').addEventListener('click',()=>{clearKeys();goals=kicks=saves=0;goalFlash=saveFlash=0;resetPositions();status.textContent='Mål: 0 · Skott: 0 · Majas räddningar: 0';render();});
  overlay.querySelector('[data-close]').addEventListener('click',close);
  overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
  root.document.addEventListener('keydown',e=>{
   if(!overlay||overlay.hidden)return;
   const dir={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',a:'left',s:'down',d:'right',W:'up',A:'left',S:'down',D:'right'}[e.key];
-  if(dir){e.preventDefault();e.stopImmediatePropagation();keys[dir]=true;}
+  if(dir){e.preventDefault();e.stopImmediatePropagation();directions.pressKey(e.code||e.key.toLowerCase(),dir);}
   else if(e.key===' '){e.preventDefault();e.stopImmediatePropagation();if(!e.repeat)kick();}
   else if(e.key==='1'||e.key==='2'){e.preventDefault();e.stopImmediatePropagation();if(!e.repeat)kick(e.key==='1'?'high':'low');}
   else if(e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();close();}
@@ -47,7 +60,7 @@ function install(){
  root.document.addEventListener('keyup',e=>{
   if(!overlay||overlay.hidden)return;
   const dir={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',a:'left',s:'down',d:'right',W:'up',A:'left',S:'down',D:'right'}[e.key];
-  if(dir){e.preventDefault();e.stopImmediatePropagation();keys[dir]=false;}
+  if(dir){e.preventDefault();e.stopImmediatePropagation();directions.releaseKey(e.code||e.key.toLowerCase());}
  },true);
 }
 function rect(x,y,w,h,color){ctx.fillStyle=color;ctx.fillRect(Math.round(x),Math.round(y),w,h);}
