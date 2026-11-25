@@ -6,11 +6,11 @@
 
 ## Obligatorisk rotation mellan utvecklingspass
 
-**SENAST BEARBETAD HUVUDUPPGIFT: `HELI-02` – rotoranimation (25 november 2026).**
+**SENAST BEARBETAD HUVUDUPPGIFT: `MYNT-03` – bonusbesked och omförsök (25 november 2026).**
 
-**NÄSTA ROTATIONSPOSITION: `MYNT-03` – nästa öppna roterande huvuduppgift.**
+**NÄSTA ROTATIONSPOSITION: `FORDON-02` – nästa öppna roterande huvuduppgift.**
 
-**ALDRIG SAMMA HUVUDUPPGIFT TVÅ `JOBB LAGE` I FÖLJD.** Följ ordningen bland öppna, genomförbara uppgifter nedan med cirkulär rotation. Starta på angiven nästa position, hoppa över avbockade punkter, stående kvalitetsregler som `MINI-01` (dessa gäller ändå varje pass) och tillfälligt blockerade uppgifter. Bearbeta olika delar av spelet mellan varven: grafik, fordon, bränsle, ljud och andra spelmekaniker. Om inget praktiskt kan göras på nästa punkt, gå vidare till följande **annan** uppgift; återvänd först efter andra utvecklingspass. Prioritet betyder vikt inom rotationen, **inte** rätt att välja samma uppgift igen direkt. När ett pass med faktisk spelutveckling slutförts, uppdatera **båda fälten ovan** till den verkliga huvuduppgiften och efterföljande öppna rotationsposition innan passet avslutas. Rapportera vilka fält som ändrades. Att kontrollera kryssrutor eller åtgärda ett akut blockerande fel räknas inte som att byta huvuduppgift. **Aktuell rotation:** HELI-02 → MYNT-03 → FORDON-02 → GRAF-01 → DRAKE-03 → NPC-04 → KARTA-01. BRÄNSLE-02 väntar på verifierbar prisdata. Nästa position MYNT-03.
+**ALDRIG SAMMA HUVUDUPPGIFT TVÅ `JOBB LAGE` I FÖLJD.** Följ ordningen bland öppna, genomförbara uppgifter nedan med cirkulär rotation. Starta på angiven nästa position, hoppa över avbockade punkter, stående kvalitetsregler som `MINI-01` (dessa gäller ändå varje pass) och tillfälligt blockerade uppgifter. Bearbeta olika delar av spelet mellan varven: grafik, fordon, bränsle, ljud och andra spelmekaniker. Om inget praktiskt kan göras på nästa punkt, gå vidare till följande **annan** uppgift; återvänd först efter andra utvecklingspass. Prioritet betyder vikt inom rotationen, **inte** rätt att välja samma uppgift igen direkt. När ett pass med faktisk spelutveckling slutförts, uppdatera **båda fälten ovan** till den verkliga huvuduppgiften och efterföljande öppna rotationsposition innan passet avslutas. Rapportera vilka fält som ändrades. Att kontrollera kryssrutor eller åtgärda ett akut blockerande fel räknas inte som att byta huvuduppgift. **Aktuell rotation:** HELI-02 → MYNT-03 → FORDON-02 → GRAF-01 → DRAKE-03 → NPC-04 → KARTA-01. BRÄNSLE-02 väntar på verifierbar prisdata. Nästa position FORDON-02.
 
 ## Obligatorisk avbockning – vid VARJE `jobb lage`
 
@@ -24,7 +24,7 @@
 
 **SJÄLVSTÄNDIG SLUTBEDÖMNING (25 november 2026):** Användaren delegerar bedömningen av färdig implementation till assistenten. Ingen användarfeedback eller fysisk mobiltestning ska vara ett rutinmässigt villkor för avbockning. Granska ursprungliga krav mot faktisk kod, använd proportionerliga isolerade tester vid behov, stryk direkt när kraven är uppfyllda och fortsätt. Separat visuell/ljudmässig kvalitetssäkring dokumenteras utan att hålla fungerande funktioner öppna. Behåll endast konkreta saknade funktioner, påvisade fel eller specifika ännu olösta krav i aktiv kö. Vid listrevision ska hela kön granskas.
 
-**Senaste avslutningsnotis:** 2026-11-25 – HELI-02: animerad rotor på bildbaserad flygande helikopter, cacheversion höjd. Kodgranskning genomförd; speltest och ny bildgenerering ej utförda. Isbollar, drakflykt, skatt, beständig återkomst och rotorljud återstår. Nästa MYNT-03.
+**Senaste avslutningsnotis:** 2026-11-25 – MYNT-03: fotboll och rutschkana skiljer sparfel från redan hämtad bonus och tillåter omförsök via nytt mål/åk. Cacheversioner höjda. Kodändringar på main; webbläsartest och ny bildgenerering ej utförda. Samtidiga flikskrivningar återstår. Nästa FORDON-02.
 
 1. Läs [AGENTS.md](AGENTS.md) och **denna korta kö**. Välj nästa genomförbara **annan** uppgift enligt rotationsfälten ovan; respektera beroenden och blockerande fel. Välj aldrig samma huvuduppgift två pass i följd.
 2. Läs **bara den valda uppgiftens avsnitt** i [TASK_DETAILS.md](docs/TASK_DETAILS.md) (vid behov genom textsökning/radintervall), sedan relevant kod. Gemensamma, detaljerade krav finns i [GAME_RULES.md](docs/GAME_RULES.md); läs relevanta delar när arbetet berör dem.
@@ -46,7 +46,7 @@
 **Kartexpansion är nu aktivt utvecklingsarbete, inte en senareläggning.** Regional utforskning finns i separat spelbar scen; sammanhängande världskarta återstår.
 
 - [ ] **GRAF-01 – Enhetlig grafik i alla scener.** · [Krav](docs/TASK_DETAILS.md#graf-01) · **Kvar:** Ersätt kvarvarande kodritade personer i minispel med riktiga bildsprites där de avviker från huvudkartans stil; harmonisera kvarvarande grafiska avvikelser. Visuell jämförelse av fordonsbilder ingår i FORDON-02.
-- [ ] **MYNT-03 – Minispelsmynt i gemensam plånbok.** · [Krav](docs/TASK_DETAILS.md#mynt-03) · **Kvar:** Fotboll och rutschkana skiljer fortfarande inte sparfel från redan erhållen bonus; inför bekräftelse och möjlighet till omförsök. Hantera konstaterade risker vid samtidiga skrivningar i flera flikar utan att gamla bonusar återinförs efter förlust.
+- [ ] **MYNT-03 – Minispelsmynt i gemensam plånbok.** · [Krav](docs/TASK_DETAILS.md#mynt-03) · **Kvar:** Hantera konstaterade risker vid samtidiga skrivningar i flera flikar utan att gamla bonusar återinförs efter förlust.
 - [ ] **FORDON-02 – Samstämmiga bil- och båtvyer.** · [Krav](docs/TASK_DETAILS.md#fordon-02) · **Kvar:** Åtta vyer finns för både bil och båt. Kontrollera den konkreta tidigare rapporterade modellskillnaden mellan bilens fram-/bak- och sidovy mot faktiska bildarket; rätta bara om skillnad konstateras.
 
 - [ ] **HELI-02 – Flygbar helikopter med drakstrid.** · **Kvar:** Implementera isbollar, tre träffar, drakflykt i 20 minuter, engångsskatt på 20 mynt, beständig återkomsttid och rotorljud. Flygning, landning, nödlandning och egen tank (65 mot bilens 27 distansenheter per procent; 7 spelmynt) finns redan.
