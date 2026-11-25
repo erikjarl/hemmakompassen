@@ -18,6 +18,10 @@
   const home={x:85,y:920};
   let t=0,x=home.x,y=home.y,near=false,shotTimer=1,shotId=0,warningTarget=null,playerDistance=Infinity;const shots=[];
   const proximity=235;
+  let iceHits=0,awayUntil=0;
+  try{awayUntil=Math.max(0,Number(root.localStorage?.getItem('rimforsa-dragon-away-until'))||0);}catch(_){}
+  function isAway(){return Date.now()<awayUntil;}
+  function hitIce(){if(isAway())return {hit:false,defeated:false,hits:0};iceHits++;if(iceHits<3)return {hit:true,defeated:false,hits:iceHits};iceHits=0;awayUntil=Date.now()+1200000;try{root.localStorage?.setItem('rimforsa-dragon-away-until',String(awayUntil));}catch(_){}resetAttacks();return {hit:true,defeated:true,hits:3};}
   // Varningen växer tydligare fram under de 0,65 sekunderna före ett låst skott.
   const FIRE_WARNING_SECONDS=.65;
   // Bensinmacken ligger vid x=394. Hela eldklotets synliga framkant
@@ -27,6 +31,7 @@
   const FIRE_MAX_DISTANCE=300,HELICOPTER_FIRE_DISTANCE=600,FIRE_EAST_LIMIT=384;
   function update(dt,playerX,playerY,helicopter,playerTargetable=true){
    dt=Math.max(0,Math.min(.1,Number(dt)||0));
+   if(isAway()){resetAttacks();return false;}
    t+=dt;
    // Flyger i en liten slinga ovanför skogen; oberoende av vägarnas gångbarhet.
    x=home.x+Math.cos(t*.45)*23;
@@ -125,12 +130,14 @@
    return Math.hypot(px-(ax+fraction*dx),py-(ay+fraction*dy))<radius;
   }
   function hazards(px,py){
+   if(isAway())return null;
    const contact=inside(px,py,8)&&Math.hypot(px-x,py-y)<37;
    const fire=shots.find(s=>passesThrough(s,px,py,17));
    return contact?'dragon-contact':fire?fire.id:null;
   }
   function consume(id){const n=shots.findIndex(s=>s.id===id);if(n>=0)shots.splice(n,1);}
   function strikeObject(px,py,radius){
+   if(isAway())return false;
    const index=shots.findIndex(s=>passesThrough(s,px,py,radius));
    if(index<0)return false;shots.splice(index,1);return true;
   }
@@ -150,8 +157,9 @@
    near=false;
    playerDistance=Infinity;
   }
-  function snapshot(){return {x,y,near,breathing:Math.sin(t*2.25)>.28,proximity,warning:!!warningTarget};}
+  function snapshot(){return {x,y,near,away:isAway(),awayUntil,iceHits,breathing:Math.sin(t*2.25)>.28,proximity,warning:!!warningTarget};}
   function draw(ctx,camX,camY,w,h){
+   if(isAway())return;
    const sx=Math.round(x-camX+w/2),sy=Math.round(y-camY+h/2);
    if(!(sx< -100||sy< -100||sx>w+120||sy>h+100)){
    ctx.save();ctx.translate(sx,sy+Math.round(Math.sin(t*4)*4));ctx.imageSmoothingEnabled=false;
@@ -241,7 +249,7 @@
      ctx.fillRect(tx-2,ty-2,Math.max(2,6-n),Math.max(2,6-n));
     }}
   }
-  return {update,draw,snapshot,hazards,consume,strikeObject,pauseAttacks,resetAttacks,home,insideForest:inside};
+  return {update,draw,snapshot,hazards,consume,strikeObject,pauseAttacks,resetAttacks,home,insideForest:inside,hitIce,isAway};
  }
  root.RimforsaDragon={createDragon};
 })(typeof window!=='undefined'?window:globalThis);
