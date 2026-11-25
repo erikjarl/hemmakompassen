@@ -115,7 +115,7 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
 <script src="./gameplay.js?v=2"></script>
 <script src="./inventory.js?v=3"></script>
 <script src="./item-art.js?v=1"></script>
-<script src="./car.js?v=10"></script>
+<script src="./car.js?v=11"></script>
 <script src="./boat-direction-art.js?v=12"></script>
 <script src="./fuel.js?v=3"></script>
 <script src="./friend-sprites.js?v=2"></script>
@@ -1280,7 +1280,7 @@ function updateMessage(){
  state.near=(trollHere||npcHere)?null:near;state.nearKey=key;interact.hidden=!(carAction||trollHere||npcHere||near);state.messageLocked=false;
  if(carAction==='enter'){
    interact.textContent='Kör bilen 🚗';title.textContent='Vit bil vid hemmet';
-   message.innerHTML='<strong>🚗 Vit bil!</strong> '+(carFuel.snapshot().level>0?'Tank: '+carFuel.snapshot().percent+' %. Hoppa in och kör över land.':'Tom tank! Gå till Bensinmacken och tanka.');
+   message.innerHTML='<strong>🚗 Vit bil!</strong> '+(carFuel.snapshot().level>0?'Tank: '+carFuel.snapshot().percent+' %. Hoppa in och kör på vägar och parkeringar.':'Tom tank! Gå till Bensinmacken och tanka.');
  }else if(carAction==='exit'){
    interact.textContent='Gå ur bilen 🚶';title.textContent='Ute och kör';
    message.innerHTML='<strong>🚗 Biltur!</strong> Tank: '+carFuel.snapshot().percent+' %. Bilen kör på land, inte vatten.';
