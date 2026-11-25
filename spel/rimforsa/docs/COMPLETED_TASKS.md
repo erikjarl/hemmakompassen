@@ -1,10 +1,12 @@
 # Lage i Rimforsa – färdiga uppgifter (arkiv)
 
-**Statuskälla:** [ROADMAP.md](../ROADMAP.md). Detta arkiv innehåller **45 avbockade uppgifter** som har tagits bort ur den aktiva att-göra-listan (senast 26 november 2026). Här behålls de som historik, inte som nya arbetsuppgifter.
+**Statuskälla:** [ROADMAP.md](../ROADMAP.md). Detta arkiv innehåller **46 avbockade uppgifter** som har tagits bort ur den aktiva att-göra-listan (senast 26 november 2026). Här behålls de som historik, inte som nya arbetsuppgifter.
 
 **Viktig avgränsning:** En del punkter är avbockade efter kodgranskning, inte fysiska mobiltester. Om ett dokumenterat acceptansvillkor visar sig saknas öppnas uppgiften på nytt i `ROADMAP.md`. Grafikstandard och separat kvalitetsarbete gäller fortfarande.
 
-## Avslutade uppgifter (45)
+## Avslutade uppgifter (46)
+
+- [x] **DRAKE-03 – Drakens avgränsade farozon i sydväst.** · [Krav](TASK_DETAILS.md#drake-03--drakens-avgränsade-farozon-i-sydväst) · 2026-11-26: tidigare kartgranskad skogspolygon; marginal vid avfyrning och hela projektilbanan, kontroll av stillastående och rörliga mål. 7 200 simulerade uppdateringar, 1 333 projektilpositioner, 392 träffprov inom skogen och inga träffar på testade skyddade målpunkter. Visuell webbläsarkontroll ej utförd.
 
 - [x] **SPORT-02 – Fotboll: förhindra fastnad rörelseriktning.** · [Krav](TASK_DETAILS.md#sport-02--fotboll-förhindra-fastnad-rörelseriktning) · 2026-11-26: individuella pek- och tangentidentiteter, globala släpp/avbrott och återställning vid fokusförlust, döljning och omstart; 2 000 simulerade styrsekvenser godkända. Faktisk mobiltestning ej utförd.
 
