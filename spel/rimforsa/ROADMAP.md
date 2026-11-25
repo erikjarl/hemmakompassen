@@ -6,11 +6,11 @@
 
 ## Obligatorisk rotation mellan utvecklingspass
 
-**SENAST BEARBETAD HUVUDUPPGIFT: `MYNT-03` – skydd mot gamla mynt efter game over (25 november 2026).**
+**SENAST BEARBETAD HUVUDUPPGIFT: `MOBIL-01` – skydd mot oavsiktlig markering (25 november 2026).**
 
-**NÄSTA ROTATIONSPOSITION: `ODLING-03` – högprioriterad ny användarinstruktion.**
+**NÄSTA ROTATIONSPOSITION: `SPORT-02` – fastnad rörelseriktning i fotboll.**
 
-**ALDRIG SAMMA HUVUDUPPGIFT TVÅ `JOBB LAGE` I FÖLJD.** Följ ordningen bland öppna, genomförbara uppgifter nedan med cirkulär rotation. Starta på angiven nästa position, hoppa över avbockade punkter, stående kvalitetsregler som `MINI-01` (dessa gäller ändå varje pass) och tillfälligt blockerade uppgifter. Bearbeta olika delar av spelet mellan varven: grafik, fordon, bränsle, ljud och andra spelmekaniker. Om inget praktiskt kan göras på nästa punkt, gå vidare till följande **annan** uppgift; återvänd först efter andra utvecklingspass. Prioritet betyder vikt inom rotationen, **inte** rätt att välja samma uppgift igen direkt. När ett pass med faktisk spelutveckling slutförts, uppdatera **båda fälten ovan** till den verkliga huvuduppgiften och efterföljande öppna rotationsposition innan passet avslutas. Rapportera vilka fält som ändrades. Att kontrollera kryssrutor eller åtgärda ett akut blockerande fel räknas inte som att byta huvuduppgift. **Aktuell rotation:** HELI-02 → MYNT-03 → ODLING-03 → MOBIL-01 → SPORT-02 → GRAF-01 → DRAKE-03 → NPC-04 → KARTA-01 → LJUD-02. BRÄNSLE-02 väntar på verifierbar prisdata. Nästa position ODLING-03.
+**ALDRIG SAMMA HUVUDUPPGIFT TVÅ `JOBB LAGE` I FÖLJD.** Följ ordningen bland öppna, genomförbara uppgifter nedan med cirkulär rotation. Starta på angiven nästa position, hoppa över avbockade punkter, stående kvalitetsregler som `MINI-01` (dessa gäller ändå varje pass) och tillfälligt blockerade uppgifter. Bearbeta olika delar av spelet mellan varven: grafik, fordon, bränsle, ljud och andra spelmekaniker. Om inget praktiskt kan göras på nästa punkt, gå vidare till följande **annan** uppgift; återvänd först efter andra utvecklingspass. Prioritet betyder vikt inom rotationen, **inte** rätt att välja samma uppgift igen direkt. När ett pass med faktisk spelutveckling slutförts, uppdatera **båda fälten ovan** till den verkliga huvuduppgiften och efterföljande öppna rotationsposition innan passet avslutas. Rapportera vilka fält som ändrades. Att kontrollera kryssrutor eller åtgärda ett akut blockerande fel räknas inte som att byta huvuduppgift. **Aktuell rotation:** HELI-02 → MYNT-03 → ODLING-03 → MOBIL-01 → SPORT-02 → GRAF-01 → DRAKE-03 → NPC-04 → KARTA-01 → LJUD-02. BRÄNSLE-02 väntar på verifierbar prisdata. Nästa position SPORT-02.
 
 ## Obligatorisk avbockning – vid VARJE `jobb lage`
 
@@ -24,7 +24,7 @@
 
 **SJÄLVSTÄNDIG SLUTBEDÖMNING (25 november 2026):** Användaren delegerar bedömningen av färdig implementation till assistenten. Ingen användarfeedback eller fysisk mobiltestning ska vara ett rutinmässigt villkor för avbockning. Granska ursprungliga krav mot faktisk kod, använd proportionerliga isolerade tester vid behov, stryk direkt när kraven är uppfyllda och fortsätt. Separat visuell/ljudmässig kvalitetssäkring dokumenteras utan att hålla fungerande funktioner öppna. Behåll endast konkreta saknade funktioner, påvisade fel eller specifika ännu olösta krav i aktiv kö. Vid listrevision ska hela kön granskas.
 
-**Senaste avslutningsnotis:** 2026-11-25 – MYNT-03: generationsmärkt minispelsplånbok på main (73d9246); simulerad skrivning över game over avvisas. Samtidiga skrivningar inom samma generation och migrering av äldre sparningar återstår. Ingen ny bildsprite integrerad; Pages ej verifierad. Nästa huvuduppgift GRAF-01.
+**Senaste avslutningsnotis:** 2026-11-25 – MOBIL-01: globalt skydd mot textmarkering, kontextmeny och dragning på main (df8a5e4); syntax och simulerat händelsetest godkända, fysisk Safari och Pages ej verifierade. ODLING-03: tre separata timers och valbar dialog på main (b4d12a7, 881c917), kartplacering återstår. Ingen ny bildsprite integrerad. Nästa huvuduppgift SPORT-02.
 
 1. Läs [AGENTS.md](AGENTS.md) och **denna korta kö**. Välj nästa genomförbara **annan** uppgift enligt rotationsfälten ovan; respektera beroenden och blockerande fel. Välj aldrig samma huvuduppgift två pass i följd.
 2. Läs **bara den valda uppgiftens avsnitt** i [TASK_DETAILS.md](docs/TASK_DETAILS.md) (vid behov genom textsökning/radintervall), sedan relevant kod. Gemensamma, detaljerade krav finns i [GAME_RULES.md](docs/GAME_RULES.md); läs relevanta delar när arbetet berör dem.
@@ -43,11 +43,11 @@
 
 ### Aktivt genomförande (9)
 
-- [ ] **MOBIL-01 – Stoppa blåmarkering och kopieringsmeny vid mobilspel (hög prioritet).** · [Krav](docs/TASK_DETAILS.md#mobil-01--stoppa-oavsiktlig-textmarkering-och-kopieringsmeny) · **Kvar:** Förhindra oavsiktlig markering och långtrycks-/kopieringsmenyer vid långa eller upprepade tryck i huvudkartan och samtliga minispel, särskilt Safari; bevara fungerande styrning.
+- [ ] **MOBIL-01 – Stoppa blåmarkering och kopieringsmeny vid mobilspel (hög prioritet).** · [Krav](docs/TASK_DETAILS.md#mobil-01--stoppa-oavsiktlig-textmarkering-och-kopieringsmeny) · **Kvar:** Kontrollera långa, upprepade och samtidiga tryck i fysisk mobil Safari på huvudkartan och i minispelen så att globalt skydd verkligen förhindrar markering och kopieringsmeny utan att störa styrningen; åtgärda eventuella kvarvarande konkreta fel.
 
 - [ ] **SPORT-02 – Lage fastnar i rörelseriktning i fotbollsspelet (hög prioritet).** · [Krav](docs/TASK_DETAILS.md#sport-02--fotboll-förhindra-fastnad-rörelseriktning) · **Kvar:** Felsök fastnad styrning, återställ avslutade och avbrutna tryck och kontrollera att Lage stannar och kan byta riktning även efter längre spel på mobilen.
 
-- [ ] **ODLING-03 – Flera potatisland öster om båtklubben (hög prioritet).** · [Krav](docs/TASK_DETAILS.md#odling-03--flera-potatisland-öster-om-båtklubben) · **Kvar:** Flytta gamla odlingsplatsen till fälten öster om båtklubben, skapa flera självständigt odlingsbara land, samordna synliga tillväxtstadier, gångbarhet, sparning och ICA-försäljning.
+- [ ] **ODLING-03 – Flera potatisland öster om båtklubben (hög prioritet).** · [Krav](docs/TASK_DETAILS.md#odling-03--flera-potatisland-öster-om-båtklubben) · **Kvar:** Anslut de tre självständiga odlingslanden till kartplatser öster om båtklubben, ta bort den gamla markören, visa respektive tillväxtstadium och kontrollera gångbarhet och interaktioner.
 
 - [ ] **LJUD-02 – Permanent fungerande ljud på mobil Safari (hög prioritet, återkommande fel).** · [Krav](docs/TASK_DETAILS.md#ljud-02) · **Kvar:** Användaren rapporterar totalt uteblivet ljud i mobil Safari 25 november 2026 trots tidigare korrigeringar. Hitta grundorsaken, säkerställ tillförlitlig ljudaktivering vid första användargest, musik och effekter i huvudkarta och minispel samt återhämtning efter omladdning, appbyte och låst skärm. Lägg till regressionstester och verifiera faktisk ljuduppspelning på iPhone/Safari; avbocka inte enbart på grund av en kodändring.
 
