@@ -124,11 +124,13 @@ function draw(canvas,options={}){
  rect(c,157,169,133,64,'#6d4c31');rect(c,151,161,143,15,'#c9955b');
  rect(c,162,176,120,44,'#93714e');rect(c,170,181,105,29,'#bda079');
  drawPizza(c,226,194,53);
+ // Bagaren ritas bakom disken, som täcker de nedersta åtta bildpixlarna.
+ if(!drawChef(c,392,145))character(c,392,145,{shirt:'#9e634a',hair:'#684b34',hat:true});
  rect(c,304,169,155,73,'#614a34');rect(c,299,161,164,18,'#c58f57');
  rect(c,308,183,145,45,'#906a45');
  // Kassa på disken och pizzabagare med kockmössa bakom.
  rect(c,308,148,45,20,'#3b5145');rect(c,313,151,33,10,'#aac8a6');
- if(!drawChef(c,392,128))character(c,392,128,{shirt:'#9e634a',hair:'#684b34',hat:true});
+
  // Besökande Maja använder sin riktiga sprite från huvudkartan, inte en kodfigur.
  drawMajaVisitor(c);
  // En extra person från bildarket ersätter behovet av en kodritad bakgrundsfigur.
