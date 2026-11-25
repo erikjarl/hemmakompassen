@@ -29,7 +29,7 @@ function createSession(){
  }
  return {snapshot,step,reset:()=>{x=52;y=74;elapsed=0;hearts=3;invul=0;finished=false;sharks=sharkStarts.map(s=>({...s}));coins=coinsAt.map(([cx,cy],i)=>({x:cx,y:cy,id:i,taken:false}));return snapshot();}};
 }
-let lageSprite=null,dialog=null,canvas,ctx,session,onCoin=null,paidInRun=new Set(),keys={up:false,down:false,left:false,right:false},raf=0,last=0,back=null,previousFocus=null,status,score,walletLabel,getWalletBalance=null;
+let lageSprite=null,dialog=null,canvas,ctx,session,onCoin=null,hasCoin=null,paidInRun=new Set(),keys={up:false,down:false,left:false,right:false},raf=0,last=0,back=null,previousFocus=null,status,score,walletLabel,getWalletBalance=null;
 function setup(){
  if(dialog)return;
  const style=root.document.createElement('style');
@@ -167,13 +167,19 @@ function frame(t){
  const dt=last?Math.min(.05,(t-last)/1000):0;last=t;
  const before=session.snapshot().found,after=session.step(dt,keys);
  if(after.damaged&&root.RimforsaAudio)(root.RimforsaAudio.sharkBump?root.RimforsaAudio.sharkBump():root.RimforsaAudio.hit());
- if(after.found>before){for(const coin of after.coins)if(coin.taken&&!paidInRun.has(coin.id)){paidInRun.add(coin.id);const earned=typeof onCoin==='function'&&onCoin(coin.id)===true;updateWallet(earned?'Nytt sjömynt! +1':'Det här myntet är redan inräknat');}if(root.RimforsaAudio)root.RimforsaAudio.coin();}
+ for(const coin of after.coins)if(coin.taken&&!paidInRun.has(coin.id)){
+  const earned=typeof onCoin==='function'&&onCoin(coin.id)===true;
+  const confirmed=earned||(typeof hasCoin==='function'&&hasCoin(coin.id)===true);
+  if(confirmed)paidInRun.add(coin.id);
+  updateWallet(earned?'Nytt sjömynt! +1':confirmed?'Det här myntet är redan inräknat':'Myntet kunde inte sparas ännu.');
+ }
+ if(after.found>before&&root.RimforsaAudio)root.RimforsaAudio.coin();
  render();raf=root.requestAnimationFrame(frame);
 }
 function start(options){
  if(!options||typeof options.returnToMap!=='function')return false;
  setup();if(!dialog.hidden)close();
- previousFocus=root.document.activeElement;back=options.returnToMap;onCoin=typeof options.onCoin==='function'?options.onCoin:null;getWalletBalance=typeof options.getWalletBalance==='function'?options.getWalletBalance:null;paidInRun=new Set();session=createSession();
+ previousFocus=root.document.activeElement;back=options.returnToMap;onCoin=typeof options.onCoin==='function'?options.onCoin:null;hasCoin=typeof options.hasCoin==='function'?options.hasCoin:null;getWalletBalance=typeof options.getWalletBalance==='function'?options.getWalletBalance:null;paidInRun=new Set();session=createSession();
  if(root.RimforsaAudio&&root.RimforsaAudio.setScene)root.RimforsaAudio.setScene('swim');keys={up:false,down:false,left:false,right:false};dialog.hidden=false;last=0;
  updateWallet();render();dialog.querySelector('[data-swim=down]').focus();raf=root.requestAnimationFrame(frame);return true;
 }
@@ -181,7 +187,7 @@ function close(){
  if(!dialog||dialog.hidden)return;
  dialog.hidden=true;root.cancelAnimationFrame(raf);keys={up:false,down:false,left:false,right:false};
  if(root.RimforsaAudio&&root.RimforsaAudio.setScene)root.RimforsaAudio.setScene('land');
- const callback=back;back=null;onCoin=null;getWalletBalance=null;if(typeof callback==='function')callback();
+ const callback=back;back=null;onCoin=null;hasCoin=null;getWalletBalance=null;if(typeof callback==='function')callback();
  if(previousFocus&&previousFocus.isConnected)previousFocus.focus();
 }
 root.RimforsaSwimMinigame={createSession,start,close,isOpen:()=>!!dialog&&!dialog.hidden,refreshWallet:()=>{if(dialog&&!dialog.hidden)updateWallet();}};
