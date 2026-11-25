@@ -1,10 +1,10 @@
 # Lage i Rimforsa – färdiga uppgifter (arkiv)
 
-**Statuskälla:** [ROADMAP.md](../ROADMAP.md). Detta arkiv innehåller **41 avbockade uppgifter** som har tagits bort ur den aktiva att-göra-listan (senast 25 november 2026). Här behålls de som historik, inte som nya arbetsuppgifter.
+**Statuskälla:** [ROADMAP.md](../ROADMAP.md). Detta arkiv innehåller **42 avbockade uppgifter** som har tagits bort ur den aktiva att-göra-listan (senast 25 november 2026). Här behålls de som historik, inte som nya arbetsuppgifter.
 
 **Viktig avgränsning:** En del punkter är avbockade efter kodgranskning, inte fysiska mobiltester. Om ett dokumenterat acceptansvillkor visar sig saknas öppnas uppgiften på nytt i `ROADMAP.md`. Grafikstandard och separat kvalitetsarbete gäller fortfarande.
 
-## Avslutade uppgifter (41)
+## Avslutade uppgifter (42)
 
 - [x] **LJUD-01 – Läs upp karaktärernas repliker.** · [Detaljer](docs/TASK_DETAILS.md#ljud-01) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.** _Källkodsverifierad integration: dialogen visas alltid i text; användarens samtalsklick anropar speechSynthesis via ljudmotorn, enbart med ljudknappen på; avstängning, flikdöljning och miljöbyte stoppar talet. 19 nov: individuella talprofiler och sänkt bakgrundsmusik under repliker. Fysisk ljudtest i mobil/Safari ingår separat i LJUD-02._
 
@@ -58,3 +58,5 @@ Den 19 november 2026 avbockades sju äldre öppna uppgifter efter kodgranskning 
 - [x] **NPC-03 – Personer på avstånd från affärer och minispel.** · 85 px skyddszon används vid placering och rörelse; 25 000 simulerade steg med syntetiskt gångbar terräng och fem omstarter godkända, minsta avstånd 85,0009 px.
 - [x] **GRAF-02 – Trollminispelets grafiska enhetlighet.** · [Krav](docs/TASK_DETAILS.md#graf-02) · Trollscenen använder gemensamma Lage- och trollbilder, detaljerad skog och träffeffekter med bevarad kastmekanik och styrning. Kodgranskad, ytterligare grafisk harmonisering ingår i GRAF-01.
 - [x] **LJUD-04 – Bättre pruttljud.** · [Krav](docs/TASK_DETAILS.md#ljud-04) · Separat 0,44 sekunder lång syntetiserad prutteffekt med fallande sågtandsfrekvens, filtrerat brus och rytmisk amplitud, kopplad till bajskorvsträff. Källkodsbedömning, ej fysisk hörselkontroll.
+
+- [x] **HUV-07 – Hoppa över bajskorvar och mindre hinder.** · [Detaljer](TASK_DETAILS.md#huv-07) · Hoppknapp/mellanslag, hoppbåge, luftfasens skydd mot bajskorvar, återhämtning och ordinarie terrängmask. Syntax och isolerad hoppcykel verifierade; fysisk mobiltestning ej utförd.
