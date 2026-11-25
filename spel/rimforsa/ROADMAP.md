@@ -6,11 +6,11 @@
 
 ## Obligatorisk rotation mellan utvecklingspass
 
-**SENAST BEARBETAD HUVUDUPPGIFT: `HUV-05` – återbetalningsspärr och kontroll av fliksignal (25 november 2026).**
+**SENAST BEARBETAD HUVUDUPPGIFT: `HUV-07` – hoppfunktion (25 november 2026).**
 
-**NÄSTA ROTATIONSPOSITION: `HUV-07` – nästa öppna roterande huvuduppgift.**
+**NÄSTA ROTATIONSPOSITION: `KARTA-03` – nästa öppna roterande huvuduppgift.**
 
-**ALDRIG SAMMA HUVUDUPPGIFT TVÅ `JOBB LAGE` I FÖLJD.** Följ ordningen bland öppna, genomförbara uppgifter nedan med cirkulär rotation. Starta på angiven nästa position, hoppa över avbockade punkter, stående kvalitetsregler som `MINI-01` (dessa gäller ändå varje pass) och tillfälligt blockerade uppgifter. Bearbeta olika delar av spelet mellan varven: grafik, fordon, bränsle, ljud och andra spelmekaniker. Om inget praktiskt kan göras på nästa punkt, gå vidare till följande **annan** uppgift; återvänd först efter andra utvecklingspass. Prioritet betyder vikt inom rotationen, **inte** rätt att välja samma uppgift igen direkt. När ett pass med faktisk spelutveckling slutförts, uppdatera **båda fälten ovan** till den verkliga huvuduppgiften och efterföljande öppna rotationsposition innan passet avslutas. Rapportera vilka fält som ändrades. Att kontrollera kryssrutor eller åtgärda ett akut blockerande fel räknas inte som att byta huvuduppgift. **Aktuell rotation:** HUV-07 → KARTA-03 → FORDON-03 → HELI-02 → MYNT-03 → FORDON-02 → GRAF-01 → KARTA-01. BRÄNSLE-02 väntar på verifierbar prisdata. Nästa position HUV-07.
+**ALDRIG SAMMA HUVUDUPPGIFT TVÅ `JOBB LAGE` I FÖLJD.** Följ ordningen bland öppna, genomförbara uppgifter nedan med cirkulär rotation. Starta på angiven nästa position, hoppa över avbockade punkter, stående kvalitetsregler som `MINI-01` (dessa gäller ändå varje pass) och tillfälligt blockerade uppgifter. Bearbeta olika delar av spelet mellan varven: grafik, fordon, bränsle, ljud och andra spelmekaniker. Om inget praktiskt kan göras på nästa punkt, gå vidare till följande **annan** uppgift; återvänd först efter andra utvecklingspass. Prioritet betyder vikt inom rotationen, **inte** rätt att välja samma uppgift igen direkt. När ett pass med faktisk spelutveckling slutförts, uppdatera **båda fälten ovan** till den verkliga huvuduppgiften och efterföljande öppna rotationsposition innan passet avslutas. Rapportera vilka fält som ändrades. Att kontrollera kryssrutor eller åtgärda ett akut blockerande fel räknas inte som att byta huvuduppgift. **Aktuell rotation:** KARTA-03 → FORDON-03 → HELI-02 → MYNT-03 → FORDON-02 → GRAF-01 → KARTA-01. BRÄNSLE-02 väntar på verifierbar prisdata. Nästa position KARTA-03.
 
 ## Obligatorisk avbockning – vid VARJE `jobb lage`
 
@@ -24,7 +24,7 @@
 
 **SJÄLVSTÄNDIG SLUTBEDÖMNING (25 november 2026):** Användaren delegerar bedömningen av färdig implementation till assistenten. Ingen användarfeedback eller fysisk mobiltestning ska vara ett rutinmässigt villkor för avbockning. Granska ursprungliga krav mot faktisk kod, använd proportionerliga isolerade tester vid behov, stryk direkt när kraven är uppfyllda och fortsätt. Separat visuell/ljudmässig kvalitetssäkring dokumenteras utan att hålla fungerande funktioner öppna. Behåll endast konkreta saknade funktioner, påvisade fel eller specifika ännu olösta krav i aktiv kö. Vid listrevision ska hela kön granskas.
 
-**Senaste avslutningsnotis:** 2026-11-25 – Samlad kodrevision av 18 öppna punkter: nio flyttade till färdigarkivet; nio kvar, varav BRÄNSLE-02 blockerad. 25 000 syntetiska NPC-steg samt drakkontakt och projektilträffar kontrollerade. Ej fysisk mobil-/hörselkontroll. Ingen spelkod ändrad.
+**Senaste avslutningsnotis:** 2026-11-25 – HUV-07: hoppknapp och mellanslag, 24 px hoppbåge under 0,46 s, skydd mot låga bajshinder i luftfasen, ordinarie terrängkollision bibehållen. Syntax och isolerad hoppcykel godkända. Ingen fysisk mobiltestning eller bildgenerering. HUV-07 arkiverad; nästa KARTA-03.
 
 1. Läs [AGENTS.md](AGENTS.md) och **denna korta kö**. Välj nästa genomförbara **annan** uppgift enligt rotationsfälten ovan; respektera beroenden och blockerande fel. Välj aldrig samma huvuduppgift två pass i följd.
 2. Läs **bara den valda uppgiftens avsnitt** i [TASK_DETAILS.md](docs/TASK_DETAILS.md) (vid behov genom textsökning/radintervall), sedan relevant kod. Gemensamma, detaljerade krav finns i [GAME_RULES.md](docs/GAME_RULES.md); läs relevanta delar när arbetet berör dem.
@@ -37,11 +37,11 @@
 
 **BILDSPRITES FÖRE NYA KODRITADE PERSONER:** Identifiera vid varje pass minst en figur eller bakgrundsperson som inte använder riktig bildsprite. Prioritera bildgenerering av en originalgjord figur i huvudkartans/Lages detaljerade 16-bitars-SNES-stil, följt av faktiskt byte från kodritad platshållare till inläst sprite. Omfattar huvudkartans NPC:er och andra personer, Hackelhallens fotbollsspel (Maja, åskådare/bakgrundspersoner), rutschkanans förskolebarn/bakgrundspersoner och andra minispel. Anpassa vinkel, storlek, perspektiv och animation; bevara Lages befintliga bra sprite. Verifiera att filerna används och fungerar på mobil/dator innan någon del kryssas av. Dokumentera vad som är bildbaserat respektive fortfarande kodritat; markera blockerad bildgenerering ärligt om verktyget saknas. **Samma huvuduppgift får fortfarande inte väljas i två på varandra följande pass.** Integrera detta som stående delmoment inom den roterande uppgiften, särskilt GRAF-01/SPORT-01, inte som skäl att ensidigt fastna i en enda scen.
 
-## Kvar att göra – aktiv arbetskö (9)
+## Kvar att göra – aktiv arbetskö (8)
 
-**Översikt 25 november 2026:** 9 öppna uppgifter, 41 tidigare avbockade i [färdigarkivet](docs/COMPLETED_TASKS.md) och 1 ständig kvalitetsregel (MINI-01). **Endast ofärdiga delar står nedan.** Utförda delmoment och tidigare rapporter finns i [arbetsloggen](docs/WORKLOG.md), [uppgiftskraven](docs/TASK_DETAILS.md) och Git-historiken. Lägg **aldrig** till långa historiska uppdateringar på dessa rader.
+**Översikt 25 november 2026:** 8 öppna uppgifter, 42 tidigare avbockade i [färdigarkivet](docs/COMPLETED_TASKS.md) och 1 ständig kvalitetsregel (MINI-01). **Endast ofärdiga delar står nedan.** Utförda delmoment och tidigare rapporter finns i [arbetsloggen](docs/WORKLOG.md), [uppgiftskraven](docs/TASK_DETAILS.md) och Git-historiken. Lägg **aldrig** till långa historiska uppdateringar på dessa rader.
 
-### Aktivt genomförande (7)
+### Aktivt genomförande (6)
 
 **Kartexpansion är nu aktivt utvecklingsarbete, inte en senareläggning.** Regional utforskning finns i separat spelbar scen; sammanhängande världskarta återstår.
 
@@ -52,7 +52,6 @@
 - [ ] **HELI-02 – Flygbar helikopter med drakstrid.** · **Kvar:** Implementera isbollar, tre träffar, drakflykt i 20 minuter, engångsskatt på 20 mynt, beständig återkomsttid och rotorljud/animation. Flygning, landning, nödlandning och egen tank (65 mot bilens 27 distansenheter per procent; 7 spelmynt) finns redan.
 - [ ] **FORDON-03 – Bilen bara på bilvägarna.** · **Kvar:** Ersätt vattenbaserad fri landkörning med vägbaserad körmask inklusive vägkant, infarter, mack och parkering; behåll vattenspärr.
 - [ ] **KARTA-03 – Fri gångpassage öster om macken.** · **Kvar:** Bekräfta och vid behov ändra den faktiska gångbarhetsmasken öster om macken; ingen särskild mackkorridor finns i index.html. Tillåt utpekad öppen mark men inte hus eller vatten.
-- [ ] **HUV-07 – Hoppa över bajskorvar och mindre hinder.** · **Kvar:** Implementera mobilknapp, tangent, hoppanimation och skadefri passage över bajskorvar/små hinder, utan passage genom hus eller vatten.
 
 ### Väntar på underlag (1)
 
@@ -68,14 +67,14 @@
 
 ## Färdiga uppgifter – flyttade ur att-göra-listan
 
-**41 färdigmarkerade uppgifter** finns i [COMPLETED_TASKS.md](docs/COMPLETED_TASKS.md). De ska **inte** återkomma i den aktiva kön såvida ett saknat acceptansvillkor påvisas. Alla 41 färdiga task-ID:n är borttagna från denna aktiva lista, men kraven finns kvar som referens i `TASK_DETAILS.md`.
+**42 färdigmarkerade uppgifter** finns i [COMPLETED_TASKS.md](docs/COMPLETED_TASKS.md). De ska **inte** återkomma i den aktiva kön såvida ett saknat acceptansvillkor påvisas. Alla 42 färdiga task-ID:n är borttagna från denna aktiva lista, men kraven finns kvar som referens i `TASK_DETAILS.md`.
 
 ## Dokumentation och principer
 
 - [TASK_DETAILS.md](docs/TASK_DETAILS.md) – fullständig beskrivning och acceptansvillkor för samtliga 51 uppgifts-ID:n (inklusive stående MINI-01), utan parallella statuskryssrutor.
 - [GAME_RULES.md](docs/GAME_RULES.md) – bindande grafik-/minispelsregler och gemensamma tekniska hänsyn.
-- [COMPLETED_TASKS.md](docs/COMPLETED_TASKS.md) – separat historik över 41 avbockade uppgifter.
+- [COMPLETED_TASKS.md](docs/COMPLETED_TASKS.md) – separat historik över 42 avbockade uppgifter.
 - [WORKLOG.md](docs/WORKLOG.md) – hela tidigare arbetsloggen och historiska statusnoteringar. Läs **bara vid behov**.
 - `AGENTS.md` i denna mapp och repo-roten – kortkommando, befogenheter och arbetsmetod.
 
-**Ny prioritet 22 november 2026 på användarens begäran:** `KARTA-01` är aktiv kartutbyggnad och ska inte längre vänta på övriga uppgifter. Kartarbete väljs återkommande i rotationen och får utgöra eget utvecklingspass; grundregeln om att inte välja samma huvuduppgift två pass i rad gäller fortsatt. Utbyggnaden ska utgå från verkliga kartkällor, med spelbara förenklingar tydligt markerade. `MINI-01` är en stående kvalitetsregel och ligger därför inte bland de 9 öppna uppgifterna.
+**Ny prioritet 22 november 2026 på användarens begäran:** `KARTA-01` är aktiv kartutbyggnad och ska inte längre vänta på övriga uppgifter. Kartarbete väljs återkommande i rotationen och får utgöra eget utvecklingspass; grundregeln om att inte välja samma huvuduppgift två pass i rad gäller fortsatt. Utbyggnaden ska utgå från verkliga kartkällor, med spelbara förenklingar tydligt markerade. `MINI-01` är en stående kvalitetsregel och ligger därför inte bland de 8 öppna uppgifterna.
