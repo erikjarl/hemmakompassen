@@ -21,6 +21,7 @@ const busySites=[
  [921,813], // Bella Donna
  [1220,740], // badet
  [1100,116], // båtklubben
+ [565,928], // potatislandet
  [464,454] // trollspektaklet
 ];
 const npcMayStand=(x,y,canStand)=>canStand(x,y)&&busySites.every(([sx,sy])=>Math.hypot(x-sx,y-sy)>=85);
