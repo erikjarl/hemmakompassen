@@ -537,6 +537,10 @@ g.save();
 g.scale(off.width/W,off.height/H);
 g.strokeStyle='#fff';g.lineWidth=34;g.lineCap='round';g.lineJoin='round';
 traceBeachAccess(g);g.stroke();
+// Tillåt passage mellan mackens parkering och väg 23 över den smala
+// gräs-/trädraden öster om parkeringen. Byggnaden ligger norr om zonen.
+// Samma mask används av manuell styrning, A* och NPC-kollisioner.
+g.beginPath();g.moveTo(448,648);g.lineTo(476,648);g.lineTo(511,648);g.lineWidth=24;g.stroke();
 g.restore();
 collision=g.getImageData(0,0,off.width,off.height).data;maskW=off.width;maskH=off.height;buildEdgeDistance();maskLoaded=true;buildCoinCandidates();scatterCoins();npcSystem.reset();message.innerHTML='<strong>Skattjakten börjar!</strong> Leta efter '+COIN_TARGET+' guldmynt och undvik bajskorvarna längs vägarna.'}
 maskImage.addEventListener('load',loadMask);tiles.addEventListener('load',()=>imageLoaded=true);sprite.addEventListener('load',()=>spriteLoaded=true);
