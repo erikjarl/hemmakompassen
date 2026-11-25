@@ -150,7 +150,7 @@ function render(){
  if(!(s.invul>0&&Math.floor(s.invul*12)%2===0)){
  if(lageSprite&&lageSprite.complete&&lageSprite.naturalWidth>=224){
   // Använd huvudkartans riktiga Lage, utan omskalningens mjukfilter.
-  ctx.drawImage(lageSprite,2*56,1*56,56,56,x-22,y-29,44,44);
+  ctx.drawImage(lageSprite,2*56,1*56,56,56,x-28,y-41,56,56);
  }else{
  ctx.fillStyle='#2d403b';ctx.fillRect(x-15,y+8,11,6);ctx.fillRect(x+5,y+8,11,6);
  ctx.fillStyle='#e26b53';ctx.fillRect(x-13,y-3,27,13);
