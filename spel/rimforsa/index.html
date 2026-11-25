@@ -119,7 +119,7 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
 <script src="./boat-direction-art.js?v=12"></script>
 <script src="./fuel.js?v=3"></script>
 <script src="./friend-sprites.js?v=2"></script>
-<script src="./npc.js?v=9"></script>
+<script src="./npc.js?v=10"></script>
 <script src="./farm.js?v=5"></script>
 <script src="./dragon.js?v=19"></script>
 <script src="./helicopter.js?v=5"></script>
@@ -1280,7 +1280,7 @@ function updateMessage(){
  if(nearHeli()&&!nearCar()){interact.hidden=false;interact.textContent='Flyg helikopter 🚁';title.textContent='Helikopter';message.textContent='Tank: '+heliFuel.snapshot().percent+'%. Tanka för 7 spelmynt på macken.';state.nearKey='heli';return;}
  const near=state.inCar?null:nearestSite(),carAction=state.inCar?'exit':nearCar()?'enter':null;
  const trollHere=!carAction&&nearTroll();
- const npcHere=!carAction&&!trollHere&&!(near&&['Förskolan Hackel','Åsundabadet','Potatislandet','Hackelhallen'].includes(near.name))?npcSystem.near(state.x,state.y):null;
+ const npcHere=!carAction&&!trollHere&&!near?npcSystem.near(state.x,state.y):null;
  const key=carAction?'car-'+carAction:trollHere?'troll':npcHere?'npc-'+npcHere.id:near?near.name:'none';
  if(key===state.nearKey)return;
  state.near=(trollHere||npcHere)?null:near;state.nearKey=key;interact.hidden=!(carAction||trollHere||npcHere||near);state.messageLocked=false;
@@ -1307,6 +1307,11 @@ function updateMessage(){
  }
 }
 interact.addEventListener('click',()=>{
+ // Uppdatera en föråldrad knapp i stället för att öppna en annan handling än den visade.
+ const previousKey=state.nearKey;
+ const previousLabel=interact.textContent;
+ const notice=coinNoticeUntil;coinNoticeUntil=0;updateMessage();coinNoticeUntil=notice;
+ if(interact.hidden||previousKey!==state.nearKey||previousLabel!==interact.textContent)return;
  if(state.inHeli){landHeli();return;}
  if(nearHeli()&&!nearCar()){enterHeli();return;}
  if(state.inCar){exitCar();return;}
@@ -1316,7 +1321,7 @@ interact.addEventListener('click',()=>{
  if(nearestSite()?.name==='Förskolan Hackel'){stop();window.RimforsaSlideMinigame.start({onLandingCoin:id=>awardBonusResult('slide-'+id),getWalletBalance:totalMoney,returnToMap:()=>{state.nearKey=null;updateCoinScore();updateMessage();}});return;}
   if(nearestSite()?.name==='Åsundabadet'){stop();window.RimforsaSwimMinigame.start({onCoin:id=>awardMinigameCoin('swim-'+id),hasCoin:id=>rewardWallet.sync()&&rewardWallet.has('swim-'+id),getWalletBalance:totalMoney,returnToMap:()=>{state.nearKey=null;updateCoinScore();updateMessage();}});return;}
   if(nearestSite()?.name==='Potatislandet'){stop();window.RimforsaFarm.start({verifyCurrentRound:()=>!reloadAfterOtherTabLoss(),returnToMap:()=>{state.nearKey=null;updateCoinScore();updateMessage();}});return;}
- const npcHere=npcSystem.near(state.x,state.y);
+ const npcHere=!nearestSite()?npcSystem.near(state.x,state.y):null;
  if(npcHere){
    const dialogue=npcSystem.talk(npcHere.id);
    if(dialogue){
