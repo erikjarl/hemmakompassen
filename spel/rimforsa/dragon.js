@@ -1,6 +1,9 @@
 /* Lage i Rimforsa: originalritad drake, eld och skogspatrull. Nu med kollisionsskada. */
 (function(root){
  'use strict';
+ // Original GPT-generated dragon sprite (92×75, transparent PNG).
+ const dragonSprite=typeof root.Image==='function'?new root.Image():null;
+ if(dragonSprite)dragonSprite.src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFwAAABLCAMAAADK4hBJAAAASFBMVEUAAAAFHRMtZi5hnjmgylDTolyTrEj41I51rkKmdUaTYzpRaDINIRQaVhZRUyE+gzQQJReBtj3wzUlBOSMzRCUlQSIAf38A/wBQCj2zAAAAGHRSTlMA+/z8/Pz8/Pz8/PyfDBH8W/z8/Eq6AgG2/zaCAAAEuElEQVR42u1Y25ajOAyMLHzhkk66Z3fn//90VJINNmSmEyDnzMNyOpcmSSGXSyWJy+X/4686yI43QOLoUpCDzruIQHadWx2BmY/DCwIb3hx+wdclHMKOkVegy9uQ0hF48j4Qs9sc+QrMGv/OuDXkjM44Gvwc/77w7VeKrn+P4XVvDzBvqGvohZyT0BfhMCf519C9j5EOoRdsopYeWUHf90fAjXTD4lb3pO/DIWKckoALVKLHtXAC234EPAl2hq4Fr09HbQCK4HENTUo5tfr92OGMXHDn7RT6QRStM+9lcHYVdJEN/iqNTwiaNK93YAO0jdulKnCKZkgxvoJP0dOS/lyUg9C5AVe+KfTBR/+kOIFtSWmJqiuwxbTgPsas/fB00hJNeLlPij/qFYCauZm/9+H7aJxM1O+whOIDKk0Db0KXiAGPBQg80S4PI6aSRLUUCTYj8UfZjXGdARs+LvQQfXYAgCv6T6njpkRBl+jxb/eHKou6v+0hJsVmWvJf1nFRLHnIj65wMaGrA3/U/RldHtfq5B10c+MAuhCg66uKRUoroyXhG/++FbKkaaKnOvBCu4HqxbouYL/F6VIC/DZ0XSNWzJbyFbrZzOK7Zoxj7mXkSX6ast8LOY88Uz9hNzpvX6pDl3o/TYJTozsnUQJbY+/Ud6y2b1Ux2Ub5rNXCC1ldoMuVRnQsmXSwCzbYapKSDhHRF7nPDtf6p6a107j92pyxbf/KlW1lauZuKadsYaeU9JXp6wvkdyFUmsGeaNxb78FHhe2RIQYDTyHZ5jj9Bp7dLSFqTeduCdL4JvK0ks9/4njBJFS8PXuksG01MOtFbW72urag6JI93atTVyyU5zaI53bA5XYgAdz73vZTPtdGDybWVitE7jbdQlIRGGQuGePSwMCBvR8EPKcUsVDdD9AKNZzrd/s5d+76A+mYDWXpYer2yMchQlyEVcozIu5yRa0D73TtGFOsIRFpqc1kWudxILdhelqsMA6+KLZUR3WbTQJp7LAVtRbK28gu11K2uOc9lbLch+hpnYmp21pXQTD6upyucz4WUuRdYs1CKZpx6LcGC3VtR4pRRcB8o4xcOtFlfMk1CUscB8llH9zWvx8Yukgq5wQAb1wUYkqesSXwBBMR4GGQwK0//b6aDQafW5XCAtGQEfL1Eg09BKgmVOaMZ2atgp9D1T2kYawVKPsMcHxV6SN+Cly0PWhEpmHJDd3fEEaq5ruAE0L2j+Kd7puqXO0FwHt9ZI33oad6cgxibqEqs2gUPT3d22Kz+kyxVPZlbjTwz2yRBZ5+vNKFlj7Ooe2a+2jLsmRtRTMAvNgGXTMlOrssSoT6BT0o+u6bGJkSw25ndKd3SNCAUtw9pGuVvTi6NaOuOdgNl/Xk995dIAuMuJ1Gk1p4jK8zXYHrDQZtKUrgoDt7AdrCg3d0rkuDy7MuSQeAZ3X9/c7CTLiM/DYVXc652eVyOZ/bZ5B+1l06NnlUhu6a/vcYNlfDqE1c58XdzKI6cd1PA+e5HTo5cBqThj2O1ah7EvaEKffjer1e5vaP+KybulM1URq6S6ft5kSbWfE8qTyac9+DLdWDZSx62016UeUbwd+HLap/Iza9D/svPX4BkuMeMZBFHFUAAAAASUVORK5CYII=';
  function createDragon(){
   // Kartans sammanhängande skog väster om den böjda sydvästvägen.
   // Konservativ polygon innanför terrängkanten; koordinater i huvudkartans 1448×1086-system.
@@ -174,7 +177,11 @@
     ctx.lineWidth=2;
     ctx.beginPath();ctx.ellipse(0,32,35,12,0,0,Math.PI*2);ctx.stroke();
    }
-   const flap=Math.sin(t*8)*13;
+   if(dragonSprite?.complete&&dragonSprite.naturalWidth===92&&dragonSprite.naturalHeight===75){
+    const h=75+Math.round(Math.sin(t*8)*7);
+    ctx.drawImage(dragonSprite,-49,-Math.round(h/2),92,h);
+   }else{
+    const flap=Math.sin(t*8)*13;
    poly([-12,-4,-47,-36-flap,-32,-12-flap,-39,10,-8,12],'#183b37');
    poly([-12,-8,-44,-34-flap,-30,-12-flap,-31,8,-8,8],'#398d68');
    poly([9,-3,34,-28+flap,43,-5+flap,27,17,10,12],'#16483b');
@@ -192,6 +199,7 @@
    ctx.fillStyle='#ffdf6c';ctx.fillRect(22,-20,5,4);ctx.fillStyle='#1b1a1b';ctx.fillRect(25,-19,2,3);
    ctx.fillStyle='#16392f';ctx.fillRect(-16,18,6,14);ctx.fillRect(10,16,7,14);
    ctx.fillStyle='#e4c581';ctx.fillRect(-17,30,9,3);ctx.fillRect(10,29,10,3);
+   }
    const breath=(t*2.25)%(Math.PI*2);
    if(Math.sin(breath)>.28){
     const length=22+Math.sin(t*12)*8;
