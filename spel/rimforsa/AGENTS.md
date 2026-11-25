@@ -8,7 +8,7 @@
 
 **SJÄLVSTÄNDIG SLUTBEDÖMNING (25 november 2026):** Användaren delegerar bedömningen av färdig implementation till assistenten. Ingen användarfeedback eller fysisk mobiltestning ska vara ett rutinmässigt villkor för avbockning. Granska ursprungliga krav mot faktisk kod, använd proportionerliga isolerade tester vid behov, stryk direkt när kraven är uppfyllda och fortsätt. Separat visuell/ljudmässig kvalitetssäkring dokumenteras utan att hålla fungerande funktioner öppna. Behåll endast konkreta saknade funktioner, påvisade fel eller specifika ännu olösta krav i aktiv kö. Vid listrevision ska hela kön granskas.
 
-**Senaste avslutningsnotis:** 2026-11-25 – LJUD-02 återöppnad efter användarens rapport om uteblivet mobilljud. Touchend/pointerup och återstartsknapp finns på main (8a076c4), fysisk funktion ej bekräftad. MYNT-03 kvar som nästa huvuduppgift; ingen ny spelkod eller bildgenerering i detta pass.
+**Senaste avslutningsnotis:** 2026-11-25 – MYNT-03: generationsmärkt minispelsplånbok på main (73d9246); simulerad skrivning över game over avvisas. Samtidiga skrivningar inom samma generation och migrering av äldre sparningar återstår. Ingen ny bildsprite integrerad; Pages ej verifierad. Nästa huvuduppgift GRAF-01.
 
 Detta är ett separat utvecklingskommando för **Lage i Rimforsa**. Läs repo-rotens `AGENTS.md`, denna fil och den **korta** `spel/rimforsa/ROADMAP.md` (enda aktiva arbetskö).
 
