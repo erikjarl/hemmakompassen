@@ -103,6 +103,9 @@ Utöver skriven text; med respekt för ljudknappen.
 
 **Återkommande felrapport 19 november:** ljudet fungerar återigen inte fullt ut i mobilvyn. Undersök vad som faktiskt är tyst: bakgrundsmusik, effekter och tal på huvudkarta och i minispel. Kontrollera ljudknapp av/på, första användargesten, byte mellan scener, paus/återupptagning, flikbyte och att ljudmotorn inte fastnar tyst. Testa i faktisk iPhone/Safari och ange vad som verifierats; kringgå inte webbläsarens regler för ljudstart.
 
+
+**Förtydligande 25 november 2026 – hög prioritet:** Användaren har inget ljud alls i mobil Safari trots tidigare korrigeringar. Utred grundorsaken, inte bara nya händelselyssnare. Säkerställ att ljudet kan aktiveras med en tydlig användargest enligt Safaris autoplay-regler, att musik och effekter hörs i samtliga spelmiljöer och att ljudmotorn kan återhämta sig efter omladdning, appbyte och skärmlås. Testa regressionsfall för avbruten eller fastnad AudioContext och bekräfta faktisk uppspelning på fysisk iPhone/Safari innan felet bedöms löst; dokumentera eventuella kvarstående begränsningar. Bevara av/på-funktionen.
+
 #### LJUD-03
 
 **Fler effekter för spelhändelser.**
