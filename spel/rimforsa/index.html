@@ -80,7 +80,7 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
   <div class="hud">LAGE <span class="heart" id="landHearts" aria-label="Hjärtan kvar">♥♥♥</span> <span class="coinScore" id="coinScore" aria-label="Myntsaldo och insamlade guldmynt">🪙 0 · Hittade 0/20</span></div><div class="fuel-hud" id="fuelHud">⛽ Bil 0% · Båt 0%</div><div class="area" id="area">Rimforsa</div>
   <canvas id="mini" class="minimap" width="128" height="96" aria-label="Minikarta över Rimforsa" role="img"></canvas>
   <button class="mapBtn" id="miniMapBtn">STOR KARTA</button>
-  <div id="mapOverlay" role="dialog" aria-modal="true" aria-label="Karta över Rimforsa"><button class="smallBtn" id="closeMap">Stäng ✕</button><canvas id="wholeMap" width="640" height="480" aria-label="Översikt av hela spelkartan. Tryck på en plats för att gå dit."></canvas><button type="button" class="smallBtn" id="goBeach">🏖️ Gå till Åsundabadet</button><button type="button" class="smallBtn" id="goFarm">🥔 Gå till potatislandet</button><p id="mapRouteHint" role="status" aria-live="polite" style="font-size:12px;margin:0;text-align:center">Tryck på kartan eller välj badplatsen för att gå dit.</p></div>
+  <div id="mapOverlay" role="dialog" aria-modal="true" aria-label="Karta över Rimforsa"><button class="smallBtn" id="closeMap">Stäng ✕</button><canvas id="wholeMap" width="640" height="480" aria-label="Översikt av hela spelkartan. Tryck på en plats för att gå dit."></canvas><button type="button" class="smallBtn" id="goBeach">🏖️ Gå till Åsundabadet</button><button type="button" class="smallBtn" id="goFarm">🥔 Potatisland 1</button><button type="button" class="smallBtn" id="goFarm2">🥔 Potatisland 2</button><button type="button" class="smallBtn" id="goFarm3">🥔 Potatisland 3</button><p id="mapRouteHint" role="status" aria-live="polite" style="font-size:12px;margin:0;text-align:center">Tryck på kartan eller välj badplatsen för att gå dit.</p></div>
 
   <div id="boatOverlay" class="boat-overlay" role="dialog" aria-modal="true" aria-label="Båtspel vid Kinda båtklubb" aria-hidden="true">
     <div class="boat-panel">
@@ -557,6 +557,8 @@ const boatHazards=[
  {x:532,y:1255,r:15},{x:734,y:1310,r:15},{x:904,y:1135,r:15}
 ];
 
+// Three plots on the land immediately south-east of the boat club.
+const farmSites=[{x:1148,y:242},{x:1198,y:248},{x:1248,y:256}].map((p,plot)=>({...p,plot,name:'Potatisland '+(plot+1),text:'Plantera potatis och skörda efter fem minuter.',symbol:'🥔'}));
 const sites=[
  {name:'Hem',x:360,y:335,text:'Välkommen hem! Här på Ulrikavägen börjar Lages Rimforsaäventyr.',symbol:'🏠'},
  {name:'Hackelhallen',x:667,y:418,text:'Här kan man spela fotboll, röra på sig och ha kul.',symbol:'⚽'},
@@ -564,7 +566,7 @@ const sites=[
  {name:'Bensinmacken',x:394,y:641,text:'Här kan man köpa korv! Mums!',symbol:'🌭'},
  {name:'ICA Melkers',x:699,y:783,text:'Här kan Lage köpa något gott att äta.',symbol:'🛒'},
  {name:'Bella Donna',x:921,y:813,text:'Här ligger pizzerian Bella Donna. Kanske dags för pizza?',symbol:'🍕'},
- {name:'Potatislandet',x:565,y:928,text:'Här kan Lage plantera potatis och skörda efter fem minuter.',symbol:'🥔'},
+ ...farmSites,
  {name:'Åsundabadet',x:1220,y:740,text:'Här kan man bada och leka vid sjön när vädret är fint.',symbol:'🏖️'},
  {name:'Kinda Båtklubb',x:1100,y:116,text:'Här ligger båtarna vid sjön. Här kan Lage hoppa i en vit motorbåt och ge sig ut på skattjakt bland grunden.',symbol:'⛵'}
 ];
@@ -582,6 +584,15 @@ function drawBeachAccess(g){
  g.strokeStyle='#d3bc8a';g.lineWidth=6;g.setLineDash([7,12]);traceBeachAccess(g);g.stroke();
  g.restore();
 }
+function traceFarmAccess(g){
+ g.beginPath();g.moveTo(1020,246);g.lineTo(1082,246);g.lineTo(1120,265);g.lineTo(1148,265);g.lineTo(1198,271);g.lineTo(1248,279);
+ for(const p of farmSites){g.moveTo(p.x,p.y+23);g.lineTo(p.x,p.y);}
+}
+function drawFarmAccess(g){
+ g.save();g.lineCap='round';g.lineJoin='round';
+ g.strokeStyle='#52663a';g.lineWidth=20;traceFarmAccess(g);g.stroke();
+ g.strokeStyle='#b49a68';g.lineWidth=13;traceFarmAccess(g);g.stroke();g.restore();
+}
 function loadMask(){if(!maskImage.complete||!maskImage.naturalWidth)return;const off=document.createElement('canvas');off.width=maskImage.naturalWidth;off.height=maskImage.naturalHeight;const g=off.getContext('2d',{willReadFrequently:true});g.imageSmoothingEnabled=false;g.drawImage(maskImage,0,0);
 // The original walkability image omits the short shore access from Bella Donna's
 // east road to Åsundabadet. Restore this narrow land path in collision space;
@@ -590,6 +601,7 @@ g.save();
 g.scale(off.width/W,off.height/H);
 g.strokeStyle='#fff';g.lineWidth=34;g.lineCap='round';g.lineJoin='round';
 traceBeachAccess(g);g.stroke();
+g.lineWidth=24;traceFarmAccess(g);g.stroke();
 // Tillåt passage mellan mackens parkering och väg 23 över den smala
 // gräs-/trädraden öster om parkeringen. Byggnaden ligger norr om zonen.
 // Samma mask används av manuell styrning, A* och NPC-kollisioner.
@@ -1346,7 +1358,7 @@ function updateMessage(){
    message.innerHTML='<strong>💬 '+npcHere.name+'</strong> – någon vill prata med Lage. Tryck på Prata!';
  }else if(near){
    const isBoat=near.name==='Kinda Båtklubb';
-   interact.textContent=near.name==='Bensinmacken'?'Tanka bilen ⛽':isBoat?'Kör båt 🛥️':near.name==='ICA Melkers'?'Köp glass 🍦':near.name==='Bella Donna'?'Köp pizza 🍕':near.name==='Förskolan Hackel'?'Åk rutschkana 🛝':near.name==='Åsundabadet'?'Dyk efter mynt 🤿':near.name==='Potatislandet'?'Odla potatis 🥔':near.name==='Hackelhallen'?'Spela fotboll ⚽':'Utforska ✨';
+   interact.textContent=near.name==='Bensinmacken'?'Tanka bilen ⛽':isBoat?'Kör båt 🛥️':near.name==='ICA Melkers'?'Köp glass 🍦':near.name==='Bella Donna'?'Köp pizza 🍕':near.name==='Förskolan Hackel'?'Åk rutschkana 🛝':near.name==='Åsundabadet'?'Dyk efter mynt 🤿':Number.isInteger(near.plot)?'Odla potatis 🥔':near.name==='Hackelhallen'?'Spela fotboll ⚽':'Utforska ✨';
    message.innerHTML='<strong>'+near.symbol+' '+near.name+'</strong> – '+(isBoat?'tryck på Kör båt för att åka ut på sjön.':'tryck på Utforska för att besöka platsen.');
    title.textContent=near.name;
  }else{
@@ -1368,7 +1380,7 @@ interact.addEventListener('click',()=>{
  if(nearestSite()?.name==='Hackelhallen'){stop();window.RimforsaFootball.start({onGoalCoin:id=>awardBonusResult('football-'+id),getWalletBalance:totalMoney,returnToMap:()=>{state.nearKey=null;updateCoinScore();updateMessage();}});return;}
  if(nearestSite()?.name==='Förskolan Hackel'){stop();window.RimforsaSlideMinigame.start({onLandingCoin:id=>awardBonusResult('slide-'+id),getWalletBalance:totalMoney,returnToMap:()=>{state.nearKey=null;updateCoinScore();updateMessage();}});return;}
   if(nearestSite()?.name==='Åsundabadet'){stop();window.RimforsaSwimMinigame.start({onCoin:id=>awardMinigameCoin('swim-'+id),hasCoin:id=>rewardWallet.sync()&&rewardWallet.has('swim-'+id),getWalletBalance:totalMoney,returnToMap:()=>{state.nearKey=null;updateCoinScore();updateMessage();}});return;}
-  if(nearestSite()?.name==='Potatislandet'){stop();window.RimforsaFarm.start({verifyCurrentRound:()=>!reloadAfterOtherTabLoss(),returnToMap:()=>{state.nearKey=null;updateCoinScore();updateMessage();}});return;}
+  if(Number.isInteger(nearestSite()?.plot)){const plot=nearestSite().plot;stop();window.RimforsaFarm.start({plot,verifyCurrentRound:()=>!reloadAfterOtherTabLoss(),returnToMap:()=>{state.nearKey=null;updateCoinScore();updateMessage();}});return;}
  const npcHere=!nearestSite()?npcSystem.near(state.x,state.y):null;
  if(npcHere){
    const dialogue=npcSystem.talk(npcHere.id);
@@ -1386,7 +1398,7 @@ interact.addEventListener('click',()=>{
  if(near.name==='Kinda Båtklubb'){openBoatGame();return;}
   if(near.name==='ICA Melkers'){openIca();return;}
   if(near.name==='Bella Donna'){openPizza();return;}
-   if(near.name==='Potatislandet'){stop();window.RimforsaFarm.start({returnToMap:()=>{state.nearKey=null;updateCoinScore();updateMessage();}});return;}
+   if(Number.isInteger(near.plot)){stop();window.RimforsaFarm.start({plot:near.plot,verifyCurrentRound:()=>!reloadAfterOtherTabLoss(),returnToMap:()=>{state.nearKey=null;updateCoinScore();updateMessage();}});return;}
   if(near.name==='Förskolan Hackel'){stop();window.RimforsaSlideMinigame.start({onLandingCoin:id=>awardBonusResult('slide-'+id),getWalletBalance:totalMoney,returnToMap:()=>{state.nearKey=null;updateCoinScore();updateMessage();}});return;}
    if(near.name==='Åsundabadet'){stop();window.RimforsaSwimMinigame.start({onCoin:id=>awardMinigameCoin('swim-'+id),hasCoin:id=>rewardWallet.sync()&&rewardWallet.has('swim-'+id),getWalletBalance:totalMoney,returnToMap:()=>{state.nearKey=null;updateCoinScore();updateMessage();}});return;}
  state.visited.add(near.name);
@@ -1743,7 +1755,7 @@ function drawTroll(){
  ctx.restore();
 }
 function drawPlayer(){const x=Math.round(state.x-state.camX+canvas.width/2),y=Math.round(state.y-state.camY+canvas.height/2);ctx.fillStyle='#162d2588';ctx.beginPath();ctx.ellipse(x,y-2,11,4,0,0,2*Math.PI);ctx.fill();ctx.save();ctx.translate(0,-jumpHeight());if(spriteLoaded){const row=state.dir==='down'?0:state.dir==='left'?1:state.dir==='right'?2:3,frame=Math.floor(state.phase)%4;ctx.drawImage(sprite,frame*56,row*56,56,56,x-22,y-47,44,44)}else{ctx.fillStyle='#f6d3aa';ctx.fillRect(x-7,y-33,14,15);ctx.fillStyle='#f6e8c5';ctx.fillRect(x-12,y-18,24,17);ctx.fillStyle='#b65c63';ctx.fillRect(x-9,y-2,7,9);ctx.fillRect(x+3,y-2,7,9)}ctx.restore();}
-function drawMap(ctx2,w,h,full=false){ctx2.clearRect(0,0,w,h);ctx2.imageSmoothingEnabled=false;if(imageLoaded){ctx2.drawImage(tiles,0,0,w,h);ctx2.save();ctx2.scale(w/W,h/H);drawBeachAccess(ctx2);ctx2.restore();}else{ctx2.fillStyle='#80a75c';ctx2.fillRect(0,0,w,h)}for(const s of sites){const x=s.x/W*w,y=s.y/H*h;ctx2.fillStyle='#feeaa9';ctx2.fillRect(x-2,y-2,4,4);if(full){ctx2.fillStyle='#08251d';ctx2.fillRect(x+3,y-1,2,2)}}const tx=troll.x/W*w,ty=troll.y/H*h;ctx2.fillStyle='#b26d4f';ctx2.fillRect(tx-2,ty-2,5,5);const d=dragon.snapshot();ctx2.fillStyle='#e8a54b';ctx2.fillRect(d.x/W*w-2,d.y/H*h-2,5,5);const px=state.x/W*w,py=state.y/H*h;ctx2.fillStyle='#ff4d5e';ctx2.fillRect(px-3,py-3,7,7);ctx2.strokeStyle='#fff2c0';ctx2.lineWidth=1.2;ctx2.strokeRect(px-4,py-4,9,9)}
+function drawMap(ctx2,w,h,full=false){ctx2.clearRect(0,0,w,h);ctx2.imageSmoothingEnabled=false;if(imageLoaded){ctx2.drawImage(tiles,0,0,w,h);ctx2.save();ctx2.scale(w/W,h/H);drawBeachAccess(ctx2);drawFarmAccess(ctx2);paintFarmPlots(ctx2);ctx2.restore();}else{ctx2.fillStyle='#80a75c';ctx2.fillRect(0,0,w,h)}for(const s of sites){const x=s.x/W*w,y=s.y/H*h;ctx2.fillStyle='#feeaa9';ctx2.fillRect(x-2,y-2,4,4);if(full){ctx2.fillStyle='#08251d';ctx2.fillRect(x+3,y-1,2,2)}}const tx=troll.x/W*w,ty=troll.y/H*h;ctx2.fillStyle='#b26d4f';ctx2.fillRect(tx-2,ty-2,5,5);const d=dragon.snapshot();ctx2.fillStyle='#e8a54b';ctx2.fillRect(d.x/W*w-2,d.y/H*h-2,5,5);const px=state.x/W*w,py=state.y/H*h;ctx2.fillStyle='#ff4d5e';ctx2.fillRect(px-3,py-3,7,7);ctx2.strokeStyle='#fff2c0';ctx2.lineWidth=1.2;ctx2.strokeRect(px-4,py-4,9,9)}
 // Pixelritad lokal skylt på huvudkartan. Visar INTE ett osäkert pris som dagens pris.
 function drawIngoPriceSign(){
  const x=Math.round(417-state.camX+canvas.width/2),y=Math.round(609-state.camY+canvas.height/2);
@@ -1774,7 +1786,26 @@ function drawHarborVisitor(){
  ctx.drawImage(art,facing*40,0,40,56,x-20,y-56,40,56);
  ctx.restore();
 }
-function drawFarmMarker(){const s=sites.find(site=>site.name==='Potatislandet');const x=Math.round(s.x-state.camX+canvas.width/2),y=Math.round(s.y-state.camY+canvas.height/2);if(x<-50||y<-50||x>canvas.width+50||y>canvas.height+50)return;ctx.fillStyle='#59402e';ctx.fillRect(x-20,y-14,40,27);ctx.fillStyle='#91663e';ctx.fillRect(x-18,y-12,36,23);ctx.fillStyle='#d5b475';ctx.fillRect(x-15,y-9,30,16);ctx.fillStyle='#397444';ctx.fillRect(x-2,y-8,4,12);ctx.fillRect(x-7,y-8,6,5);ctx.fillRect(x+2,y-10,7,6);ctx.fillStyle='#9f7147';ctx.fillRect(x-2,y+13,4,12);}
+function paintFarmPlots(g){
+ for(const p of farmSites){
+  const x=p.x,y=p.y,stage=farm.snapshot(p.plot).stage;
+  const rect=(dx,dy,w,h,c)=>{g.fillStyle=c;g.fillRect(x+dx,y+dy,w,h);};
+  rect(-22,-15,44,30,'#49382a');rect(-20,-13,40,26,'#a27749');
+  for(let row=0;row<3;row++){
+   const dy=-10+row*9;rect(-17,dy,34,5,'#63432c');rect(-17,dy+5,34,1,'#bf955b');
+   for(let j=0;j<4;j++){
+    const dx=-15+j*9;
+    rect(dx,dy+1,3,2,'#d1a26a');
+    if(stage>=1){rect(dx,dy-2,2,5,'#447d39');rect(dx-1,dy-3,4,2,'#8ebd59');}
+    if(stage>=2){rect(dx-2,dy-5,6,3,'#3f8d43');rect(dx+1,dy-6,3,3,'#86bd59');}
+    if(stage>=3){rect(dx-3,dy-7,8,4,'#397444');rect(dx-1,dy-8,5,3,'#6da64c');}
+    if(stage===4){rect(dx+1,dy-7,3,3,'#f3d184');}
+   }
+  }
+  rect(-5,14,10,3,stage===4?'#f6dc76':'#7b5b39');
+ }
+}
+function drawFarmMarker(){ctx.save();ctx.translate(Math.round(canvas.width/2-state.camX),Math.round(canvas.height/2-state.camY));drawFarmAccess(ctx);paintFarmPlots(ctx);ctx.restore();}
 function draw(){const w=canvas.width,h=canvas.height;ctx.fillStyle='#305d42';ctx.fillRect(0,0,w,h);if(imageLoaded){const x=Math.round(w/2-state.camX),y=Math.round(h/2-state.camY);ctx.drawImage(tiles,x,y);ctx.save();ctx.translate(x,y);drawBeachAccess(ctx);ctx.restore();}drawIngoPriceSign();drawFarmMarker();drawHarborVisitor();drawCoins();drawPoops();drawTroll();helicopter.draw(ctx,state.camX,state.camY,w,h,performance.now()/1000);dragon.draw(ctx,state.camX,state.camY,w,h);drawIce();npcSystem.draw(ctx,state.camX,state.camY,w,h,sprite);
 if(state.inCar){carDrive.draw(ctx,state.x-state.camX+w/2,state.y-state.camY+h/2,state.dir,true);}
 else{carDrive.draw(ctx,carPos.x-state.camX+w/2,carPos.y-state.camY+h/2,parkedCarDir,false);if(!state.inHeli)drawPlayer();}
@@ -1943,7 +1974,7 @@ function closeMap(silent=false){if(!overlay.classList.contains('show'))return;ov
 for(const id of ['showMap','miniMapBtn'])document.getElementById(id).addEventListener('click',openMap);
 document.getElementById('closeMap').addEventListener('click',()=>closeMap());
 document.getElementById('goBeach').addEventListener('click',()=>routeFromMap(1220,740));
-document.getElementById('goFarm').addEventListener('click',()=>routeFromMap(565,928));
+for(const p of farmSites){document.getElementById(p.plot===0?'goFarm':'goFarm'+(p.plot+1)).addEventListener('click',()=>routeFromMap(p.x,p.y));}
 whole.addEventListener('pointerdown',ev=>{
  ev.preventDefault();
  const rect=whole.getBoundingClientRect();
