@@ -951,3 +951,8 @@ Hoppfunktion implementerad med mobilknapp och mellanslag, 24 px höjd och 0,46 s
 ### 2026-11-25 – KARTA-03
 
 Kartbild och gångmask inspekterade via base64. Ny 24 px passage (448,648–511,648) i gemensam gångmask mellan mackens parkering och väg 23; ingen ändring i kartbilden. Syntaxkontroll godkänd. Kodcommit 6edf40b5c175c8e6f4ffb2f1d876be3add74eb84. Fysisk genomspelning och bildgenerering ej utförda. KARTA-03 arkiverad.
+
+
+### 2026-11-25 – FORDON-03
+
+Körkorridorer och parkeringsytor definierade mot faktisk kartbild. Bilens centrum måste ligga i tillåten körzon; hela tidigare kollisionsytan vattenkontrolleras som förut. Isolerade tester godkända med syntetisk vattenmask. Kodcommit 239bf8353fbfc16311e5cdc00b35d055c744c6f9; cacheversion och GAME_RULES uppdaterade. Ingen fysisk genomspelning eller bildgenerering. FORDON-03 arkiverad.
