@@ -8,7 +8,7 @@
 
 **SJÄLVSTÄNDIG SLUTBEDÖMNING (25 november 2026):** Användaren delegerar bedömningen av färdig implementation till assistenten. Ingen användarfeedback eller fysisk mobiltestning ska vara ett rutinmässigt villkor för avbockning. Granska ursprungliga krav mot faktisk kod, använd proportionerliga isolerade tester vid behov, stryk direkt när kraven är uppfyllda och fortsätt. Separat visuell/ljudmässig kvalitetssäkring dokumenteras utan att hålla fungerande funktioner öppna. Behåll endast konkreta saknade funktioner, påvisade fel eller specifika ännu olösta krav i aktiv kö. Vid listrevision ska hela kön granskas.
 
-**Senaste avslutningsnotis:** 2026-11-25 – LJUD-02: första giltiga spelgest aktiverar ljud, explicit avstängning sparas och pausad motor kan återställas via ljudknapp (98d449a). Syntax och simulerade gest-/mute-/återstartstester godkända. Fysisk iPhone/Safari och Pages ej verifierade; ingen ny figur-sprite integrerad. Nästa huvuduppgift HELI-02.
+**Senaste avslutningsnotis:** 2026-11-25 – HELI-02: rotorljud kopplat till flygning och avstängning vid landning/omstart; 20 sparade drakmynt som engångsbonus per spelomgång på main (1991ef4, 62b0cf9). Simulerad plånbok samt tre träffar, sparad 20-minutersflykt och återkomst godkända. Fysisk skatt på kartan, faktisk projektilträff och hörbart rotorljud ej kontrollerade; Pages ej verifierad. Ingen ny figur-sprite integrerad. Nästa huvuduppgift MYNT-03.
 
 Detta är ett separat utvecklingskommando för **Lage i Rimforsa**. Läs repo-rotens `AGENTS.md`, denna fil och den **korta** `spel/rimforsa/ROADMAP.md` (enda aktiva arbetskö).
 
