@@ -8,7 +8,7 @@
 
 **SJÄLVSTÄNDIG SLUTBEDÖMNING (25 november 2026):** Användaren delegerar bedömningen av färdig implementation till assistenten. Ingen användarfeedback eller fysisk mobiltestning ska vara ett rutinmässigt villkor för avbockning. Granska ursprungliga krav mot faktisk kod, använd proportionerliga isolerade tester vid behov, stryk direkt när kraven är uppfyllda och fortsätt. Separat visuell/ljudmässig kvalitetssäkring dokumenteras utan att hålla fungerande funktioner öppna. Behåll endast konkreta saknade funktioner, påvisade fel eller specifika ännu olösta krav i aktiv kö. Vid listrevision ska hela kön granskas.
 
-**Senaste avslutningsnotis:** 2026-11-25 – HELI-02: animerad rotor på bildbaserad flygande helikopter, cacheversion höjd. Kodgranskning genomförd; speltest och ny bildgenerering ej utförda. Isbollar, drakflykt, skatt, beständig återkomst och rotorljud återstår. Nästa MYNT-03.
+**Senaste avslutningsnotis:** 2026-11-25 – MYNT-03: fotboll och rutschkana skiljer sparfel från redan hämtad bonus och tillåter omförsök via nytt mål/åk. Cacheversioner höjda. Kodändringar på main; webbläsartest och ny bildgenerering ej utförda. Samtidiga flikskrivningar återstår. Nästa FORDON-02.
 
 Detta är ett separat utvecklingskommando för **Lage i Rimforsa**. Läs repo-rotens `AGENTS.md`, denna fil och den **korta** `spel/rimforsa/ROADMAP.md` (enda aktiva arbetskö).
 
