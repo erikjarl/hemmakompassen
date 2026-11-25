@@ -1,10 +1,10 @@
 # Lage i Rimforsa – färdiga uppgifter (arkiv)
 
-**Statuskälla:** [ROADMAP.md](../ROADMAP.md). Detta arkiv innehåller **44 avbockade uppgifter** som har tagits bort ur den aktiva att-göra-listan (senast 25 november 2026). Här behålls de som historik, inte som nya arbetsuppgifter.
+**Statuskälla:** [ROADMAP.md](../ROADMAP.md). Detta arkiv innehåller **45 avbockade uppgifter** som har tagits bort ur den aktiva att-göra-listan (senast 25 november 2026). Här behålls de som historik, inte som nya arbetsuppgifter.
 
 **Viktig avgränsning:** En del punkter är avbockade efter kodgranskning, inte fysiska mobiltester. Om ett dokumenterat acceptansvillkor visar sig saknas öppnas uppgiften på nytt i `ROADMAP.md`. Grafikstandard och separat kvalitetsarbete gäller fortfarande.
 
-## Avslutade uppgifter (44)
+## Avslutade uppgifter (45)
 
 - [x] **LJUD-01 – Läs upp karaktärernas repliker.** · [Detaljer](docs/TASK_DETAILS.md#ljud-01) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.** _Källkodsverifierad integration: dialogen visas alltid i text; användarens samtalsklick anropar speechSynthesis via ljudmotorn, enbart med ljudknappen på; avstängning, flikdöljning och miljöbyte stoppar talet. 19 nov: individuella talprofiler och sänkt bakgrundsmusik under repliker. Fysisk ljudtest i mobil/Safari ingår separat i LJUD-02._
 
@@ -64,3 +64,5 @@ Den 19 november 2026 avbockades sju äldre öppna uppgifter efter kodgranskning 
 - [x] **KARTA-03 – Fri gångpassage öster om macken.** · [Detaljer](TASK_DETAILS.md#karta-03) · Kartbild och binär gångmask visuellt granskade; smal korridor från parkeringen till väg 23 tillagd i gemensam gångmask. Syntaxkontroll godkänd; fysisk genomspelning ej utförd.
 
 - [x] **FORDON-03 – Bilen bara på bilvägarna.** · [Detaljer](TASK_DETAILS.md#fordon-03) · Kartbildsbaserade körkorridorer med vägkantstolerans, infarter, parkeringszoner och oförändrad vattenkontroll. Isolerade väg-, terräng-, rörelse- och vattentester godkända. Fysisk genomspelning ej utförd.
+
+- [x] **FORDON-02 – Samstämmiga bil- och båtvyer.** · [Detaljer](TASK_DETAILS.md#fordon-02) · Faktiskt 640×60-bilbildark visuellt granskat sida vid sida: åtta vyer med samstämmig vit kaross, tak, mörka rutor och ljus; ingen tydlig tidigare rapporterad modellskillnad kvar. Bilens rendering väljer samma ark i åtta riktningar; båtens åtta separat cachade canvasvyer bygger på samma skrov och palett. Fysisk mobilvisning och ny bildgenerering ej utförda; båtens vyer är kodritade bildytor, inte nya externa sprites.
