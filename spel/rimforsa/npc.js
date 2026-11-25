@@ -14,6 +14,7 @@ const definitions=[
 // Keep walking NPCs away from entrances, shops and minigame start areas.
 // The radius also applies when searching for spawn positions and while wandering.
 const busySites=[
+ [360,335], // hem
  [667,418], // Hackelhallen
  [1002,480], // förskolans rutschkana
  [394,641], // bensinmack
@@ -24,7 +25,8 @@ const busySites=[
  [565,928], // potatislandet
  [464,454] // trollspektaklet
 ];
-const npcMayStand=(x,y,canStand)=>canStand(x,y)&&busySites.every(([sx,sy])=>Math.hypot(x-sx,y-sy)>=85);
+// 75 px entré + 54 px samtalsradie + 11 px säkerhetsmarginal.
+const npcMayStand=(x,y,canStand)=>canStand(x,y)&&busySites.every(([sx,sy])=>Math.hypot(x-sx,y-sy)>=140);
 // Original 16-bit-inspired 44x44 world sprites, not recoloured Lage frames.
 function drawFriend(ctx,p,x,y){
  const px=(dx,dy,w,h,color)=>{ctx.fillStyle=color;ctx.fillRect(Math.round(x+dx),Math.round(y+dy),w,h)};
@@ -63,7 +65,7 @@ function createSystem(canStand,random=Math.random){
  const people=definitions.map(p=>({...p,homeX:p.x,homeY:p.y,ready:false,dir:'down',frame:0,phase:0,turnTime:0,wait:.3,angle:0,speechIndex:0}));
  function locate(x,y){
    if(npcMayStand(x,y,canStand))return {x,y};
-   for(const r of [12,24,36,48,64,88,110,140,180]){
+   for(const r of [12,24,36,48,64,88,110,140,180,220,260,320]){
      for(let i=0;i<24;i++){
        const a=i*Math.PI/12,px=x+Math.cos(a)*r,py=y+Math.sin(a)*r;
        if(npcMayStand(px,py,canStand))return{x:px,y:py};
