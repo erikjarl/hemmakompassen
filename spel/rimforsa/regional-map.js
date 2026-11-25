@@ -71,7 +71,7 @@ function setup(){
   for(const ev of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(ev,()=>{keys[d]=false});
  }
  for(const b of modal.querySelectorAll('[data-target]'))b.addEventListener('click',()=>routeTo(b.dataset.target));
- modal.querySelector('[data-close]').addEventListener('click',close);
+ modal.querySelector('[data-close]').addEventListener('click',()=>{if(Math.hypot(x-475,y-378)<38)close();else routeTo('Rimforsa');});
  document.addEventListener('keydown',e=>{if(modal.hidden)return;if(e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();close();return;}const d={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',a:'left',s:'down',d:'right',W:'up',A:'left',S:'down',D:'right'}[e.key];if(d){e.preventDefault();e.stopImmediatePropagation();destination=null;waypoints=[];keys[d]=true;}},true);
  document.addEventListener('keyup',e=>{if(modal.hidden)return;const d={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',a:'left',s:'down',d:'right',W:'up',A:'left',S:'down',D:'right'}[e.key];if(d){e.preventDefault();e.stopImmediatePropagation();keys[d]=false;}},true);
 }
@@ -128,11 +128,11 @@ function tick(t){
   else{dx=vx/len;dy=vy/len;d=1;}
  }
  if(d){if(Math.abs(dx)>Math.abs(dy))facing=dx>0?'right':'left';else facing=dy>0?'down':'up';phase+=dt*9;const nx=x+dx/d*speed*dt,ny=y+dy/d*speed*dt;if(walkable(nx,ny)){x=nx;y=ny;}else if(walkable(nx,y))x=nx;else if(walkable(x,ny))y=ny;}
- if(destination&&!waypoints.length&&Math.hypot(x-places.find(p=>p.name===destination).x,y-places.find(p=>p.name===destination).y)<15)destination=null;
+ if(destination&&!waypoints.length&&Math.hypot(x-places.find(p=>p.name===destination).x,y-places.find(p=>p.name===destination).y)<15){const arrived=destination;destination=null;if(arrived==='Rimforsa')modal.querySelector('.regional-info').textContent='Tillbaka i Rimforsa! Tryck på Återvänd för att öppna huvudkartan.';}
  for(const p of places.slice(1))if(Math.hypot(x-p.x,y-p.y)<38&&!visited.has(p.name)){visited.add(p.name);modal.querySelector('.regional-info').textContent='Du kom till '+p.name+'! '+p.desc+' · '+visited.size+'/'+(places.length-1)+' platser besökta.';if(root.RimforsaAudio?.regionArrival)root.RimforsaAudio.regionArrival();}
  render();raf=requestAnimationFrame(tick);
 }
-function start(opts){if(!opts||typeof opts.returnToMap!=='function')return false;setup();if(!modal.hidden)close();back=opts.returnToMap;priorFocus=document.activeElement;keys={up:false,down:false,left:false,right:false};x=475;y=378;facing='down';phase=0;visited=new Set();destination=null;waypoints=[];modal.querySelector('.regional-info').textContent='Följ vägarna. Besök '+(places.length-1)+' platser!';modal.hidden=false;last=0;modal.querySelector('[data-dir=up]').focus();raf=requestAnimationFrame(tick);return true;}
+function start(opts){if(!opts||typeof opts.returnToMap!=='function')return false;setup();if(!modal.hidden)close();back=opts.returnToMap;priorFocus=document.activeElement;keys={up:false,down:false,left:false,right:false};x=475;y=378;facing='down';phase=0;destination=null;waypoints=[];modal.querySelector('.regional-info').textContent='Följ vägarna. '+visited.size+'/'+(places.length-1)+' platser besökta.';modal.hidden=false;last=0;modal.querySelector('[data-dir=up]').focus();raf=requestAnimationFrame(tick);return true;}
 function close(){if(!modal||modal.hidden)return;modal.hidden=true;cancelAnimationFrame(raf);keys={up:false,down:false,left:false,right:false};destination=null;waypoints=[];const cb=back;back=null;if(typeof cb==='function')cb();if(priorFocus?.isConnected)priorFocus.focus();}
 root.RimforsaRegionalMap={start,close,isOpen:()=>!!modal&&!modal.hidden};
 })(window);
