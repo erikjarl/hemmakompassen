@@ -6,11 +6,11 @@
 
 ## Obligatorisk rotation mellan utvecklingspass
 
-**SENAST BEARBETAD HUVUDUPPGIFT: `MOBIL-01` – markeringsskydd; även SPORT-02 åtgärdad (26 november 2026).**
+**SENAST BEARBETAD HUVUDUPPGIFT: `GRAF-01` – bildgenererad drake (26 november 2026).**
 
-**NÄSTA ROTATIONSPOSITION: `GRAF-01` – enhetliga bildsprites.**
+**NÄSTA ROTATIONSPOSITION: `DRAKE-03` – avgränsade eldklot och skogsstrid.**
 
-**ALDRIG SAMMA HUVUDUPPGIFT TVÅ `JOBB LAGE` I FÖLJD.** Följ ordningen bland öppna, genomförbara uppgifter nedan med cirkulär rotation. Starta på angiven nästa position, hoppa över avbockade punkter, stående kvalitetsregler som `MINI-01` (dessa gäller ändå varje pass) och tillfälligt blockerade uppgifter. Bearbeta olika delar av spelet mellan varven: grafik, fordon, bränsle, ljud och andra spelmekaniker. Om inget praktiskt kan göras på nästa punkt, gå vidare till följande **annan** uppgift; återvänd först efter andra utvecklingspass. Prioritet betyder vikt inom rotationen, **inte** rätt att välja samma uppgift igen direkt. När ett pass med faktisk spelutveckling slutförts, uppdatera **båda fälten ovan** till den verkliga huvuduppgiften och efterföljande öppna rotationsposition innan passet avslutas. Rapportera vilka fält som ändrades. Att kontrollera kryssrutor eller åtgärda ett akut blockerande fel räknas inte som att byta huvuduppgift. **Aktuell rotation:** HELI-02 → MYNT-03 → ODLING-03 → MOBIL-01 → GRAF-01 → DRAKE-03 → NPC-04 → KARTA-01 → LJUD-02. BRÄNSLE-02 väntar på verifierbar prisdata. Nästa position GRAF-01.
+**ALDRIG SAMMA HUVUDUPPGIFT TVÅ `JOBB LAGE` I FÖLJD.** Följ ordningen bland öppna, genomförbara uppgifter nedan med cirkulär rotation. Starta på angiven nästa position, hoppa över avbockade punkter, stående kvalitetsregler som `MINI-01` (dessa gäller ändå varje pass) och tillfälligt blockerade uppgifter. Bearbeta olika delar av spelet mellan varven: grafik, fordon, bränsle, ljud och andra spelmekaniker. Om inget praktiskt kan göras på nästa punkt, gå vidare till följande **annan** uppgift; återvänd först efter andra utvecklingspass. Prioritet betyder vikt inom rotationen, **inte** rätt att välja samma uppgift igen direkt. När ett pass med faktisk spelutveckling slutförts, uppdatera **båda fälten ovan** till den verkliga huvuduppgiften och efterföljande öppna rotationsposition innan passet avslutas. Rapportera vilka fält som ändrades. Att kontrollera kryssrutor eller åtgärda ett akut blockerande fel räknas inte som att byta huvuduppgift. **Aktuell rotation:** HELI-02 → MYNT-03 → ODLING-03 → MOBIL-01 → GRAF-01 → DRAKE-03 → NPC-04 → KARTA-01 → LJUD-02. BRÄNSLE-02 väntar på verifierbar prisdata. Nästa position DRAKE-03.
 
 ## Obligatorisk avbockning – vid VARJE `jobb lage`
 
@@ -24,7 +24,7 @@
 
 **SJÄLVSTÄNDIG SLUTBEDÖMNING (25 november 2026):** Användaren delegerar bedömningen av färdig implementation till assistenten. Ingen användarfeedback eller fysisk mobiltestning ska vara ett rutinmässigt villkor för avbockning. Granska ursprungliga krav mot faktisk kod, använd proportionerliga isolerade tester vid behov, stryk direkt när kraven är uppfyllda och fortsätt. Separat visuell/ljudmässig kvalitetssäkring dokumenteras utan att hålla fungerande funktioner öppna. Behåll endast konkreta saknade funktioner, påvisade fel eller specifika ännu olösta krav i aktiv kö. Vid listrevision ska hela kön granskas.
 
-**Senaste avslutningsnotis:** 2026-11-26 – MOBIL-01 och SPORT-02: reservskydd mot oavsiktlig markering, individuella pek-/tangentidentiteter och återställning vid avbrutna gester/fokusförlust på main (976e366, 5fd6837). 2 000 simulerade styrsekvenser och markeringstest godkända. Fysisk Safari och Pages ej verifierade; ingen ny figur-sprite integrerad. Nästa huvuduppgift GRAF-01.
+**Senaste avslutningsnotis:** 2026-11-26 – GRAF-01: GPT-genererad transparent draksprite (92×75), integrerad i dragon.js med enkel flyganimation och tidigare reservgrafik (0de5254, a6c1815); syntax och simulerad bildrendering godkända. Inventering bekräftar sprites för Maja, fotbollspublik, förskolebarn, pizzabagare och ICA-personal. Visuell webbläsargranskning och Pages ej verifierade. Nästa huvuduppgift DRAKE-03.
 
 1. Läs [AGENTS.md](AGENTS.md) och **denna korta kö**. Välj nästa genomförbara **annan** uppgift enligt rotationsfälten ovan; respektera beroenden och blockerande fel. Välj aldrig samma huvuduppgift två pass i följd.
 2. Läs **bara den valda uppgiftens avsnitt** i [TASK_DETAILS.md](docs/TASK_DETAILS.md) (vid behov genom textsökning/radintervall), sedan relevant kod. Gemensamma, detaljerade krav finns i [GAME_RULES.md](docs/GAME_RULES.md); läs relevanta delar när arbetet berör dem.
@@ -51,7 +51,7 @@
 
 **Kartexpansion är nu aktivt utvecklingsarbete, inte en senareläggning.** Den tidigare regionala scenen har ersatts som mål av två separata fullstora världar: Kisa och Ulrika.
 
-- [ ] **GRAF-01 – Enhetlig grafik i alla scener.** · [Krav](docs/TASK_DETAILS.md#graf-01) · **Kvar:** Ersätt kvarvarande kodritade personer i minispel med riktiga bildsprites där de avviker från huvudkartans stil; harmonisera kvarvarande grafiska avvikelser.
+- [ ] **GRAF-01 – Enhetlig grafik i alla scener.** · [Krav](docs/TASK_DETAILS.md#graf-01) · **Kvar:** Inventera kvarvarande grafiska avvikelser och kodritade figurer utöver redan bildbaserade personer och drake; harmonisera återstående scener och kontrollera visuell helhet på mobil och dator.
 - [ ] **MYNT-03 – Minispelsmynt i gemensam plånbok.** · [Krav](docs/TASK_DETAILS.md#mynt-03) · **Kvar:** Hantera samtidiga köp och återbetalningar utan förlorade uppdateringar; säker migrering av äldre sparningar med befintlig förlustsignal. Kontrollera återställning vid samtidiga fynd i riktiga flikar.
 
 - [ ] **HELI-02 – Flygbar helikopter med drakstrid.** · **Kvar:** Gör engångsskatten synlig som en fysisk skatt att hämta på kartan i stället för direkt utbetalning. Kontrollera verkliga isbollsbanor/träffar och hörbart rotorljud vid flygning, landning och krasch.
