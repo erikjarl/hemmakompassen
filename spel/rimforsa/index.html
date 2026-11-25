@@ -126,7 +126,7 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
  for(const type of ['contextmenu','selectstart','dragstart'])document.addEventListener(type,preventGameSelection,true);
 })();
 </script>
-<script src="./audio.js?v=46"></script>
+<script src="./audio.js?v=47"></script>
 <script src="./gameplay.js?v=2"></script>
 <script src="./inventory.js?v=3"></script>
 <script src="./item-art.js?v=1"></script>
@@ -266,7 +266,8 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
  const rewardWallet=(()=>{
   const key='rimforsa-minigame-coins-v1';
   // Acceptera bara faktiska engångsbonusar från de fyra minispelen.
-  const validId=id=>typeof id==='string'&&/^(?:boat-[0-7]|swim-[0-4]|football-[0-2]|slide-[0-1])$/.test(id);
+  const validId=id=>typeof id==='string'&&/^(?:boat-[0-7]|swim-[0-4]|football-[0-2]|slide-[0-1]|dragon-treasure)$/.test(id);
+  const earnedValue=()=>Object.keys(earned).reduce((sum,id)=>sum+(id==='dragon-treasure'?20:1),0);
   let earned=Object.create(null),spent=0,readEpoch=null;
   const epoch=()=>localStorage.getItem('rimforsa-loss-reset-v1');
   // Läs samma sparade plånbok inför varje ändring så en äldre öppen
@@ -285,16 +286,16 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
     for(const id of Object.keys(data.earned))if(validId(id)&&data.earned[id]===true)next[id]=true;
    }
    earned=next;
-   const count=Object.keys(earned).length;
+   const count=earnedValue();
    const value=data?Number(data.spent):0;
    spent=Math.min(count,Number.isFinite(value)?Math.max(0,Math.floor(value)):0);
    return true;
   }
   sync();
   // Läs senaste sparade saldo före varje visning och köpkontroll, även innan storage-event.
-  const balance=()=>{sync();return Object.keys(earned).length-spent;};
+  const balance=()=>{sync();return earnedValue()-spent;};
   // Räknar redan hittade engångsbonusar även efter att mynt använts i en butik.
-  const collectedCount=()=>{sync();return Object.keys(earned).length;};
+  const collectedCount=()=>{sync();return Object.keys(earned).filter(id=>id!=='dragon-treasure').length;};
   // Bekräfta en myntändring först när den faktiskt finns i lagringen.
   // Annars skulle en privat/sparblockerad flik visa en bonus som försvinner vid omladdning.
   const save=()=>{
@@ -318,7 +319,7 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
    },
    spend(n){
     if(!Number.isSafeInteger(n)||n<0)return false;
-    if(!sync()||n>Object.keys(earned).length-spent)return false;
+    if(!sync()||n>earnedValue()-spent)return false;
     spent+=n;
     if(!save()){spent-=n;return false;}
     return true;
@@ -514,7 +515,7 @@ const dragon=window.RimforsaDragon.createDragon();
 const helicopter=window.RimforsaHelicopter.createHelicopter();
 const iceShots=[];let iceCooldown=0;
 function shootIce(){if(!state.inHeli||!worldIsPlaying()||iceCooldown>0||dragon.isAway())return false;const d=dragon.snapshot(),dx=d.x-state.x,dy=d.y-state.y,len=Math.hypot(dx,dy);if(len>280||len<1)return false;iceShots.push({x:state.x,y:state.y,vx:dx/len*310,vy:dy/len*310,life:1});iceCooldown=.65;return true;}
-function updateIce(dt){iceCooldown=Math.max(0,iceCooldown-dt);for(let i=iceShots.length-1;i>=0;i--){const b=iceShots[i],d=dragon.snapshot();b.x+=b.vx*dt;b.y+=b.vy*dt;b.life-=dt;if(!d.away&&Math.hypot(b.x-d.x,b.y-d.y)<30){iceShots.splice(i,1);const result=dragon.hitIce();coinNoticeUntil=performance.now()+2200;message.textContent=result.defeated?'Draken flyger iväg i 20 minuter!':'Isboll träffade! '+result.hits+'/3';if(result.defeated)iceShots.length=0;break;}if(b.life<=0||d.away)iceShots.splice(i,1);}}
+function updateIce(dt){iceCooldown=Math.max(0,iceCooldown-dt);for(let i=iceShots.length-1;i>=0;i--){const b=iceShots[i],d=dragon.snapshot();b.x+=b.vx*dt;b.y+=b.vy*dt;b.life-=dt;if(!d.away&&Math.hypot(b.x-d.x,b.y-d.y)<30){iceShots.splice(i,1);const result=dragon.hitIce();coinNoticeUntil=performance.now()+2200;message.textContent=result.defeated?'Draken flyger iväg i 20 minuter!':'Isboll träffade! '+result.hits+'/3';if(result.defeated){iceShots.length=0;const reward=awardBonusResult('dragon-treasure');message.textContent=reward==='earned'?'Draken flyr i 20 minuter! Du fick 20 skattmynt!':reward==='already'?'Draken flyr i 20 minuter! Skatten är redan hämtad.':'Draken flyr i 20 minuter! Skatten kunde inte sparas.';if(reward==='earned')audio.coin();}break;}if(b.life<=0||d.away)iceShots.splice(i,1);}}
 function drawIce(){for(const b of iceShots){const x=Math.round(b.x-state.camX+canvas.width/2),y=Math.round(b.y-state.camY+canvas.height/2);ctx.fillStyle='#326e99';ctx.fillRect(x-5,y-5,10,10);ctx.fillStyle='#9de8ff';ctx.fillRect(x-3,y-3,6,6);ctx.fillStyle='#ffffff';ctx.fillRect(x-2,y-3,3,2);}}
 let coinCandidates=[],coins=[],coinCount=0,coinNoticeUntil=0;
 let poops=[],hurtUntil=0;
@@ -1004,8 +1005,8 @@ function drawPoops(){
 let routeRetriesLeft=0;
 function clearPath(){state.path=[];routeRetriesLeft=0;}
 function nearHeli(){return !state.inCar&&!state.inHeli&&Math.hypot(state.x-helicopter.position.x,state.y-helicopter.position.y)<65;}
-function enterHeli(){cancelJump();if(heliFuel.snapshot().level<=0){message.textContent='Helikoptern har tom tank. Tanka på macken för 7 spelmynt.';if(audio.fuelEmpty)audio.fuelEmpty();return;}stop();state.inHeli=true;helicopter.setAirborne(true);state.x=helicopter.position.x;state.y=helicopter.position.y;state.nearKey=null;updateMessage();}
-function landHeli(emergency=false){const exit=nearbyExit();if(!exit&&!emergency){message.textContent='Flyg till gångbar mark innan du landar!';return;}stop();state.inHeli=false;helicopter.setAirborne(false);if(exit){state.x=exit.x;state.y=exit.y;helicopter.position.x=exit.x;helicopter.position.y=exit.y;}else{helicopter.reset();state.x=360;state.y=335;}state.nearKey=null;coinNoticeUntil=0;updateMessage();}
+function enterHeli(){cancelJump();if(heliFuel.snapshot().level<=0){message.textContent='Helikoptern har tom tank. Tanka på macken för 7 spelmynt.';if(audio.fuelEmpty)audio.fuelEmpty();return;}stop();state.inHeli=true;helicopter.setAirborne(true);audio.setHeliActive?.(true);state.x=helicopter.position.x;state.y=helicopter.position.y;state.nearKey=null;updateMessage();}
+function landHeli(emergency=false){const exit=nearbyExit();if(!exit&&!emergency){message.textContent='Flyg till gångbar mark innan du landar!';return;}stop();state.inHeli=false;helicopter.setAirborne(false);audio.setHeliActive?.(false);if(exit){state.x=exit.x;state.y=exit.y;helicopter.position.x=exit.x;helicopter.position.y=exit.y;}else{helicopter.reset();state.x=360;state.y=335;}state.nearKey=null;coinNoticeUntil=0;updateMessage();}
 function nearCar(){return !state.inCar&&Math.hypot(state.x-carPos.x,state.y-carPos.y)<78;}
 function enterCar(){cancelJump();
  if(carFuel.snapshot().level<=0){message.textContent="Bilen har tom tank! Gå till Bensinmacken och tanka först.";if(audio.fuelEmpty)audio.fuelEmpty();return false;}
@@ -1466,7 +1467,7 @@ function reset({clearMoney=true}={}){
    boatState.vx=0;boatState.vy=0;
    updateBoatHud();
   }
- pizzaOverlay.hidden=true;icaOverlay.hidden=true;winOverlay.hidden=true;document.getElementById('lossOverlay').hidden=true;hurtUntil=0;audio.setCarSpeed(0);audio.setCarActive(false);state.inCar=false;state.inHeli=false;helicopter.reset();
+ pizzaOverlay.hidden=true;icaOverlay.hidden=true;winOverlay.hidden=true;document.getElementById('lossOverlay').hidden=true;hurtUntil=0;audio.setCarSpeed(0);audio.setCarActive(false);state.inCar=false;state.inHeli=false;audio.setHeliActive?.(false);helicopter.reset();
  carPos.x=carDrive.HOME.x;carPos.y=carDrive.HOME.y;parkedCarDir='right';
  state.x=360;state.y=335;state.camX=360;state.camY=335;state.dir='down';
  state.phase=0;state.visited.clear();state.path=[];state.near=null;state.nearKey=null;
