@@ -936,3 +936,8 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 ### 2026-11-25 – HUV-05
 
 Återbetalningsfunktioner spärras efter omstart och kan endast användas en gång; fliksignalens sparresultat kontrolleras. Inline-JS syntaxkontrollerad och två isolerade återbetalningstester godkända. Ingen bildgenerering eller praktisk genomspelning. Kodcommit c6bbc0a116ad627fe8bac893843043270eb814a2.
+
+
+### 2026-11-25 – Samlad kodrevision och självständig slutbedömning
+
+På uttrycklig användarinstruktion granskades samtliga 18 öppna uppgifter mot ursprungliga krav och relevanta implementationer. Nio arkiverades: SPORT-01, DRAKE-02, HUV-05, KARTA-02, LJUD-03, LJUD-04, NPC-03, HELI-01, GRAF-02. Nio kvarstår. NPC-simulering: 25 000 steg på syntetisk gångbar terräng, fem omstarter, minsta avstånd 85,0009 px; drakkontakt och projektilträffar på Lage och helikopter godkända i isolerad simulering. Övriga avbockningar grundas på källkod och tidigare kontroller, inte fysiskt mobil- eller hörseltest. KARTA-03:s binära gångmask kunde inte inspekteras via tillgänglig UTF-8-hämtning; FORDON-02:s konkreta modellskillnad behöver bildjämförelse. Ingen spelkod ändrad. Ingen användarfeedback krävs rutinmässigt för avbockning.
