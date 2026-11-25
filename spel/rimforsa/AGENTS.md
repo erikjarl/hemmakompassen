@@ -8,7 +8,7 @@
 
 **SJÄLVSTÄNDIG SLUTBEDÖMNING (25 november 2026):** Användaren delegerar bedömningen av färdig implementation till assistenten. Ingen användarfeedback eller fysisk mobiltestning ska vara ett rutinmässigt villkor för avbockning. Granska ursprungliga krav mot faktisk kod, använd proportionerliga isolerade tester vid behov, stryk direkt när kraven är uppfyllda och fortsätt. Separat visuell/ljudmässig kvalitetssäkring dokumenteras utan att hålla fungerande funktioner öppna. Behåll endast konkreta saknade funktioner, påvisade fel eller specifika ännu olösta krav i aktiv kö. Vid listrevision ska hela kön granskas.
 
-**Senaste avslutningsnotis:** 2026-11-26 – MOBIL-01 och SPORT-02: reservskydd mot oavsiktlig markering, individuella pek-/tangentidentiteter och återställning vid avbrutna gester/fokusförlust på main (976e366, 5fd6837). 2 000 simulerade styrsekvenser och markeringstest godkända. Fysisk Safari och Pages ej verifierade; ingen ny figur-sprite integrerad. Nästa huvuduppgift GRAF-01.
+**Senaste avslutningsnotis:** 2026-11-26 – GRAF-01: GPT-genererad transparent draksprite (92×75), integrerad i dragon.js med enkel flyganimation och tidigare reservgrafik (0de5254, a6c1815); syntax och simulerad bildrendering godkända. Inventering bekräftar sprites för Maja, fotbollspublik, förskolebarn, pizzabagare och ICA-personal. Visuell webbläsargranskning och Pages ej verifierade. Nästa huvuduppgift DRAKE-03.
 
 Detta är ett separat utvecklingskommando för **Lage i Rimforsa**. Läs repo-rotens `AGENTS.md`, denna fil och den **korta** `spel/rimforsa/ROADMAP.md` (enda aktiva arbetskö).
 
