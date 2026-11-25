@@ -320,6 +320,7 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
   farm.syncCoins();
   return game.snapshot().balance+rewardWallet.balance()+farm.snapshot().balance;
  };
+ let walletGeneration=0;
  function payCoins(amount){
   // Inga köp ska kunna genomföras bakom förlustdialogen.
   if(!document.getElementById('lossOverlay').hidden)return null;
@@ -334,7 +335,13 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
    if(treasure)game.refund(treasure);
    return null;
   }
-  return ()=>{if(produce)farm.refundCoins(produce);if(bonus)rewardWallet.refund(bonus);if(treasure)game.refund(treasure)};
+  const generation=walletGeneration;
+   let refunded=false;
+   return ()=>{
+    if(refunded||generation!==walletGeneration||reloadAfterOtherTabLoss())return;
+    refunded=true;
+    if(produce)farm.refundCoins(produce);if(bonus)rewardWallet.refund(bonus);if(treasure)game.refund(treasure);
+   };
  }
  const pizzaOverlay=document.getElementById('pizzaOverlay'),pizzaBalance=document.getElementById('pizzaBalance'),pizzaStatus=document.getElementById('pizzaStatus'),pizzaBuy=document.getElementById('buyPizza');
  const PIZZA_PRICE=5;
@@ -1361,15 +1368,17 @@ function restartAfterGameOver(cause){
  // Meddela andra öppna spelflikar när nollställningen är bekräftad.
  // storage-event skickas bara till ANDRA flikar, inte till denna.
  // Det nollställda sparminnet finns redan innan signalen skrivs.
+ let resetSignalSaved=false;
  if(resetSaved){
   try{
    const signal=String(Date.now())+'-'+Math.random();
    localStorage.setItem(LOSS_RESET_KEY,signal);
-   observedLossReset=signal; // Den här fliken ska inte ladda om sin egen omgång.
+   resetSignalSaved=localStorage.getItem(LOSS_RESET_KEY)===signal;
+   if(resetSignalSaved)observedLossReset=signal; // Den här fliken ska inte ladda om sin egen omgång.
   }catch(_){}
  }
  const remainingCoins=totalMoney();
- const resetWarning=resetSaved?'':' OBS! Nollställningen kunde inte bekräftas i sparminnet efter ett nytt försök. Mynt kan återkomma efter omladdning.';
+ const resetWarning=!resetSaved?' OBS! Nollställningen kunde inte bekräftas i sparminnet efter ett nytt försök. Mynt kan återkomma efter omladdning.':!resetSignalSaved?' OBS! Andra öppna spelflikar kunde inte aviseras. Stäng dem och ladda om spelet.':'';
  document.getElementById('lossSummary').textContent=
   'Lage förlorade '+lostCoins+' mynt: '+lostBySource.map+' på kartan, '+
   lostBySource.minigames+' i minispel och '+lostBySource.potatoes+
@@ -1384,6 +1393,7 @@ function reset({clearMoney=true}={}){
   audio.setDragonNearby(false);
   // Loading the page must preserve earned minigame coins.
   if(clearMoney){
+   walletGeneration++;
    rewardWallet.clear();farm.clearCoins();
    // En förlorad omgång får inte behålla båtens tillfälliga fyndstatus.
    // openBoatGame() skapar en ny uppsättning mynt vid nästa båttur.
