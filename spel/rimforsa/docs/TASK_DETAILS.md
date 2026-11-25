@@ -361,3 +361,11 @@ Användarens spelupplevelse visar kvarstående svårighet att öppna dialoger oc
 #### ODLING-03 – Flera potatisland öster om båtklubben
 
 Hög prioritet enligt användarens instruktion 25 november 2026. Flytta befintligt potatisland från tidigare plats till fälten öster om Kinda båtklubb på huvudkartan. Skapa minst två separata odlingsland där; varje land ska kunna planteras, växa och skördas självständigt. Visa tillväxtstadier tydligt på huvudkartan i samma detaljerade 16-bitars SNES-stil. Ta bort den gamla odlingsmarkören och anpassa gångbarhet, pekrutter, interaktioner och kartmarkörer. Behåll gemensam potatisskörd och försäljning på ICA; migrera äldre sparningar utan att förlora skörd eller intäkter. Kontrollera att odlingsplatserna verkligen ligger öster om båtklubben, går att nå och fungerar oberoende av varandra.
+
+## MOBIL-01 – Stoppa oavsiktlig textmarkering och kopieringsmeny
+
+Felrapport 25 november 2026: ihållande eller upprepade tryck på mobilen blåmarkerar innehåll eller öppnar systemets kopieringsmeny. Förhindra oavsiktlig text-/bildmarkering, kontextmeny och långtrycksmeny på spelcanvas, spelkontroller och övriga interaktiva spelytor i huvudkartan och samtliga minispel. Hantera särskilt iOS Safari och upprepade eller samtidiga tryck. Bevara normal knapprespons, styrning, tillgänglighet och eventuell avsiktlig textinmatning. Kontrollera långa tryck, snabba upprepade tryck och riktningsbyten på mobil; verifiera att ingen blåmarkering eller kopieringsmeny avbryter spelet.
+
+## SPORT-02 – Fotboll: förhindra fastnad rörelseriktning
+
+Felrapport 25 november 2026: efter en stund i fotbollsspelet fastnar Lage i att springa åt ett visst håll. Utred tillståndet för styrningen och återställ avslutade eller avbrutna pek-/tangenttryck, inklusive pointercancel, förlorad pointer capture, fokusförlust, scenbyte och flera samtidiga tryck. Lage ska sluta springa när riktningskontrollen släpps och kunna byta riktning omedelbart. Testa upprepade riktningsbyten och längre spelsessioner med mobilstyrning, inklusive avbrutna gester; bevara tangentbordsstyrning, bollmekanik och återgång till huvudkartan.
