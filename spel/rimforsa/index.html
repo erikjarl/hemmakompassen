@@ -1715,7 +1715,10 @@ function tick(now){
       if(movement.moved){
         const distance=Math.hypot(movement.x-oldX,movement.y-oldY);
         carFuel.consume(distance);updateFuelHud();
-        if(carFuel.snapshot().level<=0)message.textContent='Bensinen är slut! Kliv ur bilen och gå till Bensinmacken.';
+        if(carFuel.snapshot().level<=0){
+          message.textContent='Bensinen är slut! Kliv ur bilen och gå till Bensinmacken.';
+          if(audio.fuelEmpty)audio.fuelEmpty();
+        }
       }
       audio.setCarSpeed(movement.moved&&carFuel.snapshot().level>0?1:0);
       }
