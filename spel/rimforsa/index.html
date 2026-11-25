@@ -36,6 +36,7 @@ canvas#world{display:block;width:100%;height:min(57svh,520px);min-height:315px;t
 .dpad button::before{content:"";display:block;width:0;height:0;border-left:11px solid transparent;border-right:11px solid transparent;border-bottom:16px solid #3f3c28;pointer-events:none}
 .dpad button[data-dir=down]::before{transform:rotate(180deg)}.dpad button[data-dir=left]::before{transform:rotate(-90deg)}.dpad button[data-dir=right]::before{transform:rotate(90deg)}
 .dpad button[data-dir=up]{grid-column:2;grid-row:1}.dpad button[data-dir=left]{grid-column:1;grid-row:2}.dpad button[data-dir=down]{grid-column:2;grid-row:2}.dpad button[data-dir=right]{grid-column:3;grid-row:2}
+#jumpBtn{grid-column:3;grid-row:1;min-height:46px;align-self:stretch;font-size:12px!important;line-height:1.1;touch-action:none}#jumpBtn::before{display:none}#jumpBtn:disabled{opacity:.45}
 .sound-toggle{font-size:12px;padding:9px 11px;min-width:103px}
 .head-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 @media(max-width:410px){.head-actions{gap:5px}.sound-toggle{font-size:11px;padding:8px 7px;min-width:95px}}
@@ -107,7 +108,7 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
  </div>
  <div id="bagOverlay" class="bag-dialog" role="dialog" aria-modal="true" aria-label="Lages väska" hidden><div class="bag-panel"><h2>🎒 Lages väska</h2><p>Hitta fyra saker, köp glass och prova ananaspizza!</p><ul class="bag-list" id="bagList"></ul><p id="bagDetail" class="bag-detail" role="status" aria-live="polite">Välj ett föremål i väskan för att titta närmare.</p><p class="bag-note" id="bagStatus"></p><div class="bag-actions"><button class="smallBtn" type="button" id="closeBag">Tillbaka till spelet</button><button class="smallBtn" type="button" id="clearBag">Töm väskan</button></div></div></div>
  <div class="tip" aria-live="polite"><span id="message"><strong>Nu börjar äventyret!</strong> Använd pilarna för att upptäcka Rimforsa.</span><button id="interact" class="action" hidden>Utforska ✨</button></div>
- <div class="controls"><div class="guide">Samla guldmynt! Vid hemmet står en vit bil – hoppa in med Kör bilen. Styr med pilar/WASD.</div><div class="dpad" aria-label="Styr Lage"><button type="button" data-dir="up" aria-label="Gå uppåt"></button><button type="button" data-dir="left" aria-label="Gå åt vänster"></button><button type="button" data-dir="down" aria-label="Gå nedåt"></button><button type="button" data-dir="right" aria-label="Gå åt höger"></button></div><button class="smallBtn" id="heliBoard" type="button" hidden>Flyg 🚁</button><button class="reset" id="reset">Börja om ↺</button></div>
+ <div class="controls"><div class="guide">Samla guldmynt! Vid hemmet står en vit bil – hoppa in med Kör bilen. Styr med pilar/WASD. Hoppa med mellanslag.</div><div class="dpad" aria-label="Styr Lage"><button type="button" data-dir="up" aria-label="Gå uppåt"></button><button type="button" data-dir="left" aria-label="Gå åt vänster"></button><button type="button" data-dir="down" aria-label="Gå nedåt"></button><button type="button" data-dir="right" aria-label="Gå åt höger"></button><button id="jumpBtn" type="button" aria-label="Hoppa över hinder">HOPP ↑</button></div><button class="smallBtn" id="heliBoard" type="button" hidden>Flyg 🚁</button><button class="reset" id="reset">Börja om ↺</button></div>
  <div class="footer">Illustrerad spelvärld inspirerad av Rimforsa. Platserna ligger ungefär rätt, men kartan är inte skalenlig.</div>
 </main>
 <script src="./audio.js?v=46"></script>
@@ -480,6 +481,16 @@ const dragon=window.RimforsaDragon.createDragon();
 const helicopter=window.RimforsaHelicopter.createHelicopter();
 let coinCandidates=[],coins=[],coinCount=0,coinNoticeUntil=0;
 let poops=[],hurtUntil=0;
+const JUMP_DURATION=.46,JUMP_HEIGHT=24;
+let jumpTime=0,jumpCooldown=0;
+function worldIsPlaying(){return !document.hidden&&maskLoaded&&!overlay.classList.contains('show')&&(!fuelDialog||fuelDialog.hidden)&&!isBoatOpen()&&winOverlay.hidden&&document.getElementById('lossOverlay').hidden&&bagOverlay.hidden&&icaOverlay.hidden&&pizzaOverlay.hidden&&!window.RimforsaSlideMinigame.isOpen()&&!window.RimforsaSwimMinigame.isOpen()&&!window.RimforsaTrollMinigame.isOpen()&&!window.RimforsaFarm.isOpen()&&!window.RimforsaBrokindTrail.isOpen()&&!window.RimforsaRegionalMap.isOpen()&&!window.RimforsaFootball.isOpen();}
+function jumpHeight(){return jumpTime>0?Math.round(JUMP_HEIGHT*Math.sin(Math.PI*(1-jumpTime/JUMP_DURATION))):0;}
+function startJump(){
+ if(!worldIsPlaying()||state.inCar||state.inHeli||jumpTime>0||jumpCooldown>0)return false;
+ jumpTime=JUMP_DURATION;jumpCooldown=JUMP_DURATION+.14;return true;
+}
+function advanceJump(dt){jumpTime=Math.max(0,jumpTime-dt);jumpCooldown=Math.max(0,jumpCooldown-dt);}
+function cancelJump(){jumpTime=0;jumpCooldown=0;}
 const boatKeys={up:false,down:false,left:false,right:false};
 const BOAT_COIN_TARGET=8;
 const boatState={active:false,x:374,y:283,vx:0,vy:0,angle:0,hearts:3,coins:[],collected:0,message:'',flash:0,invul:0,done:false};
@@ -650,6 +661,8 @@ function scatterPoops(){
  }
 }
 function checkPoops(){
+ // Bara luftfasen skyddar mot låga hinder; på marken gäller ordinarie träffyta.
+ if(jumpHeight()>=5){game.touchHazard(null);return false;}
  if(state.inCar||state.inHeli||boatState.active||!maskLoaded||!winOverlay.hidden||!document.getElementById('lossOverlay').hidden){game.touchHazard(null);return false;}
  const hazard=poops.find(p=>Math.hypot(state.x-p.x,state.y-p.y)<19);
  if(!hazard){game.touchHazard(null);return false;}
@@ -950,10 +963,10 @@ function drawPoops(){
 let routeRetriesLeft=0;
 function clearPath(){state.path=[];routeRetriesLeft=0;}
 function nearHeli(){return !state.inCar&&!state.inHeli&&Math.hypot(state.x-helicopter.position.x,state.y-helicopter.position.y)<65;}
-function enterHeli(){if(heliFuel.snapshot().level<=0){message.textContent='Helikoptern har tom tank. Tanka på macken för 7 spelmynt.';if(audio.fuelEmpty)audio.fuelEmpty();return;}stop();state.inHeli=true;helicopter.setAirborne(true);state.x=helicopter.position.x;state.y=helicopter.position.y;state.nearKey=null;updateMessage();}
+function enterHeli(){cancelJump();if(heliFuel.snapshot().level<=0){message.textContent='Helikoptern har tom tank. Tanka på macken för 7 spelmynt.';if(audio.fuelEmpty)audio.fuelEmpty();return;}stop();state.inHeli=true;helicopter.setAirborne(true);state.x=helicopter.position.x;state.y=helicopter.position.y;state.nearKey=null;updateMessage();}
 function landHeli(emergency=false){const exit=nearbyExit();if(!exit&&!emergency){message.textContent='Flyg till gångbar mark innan du landar!';return;}stop();state.inHeli=false;helicopter.setAirborne(false);if(exit){state.x=exit.x;state.y=exit.y;helicopter.position.x=exit.x;helicopter.position.y=exit.y;}else{helicopter.reset();state.x=360;state.y=335;}state.nearKey=null;coinNoticeUntil=0;updateMessage();}
 function nearCar(){return !state.inCar&&Math.hypot(state.x-carPos.x,state.y-carPos.y)<78;}
-function enterCar(){
+function enterCar(){cancelJump();
  if(carFuel.snapshot().level<=0){message.textContent="Bilen har tom tank! Gå till Bensinmacken och tanka först.";if(audio.fuelEmpty)audio.fuelEmpty();return false;}
  if(!carDrive.ready()){message.textContent='Laddar vattenkartan till bilen…';return false;}
  state.inCar=true;state.x=carPos.x;state.y=carPos.y;state.path=[];state.nearKey=null;
@@ -1388,6 +1401,7 @@ function restartAfterGameOver(cause){
  message.innerHTML='<strong>💔 Alla hjärtan tog slut!</strong> '+(cause==='draken'?'Draken':cause==='båten'?'Ett grund i båtspelet':'Bajskorvarna')+' tog det sista hjärtat. Lage förlorade '+lostCoins+' mynt och börjar om hemma med '+remainingCoins+' mynt. Samla nya mynt och försök igen!'+resetWarning;
 }
 function reset({clearMoney=true}={}){
+  cancelJump();
   // Inga kvarvarande eldklot eller låsta attacker får följa med till en ny omgång.
   dragon.resetAttacks();
   audio.setDragonNearby(false);
@@ -1442,6 +1456,10 @@ for(const button of document.querySelectorAll('[data-dir]')){
  button.addEventListener('touchend',release,{passive:false});
  for(const evt of ['pointerup','pointercancel','lostpointercapture'])button.addEventListener(evt,release);
 }
+const jumpBtn=document.getElementById("jumpBtn");
+ jumpBtn.addEventListener("pointerdown",ev=>{ev.preventDefault();startJump();});
+ jumpBtn.addEventListener("click",ev=>{if(ev.detail===0)startJump();});
+ window.addEventListener("keydown",ev=>{if(ev.code!=="Space"||ev.repeat||!worldIsPlaying()||state.inCar||state.inHeli)return;if(["INPUT","TEXTAREA","SELECT","BUTTON"].includes(ev.target?.tagName))return;ev.preventDefault();startJump();});
 const inputMap={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',a:'left',s:'down',d:'right',W:'up',A:'left',S:'down',D:'right'};
 window.addEventListener('keydown',ev=>{const dir=inputMap[ev.key];if(isBoatOpen()){if(ev.key==='Escape'){ev.preventDefault();closeBoatGame();return}if(dir){ev.preventDefault();boatKeys[dir]=true;return}}if(window.RimforsaFarm.isOpen()||window.RimforsaBrokindTrail.isOpen()||window.RimforsaRegionalMap.isOpen()||window.RimforsaFootball.isOpen())return;if(!pizzaOverlay.hidden||!icaOverlay.hidden||!bagOverlay.hidden){if(ev.key==='Escape'){ev.preventDefault();if(!pizzaOverlay.hidden)closePizza();else if(!icaOverlay.hidden)closeIca();else closeBag();}return}if(overlay.classList.contains('show')){if(ev.key==='Escape')closeMap();return}if(!dir)return;ev.preventDefault();clearPath();keys[dir]=true});
 window.addEventListener('keyup',ev=>{let dir=inputMap[ev.key];if(!dir)return;if(isBoatOpen())boatKeys[dir]=false;else keys[dir]=false});
@@ -1660,7 +1678,7 @@ function drawTroll(){
  }
  ctx.restore();
 }
-function drawPlayer(){const x=Math.round(state.x-state.camX+canvas.width/2),y=Math.round(state.y-state.camY+canvas.height/2);ctx.fillStyle='#162d2588';ctx.beginPath();ctx.ellipse(x,y-2,11,4,0,0,2*Math.PI);ctx.fill();if(spriteLoaded){const row=state.dir==='down'?0:state.dir==='left'?1:state.dir==='right'?2:3,frame=Math.floor(state.phase)%4;ctx.drawImage(sprite,frame*56,row*56,56,56,x-22,y-47,44,44)}else{ctx.fillStyle='#f6d3aa';ctx.fillRect(x-7,y-33,14,15);ctx.fillStyle='#f6e8c5';ctx.fillRect(x-12,y-18,24,17);ctx.fillStyle='#b65c63';ctx.fillRect(x-9,y-2,7,9);ctx.fillRect(x+3,y-2,7,9)}}
+function drawPlayer(){const x=Math.round(state.x-state.camX+canvas.width/2),y=Math.round(state.y-state.camY+canvas.height/2);ctx.fillStyle='#162d2588';ctx.beginPath();ctx.ellipse(x,y-2,11,4,0,0,2*Math.PI);ctx.fill();ctx.save();ctx.translate(0,-jumpHeight());if(spriteLoaded){const row=state.dir==='down'?0:state.dir==='left'?1:state.dir==='right'?2:3,frame=Math.floor(state.phase)%4;ctx.drawImage(sprite,frame*56,row*56,56,56,x-22,y-47,44,44)}else{ctx.fillStyle='#f6d3aa';ctx.fillRect(x-7,y-33,14,15);ctx.fillStyle='#f6e8c5';ctx.fillRect(x-12,y-18,24,17);ctx.fillStyle='#b65c63';ctx.fillRect(x-9,y-2,7,9);ctx.fillRect(x+3,y-2,7,9)}ctx.restore();}
 function drawMap(ctx2,w,h,full=false){ctx2.clearRect(0,0,w,h);ctx2.imageSmoothingEnabled=false;if(imageLoaded){ctx2.drawImage(tiles,0,0,w,h);ctx2.save();ctx2.scale(w/W,h/H);drawBeachAccess(ctx2);ctx2.restore();}else{ctx2.fillStyle='#80a75c';ctx2.fillRect(0,0,w,h)}for(const s of sites){const x=s.x/W*w,y=s.y/H*h;ctx2.fillStyle='#feeaa9';ctx2.fillRect(x-2,y-2,4,4);if(full){ctx2.fillStyle='#08251d';ctx2.fillRect(x+3,y-1,2,2)}}const tx=troll.x/W*w,ty=troll.y/H*h;ctx2.fillStyle='#b26d4f';ctx2.fillRect(tx-2,ty-2,5,5);const d=dragon.snapshot();ctx2.fillStyle='#e8a54b';ctx2.fillRect(d.x/W*w-2,d.y/H*h-2,5,5);const px=state.x/W*w,py=state.y/H*h;ctx2.fillStyle='#ff4d5e';ctx2.fillRect(px-3,py-3,7,7);ctx2.strokeStyle='#fff2c0';ctx2.lineWidth=1.2;ctx2.strokeRect(px-4,py-4,9,9)}
 // Pixelritad lokal skylt på huvudkartan. Visar INTE ett osäkert pris som dagens pris.
 function drawIngoPriceSign(){
@@ -1714,7 +1732,9 @@ function tick(now){
  }else updateBoat(dt);
  // Draken och spelaren ska använda samma pausvillkor: ingen eld när
  // huvudkartan är dold bakom butik, minispel, väska eller förlustdialog.
- const worldPlaying=!document.hidden&&maskLoaded&&!overlay.classList.contains('show')&&(!fuelDialog||fuelDialog.hidden)&&!isBoatOpen()&&winOverlay.hidden&&document.getElementById('lossOverlay').hidden&&bagOverlay.hidden&&icaOverlay.hidden&&pizzaOverlay.hidden&&!window.RimforsaSlideMinigame.isOpen()&&!window.RimforsaSwimMinigame.isOpen()&&!window.RimforsaTrollMinigame.isOpen()&&!window.RimforsaFarm.isOpen()&&!window.RimforsaBrokindTrail.isOpen()&&!window.RimforsaRegionalMap.isOpen()&&!window.RimforsaFootball.isOpen();
+ const worldPlaying=worldIsPlaying();
+ if(worldPlaying&&!state.inCar&&!state.inHeli)advanceJump(dt);else cancelJump();
+ jumpBtn.disabled=!worldPlaying||state.inCar||state.inHeli||jumpCooldown>0;
  if(worldPlaying){
   npcSystem.update(dt,state.x,state.y);
   let dx=(+keys.right)-(+keys.left),dy=(+keys.down)-(+keys.up);
@@ -1770,7 +1790,8 @@ function tick(now){
     const len=Math.hypot(dx,dy);
     if(len>.1){
       dx/=len;dy/=len;
-      const step=Math.min(143*dt,byKeys?143*dt:len);
+      const speed=jumpTime>0?165:143;
+      const step=Math.min(speed*dt,byKeys?speed*dt:len);
       const direction=byKeys?edgeAssistedDirection(dx,dy):{x:dx,y:dy};
       const moved=slideMove(direction.x*step,direction.y*step);
       if(!moved&&!byKeys){
@@ -1869,7 +1890,7 @@ whole.addEventListener('pointerdown',ev=>{
  routeFromMap(place?place.x:x,place?place.y:y);
 });
 mini.addEventListener('click',openMap);overlay.addEventListener('click',e=>{if(e.target===overlay)closeMap()});
-window.__rimforsaTest={swimGame:window.RimforsaSwimMinigame,slideGame:window.RimforsaSlideMinigame,openPizza,closePizza,renderPizza,PIZZA_PRICE,openIca,closeIca,renderIca,icePrices,dragon,bag,state,sites,npcSystem,game,poops:()=>poops.map(p=>({...p})),scatterPoops,checkPoops,showTreasureVictory,troll,nearTroll,visitTroll,carPos,carDrive,nearCar,enterCar,exitCar,canStand,pathTo,moveTo:(x,y)=>{state.x=x;state.y=y;updateMessage()},isReady:()=>maskLoaded&&imageLoaded,hasSprite:()=>spriteLoaded,frames:()=>frameCount,edgeClearance,edgeAssistedDirection,slideMove,coinCandidates:()=>coinCandidates.slice(),coins:()=>coins.map(c=>({...c})),coinCount:()=>coinCount,scatterCoins,collectCoins,reset,openBoatGame,closeBoatGame,boatState,boatHazards,boatReady:()=>boatChartLoaded,boatPixelWater,spawnBoatCoins};
+window.__rimforsaTest={startJump,jumpHeight,advanceJump,cancelJump,swimGame:window.RimforsaSwimMinigame,slideGame:window.RimforsaSlideMinigame,openPizza,closePizza,renderPizza,PIZZA_PRICE,openIca,closeIca,renderIca,icePrices,dragon,bag,state,sites,npcSystem,game,poops:()=>poops.map(p=>({...p})),scatterPoops,checkPoops,showTreasureVictory,troll,nearTroll,visitTroll,carPos,carDrive,nearCar,enterCar,exitCar,canStand,pathTo,moveTo:(x,y)=>{state.x=x;state.y=y;updateMessage()},isReady:()=>maskLoaded&&imageLoaded,hasSprite:()=>spriteLoaded,frames:()=>frameCount,edgeClearance,edgeAssistedDirection,slideMove,coinCandidates:()=>coinCandidates.slice(),coins:()=>coins.map(c=>({...c})),coinCount:()=>coinCount,scatterCoins,collectCoins,reset,openBoatGame,closeBoatGame,boatState,boatHazards,boatReady:()=>boatChartLoaded,boatPixelWater,spawnBoatCoins};
 reset({clearMoney:false});
 })();
 
