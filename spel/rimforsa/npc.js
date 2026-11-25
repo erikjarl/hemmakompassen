@@ -91,21 +91,21 @@ function createSystem(canStand,random=Math.random){
    const p=people.find(p=>p.id===id);
    if(!p||!p.ready)return null;
    const line=p.lines[p.speechIndex%p.lines.length];
-   p.speechIndex++;p.wait=3;
+   p.speechIndex++;p.wait=3;p.phase=0;
    return {name:p.name,line,id:p.id};
  }
  function update(dt,playerX,playerY){
    dt=Math.max(0,Math.min(.05,Number(dt)||0));
    for(const p of people){
      if(!p.ready)continue;
-     if(Math.hypot(p.x-playerX,p.y-playerY)<42){p.wait=Math.max(p.wait,.22);continue;}
-     if(p.wait>0){p.wait-=dt;continue;}
+     if(Math.hypot(p.x-playerX,p.y-playerY)<42){p.wait=Math.max(p.wait,.22);p.phase=0;continue;}
+     if(p.wait>0){p.wait-=dt;p.phase=0;continue;}
      if(p.turnTime<=0){p.angle=random()*Math.PI*2;p.turnTime=.55+random()*1.7;}
      p.turnTime-=dt;
      const dx=Math.cos(p.angle),dy=Math.sin(p.angle),speed=19;
      const nx=p.x+dx*speed*dt,ny=p.y+dy*speed*dt;
      if(Math.hypot(nx-p.homeX,ny-p.homeY)>82||!npcMayStand(nx,ny,canStand)){
-       p.turnTime=0;p.wait=.15+random()*.35;continue;
+       p.turnTime=0;p.wait=.15+random()*.35;p.phase=0;continue;
      }
      p.x=nx;p.y=ny;
      p.dir=Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up');
@@ -129,8 +129,8 @@ function createSystem(canStand,random=Math.random){
        const mirrored=p.dir==='left';
        const bob=Math.floor(p.phase)%4===1?1:0;
        ctx.imageSmoothingEnabled=false;
-       if(mirrored){ctx.save();ctx.translate(x,0);ctx.scale(-1,1);ctx.drawImage(friendSprites,col*32,row*48,32,48,-16,y-48+bob,32,48);ctx.restore();}
-       else ctx.drawImage(friendSprites,col*32,row*48,32,48,x-16,y-48+bob,32,48);
+       if(mirrored){ctx.save();ctx.translate(x,0);ctx.scale(-1,1);ctx.drawImage(friendSprites,col*32,row*48,32,48,-16,y-48-bob,32,48);ctx.restore();}
+       else ctx.drawImage(friendSprites,col*32,row*48,32,48,x-16,y-48-bob,32,48);
      }else if(p.id==='oliver'||p.id==='saga'){
        drawFriend(ctx,p,x,y);
      }else if(p.id==='maja'&&root.RimforsaMajaSprite&&root.RimforsaMajaSprite.complete&&root.RimforsaMajaSprite.naturalWidth===192&&root.RimforsaMajaSprite.naturalHeight===56){
@@ -141,7 +141,7 @@ function createSystem(canStand,random=Math.random){
        const oldSmooth=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=false;
        // Bevara originalrutans 48×56 pixlar: 44×51 skalade om varje pixel
        // och fick Maja att se mjukare/smalare ut än Oliver och Saga.
-       ctx.drawImage(root.RimforsaMajaSprite,col*48,0,48,56,x-24,y-56+bob,48,56);
+       ctx.drawImage(root.RimforsaMajaSprite,col*48,0,48,56,x-24,y-56-bob,48,56);
        ctx.imageSmoothingEnabled=oldSmooth;
      }else if(hasSprite){
        const row=p.dir==='down'?0:p.dir==='left'?1:p.dir==='right'?2:3;
