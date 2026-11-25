@@ -8,7 +8,7 @@
 
 **SJÄLVSTÄNDIG SLUTBEDÖMNING (25 november 2026):** Användaren delegerar bedömningen av färdig implementation till assistenten. Ingen användarfeedback eller fysisk mobiltestning ska vara ett rutinmässigt villkor för avbockning. Granska ursprungliga krav mot faktisk kod, använd proportionerliga isolerade tester vid behov, stryk direkt när kraven är uppfyllda och fortsätt. Separat visuell/ljudmässig kvalitetssäkring dokumenteras utan att hålla fungerande funktioner öppna. Behåll endast konkreta saknade funktioner, påvisade fel eller specifika ännu olösta krav i aktiv kö. Vid listrevision ska hela kön granskas.
 
-**Senaste avslutningsnotis:** 2026-11-25 – FORDON-03: kartbaserade separata körkorridorer och parkeringszoner, bibehållen vattenkontroll för hela bilens kollisionsyta. Isolerade tester av väg, parkering, hem, terrängspärr, rörelse och vatten godkända. Fysisk genomspelning och ny bildgenerering ej utförda. FORDON-03 arkiverad; nästa HELI-02.
+**Senaste avslutningsnotis:** 2026-11-25 – HELI-02: animerad rotor på bildbaserad flygande helikopter, cacheversion höjd. Kodgranskning genomförd; speltest och ny bildgenerering ej utförda. Isbollar, drakflykt, skatt, beständig återkomst och rotorljud återstår. Nästa MYNT-03.
 
 Detta är ett separat utvecklingskommando för **Lage i Rimforsa**. Läs repo-rotens `AGENTS.md`, denna fil och den **korta** `spel/rimforsa/ROADMAP.md` (enda aktiva arbetskö).
 
