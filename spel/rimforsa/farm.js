@@ -4,10 +4,14 @@
 const KEY='lage-rimforsa-farm-v1',GROW_MS=5*60*1000;
 function createFarm(storage,clock=()=>Date.now()){
  let plantedAt=null,harvested=0,sold=0,earned=0,spent=0;
+ let plots=[null,null,null];
+ const validTime=t=>Number.isFinite(t)&&t>=0&&t<=clock()+60000;
+ const plotIndex=i=>Number.isInteger(i)&&i>=0&&i<plots.length?i:0;
  try{
   const saved=JSON.parse(storage?.getItem(KEY)||'null');
   if(saved&&typeof saved==='object'){
-   if(Number.isFinite(saved.plantedAt)&&saved.plantedAt>=0&&saved.plantedAt<=clock()+60000)plantedAt=saved.plantedAt;
+   if(validTime(saved.plantedAt))plantedAt=saved.plantedAt;
+   plots=Array.isArray(saved.plots)?plots.map((_,i)=>validTime(saved.plots[i])?saved.plots[i]:null):[plantedAt,null,null];
    if(Number.isSafeInteger(saved.harvested)&&saved.harvested>=0)harvested=saved.harvested;
    if(Number.isSafeInteger(saved.sold)&&saved.sold>=0)sold=saved.sold;
    if(Number.isSafeInteger(saved.earned)&&saved.earned>=0)earned=saved.earned;
@@ -27,14 +31,15 @@ function createFarm(storage,clock=()=>Date.now()){
   }catch{}
  }
  function persist(){
-  try{storage?.setItem(KEY,JSON.stringify({plantedAt,harvested,sold,earned,spent}));return true}catch{return false}
+  try{storage?.setItem(KEY,JSON.stringify({plantedAt:plots[0],plots,harvested,sold,earned,spent}));return true}catch{return false}
  }
- function snapshot(){
+ function snapshot(plot=0){
+  const plantedAt=plots[plotIndex(plot)];
   const age=plantedAt===null?0:Math.max(0,clock()-plantedAt);
   return {plantedAt,harvested,sold,earned,spent,balance:earned-spent,age,stage:plantedAt===null?0:age>=GROW_MS?4:Math.max(1,Math.ceil(age/(GROW_MS/3))),remaining:plantedAt===null?0:Math.max(0,GROW_MS-age),ready:plantedAt!==null&&age>=GROW_MS};
  }
- function plant(){if(plantedAt!==null)return false;syncCoins();plantedAt=clock();persist();return true}
- function harvest(){if(!snapshot().ready)return false;syncCoins();plantedAt=null;harvested+=3;persist();return true}
+ function plant(plot=0){const i=plotIndex(plot);if(plots[i]!==null)return false;syncCoins();plots[i]=clock();persist();return true}
+ function harvest(plot=0){const i=plotIndex(plot);if(!snapshot(i).ready)return false;syncCoins();plots[i]=null;harvested+=3;persist();return true}
  function sell(quantity=3){
   syncCoins();
   if(!Number.isSafeInteger(quantity)||quantity<=0||harvested<quantity||earned>Number.MAX_SAFE_INTEGER-quantity*2)return {...snapshot(),success:false};
@@ -178,5 +183,5 @@ function start({returnToMap:cb,verifyCurrentRound:checkRound}={}){
  loop=root.setInterval(render,1000);
  plantButton.focus();return true;
 }
-root.RimforsaFarm={start,close,isOpen:()=>!!overlay&&!overlay.hidden,createFarm,snapshot:()=>farm.snapshot(),sell:quantity=>farm.sell(quantity),spendCoins:amount=>farm.spendCoins(amount),refundCoins:amount=>farm.refundCoins(amount),clearCoins:()=>farm.clearCoins(),syncCoins:()=>farm.syncCoins(),key:KEY};
+root.RimforsaFarm={start,close,isOpen:()=>!!overlay&&!overlay.hidden,createFarm,snapshot:plot=>farm.snapshot(plot),sell:quantity=>farm.sell(quantity),spendCoins:amount=>farm.spendCoins(amount),refundCoins:amount=>farm.refundCoins(amount),clearCoins:()=>farm.clearCoins(),syncCoins:()=>farm.syncCoins(),key:KEY};
 })(typeof window!=='undefined'?window:globalThis);
