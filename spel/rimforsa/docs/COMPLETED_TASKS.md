@@ -1,10 +1,12 @@
 # Lage i Rimforsa – färdiga uppgifter (arkiv)
 
-**Statuskälla:** [ROADMAP.md](../ROADMAP.md). Detta arkiv innehåller **44 avbockade uppgifter** som har tagits bort ur den aktiva att-göra-listan (senast 25 november 2026). Här behålls de som historik, inte som nya arbetsuppgifter.
+**Statuskälla:** [ROADMAP.md](../ROADMAP.md). Detta arkiv innehåller **45 avbockade uppgifter** som har tagits bort ur den aktiva att-göra-listan (senast 26 november 2026). Här behålls de som historik, inte som nya arbetsuppgifter.
 
 **Viktig avgränsning:** En del punkter är avbockade efter kodgranskning, inte fysiska mobiltester. Om ett dokumenterat acceptansvillkor visar sig saknas öppnas uppgiften på nytt i `ROADMAP.md`. Grafikstandard och separat kvalitetsarbete gäller fortfarande.
 
-## Avslutade uppgifter (44)
+## Avslutade uppgifter (45)
+
+- [x] **SPORT-02 – Fotboll: förhindra fastnad rörelseriktning.** · [Krav](TASK_DETAILS.md#sport-02--fotboll-förhindra-fastnad-rörelseriktning) · 2026-11-26: individuella pek- och tangentidentiteter, globala släpp/avbrott och återställning vid fokusförlust, döljning och omstart; 2 000 simulerade styrsekvenser godkända. Faktisk mobiltestning ej utförd.
 
 - [x] **LJUD-01 – Läs upp karaktärernas repliker.** · [Detaljer](docs/TASK_DETAILS.md#ljud-01) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.** _Källkodsverifierad integration: dialogen visas alltid i text; användarens samtalsklick anropar speechSynthesis via ljudmotorn, enbart med ljudknappen på; avstängning, flikdöljning och miljöbyte stoppar talet. 19 nov: individuella talprofiler och sänkt bakgrundsmusik under repliker. Fysisk ljudtest i mobil/Safari ingår separat i LJUD-02._
 
