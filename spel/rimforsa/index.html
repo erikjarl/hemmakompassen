@@ -6,6 +6,11 @@
 <meta name="theme-color" content="#183d32">
 <title>Lage i Rimforsa – utforska byn</title>
 <style>
+/* MOBIL-01: cover dynamically mounted minigames as well as the main map. */
+body,body *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+body input,body textarea,body [contenteditable]:not([contenteditable="false"]),body [contenteditable]:not([contenteditable="false"]) *{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+button,canvas,[role="button"]{touch-action:manipulation}
+
 :root{color-scheme:dark;--cream:#fff1c9;--gold:#e6c16a;--pine:#173c32}
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#102b25;color:var(--cream);font-family:system-ui,-apple-system,sans-serif}
 body{background:radial-gradient(ellipse at 50% 0,#2c5b48 0,#102b25 65%);padding:12px max(8px,env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left))}
@@ -111,6 +116,16 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
  <div class="controls"><div class="guide">Samla guldmynt! Vid hemmet står en vit bil – hoppa in med Kör bilen. Styr med pilar/WASD. Hoppa med mellanslag.</div><div class="dpad" aria-label="Styr Lage"><button type="button" data-dir="up" aria-label="Gå uppåt"></button><button type="button" data-dir="left" aria-label="Gå åt vänster"></button><button type="button" data-dir="down" aria-label="Gå nedåt"></button><button type="button" data-dir="right" aria-label="Gå åt höger"></button><button id="jumpBtn" type="button" aria-label="Hoppa över hinder">HOPP ↑</button></div><button class="smallBtn" id="heliBoard" type="button" hidden>Flyg 🚁</button><button class="smallBtn" id="iceBtn" type="button" hidden>Isboll ❄</button><button class="reset" id="reset">Börja om ↺</button></div>
  <div class="footer">Illustrerad spelvärld inspirerad av Rimforsa. Platserna ligger ungefär rätt, men kartan är inte skalenlig.</div>
 </main>
+<script>
+(function(){
+ function preventGameSelection(event){
+  const target=event.target;
+  if(target instanceof Element && target.closest('input,textarea,[contenteditable]:not([contenteditable="false"])'))return;
+  if(event.cancelable)event.preventDefault();
+ }
+ for(const type of ['contextmenu','selectstart','dragstart'])document.addEventListener(type,preventGameSelection,true);
+})();
+</script>
 <script src="./audio.js?v=46"></script>
 <script src="./gameplay.js?v=2"></script>
 <script src="./inventory.js?v=3"></script>
@@ -120,7 +135,7 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
 <script src="./fuel.js?v=3"></script>
 <script src="./friend-sprites.js?v=2"></script>
 <script src="./npc.js?v=10"></script>
-<script src="./farm.js?v=5"></script>
+<script src="./farm.js?v=6"></script>
 <script src="./dragon.js?v=20"></script>
 <script src="./helicopter.js?v=5"></script>
 <script src="./troll-minigame.js?v=8"></script>
