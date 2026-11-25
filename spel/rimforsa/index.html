@@ -107,7 +107,7 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
  </div>
  <div id="bagOverlay" class="bag-dialog" role="dialog" aria-modal="true" aria-label="Lages väska" hidden><div class="bag-panel"><h2>🎒 Lages väska</h2><p>Hitta fyra saker, köp glass och prova ananaspizza!</p><ul class="bag-list" id="bagList"></ul><p id="bagDetail" class="bag-detail" role="status" aria-live="polite">Välj ett föremål i väskan för att titta närmare.</p><p class="bag-note" id="bagStatus"></p><div class="bag-actions"><button class="smallBtn" type="button" id="closeBag">Tillbaka till spelet</button><button class="smallBtn" type="button" id="clearBag">Töm väskan</button></div></div></div>
  <div class="tip" aria-live="polite"><span id="message"><strong>Nu börjar äventyret!</strong> Använd pilarna för att upptäcka Rimforsa.</span><button id="interact" class="action" hidden>Utforska ✨</button></div>
- <div class="controls"><div class="guide">Samla guldmynt! Vid hemmet står en vit bil – hoppa in med Kör bilen. Styr med pilar/WASD.</div><div class="dpad" aria-label="Styr Lage"><button type="button" data-dir="up" aria-label="Gå uppåt"></button><button type="button" data-dir="left" aria-label="Gå åt vänster"></button><button type="button" data-dir="down" aria-label="Gå nedåt"></button><button type="button" data-dir="right" aria-label="Gå åt höger"></button></div><button class="reset" id="reset">Börja om ↺</button></div>
+ <div class="controls"><div class="guide">Samla guldmynt! Vid hemmet står en vit bil – hoppa in med Kör bilen. Styr med pilar/WASD.</div><div class="dpad" aria-label="Styr Lage"><button type="button" data-dir="up" aria-label="Gå uppåt"></button><button type="button" data-dir="left" aria-label="Gå åt vänster"></button><button type="button" data-dir="down" aria-label="Gå nedåt"></button><button type="button" data-dir="right" aria-label="Gå åt höger"></button></div><button class="smallBtn" id="heliBoard" type="button" hidden>Flyg 🚁</button><button class="reset" id="reset">Börja om ↺</button></div>
  <div class="footer">Illustrerad spelvärld inspirerad av Rimforsa. Platserna ligger ungefär rätt, men kartan är inte skalenlig.</div>
 </main>
 <script src="./audio.js?v=46"></script>
@@ -116,12 +116,12 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
 <script src="./item-art.js?v=1"></script>
 <script src="./car.js?v=10"></script>
 <script src="./boat-direction-art.js?v=12"></script>
-<script src="./fuel.js?v=2"></script>
+<script src="./fuel.js?v=3"></script>
 <script src="./friend-sprites.js?v=2"></script>
 <script src="./npc.js?v=9"></script>
 <script src="./farm.js?v=5"></script>
 <script src="./dragon.js?v=17"></script>
-<script src="./helicopter.js?v=3"></script>
+<script src="./helicopter.js?v=4"></script>
 <script src="./troll-minigame.js?v=8"></script>
 <script src="./preschool-friends-sprites.js?v=1"></script>
 <script src="./slide-minigame.js?v=10"></script>
@@ -203,9 +203,9 @@ const tiles=new Image(), maskImage=new Image(), sprite=new Image();
 maskImage.crossOrigin='anonymous';
 tiles.src='./rimforsa-karta.webp?v=2';maskImage.src='./gangbarhet.png?v=2';sprite.src='./lage-sprites.png';
 let imageLoaded=false,maskLoaded=false,spriteLoaded=false,collision=null,edgeDistance=null,maskW=724,maskH=543,frameCount=0;
-const state={x:360,y:335,dir:'down',phase:0,camX:359,camY:330,near:null,nearKey:null,visited:new Set(),path:[],messageLocked:false,inCar:false};
+const state={x:360,y:335,dir:'down',phase:0,camX:359,camY:330,near:null,nearKey:null,visited:new Set(),path:[],messageLocked:false,inCar:false,inHeli:false};
 const carDrive=window.RimforsaCar;
-const carFuel=window.RimforsaFuel,boatFuel=carFuel.boat;
+const carFuel=window.RimforsaFuel,boatFuel=carFuel.boat,heliFuel=carFuel.heli;
 const fuelHud=document.getElementById('fuelHud'),boatFuelLabel=document.getElementById('boatFuel');
 function updateFuelHud(){
  const car=carFuel.snapshot().percent,boat=boatFuel.snapshot().percent;
@@ -215,6 +215,7 @@ function updateFuelHud(){
  fuelHud.textContent='⛽ Bil '+meter(car)+' '+car+'%'+(status(car)?' ('+status(car)+')':'')+
    ' · Båt '+meter(boat)+' '+boat+'%'+(status(boat)?' ('+status(boat)+')':'');
  fuelHud.setAttribute('aria-label','Bensin: bil '+car+' procent, båt '+boat+' procent.');
+ fuelHud.textContent+=' · 🚁 '+heliFuel.snapshot().percent+'%';
  boatFuelLabel.textContent=boat+'%'+(boat<=20?' – '+(boat===0?'TOM TANK':'LÅG NIVÅ'):'');
 }
 updateFuelHud();
@@ -642,7 +643,7 @@ function scatterPoops(){
  }
 }
 function checkPoops(){
- if(state.inCar||boatState.active||!maskLoaded||!winOverlay.hidden||!document.getElementById('lossOverlay').hidden){game.touchHazard(null);return false;}
+ if(state.inCar||state.inHeli||boatState.active||!maskLoaded||!winOverlay.hidden||!document.getElementById('lossOverlay').hidden){game.touchHazard(null);return false;}
  const hazard=poops.find(p=>Math.hypot(state.x-p.x,state.y-p.y)<19);
  if(!hazard){game.touchHazard(null);return false;}
  if(performance.now()<hurtUntil)return false;
@@ -941,6 +942,9 @@ function drawPoops(){
 // orsakar oändliga A*-försök vid en blockerad vägkant.
 let routeRetriesLeft=0;
 function clearPath(){state.path=[];routeRetriesLeft=0;}
+function nearHeli(){return !state.inCar&&!state.inHeli&&Math.hypot(state.x-helicopter.position.x,state.y-helicopter.position.y)<65;}
+function enterHeli(){if(heliFuel.snapshot().level<=0){message.textContent='Helikoptern har tom tank. Tanka på macken för 7 spelmynt.';if(audio.fuelEmpty)audio.fuelEmpty();return;}stop();state.inHeli=true;helicopter.setAirborne(true);state.x=helicopter.position.x;state.y=helicopter.position.y;state.nearKey=null;updateMessage();}
+function landHeli(emergency=false){const exit=nearbyExit();if(!exit&&!emergency){message.textContent='Flyg till gångbar mark innan du landar!';return;}stop();state.inHeli=false;helicopter.setAirborne(false);if(exit){state.x=exit.x;state.y=exit.y;helicopter.position.x=exit.x;helicopter.position.y=exit.y;}else{helicopter.reset();state.x=360;state.y=335;}state.nearKey=null;coinNoticeUntil=0;updateMessage();}
 function nearCar(){return !state.inCar&&Math.hypot(state.x-carPos.x,state.y-carPos.y)<78;}
 function enterCar(){
  if(carFuel.snapshot().level<=0){message.textContent="Bilen har tom tank! Gå till Bensinmacken och tanka först.";if(audio.fuelEmpty)audio.fuelEmpty();return false;}
@@ -981,7 +985,7 @@ function openFuelStation(){
  if(!fuelDialog){
   fuelDialog=document.createElement('div');fuelDialog.className='fuel-dialog';fuelDialog.setAttribute('role','dialog');
   fuelDialog.setAttribute('aria-modal','true');fuelDialog.setAttribute('aria-label','Bensinmackens tankstation');
-  fuelDialog.innerHTML='<div class="fuel-panel"><h2>⛽ INGO Rimforsa</h2><canvas width="320" height="180" aria-label="Pixelritad bensinmack med pump, tak och skylt där verkligt dagspris är markerat som okänt"></canvas><p data-fuel-status role="status"></p><div class="fuel-buttons"><button type="button" data-fuel-buy>Tanka bilen – 2 spelmynt</button><button type="button" data-fuel-boat>Tanka båten – 2 spelmynt</button><button type="button" data-fuel-close>Tillbaka till kartan</button></div><p class="fuel-help">Verkligt bensinpris vid INGO Rimforsa: ej tillgängligt i spelet. INGO hänvisar till stationens egen prisskylt. <a href="https://www.ingo.se/station/ingo-rimforsa" target="_blank" rel="noopener noreferrer">INGO Rimforsa (officiell stationssida)</a>. Tankning kostar tills vidare 2 påhittade spelmynt, oberoende av verkligt literpris. Bilen kan alltid nås till fots om tanken tar slut.</p></div>';
+  fuelDialog.innerHTML='<div class="fuel-panel"><h2>⛽ INGO Rimforsa</h2><canvas width="320" height="180" aria-label="Pixelritad bensinmack med pump, tak och skylt där verkligt dagspris är markerat som okänt"></canvas><p data-fuel-status role="status"></p><div class="fuel-buttons"><button type="button" data-fuel-buy>Tanka bilen – 2 spelmynt</button><button type="button" data-fuel-boat>Tanka båten – 2 spelmynt</button><button type="button" data-fuel-heli>Tanka helikoptern – 7 spelmynt/full tank</button><button type="button" data-fuel-close>Tillbaka till kartan</button></div><p class="fuel-help">Verkligt bensinpris vid INGO Rimforsa: ej tillgängligt i spelet. INGO hänvisar till stationens egen prisskylt. <a href="https://www.ingo.se/station/ingo-rimforsa" target="_blank" rel="noopener noreferrer">INGO Rimforsa (officiell stationssida)</a>. Tankning kostar tills vidare 2 påhittade spelmynt, oberoende av verkligt literpris. Bilen kan alltid nås till fots om tanken tar slut.</p></div>';
   document.body.append(fuelDialog);
   fuelDialog.querySelector('[data-fuel-buy]').addEventListener('click',()=>{
    if(carFuel.snapshot().level>=100){fuelDialog.querySelector('[data-fuel-status]').textContent='Tanken är redan full!';return;}
@@ -995,6 +999,7 @@ function openFuelStation(){
    if(!refund){fuelDialog.querySelector('[data-fuel-status]').textContent='Du behöver två spelmynt för att tanka båten.';if(audio.purchaseDenied)audio.purchaseDenied();return;}
    boatFuel.fill();(audio.fuelFill||audio.coin)();updateFuelHud();renderFuelStation();
   });
+  fuelDialog.querySelector('[data-fuel-heli]').addEventListener('click',()=>{if(heliFuel.snapshot().level>=100){fuelDialog.querySelector('[data-fuel-status]').textContent='Helikopterns tank är full!';return;}const refund=payCoins(7);if(!refund){fuelDialog.querySelector('[data-fuel-status]').textContent='Du behöver 7 spelmynt.';return;}heliFuel.fill();updateFuelHud();renderFuelStation();if(audio.fuelFill)audio.fuelFill();});
   fuelDialog.querySelector('[data-fuel-close]').addEventListener('click',()=>{fuelDialog.hidden=true;state.nearKey=null;updateMessage();});
   fuelDialog.addEventListener('click',e=>{if(e.target===fuelDialog){fuelDialog.hidden=true;state.nearKey=null;updateMessage();}});
  }
@@ -1237,8 +1242,12 @@ function drawBoatGame(){
  // HUD on canvas
  boatCtx.fillStyle='rgba(8,27,21,.72)'; boatCtx.fillRect(8,8,170,40); boatCtx.strokeStyle='#dfbe80'; boatCtx.lineWidth=2; boatCtx.strokeRect(8,8,170,40); boatCtx.fillStyle='#ffe59b'; boatCtx.font='bold 14px ui-monospace, monospace'; boatCtx.fillText('♥ '+boatState.hearts+'   MYNT '+boatState.collected+'/'+BOAT_COIN_TARGET,18,33);
 }
+document.getElementById('heliBoard').addEventListener('click',()=>{if(nearHeli())enterHeli();});
 function updateMessage(){
+ document.getElementById('heliBoard').hidden=!nearHeli();
  if(performance.now()<coinNoticeUntil)return;
+ if(state.inHeli){interact.hidden=false;interact.textContent='Landa 🚁';title.textContent='Helikoptertur';message.textContent='Flyg med pilarna. Bensin: '+heliFuel.snapshot().percent+'%';return;}
+ if(nearHeli()&&!nearCar()){interact.hidden=false;interact.textContent='Flyg helikopter 🚁';title.textContent='Helikopter';message.textContent='Tank: '+heliFuel.snapshot().percent+'%. Tanka för 7 spelmynt på macken.';state.nearKey='heli';return;}
  const near=state.inCar?null:nearestSite(),carAction=state.inCar?'exit':nearCar()?'enter':null;
  const trollHere=!carAction&&nearTroll();
  const npcHere=!carAction&&!trollHere&&!(near&&['Förskolan Hackel','Åsundabadet','Potatislandet','Hackelhallen'].includes(near.name))?npcSystem.near(state.x,state.y):null;
@@ -1268,6 +1277,8 @@ function updateMessage(){
  }
 }
 interact.addEventListener('click',()=>{
+ if(state.inHeli){landHeli();return;}
+ if(nearHeli()&&!nearCar()){enterHeli();return;}
  if(state.inCar){exitCar();return;}
  if(nearCar()){enterCar();return;}
  if(nearTroll()){visitTroll();return;}
@@ -1385,7 +1396,7 @@ function reset({clearMoney=true}={}){
    boatState.vx=0;boatState.vy=0;
    updateBoatHud();
   }
- pizzaOverlay.hidden=true;icaOverlay.hidden=true;winOverlay.hidden=true;document.getElementById('lossOverlay').hidden=true;hurtUntil=0;audio.setCarSpeed(0);audio.setCarActive(false);state.inCar=false;
+ pizzaOverlay.hidden=true;icaOverlay.hidden=true;winOverlay.hidden=true;document.getElementById('lossOverlay').hidden=true;hurtUntil=0;audio.setCarSpeed(0);audio.setCarActive(false);state.inCar=false;state.inHeli=false;helicopter.reset();
  carPos.x=carDrive.HOME.x;carPos.y=carDrive.HOME.y;parkedCarDir='right';
  state.x=360;state.y=335;state.camX=360;state.camY=335;state.dir='down';
  state.phase=0;state.visited.clear();state.path=[];state.near=null;state.nearKey=null;
@@ -1561,7 +1572,7 @@ function canWalkStraight(x1,y1,x2,y2){
 let lastTapRouteFeedback=0;
 canvas.addEventListener('pointerdown',ev=>{
  if(!maskLoaded||overlay.classList.contains('show')||!icaOverlay.hidden||!pizzaOverlay.hidden||!bagOverlay.hidden||window.RimforsaSlideMinigame.isOpen()||window.RimforsaSwimMinigame.isOpen()||window.RimforsaTrollMinigame.isOpen()||window.RimforsaFarm.isOpen()||window.RimforsaBrokindTrail.isOpen()||window.RimforsaFootball.isOpen())return;
- ev.preventDefault();if(state.inCar)return;
+ ev.preventDefault();if(state.inCar||state.inHeli)return;
  const r=canvas.getBoundingClientRect(),sx=(ev.clientX-r.left)*canvas.width/r.width,sy=(ev.clientY-r.top)*canvas.height/r.height;
  const x=state.camX-canvas.width/2+sx,y=state.camY-canvas.height/2+sy;
  const route=pathTo(x,y);
@@ -1674,7 +1685,7 @@ function drawHarborVisitor(){
 function drawFarmMarker(){const s=sites.find(site=>site.name==='Potatislandet');const x=Math.round(s.x-state.camX+canvas.width/2),y=Math.round(s.y-state.camY+canvas.height/2);if(x<-50||y<-50||x>canvas.width+50||y>canvas.height+50)return;ctx.fillStyle='#59402e';ctx.fillRect(x-20,y-14,40,27);ctx.fillStyle='#91663e';ctx.fillRect(x-18,y-12,36,23);ctx.fillStyle='#d5b475';ctx.fillRect(x-15,y-9,30,16);ctx.fillStyle='#397444';ctx.fillRect(x-2,y-8,4,12);ctx.fillRect(x-7,y-8,6,5);ctx.fillRect(x+2,y-10,7,6);ctx.fillStyle='#9f7147';ctx.fillRect(x-2,y+13,4,12);}
 function draw(){const w=canvas.width,h=canvas.height;ctx.fillStyle='#305d42';ctx.fillRect(0,0,w,h);if(imageLoaded){const x=Math.round(w/2-state.camX),y=Math.round(h/2-state.camY);ctx.drawImage(tiles,x,y);ctx.save();ctx.translate(x,y);drawBeachAccess(ctx);ctx.restore();}drawIngoPriceSign();drawFarmMarker();drawHarborVisitor();drawCoins();drawPoops();drawTroll();helicopter.draw(ctx,state.camX,state.camY,w,h,performance.now()/1000);dragon.draw(ctx,state.camX,state.camY,w,h);npcSystem.draw(ctx,state.camX,state.camY,w,h,sprite);
 if(state.inCar){carDrive.draw(ctx,state.x-state.camX+w/2,state.y-state.camY+h/2,state.dir,true);}
-else{carDrive.draw(ctx,carPos.x-state.camX+w/2,carPos.y-state.camY+h/2,parkedCarDir,false);drawPlayer();}
+else{carDrive.draw(ctx,carPos.x-state.camX+w/2,carPos.y-state.camY+h/2,parkedCarDir,false);if(!state.inHeli)drawPlayer();}
 ctx.strokeStyle='#1b3028';ctx.lineWidth=2;ctx.strokeRect(1,1,w-2,h-2);drawMap(mc,mini.width,mini.height);drawBoatGame()}
 let last=performance.now(),stepProgress=0,lastLossCheck=last;
 function tick(now){
@@ -1697,7 +1708,10 @@ function tick(now){
  if(worldPlaying){
   npcSystem.update(dt,state.x,state.y);
   let dx=(+keys.right)-(+keys.left),dy=(+keys.down)-(+keys.up);
-  if(state.inCar){
+  if(state.inHeli){
+    const distance=helicopter.move(dx,dy,dt,W,H);state.x=helicopter.position.x;state.y=helicopter.position.y;
+    if(distance){heliFuel.consume(distance);updateFuelHud();if(heliFuel.snapshot().level<=0){landHeli(true);message.textContent='Bensinen tog slut! Helikoptern nödlandade.';if(audio.fuelEmpty)audio.fuelEmpty();}else updateMessage();}
+  }else if(state.inCar){
     if(dx||dy){
       clearPath();
       if(carFuel.snapshot().level<=0){
@@ -1778,14 +1792,15 @@ function tick(now){
   // Träffrökens 2,8 sekunders reaktion ska bara räknas ned när
   // huvudkartan spelas, precis som drakens eldklot och animation.
   helicopter.update(dt);
- audio.setDragonNearby(dragon.update(dt,state.x,state.y,helicopter.position,!state.inCar&&!boatState.active));
+ audio.setDragonNearby(dragon.update(dt,state.x,state.y,helicopter.position,!state.inCar&&!state.inHeli&&!boatState.active));
  if(dragon.strikeObject(helicopter.position.x,helicopter.position.y,28)){
   helicopter.hit(performance.now()/1000);
+  if(state.inHeli){landHeli(true);message.textContent='Helikoptern blev träffad och nödlandade!';}
   if(typeof audio.helicopterHit==="function")audio.helicopterHit();
   coinNoticeUntil=performance.now()+2200;
   message.innerHTML="<strong>🚁 Träff på helikoptern!</strong> Drakens eldklot träffade rotorhuset. Helikoptern står kvar och repareras automatiskt.";
  }
-  if(!state.inCar&&!boatState.active&&winOverlay.hidden&&document.getElementById('lossOverlay').hidden&&performance.now()>=hurtUntil){
+  if(!state.inCar&&!state.inHeli&&!boatState.active&&winOverlay.hidden&&document.getElementById('lossOverlay').hidden&&performance.now()>=hurtUntil){
    const danger=dragon.hazards(state.x,state.y);
    if(danger){const hit=game.touchHazard(danger);if(hit.damaged){dragon.consume(danger);audio.hit();updateLandHearts();hurtUntil=performance.now()+1500;
     if(hit.gameOver){restartAfterGameOver('draken');}
@@ -1808,7 +1823,7 @@ requestAnimationFrame(tick);
 function routeFromMap(x,y){
  const hint=document.getElementById('mapRouteHint');
  if(!maskLoaded){hint.textContent='Kartan laddas fortfarande. Försök igen.';return false}
- if(state.inCar){hint.textContent='Kliv ur bilen innan du väljer en gångväg.';return false}
+ if(state.inCar||state.inHeli){hint.textContent='Kliv ur bilen innan du väljer en gångväg.';return false}
  const route=pathTo(x,y);
  if(!route.length){
   // Att vara nära räcker inte: ett hus, en sten eller vatten kan ligga
@@ -1831,8 +1846,8 @@ for(const id of ['showMap','miniMapBtn'])document.getElementById(id).addEventLis
 document.getElementById('closeMap').addEventListener('click',()=>closeMap());
 document.getElementById('goBeach').addEventListener('click',()=>routeFromMap(1220,740));
 document.getElementById('goFarm').addEventListener('click',()=>routeFromMap(565,928));
-document.getElementById('goRegion').addEventListener('click',()=>{if(state.inCar){document.getElementById('mapRouteHint').textContent='Kliv ur bilen före utflykten.';return;}closeMap();stop();window.RimforsaRegionalMap.start({returnToMap:()=>{state.nearKey=null;updateMessage();}});});
-document.getElementById('goBrokind').addEventListener('click',()=>{if(state.inCar){document.getElementById('mapRouteHint').textContent='Kliv ur bilen innan du går på skogsleden.';return;}closeMap();stop();window.RimforsaBrokindTrail.start({returnToMap:()=>{state.nearKey=null;updateMessage();}});});
+document.getElementById('goRegion').addEventListener('click',()=>{if(state.inCar||state.inHeli){document.getElementById('mapRouteHint').textContent='Kliv ur bilen före utflykten.';return;}closeMap();stop();window.RimforsaRegionalMap.start({returnToMap:()=>{state.nearKey=null;updateMessage();}});});
+document.getElementById('goBrokind').addEventListener('click',()=>{if(state.inCar||state.inHeli){document.getElementById('mapRouteHint').textContent='Kliv ur bilen innan du går på skogsleden.';return;}closeMap();stop();window.RimforsaBrokindTrail.start({returnToMap:()=>{state.nearKey=null;updateMessage();}});});
 whole.addEventListener('pointerdown',ev=>{
  ev.preventDefault();
  const rect=whole.getBoundingClientRect();
