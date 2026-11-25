@@ -931,3 +931,8 @@ Rotation: BRÄNSLE-02 → LJUD-01. Källkodskontroll visade att `audio.speak` re
 - `football-minigame.js`: sparar Majas position före varje animeringssteg och interpolerar målvaktspositionen till den exakta tidpunkten när skottet passerar x=390; bedömer då räddningen mot den interpolerade positionen i stället för positionen i slutet av bildrutan. Studsen använder samma korrekta position. Visar en kort pixlad `RÄDDAT!`-markering när Maja blockerar skottet, nollställer signalen vid omspelning/ny match och låter den tona bort enligt tidssteg. Inga ändringar i mynt eller målintjäningsregler.
 - `index.html`: cacheversionen för `football-minigame.js` höjd från v9 till v10 så ändringen kan laddas.
 - Kod och GitHub-commit kontrollerade. Ingen faktisk match genomspelad på mobil/tangentbord, ingen visuell skärmtestning eller verifierad Pages-distribution. SPORT-01 kvarstår öppen; 14 öppna, 30 arkiverade. Existerande bildbaserad Maja och publik återanvänds, ingen ny sprite genererades eller integrerades. Nästa huvudrotation DRAKE-02; KARTA-01 fortsätter aktivt.
+
+
+### 2026-11-25 – HUV-05
+
+Återbetalningsfunktioner spärras efter omstart och kan endast användas en gång; fliksignalens sparresultat kontrolleras. Inline-JS syntaxkontrollerad och två isolerade återbetalningstester godkända. Ingen bildgenerering eller praktisk genomspelning. Kodcommit c6bbc0a116ad627fe8bac893843043270eb814a2.
