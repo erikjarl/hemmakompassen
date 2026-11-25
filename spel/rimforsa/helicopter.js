@@ -21,6 +21,7 @@
    if(sprite&&sprite.complete&&sprite.naturalWidth===92&&sprite.naturalHeight===54){
     p(-23,14,49,5,'#18392f');p(-19,12,43,3,'#3d5546');
     ctx.save();if(airborne)ctx.translate(0,-18);if(heading==='right')ctx.scale(-1,1);ctx.drawImage(sprite,-40,-37,92,54);ctx.restore();
+    if(airborne){const phase=Math.floor((clock||0)*24)%3;const span=[43,31,12][phase];p(-span,-45,span*2,2,'#34474b');p(-span+3,-46,Math.max(2,span*2-6),1,'#b6c6c5');p(-2,-47,4,4,'#536568');}
    }else{
    // Parkerad vit/röd räddningshelikopter sedd snett framifrån.
    p(-23,14,49,5,'#18392f');p(-19,12,43,3,'#3d5546'); // markskugga
