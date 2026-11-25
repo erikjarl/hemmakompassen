@@ -26,10 +26,44 @@ function waterAt(x,y){
  const py=Math.max(0,Math.min(maskH-1,Math.floor(y/worldH*maskH)));
  return mask[(py*maskW+px)*4]>127;
 }
+// Centerline corridors traced against the illustrated map (reference 1408×1056).
+// Width is a center-position tolerance; water still checks the entire hitbox.
+const roadRoutes=[
+ [25,[[618,0],[608,150],[592,300],[578,420],[559,501],[550,540],[533,592],[519,680],[505,780],[488,880],[474,1056]]],
+ [21,[[0,247],[80,273],[190,285],[278,307],[324,349],[353,411],[391,464],[431,493],[500,521],[550,540]]],
+ [22,[[550,540],[620,540],[756,540],[870,541],[927,516],[973,512],[1012,490]]],
+ [19,[[533,592],[581,601],[651,605],[724,630],[816,632],[857,620],[875,575],[909,541]]],
+ [20,[[857,620],[851,686],[844,755],[835,830],[813,891],[791,968],[782,1056]]],
+ [20,[[857,620],[929,619],[1000,635],[1040,665],[1057,702],[1050,755],[1040,797],[1016,835],[916,839],[835,830],[733,835],[630,835],[519,841],[493,855]]],
+ [20,[[493,855],[398,858],[291,858],[244,872],[217,904],[192,950],[154,1007],[145,1056]]],
+ [19,[[500,521],[469,527],[414,530],[348,533],[319,550],[307,576],[307,635],[337,647],[414,648],[451,644]]],
+ [22,[[414,648],[448,648],[475,648],[521,648]]],
+ [19,[[324,349],[366,337],[418,333]]],
+ [18,[[620,540],[631,493],[646,450],[674,424]]],
+ [18,[[733,835],[728,793],[727,760]]]
+];
+const parkingAreas=[
+ [309,615,454,679], // Ingo forecourt, south of building
+ [611,747,802,823], // ICA parking
+ [618,421,699,495], // Hackelhallen parking
+ [398,320,434,350] // home parking / spawn
+];
+function roadAt(x,y){
+ const px=x*1408/worldW,py=y*1056/worldH;
+ if(parkingAreas.some(([l,t,r,b])=>px>=l&&px<=r&&py>=t&&py<=b))return true;
+ for(const [radius,points] of roadRoutes){
+  for(let i=1;i<points.length;i++){
+   const [ax,ay]=points[i-1],[bx,by]=points[i],dx=bx-ax,dy=by-ay;
+   const t=Math.max(0,Math.min(1,((px-ax)*dx+(py-ay)*dy)/(dx*dx+dy*dy)));
+   if(Math.hypot(px-ax-t*dx,py-ay-t*dy)<=radius)return true;
+  }
+ }
+ return false;
+}
 const hitbox=[[0,0],[-15,0],[15,0],[0,-9],[0,9],[-15,-9],[15,-9],[-15,9],[15,9]];
 function canDrive(x,y){
  if(!ready()||x<20||y<20||x>=worldW-20||y>=worldH-20)return false;
- return hitbox.every(([dx,dy])=>!waterAt(x+dx,y+dy));
+ return roadAt(x,y)&&hitbox.every(([dx,dy])=>!waterAt(x+dx,y+dy));
 }
 function move(x,y,dx,dy,dt){
  let length=Math.hypot(dx,dy);
@@ -210,5 +244,5 @@ function draw(ctx,x,y,dir='right',occupied=false){
  ctx.restore();
 }
 
-root.RimforsaCar={HOME,SPEED,setWaterMask,ready,waterAt,canDrive,move,draw,spriteReady,directionSpriteReady};
+root.RimforsaCar={HOME,SPEED,setWaterMask,ready,waterAt,roadAt,canDrive,move,draw,spriteReady,directionSpriteReady};
 })(window);
