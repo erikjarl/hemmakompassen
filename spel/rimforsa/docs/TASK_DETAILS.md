@@ -317,12 +317,9 @@ Lägg till **vågskvalpsljud i bakgrunden** vid Åsundabadet.
 
 #### KARTA-01
 
-**Utöka Rimforsakartan till mer av Kindabygden.**
+**Två separata spelvärldar: Kisa och Ulrika (ersätter tidigare regional utbyggnad, 25 november 2026).**
 
-**Sök och jämför verkliga kartor över Rimforsa och närområdet i Kinda** för att skapa en allt större, geografiskt igenkännbar pixelvärld med orter, vägar, skog, sjöar, broar, byggnader och utflyktsmål som ansluter till den nuvarande kartan. Dokumentera vilka geografiska detaljer som är bekräftade från kartkällor och vilka som är fria speltolkningar. Bevara samma 16-bitarsgrafik, spelkänsla och befintliga platser.
-
-
-  **Arbetsprincip (uppdaterad 22 november 2026):** Denna punkt har **aktiv prioritet och ska bearbetas återkommande parallellt med övriga speluppgifter**. Därefter är den ett **öppet, nästan obegränsat fortsättningsarbete** för kommande `jobb lage`-pass: utöka en sammanhängande region åt gången, återkom till punkten upprepade gånger och markera den inte slutligt färdig bara för att en enskild utbyggnad publicerats. Planera kartladdning, gångbarhet, bilens vattenmask, minikarta, NPC-rutter och myntplacering så att världens storlek kan växa utan att befintliga sparade framsteg förstörs. Använd geografiska källor som får användas och dokumentera källor/licenser innan kartmaterial anpassas.
+Ta bort åtkomsten till den gamla regionala kartan över Brokind, Kättilstad och Björkfors. När spelaren följer riksväg 23 söderut från Rimforsa ska en egen fullstor Kisa-värld laddas; när spelaren följer Ulrikavägen västerut ska en egen fullstor Ulrika-värld laddas. Återvänd via motsvarande väg i respektive värld. Använd de två redan genererade originalbakgrunderna (Kisa och Ulrika) i samma detaljerade SNES-stil som Rimforsa, inte en abstrakt översiktskarta. Kisa: Café Columbia/Emigrantmuseum, biblioteket, Frendo, centrum och MTB-parken söderut. Ulrika: kyrkan, lanthandel/café, skola, bollplan och Källerud/Östgötaleden. Geografiska och arkitektoniska förenklingar är speltolkningar. Integrera bildresurser, separata gång- och fordonsmasker, kartgränser, säkra entrépunkter, kamera, pekrutter, gemensam plånbok, hälsa och fordon. Kontrollera övergångar i båda riktningar, till fots och med bil, på mobil och dator. Lägg till interaktiva platser successivt. Källor: https://www.gotabiblioteken.se/kisa-bibliotek , https://kisamtbpark.com/ , https://www.kinda.se/upplevaochgora/kultur/arkivmuseumochkulturhistoria/kisaemigrantmuseum.4.15d59a7c151bb4254b7e7372.html , https://www.ostgotaleden.se/karta/ulrika-startplats .
 
 ## Nya krav från 23 november 2026
 
