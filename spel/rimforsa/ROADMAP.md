@@ -45,7 +45,7 @@
 
 - [ ] **ODLING-03 – Flera potatisland öster om båtklubben (hög prioritet).** · [Krav](docs/TASK_DETAILS.md#odling-03--flera-potatisland-öster-om-båtklubben) · **Kvar:** Flytta gamla odlingsplatsen till fälten öster om båtklubben, skapa flera självständigt odlingsbara land, samordna synliga tillväxtstadier, gångbarhet, sparning och ICA-försäljning.
 
-- [ ] **LJUD-02 – Fungerande ljud på iPhone/Safari.** · [Krav](docs/TASK_DETAILS.md#ljud-02) · **Kvar:** Utred återkommande uteblivet mobilljud enligt användarrapport; verifiera aktivering, bakgrundsmusik och effekter efter touch-release-korrigeringen.
+- [ ] **LJUD-02 – Permanent fungerande ljud på mobil Safari (hög prioritet, återkommande fel).** · [Krav](docs/TASK_DETAILS.md#ljud-02) · **Kvar:** Användaren rapporterar totalt uteblivet ljud i mobil Safari 25 november 2026 trots tidigare korrigeringar. Hitta grundorsaken, säkerställ tillförlitlig ljudaktivering vid första användargest, musik och effekter i huvudkarta och minispel samt återhämtning efter omladdning, appbyte och låst skärm. Lägg till regressionstester och verifiera faktisk ljuduppspelning på iPhone/Safari; avbocka inte enbart på grund av en kodändring.
 
 **Kartexpansion är nu aktivt utvecklingsarbete, inte en senareläggning.** Regional utforskning finns i separat spelbar scen; sammanhängande världskarta återstår.
 
