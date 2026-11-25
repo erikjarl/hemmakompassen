@@ -6,11 +6,11 @@
 
 ## Obligatorisk rotation mellan utvecklingspass
 
-**SENAST BEARBETAD HUVUDUPPGIFT: `KARTA-01` – bortkoppling av tidigare regional karta (25 november 2026).**
+**SENAST BEARBETAD HUVUDUPPGIFT: `LJUD-02` – aktivering vid giltig spelgest (25 november 2026).**
 
-**NÄSTA ROTATIONSPOSITION: `LJUD-02` – ljud i mobil Safari.**
+**NÄSTA ROTATIONSPOSITION: `HELI-02` – helikopter och drakstrid.**
 
-**ALDRIG SAMMA HUVUDUPPGIFT TVÅ `JOBB LAGE` I FÖLJD.** Följ ordningen bland öppna, genomförbara uppgifter nedan med cirkulär rotation. Starta på angiven nästa position, hoppa över avbockade punkter, stående kvalitetsregler som `MINI-01` (dessa gäller ändå varje pass) och tillfälligt blockerade uppgifter. Bearbeta olika delar av spelet mellan varven: grafik, fordon, bränsle, ljud och andra spelmekaniker. Om inget praktiskt kan göras på nästa punkt, gå vidare till följande **annan** uppgift; återvänd först efter andra utvecklingspass. Prioritet betyder vikt inom rotationen, **inte** rätt att välja samma uppgift igen direkt. När ett pass med faktisk spelutveckling slutförts, uppdatera **båda fälten ovan** till den verkliga huvuduppgiften och efterföljande öppna rotationsposition innan passet avslutas. Rapportera vilka fält som ändrades. Att kontrollera kryssrutor eller åtgärda ett akut blockerande fel räknas inte som att byta huvuduppgift. **Aktuell rotation:** HELI-02 → MYNT-03 → ODLING-03 → MOBIL-01 → SPORT-02 → GRAF-01 → DRAKE-03 → NPC-04 → KARTA-01 → LJUD-02. BRÄNSLE-02 väntar på verifierbar prisdata. Nästa position LJUD-02.
+**ALDRIG SAMMA HUVUDUPPGIFT TVÅ `JOBB LAGE` I FÖLJD.** Följ ordningen bland öppna, genomförbara uppgifter nedan med cirkulär rotation. Starta på angiven nästa position, hoppa över avbockade punkter, stående kvalitetsregler som `MINI-01` (dessa gäller ändå varje pass) och tillfälligt blockerade uppgifter. Bearbeta olika delar av spelet mellan varven: grafik, fordon, bränsle, ljud och andra spelmekaniker. Om inget praktiskt kan göras på nästa punkt, gå vidare till följande **annan** uppgift; återvänd först efter andra utvecklingspass. Prioritet betyder vikt inom rotationen, **inte** rätt att välja samma uppgift igen direkt. När ett pass med faktisk spelutveckling slutförts, uppdatera **båda fälten ovan** till den verkliga huvuduppgiften och efterföljande öppna rotationsposition innan passet avslutas. Rapportera vilka fält som ändrades. Att kontrollera kryssrutor eller åtgärda ett akut blockerande fel räknas inte som att byta huvuduppgift. **Aktuell rotation:** HELI-02 → MYNT-03 → ODLING-03 → MOBIL-01 → SPORT-02 → GRAF-01 → DRAKE-03 → NPC-04 → KARTA-01 → LJUD-02. BRÄNSLE-02 väntar på verifierbar prisdata. Nästa position HELI-02.
 
 ## Obligatorisk avbockning – vid VARJE `jobb lage`
 
@@ -24,7 +24,7 @@
 
 **SJÄLVSTÄNDIG SLUTBEDÖMNING (25 november 2026):** Användaren delegerar bedömningen av färdig implementation till assistenten. Ingen användarfeedback eller fysisk mobiltestning ska vara ett rutinmässigt villkor för avbockning. Granska ursprungliga krav mot faktisk kod, använd proportionerliga isolerade tester vid behov, stryk direkt när kraven är uppfyllda och fortsätt. Separat visuell/ljudmässig kvalitetssäkring dokumenteras utan att hålla fungerande funktioner öppna. Behåll endast konkreta saknade funktioner, påvisade fel eller specifika ännu olösta krav i aktiv kö. Vid listrevision ska hela kön granskas.
 
-**Senaste avslutningsnotis:** 2026-11-25 – KARTA-01: gamla regionala kartan och Brokind-utflykten bortkopplade från spelet på main (33183d2), syntaxkontroll godkänd. Kisa och Ulrika ska bli separata fullstora spelvärldar med vägövergångar. Bakgrundsbilder ännu inte integrerade. Ingen ny figur-sprite integrerad; Pages ej verifierad. Nästa huvuduppgift LJUD-02.
+**Senaste avslutningsnotis:** 2026-11-25 – LJUD-02: första giltiga spelgest aktiverar ljud, explicit avstängning sparas och pausad motor kan återställas via ljudknapp (98d449a). Syntax och simulerade gest-/mute-/återstartstester godkända. Fysisk iPhone/Safari och Pages ej verifierade; ingen ny figur-sprite integrerad. Nästa huvuduppgift HELI-02.
 
 1. Läs [AGENTS.md](AGENTS.md) och **denna korta kö**. Välj nästa genomförbara **annan** uppgift enligt rotationsfälten ovan; respektera beroenden och blockerande fel. Välj aldrig samma huvuduppgift två pass i följd.
 2. Läs **bara den valda uppgiftens avsnitt** i [TASK_DETAILS.md](docs/TASK_DETAILS.md) (vid behov genom textsökning/radintervall), sedan relevant kod. Gemensamma, detaljerade krav finns i [GAME_RULES.md](docs/GAME_RULES.md); läs relevanta delar när arbetet berör dem.
@@ -49,7 +49,7 @@
 
 - [ ] **ODLING-03 – Flera potatisland öster om båtklubben (hög prioritet).** · [Krav](docs/TASK_DETAILS.md#odling-03--flera-potatisland-öster-om-båtklubben) · **Kvar:** Anslut de tre självständiga odlingslanden till kartplatser öster om båtklubben, ta bort den gamla markören, visa respektive tillväxtstadium och kontrollera gångbarhet och interaktioner.
 
-- [ ] **LJUD-02 – Permanent fungerande ljud på mobil Safari (hög prioritet, återkommande fel).** · [Krav](docs/TASK_DETAILS.md#ljud-02) · **Kvar:** Användaren rapporterar totalt uteblivet ljud i mobil Safari 25 november 2026 trots tidigare korrigeringar. Hitta grundorsaken, säkerställ tillförlitlig ljudaktivering vid första användargest, musik och effekter i huvudkarta och minispel samt återhämtning efter omladdning, appbyte och låst skärm. Lägg till regressionstester och verifiera faktisk ljuduppspelning på iPhone/Safari; avbocka inte enbart på grund av en kodändring.
+- [ ] **LJUD-02 – Permanent fungerande ljud på mobil Safari (hög prioritet, återkommande fel).** · [Krav](docs/TASK_DETAILS.md#ljud-02) · **Kvar:** Verifiera faktisk ljuduppspelning på iPhone/Safari vid första spelgest, scenbyte, omladdning, appbyte och skärmlås. Utred kvarvarande tystnad om den kan reproduceras; bevara sparat av/på-val.
 
 **Kartexpansion är nu aktivt utvecklingsarbete, inte en senareläggning.** Den tidigare regionala scenen har ersatts som mål av två separata fullstora världar: Kisa och Ulrika.
 
