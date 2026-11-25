@@ -248,16 +248,19 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
   const key='rimforsa-minigame-coins-v1';
   // Acceptera bara faktiska engångsbonusar från de fyra minispelen.
   const validId=id=>typeof id==='string'&&/^(?:boat-[0-7]|swim-[0-4]|football-[0-2]|slide-[0-1])$/.test(id);
-  let earned=Object.create(null),spent=0;
+  let earned=Object.create(null),spent=0,readEpoch=null;
+  const epoch=()=>localStorage.getItem('rimforsa-loss-reset-v1');
   // Läs samma sparade plånbok inför varje ändring så en äldre öppen
   // spelflik inte i onödan skriver över mynt från en nyare flik.
   function sync(){
    let raw;
-   try{raw=localStorage.getItem(key);}catch(_){return false;}
+   try{readEpoch=epoch();raw=localStorage.getItem(key);}catch(_){return false;}
    let data=null;
    try{data=raw?JSON.parse(raw):null;}catch(_){return false;}
    if(data!==null&&(typeof data!=='object'||Array.isArray(data)))return false;
    if(data&&(!data.earned||typeof data.earned!=='object'||Array.isArray(data.earned)))return false;
+   // Legacy records are valid only before the first reset.
+   if(data&&(data.epoch??null)!==readEpoch)data=null;
    const next=Object.create(null);
    if(data&&data.earned&&typeof data.earned==='object'&&!Array.isArray(data.earned)){
     for(const id of Object.keys(data.earned))if(validId(id)&&data.earned[id]===true)next[id]=true;
@@ -278,10 +281,11 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
   const save=()=>{
    // En lyckad setItem utan undantag räcker inte om lagring skrivs över
    // av en annan flik innan belöningen kan bekräftas.
-   const expected=JSON.stringify({earned,spent});
+   const expected=JSON.stringify({earned,spent,epoch:readEpoch});
    try{
+    if(epoch()!==readEpoch)return false;
     localStorage.setItem(key,expected);
-    return localStorage.getItem(key)===expected;
+    return epoch()===readEpoch&&localStorage.getItem(key)===expected;
    }catch(_){return false;}
   };
   return {balance,collectedCount,sync,
@@ -307,7 +311,7 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
     if(!save()){spent+=n;return false;}
     return true;
    },
-   clear(){earned=Object.create(null);spent=0;return save();}
+   clear(){if(!sync())return false;earned=Object.create(null);spent=0;return save();}
   };
  })();
  const awardBonusResult=id=>{
