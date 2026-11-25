@@ -21,6 +21,6 @@
 
 - **Ekonomi:** Låt myntplånboken som används till ICA och pizzerian ha en tydlig koppling till insamlade mynt. Samordna avdrag och återställning av mynt när hjärtan tar slut; undvik att räkna samma mynt två gånger.
 - **Ljud i webbläsaren:** Mobilwebbläsare kräver normalt en användargest innan ljud får starta. Starta ljud efter en faktisk spel-/knappinteraktion, och stoppa eller byt ljud vid miljöbyte. Använd originalskapade eller rättighetsklarerade ljud och musik.
-- **Kollisioner:** Bevara hinderreglerna i gångläget, förutom den uttryckliga förändringen för bilen (alla terränger utom vatten). Se till att en kollision inte tar flera hjärtan omedelbart genom samma kontakt.
+- **Kollisioner:** Bevara hinderreglerna i gångläget, förutom bilens egna körzoner (bilvägar, mindre vägkantstolerans, infarter och parkeringar; vatten alltid spärrat). Se till att en kollision inte tar flera hjärtan omedelbart genom samma kontakt.
 - **Trygg och begriplig barnupplevelse:** Gör köp, hjärtförlust, myntförlust och omstart tydliga och lätta att förstå. Håll styrning och ljudnivå lämpliga för mobil.
 - **Verifiering:** Lägg till tester för respektive uppgift, spela igenom huvudflödet och kontrollera samma publicerade URL. Redovisa separat om fysisk iPhone/Safari inte har testats.
