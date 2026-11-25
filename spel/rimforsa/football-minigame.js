@@ -239,9 +239,14 @@ function frame(time){
  if(ball.x<43){ball.x=43;ball.vx=Math.abs(ball.vx)*.58;}
  if(ball.x>425&&ball.y>165&&ball.y<251&&ball.vx>0){
   goals++;goalFlash=1.15;
-  const earned=goals<=MAX_GOAL_COINS&&typeof onGoalCoin==='function'&&onGoalCoin(goals-1)===true;
+  const results=[];
+  for(let id=0;id<Math.min(goals,MAX_GOAL_COINS);id++){
+   const result=typeof onGoalCoin==='function'?onGoalCoin(id):'error';
+   results.push(result===true?'earned':result==='already'?'already':result==='earned'?'earned':'error');
+  }
+  const earned=results.filter(v=>v==='earned').length;
   updateWallet();
-  status.textContent='MÅL! Lage och Maja firar! '+goals+' mål på '+kicks+' skott.'+(earned?' +1 mynt till huvudkartan!':goals<=MAX_GOAL_COINS?' Målbonusen är redan hämtad.':' Alla tre målbonusar är utdelade.');
+  status.textContent='MÅL! Lage och Maja firar! '+goals+' mål på '+kicks+' skott.'+(earned?' +'+earned+' mynt till huvudkartan!':'')+(results.includes('error')?' Mynt kunde inte sparas. Gör ett nytt mål för att försöka igen.':!earned?' Målbonusarna är redan hämtade.':'');
   if(root.RimforsaAudio&&root.RimforsaAudio.footballGoal)root.RimforsaAudio.footballGoal();
   ball.x=205;ball.y=205;ball.vx=ball.vy=0;player.x=115;player.y=215;
  }else if(ball.x>424){ball.x=424;ball.vx=-Math.abs(ball.vx)*.58;}
