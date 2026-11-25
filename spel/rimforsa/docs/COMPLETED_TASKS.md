@@ -1,10 +1,10 @@
 # Lage i Rimforsa – färdiga uppgifter (arkiv)
 
-**Statuskälla:** [ROADMAP.md](../ROADMAP.md). Detta arkiv innehåller **32 avbockade uppgifter** som har tagits bort ur den aktiva att-göra-listan (senast 25 november 2026). Här behålls de som historik, inte som nya arbetsuppgifter.
+**Statuskälla:** [ROADMAP.md](../ROADMAP.md). Detta arkiv innehåller **41 avbockade uppgifter** som har tagits bort ur den aktiva att-göra-listan (senast 25 november 2026). Här behålls de som historik, inte som nya arbetsuppgifter.
 
 **Viktig avgränsning:** En del punkter är avbockade efter kodgranskning, inte fysiska mobiltester. Om ett dokumenterat acceptansvillkor visar sig saknas öppnas uppgiften på nytt i `ROADMAP.md`. Grafikstandard och separat kvalitetsarbete gäller fortfarande.
 
-## Avslutade uppgifter (32)
+## Avslutade uppgifter (41)
 
 - [x] **LJUD-01 – Läs upp karaktärernas repliker.** · [Detaljer](docs/TASK_DETAILS.md#ljud-01) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.** _Källkodsverifierad integration: dialogen visas alltid i text; användarens samtalsklick anropar speechSynthesis via ljudmotorn, enbart med ljudknappen på; avstängning, flikdöljning och miljöbyte stoppar talet. 19 nov: individuella talprofiler och sänkt bakgrundsmusik under repliker. Fysisk ljudtest i mobil/Safari ingår separat i LJUD-02._
 
@@ -45,3 +45,16 @@ Den 19 november 2026 avbockades sju äldre öppna uppgifter efter kodgranskning 
 
 - [x] **HUV-06 – Tydligare bajskorvar utan större sprite.** · [Detaljer](TASK_DETAILS.md#huv-06) · 25 november: befintlig kontrastgrafik verifierad genom kodgranskning och 16 simulerade renderingsfall med olika avstånd, faser och rörelseinställningar; 23×26 px och 19 px skaderadie kvar. Fysisk visuell kontroll ej utförd.
 - [x] **NPC-02 – Bildbaserade Saga och Oliver.** · [Detaljer](TASK_DETAILS.md#npc-02) · 25 november: separat bildgenererat 96×96 PNG-ark, två rader med tre 32×48-riktningar, laddning före NPC-modul och faktisk drawImage-integration inklusive speglad sidovy verifierade i källkod. Mobil bildgranskning kvar i GRAF-01.
+
+
+### Kodrevision 25 november 2026
+
+- [x] **SPORT-01 – Fotboll med Maja i Hackelhallen.** · [Krav](docs/TASK_DETAILS.md#sport-01) · Spelbar hall, Maja som målvakt, boll, riktade skott, mål/poäng, pek- och tangentstyrning samt återgång verifierade i källkod. Bonusarnas sparfel hanteras separat i MYNT-03.
+- [x] **DRAKE-02 – Farlig drake och helikopterträffar.** · [Krav](docs/TASK_DETAILS.md#drake-02) · Kontakt, riktade eldklot, helikopterträffar och skadepaus verifierade i källkod; simulerad drakkontakt och projektilträff på båda mål godkända. Mackgräns och avbruten varning kontrollerade tidigare.
+- [x] **HUV-05 – Förlora alla mynt när sista hjärtat tar slut.** · [Krav](docs/TASK_DETAILS.md#huv-05) · Samtliga tre myntkällor nollställs vid sista hjärtat, sparresultat kontrolleras, ny omgång startas och andra flikar signaleras. Kodgranskning och tidigare isolerade återbetalningstester; exceptionella lagrings-/samtidighetsproblem hanteras i MYNT-03.
+- [x] **KARTA-02 – Bredare gångbara vägar och åtkomst.** · [Krav](docs/TASK_DETAILS.md#karta-02) · Smalare fotprover, vägkantsstyrning, hinderkontrollerad rutt och gångkorridor vid Åsundabadet verifierade i kod; ingen generell öppning av hinder.
+- [x] **LJUD-03 – Fler och välavvägda händelseljud.** · [Krav](docs/TASK_DETAILS.md#ljud-03) · Många originalsyntetiserade effekter för spelhändelser, inklusive bränsle, köp, fotboll och scenbyte, verifierade i kod.
+- [x] **HELI-01 – Bildbaserad helikopter.** · Originalbilden 92×54 är inbäddad i GitHub-koden, laddas och används i drawImage med speglad riktning; flyganimation och ytterligare riktningar hanteras i HELI-02.
+- [x] **NPC-03 – Personer på avstånd från affärer och minispel.** · 85 px skyddszon används vid placering och rörelse; 25 000 simulerade steg med syntetiskt gångbar terräng och fem omstarter godkända, minsta avstånd 85,0009 px.
+- [x] **GRAF-02 – Trollminispelets grafiska enhetlighet.** · [Krav](docs/TASK_DETAILS.md#graf-02) · Trollscenen använder gemensamma Lage- och trollbilder, detaljerad skog och träffeffekter med bevarad kastmekanik och styrning. Kodgranskad, ytterligare grafisk harmonisering ingår i GRAF-01.
+- [x] **LJUD-04 – Bättre pruttljud.** · [Krav](docs/TASK_DETAILS.md#ljud-04) · Separat 0,44 sekunder lång syntetiserad prutteffekt med fallande sågtandsfrekvens, filtrerat brus och rytmisk amplitud, kopplad till bajskorvsträff. Källkodsbedömning, ej fysisk hörselkontroll.
