@@ -31,7 +31,7 @@
   // måste stanna före macken, och Lageskott har högst 300 px räckvidd.
   // Eldklotet är 17 px brett och sträcker sig 9 px framför centrum.
   // Stoppa dess synliga framkant minst 1 px före mackens x=394.
-  const FIRE_MAX_DISTANCE=300,HELICOPTER_FIRE_DISTANCE=600,FIRE_EAST_LIMIT=384;
+  const FIRE_MAX_DISTANCE=300,HELICOPTER_FIRE_DISTANCE=600,FIRE_EAST_LIMIT=384,FIRE_MARGIN=32;
   function update(dt,playerX,playerY,helicopter,playerTargetable=true){
    dt=Math.max(0,Math.min(.1,Number(dt)||0));
    if(isAway()){resetAttacks();return false;}
@@ -50,7 +50,7 @@
    const inFireRange=(target,maxDistance=FIRE_MAX_DISTANCE)=>{
     if(!target||!Number.isFinite(target.x)||!Number.isFinite(target.y))return false;
     const distance=Math.hypot(target.x-mouthX,target.y-mouthY);
-    return distance>35&&distance<=maxDistance&&target.x<=FIRE_EAST_LIMIT&&inside(target.x,target.y,12)&&inside(mouthX,mouthY,18);
+    return distance>35&&distance<=maxDistance&&target.x<=FIRE_EAST_LIMIT&&inside(target.x,target.y,FIRE_MARGIN)&&inside(mouthX,mouthY,FIRE_MARGIN);
    };
    // Helikoptern prioriteras ibland, MEN aldrig om den ligger utanför
    // räckvidden. Annars kunde draken fastna på ett omöjligt mål och
@@ -89,7 +89,7 @@
      // så varningen aldrig kan skapa ett skott mot ett nu oåtkomligt mål.
      const dx=target.x-mouthX,dy=target.y-mouthY;
      const distance=Math.hypot(dx,dy);
-     if(distance>35&&distance<=target.maxDistance&&target.x<=FIRE_EAST_LIMIT&&inside(target.x,target.y,12)&&inside(mouthX,mouthY,18)){
+     if(distance>35&&distance<=target.maxDistance&&target.x<=FIRE_EAST_LIMIT&&inside(target.x,target.y,FIRE_MARGIN)&&inside(mouthX,mouthY,FIRE_MARGIN)){
       const speed=165;
       shots.push({id:'dragon-fire-'+(++shotId),kind:target.kind,x:mouthX,y:mouthY,vx:dx/distance*speed,vy:dy/distance*speed,travelled:0,maxDistance:target.maxDistance,life:5});
      }
@@ -97,6 +97,7 @@
    }
    for(let k=shots.length-1;k>=0;k--){
     const fire=shots[k];
+    if(!inside(fire.x,fire.y,FIRE_MARGIN)){shots.splice(k,1);continue;}
     // Bevara föregående position så ett snabbt eldklot inte kan hoppa förbi målet mellan två bildrutor.
     fire.prevX=fire.x;fire.prevY=fire.y;
     // Ett skott som nått gränsen försvinner först nästa uppdatering.
@@ -112,7 +113,7 @@
     if(fire.vy<0)duration=Math.min(duration,Math.max(0,(0-fire.y)/fire.vy));
     // Sample every world pixel before moving; preserve a margin for the whole flame and tail.
     const steps=Math.max(1,Math.ceil(speed*duration));let safe=0;
-    for(let i=1;i<=steps;i++){const d=duration*i/steps;if(!inside(fire.x+fire.vx*d,fire.y+fire.vy*d,32))break;safe=d;}
+    for(let i=1;i<=steps;i++){const d=duration*i/steps;if(!inside(fire.x+fire.vx*d,fire.y+fire.vy*d,FIRE_MARGIN))break;safe=d;}
     duration=safe;
     fire.x+=fire.vx*duration;fire.y+=fire.vy*duration;
     fire.travelled+=speed*duration;fire.life-=dt;
@@ -160,7 +161,7 @@
    near=false;
    playerDistance=Infinity;
   }
-  function snapshot(){return {x,y,near,away:isAway(),awayUntil,iceHits,breathing:Math.sin(t*2.25)>.28,proximity,warning:!!warningTarget};}
+  function snapshot(){return {x,y,near,away:isAway(),awayUntil,iceHits,breathing:Math.sin(t*2.25)>.28,proximity,warning:!!warningTarget,shots:shots.map(s=>({...s}))};}
   function draw(ctx,camX,camY,w,h){
    if(isAway())return;
    const sx=Math.round(x-camX+w/2),sy=Math.round(y-camY+h/2);
@@ -201,7 +202,7 @@
    ctx.fillStyle='#e4c581';ctx.fillRect(-17,30,9,3);ctx.fillRect(10,29,10,3);
    }
    const breath=(t*2.25)%(Math.PI*2);
-   if(Math.sin(breath)>.28){
+   if(Math.sin(breath)>.28&&inside(x+65,y-7,16)){
     const length=22+Math.sin(t*12)*8;
     poly([39,-8,39+length,-19,45+length*.58,-6,43+length,-2,39,-3],'#e85b27');
     poly([42,-8,39+length*.65,-12,40+length*.55,-5,43,-5],'#ffcc47');
@@ -248,7 +249,7 @@
     }
    }
    }
-   for(const shot of shots){const fx=Math.round(shot.x-camX+w/2),fy=Math.round(shot.y-camY+h/2);ctx.fillStyle='#762818';ctx.fillRect(fx-9,fy-7,17,14);ctx.fillStyle='#ed5a22';ctx.fillRect(fx-8,fy-6,15,11);ctx.fillStyle='#ffbf47';ctx.fillRect(fx-5,fy-5,10,8);ctx.fillStyle='#fff0a0';ctx.fillRect(fx-2,fy-3,5,4);ctx.fillStyle='#fa7929';ctx.fillRect(fx-13,fy-2,5,4);
+   for(const shot of shots){if(shot.expired)continue;const fx=Math.round(shot.x-camX+w/2),fy=Math.round(shot.y-camY+h/2);ctx.fillStyle='#762818';ctx.fillRect(fx-9,fy-7,17,14);ctx.fillStyle='#ed5a22';ctx.fillRect(fx-8,fy-6,15,11);ctx.fillStyle='#ffbf47';ctx.fillRect(fx-5,fy-5,10,8);ctx.fillStyle='#fff0a0';ctx.fillRect(fx-2,fy-3,5,4);ctx.fillStyle='#fa7929';ctx.fillRect(fx-13,fy-2,5,4);
     // Eldsvansen följer skottets verkliga rörelseriktning.
     const mag=Math.hypot(shot.vx,shot.vy)||1;
     for(let n=1;n<=3;n++){
