@@ -2,7 +2,20 @@
 (function(root){
  'use strict';
  function createDragon(){
-  const home={x:115,y:780};
+  // Kartans sammanhängande skog väster om den böjda sydvästvägen.
+  // Konservativ polygon innanför terrängkanten; koordinater i huvudkartans 1448×1086-system.
+  const forest=[[12,765],[115,765],[158,825],[171,900],[165,965],[230,1057],[230,1080],[12,1080]];
+  function inside(px,py,margin=0){
+   let hit=false,min=Infinity;
+   for(let i=0,j=forest.length-1;i<forest.length;j=i++){
+    const [ax,ay]=forest[j],[bx,by]=forest[i],dx=bx-ax,dy=by-ay;
+    if((ay>py)!==(by>py)&&px<(bx-ax)*(py-ay)/(by-ay)+ax)hit=!hit;
+    const u=Math.max(0,Math.min(1,((px-ax)*dx+(py-ay)*dy)/(dx*dx+dy*dy)));
+    min=Math.min(min,Math.hypot(px-ax-u*dx,py-ay-u*dy));
+   }
+   return hit&&min>=margin;
+  }
+  const home={x:85,y:920};
   let t=0,x=home.x,y=home.y,near=false,shotTimer=1,shotId=0,warningTarget=null,playerDistance=Infinity;const shots=[];
   const proximity=235;
   // Varningen växer tydligare fram under de 0,65 sekunderna före ett låst skott.
@@ -16,12 +29,12 @@
    dt=Math.max(0,Math.min(.1,Number(dt)||0));
    t+=dt;
    // Flyger i en liten slinga ovanför skogen; oberoende av vägarnas gångbarhet.
-   x=home.x+Math.cos(t*.45)*75;
-   y=home.y+Math.sin(t*.61)*53;
+   x=home.x+Math.cos(t*.45)*23;
+   y=home.y+Math.sin(t*.61)*42;
    playerDistance=playerTargetable?Math.hypot(x-playerX,y-playerY):Infinity;
    // Bilen skyddar Lage: visa inte heller en missvisande närhetsvarning
    // eller spela upp drakens faroljud när han inte kan bli attackerad.
-   near=playerTargetable&&playerDistance<proximity;
+   near=playerTargetable&&inside(playerX,playerY,8)&&playerDistance<proximity;
    shotTimer-=dt;
    // Samma mynning används för varningslinje, skottets start och dess riktning.
    const mouthX=x+28,mouthY=y-7;
@@ -29,7 +42,7 @@
    const inFireRange=(target,maxDistance=FIRE_MAX_DISTANCE)=>{
     if(!target||!Number.isFinite(target.x)||!Number.isFinite(target.y))return false;
     const distance=Math.hypot(target.x-mouthX,target.y-mouthY);
-    return distance>35&&distance<=maxDistance&&target.x<=FIRE_EAST_LIMIT;
+    return distance>35&&distance<=maxDistance&&target.x<=FIRE_EAST_LIMIT&&inside(target.x,target.y,12)&&inside(mouthX,mouthY,18);
    };
    // Helikoptern prioriteras ibland, MEN aldrig om den ligger utanför
    // räckvidden. Annars kunde draken fastna på ett omöjligt mål och
@@ -68,7 +81,7 @@
      // så varningen aldrig kan skapa ett skott mot ett nu oåtkomligt mål.
      const dx=target.x-mouthX,dy=target.y-mouthY;
      const distance=Math.hypot(dx,dy);
-     if(distance>35&&distance<=target.maxDistance&&target.x<=FIRE_EAST_LIMIT){
+     if(distance>35&&distance<=target.maxDistance&&target.x<=FIRE_EAST_LIMIT&&inside(target.x,target.y,12)&&inside(mouthX,mouthY,18)){
       const speed=165;
       shots.push({id:'dragon-fire-'+(++shotId),kind:target.kind,x:mouthX,y:mouthY,vx:dx/distance*speed,vy:dy/distance*speed,travelled:0,maxDistance:target.maxDistance,life:5});
      }
@@ -89,6 +102,10 @@
     if(fire.vx<0)duration=Math.min(duration,Math.max(0,(0-fire.x)/fire.vx));
     if(fire.vy>0)duration=Math.min(duration,Math.max(0,(1086-fire.y)/fire.vy));
     if(fire.vy<0)duration=Math.min(duration,Math.max(0,(0-fire.y)/fire.vy));
+    // Sample every world pixel before moving; preserve a margin for the whole flame and tail.
+    const steps=Math.max(1,Math.ceil(speed*duration));let safe=0;
+    for(let i=1;i<=steps;i++){const d=duration*i/steps;if(!inside(fire.x+fire.vx*d,fire.y+fire.vy*d,32))break;safe=d;}
+    duration=safe;
     fire.x+=fire.vx*duration;fire.y+=fire.vy*duration;
     fire.travelled+=speed*duration;fire.life-=dt;
     // Ett eldklot som stoppats vid kartans kant kan fortfarande kollidera
@@ -100,7 +117,7 @@
   function passesThrough(fire,px,py,radius){
    // Macken och området öster om den är säkra även när målets träffradie
    // överlappar det sista tillåtna projektilsegmentet.
-   if(px>=394)return false;
+   if(px>=394||!inside(px,py,radius))return false;
    // Kortaste avståndet mellan målets mitt och projektilens senaste rörelsesegment.
    const ax=fire.prevX??fire.x,ay=fire.prevY??fire.y,dx=fire.x-ax,dy=fire.y-ay;
    const lengthSquared=dx*dx+dy*dy;
@@ -108,7 +125,7 @@
    return Math.hypot(px-(ax+fraction*dx),py-(ay+fraction*dy))<radius;
   }
   function hazards(px,py){
-   const contact=Math.hypot(px-x,py-y)<37;
+   const contact=inside(px,py,8)&&Math.hypot(px-x,py-y)<37;
    const fire=shots.find(s=>passesThrough(s,px,py,17));
    return contact?'dragon-contact':fire?fire.id:null;
   }
@@ -224,7 +241,7 @@
      ctx.fillRect(tx-2,ty-2,Math.max(2,6-n),Math.max(2,6-n));
     }}
   }
-  return {update,draw,snapshot,hazards,consume,strikeObject,pauseAttacks,resetAttacks,home};
+  return {update,draw,snapshot,hazards,consume,strikeObject,pauseAttacks,resetAttacks,home,insideForest:inside};
  }
  root.RimforsaDragon={createDragon};
 })(typeof window!=='undefined'?window:globalThis);
