@@ -343,3 +343,13 @@ Gångvägar ska ansluta mackens interaktionspunkt. Tillåt också gång över ut
 
 #### HUV-07 – Hopp över små hinder
 Inför hoppknapp på mobil och tangent på dator, med synlig hoppanimation. Hoppning över bajskorvar ska undvika skada när Lage är i luften, och begränsade små hinder ska kunna passeras. Hoppa aldrig över byggnader eller vatten. Testa landning, skada och återgång till gångläge.
+
+## Förtydligade spelkrav från 25 november 2026
+
+#### DRAKE-03 – Drakens avgränsade farozon i sydväst
+
+Flytta hela drakens rörelsebana längre mot huvudkartans nedersta vänstra hörn (sydväst), inom ett sammanhängande skogs-/terrängområde. Draken får inte röra sig på vägar eller nära hus. Avgränsa eldklotens faktiska bana, räckvidd och träffzon till detta terrängområde: inga eldklot eller träffar på vägar, hus, byggnadsnära ytor, affärer eller minispelsentréer, inte heller när Lage eller helikoptern står där. Avbryt projektiler innan de når skyddade områden, även om de avfyras inifrån farozonen. Använd kartans faktiska väg-/byggnadsgeometri och en säkerhetsmarginal, inte enbart ett maximalt avstånd eller en mackgräns. Bevara fungerande strid inne i terrängzonen och HELI-02:s planerade isbollar. Kontrollera rörelsebanans ytterlägen och projektiler från flera riktningar mot vägar och hus, inklusive mål som flyttar sig ur farozonen.
+
+#### NPC-04 – Dialoger och minispel får inte konkurrera om interaktionen
+
+Användarens spelupplevelse visar kvarstående svårighet att öppna dialoger och minispel när vandrande figurer befinner sig nära spel/affärer. NPC-03:s tidigare avståndsskydd är genomfört enligt dåvarande tester, men räcker inte som bevis för att detta problem är löst. Granska hela interaktionsflödet för både mobilens tryck och datorns styrning. Säkerställ att NPC:ers startpositioner, vandring och samtalsradier inte överlappar entréer eller minispelens faktiska aktiverings-/tryckytor; utöka eller anpassa skyddszoner vid behov. Vid kvarvarande överlapp ska avsiktlig aktivering av entré/minispel inte kapas av NPC-dialog; avsiktlig NPC-interaktion ska samtidigt öppna rätt dialog och inte oavsiktligt starta minispel. Använd tydlig separat interaktion eller deterministisk prioritering där det behövs. Verifiera båda riktningarna för närliggande interaktioner på huvudkartan, med vandrande NPC, både pekstyrning och tangentbord, samt att entréer går att nå och återöppna.
