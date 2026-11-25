@@ -1794,11 +1794,12 @@ function tick(now){
   helicopter.update(dt);
  audio.setDragonNearby(dragon.update(dt,state.x,state.y,helicopter.position,!state.inCar&&!state.inHeli&&!boatState.active));
  if(dragon.strikeObject(helicopter.position.x,helicopter.position.y,28)){
+  const wasFlying=state.inHeli;
+  if(wasFlying){landHeli(true);hurtUntil=performance.now()+1500;}
   helicopter.hit(performance.now()/1000);
-  if(state.inHeli){landHeli(true);message.textContent='Helikoptern blev träffad och nödlandade!';}
   if(typeof audio.helicopterHit==="function")audio.helicopterHit();
   coinNoticeUntil=performance.now()+2200;
-  message.innerHTML="<strong>🚁 Träff på helikoptern!</strong> Drakens eldklot träffade rotorhuset. Helikoptern står kvar och repareras automatiskt.";
+  message.textContent=wasFlying?"Helikoptern blev träffad och nödlandade!":"Drakens eldklot träffade den parkerade helikoptern.";
  }
   if(!state.inCar&&!state.inHeli&&!boatState.active&&winOverlay.hidden&&document.getElementById('lossOverlay').hidden&&performance.now()>=hurtUntil){
    const danger=dragon.hazards(state.x,state.y);
