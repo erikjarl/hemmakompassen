@@ -10,7 +10,7 @@
 
 **NÄSTA ROTATIONSPOSITION: `MYNT-03` – nästa öppna roterande huvuduppgift.**
 
-**ALDRIG SAMMA HUVUDUPPGIFT TVÅ `JOBB LAGE` I FÖLJD.** Följ ordningen bland öppna, genomförbara uppgifter nedan med cirkulär rotation. Starta på angiven nästa position, hoppa över avbockade punkter, stående kvalitetsregler som `MINI-01` (dessa gäller ändå varje pass) och tillfälligt blockerade uppgifter. Bearbeta olika delar av spelet mellan varven: grafik, fordon, bränsle, ljud och andra spelmekaniker. Om inget praktiskt kan göras på nästa punkt, gå vidare till följande **annan** uppgift; återvänd först efter andra utvecklingspass. Prioritet betyder vikt inom rotationen, **inte** rätt att välja samma uppgift igen direkt. När ett pass med faktisk spelutveckling slutförts, uppdatera **båda fälten ovan** till den verkliga huvuduppgiften och efterföljande öppna rotationsposition innan passet avslutas. Rapportera vilka fält som ändrades. Att kontrollera kryssrutor eller åtgärda ett akut blockerande fel räknas inte som att byta huvuduppgift. **Aktuell rotation:** HELI-02 → MYNT-03 → GRAF-01 → DRAKE-03 → NPC-04 → KARTA-01. BRÄNSLE-02 väntar på verifierbar prisdata. Nästa position MYNT-03.
+**ALDRIG SAMMA HUVUDUPPGIFT TVÅ `JOBB LAGE` I FÖLJD.** Följ ordningen bland öppna, genomförbara uppgifter nedan med cirkulär rotation. Starta på angiven nästa position, hoppa över avbockade punkter, stående kvalitetsregler som `MINI-01` (dessa gäller ändå varje pass) och tillfälligt blockerade uppgifter. Bearbeta olika delar av spelet mellan varven: grafik, fordon, bränsle, ljud och andra spelmekaniker. Om inget praktiskt kan göras på nästa punkt, gå vidare till följande **annan** uppgift; återvänd först efter andra utvecklingspass. Prioritet betyder vikt inom rotationen, **inte** rätt att välja samma uppgift igen direkt. När ett pass med faktisk spelutveckling slutförts, uppdatera **båda fälten ovan** till den verkliga huvuduppgiften och efterföljande öppna rotationsposition innan passet avslutas. Rapportera vilka fält som ändrades. Att kontrollera kryssrutor eller åtgärda ett akut blockerande fel räknas inte som att byta huvuduppgift. **Aktuell rotation:** HELI-02 → MYNT-03 → GRAF-01 → DRAKE-03 → NPC-04 → KARTA-01 → LJUD-02. BRÄNSLE-02 väntar på verifierbar prisdata. Nästa position MYNT-03.
 
 ## Obligatorisk avbockning – vid VARJE `jobb lage`
 
@@ -24,7 +24,7 @@
 
 **SJÄLVSTÄNDIG SLUTBEDÖMNING (25 november 2026):** Användaren delegerar bedömningen av färdig implementation till assistenten. Ingen användarfeedback eller fysisk mobiltestning ska vara ett rutinmässigt villkor för avbockning. Granska ursprungliga krav mot faktisk kod, använd proportionerliga isolerade tester vid behov, stryk direkt när kraven är uppfyllda och fortsätt. Separat visuell/ljudmässig kvalitetssäkring dokumenteras utan att hålla fungerande funktioner öppna. Behåll endast konkreta saknade funktioner, påvisade fel eller specifika ännu olösta krav i aktiv kö. Vid listrevision ska hela kön granskas.
 
-**Senaste avslutningsnotis:** 2026-11-25 – KARTA-01 och HELI-02: regionala besök bevaras under sidbesöket, återresa via Rimforsa; isbollsknapp, projektiler och treträffars drakflykt med lokal 20-minuterstimer finns på main. Ej speltestat; skatt, rotorljud, sammanhängande karta och bildgenerering återstår. Nästa MYNT-03.
+**Senaste avslutningsnotis:** 2026-11-25 – LJUD-02 återöppnad efter användarens rapport om uteblivet mobilljud. Touchend/pointerup och återstartsknapp finns på main (8a076c4), fysisk funktion ej bekräftad. MYNT-03 kvar som nästa huvuduppgift; ingen ny spelkod eller bildgenerering i detta pass.
 
 1. Läs [AGENTS.md](AGENTS.md) och **denna korta kö**. Välj nästa genomförbara **annan** uppgift enligt rotationsfälten ovan; respektera beroenden och blockerande fel. Välj aldrig samma huvuduppgift två pass i följd.
 2. Läs **bara den valda uppgiftens avsnitt** i [TASK_DETAILS.md](docs/TASK_DETAILS.md) (vid behov genom textsökning/radintervall), sedan relevant kod. Gemensamma, detaljerade krav finns i [GAME_RULES.md](docs/GAME_RULES.md); läs relevanta delar när arbetet berör dem.
@@ -37,11 +37,13 @@
 
 **BILDSPRITES FÖRE NYA KODRITADE PERSONER:** Identifiera vid varje pass minst en figur eller bakgrundsperson som inte använder riktig bildsprite. Prioritera bildgenerering av en originalgjord figur i huvudkartans/Lages detaljerade 16-bitars-SNES-stil, följt av faktiskt byte från kodritad platshållare till inläst sprite. Omfattar huvudkartans NPC:er och andra personer, Hackelhallens fotbollsspel (Maja, åskådare/bakgrundspersoner), rutschkanans förskolebarn/bakgrundspersoner och andra minispel. Anpassa vinkel, storlek, perspektiv och animation; bevara Lages befintliga bra sprite. Verifiera att filerna används och fungerar på mobil/dator innan någon del kryssas av. Dokumentera vad som är bildbaserat respektive fortfarande kodritat; markera blockerad bildgenerering ärligt om verktyget saknas. **Samma huvuduppgift får fortfarande inte väljas i två på varandra följande pass.** Integrera detta som stående delmoment inom den roterande uppgiften, särskilt GRAF-01/SPORT-01, inte som skäl att ensidigt fastna i en enda scen.
 
-## Kvar att göra – aktiv arbetskö (7)
+## Kvar att göra – aktiv arbetskö (8)
 
-**Översikt 25 november 2026:** 7 öppna uppgifter, 45 tidigare avbockade i [färdigarkivet](docs/COMPLETED_TASKS.md) och 1 ständig kvalitetsregel (MINI-01). **Endast ofärdiga delar står nedan.** Utförda delmoment och tidigare rapporter finns i [arbetsloggen](docs/WORKLOG.md), [uppgiftskraven](docs/TASK_DETAILS.md) och Git-historiken. Lägg **aldrig** till långa historiska uppdateringar på dessa rader.
+**Översikt 25 november 2026:** 8 öppna uppgifter, 44 tidigare avbockade i [färdigarkivet](docs/COMPLETED_TASKS.md) och 1 ständig kvalitetsregel (MINI-01). **Endast ofärdiga delar står nedan.** Utförda delmoment och tidigare rapporter finns i [arbetsloggen](docs/WORKLOG.md), [uppgiftskraven](docs/TASK_DETAILS.md) och Git-historiken. Lägg **aldrig** till långa historiska uppdateringar på dessa rader.
 
-### Aktivt genomförande (5)
+### Aktivt genomförande (6)
+
+- [ ] **LJUD-02 – Fungerande ljud på iPhone/Safari.** · [Krav](docs/TASK_DETAILS.md#ljud-02) · **Kvar:** Utred återkommande uteblivet mobilljud enligt användarrapport; verifiera aktivering, bakgrundsmusik och effekter efter touch-release-korrigeringen.
 
 **Kartexpansion är nu aktivt utvecklingsarbete, inte en senareläggning.** Regional utforskning finns i separat spelbar scen; sammanhängande världskarta återstår.
 
@@ -67,14 +69,14 @@
 
 ## Färdiga uppgifter – flyttade ur att-göra-listan
 
-**45 färdigmarkerade uppgifter** finns i [COMPLETED_TASKS.md](docs/COMPLETED_TASKS.md). De ska **inte** återkomma i den aktiva kön såvida ett saknat acceptansvillkor påvisas. Alla 45 färdiga task-ID:n är borttagna från denna aktiva lista, men kraven finns kvar som referens i `TASK_DETAILS.md`.
+**44 färdigmarkerade uppgifter** finns i [COMPLETED_TASKS.md](docs/COMPLETED_TASKS.md). De ska **inte** återkomma i den aktiva kön såvida ett saknat acceptansvillkor påvisas. Alla 44 färdiga task-ID:n är borttagna från denna aktiva lista, men kraven finns kvar som referens i `TASK_DETAILS.md`.
 
 ## Dokumentation och principer
 
 - [TASK_DETAILS.md](docs/TASK_DETAILS.md) – fullständig beskrivning och acceptansvillkor för samtliga 53 uppgifts-ID:n (inklusive stående MINI-01), utan parallella statuskryssrutor.
 - [GAME_RULES.md](docs/GAME_RULES.md) – bindande grafik-/minispelsregler och gemensamma tekniska hänsyn.
-- [COMPLETED_TASKS.md](docs/COMPLETED_TASKS.md) – separat historik över 45 avbockade uppgifter.
+- [COMPLETED_TASKS.md](docs/COMPLETED_TASKS.md) – separat historik över 44 avbockade uppgifter.
 - [WORKLOG.md](docs/WORKLOG.md) – hela tidigare arbetsloggen och historiska statusnoteringar. Läs **bara vid behov**.
 - `AGENTS.md` i denna mapp och repo-roten – kortkommando, befogenheter och arbetsmetod.
 
-**Ny prioritet 22 november 2026 på användarens begäran:** `KARTA-01` är aktiv kartutbyggnad och ska inte längre vänta på övriga uppgifter. Kartarbete väljs återkommande i rotationen och får utgöra eget utvecklingspass; grundregeln om att inte välja samma huvuduppgift två pass i rad gäller fortsatt. Utbyggnaden ska utgå från verkliga kartkällor, med spelbara förenklingar tydligt markerade. `MINI-01` är en stående kvalitetsregel och ligger därför inte bland de 7 öppna uppgifterna.
+**Ny prioritet 22 november 2026 på användarens begäran:** `KARTA-01` är aktiv kartutbyggnad och ska inte längre vänta på övriga uppgifter. Kartarbete väljs återkommande i rotationen och får utgöra eget utvecklingspass; grundregeln om att inte välja samma huvuduppgift två pass i rad gäller fortsatt. Utbyggnaden ska utgå från verkliga kartkällor, med spelbara förenklingar tydligt markerade. `MINI-01` är en stående kvalitetsregel och ligger därför inte bland de 8 öppna uppgifterna.
