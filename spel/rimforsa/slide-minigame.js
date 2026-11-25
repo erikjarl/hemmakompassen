@@ -159,7 +159,7 @@ function render(){
  function drawPreschoolFriend(cx,ground,frame,shirt,hair,skin,pose){
   ctx.fillStyle='#314a3a';ctx.fillRect(cx-10,ground-3,20,4);
   if(preschoolFriendsSprite&&preschoolFriendsSprite.complete&&preschoolFriendsSprite.naturalWidth===128&&preschoolFriendsSprite.naturalHeight===32){
-   ctx.drawImage(preschoolFriendsSprite,frame*32,0,32,32,Math.round(cx-24),ground-48,48,48);
+   ctx.drawImage(preschoolFriendsSprite,frame*32,0,32,32,Math.round(cx-16),ground-32,32,32);
    return;
   }
   // Fallback medan den inbäddade PNG-bilden laddas.
@@ -189,7 +189,7 @@ function render(){
  // Rad 2 är riktningen åt höger, vilket passar rutschkanans färdriktning.
  if(lageSprite&&lageSprite.complete&&lageSprite.naturalWidth>=224&&lageSprite.naturalHeight>=224){
   const walkingFrame=s.state==='flying'?2:0;
-  ctx.drawImage(lageSprite,walkingFrame*56,2*56,56,56,Math.round(px-22),Math.round(py-30),44,44);
+  ctx.drawImage(lageSprite,walkingFrame*56,2*56,56,56,Math.round(px-28),Math.round(py-42),56,56);
  }else{
   // Reservfigur syns enbart om originalbilden inte kan hämtas.
   ctx.fillStyle='#2b3b30';ctx.fillRect(px-11,py+14,9,12);ctx.fillRect(px+3,py+14,9,12);
