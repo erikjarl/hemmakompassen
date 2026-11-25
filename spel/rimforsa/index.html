@@ -270,6 +270,9 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
   const earnedValue=()=>Object.keys(earned).reduce((sum,id)=>sum+(id==='dragon-treasure'?20:1),0);
   let earned=Object.create(null),spent=0,readEpoch=null;
   const epoch=()=>localStorage.getItem('rimforsa-loss-reset-v1');
+  const awardPrefix=key+':award:';
+  const ids=[...Array.from({length:8},(_,i)=>'boat-'+i),...Array.from({length:5},(_,i)=>'swim-'+i),...Array.from({length:3},(_,i)=>'football-'+i),...Array.from({length:2},(_,i)=>'slide-'+i),'dragon-treasure'];
+  const awardKey=(id,generation)=>awardPrefix+encodeURIComponent(JSON.stringify(generation))+':'+id;
   // Läs samma sparade plånbok inför varje ändring så en äldre öppen
   // spelflik inte i onödan skriver över mynt från en nyare flik.
   function sync(){
@@ -285,6 +288,9 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
    if(data&&data.earned&&typeof data.earned==='object'&&!Array.isArray(data.earned)){
     for(const id of Object.keys(data.earned))if(validId(id)&&data.earned[id]===true)next[id]=true;
    }
+   // Varje fynd har en separat generationsbunden nyckel. Två flikar
+   // som hittar olika mynt kan därför inte skriva över varandras fynd.
+   try{for(const id of ids)if(localStorage.getItem(awardKey(id,readEpoch))==='1')next[id]=true;}catch(_){return false;}
    earned=next;
    const count=earnedValue();
    const value=data?Number(data.spent):0;
@@ -313,9 +319,13 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
    award(id){
     if(!validId(id))return false;
     if(!sync()||earned[id])return false;
-    earned[id]=true;
-    if(!save()){delete earned[id];return false;}
-    return true;
+    const generation=readEpoch,k=awardKey(id,generation);
+    try{
+     if(epoch()!==generation||localStorage.getItem(k)==='1')return false;
+     localStorage.setItem(k,'1');
+     if(epoch()!==generation||localStorage.getItem(k)!=='1')return false;
+     earned[id]=true;return true;
+    }catch(_){return false;}
    },
    spend(n){
     if(!Number.isSafeInteger(n)||n<0)return false;
@@ -331,7 +341,12 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
     if(!save()){spent+=n;return false;}
     return true;
    },
-   clear(){if(!sync())return false;earned=Object.create(null);spent=0;return save();}
+   clear(){
+    if(!sync())return false;
+    const generation=readEpoch;
+    try{for(const id of ids){if(epoch()!==generation)return false;localStorage.removeItem(awardKey(id,generation));}}catch(_){return false;}
+    earned=Object.create(null);spent=0;return save();
+   }
   };
  })();
  const awardBonusResult=id=>{
@@ -746,8 +761,9 @@ window.addEventListener('storage',event=>{
   reloadAfterOtherTabLoss();
   return;
  }
- if(event.key!==null&&event.key!=='rimforsa-minigame-coins-v1'&&event.key!==farm.key)return;
- if(event.key===null||event.key==='rimforsa-minigame-coins-v1')rewardWallet.sync();
+ const bonusChanged=event.key==='rimforsa-minigame-coins-v1'||event.key?.startsWith('rimforsa-minigame-coins-v1:award:');
+ if(event.key!==null&&!bonusChanged&&event.key!==farm.key)return;
+ if(event.key===null||bonusChanged)rewardWallet.sync();
  if(event.key===null||event.key===farm.key)farm.syncCoins();
  refreshSharedCoinViews();
 });
