@@ -39,17 +39,20 @@ function inWater(px,py){
 function routeTo(name){
  const target=places.find(p=>p.name===name);
  if(!target)return;
- let best={d:Infinity,path:null,segment:0};
+ let best={d:Infinity,path:null,segment:0,px:0,py:0};
  for(const path of roads)for(let i=0;i<path.length-1;i++){
-  const d=distToSegment(x,y,path[i],path[i+1]);
-  if(d<best.d)best={d,path,segment:i};
+  const a=path[i],b=path[i+1],dx=b[0]-a[0],dy=b[1]-a[1];
+  const t=clamp(((x-a[0])*dx+(y-a[1])*dy)/(dx*dx+dy*dy),0,1);
+  const px=a[0]+t*dx,py=a[1]+t*dy,d=Math.hypot(x-px,y-py);
+  if(d<best.d&&walkable(px,py))best={d,path,segment:i,px,py};
  }
  if(!best.path||best.d>42)return;
  const branch=roads.find(path=>{const end=path[path.length-1];return Math.hypot(end[0]-target.x,end[1]-target.y)<2;});
- if(!branch)return;
- const towardCenter=best.path.slice(0,best.segment+1).reverse();
- waypoints=[...towardCenter,...branch.slice(1)].map(([px,py])=>({x:px,y:py}));
+ if(!branch&&name!=='Rimforsa')return;
+ const route=best.path===branch?best.path.slice(best.segment+1):[...best.path.slice(0,best.segment+1).reverse(),...(branch?branch.slice(1):[])];
+ waypoints=[[best.px,best.py],...route].map(([px,py])=>({x:px,y:py}));
  destination=name;
+ for(const k of Object.keys(keys))keys[k]=false;
  modal.querySelector('.regional-info').textContent='Lage går mot '+name+' längs vägarna. Styr själv för att avbryta.';
 }
 function setup(){
@@ -59,9 +62,9 @@ function setup(){
  document.head.append(st);
  modal=document.createElement('div');modal.className='regional-map';modal.hidden=true;
  modal.setAttribute('role','dialog');modal.setAttribute('aria-modal','true');modal.setAttribute('aria-label','Större karta kring Rimforsa');
- modal.innerHTML='<div class="regional-card"><h2>🌲 Rimforsa och omgivningarna</h2><p>Utforska Brokind, Kättilstad, Björkfors och Tjärstads kyrka! Vägar och sjöar är fritt tolkade från verkliga kartor.</p><canvas width="480" height="340" aria-label="Spelbar regional pixelkarta, följ vägarna till platserna"></canvas><p class="regional-info" role="status" aria-live="polite">Följ vägarna. Besök 4 platser!</p><div class="regional-controls"><div class="regional-pad"><button data-dir="up" aria-label="Norr">▲</button><button data-dir="left" aria-label="Väster">◀</button><button data-dir="down" aria-label="Söder">▼</button><button data-dir="right" aria-label="Öster">▶</button></div><div><div class="regional-locations"><button data-target="Brokind">Brokind</button><button data-target="Kättilstad">Kättilstad</button><button data-target="Björkfors">Björkfors</button><button data-target="Tjärstads kyrka">Tjärstads kyrka</button></div><button data-close>Återvänd till Rimforsa ✕</button></div></div><p>Styr med pilar, WASD eller knapparna. Välj ett ortnamn för att låta Lage följa vägen dit, eller styr själv. Detta är en spelkarta, inte en vägvisning i verkligheten.</p></div>';
+ modal.innerHTML='<div class="regional-card"><h2>🌲 Rimforsa och omgivningarna</h2><p>Utforska Brokind, Kättilstad, Björkfors och Tjärstads kyrka! Vägar och sjöar är fritt tolkade från verkliga kartor.</p><canvas width="480" height="340" aria-label="Spelbar regional pixelkarta, följ vägarna till platserna"></canvas><p class="regional-info" role="status" aria-live="polite">Följ vägarna. Besök 4 platser!</p><div class="regional-controls"><div class="regional-pad"><button data-dir="up" aria-label="Norr">▲</button><button data-dir="left" aria-label="Väster">◀</button><button data-dir="down" aria-label="Söder">▼</button><button data-dir="right" aria-label="Öster">▶</button></div><div><div class="regional-locations"><button data-target="Rimforsa">Rimforsa</button><button data-target="Brokind">Brokind</button><button data-target="Kättilstad">Kättilstad</button><button data-target="Björkfors">Björkfors</button><button data-target="Tjärstads kyrka">Tjärstads kyrka</button></div><button data-close>Återvänd till Rimforsa ✕</button></div></div><p>Styr med pilar, WASD eller knapparna. Välj ett ortnamn för att låta Lage följa vägen dit, eller styr själv. Detta är en spelkarta, inte en vägvisning i verkligheten.</p></div>';
  document.body.append(modal);canvas=modal.querySelector('canvas');g=canvas.getContext('2d');
- hero=new Image();hero.src='./lage-sprites.png';hero.onload=()=>{if(!modal.hidden)render();};
+ hero=new Image();hero.onload=()=>{if(!modal.hidden)render();};hero.src='./lage-sprites.png';
  for(const b of modal.querySelectorAll('[data-dir]')){
   const d=b.dataset.dir;
   b.addEventListener('pointerdown',e=>{e.preventDefault();destination=null;waypoints=[];keys[d]=true;try{b.setPointerCapture(e.pointerId)}catch(_){}});
@@ -116,11 +119,12 @@ function render(){
 function tick(t){
  if(!modal||modal.hidden)return;
  const dt=Math.min(.05,Math.max(0,(t-last)/1000||0));last=t;
+ if(document.hidden){for(const k of Object.keys(keys))keys[k]=false;raf=requestAnimationFrame(tick);return;}
  let dx=(+keys.right)-(+keys.left),dy=(+keys.down)-(+keys.up),d=Math.hypot(dx,dy);
  if(!d&&destination&&waypoints.length){
   // One point at a time, so arrival at a curve does not cut across forests.
   const point=waypoints[0],vx=point.x-x,vy=point.y-y,len=Math.hypot(vx,vy);
-  if(len<=speed*dt+1){x=point.x;y=point.y;waypoints.shift();}
+  if(len<=speed*dt+1){if(walkable(point.x,point.y)){x=point.x;y=point.y;waypoints.shift();}else{destination=null;waypoints=[];}}
   else{dx=vx/len;dy=vy/len;d=1;}
  }
  if(d){if(Math.abs(dx)>Math.abs(dy))facing=dx>0?'right':'left';else facing=dy>0?'down':'up';phase+=dt*9;const nx=x+dx/d*speed*dt,ny=y+dy/d*speed*dt;if(walkable(nx,ny)){x=nx;y=ny;}else if(walkable(nx,y))x=nx;else if(walkable(x,ny))y=ny;}
