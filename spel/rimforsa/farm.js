@@ -58,12 +58,13 @@ function createFarm(storage,clock=()=>Date.now()){
  }
  return {snapshot,plant,harvest,sell,spendCoins,refundCoins,clearCoins,syncCoins,key:KEY};
 }
+let activePlot=0;
 let overlay=null,canvas=null,ctx=null,info=null,plantButton=null,harvestButton=null,loop=null,previousFocus=null,returnToMap=null,verifyCurrentRound=null;
 let farm=createFarm((()=>{try{return root.localStorage}catch{return null}})());
 function rect(x,y,w,h,color){ctx.fillStyle=color;ctx.fillRect(x,y,w,h)}
 function drawField(){
  if(!ctx)return;
- const s=farm.snapshot();
+ const s=farm.snapshot(activePlot);
  ctx.imageSmoothingEnabled=false;
  rect(0,0,480,288,'#81b2a0');rect(0,0,480,87,'#95c5be');
  for(let i=0;i<13;i++){
@@ -123,13 +124,13 @@ function drawField(){
  // Säcken står utanför jordlandet, även när grödan väntar.
  rect(418,218,41,48,'#a98554');rect(423,213,30,8,'#d7bb80');rect(426,230,24,20,'#c5a06c');
  rect(432,235,12,10,'#745437');rect(430,258,17,5,'#6f5237');
- ctx.fillStyle='#173f32';ctx.font='bold 14px monospace';ctx.fillText('LAGES POTATISLAND',15,24);
+ ctx.fillStyle='#173f32';ctx.font='bold 14px monospace';ctx.fillText('LAGES POTATISLAND '+(activePlot+1),15,24);
 }
 function render(){
  if(!overlay||overlay.hidden)return;
- const s=farm.snapshot();drawField();
- const m=Math.floor(s.remaining/60000),sec=Math.ceil((s.remaining%60000)/1000);
- if(!s.plantedAt)info.textContent='Jorden är redo! Plantera din första potatis.';
+ const s=farm.snapshot(activePlot);drawField();
+ const seconds=Math.ceil(s.remaining/1000),m=Math.floor(seconds/60),sec=seconds%60;
+ if(s.plantedAt===null)info.textContent='Jorden är redo! Plantera din första potatis.';
  else if(s.ready)info.textContent='Potatisen är färdig! Skörda tre potatisar.';
  else info.textContent='Potatisen växer! Färdig om '+m+':'+String(sec).padStart(2,'0')+'. Du kan lämna fältet under tiden.';
  plantButton.hidden=s.plantedAt!==null;
@@ -161,23 +162,25 @@ function install(){
  plantButton.addEventListener('click',()=>{
   // Förhindra att en sovande flik skriver över data från en förlorad omgång.
   if(verifyCurrentRound&&verifyCurrentRound()===false)return;
-  const planted=farm.plant();
+  const planted=farm.plant(activePlot);
   if(planted&&root.RimforsaAudio?.potatoPlant)root.RimforsaAudio.potatoPlant();
   render();
  });
  harvestButton.addEventListener('click',()=>{
   if(verifyCurrentRound&&verifyCurrentRound()===false)return;
-  const harvested=farm.harvest();
+  const harvested=farm.harvest(activePlot);
   if(harvested&&root.RimforsaAudio?.potatoHarvest)root.RimforsaAudio.potatoHarvest();
   render();
  });
  overlay.querySelector('[data-farm-close]').addEventListener('click',close);
  root.document.addEventListener('keydown',e=>{if(overlay&&!overlay.hidden&&e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();close()}},true);
 }
-function start({returnToMap:cb,verifyCurrentRound:checkRound}={}){
+function start({returnToMap:cb,verifyCurrentRound:checkRound,plot=0}={}){
  install();previousFocus=root.document.activeElement;returnToMap=cb;
  verifyCurrentRound=typeof checkRound==='function'?checkRound:null;
  if(verifyCurrentRound&&verifyCurrentRound()===false){verifyCurrentRound=null;return false;}
+ activePlot=Number.isInteger(plot)&&plot>=0&&plot<3?plot:0;
+ overlay.querySelector('h2').textContent='🥔 Lages potatisland '+(activePlot+1);
  overlay.hidden=false;render();
  if(loop!==null)root.clearInterval(loop);
  loop=root.setInterval(render,1000);
