@@ -171,36 +171,42 @@ function showAudioState(){
   button.title=!s.available?'Ljud stöds inte av den här webbläsaren':needsResume?'Ljudet är pausat av webbläsaren. Tryck här eller i spelet för att försöka återuppta.':'';
  }
 }
+// Starta ljud på första giltiga spelgest, men respektera uttryckligt avstängt ljud.
+const soundPreferenceKey='rimforsa-sound-preference-v1';
+let soundWanted=true;
+try{soundWanted=localStorage.getItem(soundPreferenceKey)!=='off';}catch(_){}
+function rememberSound(wanted){
+ soundWanted=wanted;
+ try{localStorage.setItem(soundPreferenceKey,wanted?'on':'off');}catch(_){}
+}
 for(const button of document.querySelectorAll('[data-sound-toggle]'))button.addEventListener('click',()=>{
- // Ett av-tryck måste alltid fungera även om Safari har stoppat ljudmotorn.
- // Nästa på-tryck skapar vid behov en ny WebAudio-kontext från klickgesten.
  const status=audio.status();
- if(status.enabled&&status.contextState!=='running'&&audio.resumeFromGesture)audio.resumeFromGesture();else audio.toggle();
+ if(status.enabled&&status.contextState==='running'){
+  rememberSound(false);audio.disable();
+ }else{
+  rememberSound(true);
+  // Explicit återstart: en blockerad/fastnad kontext får inte äta upp klicket.
+  if(status.enabled)audio.disable();
+  audio.enable();
+ }
  showAudioState();
 });
-// iOS Safari kan avbryta WebAudio efter appbyte. Försök återuppta bara efter
-// en ny användargest, inte automatiskt från en bakgrundstimer.
 function resumeAudioGesture(ev){
  if(ev.target&&ev.target.closest&&ev.target.closest('[data-sound-toggle]'))return;
- const s=audio.status();
- if(s.enabled&&(s.contextState!=='running'||!s.sceneStarted)&&audio.resumeFromGesture){
-  audio.resumeFromGesture();
-  showAudioState();
- }
+ if(!soundWanted||ev.isTrusted===false)return;
+ // Touch börjar inte nödvändigtvis med transient aktivering. Vänta på
+ // touchend/pointerup eller klick i stället för att låsa resume på touchstart.
+ if(ev.type==='pointerdown'&&ev.pointerType!=='mouse')return;
+ if(navigator.userActivation&&navigator.userActivation.isActive===false)return;
+ const status=audio.status();
+ if(!status.enabled){if(audio.enable)audio.enable();}
+ else if((status.contextState!=='running'||!status.sceneStarted)&&audio.resumeFromGesture)audio.resumeFromGesture();
+ showAudioState();
 }
 document.addEventListener('pointerdown',resumeAudioGesture,{capture:true,passive:true});
-// iOS-versioner som inte skickar Pointer Events kan fortfarande ge touchstart.
-// Anropet är idempotent om båda händelserna kommer för samma fingertryck.
-document.addEventListener('touchstart',resumeAudioGesture,{capture:true,passive:true});
-// Touch activation may only become available when the finger is released.
 document.addEventListener('touchend',resumeAudioGesture,{capture:true,passive:true});
 document.addEventListener('pointerup',resumeAudioGesture,{capture:true,passive:true});
 document.addEventListener('keydown',resumeAudioGesture,true);
-// VoiceOver och andra hjälpmedel kan aktivera knappar via ett riktigt klick
-// utan föregående pointerdown/touchstart/keydown. Återuppta endast som följd
-// av klickgesten; ljudknappens egna av/på-logik hanteras separat ovan.
-// Upprepade klick efter pekhändelser är ofarliga: ljudmotorn kontrollerar
-// redan running/pågående resume och startar inte dubbla scenloopar.
 document.addEventListener('click',resumeAudioGesture,true);
 window.addEventListener('rimforsa-audio-state',showAudioState);
 document.addEventListener('visibilitychange',()=>{audio.setVisible(!document.hidden);showAudioState();});
