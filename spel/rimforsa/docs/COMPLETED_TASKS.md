@@ -1,10 +1,10 @@
 # Lage i Rimforsa – färdiga uppgifter (arkiv)
 
-**Statuskälla:** [ROADMAP.md](../ROADMAP.md). Detta arkiv innehåller **45 avbockade uppgifter** som har tagits bort ur den aktiva att-göra-listan (senast 25 november 2026). Här behålls de som historik, inte som nya arbetsuppgifter.
+**Statuskälla:** [ROADMAP.md](../ROADMAP.md). Detta arkiv innehåller **44 avbockade uppgifter** som har tagits bort ur den aktiva att-göra-listan (senast 25 november 2026). Här behålls de som historik, inte som nya arbetsuppgifter.
 
 **Viktig avgränsning:** En del punkter är avbockade efter kodgranskning, inte fysiska mobiltester. Om ett dokumenterat acceptansvillkor visar sig saknas öppnas uppgiften på nytt i `ROADMAP.md`. Grafikstandard och separat kvalitetsarbete gäller fortfarande.
 
-## Avslutade uppgifter (45)
+## Avslutade uppgifter (44)
 
 - [x] **LJUD-01 – Läs upp karaktärernas repliker.** · [Detaljer](docs/TASK_DETAILS.md#ljud-01) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.** _Källkodsverifierad integration: dialogen visas alltid i text; användarens samtalsklick anropar speechSynthesis via ljudmotorn, enbart med ljudknappen på; avstängning, flikdöljning och miljöbyte stoppar talet. 19 nov: individuella talprofiler och sänkt bakgrundsmusik under repliker. Fysisk ljudtest i mobil/Safari ingår separat i LJUD-02._
 
@@ -41,7 +41,6 @@ Den 19 november 2026 avbockades sju äldre öppna uppgifter efter kodgranskning 
 - [x] **PIZ-01 – Pizza.** · [Detaljer](docs/TASK_DETAILS.md#piz-01) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.**
 - [x] **FÖR-01 – Rutschkana.** · [Detaljer](docs/TASK_DETAILS.md#för-01) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.**
 
-- [x] **LJUD-02 – Fungerande ljud på iPhone/Safari.** · [Detaljer](TASK_DETAILS.md#ljud-02) · Användaren bekräftade 25 november 2026 att ljudet redan fungerar. Avslutad utifrån användarens besked och befintlig ljudimplementation; ingen separat fysisk iPhone-testmatris genomfördes av assistenten.
 
 - [x] **HUV-06 – Tydligare bajskorvar utan större sprite.** · [Detaljer](TASK_DETAILS.md#huv-06) · 25 november: befintlig kontrastgrafik verifierad genom kodgranskning och 16 simulerade renderingsfall med olika avstånd, faser och rörelseinställningar; 23×26 px och 19 px skaderadie kvar. Fysisk visuell kontroll ej utförd.
 - [x] **NPC-02 – Bildbaserade Saga och Oliver.** · [Detaljer](TASK_DETAILS.md#npc-02) · 25 november: separat bildgenererat 96×96 PNG-ark, två rader med tre 32×48-riktningar, laddning före NPC-modul och faktisk drawImage-integration inklusive speglad sidovy verifierade i källkod. Mobil bildgranskning kvar i GRAF-01.
