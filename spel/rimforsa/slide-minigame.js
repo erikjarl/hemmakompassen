@@ -217,13 +217,14 @@ function frame(t){
  const dt=lastFrame?Math.min(.05,(t-lastFrame)/1000):0;lastFrame=t;
  const was=session.snapshot().state,now=session.step(dt).state;
  if(was==='flying'&&now==='landed'){
-  const earned=typeof onLandingCoin==='function'&&onLandingCoin(0)===true;
+  const claim=id=>{const result=typeof onLandingCoin==='function'?onLandingCoin(id):'error';return result===true?'earned':result==='already'?'already':result==='earned'?'earned':'error';};
+  const landingResult=claim(0),earned=landingResult==='earned';
   const longJump=now==='landed'&&session.snapshot().distance>=200;
-  const longJumpEarned=longJump&&typeof onLandingCoin==='function'&&onLandingCoin(1)===true;
+  const longResult=longJump?claim(1):null,longJumpEarned=longResult==='earned';
   const rewards=(earned?1:0)+(longJumpEarned?1:0);
   landingBonus=(rewards?'Du fick +'+rewards+' mynt! ':'')+
-   (earned?'Landningsmynt intjänat. ':'Landningsmynt redan hämtat. ')+
-   (longJump?(longJumpEarned?'Långhoppsbonus intjänad!':'Långhoppsbonus redan hämtad.'):'Hoppa minst 200 meter för ett extra mynt.');
+   (earned?'Landningsmynt intjänat. ':landingResult==='already'?'Landningsmynt redan hämtat. ':'Landningsmynt kunde inte sparas. Åk igen för att försöka. ')+
+   (longJump?(longJumpEarned?'Långhoppsbonus intjänad!':longResult==='already'?'Långhoppsbonus redan hämtad.':'Långhoppsbonus kunde inte sparas. Hoppa 200 meter igen.'):'Hoppa minst 200 meter för ett extra mynt.');
   if(root.RimforsaAudio&&root.RimforsaAudio.status().enabled){
    const sound=root.RimforsaAudio;
    if(longJumpEarned&&sound.slideLongJump)sound.slideLongJump();
