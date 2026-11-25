@@ -151,17 +151,18 @@ function showAudioState(){
   const needsResume=s.enabled&&s.contextState!=='running';
   // Ljudknappen är ALLTID av/på, också när Safari har pausat AudioContext.
   // Återupptagning erbjuds via nästa riktiga spelgest utan att låsa av-knappen.
-  button.textContent=s.enabled?'🔊 Ljud av':'🔈 Ljud på';
+  button.textContent=needsResume?'🔈 Starta ljud':s.enabled?'🔊 Ljud av':'🔈 Ljud på';
   button.setAttribute('aria-pressed',String(s.enabled));
-  button.setAttribute('aria-label',s.enabled?'Stäng av spelljud':'Slå på spelljud');
+  button.setAttribute('aria-label',needsResume?'Starta pausat spelljud':s.enabled?'Stäng av spelljud':'Slå på spelljud');
   button.disabled=!s.available;
-  button.title=!s.available?'Ljud stöds inte av den här webbläsaren':needsResume?'Ljudet är pausat av webbläsaren. Tryck i spelet för att försöka återuppta, eller här för att stänga av.':'';
+  button.title=!s.available?'Ljud stöds inte av den här webbläsaren':needsResume?'Ljudet är pausat av webbläsaren. Tryck här eller i spelet för att försöka återuppta.':'';
  }
 }
 for(const button of document.querySelectorAll('[data-sound-toggle]'))button.addEventListener('click',()=>{
  // Ett av-tryck måste alltid fungera även om Safari har stoppat ljudmotorn.
  // Nästa på-tryck skapar vid behov en ny WebAudio-kontext från klickgesten.
- audio.toggle();
+ const status=audio.status();
+ if(status.enabled&&status.contextState!=='running'&&audio.resumeFromGesture)audio.resumeFromGesture();else audio.toggle();
  showAudioState();
 });
 // iOS Safari kan avbryta WebAudio efter appbyte. Försök återuppta bara efter
@@ -178,6 +179,9 @@ document.addEventListener('pointerdown',resumeAudioGesture,{capture:true,passive
 // iOS-versioner som inte skickar Pointer Events kan fortfarande ge touchstart.
 // Anropet är idempotent om båda händelserna kommer för samma fingertryck.
 document.addEventListener('touchstart',resumeAudioGesture,{capture:true,passive:true});
+// Touch activation may only become available when the finger is released.
+document.addEventListener('touchend',resumeAudioGesture,{capture:true,passive:true});
+document.addEventListener('pointerup',resumeAudioGesture,{capture:true,passive:true});
 document.addEventListener('keydown',resumeAudioGesture,true);
 // VoiceOver och andra hjälpmedel kan aktivera knappar via ett riktigt klick
 // utan föregående pointerdown/touchstart/keydown. Återuppta endast som följd
