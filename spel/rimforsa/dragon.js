@@ -98,6 +98,9 @@
    return near;
   }
   function passesThrough(fire,px,py,radius){
+   // Macken och området öster om den är säkra även när målets träffradie
+   // överlappar det sista tillåtna projektilsegmentet.
+   if(px>=394)return false;
    // Kortaste avståndet mellan målets mitt och projektilens senaste rörelsesegment.
    const ax=fire.prevX??fire.x,ay=fire.prevY??fire.y,dx=fire.x-ax,dy=fire.y-ay;
    const lengthSquared=dx*dx+dy*dy;
@@ -116,7 +119,11 @@
   }
   // Menyer och minispel pausar redan flygande eldklot. Rensa den låsta
   // varningen så den inte avfyras överraskande direkt när Lage återkommer.
-  function pauseAttacks(){warningTarget=null;}
+  function pauseAttacks(){
+   // En avbruten varning får inte återuppstå precis före avfyrning.
+   if(warningTarget||shotTimer<=FIRE_WARNING_SECONDS)shotTimer=2.7;
+   warningTarget=null;
+  }
   // Ny skattjakt får inte ärva eldklot eller låsta skottvarningar från
   // förra spelomgången. Låt drakens vanliga patrull fortsätta ostörd.
   function resetAttacks(){
