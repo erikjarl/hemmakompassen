@@ -125,10 +125,10 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
 <script src="./helicopter.js?v=5"></script>
 <script src="./troll-minigame.js?v=8"></script>
 <script src="./preschool-friends-sprites.js?v=1"></script>
-<script src="./slide-minigame.js?v=10"></script>
+<script src="./slide-minigame.js?v=11"></script>
 <script src="./maja-sprites.js?v=1"></script>
 <script src="./harbor-visitor-sprites.js?v=1"></script>
-<script src="./football-minigame.js?v=13"></script>
+<script src="./football-minigame.js?v=14"></script>
 <script src="./swim-minigame.js?v=9"></script>
 <script src="./brokind-trail.js?v=1"></script>
 <script src="./regional-map.js?v=4"></script>
@@ -306,6 +306,12 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
    clear(){earned=Object.create(null);spent=0;return save();}
   };
  })();
+ const awardBonusResult=id=>{
+  if(!document.getElementById('lossOverlay').hidden||reloadAfterOtherTabLoss()||!rewardWallet.sync())return 'error';
+  if(rewardWallet.has(id))return 'already';
+  if(awardMinigameCoin(id))return 'earned';
+  return rewardWallet.sync()&&rewardWallet.has(id)?'already':'error';
+ };
  const awardMinigameCoin=id=>{
   // Sena återkopplingar från minispel får inte lägga tillbaka mynt under förlustdialogen.
   if(!document.getElementById('lossOverlay').hidden)return false;
@@ -1306,8 +1312,8 @@ interact.addEventListener('click',()=>{
  if(state.inCar){exitCar();return;}
  if(nearCar()){enterCar();return;}
  if(nearTroll()){visitTroll();return;}
- if(nearestSite()?.name==='Hackelhallen'){stop();window.RimforsaFootball.start({onGoalCoin:id=>awardMinigameCoin('football-'+id),getWalletBalance:totalMoney,returnToMap:()=>{state.nearKey=null;updateCoinScore();updateMessage();}});return;}
- if(nearestSite()?.name==='Förskolan Hackel'){stop();window.RimforsaSlideMinigame.start({onLandingCoin:id=>awardMinigameCoin('slide-'+id),getWalletBalance:totalMoney,returnToMap:()=>{state.nearKey=null;updateCoinScore();updateMessage();}});return;}
+ if(nearestSite()?.name==='Hackelhallen'){stop();window.RimforsaFootball.start({onGoalCoin:id=>awardBonusResult('football-'+id),getWalletBalance:totalMoney,returnToMap:()=>{state.nearKey=null;updateCoinScore();updateMessage();}});return;}
+ if(nearestSite()?.name==='Förskolan Hackel'){stop();window.RimforsaSlideMinigame.start({onLandingCoin:id=>awardBonusResult('slide-'+id),getWalletBalance:totalMoney,returnToMap:()=>{state.nearKey=null;updateCoinScore();updateMessage();}});return;}
   if(nearestSite()?.name==='Åsundabadet'){stop();window.RimforsaSwimMinigame.start({onCoin:id=>awardMinigameCoin('swim-'+id),hasCoin:id=>rewardWallet.sync()&&rewardWallet.has('swim-'+id),getWalletBalance:totalMoney,returnToMap:()=>{state.nearKey=null;updateCoinScore();updateMessage();}});return;}
   if(nearestSite()?.name==='Potatislandet'){stop();window.RimforsaFarm.start({verifyCurrentRound:()=>!reloadAfterOtherTabLoss(),returnToMap:()=>{state.nearKey=null;updateCoinScore();updateMessage();}});return;}
  const npcHere=npcSystem.near(state.x,state.y);
@@ -1328,7 +1334,7 @@ interact.addEventListener('click',()=>{
   if(near.name==='ICA Melkers'){openIca();return;}
   if(near.name==='Bella Donna'){openPizza();return;}
    if(near.name==='Potatislandet'){stop();window.RimforsaFarm.start({returnToMap:()=>{state.nearKey=null;updateCoinScore();updateMessage();}});return;}
-  if(near.name==='Förskolan Hackel'){stop();window.RimforsaSlideMinigame.start({onLandingCoin:id=>awardMinigameCoin('slide-'+id),getWalletBalance:totalMoney,returnToMap:()=>{state.nearKey=null;updateCoinScore();updateMessage();}});return;}
+  if(near.name==='Förskolan Hackel'){stop();window.RimforsaSlideMinigame.start({onLandingCoin:id=>awardBonusResult('slide-'+id),getWalletBalance:totalMoney,returnToMap:()=>{state.nearKey=null;updateCoinScore();updateMessage();}});return;}
    if(near.name==='Åsundabadet'){stop();window.RimforsaSwimMinigame.start({onCoin:id=>awardMinigameCoin('swim-'+id),hasCoin:id=>rewardWallet.sync()&&rewardWallet.has('swim-'+id),getWalletBalance:totalMoney,returnToMap:()=>{state.nearKey=null;updateCoinScore();updateMessage();}});return;}
  state.visited.add(near.name);
   const found=bag.collectAt(near.name);if(found){renderBag();if(audio.itemFound)audio.itemFound();}
