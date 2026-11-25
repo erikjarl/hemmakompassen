@@ -5,7 +5,10 @@
  if(sprite)sprite.src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFwAAAA2CAMAAAB9Xg5WAAAAeFBMVEUbFxujnKXj3d9lYm0eMlKwGh7KIyXSoqUVWJ9bHB3Eu8TKYWRBPkptd4wxSmi4t8ROm96cXmMAOIUue8XarSlrVyGtiSn6zCk5idKBfYtWibic0O+PcyeljlOlPULEP0PLfoM+QDgAAABXVmgqJy5JR1T7+PbPyM5lWImfAAAAKHRSTlP/////////////////////////////////////////////AP//////d2xqWQAABGhJREFUeNrtmFt32yoQhWcACdDVdydp0ksE5v//w+5Bsts6tqM456y+lIfEWTIfm83MMAq9/o+D/sH/PpzovxN49oC2u81z+Ag5hN1m52fBt5v95mWIYaZ8ojjol/1+d/59T5e2RFt8XQ9D8z6fQhwwovFvhFPpL/tFoRkyn8J76FHEG0TQ2ntNVw5j0nTdnokczcXjZ2WXbMP1kxY3ZT5dmE4kO4vmytLalkVZFnQzzvNpgR+mqAjTBxF9lYxpYBdFNp1uB0Pmx/BKkZkfzWhYpFvJIMKLLPzdDCUyphlMYBkDNTGG22kWbA30PPhpB/BnCDPSF8LBXvr5tYXADYFic+Prvsg2Q3htLYd5cAIUthNMMfH6SdIYIPqQklJJz6iKAs7hLOGHoB4TINKFBbRKTBLjCWMUfgMuRylBl0mBBI2PdMzMs4gh6IVcPiQswlW8CQ8m14BsAmmuyDQx6MQ6LzLm5+98feAW+1NKMeQs03XPg9F59rj7wAeo0Vq3nA6YjKox1R9ZfBIetUas4jkT6YGYL8ODmYrdZCyBezgoYPFDhsoROeWvxlaCFqfHZ9bHFgvp6kKcS0CI5mPFJeQnYzbAqZI9Y1TaDCN+qm9bLWSlrK3L0pPMeQun7XO2g05khiQO1EYcU8UIA4hquEJNDSIPDpnhBffLj5TBqFfek240cXtuy26/3+hTmSWdsg1Kx7hUSVWsJBCgnAOKAI82cHzeb7Ye4OKrtUm1RkccwNskot1uewwAch2LzTKgv+orPo0QDAJHyUh26b1HFYQbTZJjIX5smelWKHbrtTOcjxFmKCGJq5mHeNFV4mTrus6Vu5huTC1aNDzT4VZb0K2fnGnbk3bh9ilV1fEvXDbFBPanaCexiumdnqNz7RfXHp6MiE9ZPOQjjPMpKIv8TlJWC/9nmhqJGH8bbpzL7JVzHcCA9ip1nYNRWMmWtUq9zZrPKwb2Ur4DF7b50q7c4qFL1WC6jqsBfwBepWSLb7Xt6/JSI4SoGa+Jq3DjFk9m4VbrxcKZis1ibXAJPTi3MiyKMSxfZCOv/jDqwt0OOIxZPYjUoeJOoFDusi1yQeIyKPx9jSgPzrg1dIMNmjYCrYwMjSxFmNSp9K/3wKUEdmbt3AJMgXcr+QV3kD2Ke6Uqa78VdBecc8Ib4zIbeRhNLqZjAvWcKuROMbdPPRM+Jg3MEMFQjDCXnAFcEnIpwV1yvK9x18d85G4YOtREZAUK3lcJYGl1lnKzz2WfwXMCTzVEWTiwrCXyMhdYy6gB/Wz2ufKlVCbIZTHFC7Ss7ffvy7EA9NzLTXkvPCcwUlhO1DTSCTPUSgHopVmMOnzklelteZBhppQ5lfDH1si1jwwzn3oTw3XLuEiloIDa4kKUZoJOT8Nn4Pm9YRwkDeLZszbmxvT+d8hfUoOmswePUXqWT8B/PSGO01pwG51KHHtFev0cHOZKY9hGaezQcOjYNPLqRh94xb7+ai3tfnb+o8hZttxJ/Pf/lr8K/wntWxM40VUssQAAAABJRU5ErkJggg==';
  function createHelicopter(){
   const position={x:365,y:310};
-  let hitUntil=0,impactCount=0;
+  let hitUntil=0,impactCount=0,airborne=false,heading='left';
+  function reset(){position.x=365;position.y=310;airborne=false;heading='left';hitUntil=0;impactCount=0;}
+  function setAirborne(value){airborne=!!value;}
+  function move(dx,dy,dt,w,h){const len=Math.hypot(dx,dy);if(!airborne||!len)return 0;const ox=position.x,oy=position.y;position.x=Math.max(28,Math.min(w-28,ox+dx/len*220*dt));position.y=Math.max(28,Math.min(h-28,oy+dy/len*220*dt));if(dx)heading=dx>0?'right':'left';return Math.hypot(position.x-ox,position.y-oy);}
   function hit(){hitUntil=2.8;impactCount++;return impactCount;}
   function update(dt){hitUntil=Math.max(0,hitUntil-Math.max(0,dt||0));}
   function snapshot(){return {x:position.x,y:position.y,damaged:hitUntil>0,impacts:impactCount};}
@@ -17,7 +20,7 @@
    // GPT-genererad transparent pixelbild; tidigare ritning är reserv vid bildfel.
    if(sprite&&sprite.complete&&sprite.naturalWidth===92&&sprite.naturalHeight===54){
     p(-23,14,49,5,'#18392f');p(-19,12,43,3,'#3d5546');
-    ctx.drawImage(sprite,-40,-37,92,54);
+    ctx.save();if(airborne)ctx.translate(0,-18);if(heading==='right')ctx.scale(-1,1);ctx.drawImage(sprite,-40,-37,92,54);ctx.restore();
    }else{
    // Parkerad vit/röd räddningshelikopter sedd snett framifrån.
    p(-23,14,49,5,'#18392f');p(-19,12,43,3,'#3d5546'); // markskugga
@@ -45,7 +48,7 @@
    }
    ctx.restore();
   }
-  return {position,hit,update,snapshot,draw};
+  return {position,hit,update,snapshot,draw,reset,setAirborne,move};
  }
  root.RimforsaHelicopter={createHelicopter};
 })(typeof window!=='undefined'?window:globalThis);
