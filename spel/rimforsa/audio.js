@@ -4,6 +4,7 @@
   const AudioCtor = root.AudioContext || root.webkitAudioContext;
   let ctx=null,master=null,scene='land',enabled=false,hidden=false;
   let musicInterval=null,gullInterval=null,preschoolInterval=null,engine=null,waves=null,carEngine=null,carActive=false,melodyStep=0,volume=.55,dragonNearby=false;
+  let rotor=null,heliActive=false;
   let sceneStarted=false,resumePending=false,resumeStartedAt=0,resumeSerial=0,resumeFailed=false,startChimePending=false;
   const melody=[392,440,523.25,440,392,329.63,349.23,392,440,392,329.63,293.66,329.63,349.23,392,0,
                  349.23,392,440,523.25,587.33,523.25,440,392,349.23,329.63,293.66,329.63,349.23,392,329.63,0];
@@ -90,6 +91,24 @@
     for(const n of [carEngine.lo,carEngine.hi,carEngine.filter,carEngine.g])n.disconnect();
     carEngine=null;
   }
+  function startRotor(){
+    if(rotor||!heliActive||!enabled||hidden||scene!=='land'||!ctx||ctx.state!=='running')return;
+    const blade=oscillator('sawtooth',72),pulse=oscillator('sine',14),filter=ctx.createBiquadFilter(),g=gain(.036),depth=gain(.025);
+    filter.type='lowpass';filter.frequency.value=290;
+    blade.connect(filter);filter.connect(g);g.connect(master);
+    pulse.connect(depth);depth.connect(g.gain);
+    blade.start();pulse.start();rotor={blade,pulse,filter,g,depth};
+  }
+  function stopRotor(){
+    if(!rotor)return;
+    try{rotor.blade.stop();rotor.pulse.stop();}catch(_){}
+    for(const node of Object.values(rotor))try{node.disconnect();}catch(_){}
+    rotor=null;
+  }
+  function setHeliActive(active){
+    heliActive=!!active;
+    if(heliActive)startRotor();else stopRotor();
+  }
   function setCarActive(active){
     carActive=!!active;
     if(!carActive)stopCarEngine();
@@ -130,7 +149,7 @@
     if(musicInterval!==null){root.clearInterval(musicInterval);musicInterval=null;}
     if(gullInterval!==null){root.clearInterval(gullInterval);gullInterval=null;}
     if(preschoolInterval!==null){root.clearInterval(preschoolInterval);preschoolInterval=null;}
-    stopWaves();stopEngine();stopCarEngine();
+    stopWaves();stopEngine();stopCarEngine();stopRotor();
     sceneStarted=false;
   }
   // Safari kan ibland behålla en körande kontext trots att en scenloop
@@ -141,7 +160,7 @@
     if(scene==='boat')return !!waves&&!!engine&&gullInterval!==null;
     if(scene==='swim')return !!waves;
     if(scene==='preschool')return preschoolInterval!==null;
-    return musicInterval!==null&&(!carActive||!!carEngine);
+    return musicInterval!==null&&(!carActive||!!carEngine)&&(!heliActive||!!rotor);
   }
   function restoreSceneFromGesture(){
     if(!enabled||hidden||!ctx||ctx.state!=='running')return;
@@ -165,6 +184,7 @@
       musicTick();
       musicInterval=root.setInterval(musicTick,360);
       if(carActive)startCarEngine();
+      if(heliActive)startRotor();
     }
   }
   function notifyAudioState(){
@@ -765,6 +785,6 @@
       return true;
     }catch(_){speechMusicVolume(volume);return false;}
   }
-  function status(){return {enabled,available:!!AudioCtor,contextState:ctx?ctx.state:'not-created',scene,hidden,sceneStarted,playingMusic:musicInterval!==null,playingWaves:!!waves,playingEngine:!!engine,playingCarEngine:!!carEngine,carActive,dragonNearby};}
-  root.RimforsaAudio={enable,disable,toggle,resumeFromGesture,setScene,setBoatSpeed,setCarActive,setCarSpeed,setDragonNearby,coin,hit,poop,victory,slideLaunch,slideLand,slideCharge,slideLongJump,sharkBump,purchase,purchaseDenied,fuelFill,fuelEmpty,boatGrounding,boatOutOfFuel,regionArrival,carEnter,itemFound,helicopterHit,footballKick,footballSave,footballGoal,boatTreasure,npcTalk,bagOpen,bagClose,fuelStationEnter,mapOpen,boatLaunch,potatoSale,carExit,bagClear,newHunt,boatRetry,gameOver,shopEnter,mapClose,boatReturn,shopExit,routeSelected,routeBlocked,potatoPlant,potatoHarvest,speak,stopSpeech,setVisible,status};
+  function status(){return {enabled,available:!!AudioCtor,contextState:ctx?ctx.state:'not-created',scene,hidden,sceneStarted,playingMusic:musicInterval!==null,playingWaves:!!waves,playingEngine:!!engine,playingCarEngine:!!carEngine,playingRotor:!!rotor,heliActive,carActive,dragonNearby};}
+  root.RimforsaAudio={enable,disable,toggle,resumeFromGesture,setScene,setBoatSpeed,setCarActive,setCarSpeed,setHeliActive,setDragonNearby,coin,hit,poop,victory,slideLaunch,slideLand,slideCharge,slideLongJump,sharkBump,purchase,purchaseDenied,fuelFill,fuelEmpty,boatGrounding,boatOutOfFuel,regionArrival,carEnter,itemFound,helicopterHit,footballKick,footballSave,footballGoal,boatTreasure,npcTalk,bagOpen,bagClose,fuelStationEnter,mapOpen,boatLaunch,potatoSale,carExit,bagClear,newHunt,boatRetry,gameOver,shopEnter,mapClose,boatReturn,shopExit,routeSelected,routeBlocked,potatoPlant,potatoHarvest,speak,stopSpeech,setVisible,status};
 })(window);
