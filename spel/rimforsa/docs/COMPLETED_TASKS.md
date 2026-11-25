@@ -1,10 +1,10 @@
 # Lage i Rimforsa – färdiga uppgifter (arkiv)
 
-**Statuskälla:** [ROADMAP.md](../ROADMAP.md). Detta arkiv innehåller **42 avbockade uppgifter** som har tagits bort ur den aktiva att-göra-listan (senast 25 november 2026). Här behålls de som historik, inte som nya arbetsuppgifter.
+**Statuskälla:** [ROADMAP.md](../ROADMAP.md). Detta arkiv innehåller **43 avbockade uppgifter** som har tagits bort ur den aktiva att-göra-listan (senast 25 november 2026). Här behålls de som historik, inte som nya arbetsuppgifter.
 
 **Viktig avgränsning:** En del punkter är avbockade efter kodgranskning, inte fysiska mobiltester. Om ett dokumenterat acceptansvillkor visar sig saknas öppnas uppgiften på nytt i `ROADMAP.md`. Grafikstandard och separat kvalitetsarbete gäller fortfarande.
 
-## Avslutade uppgifter (42)
+## Avslutade uppgifter (43)
 
 - [x] **LJUD-01 – Läs upp karaktärernas repliker.** · [Detaljer](docs/TASK_DETAILS.md#ljud-01) · **16-BITARS SNES: MATCHA HUVUDKARTAN OCH LAGES ANSIKTE/HÅR.** _Källkodsverifierad integration: dialogen visas alltid i text; användarens samtalsklick anropar speechSynthesis via ljudmotorn, enbart med ljudknappen på; avstängning, flikdöljning och miljöbyte stoppar talet. 19 nov: individuella talprofiler och sänkt bakgrundsmusik under repliker. Fysisk ljudtest i mobil/Safari ingår separat i LJUD-02._
 
@@ -60,3 +60,5 @@ Den 19 november 2026 avbockades sju äldre öppna uppgifter efter kodgranskning 
 - [x] **LJUD-04 – Bättre pruttljud.** · [Krav](docs/TASK_DETAILS.md#ljud-04) · Separat 0,44 sekunder lång syntetiserad prutteffekt med fallande sågtandsfrekvens, filtrerat brus och rytmisk amplitud, kopplad till bajskorvsträff. Källkodsbedömning, ej fysisk hörselkontroll.
 
 - [x] **HUV-07 – Hoppa över bajskorvar och mindre hinder.** · [Detaljer](TASK_DETAILS.md#huv-07) · Hoppknapp/mellanslag, hoppbåge, luftfasens skydd mot bajskorvar, återhämtning och ordinarie terrängmask. Syntax och isolerad hoppcykel verifierade; fysisk mobiltestning ej utförd.
+
+- [x] **KARTA-03 – Fri gångpassage öster om macken.** · [Detaljer](TASK_DETAILS.md#karta-03) · Kartbild och binär gångmask visuellt granskade; smal korridor från parkeringen till väg 23 tillagd i gemensam gångmask. Syntaxkontroll godkänd; fysisk genomspelning ej utförd.
