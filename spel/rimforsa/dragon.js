@@ -21,7 +21,7 @@
   const home={x:85,y:920};
   let t=0,x=home.x,y=home.y,near=false,shotTimer=1,shotId=0,warningTarget=null,playerDistance=Infinity,mouthOffset=28;const shots=[];
   const proximity=235;
-  let iceHits=0,awayUntil=0;
+  let iceHits=0,awayUntil=0,heliWasInRange=false;
   try{awayUntil=Math.max(0,Number(root.localStorage?.getItem('rimforsa-dragon-away-until'))||0);}catch(_){}
   function isAway(){return Date.now()<awayUntil;}
   function hitIce(){if(isAway())return {hit:false,defeated:false,hits:0};iceHits++;if(iceHits<3)return {hit:true,defeated:false,hits:iceHits};iceHits=0;awayUntil=Date.now()+1200000;try{root.localStorage?.setItem('rimforsa-dragon-away-until',String(awayUntil));}catch(_){}resetAttacks();return {hit:true,defeated:true,hits:3};}
@@ -32,7 +32,7 @@
   // Eldklotet är 17 px brett och sträcker sig 9 px framför centrum.
   // Stoppa dess synliga framkant minst 1 px före mackens x=394.
   const FIRE_MAX_DISTANCE=300,HELICOPTER_FIRE_DISTANCE=600,FIRE_EAST_LIMIT=384,FIRE_MARGIN=32;
-  function update(dt,playerX,playerY,helicopter,playerTargetable=true){
+  function update(dt,playerX,playerY,helicopter,playerTargetable=true,helicopterAirborne=false){
    dt=Math.max(0,Math.min(.1,Number(dt)||0));
    if(isAway()){resetAttacks();return false;}
    t+=dt;
@@ -51,17 +51,24 @@
    for(let offset=28;offset>=0;offset--){if(inside(x+offset,y-7,FIRE_MARGIN)){mouthX=x+offset;break;}}
    mouthOffset=mouthX-x;
    const player={x:playerX,y:playerY};
-   const inFireRange=(target,maxDistance=FIRE_MAX_DISTANCE,targetMargin=FIRE_MARGIN)=>{
+   const inFireRange=(target,maxDistance=FIRE_MAX_DISTANCE,targetMargin=FIRE_MARGIN,minDistance=35)=>{
     if(!target||!Number.isFinite(target.x)||!Number.isFinite(target.y))return false;
     const distance=Math.hypot(target.x-mouthX,target.y-mouthY);
-    return distance>35&&distance<=maxDistance&&target.x<=FIRE_EAST_LIMIT&&inside(target.x,target.y,targetMargin)&&inside(mouthX,mouthY,FIRE_MARGIN);
+    return distance>minDistance&&distance<=maxDistance&&target.x<=FIRE_EAST_LIMIT&&inside(target.x,target.y,targetMargin)&&inside(mouthX,mouthY,FIRE_MARGIN);
    };
    // Helikoptern prioriteras ibland, MEN aldrig om den ligger utanför
    // räckvidden. Annars kunde draken fastna på ett omöjligt mål och
    // sluta skjuta mot Lage, även när han stod alldeles nära.
    // Helikoptern står norr om skogen, bortom Lages vanliga 300-pixelsräckvidd.
    // Den får nås på längre avstånd, men inte öster om mackens gräns.
-   const helicopterInRange=inFireRange(helicopter,HELICOPTER_FIRE_DISTANCE,8);
+   // En flygande helikopter kan beskjutas även precis intill gapet.
+   const heliMinDistance=helicopterAirborne?0:35;
+   const helicopterInRange=inFireRange(helicopter,HELICOPTER_FIRE_DISTANCE,8,heliMinDistance);
+   // Starta en varning direkt vid inträde i farozonen, utan att först
+   // vänta på en hel tom 2,7-sekunderscykel.
+   const flyingInRange=helicopterAirborne&&helicopterInRange;
+   if(flyingInRange&&!heliWasInRange&&!warningTarget)shotTimer=Math.min(shotTimer,FIRE_WARNING_SECONDS);
+   heliWasInRange=flyingInRange;
    // I bilen eller ett minispel kan Lage inte träffas av draken och ska därför
    // inte dra till sig eldklot. Helikoptern förblir ett möjligt mål.
    const playerInRange=playerTargetable&&inFireRange(player);
@@ -78,23 +85,28 @@
    // Sikta endast en gång per skott. En låst varning ger Lage en
    // begriplig chans att väja, i stället för att skottet följer varje steg.
    if(shotTimer>0&&shotTimer<=FIRE_WARNING_SECONDS&&!warningTarget){
-    const aimAtHelicopter=helicopterInRange&&(shotId%3===0||!playerInRange);
+    const aimAtHelicopter=helicopterInRange&&(helicopterAirborne||shotId%3===0||!playerInRange);
     const target=aimAtHelicopter?helicopter:playerInRange?player:null;
-    if(inFireRange(target,aimAtHelicopter?HELICOPTER_FIRE_DISTANCE:FIRE_MAX_DISTANCE,aimAtHelicopter?8:FIRE_MARGIN)){
+    if(inFireRange(target,aimAtHelicopter?HELICOPTER_FIRE_DISTANCE:FIRE_MAX_DISTANCE,aimAtHelicopter?8:FIRE_MARGIN,aimAtHelicopter?heliMinDistance:35)){
      warningTarget={x:target.x,y:target.y,maxDistance:aimAtHelicopter?HELICOPTER_FIRE_DISTANCE:FIRE_MAX_DISTANCE,kind:aimAtHelicopter?'helicopter':'player'};
     }
    }
+   // Följ helikoptern under den första delen av varningen. Lås sedan
+   // siktet sista 0,20 s så att det fortfarande går att väja.
+   if(warningTarget?.kind==='helicopter'&&flyingInRange&&shotTimer>.20){
+    warningTarget.x=helicopter.x;warningTarget.y=helicopter.y;
+   }
    if(shotTimer<=0){
     const target=warningTarget;
-    shotTimer=2.7;warningTarget=null;
+    shotTimer=flyingInRange?1.65:2.7;warningTarget=null;
     if(target){
      // Draken rör sig medan varningsmarkeringen är låst.
      // Kontrollera räckvidden igen från den VERKLIGA mynningen vid skottögonblicket,
      // så varningen aldrig kan skapa ett skott mot ett nu oåtkomligt mål.
      const dx=target.x-mouthX,dy=target.y-mouthY;
      const distance=Math.hypot(dx,dy);
-     if(distance>35&&distance<=target.maxDistance&&target.x<=FIRE_EAST_LIMIT&&inside(target.x,target.y,target.kind==='helicopter'?8:FIRE_MARGIN)&&inside(mouthX,mouthY,FIRE_MARGIN)){
-      const speed=165;
+     if(distance>(target.kind==='helicopter'&&helicopterAirborne?0:35)&&distance<=target.maxDistance&&target.x<=FIRE_EAST_LIMIT&&inside(target.x,target.y,target.kind==='helicopter'?8:FIRE_MARGIN)&&inside(mouthX,mouthY,FIRE_MARGIN)){
+      const speed=target.kind==='helicopter'&&helicopterAirborne?285:165;
       shots.push({id:'dragon-fire-'+(++shotId),kind:target.kind,x:mouthX,y:mouthY,vx:dx/distance*speed,vy:dy/distance*speed,travelled:0,maxDistance:target.maxDistance,life:5});
      }
     }
@@ -124,7 +136,7 @@
     fire.stepFraction=dt>0?duration/dt:0;
     // Ett eldklot som stoppats vid kartans kant kan fortfarande kollidera
     // på sista rörelsesegmentet, men ska inte ligga kvar som synlig låga.
-    fire.expired=fire.life<=0||duration<dt||fire.travelled>=fire.maxDistance;
+    fire.expired=fire.life<=0||duration+1e-8<dt||fire.travelled+1e-8>=fire.maxDistance;
    }
    return near;
   }
@@ -173,6 +185,7 @@
    shots.length=0;
    warningTarget=null;
    shotTimer=2.7;
+   heliWasInRange=false;
    near=false;
    playerDistance=Infinity;
   }

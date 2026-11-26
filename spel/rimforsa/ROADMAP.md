@@ -27,11 +27,11 @@ Undantag: endast verkligt övergripande hinder (t.ex. nekad skrivbehörighet, sa
 
 Rotation: DRAKE-03 → SKATT-01. Om endast en uppgift återstår får den väljas igen. Stryk verifierat färdiga delmoment direkt, flytta färdiga uppgifter till färdigarkivet och uppdatera antalen. Behåll återkallade uppgifter utanför kön.
 
-**Senaste avslutningsnotis:** 2026-11-26 – DRAKE-03: träffkontroll tar hänsyn till helikopterns rörelse under bildrutan; isolerat test av träff, gräns och tidigare missad rörlig träff godkänt. Kartbild/Pages ej verifierade. Nästa SKATT-01.
+**Senaste avslutningsnotis:** 2026-11-26 – DRAKE-03: användaren rapporterade utebliven helikopterbeskjutning. Tog bort 35 px dödzon för flygande helikopter, snabbare skott/varning och tätare eld i samma skogszon. Reproducerat och testat isolerat med verklig helikoptermodul; spel i webbläsare/Pages ej verifierat.
 
 ## Kvar att göra – aktiv arbetskö (2)
 
-- [ ] **DRAKE-03 – Drakstridens ljud och säkra eldbollar.** · [Krav](docs/TASK_DETAILS.md#drake-03--drakstridens-ljud-och-säkra-eldbollar) · **Kvar:** Jämför skogspolygonen med kartbildens faktiska väg- och byggnadsgeometri; åtgärda eventuella konkreta överlapp.
+- [ ] **DRAKE-03 – Drakstridens ljud och säkra eldbollar.** · [Krav](docs/TASK_DETAILS.md#drake-03--drakstridens-ljud-och-säkra-eldbollar) · **Kvar:** Användaren rapporterade utebliven beskjutning: kontrollera det nya flygande målets avfyrning och nödlandning i huvudkartan samt skogspolygonen mot faktisk väg- och byggnadsgeometri.
 - [ ] **SKATT-01 – Växande skatt vid hemmet.** · [Krav](docs/TASK_DETAILS.md#skatt-01--växande-skatt-vid-hemmet) · **Kvar:** Kontrollera skattplattans visuella placering mot kartbilden, att den inte överlappar hus eller fordon, samt faktisk rendering vid intjäning, köp och återställning; åtgärda konkreta fel.
 
 ## Status

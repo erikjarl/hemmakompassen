@@ -23,7 +23,7 @@ Undantag: endast verkligt övergripande hinder (t.ex. nekad skrivbehörighet, sa
 
 **SJÄLVSTÄNDIG SLUTBEDÖMNING (25 november 2026):** Användaren delegerar bedömningen av färdig implementation till assistenten. Ingen användarfeedback eller fysisk mobiltestning ska vara ett rutinmässigt villkor för avbockning. Granska ursprungliga krav mot faktisk kod, använd proportionerliga isolerade tester vid behov, stryk direkt när kraven är uppfyllda och fortsätt. Separat visuell/ljudmässig kvalitetssäkring dokumenteras utan att hålla fungerande funktioner öppna. Behåll endast konkreta saknade funktioner, påvisade fel eller specifika ännu olösta krav i aktiv kö. Vid listrevision ska hela kön granskas.
 
-**Senaste avslutningsnotis:** 2026-11-26 – DRAKE-03: träffkontroll tar hänsyn till helikopterns rörelse under bildrutan; isolerat test av träff, gräns och tidigare missad rörlig träff godkänt. Kartbild/Pages ej verifierade. Nästa SKATT-01.
+**Senaste avslutningsnotis:** 2026-11-26 – DRAKE-03: användaren rapporterade utebliven helikopterbeskjutning. Tog bort 35 px dödzon för flygande helikopter, snabbare skott/varning och tätare eld i samma skogszon. Reproducerat och testat isolerat med verklig helikoptermodul; spel i webbläsare/Pages ej verifierat.
 
 Detta är ett separat utvecklingskommando för **Lage i Rimforsa**. Läs repo-rotens `AGENTS.md`, denna fil och den **korta** `spel/rimforsa/ROADMAP.md` (enda aktiva arbetskö).
 

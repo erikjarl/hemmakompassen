@@ -157,7 +157,7 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
 <script src="./friend-sprites.js?v=2"></script>
 <script src="./npc.js?v=11"></script>
 <script src="./farm.js?v=6"></script>
-<script src="./dragon.js?v=28"></script>
+<script src="./dragon.js?v=29"></script>
 <script src="./helicopter.js?v=5"></script>
 <script src="./troll-minigame.js?v=8"></script>
 <script src="./preschool-friends-sprites.js?v=1"></script>
@@ -2045,7 +2045,7 @@ function tick(now){
   helicopter.update(dt);
   updateIce(dt);
   collectDragonTreasure();
- const dragonDanger=dragon.update(dt,state.x,state.y,helicopter.position,!state.inCar&&!state.inHeli&&!boatState.active);
+ const dragonDanger=dragon.update(dt,state.x,state.y,helicopter.position,!state.inCar&&!state.inHeli&&!boatState.active,state.inHeli);
  const ds=dragon.snapshot();
  audio.setDragonNearby(!ds.away&&(dragonDanger||Math.hypot(ds.x-state.x,ds.y-state.y)<ds.proximity));
  if(dragon.strikeObject(helicopter.position.x,helicopter.position.y,28,state.inHeli?previousHeli:null)){

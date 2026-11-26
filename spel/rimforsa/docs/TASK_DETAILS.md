@@ -370,7 +370,7 @@ Felrapport 25 november 2026: efter en stund i fotbollsspelet fastnar Lage i att 
 
 #### DRAKE-03 – Drakstridens ljud och säkra eldbollar
 
-Lägg till tydligt isbollsskottljud och träffljud när isbollen träffar draken. Växla till hotfull musik när spelaren är nära draken och tillbaka när spelaren lämnar området. Respektera ljudets av/på-val. Eldbollar ska kunna träffa flygande helikopter och ge skada/krasch enligt befintliga regler. Begränsa hela projektilbanan och träffzonen till terrängen väster om väg 23, aldrig på vägen, nära bensinmacken, hus eller andra skyddade områden. Kontrollera faktisk kartgeometri, projektilens hela färdväg och helikopterträffar. Tidigare övriga HELI-02-krav är inte aktiva.
+Lägg till tydligt isbollsskottljud och träffljud när isbollen träffar draken. Växla till hotfull musik när spelaren är nära draken och tillbaka när spelaren lämnar området. Respektera ljudets av/på-val. Eldbollar ska kunna träffa flygande helikopter och ge skada/krasch enligt befintliga regler. Felrapport 26 november: användaren upplever ingen eld som kan skada helikoptern; verifiera beskjutning även när helikoptern flyger nära draken och närmar sig genom skogszonen. Begränsa hela projektilbanan och träffzonen till terrängen väster om väg 23, aldrig på vägen, nära bensinmacken, hus eller andra skyddade områden. Kontrollera faktisk kartgeometri, projektilens hela färdväg och helikopterträffar. Tidigare övriga HELI-02-krav är inte aktiva.
 
 #### SKATT-01 – Växande skatt vid hemmet
 
