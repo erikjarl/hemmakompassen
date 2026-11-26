@@ -22,7 +22,7 @@ const busySites=[
  [921,813], // Bella Donna
  [1220,740], // badet
  [1100,116], // båtklubben
- [565,928], // potatislandet
+ [1148,242], [1198,248], [1248,256], // tre potatisland öster om båtklubben
  [464,454] // trollspektaklet
 ];
 // 75 px entré + 54 px samtalsradie + 11 px säkerhetsmarginal.
@@ -71,7 +71,15 @@ function createSystem(canStand,random=Math.random){
        if(npcMayStand(px,py,canStand))return{x:px,y:py};
      }
    }
-   return null;
+   // Fallback: search the entire map on a fine grid if local rings miss narrow paths.
+   let best=null,bestDistance=Infinity;
+   for(let py=8;py<1086-8;py+=4){
+     for(let px=8;px<1448-8;px+=4){
+       const d=(px-x)**2+(py-y)**2;
+       if(d<bestDistance&&npcMayStand(px,py,canStand)){best={x:px,y:py};bestDistance=d;}
+     }
+   }
+   return best;
  }
  function reset(){
    for(const p of people){
