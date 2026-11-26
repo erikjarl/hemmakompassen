@@ -418,12 +418,14 @@ let homeTreasureBalance=0;
    if(treasure)game.refund(treasure);
    return null;
   }
+  updateCoinScore();
   const generation=walletGeneration;
    let refunded=false;
    return ()=>{
     if(refunded||generation!==walletGeneration||reloadAfterOtherTabLoss())return;
     refunded=true;
     if(produce)farm.refundCoins(produce);if(bonus)rewardWallet.refund(bonus);if(treasure)game.refund(treasure);
+    updateCoinScore();
    };
  }
  const pizzaOverlay=document.getElementById('pizzaOverlay'),pizzaBalance=document.getElementById('pizzaBalance'),pizzaStatus=document.getElementById('pizzaStatus'),pizzaBuy=document.getElementById('buyPizza');
