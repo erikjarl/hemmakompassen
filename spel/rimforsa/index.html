@@ -604,7 +604,7 @@ function drawHomeTreasure(){
  const x=Math.round(310-state.camX+canvas.width/2),y=Math.round(335-state.camY+canvas.height/2);
  if(x<-55||y<-65||x>canvas.width+55||y>canvas.height+65)return;
  const amount=Math.max(0,homeTreasureBalance||0);
- const count=amount?Math.min(54,Math.ceil(5*Math.log2(amount+1))):0;
+ const count=amount<=9?Math.floor(amount):Math.min(54,9+Math.ceil(6*Math.log2(amount/9)));
  const clock=performance.now()/1000;
  ctx.save();ctx.translate(x,y);ctx.imageSmoothingEnabled=false;
  const rect=(a,b,w,h,color)=>{ctx.fillStyle=color;ctx.fillRect(a,b,w,h);};
