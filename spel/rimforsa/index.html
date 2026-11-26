@@ -218,7 +218,9 @@ function resumeAudioGesture(ev){
  // Touch börjar inte nödvändigtvis med transient aktivering. Vänta på
  // touchend/pointerup eller klick i stället för att låsa resume på touchstart.
  if(ev.type==='pointerdown'&&ev.pointerType!=='mouse')return;
- if(navigator.userActivation&&navigator.userActivation.isActive===false)return;
+ // Safari kan rapportera isActive=false under ett betrott touchend/klick.
+ // Låt WebAudio själv avgöra om gesten får återuppta ljud; syntetiska events avvisas ovan.
+ if(navigator.userActivation&&navigator.userActivation.isActive===false&&!['touchend','pointerup','click'].includes(ev.type))return;
  const status=audio.status();
  if(!status.enabled){if(audio.enable)audio.enable();}
  else if((status.contextState!=='running'||!status.sceneStarted)&&audio.resumeFromGesture)audio.resumeFromGesture();
