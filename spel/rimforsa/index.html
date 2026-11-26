@@ -80,7 +80,7 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
   <div class="hud">LAGE <span class="heart" id="landHearts" aria-label="Hjärtan kvar">♥♥♥</span> <span class="coinScore" id="coinScore" aria-label="Myntsaldo och insamlade guldmynt">🪙 0 · Hittade 0/20</span></div><div class="fuel-hud" id="fuelHud">⛽ Bil 0% · Båt 0%</div><div class="area" id="area">Rimforsa</div>
   <canvas id="mini" class="minimap" width="128" height="96" aria-label="Minikarta över Rimforsa" role="img"></canvas>
   <button class="mapBtn" id="miniMapBtn">STOR KARTA</button>
-  <div id="mapOverlay" role="dialog" aria-modal="true" aria-label="Karta över Rimforsa"><button class="smallBtn" id="closeMap">Stäng ✕</button><canvas id="wholeMap" width="640" height="480" aria-label="Översikt av hela spelkartan. Tryck på en plats för att gå dit."></canvas><button type="button" class="smallBtn" id="goBeach">🏖️ Gå till Åsundabadet</button><button type="button" class="smallBtn" id="goFarm">🥔 Potatisland 1</button><button type="button" class="smallBtn" id="goFarm2">🥔 Potatisland 2</button><button type="button" class="smallBtn" id="goFarm3">🥔 Potatisland 3</button><p id="mapRouteHint" role="status" aria-live="polite" style="font-size:12px;margin:0;text-align:center">Tryck på kartan eller välj badplatsen för att gå dit.</p></div>
+  <div id="mapOverlay" role="dialog" aria-modal="true" aria-label="Karta över Rimforsa"><button class="smallBtn" id="closeMap">Stäng ✕</button><canvas id="wholeMap" width="640" height="480" aria-label="Översikt av hela spelkartan. Tryck på en plats för att gå dit."></canvas><button type="button" class="smallBtn" id="goBeach">🏖️ Gå till Åsundabadet</button><button type="button" class="smallBtn" id="goFarm">🥔 Potatisland 1</button><button type="button" class="smallBtn" id="goFarm2">🥔 Potatisland 2</button><button type="button" class="smallBtn" id="goFarm3">🥔 Potatisland 3</button><p id="mapRouteHint" role="status" aria-live="polite" style="font-size:12px;margin:0;text-align:center">Tryck på kartan eller välj badplatsen eller ett potatisland.</p></div>
 
   <div id="boatOverlay" class="boat-overlay" role="dialog" aria-modal="true" aria-label="Båtspel vid Kinda båtklubb" aria-hidden="true">
     <div class="boat-panel">
@@ -1420,7 +1420,7 @@ function updateMessage(){
    message.innerHTML='<strong>💬 '+npcHere.name+'</strong> – någon vill prata med Lage. Tryck på Prata!';
  }else if(near){
    const isBoat=near.name==='Kinda Båtklubb';
-   interact.textContent=near.name==='Bensinmacken'?'Tanka bilen ⛽':isBoat?'Kör båt 🛥️':near.name==='ICA Melkers'?'Köp glass 🍦':near.name==='Bella Donna'?'Köp pizza 🍕':near.name==='Förskolan Hackel'?'Åk rutschkana 🛝':near.name==='Åsundabadet'?'Dyk efter mynt 🤿':Number.isInteger(near.plot)?'Odla potatis 🥔':near.name==='Hackelhallen'?'Spela fotboll ⚽':'Utforska ✨';
+   interact.textContent=near.name==='Bensinmacken'?'Tanka bilen ⛽':isBoat?'Kör båt 🛥️':near.name==='ICA Melkers'?'Köp glass 🍦':near.name==='Bella Donna'?'Köp pizza 🍕':near.name==='Förskolan Hackel'?'Åk rutschkana 🛝':near.name==='Åsundabadet'?'Dyk efter mynt 🤿':Number.isInteger(near.plot)?'Odla i land '+(near.plot+1)+' 🥔':near.name==='Hackelhallen'?'Spela fotboll ⚽':'Utforska ✨';
    message.innerHTML='<strong>'+near.symbol+' '+near.name+'</strong> – '+(isBoat?'tryck på Kör båt för att åka ut på sjön.':'tryck på Utforska för att besöka platsen.');
    title.textContent=near.name;
  }else{
@@ -2033,7 +2033,7 @@ function routeFromMap(x,y){
  message.innerHTML='<strong>🚶 Lage går!</strong> Följ stigen och använd pilarna om du vill styra själv.';
  return true;
 }
-function openMap(){stop();overlay.classList.add('show');if(audio.mapOpen)audio.mapOpen();drawMap(wc,whole.width,whole.height,true);document.getElementById('mapRouteHint').textContent='Tryck på kartan eller välj badplatsen för att gå dit.';document.getElementById('closeMap').focus()}
+function openMap(){stop();overlay.classList.add('show');if(audio.mapOpen)audio.mapOpen();drawMap(wc,whole.width,whole.height,true);document.getElementById('mapRouteHint').textContent='Tryck på kartan eller välj badplatsen eller ett potatisland.';document.getElementById('closeMap').focus()}
 function closeMap(silent=false){if(!overlay.classList.contains('show'))return;overlay.classList.remove('show');if(!silent&&audio.mapClose)audio.mapClose();}
 for(const id of ['showMap','miniMapBtn'])document.getElementById(id).addEventListener('click',openMap);
 document.getElementById('closeMap').addEventListener('click',()=>closeMap());
@@ -2045,7 +2045,7 @@ whole.addEventListener('pointerdown',ev=>{
  if(!rect.width||!rect.height)return;
  const x=(ev.clientX-rect.left)/rect.width*W,y=(ev.clientY-rect.top)/rect.height*H;
  // Snap to known destinations so their interaction buttons become reachable.
- const place=sites.find(site=>Math.hypot(site.x-x,site.y-y)<42);
+ const place=sites.reduce((best,site)=>{const distance=Math.hypot(site.x-x,site.y-y);return distance<42&&(!best||distance<Math.hypot(best.x-x,best.y-y))?site:best;},null);
  routeFromMap(place?place.x:x,place?place.y:y);
 });
 mini.addEventListener('click',openMap);overlay.addEventListener('click',e=>{if(e.target===overlay)closeMap()});
