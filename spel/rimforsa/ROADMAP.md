@@ -6,11 +6,11 @@
 
 ## Obligatorisk rotation mellan utvecklingspass
 
-**SENAST BEARBETAD HUVUDUPPGIFT: `ODLING-03` – precisare val av potatisland (26 november 2026).**
+**SENAST BEARBETAD HUVUDUPPGIFT: `MOBIL-01` – förstärkt markeringsskydd (26 november 2026).**
 
-**NÄSTA ROTATIONSPOSITION: `MOBIL-01` – markering och kopieringsmeny.**
+**NÄSTA ROTATIONSPOSITION: `GRAF-01` – bildsprites och enhetlig grafik.**
 
-**ALDRIG SAMMA HUVUDUPPGIFT TVÅ `JOBB LAGE` I FÖLJD.** Följ ordningen bland öppna, genomförbara uppgifter nedan med cirkulär rotation. Starta på angiven nästa position, hoppa över avbockade punkter, stående kvalitetsregler som `MINI-01` (dessa gäller ändå varje pass) och tillfälligt blockerade uppgifter. Bearbeta olika delar av spelet mellan varven: grafik, fordon, bränsle, ljud och andra spelmekaniker. Om inget praktiskt kan göras på nästa punkt, gå vidare till följande **annan** uppgift; återvänd först efter andra utvecklingspass. Prioritet betyder vikt inom rotationen, **inte** rätt att välja samma uppgift igen direkt. När ett pass med faktisk spelutveckling slutförts, uppdatera **båda fälten ovan** till den verkliga huvuduppgiften och efterföljande öppna rotationsposition innan passet avslutas. Rapportera vilka fält som ändrades. Att kontrollera kryssrutor eller åtgärda ett akut blockerande fel räknas inte som att byta huvuduppgift. **Aktuell rotation:** HELI-02 → MYNT-03 → ODLING-03 → MOBIL-01 → GRAF-01 → NPC-04 → KARTA-01 → LJUD-02. BRÄNSLE-02 väntar på verifierbar prisdata. Nästa position MOBIL-01.
+**ALDRIG SAMMA HUVUDUPPGIFT TVÅ `JOBB LAGE` I FÖLJD.** Följ ordningen bland öppna, genomförbara uppgifter nedan med cirkulär rotation. Starta på angiven nästa position, hoppa över avbockade punkter, stående kvalitetsregler som `MINI-01` (dessa gäller ändå varje pass) och tillfälligt blockerade uppgifter. Bearbeta olika delar av spelet mellan varven: grafik, fordon, bränsle, ljud och andra spelmekaniker. Om inget praktiskt kan göras på nästa punkt, gå vidare till följande **annan** uppgift; återvänd först efter andra utvecklingspass. Prioritet betyder vikt inom rotationen, **inte** rätt att välja samma uppgift igen direkt. När ett pass med faktisk spelutveckling slutförts, uppdatera **båda fälten ovan** till den verkliga huvuduppgiften och efterföljande öppna rotationsposition innan passet avslutas. Rapportera vilka fält som ändrades. Att kontrollera kryssrutor eller åtgärda ett akut blockerande fel räknas inte som att byta huvuduppgift. **Aktuell rotation:** HELI-02 → MYNT-03 → ODLING-03 → MOBIL-01 → GRAF-01 → NPC-04 → KARTA-01 → LJUD-02. BRÄNSLE-02 väntar på verifierbar prisdata. Nästa position GRAF-01.
 
 ## Obligatorisk avbockning – vid VARJE `jobb lage`
 
@@ -24,7 +24,7 @@
 
 **SJÄLVSTÄNDIG SLUTBEDÖMNING (25 november 2026):** Användaren delegerar bedömningen av färdig implementation till assistenten. Ingen användarfeedback eller fysisk mobiltestning ska vara ett rutinmässigt villkor för avbockning. Granska ursprungliga krav mot faktisk kod, använd proportionerliga isolerade tester vid behov, stryk direkt när kraven är uppfyllda och fortsätt. Separat visuell/ljudmässig kvalitetssäkring dokumenteras utan att hålla fungerande funktioner öppna. Behåll endast konkreta saknade funktioner, påvisade fel eller specifika ännu olösta krav i aktiv kö. Vid listrevision ska hela kön granskas.
 
-**Senaste avslutningsnotis:** 2026-11-26 – ODLING-03: karttryck väljer närmaste plats i stället för första inom radien; numrerad odlingsknapp och tydligare karthjälp (46a4a74). Fem isolerade målvalstest godkända; faktisk gångmask, rutter och dialoger ej webbläsartestade. Ingen ny bildsprite integrerad. Nästa MOBIL-01.
+**Senaste avslutningsnotis:** 2026-11-26 – MOBIL-01: förstärkt CSS mot markering och bilddragning samt rensning av oavsiktlig markering vid pekgesters början/slut utan att stoppa normala klick (358ce2e). Fysisk Safari, faktisk meny och Pages ej testade. Ingen ny bildsprite integrerad. Nästa GRAF-01.
 
 1. Läs [AGENTS.md](AGENTS.md) och **denna korta kö**. Välj nästa genomförbara **annan** uppgift enligt rotationsfälten ovan; respektera beroenden och blockerande fel. Välj aldrig samma huvuduppgift två pass i följd.
 2. Läs **bara den valda uppgiftens avsnitt** i [TASK_DETAILS.md](docs/TASK_DETAILS.md) (vid behov genom textsökning/radintervall), sedan relevant kod. Gemensamma, detaljerade krav finns i [GAME_RULES.md](docs/GAME_RULES.md); läs relevanta delar när arbetet berör dem.
