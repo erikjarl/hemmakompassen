@@ -21,13 +21,13 @@ Undantag: endast verkligt övergripande hinder (t.ex. nekad skrivbehörighet, sa
 
 ## Rotation
 
-**SENAST BEARBETAD HUVUDUPPGIFT: `SKATT-01` – växande myntstapel.**
+**SENAST BEARBETAD HUVUDUPPGIFT: `DRAKE-03` – siktning vid skogskant.**
 
-**NÄSTA ROTATIONSPOSITION: `DRAKE-03`.**
+**NÄSTA ROTATIONSPOSITION: `SKATT-01`.**
 
 Rotation: DRAKE-03 → SKATT-01. Om endast en uppgift återstår får den väljas igen. Stryk verifierat färdiga delmoment direkt, flytta färdiga uppgifter till färdigarkivet och uppdatera antalen. Behåll återkallade uppgifter utanför kön.
 
-**Senaste avslutningsnotis:** 2026-11-26 – SKATT-01: utökad skatt från 36 till 54 synliga mynt med kompaktare stapling (44821a4); nivåberäkning kontrollerad för 0–1000 mynt. Kartplacering, verklig rendering och Pages ej verifierade. Nästa DRAKE-03.
+**Senaste avslutningsnotis:** 2026-11-26 – DRAKE-03: helikoptern kan nu siktas på närmare skogskanten utan ändrad projektilgräns (659006f), cache v27. Kod återläst; faktisk flygträff och kartgeometri ej verifierade. Nästa SKATT-01.
 
 ## Kvar att göra – aktiv arbetskö (2)
 
