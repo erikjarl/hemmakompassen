@@ -366,3 +366,12 @@ Felrapport 25 november 2026: ihållande eller upprepade tryck på mobilen blåma
 ## SPORT-02 – Fotboll: förhindra fastnad rörelseriktning
 
 Felrapport 25 november 2026: efter en stund i fotbollsspelet fastnar Lage i att springa åt ett visst håll. Utred tillståndet för styrningen och återställ avslutade eller avbrutna pek-/tangenttryck, inklusive pointercancel, förlorad pointer capture, fokusförlust, scenbyte och flera samtidiga tryck. Lage ska sluta springa när riktningskontrollen släpps och kunna byta riktning omedelbart. Testa upprepade riktningsbyten och längre spelsessioner med mobilstyrning, inklusive avbrutna gester; bevara tangentbordsstyrning, bollmekanik och återgång till huvudkartan.
+
+
+#### DRAKE-03 – Drakstridens ljud och säkra eldbollar
+
+Lägg till tydligt isbollsskottljud och träffljud när isbollen träffar draken. Växla till hotfull musik när spelaren är nära draken och tillbaka när spelaren lämnar området. Respektera ljudets av/på-val. Eldbollar ska kunna träffa flygande helikopter och ge skada/krasch enligt befintliga regler. Begränsa hela projektilbanan och träffzonen till terrängen väster om väg 23, aldrig på vägen, nära bensinmacken, hus eller andra skyddade områden. Kontrollera faktisk kartgeometri, projektilens hela färdväg och helikopterträffar. Tidigare övriga HELI-02-krav är inte aktiva.
+
+#### SKATT-01 – Växande skatt vid hemmet
+
+Skapa en liten skattplatta nära hemhuset, utan att blockera gångvägar eller fordon. Visualisera spelarens gemensamma aktuella myntförmögenhet (kartmynt, minispelsmynt och potatismynt) med en allt större glittrande skatt i enhetlig detaljerad 16-bitars SNES-stil. Uppdatera vid intjäning, köp och återställning enligt befintliga saldoregler; visa gärna det exakta saldot vid plattan. Ändra inte ekonomins regler. Kontrollera tomt saldo, flera växande nivåer och återställning.
