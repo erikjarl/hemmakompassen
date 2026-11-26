@@ -21,7 +21,7 @@ Undantag: endast verkligt övergripande hinder (t.ex. nekad skrivbehörighet, sa
 
 **SJÄLVSTÄNDIG SLUTBEDÖMNING (25 november 2026):** Användaren delegerar bedömningen av färdig implementation till assistenten. Ingen användarfeedback eller fysisk mobiltestning ska vara ett rutinmässigt villkor för avbockning. Granska ursprungliga krav mot faktisk kod, använd proportionerliga isolerade tester vid behov, stryk direkt när kraven är uppfyllda och fortsätt. Separat visuell/ljudmässig kvalitetssäkring dokumenteras utan att hålla fungerande funktioner öppna. Behåll endast konkreta saknade funktioner, påvisade fel eller specifika ännu olösta krav i aktiv kö. Vid listrevision ska hela kön granskas.
 
-**Senaste avslutningsnotis:** 2026-11-26 – Instruktionsrevision: bindande leveransgrind, reservuppgift vid blockering och verifiering på main. Ingen speländring i detta administrativa uppdrag; rotation oförändrad.
+**Senaste avslutningsnotis:** 2026-11-26 – LJUD-02: betrodda touchend/pointerup/klick får försöka återaktivera WebAudio även vid negativ userActivation-status; av-val och syntetiska event spärras. Kod på main (89304d9), återläst och villkor kodgranskade. Fysisk Safari och Pages ej verifierade. KARTA-01 hoppades över p.g.a. tidigare olöst binäröverföring; ingen ny sprite integrerad. Nästa HELI-02.
 
 Detta är ett separat utvecklingskommando för **Lage i Rimforsa**. Läs repo-rotens `AGENTS.md`, denna fil och den **korta** `spel/rimforsa/ROADMAP.md` (enda aktiva arbetskö).
 
