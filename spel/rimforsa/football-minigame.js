@@ -102,7 +102,7 @@ function drawSpectators(){
   rect(x-15,118,30,2,'#253e39');
   if(spectatorSprites&&spectatorSprites.complete&&spectatorSprites.naturalWidth===128&&spectatorSprites.naturalHeight===32){
    // Behåll originalarkets 32×32-pixlar utan ojämn uppskalning.
-   ctx.drawImage(spectatorSprites,frame*32,0,32,32,x-16,82,32,32);
+   ctx.drawImage(spectatorSprites,frame*32,0,32,32,x-16,74,32,32);
   }else{
    // Silhuett under bildladdning, byts mot PNG så snart den finns.
    rect(x-8,92,16,18,'#4a5d66');rect(x-6,82,12,12,'#c48b68');
