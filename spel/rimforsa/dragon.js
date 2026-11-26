@@ -257,7 +257,9 @@
     // Eldsvansen följer skottets verkliga rörelseriktning.
     const mag=Math.hypot(shot.vx,shot.vy)||1;
     for(let n=1;n<=3;n++){
-     const tx=Math.round(fx-shot.vx/mag*(n*7+7)),ty=Math.round(fy-shot.vy/mag*(n*7+7));
+     const tailX=shot.x-shot.vx/mag*(n*7+7),tailY=shot.y-shot.vy/mag*(n*7+7);
+     if(!inside(tailX,tailY,5))continue;
+     const tx=Math.round(tailX-camX+w/2),ty=Math.round(tailY-camY+h/2);
      ctx.fillStyle=n===1?'#ffb83b':n===2?'#df652c':'#754031';
      ctx.fillRect(tx-2,ty-2,Math.max(2,6-n),Math.max(2,6-n));
     }}
