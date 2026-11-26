@@ -21,13 +21,13 @@ Undantag: endast verkligt övergripande hinder (t.ex. nekad skrivbehörighet, sa
 
 ## Rotation
 
-**SENAST BEARBETAD HUVUDUPPGIFT: `SKATT-01` – växande skattplatta.**
+**SENAST BEARBETAD HUVUDUPPGIFT: `DRAKE-03` – säker avfyrning och eldsvans.**
 
-**NÄSTA ROTATIONSPOSITION: `DRAKE-03`.**
+**NÄSTA ROTATIONSPOSITION: `SKATT-01`.**
 
 Rotation: DRAKE-03 → SKATT-01. Om endast en uppgift återstår får den väljas igen. Stryk verifierat färdiga delmoment direkt, flytta färdiga uppgifter till färdigarkivet och uppdatera antalen. Behåll återkallade uppgifter utanför kön.
 
-**Senaste avslutningsnotis:** 2026-11-26 – SKATT-01: glittrande skattplatta vid (310,335) med växande myntstaplar och exakt saldo kopplat till befintlig HUD/plånbok; kod på main (6cbc808), återläst och nivåformel kontrollerad. Visuell placering mot kartbilden och faktisk spelrendering/Pages återstår att kontrollera. Nästa DRAKE-03.
+**Senaste avslutningsnotis:** 2026-11-26 – DRAKE-03: dynamisk säker mynning (b5d2646), eldsvans klipps till skogszon (1bc9322), cacheversion 25 (7c8eff6). Geometriskt test av 1001 patrullpositioner: 923 tidigare, 1001 nu med säker mynning. Faktisk helikopterträff, kartbild och Pages ej verifierade. Nästa SKATT-01.
 
 ## Kvar att göra – aktiv arbetskö (2)
 
