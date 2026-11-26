@@ -21,17 +21,17 @@ Undantag: endast verkligt övergripande hinder (t.ex. nekad skrivbehörighet, sa
 
 ## Rotation
 
-**SENAST BEARBETAD HUVUDUPPGIFT: `MYNT-03` (historisk, före körevision).**
+**SENAST BEARBETAD HUVUDUPPGIFT: `DRAKE-03` – isbollsljud och närhetsmusik.**
 
-**NÄSTA ROTATIONSPOSITION: `DRAKE-03`.**
+**NÄSTA ROTATIONSPOSITION: `SKATT-01`.**
 
 Rotation: DRAKE-03 → SKATT-01. Om endast en uppgift återstår får den väljas igen. Stryk verifierat färdiga delmoment direkt, flytta färdiga uppgifter till färdigarkivet och uppdatera antalen. Behåll återkallade uppgifter utanför kön.
 
-**Senaste avslutningsnotis:** 2026-11-26 – Användaren återkallade tidigare öppna krav och ersatte dem med DRAKE-03 och SKATT-01. Administrativ körevision; ingen spelkod ändrad.
+**Senaste avslutningsnotis:** 2026-11-26 – DRAKE-03: egna isbollsskott- och drakträffljud samt närhetsmusik även vid helikopterflygning implementerade på main (7639767, 0409c3e), återlästa och kodgranskade. Befintlig helikopterträff och terränggräns finns men verklig träffmöjlighet och gränser behöver kontrolleras. Ljuduppspelning/Pages ej verifierade. Nästa SKATT-01.
 
 ## Kvar att göra – aktiv arbetskö (2)
 
-- [ ] **DRAKE-03 – Drakstridens ljud och säkra eldbollar.** · [Krav](docs/TASK_DETAILS.md#drake-03--drakstridens-ljud-och-säkra-eldbollar) · **Kvar:** Isbollsskottljud, träffljud på draken, hotfull musik nära draken samt eldbollar som kan träffa helikoptern men aldrig når väg 23, bensinmackens närhet eller andra skyddade områden.
+- [ ] **DRAKE-03 – Drakstridens ljud och säkra eldbollar.** · [Krav](docs/TASK_DETAILS.md#drake-03--drakstridens-ljud-och-säkra-eldbollar) · **Kvar:** Kontrollera faktisk eldklotsträff på flygande helikopter och att hela projektilbanan aldrig når väg 23, bensinmackens närhet eller andra skyddade områden; åtgärda konkreta fel.
 - [ ] **SKATT-01 – Växande skatt vid hemmet.** · [Krav](docs/TASK_DETAILS.md#skatt-01--växande-skatt-vid-hemmet) · **Kvar:** Skattplatta nära hemhuset med växande glittrande skatt som speglar alla mynt i den gemensamma plånboken.
 
 ## Status
