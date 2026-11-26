@@ -1406,15 +1406,27 @@ function drawBoatGame(){
  boatCtx.fillStyle='rgba(8,27,21,.72)'; boatCtx.fillRect(8,8,170,40); boatCtx.strokeStyle='#dfbe80'; boatCtx.lineWidth=2; boatCtx.strokeRect(8,8,170,40); boatCtx.fillStyle='#ffe59b'; boatCtx.font='bold 14px ui-monospace, monospace'; boatCtx.fillText('♥ '+boatState.hearts+'   MYNT '+boatState.collected+'/'+BOAT_COIN_TARGET,18,33);
 }
 document.getElementById('heliBoard').addEventListener('click',()=>{if(nearHeli())enterHeli();});
+// One interaction resolver for the displayed action and its activation.
+function resolveMapInteraction(){
+ if(state.inHeli)return {key:'heli-land'};
+ if(nearHeli()&&!nearCar())return {key:'heli'};
+ if(state.inCar)return {key:'car-exit'};
+ if(nearCar())return {key:'car-enter'};
+ if(nearTroll())return {key:'troll'};
+ const near=nearestSite();
+ if(near)return {key:near.name,near};
+ const npc=npcSystem.near(state.x,state.y);
+ return npc?{key:'npc-'+npc.id,npc}:{key:'none'};
+}
 function updateMessage(){
  document.getElementById('heliBoard').hidden=!nearHeli();
  if(performance.now()<coinNoticeUntil)return;
- if(state.inHeli){interact.hidden=false;interact.textContent='Landa 🚁';title.textContent='Helikoptertur';message.textContent='Flyg med pilarna. Isboll: knapp eller mellanslag. Bensin: '+heliFuel.snapshot().percent+'%';return;}
- if(nearHeli()&&!nearCar()){interact.hidden=false;interact.textContent='Flyg helikopter 🚁';title.textContent='Helikopter';message.textContent='Tank: '+heliFuel.snapshot().percent+'%. Tanka för 7 spelmynt på macken.';state.nearKey='heli';return;}
- const near=state.inCar?null:nearestSite(),carAction=state.inCar?'exit':nearCar()?'enter':null;
- const trollHere=!carAction&&nearTroll();
- const npcHere=!carAction&&!trollHere&&!near?npcSystem.near(state.x,state.y):null;
- const key=carAction?'car-'+carAction:trollHere?'troll':npcHere?'npc-'+npcHere.id:near?near.name:'none';
+ const action=resolveMapInteraction();
+ if(action.key==='heli-land'){state.nearKey=action.key;interact.hidden=false;interact.textContent='Landa 🚁';title.textContent='Helikoptertur';message.textContent='Flyg med pilarna. Isboll: knapp eller mellanslag. Bensin: '+heliFuel.snapshot().percent+'%';return;}
+ if(action.key==='heli'){interact.hidden=false;interact.textContent='Flyg helikopter 🚁';title.textContent='Helikopter';message.textContent='Tank: '+heliFuel.snapshot().percent+'%. Tanka för 7 spelmynt på macken.';state.nearKey='heli';return;}
+ const {key,near=null,npc:npcHere=null}=action;
+ const carAction=key==='car-exit'?'exit':key==='car-enter'?'enter':null;
+ const trollHere=key==='troll';
  if(key===state.nearKey)return;
  state.near=(trollHere||npcHere)?null:near;state.nearKey=key;interact.hidden=!(carAction||trollHere||npcHere||near);state.messageLocked=false;
  if(carAction==='enter'){
@@ -1445,16 +1457,14 @@ interact.addEventListener('click',()=>{
  const previousLabel=interact.textContent;
  const notice=coinNoticeUntil;coinNoticeUntil=0;updateMessage();coinNoticeUntil=notice;
  if(interact.hidden||previousKey!==state.nearKey||previousLabel!==interact.textContent)return;
- if(state.inHeli){landHeli();return;}
- if(nearHeli()&&!nearCar()){enterHeli();return;}
- if(state.inCar){exitCar();return;}
- if(nearCar()){enterCar();return;}
- if(nearTroll()){visitTroll();return;}
- if(nearestSite()?.name==='Hackelhallen'){stop();window.RimforsaFootball.start({onGoalCoin:id=>awardBonusResult('football-'+id),getWalletBalance:totalMoney,returnToMap:()=>{state.nearKey=null;updateCoinScore();updateMessage();}});return;}
- if(nearestSite()?.name==='Förskolan Hackel'){stop();window.RimforsaSlideMinigame.start({onLandingCoin:id=>awardBonusResult('slide-'+id),getWalletBalance:totalMoney,returnToMap:()=>{state.nearKey=null;updateCoinScore();updateMessage();}});return;}
-  if(nearestSite()?.name==='Åsundabadet'){stop();window.RimforsaSwimMinigame.start({onCoin:id=>awardMinigameCoin('swim-'+id),hasCoin:id=>rewardWallet.sync()&&rewardWallet.has('swim-'+id),getWalletBalance:totalMoney,returnToMap:()=>{state.nearKey=null;updateCoinScore();updateMessage();}});return;}
-  if(Number.isInteger(nearestSite()?.plot)){const plot=nearestSite().plot;stop();window.RimforsaFarm.start({plot,verifyCurrentRound:()=>!reloadAfterOtherTabLoss(),returnToMap:()=>{state.nearKey=null;updateCoinScore();updateMessage();}});return;}
- const npcHere=!nearestSite()?npcSystem.near(state.x,state.y):null;
+ const action=resolveMapInteraction();
+ if(action.key!==previousKey)return;
+ if(action.key==='heli-land'){landHeli();return;}
+ if(action.key==='heli'){enterHeli();return;}
+ if(action.key==='car-exit'){exitCar();return;}
+ if(action.key==='car-enter'){enterCar();return;}
+ if(action.key==='troll'){visitTroll();return;}
+ const npcHere=action.npc;
  if(npcHere){
    const dialogue=npcSystem.talk(npcHere.id);
    if(dialogue){
@@ -1466,7 +1476,8 @@ interact.addEventListener('click',()=>{
    }
    return;
  }
- const near=nearestSite();if(!near)return;
+ const near=action.near;if(!near)return;
+ if(near.name==='Hackelhallen'){stop();window.RimforsaFootball.start({onGoalCoin:id=>awardBonusResult('football-'+id),getWalletBalance:totalMoney,returnToMap:()=>{state.nearKey=null;updateCoinScore();updateMessage();}});return;}
  if(near.name==='Bensinmacken'){openFuelStation();return;}
  if(near.name==='Kinda Båtklubb'){openBoatGame();return;}
   if(near.name==='ICA Melkers'){openIca();return;}
