@@ -283,7 +283,8 @@ const keys={up:false,down:false,left:false,right:false};
 const COIN_TARGET=20,POOP_TARGET=7,coinScore=document.getElementById('coinScore');
 const landHearts=document.getElementById('landHearts');
 const winOverlay=document.getElementById('winOverlay'),winCount=document.getElementById('winCount');
-const game=window.RimforsaGameplay.createSession(COIN_TARGET);
+let homeTreasureBalance=0;
+ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
  const farm=window.RimforsaFarm;
  // Skattmynt och intäkter från odling redovisas separat.
  const rewardWallet=(()=>{
@@ -596,6 +597,37 @@ function collectDragonTreasure(){
  try{localStorage.removeItem(DRAGON_TREASURE_KEY);}catch(_){}
  if(result==='earned'){audio.coin();coinNoticeUntil=performance.now()+3000;message.textContent='Du hämtade drakens skatt: 20 mynt!';}
 }
+// Read-only display: the same balance as the HUD, never a separate wallet.
+function drawHomeTreasure(){
+ const x=Math.round(310-state.camX+canvas.width/2),y=Math.round(335-state.camY+canvas.height/2);
+ if(x<-55||y<-65||x>canvas.width+55||y>canvas.height+65)return;
+ const amount=Math.max(0,homeTreasureBalance||0);
+ const count=amount?Math.min(36,Math.ceil(5*Math.log2(amount+1))):0;
+ const clock=performance.now()/1000;
+ ctx.save();ctx.translate(x,y);ctx.imageSmoothingEnabled=false;
+ const rect=(a,b,w,h,color)=>{ctx.fillStyle=color;ctx.fillRect(a,b,w,h);};
+ // Low stone plinth, with a dark bevel and moss at the corners.
+ rect(-23,4,46,15,'#243c32');rect(-22,-5,44,18,'#555e55');
+ rect(-19,-8,38,15,'#9b9c83');rect(-16,-6,32,10,'#c3bfa1');
+ rect(-19,8,38,4,'#747b69');rect(-22,13,44,3,'#394b40');
+ rect(-21,5,5,3,'#657d42');rect(16,8,5,3,'#738847');
+ // Arrange progressively more coins in compact rows, then build upwards.
+ for(let i=0;i<count;i++){
+  const row=Math.floor(i/9),column=i%9,xx=-17+column*4+(row%2)*2,yy=4-row*8-Math.floor(Math.abs(column-4)/2);
+  rect(xx,yy,7,4,'#70431f');rect(xx,yy-2,7,4,'#bc7928');
+  rect(xx+1,yy-3,5,3,'#e9b54a');rect(xx+2,yy-3,3,1,'#fff0a4');
+  rect(xx+1,yy+1,5,1,'#98591d');
+ }
+ for(let i=0;i<Math.min(6,Math.ceil(count/5));i++){
+  const phase=(clock*2+i*.37)%1;if(phase>.46)continue;
+  const sx=-16+(i*13)%35,sy=-8-Math.floor(i/3)*10-Math.floor(phase*8);
+  rect(sx-3,sy,7,1,'#fff4b0');rect(sx,sy-3,1,7,'#fff4b0');rect(sx,sy,1,1,'#fff');
+ }
+ ctx.font='bold 10px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+ const label=String(amount)+' mynt',width=Math.ceil(ctx.measureText(label).width)+8;
+ rect(-Math.floor(width/2),20,width,14,'#26382e');ctx.fillStyle='#ffe5a0';ctx.fillText(label,0,27);
+ ctx.restore();
+}
 function drawDragonTreasure(){
  if(!dragonTreasure||rewardWallet.has('dragon-treasure'))return;
  const x=Math.round(dragonTreasure.x-state.camX+canvas.width/2),y=Math.round(dragonTreasure.y-state.camY+canvas.height/2);
@@ -882,7 +914,7 @@ document.addEventListener('visibilitychange',()=>{
 // En annan redan synlig flik kan återfå fokus utan pageshow/visibilitychange.
 // Kontrollera förlustsignalen även när spelaren växlar tillbaka till fönstret.
 window.addEventListener('focus',refreshSharedCoinViews);
-function updateCoinScore(){coinScore.textContent='🪙 '+totalMoney()+' · Hittade '+coinCount+'/'+(coinCount+coins.length)+' · Minispel '+rewardWallet.balance()+' (hittade '+rewardWallet.collectedCount()+'/18) · 🥔 '+farm.snapshot().balance}
+function updateCoinScore(){homeTreasureBalance=totalMoney();coinScore.textContent='🪙 '+homeTreasureBalance+' · Hittade '+coinCount+'/'+(coinCount+coins.length)+' · Minispel '+rewardWallet.balance()+' (hittade '+rewardWallet.collectedCount()+'/18) · 🥔 '+farm.snapshot().balance}
 function showTreasureVictory(){
  audio.victory();stop();
  winCount.textContent=String(coinCount);
@@ -1895,7 +1927,7 @@ function paintFarmPlots(g){
  }
 }
 function drawFarmMarker(){ctx.save();ctx.translate(Math.round(canvas.width/2-state.camX),Math.round(canvas.height/2-state.camY));drawFarmAccess(ctx);paintFarmPlots(ctx);ctx.restore();}
-function draw(){const w=canvas.width,h=canvas.height;ctx.fillStyle='#305d42';ctx.fillRect(0,0,w,h);if(imageLoaded){const x=Math.round(w/2-state.camX),y=Math.round(h/2-state.camY);ctx.drawImage(tiles,x,y);ctx.save();ctx.translate(x,y);drawBeachAccess(ctx);ctx.restore();}drawIngoPriceSign();drawFarmMarker();drawHarborVisitor();drawCoins();drawDragonTreasure();drawPoops();drawTroll();helicopter.draw(ctx,state.camX,state.camY,w,h,performance.now()/1000);dragon.draw(ctx,state.camX,state.camY,w,h);drawIce();npcSystem.draw(ctx,state.camX,state.camY,w,h,sprite);
+function draw(){const w=canvas.width,h=canvas.height;ctx.fillStyle='#305d42';ctx.fillRect(0,0,w,h);if(imageLoaded){const x=Math.round(w/2-state.camX),y=Math.round(h/2-state.camY);ctx.drawImage(tiles,x,y);ctx.save();ctx.translate(x,y);drawBeachAccess(ctx);ctx.restore();}drawIngoPriceSign();drawFarmMarker();drawHarborVisitor();drawHomeTreasure();drawCoins();drawDragonTreasure();drawPoops();drawTroll();helicopter.draw(ctx,state.camX,state.camY,w,h,performance.now()/1000);dragon.draw(ctx,state.camX,state.camY,w,h);drawIce();npcSystem.draw(ctx,state.camX,state.camY,w,h,sprite);
 if(state.inCar){carDrive.draw(ctx,state.x-state.camX+w/2,state.y-state.camY+h/2,state.dir,true);}
 else{carDrive.draw(ctx,carPos.x-state.camX+w/2,carPos.y-state.camY+h/2,parkedCarDir,false);if(!state.inHeli)drawPlayer();}
 ctx.strokeStyle='#1b3028';ctx.lineWidth=2;ctx.strokeRect(1,1,w-2,h-2);drawMap(mc,mini.width,mini.height);drawBoatGame()}
