@@ -19,11 +19,11 @@ Undantag: endast verkligt övergripande hinder (t.ex. nekad skrivbehörighet, sa
 
 ## Obligatorisk rotation mellan utvecklingspass
 
-**SENAST BEARBETAD HUVUDUPPGIFT: `NPC-04` – gemensam interaktionsresolver (26 november 2026).**
+**SENAST BEARBETAD HUVUDUPPGIFT: `LJUD-02` – betrodda återaktiveringsgester (26 november 2026).**
 
-**NÄSTA ROTATIONSPOSITION: `KARTA-01` – egna spelvärldar för Kisa och Ulrika.**
+**NÄSTA ROTATIONSPOSITION: `HELI-02` – flygbar helikopter med drakstrid.**
 
-**ALDRIG SAMMA HUVUDUPPGIFT TVÅ `JOBB LAGE` I FÖLJD.** Följ ordningen bland öppna, genomförbara uppgifter nedan med cirkulär rotation. Starta på angiven nästa position, hoppa över avbockade punkter, stående kvalitetsregler som `MINI-01` (dessa gäller ändå varje pass) och tillfälligt blockerade uppgifter. Bearbeta olika delar av spelet mellan varven: grafik, fordon, bränsle, ljud och andra spelmekaniker. Om inget praktiskt kan göras på nästa punkt, gå vidare till följande **annan** uppgift; återvänd först efter andra utvecklingspass. Prioritet betyder vikt inom rotationen, **inte** rätt att välja samma uppgift igen direkt. När ett pass med faktisk spelutveckling slutförts, uppdatera **båda fälten ovan** till den verkliga huvuduppgiften och efterföljande öppna rotationsposition innan passet avslutas. Rapportera vilka fält som ändrades. Att kontrollera kryssrutor eller åtgärda ett akut blockerande fel räknas inte som att byta huvuduppgift. **Aktuell rotation:** HELI-02 → MYNT-03 → ODLING-03 → MOBIL-01 → GRAF-01 → NPC-04 → KARTA-01 → LJUD-02. BRÄNSLE-02 väntar på verifierbar prisdata. Nästa position KARTA-01.
+**ALDRIG SAMMA HUVUDUPPGIFT TVÅ `JOBB LAGE` I FÖLJD.** Följ ordningen bland öppna, genomförbara uppgifter nedan med cirkulär rotation. Starta på angiven nästa position, hoppa över avbockade punkter, stående kvalitetsregler som `MINI-01` (dessa gäller ändå varje pass) och tillfälligt blockerade uppgifter. Bearbeta olika delar av spelet mellan varven: grafik, fordon, bränsle, ljud och andra spelmekaniker. Om inget praktiskt kan göras på nästa punkt, gå vidare till följande **annan** uppgift; återvänd först efter andra utvecklingspass. Prioritet betyder vikt inom rotationen, **inte** rätt att välja samma uppgift igen direkt. När ett pass med faktisk spelutveckling slutförts, uppdatera **båda fälten ovan** till den verkliga huvuduppgiften och efterföljande öppna rotationsposition innan passet avslutas. Rapportera vilka fält som ändrades. Att kontrollera kryssrutor eller åtgärda ett akut blockerande fel räknas inte som att byta huvuduppgift. **Aktuell rotation:** HELI-02 → MYNT-03 → ODLING-03 → MOBIL-01 → GRAF-01 → NPC-04 → KARTA-01 → LJUD-02. BRÄNSLE-02 väntar på verifierbar prisdata. Nästa position HELI-02.
 
 ## Obligatorisk avbockning – vid VARJE `jobb lage`
 
@@ -37,7 +37,7 @@ Undantag: endast verkligt övergripande hinder (t.ex. nekad skrivbehörighet, sa
 
 **SJÄLVSTÄNDIG SLUTBEDÖMNING (25 november 2026):** Användaren delegerar bedömningen av färdig implementation till assistenten. Ingen användarfeedback eller fysisk mobiltestning ska vara ett rutinmässigt villkor för avbockning. Granska ursprungliga krav mot faktisk kod, använd proportionerliga isolerade tester vid behov, stryk direkt när kraven är uppfyllda och fortsätt. Separat visuell/ljudmässig kvalitetssäkring dokumenteras utan att hålla fungerande funktioner öppna. Behåll endast konkreta saknade funktioner, påvisade fel eller specifika ännu olösta krav i aktiv kö. Vid listrevision ska hela kön granskas.
 
-**Senaste avslutningsnotis:** 2026-11-26 – Instruktionsrevision: bindande leveransgrind, reservuppgift vid blockering och verifiering på main. Ingen speländring i detta administrativa uppdrag; rotation oförändrad.
+**Senaste avslutningsnotis:** 2026-11-26 – LJUD-02: betrodda touchend/pointerup/klick får försöka återaktivera WebAudio även vid negativ userActivation-status; av-val och syntetiska event spärras. Kod på main (89304d9), återläst och villkor kodgranskade. Fysisk Safari och Pages ej verifierade. KARTA-01 hoppades över p.g.a. tidigare olöst binäröverföring; ingen ny sprite integrerad. Nästa HELI-02.
 
 1. Läs [AGENTS.md](AGENTS.md) och **denna korta kö**. Välj nästa genomförbara **annan** uppgift enligt rotationsfälten ovan; respektera beroenden och blockerande fel. Välj aldrig samma huvuduppgift två pass i följd.
 2. Läs **bara den valda uppgiftens avsnitt** i [TASK_DETAILS.md](docs/TASK_DETAILS.md) (vid behov genom textsökning/radintervall), sedan relevant kod. Gemensamma, detaljerade krav finns i [GAME_RULES.md](docs/GAME_RULES.md); läs relevanta delar när arbetet berör dem.
