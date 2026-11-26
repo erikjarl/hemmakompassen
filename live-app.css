@@ -3694,3 +3694,12 @@ body .live-layout #live-app > .insights-view .ai-result-panel :is(a,[data-ai-ana
     overflow-wrap:anywhere;
   }
 }
+
+/* DES-01F: match legend strokes to the light percentile chart markers. */
+.pf-percentile-chart .pf-legend-own::before { border-color:#394627!important; }
+.pf-percentile-chart .pf-legend-other::before { border-color:#713c2e!important; }
+.pf-percentile-chart .pf-reference-legend > span::before { border-top-color:#534c44; }
+@media (max-width:420px) {
+  .pf-percentile-chart .pf-reference-legend { font-size:13px; line-height:1.5; }
+  .pf-percentile-chart .pf-reference-legend > span { min-width:0; overflow-wrap:anywhere; }
+}
