@@ -21,13 +21,13 @@ Undantag: endast verkligt övergripande hinder (t.ex. nekad skrivbehörighet, sa
 
 ## Rotation
 
-**SENAST BEARBETAD HUVUDUPPGIFT: `DRAKE-03` – säker avfyrning och eldsvans.**
+**SENAST BEARBETAD HUVUDUPPGIFT: `SKATT-01` – saldouppdatering vid betalningar.**
 
-**NÄSTA ROTATIONSPOSITION: `SKATT-01`.**
+**NÄSTA ROTATIONSPOSITION: `DRAKE-03`.**
 
 Rotation: DRAKE-03 → SKATT-01. Om endast en uppgift återstår får den väljas igen. Stryk verifierat färdiga delmoment direkt, flytta färdiga uppgifter till färdigarkivet och uppdatera antalen. Behåll återkallade uppgifter utanför kön.
 
-**Senaste avslutningsnotis:** 2026-11-26 – DRAKE-03: dynamisk säker mynning (b5d2646), eldsvans klipps till skogszon (1bc9322), cacheversion 25 (7c8eff6). Geometriskt test av 1001 patrullpositioner: 923 tidigare, 1001 nu med säker mynning. Faktisk helikopterträff, kartbild och Pages ej verifierade. Nästa SKATT-01.
+**Senaste avslutningsnotis:** 2026-11-26 – SKATT-01: gemensam betalningsfunktion uppdaterar nu skatt/HUD direkt efter betalning och återbetalning (3e9872d). Kod återläst; visuell kartplacering, faktisk rendering och Pages ej verifierade. Nästa DRAKE-03.
 
 ## Kvar att göra – aktiv arbetskö (2)
 
