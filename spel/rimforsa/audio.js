@@ -370,6 +370,21 @@
     if(next===dragonNearby)return;
     dragonNearby=next;melodyStep=0;
   }
+  function iceShoot(){
+    if(!enabled||!ctx||hidden||ctx.state!=='running')return;
+    const t=now()+.01;
+    tone(1046.5,t,.055,.055,'triangle');
+    tone(1568,t+.035,.09,.04,'sine');
+    tone(2093,t+.07,.12,.025,'sine');
+  }
+  function dragonIceHit(){
+    if(!enabled||!ctx||hidden||ctx.state!=='running')return;
+    const t=now()+.01;
+    tone(196,t,.16,.075,'sawtooth');
+    tone(1174.66,t,.07,.045,'triangle');
+    tone(783.99,t+.06,.13,.04,'square');
+    tone(130.81,t+.12,.22,.04,'triangle');
+  }
   function coin(){
     if(!enabled||!ctx||hidden)return;
     const t=now()+.01;
@@ -786,5 +801,5 @@
     }catch(_){speechMusicVolume(volume);return false;}
   }
   function status(){return {enabled,available:!!AudioCtor,contextState:ctx?ctx.state:'not-created',scene,hidden,sceneStarted,playingMusic:musicInterval!==null,playingWaves:!!waves,playingEngine:!!engine,playingCarEngine:!!carEngine,playingRotor:!!rotor,heliActive,carActive,dragonNearby};}
-  root.RimforsaAudio={enable,disable,toggle,resumeFromGesture,setScene,setBoatSpeed,setCarActive,setCarSpeed,setHeliActive,setDragonNearby,coin,hit,poop,victory,slideLaunch,slideLand,slideCharge,slideLongJump,sharkBump,purchase,purchaseDenied,fuelFill,fuelEmpty,boatGrounding,boatOutOfFuel,regionArrival,carEnter,itemFound,helicopterHit,footballKick,footballSave,footballGoal,boatTreasure,npcTalk,bagOpen,bagClose,fuelStationEnter,mapOpen,boatLaunch,potatoSale,carExit,bagClear,newHunt,boatRetry,gameOver,shopEnter,mapClose,boatReturn,shopExit,routeSelected,routeBlocked,potatoPlant,potatoHarvest,speak,stopSpeech,setVisible,status};
+  root.RimforsaAudio={enable,disable,toggle,resumeFromGesture,setScene,setBoatSpeed,setCarActive,setCarSpeed,setHeliActive,setDragonNearby,iceShoot,dragonIceHit,coin,hit,poop,victory,slideLaunch,slideLand,slideCharge,slideLongJump,sharkBump,purchase,purchaseDenied,fuelFill,fuelEmpty,boatGrounding,boatOutOfFuel,regionArrival,carEnter,itemFound,helicopterHit,footballKick,footballSave,footballGoal,boatTreasure,npcTalk,bagOpen,bagClose,fuelStationEnter,mapOpen,boatLaunch,potatoSale,carExit,bagClear,newHunt,boatRetry,gameOver,shopEnter,mapClose,boatReturn,shopExit,routeSelected,routeBlocked,potatoPlant,potatoHarvest,speak,stopSpeech,setVisible,status};
 })(window);
