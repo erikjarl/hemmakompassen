@@ -21,13 +21,13 @@ Undantag: endast verkligt övergripande hinder (t.ex. nekad skrivbehörighet, sa
 
 ## Rotation
 
-**SENAST BEARBETAD HUVUDUPPGIFT: `DRAKE-03` – siktning vid skogskant.**
+**SENAST BEARBETAD HUVUDUPPGIFT: `SKATT-01` – individuell visualisering av första mynten.**
 
-**NÄSTA ROTATIONSPOSITION: `SKATT-01`.**
+**NÄSTA ROTATIONSPOSITION: `DRAKE-03`.**
 
 Rotation: DRAKE-03 → SKATT-01. Om endast en uppgift återstår får den väljas igen. Stryk verifierat färdiga delmoment direkt, flytta färdiga uppgifter till färdigarkivet och uppdatera antalen. Behåll återkallade uppgifter utanför kön.
 
-**Senaste avslutningsnotis:** 2026-11-26 – DRAKE-03: helikoptern kan nu siktas på närmare skogskanten utan ändrad projektilgräns (659006f), cache v27. Kod återläst; faktisk flygträff och kartgeometri ej verifierade. Nästa SKATT-01.
+**Senaste avslutningsnotis:** 2026-11-26 – SKATT-01: första nio mynten visas individuellt, större saldon komprimeras gradvis (200d04b); nivåberäkning testad 0–1000. Kartplacering, faktisk rendering och Pages ej verifierade. Nästa DRAKE-03.
 
 ## Kvar att göra – aktiv arbetskö (2)
 
