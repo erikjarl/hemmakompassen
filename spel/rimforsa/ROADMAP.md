@@ -6,11 +6,11 @@
 
 ## Obligatorisk rotation mellan utvecklingspass
 
-**SENAST BEARBETAD HUVUDUPPGIFT: `DRAKE-03` – projektilsäkerhet i skogen (26 november 2026).**
+**SENAST BEARBETAD HUVUDUPPGIFT: `NPC-04` – skyddszoner och startpositioner (26 november 2026).**
 
-**NÄSTA ROTATIONSPOSITION: `NPC-04` – dialoger och entréer.**
+**NÄSTA ROTATIONSPOSITION: `KARTA-01` – separata spelvärldar.**
 
-**ALDRIG SAMMA HUVUDUPPGIFT TVÅ `JOBB LAGE` I FÖLJD.** Följ ordningen bland öppna, genomförbara uppgifter nedan med cirkulär rotation. Starta på angiven nästa position, hoppa över avbockade punkter, stående kvalitetsregler som `MINI-01` (dessa gäller ändå varje pass) och tillfälligt blockerade uppgifter. Bearbeta olika delar av spelet mellan varven: grafik, fordon, bränsle, ljud och andra spelmekaniker. Om inget praktiskt kan göras på nästa punkt, gå vidare till följande **annan** uppgift; återvänd först efter andra utvecklingspass. Prioritet betyder vikt inom rotationen, **inte** rätt att välja samma uppgift igen direkt. När ett pass med faktisk spelutveckling slutförts, uppdatera **båda fälten ovan** till den verkliga huvuduppgiften och efterföljande öppna rotationsposition innan passet avslutas. Rapportera vilka fält som ändrades. Att kontrollera kryssrutor eller åtgärda ett akut blockerande fel räknas inte som att byta huvuduppgift. **Aktuell rotation:** HELI-02 → MYNT-03 → ODLING-03 → MOBIL-01 → GRAF-01 → NPC-04 → KARTA-01 → LJUD-02. BRÄNSLE-02 väntar på verifierbar prisdata. Nästa position NPC-04.
+**ALDRIG SAMMA HUVUDUPPGIFT TVÅ `JOBB LAGE` I FÖLJD.** Följ ordningen bland öppna, genomförbara uppgifter nedan med cirkulär rotation. Starta på angiven nästa position, hoppa över avbockade punkter, stående kvalitetsregler som `MINI-01` (dessa gäller ändå varje pass) och tillfälligt blockerade uppgifter. Bearbeta olika delar av spelet mellan varven: grafik, fordon, bränsle, ljud och andra spelmekaniker. Om inget praktiskt kan göras på nästa punkt, gå vidare till följande **annan** uppgift; återvänd först efter andra utvecklingspass. Prioritet betyder vikt inom rotationen, **inte** rätt att välja samma uppgift igen direkt. När ett pass med faktisk spelutveckling slutförts, uppdatera **båda fälten ovan** till den verkliga huvuduppgiften och efterföljande öppna rotationsposition innan passet avslutas. Rapportera vilka fält som ändrades. Att kontrollera kryssrutor eller åtgärda ett akut blockerande fel räknas inte som att byta huvuduppgift. **Aktuell rotation:** HELI-02 → MYNT-03 → ODLING-03 → MOBIL-01 → GRAF-01 → NPC-04 → KARTA-01 → LJUD-02. BRÄNSLE-02 väntar på verifierbar prisdata. Nästa position KARTA-01.
 
 ## Obligatorisk avbockning – vid VARJE `jobb lage`
 
@@ -24,7 +24,7 @@
 
 **SJÄLVSTÄNDIG SLUTBEDÖMNING (25 november 2026):** Användaren delegerar bedömningen av färdig implementation till assistenten. Ingen användarfeedback eller fysisk mobiltestning ska vara ett rutinmässigt villkor för avbockning. Granska ursprungliga krav mot faktisk kod, använd proportionerliga isolerade tester vid behov, stryk direkt när kraven är uppfyllda och fortsätt. Separat visuell/ljudmässig kvalitetssäkring dokumenteras utan att hålla fungerande funktioner öppna. Behåll endast konkreta saknade funktioner, påvisade fel eller specifika ännu olösta krav i aktiv kö. Vid listrevision ska hela kön granskas.
 
-**Senaste avslutningsnotis:** 2026-11-26 – DRAKE-03: konsekvent 32 px säkerhetsmarginal för eldklot vid avfyrning och rörelse, utgångna lågor döljs och dekorativ eld begränsas (77f8a5c, 4c73eb6). 7 200 simulerade uppdateringar, 1 333 projektilpositioner och 392 träffprov inne i skogen; skyddade målpunkter träffades inte. Ingen ny figur-sprite integrerad; Pages ej verifierad. Nästa huvuduppgift NPC-04.
+**Senaste avslutningsnotis:** 2026-11-26 – NPC-04: skyddszoner för alla tre nya potatisland och reservsökning över kartan för NPC-startplatser (f670d68, f9227b2). Isolerat test av smal syntetisk gångmask och 3 000 uppdateringar godkänt. Faktisk kartmask, pek-/tangentbordsflöde och Pages ej verifierade; ingen ny bildsprite integrerad. Nästa huvuduppgift KARTA-01.
 
 1. Läs [AGENTS.md](AGENTS.md) och **denna korta kö**. Välj nästa genomförbara **annan** uppgift enligt rotationsfälten ovan; respektera beroenden och blockerande fel. Välj aldrig samma huvuduppgift två pass i följd.
 2. Läs **bara den valda uppgiftens avsnitt** i [TASK_DETAILS.md](docs/TASK_DETAILS.md) (vid behov genom textsökning/radintervall), sedan relevant kod. Gemensamma, detaljerade krav finns i [GAME_RULES.md](docs/GAME_RULES.md); läs relevanta delar när arbetet berör dem.
@@ -72,13 +72,13 @@
 
 ## Färdiga uppgifter – flyttade ur att-göra-listan
 
-**44 färdigmarkerade uppgifter** finns i [COMPLETED_TASKS.md](docs/COMPLETED_TASKS.md). De ska **inte** återkomma i den aktiva kön såvida ett saknat acceptansvillkor påvisas. Alla 44 färdiga task-ID:n är borttagna från denna aktiva lista, men kraven finns kvar som referens i `TASK_DETAILS.md`.
+**46 färdigmarkerade uppgifter** finns i [COMPLETED_TASKS.md](docs/COMPLETED_TASKS.md). De ska **inte** återkomma i den aktiva kön såvida ett saknat acceptansvillkor påvisas. Alla 46 färdiga task-ID:n är borttagna från denna aktiva lista, men kraven finns kvar som referens i `TASK_DETAILS.md`.
 
 ## Dokumentation och principer
 
 - [TASK_DETAILS.md](docs/TASK_DETAILS.md) – fullständig beskrivning och acceptansvillkor för samtliga 56 uppgifts-ID:n (inklusive stående MINI-01), utan parallella statuskryssrutor.
 - [GAME_RULES.md](docs/GAME_RULES.md) – bindande grafik-/minispelsregler och gemensamma tekniska hänsyn.
-- [COMPLETED_TASKS.md](docs/COMPLETED_TASKS.md) – separat historik över 44 avbockade uppgifter.
+- [COMPLETED_TASKS.md](docs/COMPLETED_TASKS.md) – separat historik över 46 avbockade uppgifter.
 - [WORKLOG.md](docs/WORKLOG.md) – hela tidigare arbetsloggen och historiska statusnoteringar. Läs **bara vid behov**.
 - `AGENTS.md` i denna mapp och repo-roten – kortkommando, befogenheter och arbetsmetod.
 
