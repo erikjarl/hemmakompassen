@@ -21,18 +21,18 @@ Undantag: endast verkligt övergripande hinder (t.ex. nekad skrivbehörighet, sa
 
 ## Rotation
 
-**SENAST BEARBETAD HUVUDUPPGIFT: `DRAKE-03` – isbollsljud och närhetsmusik.**
+**SENAST BEARBETAD HUVUDUPPGIFT: `SKATT-01` – växande skattplatta.**
 
-**NÄSTA ROTATIONSPOSITION: `SKATT-01`.**
+**NÄSTA ROTATIONSPOSITION: `DRAKE-03`.**
 
 Rotation: DRAKE-03 → SKATT-01. Om endast en uppgift återstår får den väljas igen. Stryk verifierat färdiga delmoment direkt, flytta färdiga uppgifter till färdigarkivet och uppdatera antalen. Behåll återkallade uppgifter utanför kön.
 
-**Senaste avslutningsnotis:** 2026-11-26 – DRAKE-03: egna isbollsskott- och drakträffljud samt närhetsmusik även vid helikopterflygning implementerade på main (7639767, 0409c3e), återlästa och kodgranskade. Befintlig helikopterträff och terränggräns finns men verklig träffmöjlighet och gränser behöver kontrolleras. Ljuduppspelning/Pages ej verifierade. Nästa SKATT-01.
+**Senaste avslutningsnotis:** 2026-11-26 – SKATT-01: glittrande skattplatta vid (310,335) med växande myntstaplar och exakt saldo kopplat till befintlig HUD/plånbok; kod på main (6cbc808), återläst och nivåformel kontrollerad. Visuell placering mot kartbilden och faktisk spelrendering/Pages återstår att kontrollera. Nästa DRAKE-03.
 
 ## Kvar att göra – aktiv arbetskö (2)
 
 - [ ] **DRAKE-03 – Drakstridens ljud och säkra eldbollar.** · [Krav](docs/TASK_DETAILS.md#drake-03--drakstridens-ljud-och-säkra-eldbollar) · **Kvar:** Kontrollera faktisk eldklotsträff på flygande helikopter och att hela projektilbanan aldrig når väg 23, bensinmackens närhet eller andra skyddade områden; åtgärda konkreta fel.
-- [ ] **SKATT-01 – Växande skatt vid hemmet.** · [Krav](docs/TASK_DETAILS.md#skatt-01--växande-skatt-vid-hemmet) · **Kvar:** Skattplatta nära hemhuset med växande glittrande skatt som speglar alla mynt i den gemensamma plånboken.
+- [ ] **SKATT-01 – Växande skatt vid hemmet.** · [Krav](docs/TASK_DETAILS.md#skatt-01--växande-skatt-vid-hemmet) · **Kvar:** Kontrollera skattplattans visuella placering mot kartbilden, att den inte överlappar hus eller fordon, samt faktisk rendering vid intjäning, köp och återställning; åtgärda konkreta fel.
 
 ## Status
 
