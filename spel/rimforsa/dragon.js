@@ -130,7 +130,9 @@
   function passesThrough(fire,px,py,radius){
    // Macken och området öster om den är säkra även när målets träffradie
    // överlappar det sista tillåtna projektilsegmentet.
-   if(px>=394||!inside(px,py,radius))return false;
+   // Målets centrum måste vara i skogen, men en bred helikopter får inte bli immun
+   // bara för att dess träffradie sträcker sig över terrängkanten.
+   if(px>=394||!inside(px,py,8))return false;
    // Kortaste avståndet mellan målets mitt och projektilens senaste rörelsesegment.
    const ax=fire.prevX??fire.x,ay=fire.prevY??fire.y,dx=fire.x-ax,dy=fire.y-ay;
    const lengthSquared=dx*dx+dy*dy;
