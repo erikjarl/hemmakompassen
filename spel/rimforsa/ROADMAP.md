@@ -24,7 +24,7 @@
 
 **SJÄLVSTÄNDIG SLUTBEDÖMNING (25 november 2026):** Användaren delegerar bedömningen av färdig implementation till assistenten. Ingen användarfeedback eller fysisk mobiltestning ska vara ett rutinmässigt villkor för avbockning. Granska ursprungliga krav mot faktisk kod, använd proportionerliga isolerade tester vid behov, stryk direkt när kraven är uppfyllda och fortsätt. Separat visuell/ljudmässig kvalitetssäkring dokumenteras utan att hålla fungerande funktioner öppna. Behåll endast konkreta saknade funktioner, påvisade fel eller specifika ännu olösta krav i aktiv kö. Vid listrevision ska hela kön granskas.
 
-**Senaste avslutningsnotis:** 2026-11-26 – NPC-04: gemensam resolver för knappvisning och aktivering, borttagen dubbel minispelsdispatch (70c522b). Kodgranskning av befintlig 140 px skyddszon; faktisk gångmask, mobil/dator och Pages ej funktionstestade. Ingen ny sprite. Nästa KARTA-01.
+**Senaste avslutningsnotis:** 2026-11-26 – KARTA-01: originalbilder återfunna, hämtade och visuellt identifierade: image-gen-1(2).png = Kisa, image-gen-2(2).png = Ulrika, båda 1448×1086. Binär överföring till GitHub och spelintegration återstår; ingen ny sprite eller spelkod. Rotation kvar på KARTA-01.
 
 1. Läs [AGENTS.md](AGENTS.md) och **denna korta kö**. Välj nästa genomförbara **annan** uppgift enligt rotationsfälten ovan; respektera beroenden och blockerande fel. Välj aldrig samma huvuduppgift två pass i följd.
 2. Läs **bara den valda uppgiftens avsnitt** i [TASK_DETAILS.md](docs/TASK_DETAILS.md) (vid behov genom textsökning/radintervall), sedan relevant kod. Gemensamma, detaljerade krav finns i [GAME_RULES.md](docs/GAME_RULES.md); läs relevanta delar när arbetet berör dem.
@@ -64,7 +64,7 @@
 
 ### Aktiv kartutbyggnad (1)
 
-- [ ] **KARTA-01 – Egna spelvärldar för Kisa och Ulrika.** · [Krav](docs/TASK_DETAILS.md#karta-01) · **Kvar:** Återfinn de två genererade bakgrundsfilerna (saknas på main och i sökt filbibliotek) och integrera dem, skapa gång- och fordonsmasker och vägövergångar i båda riktningar via väg 23 söderut respektive Ulrikavägen västerut. Anslut gemensamma spelmekaniker och interaktiva platser.
+- [ ] **KARTA-01 – Egna spelvärldar för Kisa och Ulrika.** · [Krav](docs/TASK_DETAILS.md#karta-01) · **Kvar:** Överför de två återfunna och visuellt identifierade originalbakgrunderna från filbiblioteket till GitHub (Kisa: file_00000000c3b481f4b952d19fb6658fcb; Ulrika: file_00000000eb1c82109e95f86e5951a45e) och integrera dem, skapa gång- och fordonsmasker och vägövergångar i båda riktningar via väg 23 söderut respektive Ulrikavägen västerut. Anslut gemensamma spelmekaniker och interaktiva platser.
 
 ## Stående regel – inte en ofärdig uppgift
 
