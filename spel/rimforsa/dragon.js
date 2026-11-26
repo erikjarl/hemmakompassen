@@ -51,17 +51,17 @@
    for(let offset=28;offset>=0;offset--){if(inside(x+offset,y-7,FIRE_MARGIN)){mouthX=x+offset;break;}}
    mouthOffset=mouthX-x;
    const player={x:playerX,y:playerY};
-   const inFireRange=(target,maxDistance=FIRE_MAX_DISTANCE)=>{
+   const inFireRange=(target,maxDistance=FIRE_MAX_DISTANCE,targetMargin=FIRE_MARGIN)=>{
     if(!target||!Number.isFinite(target.x)||!Number.isFinite(target.y))return false;
     const distance=Math.hypot(target.x-mouthX,target.y-mouthY);
-    return distance>35&&distance<=maxDistance&&target.x<=FIRE_EAST_LIMIT&&inside(target.x,target.y,FIRE_MARGIN)&&inside(mouthX,mouthY,FIRE_MARGIN);
+    return distance>35&&distance<=maxDistance&&target.x<=FIRE_EAST_LIMIT&&inside(target.x,target.y,targetMargin)&&inside(mouthX,mouthY,FIRE_MARGIN);
    };
    // Helikoptern prioriteras ibland, MEN aldrig om den ligger utanför
    // räckvidden. Annars kunde draken fastna på ett omöjligt mål och
    // sluta skjuta mot Lage, även när han stod alldeles nära.
    // Helikoptern står norr om skogen, bortom Lages vanliga 300-pixelsräckvidd.
    // Den får nås på längre avstånd, men inte öster om mackens gräns.
-   const helicopterInRange=inFireRange(helicopter,HELICOPTER_FIRE_DISTANCE);
+   const helicopterInRange=inFireRange(helicopter,HELICOPTER_FIRE_DISTANCE,8);
    // I bilen eller ett minispel kan Lage inte träffas av draken och ska därför
    // inte dra till sig eldklot. Helikoptern förblir ett möjligt mål.
    const playerInRange=playerTargetable&&inFireRange(player);
@@ -80,7 +80,7 @@
    if(shotTimer>0&&shotTimer<=FIRE_WARNING_SECONDS&&!warningTarget){
     const aimAtHelicopter=helicopterInRange&&(shotId%3===0||!playerInRange);
     const target=aimAtHelicopter?helicopter:playerInRange?player:null;
-    if(inFireRange(target,aimAtHelicopter?HELICOPTER_FIRE_DISTANCE:FIRE_MAX_DISTANCE)){
+    if(inFireRange(target,aimAtHelicopter?HELICOPTER_FIRE_DISTANCE:FIRE_MAX_DISTANCE,aimAtHelicopter?8:FIRE_MARGIN)){
      warningTarget={x:target.x,y:target.y,maxDistance:aimAtHelicopter?HELICOPTER_FIRE_DISTANCE:FIRE_MAX_DISTANCE,kind:aimAtHelicopter?'helicopter':'player'};
     }
    }
@@ -93,7 +93,7 @@
      // så varningen aldrig kan skapa ett skott mot ett nu oåtkomligt mål.
      const dx=target.x-mouthX,dy=target.y-mouthY;
      const distance=Math.hypot(dx,dy);
-     if(distance>35&&distance<=target.maxDistance&&target.x<=FIRE_EAST_LIMIT&&inside(target.x,target.y,FIRE_MARGIN)&&inside(mouthX,mouthY,FIRE_MARGIN)){
+     if(distance>35&&distance<=target.maxDistance&&target.x<=FIRE_EAST_LIMIT&&inside(target.x,target.y,target.kind==='helicopter'?8:FIRE_MARGIN)&&inside(mouthX,mouthY,FIRE_MARGIN)){
       const speed=165;
       shots.push({id:'dragon-fire-'+(++shotId),kind:target.kind,x:mouthX,y:mouthY,vx:dx/distance*speed,vy:dy/distance*speed,travelled:0,maxDistance:target.maxDistance,life:5});
      }
