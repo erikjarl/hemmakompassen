@@ -21,7 +21,7 @@ Undantag: endast verkligt övergripande hinder (t.ex. nekad skrivbehörighet, sa
 
 **SJÄLVSTÄNDIG SLUTBEDÖMNING (25 november 2026):** Användaren delegerar bedömningen av färdig implementation till assistenten. Ingen användarfeedback eller fysisk mobiltestning ska vara ett rutinmässigt villkor för avbockning. Granska ursprungliga krav mot faktisk kod, använd proportionerliga isolerade tester vid behov, stryk direkt när kraven är uppfyllda och fortsätt. Separat visuell/ljudmässig kvalitetssäkring dokumenteras utan att hålla fungerande funktioner öppna. Behåll endast konkreta saknade funktioner, påvisade fel eller specifika ännu olösta krav i aktiv kö. Vid listrevision ska hela kön granskas.
 
-**Senaste avslutningsnotis:** 2026-11-26 – MYNT-03: potatisförsäljning använder nu samma Web Locks-lås som köp och blockeras under förlustdialogen. Kod på main (5cb864d), återläst och kodgranskad. Samtidiga riktiga flikar, fallback utan Web Locks, återställning och Pages ej verifierade; ingen ny sprite integrerad. Nästa ODLING-03.
+**Senaste avslutningsnotis:** 2026-11-26 – Användarkorrigering ODLING-03: tre odlingar flyttade till gräsfältet direkt norr om Hackelhallen, öster om väg 23 (8186957), med ny gångkorridor. Koordinater och ursprunglig gångmask kontrollerade; pekrutter, dialoger, visuell mobilvy och Pages ännu ej verifierade. Rotation oförändrad (direkt användaruppdrag).
 
 Detta är ett separat utvecklingskommando för **Lage i Rimforsa**. Läs repo-rotens `AGENTS.md`, denna fil och den **korta** `spel/rimforsa/ROADMAP.md` (enda aktiva arbetskö).
 
