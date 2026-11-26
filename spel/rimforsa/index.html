@@ -147,7 +147,7 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
  });
 })();
 </script>
-<script src="./audio.js?v=47"></script>
+<script src="./audio.js?v=48"></script>
 <script src="./gameplay.js?v=2"></script>
 <script src="./inventory.js?v=3"></script>
 <script src="./item-art.js?v=1"></script>
@@ -157,7 +157,7 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
 <script src="./friend-sprites.js?v=2"></script>
 <script src="./npc.js?v=11"></script>
 <script src="./farm.js?v=6"></script>
-<script src="./dragon.js?v=22"></script>
+<script src="./dragon.js?v=23"></script>
 <script src="./helicopter.js?v=5"></script>
 <script src="./troll-minigame.js?v=8"></script>
 <script src="./preschool-friends-sprites.js?v=1"></script>
@@ -563,8 +563,8 @@ const npcSystem=window.RimforsaNPC.createSystem(canStand);
 const dragon=window.RimforsaDragon.createDragon();
 const helicopter=window.RimforsaHelicopter.createHelicopter();
 const iceShots=[];let iceCooldown=0;
-function shootIce(){if(!state.inHeli||!worldIsPlaying()||iceCooldown>0||dragon.isAway())return false;const d=dragon.snapshot(),dx=d.x-state.x,dy=d.y-state.y,len=Math.hypot(dx,dy);if(len>280||len<1)return false;iceShots.push({x:state.x,y:state.y,vx:dx/len*310,vy:dy/len*310,life:1});iceCooldown=.65;return true;}
-function updateIce(dt){iceCooldown=Math.max(0,iceCooldown-dt);for(let i=iceShots.length-1;i>=0;i--){const b=iceShots[i],d=dragon.snapshot();const ox=b.x,oy=b.y,step=Math.min(dt,Math.max(0,b.life));b.x+=b.vx*step;b.y+=b.vy*step;b.life-=dt;const sx=b.x-ox,sy=b.y-oy,span=sx*sx+sy*sy;const t=span?Math.max(0,Math.min(1,((d.x-ox)*sx+(d.y-oy)*sy)/span)):0;if(!d.away&&Math.hypot(ox+t*sx-d.x,oy+t*sy-d.y)<30){iceShots.splice(i,1);const result=dragon.hitIce();coinNoticeUntil=performance.now()+2200;message.textContent=result.defeated?'Draken flyger iväg i 20 minuter!':'Isboll träffade! '+result.hits+'/3';if(result.defeated){iceShots.length=0;message.textContent=dropDragonTreasure(d.x,d.y);}break;}if(b.life<=0||d.away)iceShots.splice(i,1);}}
+function shootIce(){if(!state.inHeli||!worldIsPlaying()||iceCooldown>0||dragon.isAway())return false;const d=dragon.snapshot(),dx=d.x-state.x,dy=d.y-state.y,len=Math.hypot(dx,dy);if(len>280||len<1)return false;iceShots.push({x:state.x,y:state.y,vx:dx/len*310,vy:dy/len*310,life:1});iceCooldown=.65;audio.iceShoot?.();return true;}
+function updateIce(dt){iceCooldown=Math.max(0,iceCooldown-dt);for(let i=iceShots.length-1;i>=0;i--){const b=iceShots[i],d=dragon.snapshot();const ox=b.x,oy=b.y,step=Math.min(dt,Math.max(0,b.life));b.x+=b.vx*step;b.y+=b.vy*step;b.life-=dt;const sx=b.x-ox,sy=b.y-oy,span=sx*sx+sy*sy;const t=span?Math.max(0,Math.min(1,((d.x-ox)*sx+(d.y-oy)*sy)/span)):0;if(!d.away&&Math.hypot(ox+t*sx-d.x,oy+t*sy-d.y)<30){iceShots.splice(i,1);const result=dragon.hitIce();if(result.hit)audio.dragonIceHit?.();coinNoticeUntil=performance.now()+2200;message.textContent=result.defeated?'Draken flyger iväg i 20 minuter!':'Isboll träffade! '+result.hits+'/3';if(result.defeated){iceShots.length=0;message.textContent=dropDragonTreasure(d.x,d.y);}break;}if(b.life<=0||d.away)iceShots.splice(i,1);}}
 
 const DRAGON_TREASURE_KEY='rimforsa-dragon-drop-v1';
 let dragonTreasure=null;
@@ -2010,7 +2010,9 @@ function tick(now){
   helicopter.update(dt);
   updateIce(dt);
   collectDragonTreasure();
- audio.setDragonNearby(dragon.update(dt,state.x,state.y,helicopter.position,!state.inCar&&!state.inHeli&&!boatState.active));
+ const dragonDanger=dragon.update(dt,state.x,state.y,helicopter.position,!state.inCar&&!state.inHeli&&!boatState.active);
+ const ds=dragon.snapshot();
+ audio.setDragonNearby(!ds.away&&(dragonDanger||Math.hypot(ds.x-state.x,ds.y-state.y)<ds.proximity));
  if(dragon.strikeObject(helicopter.position.x,helicopter.position.y,28)){
   const wasFlying=state.inHeli;
   if(wasFlying){landHeli(true);hurtUntil=performance.now()+1500;}
