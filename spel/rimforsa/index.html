@@ -284,6 +284,8 @@ const COIN_TARGET=20,POOP_TARGET=7,coinScore=document.getElementById('coinScore'
 const landHearts=document.getElementById('landHearts');
 const winOverlay=document.getElementById('winOverlay'),winCount=document.getElementById('winCount');
 let homeTreasureBalance=0;
+ // Gräset öster om hemmet, norr om bilens parkeringsplats, utanför vägen.
+ const HOME_TREASURE={x:470,y:275};
  const game=window.RimforsaGameplay.createSession(COIN_TARGET);
  const farm=window.RimforsaFarm;
  // Skattmynt och intäkter från odling redovisas separat.
@@ -601,7 +603,7 @@ function collectDragonTreasure(){
 }
 // Read-only display: the same balance as the HUD, never a separate wallet.
 function drawHomeTreasure(){
- const x=Math.round(310-state.camX+canvas.width/2),y=Math.round(335-state.camY+canvas.height/2);
+ const x=Math.round(HOME_TREASURE.x-state.camX+canvas.width/2),y=Math.round(HOME_TREASURE.y-state.camY+canvas.height/2);
  if(x<-55||y<-65||x>canvas.width+55||y>canvas.height+65)return;
  const amount=Math.max(0,homeTreasureBalance||0);
  const count=amount<=9?Math.floor(amount):Math.min(54,9+Math.ceil(6*Math.log2(amount/9)));
@@ -613,6 +615,9 @@ function drawHomeTreasure(){
  rect(-19,-8,38,15,'#9b9c83');rect(-16,-6,32,10,'#c3bfa1');
  rect(-19,8,38,4,'#747b69');rect(-22,13,44,3,'#394b40');
  rect(-21,5,5,3,'#657d42');rect(16,8,5,3,'#738847');
+  // Finare stenfog och kantreflexer; inga ändringar av gångmask eller ekonomi.
+  rect(-17,-7,12,1,'#d7d2b4');rect(7,-7,10,1,'#d7d2b4');
+  rect(-11,9,1,3,'#505d50');rect(10,9,1,3,'#505d50');
  // Arrange progressively more coins in compact rows, then build upwards.
  for(let i=0;i<count;i++){
   const row=Math.floor(i/9),column=i%9,xx=-19+column*4+(row%2)*2,yy=4-row*5-Math.floor(Math.abs(column-4)/2);
@@ -622,7 +627,8 @@ function drawHomeTreasure(){
  }
  for(let i=0;i<Math.min(6,Math.ceil(count/5));i++){
   const phase=(clock*2+i*.37)%1;if(phase>.46)continue;
-  const sx=-16+(i*13)%35,sy=-8-Math.floor(i/3)*10-Math.floor(phase*8);
+  const coinIndex=Math.max(0,count-1-i*3),row=Math.floor(coinIndex/9),column=coinIndex%9;
+   const sx=-16+column*4+(row%2)*2,sy=-row*5-Math.floor(Math.abs(column-4)/2)-Math.floor(phase*5);
   rect(sx-3,sy,7,1,'#fff4b0');rect(sx,sy-3,1,7,'#fff4b0');rect(sx,sy,1,1,'#fff');
  }
  ctx.font='bold 10px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';

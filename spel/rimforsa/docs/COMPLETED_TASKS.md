@@ -1,10 +1,12 @@
 # Lage i Rimforsa – färdiga uppgifter (arkiv)
 
-**Statuskälla:** [ROADMAP.md](../ROADMAP.md). Detta arkiv innehåller **46 avbockade uppgifter** som har tagits bort ur den aktiva att-göra-listan (senast 26 november 2026). Här behålls de som historik, inte som nya arbetsuppgifter.
+**Statuskälla:** [ROADMAP.md](../ROADMAP.md). Detta arkiv innehåller **47 avbockade uppgifter** som har tagits bort ur den aktiva att-göra-listan (senast 26 november 2026). Här behålls de som historik, inte som nya arbetsuppgifter.
 
 **Viktig avgränsning:** En del punkter är avbockade efter kodgranskning, inte fysiska mobiltester. Om ett dokumenterat acceptansvillkor visar sig saknas öppnas uppgiften på nytt i `ROADMAP.md`. Grafikstandard och separat kvalitetsarbete gäller fortfarande.
 
-## Avslutade uppgifter (46)
+## Avslutade uppgifter (47)
+
+- [x] **SKATT-01 – Växande skatt vid hemmet.** · [Krav](TASK_DETAILS.md#skatt-01--växande-skatt-vid-hemmet) · 2026-11-26: gemensamt HUD-saldo, individuella första mynt, växande hög och myntförankrat glitter; flyttad från väg/huskant till gräsyta norr om bilen med stöd av användarens skärmbild. Renderingsfunktion och saldouppdatering testade med simulerade plånbokssaldon 0–1000 inklusive köp och återställning. Ingen ny livebild eller fysisk mobiltestning.
 
 - [x] **DRAKE-03 – Drakens avgränsade farozon i sydväst.** · [Krav](TASK_DETAILS.md#drake-03--drakens-avgränsade-farozon-i-sydväst) · 2026-11-26: tidigare kartgranskad skogspolygon; marginal vid avfyrning och hela projektilbanan, kontroll av stillastående och rörliga mål. 7 200 simulerade uppdateringar, 1 333 projektilpositioner, 392 träffprov inom skogen och inga träffar på testade skyddade målpunkter. Visuell webbläsarkontroll ej utförd.
 
