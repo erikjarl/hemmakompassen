@@ -157,7 +157,7 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
 <script src="./friend-sprites.js?v=2"></script>
 <script src="./npc.js?v=11"></script>
 <script src="./farm.js?v=6"></script>
-<script src="./dragon.js?v=27"></script>
+<script src="./dragon.js?v=28"></script>
 <script src="./helicopter.js?v=5"></script>
 <script src="./troll-minigame.js?v=8"></script>
 <script src="./preschool-friends-sprites.js?v=1"></script>
@@ -1951,6 +1951,7 @@ function tick(now){
  // Draken och spelaren ska använda samma pausvillkor: ingen eld när
  // huvudkartan är dold bakom butik, minispel, väska eller förlustdialog.
  const worldPlaying=worldIsPlaying();
+ const previousHeli=worldPlaying&&state.inHeli?{...helicopter.position}:null;
  if(worldPlaying&&!state.inCar&&!state.inHeli)advanceJump(dt);else cancelJump();
  iceBtn.hidden=!state.inHeli;iceBtn.disabled=!worldPlaying||iceCooldown>0||dragon.isAway();
  jumpBtn.disabled=!worldPlaying||state.inCar||state.inHeli||jumpCooldown>0;
@@ -2047,7 +2048,7 @@ function tick(now){
  const dragonDanger=dragon.update(dt,state.x,state.y,helicopter.position,!state.inCar&&!state.inHeli&&!boatState.active);
  const ds=dragon.snapshot();
  audio.setDragonNearby(!ds.away&&(dragonDanger||Math.hypot(ds.x-state.x,ds.y-state.y)<ds.proximity));
- if(dragon.strikeObject(helicopter.position.x,helicopter.position.y,28)){
+ if(dragon.strikeObject(helicopter.position.x,helicopter.position.y,28,state.inHeli?previousHeli:null)){
   const wasFlying=state.inHeli;
   if(wasFlying){landHeli(true);hurtUntil=performance.now()+1500;}
   helicopter.hit(performance.now()/1000);

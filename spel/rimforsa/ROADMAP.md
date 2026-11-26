@@ -21,17 +21,17 @@ Undantag: endast verkligt övergripande hinder (t.ex. nekad skrivbehörighet, sa
 
 ## Rotation
 
-**SENAST BEARBETAD HUVUDUPPGIFT: `SKATT-01` – individuell visualisering av första mynten.**
+**SENAST BEARBETAD HUVUDUPPGIFT: `DRAKE-03` – rörliga helikopterträffar.**
 
-**NÄSTA ROTATIONSPOSITION: `DRAKE-03`.**
+**NÄSTA ROTATIONSPOSITION: `SKATT-01`.**
 
 Rotation: DRAKE-03 → SKATT-01. Om endast en uppgift återstår får den väljas igen. Stryk verifierat färdiga delmoment direkt, flytta färdiga uppgifter till färdigarkivet och uppdatera antalen. Behåll återkallade uppgifter utanför kön.
 
-**Senaste avslutningsnotis:** 2026-11-26 – SKATT-01: första nio mynten visas individuellt, större saldon komprimeras gradvis (200d04b); nivåberäkning testad 0–1000. Kartplacering, faktisk rendering och Pages ej verifierade. Nästa DRAKE-03.
+**Senaste avslutningsnotis:** 2026-11-26 – DRAKE-03: träffkontroll tar hänsyn till helikopterns rörelse under bildrutan; isolerat test av träff, gräns och tidigare missad rörlig träff godkänt. Kartbild/Pages ej verifierade. Nästa SKATT-01.
 
 ## Kvar att göra – aktiv arbetskö (2)
 
-- [ ] **DRAKE-03 – Drakstridens ljud och säkra eldbollar.** · [Krav](docs/TASK_DETAILS.md#drake-03--drakstridens-ljud-och-säkra-eldbollar) · **Kvar:** Kontrollera faktisk eldklotsträff på flygande helikopter och att hela projektilbanan aldrig når väg 23, bensinmackens närhet eller andra skyddade områden; åtgärda konkreta fel.
+- [ ] **DRAKE-03 – Drakstridens ljud och säkra eldbollar.** · [Krav](docs/TASK_DETAILS.md#drake-03--drakstridens-ljud-och-säkra-eldbollar) · **Kvar:** Jämför skogspolygonen med kartbildens faktiska väg- och byggnadsgeometri; åtgärda eventuella konkreta överlapp.
 - [ ] **SKATT-01 – Växande skatt vid hemmet.** · [Krav](docs/TASK_DETAILS.md#skatt-01--växande-skatt-vid-hemmet) · **Kvar:** Kontrollera skattplattans visuella placering mot kartbilden, att den inte överlappar hus eller fordon, samt faktisk rendering vid intjäning, köp och återställning; åtgärda konkreta fel.
 
 ## Status

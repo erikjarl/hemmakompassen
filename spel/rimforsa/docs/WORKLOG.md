@@ -956,3 +956,7 @@ Kartbild och gångmask inspekterade via base64. Ny 24 px passage (448,648–511,
 ### 2026-11-25 – FORDON-03
 
 Körkorridorer och parkeringsytor definierade mot faktisk kartbild. Bilens centrum måste ligga i tillåten körzon; hela tidigare kollisionsytan vattenkontrolleras som förut. Isolerade tester godkända med syntetisk vattenmask. Kodcommit 239bf8353fbfc16311e5cdc00b35d055c744c6f9; cacheversion och GAME_RULES uppdaterade. Ingen fysisk genomspelning eller bildgenerering. FORDON-03 arkiverad.
+
+### 2026-11-26 – Jobb lage / DRAKE-03 (rörliga helikopterträffar)
+- `dragon.js` beräknar relativ rörelse mellan projektilen och helikoptern, med samma tidsandel för klippt projektilbana; centrum måste vara i skogszonen. `index.html` skickar positionen före flygrörelsen och laddar v28.
+- Isolerade JS-tester med verklig modul: träff på stillastående mål i skog, regressionsfall med rörligt mål som gamla koden missade, gränsprover i fem riktningar samt syntaxkontroll av inline-script godkända. Kartbildens geometri, fysisk spelning och Pages ej kontrollerade. Nästa SKATT-01; 2 öppna, 46 färdiga.

@@ -121,23 +121,32 @@
     duration=safe;
     fire.x+=fire.vx*duration;fire.y+=fire.vy*duration;
     fire.travelled+=speed*duration;fire.life-=dt;
+    fire.stepFraction=dt>0?duration/dt:0;
     // Ett eldklot som stoppats vid kartans kant kan fortfarande kollidera
     // på sista rörelsesegmentet, men ska inte ligga kvar som synlig låga.
     fire.expired=fire.life<=0||duration<dt||fire.travelled>=fire.maxDistance;
    }
    return near;
   }
-  function passesThrough(fire,px,py,radius){
+  function passesThrough(fire,px,py,radius,previous){
    // Macken och området öster om den är säkra även när målets träffradie
    // överlappar det sista tillåtna projektilsegmentet.
    // Målets centrum måste vara i skogen, men en bred helikopter får inte bli immun
    // bara för att dess träffradie sträcker sig över terrängkanten.
    if(px>=394||!inside(px,py,8))return false;
    // Kortaste avståndet mellan målets mitt och projektilens senaste rörelsesegment.
-   const ax=fire.prevX??fire.x,ay=fire.prevY??fire.y,dx=fire.x-ax,dy=fire.y-ay;
+   const ax=fire.prevX??fire.x,ay=fire.prevY??fire.y;
+   // Kontrollera relativ rörelse under samma bildruta; förflyttning via
+   // landning eller återställning är inte en flygbana. Målet måste också
+   // vara kvar i den skyddade skogszonen vid själva träffögonblicket.
+   const moving=previous&&inside(previous.x,previous.y,8)&&Math.hypot(px-previous.x,py-previous.y)<=24;
+   const startX=moving?previous.x:px,startY=moving?previous.y:py;
+   const step=moving?(fire.stepFraction??1):0;
+   const mx=(px-startX)*step,my=(py-startY)*step;
+   const dx=fire.x-ax-mx,dy=fire.y-ay-my;
    const lengthSquared=dx*dx+dy*dy;
-   const fraction=lengthSquared?Math.max(0,Math.min(1,((px-ax)*dx+(py-ay)*dy)/lengthSquared)):0;
-   return Math.hypot(px-(ax+fraction*dx),py-(ay+fraction*dy))<radius;
+   const fraction=lengthSquared?Math.max(0,Math.min(1,((startX-ax)*dx+(startY-ay)*dy)/lengthSquared)):0;
+   return inside(startX+mx*fraction,startY+my*fraction,8)&&Math.hypot(startX-ax-fraction*dx,startY-ay-fraction*dy)<radius;
   }
   function hazards(px,py){
    if(isAway())return null;
@@ -146,9 +155,9 @@
    return contact?'dragon-contact':fire?fire.id:null;
   }
   function consume(id){const n=shots.findIndex(s=>s.id===id);if(n>=0)shots.splice(n,1);}
-  function strikeObject(px,py,radius){
+  function strikeObject(px,py,radius,previous){
    if(isAway())return false;
-   const index=shots.findIndex(s=>passesThrough(s,px,py,radius));
+   const index=shots.findIndex(s=>passesThrough(s,px,py,radius,previous));
    if(index<0)return false;shots.splice(index,1);return true;
   }
   // Menyer och minispel pausar redan flygande eldklot. Rensa den låsta
