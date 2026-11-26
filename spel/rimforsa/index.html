@@ -517,14 +517,16 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
    icaStatus.textContent='🍨 Tack för köpet! Du fick en '+name+' i väskan.'+(added.saved?'':' Den kunde inte sparas till nästa besök.');
    (audio.purchase||audio.coin)();updateCoinScore();renderBag();renderIca();drawIcaScene();
  }));
- document.getElementById('sellPotatoes').addEventListener('click',()=>{
+ document.getElementById('sellPotatoes').addEventListener('click',walletAction(()=>{
+   // Samma lås som köp: potatismynt får inte säljas samtidigt som de spenderas.
+   if(!document.getElementById('lossOverlay').hidden)return;
    // En gammal flik får inte sälja potatis efter att en annan flik förlorat.
    if(reloadAfterOtherTabLoss())return;
    const sale=farm.sell(3);
    if(!sale.success){icaStatus.textContent='Du behöver tre skördade potatisar för att sälja.';renderIca();return;}
    icaStatus.textContent='🥔 ICA-personalen köpte tre potatisar! Du fick 6 potatismynt att handla för.';
    (audio.potatoSale||audio.coin)();updateCoinScore();renderIca();drawIcaScene();
- });
+ }));
  const bag=window.RimforsaInventory.createInventory((()=>{try{return window.localStorage}catch(e){return null}})());
  const bagOverlay=document.getElementById('bagOverlay'),bagList=document.getElementById('bagList'),bagCount=document.getElementById('bagCount'),bagStatus=document.getElementById('bagStatus');
  function renderBag(){
