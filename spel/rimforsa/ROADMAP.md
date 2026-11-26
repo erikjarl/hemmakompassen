@@ -6,11 +6,11 @@
 
 ## Obligatorisk rotation mellan utvecklingspass
 
-**SENAST BEARBETAD HUVUDUPPGIFT: `HELI-02` – fysisk drakskatt (26 november 2026).**
+**SENAST BEARBETAD HUVUDUPPGIFT: `MYNT-03` – låsta köptransaktioner (26 november 2026).**
 
-**NÄSTA ROTATIONSPOSITION: `MYNT-03` – samtidiga köp och återbetalningar.**
+**NÄSTA ROTATIONSPOSITION: `ODLING-03` – gångvägar och odlingsdialoger.**
 
-**ALDRIG SAMMA HUVUDUPPGIFT TVÅ `JOBB LAGE` I FÖLJD.** Följ ordningen bland öppna, genomförbara uppgifter nedan med cirkulär rotation. Starta på angiven nästa position, hoppa över avbockade punkter, stående kvalitetsregler som `MINI-01` (dessa gäller ändå varje pass) och tillfälligt blockerade uppgifter. Bearbeta olika delar av spelet mellan varven: grafik, fordon, bränsle, ljud och andra spelmekaniker. Om inget praktiskt kan göras på nästa punkt, gå vidare till följande **annan** uppgift; återvänd först efter andra utvecklingspass. Prioritet betyder vikt inom rotationen, **inte** rätt att välja samma uppgift igen direkt. När ett pass med faktisk spelutveckling slutförts, uppdatera **båda fälten ovan** till den verkliga huvuduppgiften och efterföljande öppna rotationsposition innan passet avslutas. Rapportera vilka fält som ändrades. Att kontrollera kryssrutor eller åtgärda ett akut blockerande fel räknas inte som att byta huvuduppgift. **Aktuell rotation:** HELI-02 → MYNT-03 → ODLING-03 → MOBIL-01 → GRAF-01 → NPC-04 → KARTA-01 → LJUD-02. BRÄNSLE-02 väntar på verifierbar prisdata. Nästa position MYNT-03.
+**ALDRIG SAMMA HUVUDUPPGIFT TVÅ `JOBB LAGE` I FÖLJD.** Följ ordningen bland öppna, genomförbara uppgifter nedan med cirkulär rotation. Starta på angiven nästa position, hoppa över avbockade punkter, stående kvalitetsregler som `MINI-01` (dessa gäller ändå varje pass) och tillfälligt blockerade uppgifter. Bearbeta olika delar av spelet mellan varven: grafik, fordon, bränsle, ljud och andra spelmekaniker. Om inget praktiskt kan göras på nästa punkt, gå vidare till följande **annan** uppgift; återvänd först efter andra utvecklingspass. Prioritet betyder vikt inom rotationen, **inte** rätt att välja samma uppgift igen direkt. När ett pass med faktisk spelutveckling slutförts, uppdatera **båda fälten ovan** till den verkliga huvuduppgiften och efterföljande öppna rotationsposition innan passet avslutas. Rapportera vilka fält som ändrades. Att kontrollera kryssrutor eller åtgärda ett akut blockerande fel räknas inte som att byta huvuduppgift. **Aktuell rotation:** HELI-02 → MYNT-03 → ODLING-03 → MOBIL-01 → GRAF-01 → NPC-04 → KARTA-01 → LJUD-02. BRÄNSLE-02 väntar på verifierbar prisdata. Nästa position ODLING-03.
 
 ## Obligatorisk avbockning – vid VARJE `jobb lage`
 
@@ -24,7 +24,7 @@
 
 **SJÄLVSTÄNDIG SLUTBEDÖMNING (25 november 2026):** Användaren delegerar bedömningen av färdig implementation till assistenten. Ingen användarfeedback eller fysisk mobiltestning ska vara ett rutinmässigt villkor för avbockning. Granska ursprungliga krav mot faktisk kod, använd proportionerliga isolerade tester vid behov, stryk direkt när kraven är uppfyllda och fortsätt. Separat visuell/ljudmässig kvalitetssäkring dokumenteras utan att hålla fungerande funktioner öppna. Behåll endast konkreta saknade funktioner, påvisade fel eller specifika ännu olösta krav i aktiv kö. Vid listrevision ska hela kön granskas.
 
-**Senaste avslutningsnotis:** 2026-11-26 – HELI-02: fysisk drakskatt vid besegrad drake, upphämtning med helikopter, generationsbunden sparning och återställning vid game over (6ba64b7). Syntaxkontroll godkänd; faktisk upphämtning, samtidiga flikar, rotorljud och Pages ej funktionstestade. Skattgrafiken är kodritad, ingen ny bildsprite integrerad. Nästa MYNT-03.
+**Senaste avslutningsnotis:** 2026-11-26 – MYNT-03: exklusivt Web Locks-lås kring pizza-, glass- och bränsleköp inklusive synkron återbetalning (544414c). Äldre webbläsare använder tidigare beteende; samtidiga återställningar, potatisförsäljning, migrering och riktiga fliktester återstår. Ingen ny bildsprite integrerad. Nästa ODLING-03.
 
 1. Läs [AGENTS.md](AGENTS.md) och **denna korta kö**. Välj nästa genomförbara **annan** uppgift enligt rotationsfälten ovan; respektera beroenden och blockerande fel. Välj aldrig samma huvuduppgift två pass i följd.
 2. Läs **bara den valda uppgiftens avsnitt** i [TASK_DETAILS.md](docs/TASK_DETAILS.md) (vid behov genom textsökning/radintervall), sedan relevant kod. Gemensamma, detaljerade krav finns i [GAME_RULES.md](docs/GAME_RULES.md); läs relevanta delar när arbetet berör dem.
@@ -52,7 +52,7 @@
 **Kartexpansion är nu aktivt utvecklingsarbete, inte en senareläggning.** Den tidigare regionala scenen har ersatts som mål av två separata fullstora världar: Kisa och Ulrika.
 
 - [ ] **GRAF-01 – Enhetlig grafik i alla scener.** · [Krav](docs/TASK_DETAILS.md#graf-01) · **Kvar:** Inventera kvarvarande grafiska avvikelser och kodritade figurer utöver redan bildbaserade personer och drake; harmonisera återstående scener och kontrollera visuell helhet på mobil och dator.
-- [ ] **MYNT-03 – Minispelsmynt i gemensam plånbok.** · [Krav](docs/TASK_DETAILS.md#mynt-03) · **Kvar:** Hantera samtidiga köp och återbetalningar utan förlorade uppdateringar; säker migrering av äldre sparningar med befintlig förlustsignal. Kontrollera återställning vid samtidiga fynd i riktiga flikar.
+- [ ] **MYNT-03 – Minispelsmynt i gemensam plånbok.** · [Krav](docs/TASK_DETAILS.md#mynt-03) · **Kvar:** Samordna potatisförsäljning och återställning med köp, hantera webbläsare utan Web Locks och verifiera låsta köp/återbetalningar; säker migrering av äldre sparningar med befintlig förlustsignal. Kontrollera återställning vid samtidiga fynd i riktiga flikar.
 
 - [ ] **HELI-02 – Flygbar helikopter med drakstrid.** · **Kvar:** Funktionstesta fysisk skatt vid tre isbollsträffar, upphämtning, omladdning och samtidiga flikar; förbättra skattens bildgrafik. Kontrollera verkliga isbollsbanor/träffar och hörbart rotorljud vid flygning, landning och krasch.
 
