@@ -380,6 +380,15 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
   farm.syncCoins();
   return game.snapshot().balance+rewardWallet.balance()+farm.snapshot().balance;
  };
+ // Serialize purchases and their synchronous rollback across tabs.
+ function walletAction(action){
+  return ()=>{
+   const run=()=>{if(!reloadAfterOtherTabLoss())action();};
+   if(navigator.locks?.request){
+    navigator.locks.request('rimforsa-wallet-purchase-v1',{mode:'exclusive'},run).catch(error=>console.error('Köp kunde inte genomföras',error));
+   }else run();
+  };
+ }
  let walletGeneration=0;
  function payCoins(amount){
   // Inga köp ska kunna genomföras bakom förlustdialogen.
@@ -434,7 +443,7 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
    pizzaBuy.click();
   }
  });
- pizzaBuy.addEventListener('click',()=>{
+ pizzaBuy.addEventListener('click',walletAction(()=>{
   if(bag.has('ananaspizza')){pizzaStatus.textContent='Pizzan finns redan i väskan!';if(audio.purchaseDenied)audio.purchaseDenied();renderPizza();return;}
   const refund=payCoins(PIZZA_PRICE);
    if(!refund){pizzaStatus.textContent='Du behöver minst fem mynt för att köpa pizzan.';if(audio.purchaseDenied)audio.purchaseDenied();renderPizza();return;}
@@ -442,7 +451,7 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
   if(!result.added){refund();pizzaStatus.textContent='Det gick inte att lägga pizzan i väskan.';if(audio.purchaseDenied)audio.purchaseDenied();renderPizza();return;}
   pizzaStatus.textContent='🍕 Mums! Pizzaslicen med ananas ligger i väskan.'+(result.saved?'':' Den kunde inte sparas till nästa besök.');
   (audio.purchase||audio.coin)();updateCoinScore();renderBag();renderPizza();drawPizzaScene();
- });
+ }));
  const icaOverlay=document.getElementById('icaOverlay'),icaBalance=document.getElementById('icaBalance'),icaStatus=document.getElementById('icaStatus');
  const icePrices={paronglass:3,vaniljglass:4};
  const icaCanvas=document.getElementById('icaShopScene');
@@ -484,7 +493,7 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
    icaOverlay.querySelector('[data-buy-ice="'+id+'"]').click();
   }
  });
- for(const button of icaOverlay.querySelectorAll('[data-buy-ice]'))button.addEventListener('click',()=>{
+ for(const button of icaOverlay.querySelectorAll('[data-buy-ice]'))button.addEventListener('click',walletAction(()=>{
    const id=button.dataset.buyIce,cost=icePrices[id];
    if(bag.has(id)){icaStatus.textContent='Den glassen finns redan i väskan!';if(audio.purchaseDenied)audio.purchaseDenied();renderIca();return;}
    const refund=payCoins(cost);
@@ -494,7 +503,7 @@ const game=window.RimforsaGameplay.createSession(COIN_TARGET);
    const name=id==='paronglass'?'päronglass':'vaniljglass';
    icaStatus.textContent='🍨 Tack för köpet! Du fick en '+name+' i väskan.'+(added.saved?'':' Den kunde inte sparas till nästa besök.');
    (audio.purchase||audio.coin)();updateCoinScore();renderBag();renderIca();drawIcaScene();
- });
+ }));
  document.getElementById('sellPotatoes').addEventListener('click',()=>{
    // En gammal flik får inte sälja potatis efter att en annan flik förlorat.
    if(reloadAfterOtherTabLoss())return;
@@ -1130,19 +1139,19 @@ function openFuelStation(){
   fuelDialog.setAttribute('aria-modal','true');fuelDialog.setAttribute('aria-label','Bensinmackens tankstation');
   fuelDialog.innerHTML='<div class="fuel-panel"><h2>⛽ INGO Rimforsa</h2><canvas width="320" height="180" aria-label="Pixelritad bensinmack med pump, tak och skylt där verkligt dagspris är markerat som okänt"></canvas><p data-fuel-status role="status"></p><div class="fuel-buttons"><button type="button" data-fuel-buy>Tanka bilen – 2 spelmynt</button><button type="button" data-fuel-boat>Tanka båten – 2 spelmynt</button><button type="button" data-fuel-heli>Tanka helikoptern – 7 spelmynt/full tank</button><button type="button" data-fuel-close>Tillbaka till kartan</button></div><p class="fuel-help">Verkligt bensinpris vid INGO Rimforsa: ej tillgängligt i spelet. INGO hänvisar till stationens egen prisskylt. <a href="https://www.ingo.se/station/ingo-rimforsa" target="_blank" rel="noopener noreferrer">INGO Rimforsa (officiell stationssida)</a>. Tankning kostar tills vidare 2 påhittade spelmynt, oberoende av verkligt literpris. Bilen kan alltid nås till fots om tanken tar slut.</p></div>';
   document.body.append(fuelDialog);
-  fuelDialog.querySelector('[data-fuel-buy]').addEventListener('click',()=>{
+  fuelDialog.querySelector('[data-fuel-buy]').addEventListener('click',walletAction(()=>{
    if(carFuel.snapshot().level>=100){fuelDialog.querySelector('[data-fuel-status]').textContent='Tanken är redan full!';return;}
    const refund=payCoins(carFuel.COST);
    if(!refund){fuelDialog.querySelector('[data-fuel-status]').textContent='Du behöver två spelmynt. Samla mynt på kartan eller sälj potatis på ICA.';if(audio.purchaseDenied)audio.purchaseDenied();return;}
    carFuel.fill();(audio.fuelFill||audio.coin)();updateFuelHud();renderFuelStation();
-  });
-  fuelDialog.querySelector('[data-fuel-boat]').addEventListener('click',()=>{
+  }));
+  fuelDialog.querySelector('[data-fuel-boat]').addEventListener('click',walletAction(()=>{
    if(boatFuel.snapshot().level>=100){fuelDialog.querySelector('[data-fuel-status]').textContent='Båtens tank är redan full!';return;}
    const refund=payCoins(carFuel.COST);
    if(!refund){fuelDialog.querySelector('[data-fuel-status]').textContent='Du behöver två spelmynt för att tanka båten.';if(audio.purchaseDenied)audio.purchaseDenied();return;}
    boatFuel.fill();(audio.fuelFill||audio.coin)();updateFuelHud();renderFuelStation();
-  });
-  fuelDialog.querySelector('[data-fuel-heli]').addEventListener('click',()=>{if(heliFuel.snapshot().level>=100){fuelDialog.querySelector('[data-fuel-status]').textContent='Helikopterns tank är full!';return;}const refund=payCoins(7);if(!refund){fuelDialog.querySelector('[data-fuel-status]').textContent='Du behöver 7 spelmynt.';return;}heliFuel.fill();updateFuelHud();renderFuelStation();if(audio.fuelFill)audio.fuelFill();});
+  }));
+  fuelDialog.querySelector('[data-fuel-heli]').addEventListener('click',walletAction(()=>{if(heliFuel.snapshot().level>=100){fuelDialog.querySelector('[data-fuel-status]').textContent='Helikopterns tank är full!';return;}const refund=payCoins(7);if(!refund){fuelDialog.querySelector('[data-fuel-status]').textContent='Du behöver 7 spelmynt.';return;}heliFuel.fill();updateFuelHud();renderFuelStation();if(audio.fuelFill)audio.fuelFill();}));
   fuelDialog.querySelector('[data-fuel-close]').addEventListener('click',()=>{fuelDialog.hidden=true;state.nearKey=null;updateMessage();});
   fuelDialog.addEventListener('click',e=>{if(e.target===fuelDialog){fuelDialog.hidden=true;state.nearKey=null;updateMessage();}});
  }
