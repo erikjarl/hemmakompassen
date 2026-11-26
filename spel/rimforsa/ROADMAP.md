@@ -4,95 +4,36 @@
 **Publicerad adress:** https://erikjarl.github.io/hemmakompassen/spel/rimforsa/  
 **Senast rensad:** 2026-11-26 · **Källa för uppgiftsstatus och arbetsordning:** denna fil.
 
+**NY AVGRÄNSNING 26 november 2026 (uttrycklig användarinstruktion, företräde framför äldre regler):** Användaren är nöjd med spelet i övrigt. Arbeta endast med de nya önskemålen i ROADMAP: drakstridens ljud/musik, helikopterträffar med strikt eldklotsgräns och synlig förmögenhet vid hemmet. Tidigare öppna uppgifter är återkallade, inte verifierat färdiga, och får inte återinföras eller väljas som reservuppgift utan ny användarinstruktion. Den stående generella spriteinventeringen upphör; bildarbete görs endast för aktuella krav. Behåll SNES-kvalitetsregeln för ny grafik. Rotera mellan de nya aktiva uppgifterna; om endast en återstår får den bearbetas flera pass i följd. När kön är tom avslutas Jobb lage utan nya oombedda förändringar. Leveransgrinden gäller inom denna avgränsning.
+
 ## Bindande leveransgrind för varje Jobb lage (26 november 2026)
 
 **Läsning, planering, inventering, kodgranskning, testning och rapportering är förberedelser – inte ett avslutat utvecklingspass.** Börja verktygsarbetet omedelbart och fortsätt i samma körning till en konkret leverans. Ingen ny användarbekräftelse behövs.
 
 1. Läs aktiv kö och instruktioner. Välj nästa genomförbara huvuduppgift enligt rotationen. Avgränsa vid behov uppgiften till en liten men verklig användarnyttig förändring.
-2. Om vald uppgift blockeras (t.ex. binär bildöverföring, fysisk Safari eller extern prisdata), dokumentera exakt hindret och byt **omedelbart** till nästa andra öppna genomförbara uppgift. Upprepa tills en konkret förändring kan göras. Ett hinder i en enskild uppgift är aldrig skäl att avsluta hela passet. Om alla öppna punkter är blockerade, inventera spelet efter en konkret förbättring inom redan godkänt spelscope, utan att uppfinna nya större funktioner.
-3. Utför minst en substantiell speländring i kod eller integrerade resurser som förbättrar faktisk funktion, spelupplevelse eller grafik; rena dokumentationsändringar, cacheversionshöjningar, kosmetiska kodomskrivningar, testfiler eller enbart genererade men ointegrerade bilder uppfyller inte detta krav. Prioritera riktiga bildsprites enligt tidigare instruktion; om bildöverföring blockeras, leverera annan konkret speländring.
+2. Om vald uppgift blockeras (t.ex. binär bildöverföring, fysisk Safari eller extern prisdata), dokumentera exakt hindret och byt **omedelbart** till nästa andra öppna genomförbara uppgift. Upprepa tills en konkret förändring kan göras. Ett hinder i en enskild uppgift är aldrig skäl att avsluta hela passet. Om alla aktiva punkter är blockerade, välj en mindre genomförbar del inom samma nya krav; ändra inte andra funktioner.
+3. Utför minst en substantiell speländring i kod eller integrerade resurser som förbättrar faktisk funktion, spelupplevelse eller grafik; rena dokumentationsändringar, cacheversionshöjningar, kosmetiska kodomskrivningar, testfiler eller enbart genererade men ointegrerade bilder uppfyller inte detta krav. Prioritera integrerad bildgrafik när den behövs för aktuella krav.
 4. Kontrollera ändringen med lämplig syntaxkontroll, avgränsat funktionstest eller konkret kodgranskning. Vid fel: rätta och kontrollera igen, eller välj en mindre genomförbar ändring. Granska öppna punkter och stryk verifierat klara direkt.
 5. Committa/pusha speländringen till main enligt fullmakten, synkronisera ROADMAP.md, båda AGENTS.md och övriga berörda instruktioner samt färdigarkiv/arbetslogg där tillämpligt. Uppdatera rotationen efter faktiskt utfört arbete. Läs tillbaka ändrade filer på main och kontrollera commitresultat; kontrollera publicering där tillgängligt. Påstå inte att Pages är publicerat om detta inte verifierats.
 6. **SLUTGRIND:** Innan slutrapport: kontrollera att (a) en verklig speländring finns på main, (b) relevant kontroll utförts och redovisats, (c) samtliga obligatoriska dokument är synkroniserade, (d) rotation och status är korrekta. Om något saknas, fortsätt med nästa nödvändiga verktygsanrop i stället för att avsluta. En blockerad uppgift eller ett misslyckat verktygsanrop räcker inte; försök en rimlig alternativ metod eller annan uppgift. Prioritera tidigt en liten levererbar ändring så att passet inte förbrukas av läsning.
 
 Undantag: endast verkligt övergripande hinder (t.ex. nekad skrivbehörighet, samtliga rimliga verktygsvägar otillgängliga eller en hård körgräns) får göra passet ofullständigt. Leverera då allt faktiskt genomförbart, uppdatera dokumentationen om möjligt och rapportera exakt vilka alternativa försök som gjordes och vilka slutvillkor som inte uppfylldes. Ändra inte rotationsfält som om passet lyckats. Kalla aldrig ett sådant pass genomfört. Inga löften om arbete efter avslutad körning. Denna leveransgrind har företräde framför äldre formuleringar som kan tolkas som att en granskning eller blockerad enskild uppgift räcker.
 
-## Obligatorisk rotation mellan utvecklingspass
+## Rotation
 
-**SENAST BEARBETAD HUVUDUPPGIFT: `MYNT-03` – låst potatisförsäljning (26 november 2026).**
+**SENAST BEARBETAD HUVUDUPPGIFT: `MYNT-03` (historisk, före körevision).**
 
-**NÄSTA ROTATIONSPOSITION: `ODLING-03` – flera potatisland.**
+**NÄSTA ROTATIONSPOSITION: `DRAKE-03`.**
 
-**ALDRIG SAMMA HUVUDUPPGIFT TVÅ `JOBB LAGE` I FÖLJD.** Följ ordningen bland öppna, genomförbara uppgifter nedan med cirkulär rotation. Starta på angiven nästa position, hoppa över avbockade punkter, stående kvalitetsregler som `MINI-01` (dessa gäller ändå varje pass) och tillfälligt blockerade uppgifter. Bearbeta olika delar av spelet mellan varven: grafik, fordon, bränsle, ljud och andra spelmekaniker. Om inget praktiskt kan göras på nästa punkt, gå vidare till följande **annan** uppgift; återvänd först efter andra utvecklingspass. Prioritet betyder vikt inom rotationen, **inte** rätt att välja samma uppgift igen direkt. När ett pass med faktisk spelutveckling slutförts, uppdatera **båda fälten ovan** till den verkliga huvuduppgiften och efterföljande öppna rotationsposition innan passet avslutas. Rapportera vilka fält som ändrades. Att kontrollera kryssrutor eller åtgärda ett akut blockerande fel räknas inte som att byta huvuduppgift. **Aktuell rotation:** HELI-02 → MYNT-03 → ODLING-03 → MOBIL-01 → GRAF-01 → NPC-04 → KARTA-01 → LJUD-02. BRÄNSLE-02 väntar på verifierbar prisdata. Nästa position ODLING-03.
+Rotation: DRAKE-03 → SKATT-01. Om endast en uppgift återstår får den väljas igen. Stryk verifierat färdiga delmoment direkt, flytta färdiga uppgifter till färdigarkivet och uppdatera antalen. Behåll återkallade uppgifter utanför kön.
 
-## Obligatorisk avbockning – vid VARJE `jobb lage`
+**Senaste avslutningsnotis:** 2026-11-26 – Användaren återkallade tidigare öppna krav och ersatte dem med DRAKE-03 och SKATT-01. Administrativ körevision; ingen spelkod ändrad.
 
-**GÅ IGENOM ÖPPNA PUNKTER OCH KRYSSA AV ALLT SOM REDAN ÄR FÄRDIGT.** Detta gäller oavsett om arbetet utfördes nu eller under ett tidigare pass. Kontrollera befintlig implementation mot uppgiftens acceptansvillkor **innan** nästa arbete väljs och kontrollera igen **efter** passet. När en uppgift är helt genomförd och tillräckligt verifierad: **ta bort dess `[ ]`-rad från den aktiva arbetskön, lägg en `[x]`-rad i [COMPLETED_TASKS.md](docs/COMPLETED_TASKS.md) och uppdatera antalen i båda filerna**. Behåll inte genomförda uppgifter i listan över kvarvarande arbete. Låt inte färdiga punkter ligga kvar öppna av slentrian. Verifiering ska vara relevant och proportionerlig; ett omfattande CI-pass eller fysisk Safari behövs inte automatiskt för varje isolerad uppgift, men om uppgiften kräver sådan kontroll får den inte påstås vara slutförd utan den. Om en del återstår: behåll `[ ]` och ange konkret **vad** som saknas i stället för att bara skriva ”verifiering återstår”. Skilj separata framtida grafikförbättringar från redan färdiga funktionskrav, utan att förbigå grafikkrav som ingår i själva uppgiften. `ROADMAP.md` är enda källa till uppgiftskryss och status.
+## Kvar att göra – aktiv arbetskö (2)
 
-## Snabb rutin för `jobb lage`
+- [ ] **DRAKE-03 – Drakstridens ljud och säkra eldbollar.** · [Krav](docs/TASK_DETAILS.md#drake-03--drakstridens-ljud-och-säkra-eldbollar) · **Kvar:** Isbollsskottljud, träffljud på draken, hotfull musik nära draken samt eldbollar som kan träffa helikoptern men aldrig når väg 23, bensinmackens närhet eller andra skyddade områden.
+- [ ] **SKATT-01 – Växande skatt vid hemmet.** · [Krav](docs/TASK_DETAILS.md#skatt-01--växande-skatt-vid-hemmet) · **Kvar:** Skattplatta nära hemhuset med växande glittrande skatt som speglar alla mynt i den gemensamma plånboken.
 
-**OBLIGATORISK AVSLUTNINGSRUTIN VID VARJE `jobb lage` (25 november 2026):** Inget arbetspass får avslutas innan samtliga relevanta ROADMAP- och AGENTS-filer har lästs om, uppdaterats och synkroniserats med faktiskt utfört arbete och aktuella användarinstruktioner. Detta omfattar alltid `AGENTS.md` i repo-roten, `spel/rimforsa/AGENTS.md` och `spel/rimforsa/ROADMAP.md`, samt andra ROADMAP-/AGENTS-filer som berör den ändrade delen av spelet. Uppdatera i varje berörd fil en kort, aktuell avslutningsnotis (ersätt föregående notis, bygg inte upp en historik), och ändra vid behov arbetsinstruktioner, status, kvarvarande delmoment, beroenden och rotationsordning. ROADMAP.md för spelet förblir enda aktiva uppgiftskö; duplicera inte checklistor i AGENTS-filerna eller Hemmakompassens separata roadmap. Flytta verifierat färdiga punkter till färdigarkivet och justera antalen; lämna delvis klara punkter öppna med konkret återstående arbete. Vid blockerat eller ofullständigt pass gäller samma avslutningsrutin, men ange vad som inte kunde utföras och ändra inte rotationsfält som om ett utvecklingspass slutförts. Committa samtliga relevanta dokumentändringar, kontrollera att de finns på main och redovisa i slutrapporten exakt vilka filer som uppdaterats och vad som eventuellt blockerats. Att bara uppdatera spelkoden, skriva en rapport i chatten eller uppdatera en enda roadmap räcker inte.
+## Status
 
-**OMEDELBAR STRYKNING (25 november 2026, uttrycklig användarinstruktion):** Så fort en uppgift eller ett delmoment upptäcks vara färdigimplementerat ska det strykas ur den aktiva listan, även mitt i ett pass och även om arbetet gjordes tidigare. Kodgranskning och avgränsade funktionstester räcker när de visar att de ursprungliga kraven är uppfyllda; kräv inte fysisk mobiltestning eller nya förbättringar rutinmässigt. Flytta helt färdiga uppgifter till färdigarkivet direkt och räkna om antal; stryk färdiga delmoment från kvar-raden. Separat kvalitetssäkring får inte hålla färdig funktion öppen. Dokumentera verifieringsnivå ärligt och öppna på nytt endast vid konkret upptäckt brist. Fortsätt direkt med nästa faktiskt ofärdiga uppgift.
-
-**SJÄLVSTÄNDIG SLUTBEDÖMNING (25 november 2026):** Användaren delegerar bedömningen av färdig implementation till assistenten. Ingen användarfeedback eller fysisk mobiltestning ska vara ett rutinmässigt villkor för avbockning. Granska ursprungliga krav mot faktisk kod, använd proportionerliga isolerade tester vid behov, stryk direkt när kraven är uppfyllda och fortsätt. Separat visuell/ljudmässig kvalitetssäkring dokumenteras utan att hålla fungerande funktioner öppna. Behåll endast konkreta saknade funktioner, påvisade fel eller specifika ännu olösta krav i aktiv kö. Vid listrevision ska hela kön granskas.
-
-**Senaste avslutningsnotis:** 2026-11-26 – Användarkorrigering ODLING-03: tre odlingar flyttade till gräsfältet direkt norr om Hackelhallen, öster om väg 23 (8186957), med ny gångkorridor. Koordinater och ursprunglig gångmask kontrollerade; pekrutter, dialoger, visuell mobilvy och Pages ännu ej verifierade. Rotation oförändrad (direkt användaruppdrag).
-
-1. Läs [AGENTS.md](AGENTS.md) och **denna korta kö**. Välj nästa genomförbara **annan** uppgift enligt rotationsfälten ovan; respektera beroenden och blockerande fel. Välj aldrig samma huvuduppgift två pass i följd.
-2. Läs **bara den valda uppgiftens avsnitt** i [TASK_DETAILS.md](docs/TASK_DETAILS.md) (vid behov genom textsökning/radintervall), sedan relevant kod. Gemensamma, detaljerade krav finns i [GAME_RULES.md](docs/GAME_RULES.md); läs relevanta delar när arbetet berör dem.
-3. Ägna huvuddelen av passet åt faktiska spelförbättringar, med proportionerliga kontroller. Committa, pusha och publicera enligt stående fullmakt. Markera `[x]` först efter relevant verifiering.
-4. Uppdatera **endast återstående del** på uppgiftsraden i denna roadmap; flytta helt färdiga uppgifter till [COMPLETED_TASKS.md](docs/COMPLETED_TASKS.md). Skriv utfört arbete och verifieringsnivå i [WORKLOG.md](docs/WORKLOG.md), **aldrig som växande historik på checklistans rad**. Läs inte hela arbetsloggen inför varje pass; sök där bara vid behov.
-
-**OBLIGATORISKT FÖR VARJE UPPGIFT:** All ny och ändrad synlig grafik ska vara originalgjord **16-BITARS SUPER NINTENDO-PIXELKONST MED SAMMA PIXELSKALA, SKÄRPA, DETALJRIKEDOM, FÄRGSTIL, PROPORTIONER OCH TYDLIGA ANSIKTSDRAG/HÅR SOM HUVUDKARTAN OCH LAGES SPRITE**. Inga avvikande grovpixliga platshållare. Samma krav gäller även redan avbockade funktioner när grafiken berörs. Se [GAME_RULES.md](docs/GAME_RULES.md). Detta krav gäller även om den korta grafikmärkningen nedan utelämnas vid framtida redigering.
-
-## Stående högsta bildprioritet – varje `jobb lage` (20 november 2026)
-
-**BILDSPRITES FÖRE NYA KODRITADE PERSONER:** Identifiera vid varje pass minst en figur eller bakgrundsperson som inte använder riktig bildsprite. Prioritera bildgenerering av en originalgjord figur i huvudkartans/Lages detaljerade 16-bitars-SNES-stil, följt av faktiskt byte från kodritad platshållare till inläst sprite. Omfattar huvudkartans NPC:er och andra personer, Hackelhallens fotbollsspel (Maja, åskådare/bakgrundspersoner), rutschkanans förskolebarn/bakgrundspersoner och andra minispel. Anpassa vinkel, storlek, perspektiv och animation; bevara Lages befintliga bra sprite. Verifiera att filerna används och fungerar på mobil/dator innan någon del kryssas av. Dokumentera vad som är bildbaserat respektive fortfarande kodritat; markera blockerad bildgenerering ärligt om verktyget saknas. **Samma huvuduppgift får fortfarande inte väljas i två på varandra följande pass.** Integrera detta som stående delmoment inom den roterande uppgiften, särskilt GRAF-01/SPORT-01, inte som skäl att ensidigt fastna i en enda scen.
-
-## Kvar att göra – aktiv arbetskö (9)
-
-**Översikt 26 november 2026:** 9 öppna uppgifter, 46 tidigare avbockade i [färdigarkivet](docs/COMPLETED_TASKS.md) och 1 ständig kvalitetsregel (MINI-01). **Endast ofärdiga delar står nedan.** Utförda delmoment och tidigare rapporter finns i [arbetsloggen](docs/WORKLOG.md), [uppgiftskraven](docs/TASK_DETAILS.md) och Git-historiken. Lägg **aldrig** till långa historiska uppdateringar på dessa rader.
-
-### Aktivt genomförande (7)
-
-- [ ] **MOBIL-01 – Stoppa blåmarkering och kopieringsmeny vid mobilspel (hög prioritet).** · [Krav](docs/TASK_DETAILS.md#mobil-01--stoppa-oavsiktlig-textmarkering-och-kopieringsmeny) · **Kvar:** Kontrollera långa, upprepade och samtidiga tryck i fysisk mobil Safari på huvudkartan och i minispelen så att globalt skydd verkligen förhindrar markering och kopieringsmeny utan att störa styrningen; åtgärda eventuella kvarvarande konkreta fel.
-
-- [ ] **ODLING-03 – Flera potatisland norr om Hackelhallen (hög prioritet).** · [Krav](docs/TASK_DETAILS.md#odling-03--flera-potatisland-norr-om-hackelhallen) · **Kvar:** Verifiera pekrutter från huvudvägnätet till alla tre odlingar på fältet norr om Hackelhallen, öster om väg 23 (enligt användarens bild 26 november), samt att respektive odlingsdialog öppnas på rätt plats. Justera eventuella konkreta visuella överlappningar eller blockerade rutter.
-
-- [ ] **LJUD-02 – Permanent fungerande ljud på mobil Safari (hög prioritet, återkommande fel).** · [Krav](docs/TASK_DETAILS.md#ljud-02) · **Kvar:** Verifiera faktisk ljuduppspelning på iPhone/Safari vid första spelgest, scenbyte, omladdning, appbyte och skärmlås. Utred kvarvarande tystnad om den kan reproduceras; bevara sparat av/på-val.
-
-**Kartexpansion är nu aktivt utvecklingsarbete, inte en senareläggning.** Den tidigare regionala scenen har ersatts som mål av två separata fullstora världar: Kisa och Ulrika.
-
-- [ ] **GRAF-01 – Enhetlig grafik i alla scener.** · [Krav](docs/TASK_DETAILS.md#graf-01) · **Kvar:** Inventera kvarvarande grafiska avvikelser och kodritade figurer utöver redan bildbaserade personer och drake; harmonisera återstående scener och kontrollera visuell helhet på mobil och dator.
-- [ ] **MYNT-03 – Minispelsmynt i gemensam plånbok.** · [Krav](docs/TASK_DETAILS.md#mynt-03) · **Kvar:** Samordna återställning med köp, hantera webbläsare utan Web Locks och verifiera låsta köp/återbetalningar; säker migrering av äldre sparningar med befintlig förlustsignal. Kontrollera återställning vid samtidiga fynd i riktiga flikar.
-
-- [ ] **HELI-02 – Flygbar helikopter med drakstrid.** · **Kvar:** Funktionstesta fysisk skatt vid tre isbollsträffar, upphämtning, omladdning och samtidiga flikar; förbättra skattens bildgrafik. Kontrollera verkliga isbollsbanor/träffar och hörbart rotorljud vid flygning, landning och krasch.
-
-- [ ] **NPC-04 – Dialoger och minispel utan interaktionskonflikt.** · [Krav](docs/TASK_DETAILS.md#npc-04--dialoger-och-minispel-får-inte-konkurrera-om-interaktionen) · **Kvar:** Kontrollera att alla NPC:er hittar gångbara startplatser med den utökade skyddszonen på den faktiska kartmasken samt att dialoger och entréer fungerar och kan återöppnas med pek- och tangentbordsstyrning.
-
-### Väntar på underlag (1)
-
-- [ ] **BRÄNSLE-02 – Verifierat dagspris på Ingo-skylten.** · [Krav](docs/TASK_DETAILS.md#bränsle-02) · **Blockerat:** Saknar verifierbart stationsspecifikt dagspris och pålitlig uppdateringsmetod. Visa inte regionala snitt som lokalt pris och ändra inte speltaxan på gissning.
-
-### Aktiv kartutbyggnad (1)
-
-- [ ] **KARTA-01 – Egna spelvärldar för Kisa och Ulrika.** · [Krav](docs/TASK_DETAILS.md#karta-01) · **Kvar:** Överför de två återfunna och visuellt identifierade originalbakgrunderna från filbiblioteket till GitHub (Kisa: file_00000000c3b481f4b952d19fb6658fcb; Ulrika: file_00000000eb1c82109e95f86e5951a45e) och integrera dem, skapa gång- och fordonsmasker och vägövergångar i båda riktningar via väg 23 söderut respektive Ulrikavägen västerut. Anslut gemensamma spelmekaniker och interaktiva platser.
-
-## Stående regel – inte en ofärdig uppgift
-
-**MINI-01:** Alla nya eller ändrade minispel ska följa [kraven](docs/TASK_DETAILS.md#mini-01) och huvudkartans SNES-grafik. Detta är en **återkommande kvalitetsregel**, inte en uppgift som väntar på att bli avbockad eller ska väljas som självständigt `jobb lage`-pass.
-
-## Färdiga uppgifter – flyttade ur att-göra-listan
-
-**46 färdigmarkerade uppgifter** finns i [COMPLETED_TASKS.md](docs/COMPLETED_TASKS.md). De ska **inte** återkomma i den aktiva kön såvida ett saknat acceptansvillkor påvisas. Alla 46 färdiga task-ID:n är borttagna från denna aktiva lista, men kraven finns kvar som referens i `TASK_DETAILS.md`.
-
-## Dokumentation och principer
-
-- [TASK_DETAILS.md](docs/TASK_DETAILS.md) – fullständig beskrivning och acceptansvillkor för samtliga 56 uppgifts-ID:n (inklusive stående MINI-01), utan parallella statuskryssrutor.
-- [GAME_RULES.md](docs/GAME_RULES.md) – bindande grafik-/minispelsregler och gemensamma tekniska hänsyn.
-- [COMPLETED_TASKS.md](docs/COMPLETED_TASKS.md) – separat historik över 46 avbockade uppgifter.
-- [WORKLOG.md](docs/WORKLOG.md) – hela tidigare arbetsloggen och historiska statusnoteringar. Läs **bara vid behov**.
-- `AGENTS.md` i denna mapp och repo-roten – kortkommando, befogenheter och arbetsmetod.
-
-**Ny prioritet 22 november 2026 på användarens begäran:** `KARTA-01` är aktiv kartutbyggnad och ska inte längre vänta på övriga uppgifter. Kartarbete väljs återkommande i rotationen och får utgöra eget utvecklingspass; grundregeln om att inte välja samma huvuduppgift två pass i rad gäller fortsatt. Utbyggnaden ska utgå från verkliga kartkällor, med spelbara förenklingar tydligt markerade. `MINI-01` är en stående kvalitetsregel och ligger därför inte bland de 9 öppna uppgifterna.
+46 tidigare verifierat färdiga uppgifter i [COMPLETED_TASKS.md](docs/COMPLETED_TASKS.md). Nio tidigare öppna uppgifter har återkallats av användaren 26 november 2026: MOBIL-01, ODLING-03, LJUD-02, GRAF-01, MYNT-03, HELI-02, NPC-04, BRÄNSLE-02, KARTA-01. De är historiska krav i TASK_DETAILS.md och inte aktiva eller färdigmarkerade. MINI-01 och [GAME_RULES.md](docs/GAME_RULES.md) gäller som kvalitetsregler för ändrad grafik/spelmekanik, inte som extra utvecklingsuppgifter. Dokumentera faktiskt genomförda delsteg i [WORKLOG.md](docs/WORKLOG.md) och synkronisera båda AGENTS-filerna vid varje utvecklingspass.
