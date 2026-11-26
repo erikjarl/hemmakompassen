@@ -1,10 +1,12 @@
 # Lage i Rimforsa – färdiga uppgifter (arkiv)
 
-**Statuskälla:** [ROADMAP.md](../ROADMAP.md). Detta arkiv innehåller **47 avbockade uppgifter** som har tagits bort ur den aktiva att-göra-listan (senast 26 november 2026). Här behålls de som historik, inte som nya arbetsuppgifter.
+**Statuskälla:** [ROADMAP.md](../ROADMAP.md). Detta arkiv innehåller **48 avbockade uppgifter** som har tagits bort ur den aktiva att-göra-listan (senast 26 november 2026). Här behålls de som historik, inte som nya arbetsuppgifter.
 
 **Viktig avgränsning:** En del punkter är avbockade efter kodgranskning, inte fysiska mobiltester. Om ett dokumenterat acceptansvillkor visar sig saknas öppnas uppgiften på nytt i `ROADMAP.md`. Grafikstandard och separat kvalitetsarbete gäller fortfarande.
 
-## Avslutade uppgifter (47)
+## Avslutade uppgifter (48)
+
+- [x] **DRAKE-03 – Drakstridens ljud och säkra eldbollar (nya kraven 26 november).** · [Krav](TASK_DETAILS.md#drake-03--drakstridens-ljud-och-säkra-eldbollar) · Isbollsljud, träffljud och närhetsmusik integrerade. Flygande helikopter kan beskjutas och träffas nära draken; synlig rök före nödlandning. Kartbaserad bilvägsgeometri med marginal skyddas utöver tidigare kartgranskad polygon. Isolerade modul- och nödlandningstester godkända; ingen ny fysisk webbläsarspelning.
 
 - [x] **SKATT-01 – Växande skatt vid hemmet.** · [Krav](TASK_DETAILS.md#skatt-01--växande-skatt-vid-hemmet) · 2026-11-26: gemensamt HUD-saldo, individuella första mynt, växande hög och myntförankrat glitter; flyttad från väg/huskant till gräsyta norr om bilen med stöd av användarens skärmbild. Renderingsfunktion och saldouppdatering testade med simulerade plånbokssaldon 0–1000 inklusive köp och återställning. Ingen ny livebild eller fysisk mobiltestning.
 

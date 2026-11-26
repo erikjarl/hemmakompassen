@@ -48,14 +48,14 @@ const parkingAreas=[
  [618,421,699,495], // Hackelhallen parking
  [398,320,434,350] // home parking / spawn
 ];
-function roadAt(x,y){
- const px=x*1408/worldW,py=y*1056/worldH;
- if(parkingAreas.some(([l,t,r,b])=>px>=l&&px<=r&&py>=t&&py<=b))return true;
+function roadAt(x,y,margin=0){
+ const px=x*1408/worldW,py=y*1056/worldH,pad=Math.max(0,Number(margin)||0)*Math.max(1408/worldW,1056/worldH);
+ if(parkingAreas.some(([l,t,r,b])=>px>=l-pad&&px<=r+pad&&py>=t-pad&&py<=b+pad))return true;
  for(const [radius,points] of roadRoutes){
   for(let i=1;i<points.length;i++){
    const [ax,ay]=points[i-1],[bx,by]=points[i],dx=bx-ax,dy=by-ay;
    const t=Math.max(0,Math.min(1,((px-ax)*dx+(py-ay)*dy)/(dx*dx+dy*dy)));
-   if(Math.hypot(px-ax-t*dx,py-ay-t*dy)<=radius)return true;
+   if(Math.hypot(px-ax-t*dx,py-ay-t*dy)<=radius+pad)return true;
   }
  }
  return false;

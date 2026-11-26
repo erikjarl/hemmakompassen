@@ -21,18 +21,18 @@ Undantag: endast verkligt övergripande hinder (t.ex. nekad skrivbehörighet, sa
 
 ## Rotation
 
-**SENAST BEARBETAD HUVUDUPPGIFT: `SKATT-01` – placering och saldoåtergivning.**
+**SENAST BEARBETAD HUVUDUPPGIFT: `DRAKE-03` – vägskydd och synlig nödlandning.**
 
-**NÄSTA ROTATIONSPOSITION: `DRAKE-03`.**
+**NÄSTA ROTATIONSPOSITION: Ingen – aktiv kö tom.**
 
 Rotation: DRAKE-03 → SKATT-01. Om endast en uppgift återstår får den väljas igen. Stryk verifierat färdiga delmoment direkt, flytta färdiga uppgifter till färdigarkivet och uppdatera antalen. Behåll återkallade uppgifter utanför kön.
 
-**Senaste avslutningsnotis:** 2026-11-26 – SKATT-01: flyttade skattplattan från väg/huskant till gräset öster om hemmet, norr om bilen (470,275), utifrån användarens skärmbild. Förfinade stenfog och förankrade glitter vid mynten. Isolerad renderings- och saldokontroll godkänd. Ny livevy/Pages ej verifierad. SKATT-01 arkiverad; nästa DRAKE-03.
+**Senaste avslutningsnotis:** 2026-11-26 – DRAKE-03: kartbaserad vägkorridor skyddas med marginal; synlig 0,75 s träffrök före nödlandning. Isolerade väg-, träff- och nödlandningstester godkända. Ny kartbild/webbläsare ej verifierad. Aktiv kö tom.
 
-## Kvar att göra – aktiv arbetskö (1)
+## Kvar att göra – aktiv arbetskö (0)
 
-- [ ] **DRAKE-03 – Drakstridens ljud och säkra eldbollar.** · [Krav](docs/TASK_DETAILS.md#drake-03--drakstridens-ljud-och-säkra-eldbollar) · **Kvar:** Användaren rapporterade utebliven beskjutning: kontrollera det nya flygande målets avfyrning och nödlandning i huvudkartan samt skogspolygonen mot faktisk väg- och byggnadsgeometri.
+Inga aktiva uppgifter. Invänta nya uttryckliga önskemål.
 
 ## Status
 
-47 tidigare verifierat färdiga uppgifter i [COMPLETED_TASKS.md](docs/COMPLETED_TASKS.md). Nio tidigare öppna uppgifter har återkallats av användaren 26 november 2026: MOBIL-01, ODLING-03, LJUD-02, GRAF-01, MYNT-03, HELI-02, NPC-04, BRÄNSLE-02, KARTA-01. De är historiska krav i TASK_DETAILS.md och inte aktiva eller färdigmarkerade. MINI-01 och [GAME_RULES.md](docs/GAME_RULES.md) gäller som kvalitetsregler för ändrad grafik/spelmekanik, inte som extra utvecklingsuppgifter. Dokumentera faktiskt genomförda delsteg i [WORKLOG.md](docs/WORKLOG.md) och synkronisera båda AGENTS-filerna vid varje utvecklingspass.
+48 tidigare verifierat färdiga uppgifter i [COMPLETED_TASKS.md](docs/COMPLETED_TASKS.md). Nio tidigare öppna uppgifter har återkallats av användaren 26 november 2026: MOBIL-01, ODLING-03, LJUD-02, GRAF-01, MYNT-03, HELI-02, NPC-04, BRÄNSLE-02, KARTA-01. De är historiska krav i TASK_DETAILS.md och inte aktiva eller färdigmarkerade. MINI-01 och [GAME_RULES.md](docs/GAME_RULES.md) gäller som kvalitetsregler för ändrad grafik/spelmekanik, inte som extra utvecklingsuppgifter. Dokumentera faktiskt genomförda delsteg i [WORKLOG.md](docs/WORKLOG.md) och synkronisera båda AGENTS-filerna vid varje utvecklingspass.
