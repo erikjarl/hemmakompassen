@@ -8,7 +8,7 @@
 
 **SJÄLVSTÄNDIG SLUTBEDÖMNING (25 november 2026):** Användaren delegerar bedömningen av färdig implementation till assistenten. Ingen användarfeedback eller fysisk mobiltestning ska vara ett rutinmässigt villkor för avbockning. Granska ursprungliga krav mot faktisk kod, använd proportionerliga isolerade tester vid behov, stryk direkt när kraven är uppfyllda och fortsätt. Separat visuell/ljudmässig kvalitetssäkring dokumenteras utan att hålla fungerande funktioner öppna. Behåll endast konkreta saknade funktioner, påvisade fel eller specifika ännu olösta krav i aktiv kö. Vid listrevision ska hela kön granskas.
 
-**Senaste avslutningsnotis:** 2026-11-26 – NPC-04: skyddszoner för alla tre nya potatisland och reservsökning över kartan för NPC-startplatser (f670d68, f9227b2). Isolerat test av smal syntetisk gångmask och 3 000 uppdateringar godkänt. Faktisk kartmask, pek-/tangentbordsflöde och Pages ej verifierade; ingen ny bildsprite integrerad. Nästa huvuduppgift KARTA-01.
+**Senaste avslutningsnotis:** 2026-11-26 – HELI-02: fysisk drakskatt vid besegrad drake, upphämtning med helikopter, generationsbunden sparning och återställning vid game over (6ba64b7). Syntaxkontroll godkänd; faktisk upphämtning, samtidiga flikar, rotorljud och Pages ej funktionstestade. Skattgrafiken är kodritad, ingen ny bildsprite integrerad. Nästa MYNT-03.
 
 Detta är ett separat utvecklingskommando för **Lage i Rimforsa**. Läs repo-rotens `AGENTS.md`, denna fil och den **korta** `spel/rimforsa/ROADMAP.md` (enda aktiva arbetskö).
 
