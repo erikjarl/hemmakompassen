@@ -19,7 +19,7 @@
    return hit&&min>=margin;
   }
   const home={x:85,y:920};
-  let t=0,x=home.x,y=home.y,near=false,shotTimer=1,shotId=0,warningTarget=null,playerDistance=Infinity;const shots=[];
+  let t=0,x=home.x,y=home.y,near=false,shotTimer=1,shotId=0,warningTarget=null,playerDistance=Infinity,mouthOffset=28;const shots=[];
   const proximity=235;
   let iceHits=0,awayUntil=0;
   try{awayUntil=Math.max(0,Number(root.localStorage?.getItem('rimforsa-dragon-away-until'))||0);}catch(_){}
@@ -45,7 +45,11 @@
    near=playerTargetable&&inside(playerX,playerY,8)&&playerDistance<proximity;
    shotTimer-=dt;
    // Samma mynning används för varningslinje, skottets start och dess riktning.
-   const mouthX=x+28,mouthY=y-7;
+   // Välj den yttersta säkra punkten längs gapets riktning. Den fasta
+   // mynningen kan hamna för nära skogskanten under patrullen.
+   let mouthX=x,mouthY=y-7;
+   for(let offset=28;offset>=0;offset--){if(inside(x+offset,y-7,FIRE_MARGIN)){mouthX=x+offset;break;}}
+   mouthOffset=mouthX-x;
    const player={x:playerX,y:playerY};
    const inFireRange=(target,maxDistance=FIRE_MAX_DISTANCE)=>{
     if(!target||!Number.isFinite(target.x)||!Number.isFinite(target.y))return false;
@@ -218,7 +222,7 @@
    ctx.restore();
    if(warningTarget){
     const targetX=Math.round(warningTarget.x-camX+w/2),targetY=Math.round(warningTarget.y-camY+h/2);
-    const dx=targetX-(sx+28),dy=targetY-(sy-7),dist=Math.hypot(dx,dy);
+    const dx=targetX-(sx+mouthOffset),dy=targetY-(sy-7),dist=Math.hypot(dx,dy);
     if(dist>0){
      // Målpunkten visar var eldkulan faktiskt siktar. Lage kan väja
      // efter att målet låsts utan att varningen följer honom.
@@ -241,7 +245,7 @@
       ctx.fillRect(targetX+dx,targetY+dy,2,6);
      }
      for(let d=18;d<Math.min(95,dist);d+=16){
-      const px=Math.round(sx+28+dx/dist*d),py=Math.round(sy-7+dy/dist*d);
+      const px=Math.round(sx+mouthOffset+dx/dist*d),py=Math.round(sy-7+dy/dist*d);
       ctx.fillStyle=Math.floor(d/16)%2?'#ff9e3e':'#ffe58f';
       ctx.fillRect(px-2,py-2,4,4);
       ctx.fillStyle='#9f3e25';ctx.fillRect(px+2,py,2,2);
