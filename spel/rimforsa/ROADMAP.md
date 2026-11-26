@@ -4,6 +4,19 @@
 **Publicerad adress:** https://erikjarl.github.io/hemmakompassen/spel/rimforsa/  
 **Senast rensad:** 2026-11-26 · **Källa för uppgiftsstatus och arbetsordning:** denna fil.
 
+## Bindande leveransgrind för varje Jobb lage (26 november 2026)
+
+**Läsning, planering, inventering, kodgranskning, testning och rapportering är förberedelser – inte ett avslutat utvecklingspass.** Börja verktygsarbetet omedelbart och fortsätt i samma körning till en konkret leverans. Ingen ny användarbekräftelse behövs.
+
+1. Läs aktiv kö och instruktioner. Välj nästa genomförbara huvuduppgift enligt rotationen. Avgränsa vid behov uppgiften till en liten men verklig användarnyttig förändring.
+2. Om vald uppgift blockeras (t.ex. binär bildöverföring, fysisk Safari eller extern prisdata), dokumentera exakt hindret och byt **omedelbart** till nästa andra öppna genomförbara uppgift. Upprepa tills en konkret förändring kan göras. Ett hinder i en enskild uppgift är aldrig skäl att avsluta hela passet. Om alla öppna punkter är blockerade, inventera spelet efter en konkret förbättring inom redan godkänt spelscope, utan att uppfinna nya större funktioner.
+3. Utför minst en substantiell speländring i kod eller integrerade resurser som förbättrar faktisk funktion, spelupplevelse eller grafik; rena dokumentationsändringar, cacheversionshöjningar, kosmetiska kodomskrivningar, testfiler eller enbart genererade men ointegrerade bilder uppfyller inte detta krav. Prioritera riktiga bildsprites enligt tidigare instruktion; om bildöverföring blockeras, leverera annan konkret speländring.
+4. Kontrollera ändringen med lämplig syntaxkontroll, avgränsat funktionstest eller konkret kodgranskning. Vid fel: rätta och kontrollera igen, eller välj en mindre genomförbar ändring. Granska öppna punkter och stryk verifierat klara direkt.
+5. Committa/pusha speländringen till main enligt fullmakten, synkronisera ROADMAP.md, båda AGENTS.md och övriga berörda instruktioner samt färdigarkiv/arbetslogg där tillämpligt. Uppdatera rotationen efter faktiskt utfört arbete. Läs tillbaka ändrade filer på main och kontrollera commitresultat; kontrollera publicering där tillgängligt. Påstå inte att Pages är publicerat om detta inte verifierats.
+6. **SLUTGRIND:** Innan slutrapport: kontrollera att (a) en verklig speländring finns på main, (b) relevant kontroll utförts och redovisats, (c) samtliga obligatoriska dokument är synkroniserade, (d) rotation och status är korrekta. Om något saknas, fortsätt med nästa nödvändiga verktygsanrop i stället för att avsluta. En blockerad uppgift eller ett misslyckat verktygsanrop räcker inte; försök en rimlig alternativ metod eller annan uppgift. Prioritera tidigt en liten levererbar ändring så att passet inte förbrukas av läsning.
+
+Undantag: endast verkligt övergripande hinder (t.ex. nekad skrivbehörighet, samtliga rimliga verktygsvägar otillgängliga eller en hård körgräns) får göra passet ofullständigt. Leverera då allt faktiskt genomförbart, uppdatera dokumentationen om möjligt och rapportera exakt vilka alternativa försök som gjordes och vilka slutvillkor som inte uppfylldes. Ändra inte rotationsfält som om passet lyckats. Kalla aldrig ett sådant pass genomfört. Inga löften om arbete efter avslutad körning. Denna leveransgrind har företräde framför äldre formuleringar som kan tolkas som att en granskning eller blockerad enskild uppgift räcker.
+
 ## Obligatorisk rotation mellan utvecklingspass
 
 **SENAST BEARBETAD HUVUDUPPGIFT: `NPC-04` – gemensam interaktionsresolver (26 november 2026).**
@@ -24,7 +37,7 @@
 
 **SJÄLVSTÄNDIG SLUTBEDÖMNING (25 november 2026):** Användaren delegerar bedömningen av färdig implementation till assistenten. Ingen användarfeedback eller fysisk mobiltestning ska vara ett rutinmässigt villkor för avbockning. Granska ursprungliga krav mot faktisk kod, använd proportionerliga isolerade tester vid behov, stryk direkt när kraven är uppfyllda och fortsätt. Separat visuell/ljudmässig kvalitetssäkring dokumenteras utan att hålla fungerande funktioner öppna. Behåll endast konkreta saknade funktioner, påvisade fel eller specifika ännu olösta krav i aktiv kö. Vid listrevision ska hela kön granskas.
 
-**Senaste avslutningsnotis:** 2026-11-26 – KARTA-01: originalbilder återfunna, hämtade och visuellt identifierade: image-gen-1(2).png = Kisa, image-gen-2(2).png = Ulrika, båda 1448×1086. Binär överföring till GitHub och spelintegration återstår; ingen ny sprite eller spelkod. Rotation kvar på KARTA-01.
+**Senaste avslutningsnotis:** 2026-11-26 – Instruktionsrevision: bindande leveransgrind, reservuppgift vid blockering och verifiering på main. Ingen speländring i detta administrativa uppdrag; rotation oförändrad.
 
 1. Läs [AGENTS.md](AGENTS.md) och **denna korta kö**. Välj nästa genomförbara **annan** uppgift enligt rotationsfälten ovan; respektera beroenden och blockerande fel. Välj aldrig samma huvuduppgift två pass i följd.
 2. Läs **bara den valda uppgiftens avsnitt** i [TASK_DETAILS.md](docs/TASK_DETAILS.md) (vid behov genom textsökning/radintervall), sedan relevant kod. Gemensamma, detaljerade krav finns i [GAME_RULES.md](docs/GAME_RULES.md); läs relevanta delar när arbetet berör dem.
