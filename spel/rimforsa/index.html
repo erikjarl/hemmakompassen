@@ -634,8 +634,8 @@ const boatHazards=[
  {x:532,y:1255,r:15},{x:734,y:1310,r:15},{x:904,y:1135,r:15}
 ];
 
-// Three plots on the land immediately south-east of the boat club.
-const farmSites=[{x:1148,y:242},{x:1198,y:248},{x:1248,y:256}].map((p,plot)=>({...p,plot,name:'Potatisland '+(plot+1),text:'Plantera potatis och skörda efter fem minuter.',symbol:'🥔'}));
+// Tre potatisland på öppna fältet norr om Hackelhallen, öster om väg 23.
+const farmSites=[{x:710,y:237},{x:770,y:237},{x:830,y:237}].map((p,plot)=>({...p,plot,name:'Potatisland '+(plot+1),text:'Plantera potatis och skörda efter fem minuter.',symbol:'🥔'}));
 const sites=[
  {name:'Hem',x:360,y:335,text:'Välkommen hem! Här på Ulrikavägen börjar Lages Rimforsaäventyr.',symbol:'🏠'},
  {name:'Hackelhallen',x:667,y:418,text:'Här kan man spela fotboll, röra på sig och ha kul.',symbol:'⚽'},
@@ -662,7 +662,7 @@ function drawBeachAccess(g){
  g.restore();
 }
 function traceFarmAccess(g){
- g.beginPath();g.moveTo(1020,246);g.lineTo(1082,246);g.lineTo(1120,265);g.lineTo(1148,265);g.lineTo(1198,271);g.lineTo(1248,279);
+ g.beginPath();g.moveTo(600,250);g.lineTo(680,250);g.lineTo(710,260);g.lineTo(830,260);
  for(const p of farmSites){g.moveTo(p.x,p.y+23);g.lineTo(p.x,p.y);}
 }
 function drawFarmAccess(g){
