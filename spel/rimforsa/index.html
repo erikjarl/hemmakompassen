@@ -149,6 +149,7 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
 </script>
 <script src="./audio.js?v=49"></script>
 <script src="./gameplay.js?v=2"></script>
+<script src="./south-world.js?v=1"></script>
 <script src="./inventory.js?v=3"></script>
 <script src="./item-art.js?v=1"></script>
 <script src="./car.js?v=12"></script>
@@ -253,6 +254,9 @@ const tiles=new Image(), maskImage=new Image(), sprite=new Image();
 maskImage.crossOrigin='anonymous';
 
 let imageLoaded=false,maskLoaded=false,spriteLoaded=false,collision=null,edgeDistance=null,maskW=724,maskH=543,frameCount=0;
+const south=window.RimforsaSouthWorld,southArt=new Image();
+let region="rimforsa",carRegion="rimforsa",heliRegion="rimforsa",southReady=false;
+southArt.onload=()=>{southReady=!!south&&southArt.naturalWidth===W&&southArt.naturalHeight===H;};
 const state={x:360,y:335,dir:'down',phase:0,camX:359,camY:330,near:null,nearKey:null,visited:new Set(),path:[],messageLocked:false,inCar:false,inHeli:false};
 const carDrive=window.RimforsaCar;
 const carFuel=window.RimforsaFuel,boatFuel=carFuel.boat,heliFuel=carFuel.heli;
@@ -587,7 +591,7 @@ const npcSystem=window.RimforsaNPC.createSystem(canStand,Math.random,humpvindGra
 const dragon=window.RimforsaDragon.createDragon((x,y,margin)=>carDrive.roadAt(x,y,margin));
 const helicopter=window.RimforsaHelicopter.createHelicopter();
 const iceShots=[];let iceCooldown=0,heliCrashTime=0;
-function shootIce(){if(!state.inHeli||heliCrashTime>0||!worldIsPlaying()||iceCooldown>0||dragon.isAway())return false;const d=dragon.snapshot(),dx=d.x-state.x,dy=d.y-state.y,len=Math.hypot(dx,dy);if(len>280||len<1)return false;iceShots.push({x:state.x,y:state.y,vx:dx/len*310,vy:dy/len*310,life:1});iceCooldown=.65;audio.iceShoot?.();return true;}
+function shootIce(){if(region==="south"||!state.inHeli||heliCrashTime>0||!worldIsPlaying()||iceCooldown>0||dragon.isAway())return false;const d=dragon.snapshot(),dx=d.x-state.x,dy=d.y-state.y,len=Math.hypot(dx,dy);if(len>280||len<1)return false;iceShots.push({x:state.x,y:state.y,vx:dx/len*310,vy:dy/len*310,life:1});iceCooldown=.65;audio.iceShoot?.();return true;}
 function updateIce(dt){iceCooldown=Math.max(0,iceCooldown-dt);for(let i=iceShots.length-1;i>=0;i--){const b=iceShots[i],d=dragon.snapshot();const ox=b.x,oy=b.y,step=Math.min(dt,Math.max(0,b.life));b.x+=b.vx*step;b.y+=b.vy*step;b.life-=dt;const sx=b.x-ox,sy=b.y-oy,span=sx*sx+sy*sy;const t=span?Math.max(0,Math.min(1,((d.x-ox)*sx+(d.y-oy)*sy)/span)):0;if(!d.away&&Math.hypot(ox+t*sx-d.x,oy+t*sy-d.y)<30){iceShots.splice(i,1);const result=dragon.hitIce();if(result.hit)audio.dragonIceHit?.();coinNoticeUntil=performance.now()+2200;message.textContent=result.defeated?'Draken flyger iväg i 20 minuter!':'Isboll träffade! '+result.hits+'/3';if(result.defeated){iceShots.length=0;message.textContent=dropDragonTreasure(d.x,d.y);}break;}if(b.life<=0||d.away)iceShots.splice(i,1);}}
 
 const DRAGON_TREASURE_KEY='rimforsa-dragon-drop-v1';
@@ -763,7 +767,9 @@ function freePoint(x,y){if(!collision||x<8||y<8||x>=W-8||y>=H-8)return false;con
 // Båda punkterna måste vara godkända i ORIGINALMASKEN: inget hus, vatten eller sten
 // görs gångbart och kartans bild lämnas oförändrad.
 function canStand(x,y){
- return WALK_FOOT_SAMPLES.every(([ox,oy])=>freePoint(x+ox,y+oy));
+  if(region==="south")return south.canStand(x,y);
+  if(southReady&&y>=H-85&&y<H-8&&Math.abs(x-490)<32&&carDrive.roadAt(x,y))return true;
+  return WALK_FOOT_SAMPLES.every(([ox,oy])=>freePoint(x+ox,y+oy));
 }
 // A distance-to-wall field is generated once from the existing walkability mask.
 // Its gradient gently guides manual input along road edges WITHOUT making houses, water or forest walkable.
@@ -781,7 +787,8 @@ function buildEdgeDistance(){
  }
 }
 function edgeClearance(x,y){
- if(!edgeDistance)return 0;
+  if(region==="south")return south.canStand(x,y)?30:0;
+  if(!edgeDistance)return 0;
  let d=1e5;
  for(const [ox,oy] of WALK_FOOT_SAMPLES){const px=Math.floor((x+ox)*maskW/W),py=Math.floor((y+oy)*maskH/H);
    if(px<0||py<0||px>=maskW||py>=maskH)return 0;
@@ -1171,10 +1178,10 @@ function drawPoops(){
 // orsakar oändliga A*-försök vid en blockerad vägkant.
 let routeRetriesLeft=0;
 function clearPath(){state.path=[];routeRetriesLeft=0;}
-function nearHeli(){return !state.inCar&&!state.inHeli&&Math.hypot(state.x-helicopter.position.x,state.y-helicopter.position.y)<65;}
+function nearHeli(){return heliRegion===region&&!state.inCar&&!state.inHeli&&Math.hypot(state.x-helicopter.position.x,state.y-helicopter.position.y)<65;}
 function enterHeli(){cancelJump();if(heliFuel.snapshot().level<=0){message.textContent='Helikoptern har tom tank. Tanka på macken för 7 spelmynt.';if(audio.fuelEmpty)audio.fuelEmpty();return;}stop();state.inHeli=true;helicopter.setAirborne(true);audio.setHeliActive?.(true);state.x=helicopter.position.x;state.y=helicopter.position.y;state.nearKey=null;updateMessage();}
 function landHeli(emergency=false){if(heliCrashTime>0&&!emergency)return;heliCrashTime=0;const exit=nearbyExit();if(!exit&&!emergency){message.textContent='Flyg till gångbar mark innan du landar!';return;}stop();state.inHeli=false;helicopter.setAirborne(false);audio.setHeliActive?.(false);if(exit){state.x=exit.x;state.y=exit.y;helicopter.position.x=exit.x;helicopter.position.y=exit.y;}else{helicopter.reset();state.x=360;state.y=335;}state.nearKey=null;coinNoticeUntil=0;updateMessage();}
-function nearCar(){return !state.inCar&&Math.hypot(state.x-carPos.x,state.y-carPos.y)<78;}
+function nearCar(){return carRegion===region&&!state.inCar&&Math.hypot(state.x-carPos.x,state.y-carPos.y)<78;}
 function enterCar(){cancelJump();
  if(carFuel.snapshot().level<=0){message.textContent="Bilen har tom tank! Gå till Bensinmacken och tanka först.";if(audio.fuelEmpty)audio.fuelEmpty();return false;}
  if(!carDrive.ready()){message.textContent='Laddar vattenkartan till bilen…';return false;}
@@ -1189,7 +1196,8 @@ function nearbyExit(){
      if(canStand(x,y))return{x,y};
    }
  }
- return null;
+ if(region==="south"){const y=Math.max(28,Math.min(H-28,state.y));return{x:south.roadX(y),y};}
+  return null;
 }
 function exitCar(){
  if(!state.inCar)return false;
@@ -1478,6 +1486,7 @@ function resolveMapInteraction(){
  if(nearHeli()&&!nearCar())return {key:'heli'};
  if(state.inCar)return {key:'car-exit'};
  if(nearCar())return {key:'car-enter'};
+ if(region==='south')return {key:'south'};
  if(nearTroll())return {key:'troll'};
  const near=nearestSite();
  if(near)return {key:near.name,near};
@@ -1513,8 +1522,8 @@ function updateMessage(){
    message.innerHTML='<strong>'+near.symbol+' '+near.name+'</strong> – '+(isBoat?'tryck på Kör båt för att åka ut på sjön.':'tryck på Utforska för att besöka platsen.');
    title.textContent=near.name;
  }else{
-   title.textContent='Rimforsa';
-   message.innerHTML='<strong>På upptäcktsfärd!</strong> Följ vägarna till nästa plats.';
+   title.textContent=region==='south'?'Helvetets portar':'Rimforsa';
+    message.innerHTML=region==='south'?'<strong>Helvetets portar!</strong> Utforska skogen. Följ väg 23 norrut för att återvända till Rimforsa.':'<strong>På upptäcktsfärd!</strong> Följ vägarna till nästa plats.';
  }
 }
 interact.addEventListener('click',()=>{
@@ -1626,6 +1635,7 @@ function restartAfterGameOver(cause){
  message.innerHTML='<strong>💔 Alla hjärtan tog slut!</strong> '+(cause==='draken'?'Draken':cause==='båten'?'Ett grund i båtspelet':'Bajskorvarna')+' tog det sista hjärtat. Lage förlorade '+lostCoins+' mynt och börjar om hemma med '+remainingCoins+' mynt. Samla nya mynt och försök igen!'+resetWarning;
 }
 function reset({clearMoney=true}={}){
+  region=carRegion=heliRegion="rimforsa";
   cancelJump();
   // Inga kvarvarande eldklot eller låsta attacker får följa med till en ny omgång.
   dragon.resetAttacks();iceShots.length=0;iceCooldown=0;heliCrashTime=0;
@@ -1906,7 +1916,7 @@ function drawTroll(){
  ctx.restore();
 }
 function drawPlayer(){const x=Math.round(state.x-state.camX+canvas.width/2),y=Math.round(state.y-state.camY+canvas.height/2);ctx.fillStyle='#162d2588';ctx.beginPath();ctx.ellipse(x,y-2,11,4,0,0,2*Math.PI);ctx.fill();ctx.save();ctx.translate(0,-jumpHeight());if(spriteLoaded){const row=state.dir==='down'?0:state.dir==='left'?1:state.dir==='right'?2:3,frame=Math.floor(state.phase)%4;ctx.drawImage(sprite,frame*56,row*56,56,56,x-22,y-47,44,44)}else{ctx.fillStyle='#f6d3aa';ctx.fillRect(x-7,y-33,14,15);ctx.fillStyle='#f6e8c5';ctx.fillRect(x-12,y-18,24,17);ctx.fillStyle='#b65c63';ctx.fillRect(x-9,y-2,7,9);ctx.fillRect(x+3,y-2,7,9)}ctx.restore();}
-function drawMap(ctx2,w,h,full=false){ctx2.clearRect(0,0,w,h);ctx2.imageSmoothingEnabled=false;if(imageLoaded){ctx2.drawImage(tiles,0,0,w,h);ctx2.save();ctx2.scale(w/W,h/H);drawBeachAccess(ctx2);drawFarmAccess(ctx2);paintFarmPlots(ctx2);ctx2.restore();}else{ctx2.fillStyle='#80a75c';ctx2.fillRect(0,0,w,h)}for(const s of sites){const x=s.x/W*w,y=s.y/H*h;ctx2.fillStyle='#feeaa9';ctx2.fillRect(x-2,y-2,4,4);if(full){ctx2.fillStyle='#08251d';ctx2.fillRect(x+3,y-1,2,2)}}const tx=troll.x/W*w,ty=troll.y/H*h;ctx2.fillStyle='#b26d4f';ctx2.fillRect(tx-2,ty-2,5,5);const d=dragon.snapshot();ctx2.fillStyle='#e8a54b';ctx2.fillRect(d.x/W*w-2,d.y/H*h-2,5,5);const boba=npcSystem.boba?.p;if(boba?.ready){const bx=boba.x/W*w,by=boba.y/H*h;ctx2.save();ctx2.fillStyle='#ff866f';ctx2.strokeStyle='#fff2be';ctx2.lineWidth=1;ctx2.fillRect(bx-3,by-3,6,6);ctx2.strokeRect(bx-3,by-3,6,6);if(full){ctx2.font='bold 12px sans-serif';ctx2.lineWidth=3;ctx2.strokeStyle='#29202a';ctx2.strokeText('Boba',bx+7,by-5);ctx2.fillText('Boba',bx+7,by-5);}ctx2.restore();}const hv=npcSystem.humpvind?.p;if(hv?.ready){const hx=hv.x/W*w,hy=hv.y/H*h;ctx2.save();ctx2.fillStyle='#cda5f1';ctx2.strokeStyle='#fff2be';ctx2.fillRect(hx-3,hy-3,6,6);ctx2.strokeRect(hx-3,hy-3,6,6);if(full){ctx2.font='bold 12px sans-serif';ctx2.lineWidth=3;ctx2.strokeStyle='#29202a';ctx2.strokeText('Humpvind',hx+7,hy-5);ctx2.fillText('Humpvind',hx+7,hy-5);}ctx2.restore();}const px=state.x/W*w,py=state.y/H*h;ctx2.fillStyle='#ff4d5e';ctx2.fillRect(px-3,py-3,7,7);ctx2.strokeStyle='#fff2c0';ctx2.lineWidth=1.2;ctx2.strokeRect(px-4,py-4,9,9)}
+function drawMap(ctx2,w,h,full=false){ctx2.clearRect(0,0,w,h);if(region==="south"){ctx2.imageSmoothingEnabled=false;ctx2.drawImage(southArt,0,0,w,h);ctx2.fillStyle="#ff4d5e";ctx2.fillRect(state.x/W*w-3,state.y/H*h-3,7,7);return;}ctx2.imageSmoothingEnabled=false;if(imageLoaded){ctx2.drawImage(tiles,0,0,w,h);ctx2.save();ctx2.scale(w/W,h/H);drawBeachAccess(ctx2);drawFarmAccess(ctx2);paintFarmPlots(ctx2);ctx2.restore();}else{ctx2.fillStyle='#80a75c';ctx2.fillRect(0,0,w,h)}for(const s of sites){const x=s.x/W*w,y=s.y/H*h;ctx2.fillStyle='#feeaa9';ctx2.fillRect(x-2,y-2,4,4);if(full){ctx2.fillStyle='#08251d';ctx2.fillRect(x+3,y-1,2,2)}}const tx=troll.x/W*w,ty=troll.y/H*h;ctx2.fillStyle='#b26d4f';ctx2.fillRect(tx-2,ty-2,5,5);const d=dragon.snapshot();ctx2.fillStyle='#e8a54b';ctx2.fillRect(d.x/W*w-2,d.y/H*h-2,5,5);const boba=npcSystem.boba?.p;if(boba?.ready){const bx=boba.x/W*w,by=boba.y/H*h;ctx2.save();ctx2.fillStyle='#ff866f';ctx2.strokeStyle='#fff2be';ctx2.lineWidth=1;ctx2.fillRect(bx-3,by-3,6,6);ctx2.strokeRect(bx-3,by-3,6,6);if(full){ctx2.font='bold 12px sans-serif';ctx2.lineWidth=3;ctx2.strokeStyle='#29202a';ctx2.strokeText('Boba',bx+7,by-5);ctx2.fillText('Boba',bx+7,by-5);}ctx2.restore();}const hv=npcSystem.humpvind?.p;if(hv?.ready){const hx=hv.x/W*w,hy=hv.y/H*h;ctx2.save();ctx2.fillStyle='#cda5f1';ctx2.strokeStyle='#fff2be';ctx2.fillRect(hx-3,hy-3,6,6);ctx2.strokeRect(hx-3,hy-3,6,6);if(full){ctx2.font='bold 12px sans-serif';ctx2.lineWidth=3;ctx2.strokeStyle='#29202a';ctx2.strokeText('Humpvind',hx+7,hy-5);ctx2.fillText('Humpvind',hx+7,hy-5);}ctx2.restore();}const px=state.x/W*w,py=state.y/H*h;ctx2.fillStyle='#ff4d5e';ctx2.fillRect(px-3,py-3,7,7);ctx2.strokeStyle='#fff2c0';ctx2.lineWidth=1.2;ctx2.strokeRect(px-4,py-4,9,9)}
 // Pixelritad lokal skylt på huvudkartan. Visar INTE ett osäkert pris som dagens pris.
 function drawIngoPriceSign(){
  const x=Math.round(417-state.camX+canvas.width/2),y=Math.round(609-state.camY+canvas.height/2);
@@ -1967,13 +1977,37 @@ function drawLayer(name,fn){
 }
 function draw(){
  const w=canvas.width,h=canvas.height;ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.fillStyle='#305d42';ctx.fillRect(0,0,w,h);
- if(imageLoaded)drawLayer('map',()=>{const x=Math.round(w/2-state.camX),y=Math.round(h/2-state.camY);ctx.drawImage(tiles,x,y);ctx.translate(x,y);drawBeachAccess(ctx);});
+ if(region==='south'){
+   drawLayer('south map',()=>ctx.drawImage(southArt,Math.round(w/2-state.camX),Math.round(h/2-state.camY),W,H));
+   if(heliRegion===region)drawLayer('helicopter',()=>helicopter.draw(ctx,state.camX,state.camY,w,h,performance.now()/1000));
+   if(state.inCar)drawLayer('car',()=>carDrive.draw(ctx,state.x-state.camX+w/2,state.y-state.camY+h/2,state.dir,true));
+   else{if(carRegion===region)drawLayer('parked car',()=>carDrive.draw(ctx,carPos.x-state.camX+w/2,carPos.y-state.camY+h/2,parkedCarDir,false));if(!state.inHeli)drawLayer('player',drawPlayer);}
+   drawLayer('minimap',()=>drawMap(mc,mini.width,mini.height));return;
+  }
+  if(imageLoaded)drawLayer('map',()=>{const x=Math.round(w/2-state.camX),y=Math.round(h/2-state.camY);ctx.drawImage(tiles,x,y);ctx.translate(x,y);drawBeachAccess(ctx);});
  drawLayer('sign',drawIngoPriceSign);drawLayer('farm',drawFarmMarker);drawLayer('harbor',drawHarborVisitor);drawLayer('treasure',drawHomeTreasure);drawLayer('coins',drawCoins);drawLayer('dragon treasure',drawDragonTreasure);drawLayer('poops',drawPoops);drawLayer('troll',drawTroll);
- drawLayer('helicopter',()=>helicopter.draw(ctx,state.camX,state.camY,w,h,performance.now()/1000));drawLayer('dragon',()=>dragon.draw(ctx,state.camX,state.camY,w,h));drawLayer('ice',drawIce);drawLayer('NPCs',()=>npcSystem.draw(ctx,state.camX,state.camY,w,h,sprite));
+ if(heliRegion===region)drawLayer('helicopter',()=>helicopter.draw(ctx,state.camX,state.camY,w,h,performance.now()/1000));drawLayer('dragon',()=>dragon.draw(ctx,state.camX,state.camY,w,h));drawLayer('ice',drawIce);drawLayer('NPCs',()=>npcSystem.draw(ctx,state.camX,state.camY,w,h,sprite));
  if(state.inCar)drawLayer('car',()=>carDrive.draw(ctx,state.x-state.camX+w/2,state.y-state.camY+h/2,state.dir,true));
- else{drawLayer('parked car',()=>carDrive.draw(ctx,carPos.x-state.camX+w/2,carPos.y-state.camY+h/2,parkedCarDir,false));if(!state.inHeli)drawLayer('player',drawPlayer);}
+ else{if(carRegion===region)drawLayer('parked car',()=>carDrive.draw(ctx,carPos.x-state.camX+w/2,carPos.y-state.camY+h/2,parkedCarDir,false));if(!state.inHeli)drawLayer('player',drawPlayer);}
  ctx.strokeStyle='#1b3028';ctx.lineWidth=2;ctx.strokeRect(1,1,w-2,h-2);
  drawLayer('minimap',()=>drawMap(mc,mini.width,mini.height));drawLayer('boat',drawBoatGame);
+}
+function crossSouthPortal(dy){
+ if(!southReady||!south||!dy)return false;
+ if(state.inCar&&carFuel.snapshot().level<=0||state.inHeli&&(heliFuel.snapshot().level<=0||heliCrashTime>0))return false;
+ const next=south.crossing(region,state.x,state.y,dy,state.inHeli?'heli':state.inCar?'car':'walk');
+ if(!next)return false;
+ region=next.region;state.x=next.x;state.y=next.y;
+ if(state.inCar)carRegion=region;
+ if(state.inHeli){heliRegion=region;helicopter.position.x=state.x;helicopter.position.y=state.y;}
+ if(!state.inCar&&!state.inHeli&&!canStand(state.x,state.y)){
+  const p=nearbyExit();if(p){state.x=p.x;state.y=p.y;}
+ }
+ clearPath();cancelJump();state.near=null;state.nearKey=null;coinNoticeUntil=0;
+ state.camX=Math.max(canvas.width/2,Math.min(W-canvas.width/2,state.x));
+ state.camY=Math.max(canvas.height/2,Math.min(H-canvas.height/2,state.y));
+ audio.setDragonNearby(false);dragon.pauseAttacks();iceShots.length=0;
+ updateMessage();return true;
 }
 let last=performance.now(),stepProgress=0,lastLossCheck=last;
 let tickErrorReported=false;
@@ -1998,10 +2032,10 @@ function tick(now){
  const worldPlaying=worldIsPlaying();
  const previousHeli=worldPlaying&&state.inHeli?{...helicopter.position}:null;
  if(worldPlaying&&!state.inCar&&!state.inHeli)advanceJump(dt);else cancelJump();
- iceBtn.hidden=!state.inHeli;iceBtn.disabled=!worldPlaying||heliCrashTime>0||iceCooldown>0||dragon.isAway();
+ iceBtn.hidden=!state.inHeli||region==="south";iceBtn.disabled=region==="south"||!worldPlaying||heliCrashTime>0||iceCooldown>0||dragon.isAway();
  jumpBtn.disabled=!worldPlaying||state.inCar||state.inHeli||jumpCooldown>0;
  if(worldPlaying){
-  npcSystem.update(dt,state.x,state.y);
+  if(region==="rimforsa")npcSystem.update(dt,state.x,state.y);
   let dx=(+keys.right)-(+keys.left),dy=(+keys.down)-(+keys.up);
   if(state.inHeli&&heliCrashTime>0){
     heliCrashTime=Math.max(0,heliCrashTime-dt);
@@ -2017,9 +2051,9 @@ function tick(now){
         message.textContent='Bensinen är slut! Kliv ur bilen och gå till Bensinmacken.';
       }else{
       const oldX=state.x,oldY=state.y;
-      const movement=carDrive.move(state.x,state.y,dx,dy,dt);
+      const movement=region==="south"?south.drive(state.x,state.y,dx,dy,dt):carDrive.move(state.x,state.y,dx,dy,dt);
       if(movement.moved){
-        state.x=movement.x;state.y=movement.y;collectCoins();
+        state.x=movement.x;state.y=movement.y;if(region==="rimforsa")collectCoins();
         state.dir=dx&&dy?(dy<0?'up-':'down-')+(dx<0?'left':'right'):dx?(dx>0?'right':'left'):(dy>0?'down':'up');
         stepProgress+=dt;
         if(stepProgress>.08){updateMessage();stepProgress=0;}
@@ -2075,20 +2109,22 @@ function tick(now){
        }else clearPath();
       }
       if(moved){
-        collectCoins();
+         if(region==="rimforsa")collectCoins();
         state.dir=Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up');
         state.phase+=dt*9;stepProgress+=dt;
         if(stepProgress>.11){updateMessage();stepProgress=0;}
       }else state.phase=0;
     }else state.phase=0;
   }
- }
- // Bajskorvar får inte ta hjärtan medan huvudkartan är pausad bakom
+   crossSouthPortal(dy);
+  }
+  // Bajskorvar får inte ta hjärtan medan huvudkartan är pausad bakom
  // butiker, väska, minispel eller en dold webbläsarflik.
- if(worldPlaying)checkPoops();
+ if(worldPlaying&&region==="rimforsa")checkPoops();
  else game.touchHazard(null);
- if(worldPlaying){
-  // Träffrökens 2,8 sekunders reaktion ska bara räknas ned när
+ if(worldPlaying&&region==="south")helicopter.update(dt);
+  if(worldPlaying&&region==="rimforsa"){
+   // Träffrökens 2,8 sekunders reaktion ska bara räknas ned när
   // huvudkartan spelas, precis som drakens eldklot och animation.
   helicopter.update(dt);
   updateIce(dt);
@@ -2096,7 +2132,7 @@ function tick(now){
  const dragonDanger=dragon.update(dt,state.x,state.y,helicopter.position,!state.inCar&&!state.inHeli&&!boatState.active,state.inHeli);
  const ds=dragon.snapshot();
  audio.setDragonNearby(!ds.away&&(dragonDanger||Math.hypot(ds.x-state.x,ds.y-state.y)<ds.proximity));
- if(heliCrashTime===0&&dragon.strikeObject(helicopter.position.x,helicopter.position.y,28,state.inHeli?previousHeli:null)){
+ if(heliRegion===region&&heliCrashTime===0&&dragon.strikeObject(helicopter.position.x,helicopter.position.y,28,state.inHeli?previousHeli:null)){
   const wasFlying=state.inHeli;
   if(wasFlying){stop();heliCrashTime=.75;iceShots.length=0;audio.setHeliActive?.(false);}
   helicopter.hit(performance.now()/1000);
@@ -2145,7 +2181,7 @@ function routeFromMap(x,y){
  message.innerHTML='<strong>🚶 Lage går!</strong> Följ stigen och använd pilarna om du vill styra själv.';
  return true;
 }
-function openMap(){stop();overlay.classList.add('show');if(audio.mapOpen)audio.mapOpen();drawMap(wc,whole.width,whole.height,true);document.getElementById('mapRouteHint').textContent='Tryck på kartan eller välj badplatsen, ett potatisland eller Boba.';document.getElementById('closeMap').focus()}
+function openMap(){stop();overlay.classList.add('show');if(audio.mapOpen)audio.mapOpen();drawMap(wc,whole.width,whole.height,true);for(const id of ['goBeach','goFarm','goFarm2','goFarm3','goBoba'])document.getElementById(id).hidden=region==='south';document.getElementById('mapRouteHint').textContent=region==='south'?'Tryck på skogskartan för att välja en gångväg.':'Tryck på kartan eller välj badplatsen, ett potatisland eller Boba.';document.getElementById('closeMap').focus()}
 function closeMap(silent=false){if(!overlay.classList.contains('show'))return;overlay.classList.remove('show');if(!silent&&audio.mapClose)audio.mapClose();}
 for(const id of ['showMap','miniMapBtn'])document.getElementById(id).addEventListener('click',openMap);
 document.getElementById('closeMap').addEventListener('click',()=>closeMap());
@@ -2158,13 +2194,14 @@ whole.addEventListener('pointerdown',ev=>{
  if(!rect.width||!rect.height)return;
  const x=(ev.clientX-rect.left)/rect.width*W,y=(ev.clientY-rect.top)/rect.height*H;
  // Snap to known destinations so their interaction buttons become reachable.
- const place=sites.reduce((best,site)=>{const distance=Math.hypot(site.x-x,site.y-y);return distance<42&&(!best||distance<Math.hypot(best.x-x,best.y-y))?site:best;},null);
+ const place=region==='south'?null:sites.reduce((best,site)=>{const distance=Math.hypot(site.x-x,site.y-y);return distance<42&&(!best||distance<Math.hypot(best.x-x,best.y-y))?site:best;},null);
  routeFromMap(place?place.x:x,place?place.y:y);
 });
 mini.addEventListener('click',openMap);overlay.addEventListener('click',e=>{if(e.target===overlay)closeMap()});
-window.__rimforsaTest={startJump,jumpHeight,advanceJump,cancelJump,swimGame:window.RimforsaSwimMinigame,slideGame:window.RimforsaSlideMinigame,openPizza,closePizza,renderPizza,PIZZA_PRICE,openIca,closeIca,renderIca,icePrices,dragon,bag,state,sites,npcSystem,game,poops:()=>poops.map(p=>({...p})),scatterPoops,checkPoops,showTreasureVictory,troll,nearTroll,visitTroll,carPos,carDrive,nearCar,enterCar,exitCar,canStand,pathTo,moveTo:(x,y)=>{state.x=x;state.y=y;updateMessage()},isReady:()=>maskLoaded&&imageLoaded,hasSprite:()=>spriteLoaded,frames:()=>frameCount,edgeClearance,edgeAssistedDirection,slideMove,coinCandidates:()=>coinCandidates.slice(),coins:()=>coins.map(c=>({...c})),coinCount:()=>coinCount,scatterCoins,collectCoins,reset,openBoatGame,closeBoatGame,boatState,boatHazards,boatReady:()=>boatChartLoaded,boatPixelWater,spawnBoatCoins};
+window.__rimforsaTest={region:()=>region,southReady:()=>southReady,crossSouthPortal,startJump,jumpHeight,advanceJump,cancelJump,swimGame:window.RimforsaSwimMinigame,slideGame:window.RimforsaSlideMinigame,openPizza,closePizza,renderPizza,PIZZA_PRICE,openIca,closeIca,renderIca,icePrices,dragon,bag,state,sites,npcSystem,game,poops:()=>poops.map(p=>({...p})),scatterPoops,checkPoops,showTreasureVictory,troll,nearTroll,visitTroll,carPos,carDrive,nearCar,enterCar,exitCar,canStand,pathTo,moveTo:(x,y)=>{state.x=x;state.y=y;updateMessage()},isReady:()=>maskLoaded&&imageLoaded,hasSprite:()=>spriteLoaded,frames:()=>frameCount,edgeClearance,edgeAssistedDirection,slideMove,coinCandidates:()=>coinCandidates.slice(),coins:()=>coins.map(c=>({...c})),coinCount:()=>coinCount,scatterCoins,collectCoins,reset,openBoatGame,closeBoatGame,boatState,boatHazards,boatReady:()=>boatChartLoaded,boatPixelWater,spawnBoatCoins};
 reset({clearMoney:false});
-tiles.src='./rimforsa-karta.webp?v=2';maskImage.src='./gangbarhet.png?v=2';sprite.src='./lage-sprites.png';
+southArt.src='./helvetets-portar.png';
+ tiles.src='./rimforsa-karta.webp?v=2';maskImage.src='./gangbarhet.png?v=2';sprite.src='./lage-sprites.png';
 if(tiles.complete&&tiles.naturalWidth)imageLoaded=true;
 if(sprite.complete&&sprite.naturalWidth)spriteLoaded=true;
 if(!maskLoaded&&maskImage.complete&&maskImage.naturalWidth)loadMask();
