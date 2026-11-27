@@ -185,6 +185,10 @@ function createSystem(canStand,random=Math.random){
  const bobaArt=typeof Image==='function'?new Image():{complete:false};
  if(typeof Image==='function')bobaArt.src='./boba-sprites.png?v=1';
  const boba=makeBoba(canStand,Math.random,bobaArt);
+ const reported=new Set();
+ function optionalNpc(npc,method,...args){
+   try{npc[method](...args);}catch(err){const key=(npc===boba?'Boba':'Slobido')+':'+method;if(!reported.has(key)){reported.add(key);console.warn(key,err);}if(method==='draw'){const ctx=args[0];ctx.restore();ctx.setTransform?.(1,0,0,1,0,0);} }
+ }
  const people=definitions.map(p=>({...p,homeX:p.x,homeY:p.y,ready:false,dir:'down',frame:0,phase:0,turnTime:0,wait:.3,angle:0,speechIndex:0}));
  function locate(x,y){
    if(npcMayStand(x,y,canStand))return {x,y};
@@ -205,7 +209,7 @@ function createSystem(canStand,random=Math.random){
    return best;
  }
  function reset(){
-   slobido.reset();boba.reset();
+   optionalNpc(slobido,'reset');optionalNpc(boba,'reset');
    for(const p of people){
      const pos=locate(p.homeX,p.homeY);
      if(!pos){p.ready=false;continue;}
@@ -231,7 +235,7 @@ function createSystem(canStand,random=Math.random){
  }
  function update(dt,playerX,playerY){
    dt=Math.max(0,Math.min(.05,Number(dt)||0));
-   slobido.update(dt,playerX,playerY);boba.update(dt,playerX,playerY);
+   optionalNpc(slobido,'update',dt,playerX,playerY);optionalNpc(boba,'update',dt,playerX,playerY);
    for(const p of people){
      if(!p.ready)continue;
      if(Math.hypot(p.x-playerX,p.y-playerY)<42){p.wait=Math.max(p.wait,.22);p.phase=0;continue;}
@@ -249,7 +253,7 @@ function createSystem(canStand,random=Math.random){
    }
  }
  function draw(ctx,camX,camY,width,height,sprite){
-   slobido.draw(ctx,camX,camY,width,height);boba.draw(ctx,camX,camY,width,height);
+   optionalNpc(slobido,'draw',ctx,camX,camY,width,height);optionalNpc(boba,'draw',ctx,camX,camY,width,height);
    const hasSprite=!!(sprite&&sprite.complete&&sprite.naturalWidth);
    for(const p of people){
      if(!p.ready)continue;

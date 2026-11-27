@@ -982,3 +982,8 @@ Körkorridorer och parkeringsytor definierade mot faktisk kartbild. Bilens centr
 ## 2026-11-27 – NPC-BOBA
 
 2026-11-27 – NPC-BOBA: bildbaserad tvåvingad Boba på 44×44 px (samma som Lage), avskild väster om väg 23. Minst 190 kartpixlar från samtliga listade event, vandring, svävning och ofarliga isbollar. 6 000 simulerade uppdateringar och 600 renderingsanrop godkända med testmask; riktig kartbild och mask granskade, ingen visuell spelning. Pages ej bekräftad. Aktiv kö tom efter kodleverans.
+
+
+## 2026-11-27 – START-01
+
+2026-11-27 – START-01: användaren rapporterade att Lage försvann och spelet låste sig. Startordning för bildresurser säkrad; nya NPC:er och ritlager isolerade; bildloop återhämtar sig efter undantag. Syntax kontrollerad. Exakt ursprungligt fel och fysisk Safari ännu ej verifierade; kontrollera oberoende starttest.

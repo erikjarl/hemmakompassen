@@ -23,15 +23,15 @@ Undantag: endast verkligt övergripande hinder (t.ex. nekad skrivbehörighet, sa
 
 **SENAST BEARBETAD HUVUDUPPGIFT: `NPC-BOBA` – tvåvingad karaktär på avskilt fält.**
 
-**NÄSTA ROTATIONSPOSITION: Ingen – aktiv kö tom.**
+**NÄSTA ROTATIONSPOSITION: START-01 – verifiera startfelet.**
 
 Rotation: DRAKE-03 → SKATT-01. Om endast en uppgift återstår får den väljas igen. Stryk verifierat färdiga delmoment direkt, flytta färdiga uppgifter till färdigarkivet och uppdatera antalen. Behåll återkallade uppgifter utanför kön.
 
-**Senaste avslutningsnotis:** 2026-11-27 – NPC-BOBA: bildbaserad tvåvingad Boba på 44×44 px (samma som Lage), avskild väster om väg 23. Minst 190 kartpixlar från samtliga listade event, vandring, svävning och ofarliga isbollar. 6 000 simulerade uppdateringar och 600 renderingsanrop godkända med testmask; riktig kartbild och mask granskade, ingen visuell spelning. Pages ej bekräftad. Aktiv kö tom efter kodleverans.
+**Senaste avslutningsnotis:** 2026-11-27 – START-01: användaren rapporterade att Lage försvann och spelet låste sig. Startordning för bildresurser säkrad; nya NPC:er och ritlager isolerade; bildloop återhämtar sig efter undantag. Syntax kontrollerad. Exakt ursprungligt fel och fysisk Safari ännu ej verifierade; kontrollera oberoende starttest.
 
-## Kvar att göra – aktiv arbetskö (0)
+## Kvar att göra – aktiv arbetskö (1)
 
-Inga aktiva uppgifter. Invänta nya uttryckliga önskemål.
+- [ ] **START-01 – verifiera spelstart efter rapport om försvunnen Lage.** Startskydd publicerat i kod; kontrollera oberoende webbläsartest och korrigera konkret återstående fel. Behåll Boba och Slobido.
 
 ## Status
 

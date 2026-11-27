@@ -155,7 +155,7 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
 <script src="./boat-direction-art.js?v=12"></script>
 <script src="./fuel.js?v=3"></script>
 <script src="./friend-sprites.js?v=2"></script>
-<script src="./npc.js?v=14"></script>
+<script src="./npc.js?v=15"></script>
 <script src="./farm.js?v=6"></script>
 <script src="./dragon.js?v=30"></script>
 <script src="./helicopter.js?v=5"></script>
@@ -248,7 +248,7 @@ let boatChartLoaded=false,boatWaterData=null,boatW=1122,boatH=1402;
 
 const tiles=new Image(), maskImage=new Image(), sprite=new Image();
 maskImage.crossOrigin='anonymous';
-tiles.src='./rimforsa-karta.webp?v=2';maskImage.src='./gangbarhet.png?v=2';sprite.src='./lage-sprites.png';
+
 let imageLoaded=false,maskLoaded=false,spriteLoaded=false,collision=null,edgeDistance=null,maskW=724,maskH=543,frameCount=0;
 const state={x:360,y:335,dir:'down',phase:0,camX:359,camY:330,near:null,nearKey:null,visited:new Set(),path:[],messageLocked:false,inCar:false,inHeli:false};
 const carDrive=window.RimforsaCar;
@@ -726,6 +726,8 @@ g.beginPath();g.moveTo(448,648);g.lineTo(476,648);g.lineTo(511,648);g.lineWidth=
 g.restore();
 collision=g.getImageData(0,0,off.width,off.height).data;maskW=off.width;maskH=off.height;buildEdgeDistance();maskLoaded=true;buildCoinCandidates();scatterCoins();npcSystem.reset();message.innerHTML='<strong>Skattjakten börjar!</strong> Leta efter '+COIN_TARGET+' guldmynt och undvik bajskorvarna längs vägarna.'}
 maskImage.addEventListener('load',loadMask);tiles.addEventListener('load',()=>imageLoaded=true);sprite.addEventListener('load',()=>spriteLoaded=true);
+maskImage.addEventListener('error',()=>{message.textContent='Gångkartan kunde inte laddas. Ladda om sidan.';});
+// Start requests only after all listeners and game declarations are installed (see end of script).
 boatChart.addEventListener('load',()=>{
  // Collision pixels must use the same NATURAL image dimensions as the rendered map.
  boatW=boatChart.naturalWidth;boatH=boatChart.naturalHeight;
@@ -1935,12 +1937,29 @@ function paintFarmPlots(g){
  }
 }
 function drawFarmMarker(){ctx.save();ctx.translate(Math.round(canvas.width/2-state.camX),Math.round(canvas.height/2-state.camY));drawFarmAccess(ctx);paintFarmPlots(ctx);ctx.restore();}
-function draw(){const w=canvas.width,h=canvas.height;ctx.fillStyle='#305d42';ctx.fillRect(0,0,w,h);if(imageLoaded){const x=Math.round(w/2-state.camX),y=Math.round(h/2-state.camY);ctx.drawImage(tiles,x,y);ctx.save();ctx.translate(x,y);drawBeachAccess(ctx);ctx.restore();}drawIngoPriceSign();drawFarmMarker();drawHarborVisitor();drawHomeTreasure();drawCoins();drawDragonTreasure();drawPoops();drawTroll();helicopter.draw(ctx,state.camX,state.camY,w,h,performance.now()/1000);dragon.draw(ctx,state.camX,state.camY,w,h);drawIce();npcSystem.draw(ctx,state.camX,state.camY,w,h,sprite);
-if(state.inCar){carDrive.draw(ctx,state.x-state.camX+w/2,state.y-state.camY+h/2,state.dir,true);}
-else{carDrive.draw(ctx,carPos.x-state.camX+w/2,carPos.y-state.camY+h/2,parkedCarDir,false);if(!state.inHeli)drawPlayer();}
-ctx.strokeStyle='#1b3028';ctx.lineWidth=2;ctx.strokeRect(1,1,w-2,h-2);drawMap(mc,mini.width,mini.height);drawBoatGame()}
+// A decorative layer must not terminate the game loop or hide the player.
+const reportedDrawErrors=new Set();
+function drawLayer(name,fn){
+ ctx.save();
+ try{fn();}
+ catch(err){if(!reportedDrawErrors.has(name)){reportedDrawErrors.add(name);console.warn('Rimforsa draw '+name,err);}}
+ finally{ctx.restore();ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;}
+}
+function draw(){
+ const w=canvas.width,h=canvas.height;ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.fillStyle='#305d42';ctx.fillRect(0,0,w,h);
+ if(imageLoaded)drawLayer('map',()=>{const x=Math.round(w/2-state.camX),y=Math.round(h/2-state.camY);ctx.drawImage(tiles,x,y);ctx.translate(x,y);drawBeachAccess(ctx);});
+ drawLayer('sign',drawIngoPriceSign);drawLayer('farm',drawFarmMarker);drawLayer('harbor',drawHarborVisitor);drawLayer('treasure',drawHomeTreasure);drawLayer('coins',drawCoins);drawLayer('dragon treasure',drawDragonTreasure);drawLayer('poops',drawPoops);drawLayer('troll',drawTroll);
+ drawLayer('helicopter',()=>helicopter.draw(ctx,state.camX,state.camY,w,h,performance.now()/1000));drawLayer('dragon',()=>dragon.draw(ctx,state.camX,state.camY,w,h));drawLayer('ice',drawIce);drawLayer('NPCs',()=>npcSystem.draw(ctx,state.camX,state.camY,w,h,sprite));
+ if(state.inCar)drawLayer('car',()=>carDrive.draw(ctx,state.x-state.camX+w/2,state.y-state.camY+h/2,state.dir,true));
+ else{drawLayer('parked car',()=>carDrive.draw(ctx,carPos.x-state.camX+w/2,carPos.y-state.camY+h/2,parkedCarDir,false));if(!state.inHeli)drawLayer('player',drawPlayer);}
+ ctx.strokeStyle='#1b3028';ctx.lineWidth=2;ctx.strokeRect(1,1,w-2,h-2);
+ drawLayer('minimap',()=>drawMap(mc,mini.width,mini.height));drawLayer('boat',drawBoatGame);
+}
 let last=performance.now(),stepProgress=0,lastLossCheck=last;
+let tickErrorReported=false;
 function tick(now){
+ requestAnimationFrame(tick);
+ try{
  const dt=Math.min(.05,(now-last)/1000);last=now;
  // Långvarigt öppna flikar kan missa storage/focus/pageshow på vissa enheter.
  // Kontrollera omgångssignalen varje sekund, även mitt under spel eller båtresa.
@@ -2082,7 +2101,8 @@ function tick(now){
  const clampedY=Math.max(canvas.height/2,Math.min(H-canvas.height/2,state.y));
  state.camX+=(clampedX-state.camX)*Math.min(1,dt*14);
  state.camY+=(clampedY-state.camY)*Math.min(1,dt*14);
- draw();frameCount++;requestAnimationFrame(tick);
+ draw();frameCount++;
+ }catch(err){if(!tickErrorReported){tickErrorReported=true;console.error('Rimforsa tick',err);}try{draw();}catch(drawErr){if(!reportedDrawErrors.has('recovery')){reportedDrawErrors.add('recovery');console.error('Rimforsa recovery',drawErr);}}}
 }
 requestAnimationFrame(tick);
 function routeFromMap(x,y){
@@ -2123,6 +2143,10 @@ whole.addEventListener('pointerdown',ev=>{
 mini.addEventListener('click',openMap);overlay.addEventListener('click',e=>{if(e.target===overlay)closeMap()});
 window.__rimforsaTest={startJump,jumpHeight,advanceJump,cancelJump,swimGame:window.RimforsaSwimMinigame,slideGame:window.RimforsaSlideMinigame,openPizza,closePizza,renderPizza,PIZZA_PRICE,openIca,closeIca,renderIca,icePrices,dragon,bag,state,sites,npcSystem,game,poops:()=>poops.map(p=>({...p})),scatterPoops,checkPoops,showTreasureVictory,troll,nearTroll,visitTroll,carPos,carDrive,nearCar,enterCar,exitCar,canStand,pathTo,moveTo:(x,y)=>{state.x=x;state.y=y;updateMessage()},isReady:()=>maskLoaded&&imageLoaded,hasSprite:()=>spriteLoaded,frames:()=>frameCount,edgeClearance,edgeAssistedDirection,slideMove,coinCandidates:()=>coinCandidates.slice(),coins:()=>coins.map(c=>({...c})),coinCount:()=>coinCount,scatterCoins,collectCoins,reset,openBoatGame,closeBoatGame,boatState,boatHazards,boatReady:()=>boatChartLoaded,boatPixelWater,spawnBoatCoins};
 reset({clearMoney:false});
+tiles.src='./rimforsa-karta.webp?v=2';maskImage.src='./gangbarhet.png?v=2';sprite.src='./lage-sprites.png';
+if(tiles.complete&&tiles.naturalWidth)imageLoaded=true;
+if(sprite.complete&&sprite.naturalWidth)spriteLoaded=true;
+if(!maskLoaded&&maskImage.complete&&maskImage.naturalWidth)loadMask();
 })();
 
 </script>

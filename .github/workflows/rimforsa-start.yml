@@ -1,0 +1,27 @@
+name: Rimforsa independent start smoke
+on:
+  push:
+    branches: [main]
+    paths: ['spel/rimforsa/**', 'tests/rimforsa-start-browser.mjs', '.github/workflows/rimforsa-start.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  start:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright
+      - run: npx playwright install chromium
+      - run: |
+          python3 -m http.server 8765 > /tmp/rimforsa-http.log 2>&1 &
+          node tests/rimforsa-start-browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rimforsa-start
+          path: rimforsa-start.png
