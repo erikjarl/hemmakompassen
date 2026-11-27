@@ -2,6 +2,8 @@
 
 **27/11 – Jobb hk, DES-01F / CI-isolering (PR #540):** Föregående CI #45897357079 gav 961 godkända och 27 underkända testfall; samtliga underkända gäller Rimforsa. Webbläsarstegen hoppades över. Commit `ac757b7` delar kontrakttesterna i oberoende jobb: 19 Rimforsa-testfiler i eget jobb och övriga i befintligt visual-jobb; inga testfall tas bort. Båda jobbens resultat ska granskas, och rött speljobb får inte tolkas som grönt totalresultat. Supabase SELECT: två new, fem reviewing, inga ändrade statusar. Ny CI, merge, verklig Safari och publicering ännu ej verifierade.
 
+**27/11 – Jobb hk, DES-01F / PR #540 levererad till main:** Squash-merge `609dfc7cf10b68b4d4247693ee999831eb073d8d`. CI #45919051620: visual success, 895/895 kontrakttester, statiskt bygge, Chromium, rapportdialog och browser/skärmbilder godkända. Separata game-contracts 66 godkända/27 underkända, samma tidigare kända speltestfel; totalt workflow failure. Merge valdes efter granskning av att inga spelfiler/testfall ändrats; detta är inte fullständigt grön repo-CI. Supabase SELECT: 2 new, 5 reviewing, inga statusändringar. Fysisk Safari, verkliga tvåkontotester och live-publicering ännu ej verifierade.
+
 ## Snabböversikt – 17 november 2026
 
 **Syfte:** Hitta nästa genomförbara arbete utan att behöva läsa hela ändringshistoriken. Detaljer, acceptanskriterier och verifieringslogg finns längre ned i **den här filen**; sammanfattningen är ingen ny parallell arbetskö.
