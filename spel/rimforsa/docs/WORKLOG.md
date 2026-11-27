@@ -987,3 +987,8 @@ Körkorridorer och parkeringsytor definierade mot faktisk kartbild. Bilens centr
 ## 2026-11-27 – START-01
 
 2026-11-27 – START-01: användaren rapporterade att Lage försvann och spelet låste sig. Startordning för bildresurser säkrad; nya NPC:er och ritlager isolerade; bildloop återhämtar sig efter undantag. Syntax kontrollerad. Exakt ursprungligt fel och fysisk Safari ännu ej verifierade; kontrollera oberoende starttest.
+
+
+## 2026-11-27 – NPC-BOBA-FIX
+
+2026-11-27 – NPC-BOBA-FIX: oberoende Chromium-test avslöjade att Boba försvann på grund av ellipse() med sex i stället för sju parametrar. Rättat, cache v16 och Boba-markör samt Gå till Boba-knapp. Föregående START-01-test godkänt (Lage synlig/styrbar), nytt skarpare webbläsartest av riktig Boba-ritning och gångrutt inväntas.

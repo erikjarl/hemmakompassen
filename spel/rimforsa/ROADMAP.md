@@ -23,15 +23,15 @@ Undantag: endast verkligt övergripande hinder (t.ex. nekad skrivbehörighet, sa
 
 **SENAST BEARBETAD HUVUDUPPGIFT: `NPC-BOBA` – tvåvingad karaktär på avskilt fält.**
 
-**NÄSTA ROTATIONSPOSITION: START-01 – verifiera startfelet.**
+**NÄSTA ROTATIONSPOSITION: NPC-BOBA-FIX – verifiera Boba-ritning och gångrutt.**
 
 Rotation: DRAKE-03 → SKATT-01. Om endast en uppgift återstår får den väljas igen. Stryk verifierat färdiga delmoment direkt, flytta färdiga uppgifter till färdigarkivet och uppdatera antalen. Behåll återkallade uppgifter utanför kön.
 
-**Senaste avslutningsnotis:** 2026-11-27 – START-01: användaren rapporterade att Lage försvann och spelet låste sig. Startordning för bildresurser säkrad; nya NPC:er och ritlager isolerade; bildloop återhämtar sig efter undantag. Syntax kontrollerad. Exakt ursprungligt fel och fysisk Safari ännu ej verifierade; kontrollera oberoende starttest.
+**Senaste avslutningsnotis:** 2026-11-27 – NPC-BOBA-FIX: oberoende Chromium-test avslöjade att Boba försvann på grund av ellipse() med sex i stället för sju parametrar. Rättat, cache v16 och Boba-markör samt Gå till Boba-knapp. Föregående START-01-test godkänt (Lage synlig/styrbar), nytt skarpare webbläsartest av riktig Boba-ritning och gångrutt inväntas.
 
 ## Kvar att göra – aktiv arbetskö (1)
 
-- [ ] **START-01 – verifiera spelstart efter rapport om försvunnen Lage.** Startskydd publicerat i kod; kontrollera oberoende webbläsartest och korrigera konkret återstående fel. Behåll Boba och Slobido.
+- [ ] **NPC-BOBA-FIX – verifiera att Boba faktiskt visas och kan nås.** Rättat konstaterat canvasfel; verifiera nya oberoende webbläsartestet. START-01: tidigare oberoende webbläsartest godkänt för spelstart och Lages rörelse.
 
 ## Status
 

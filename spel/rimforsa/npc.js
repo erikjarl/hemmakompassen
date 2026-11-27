@@ -167,7 +167,7 @@ function makeBoba(canStand,random,art){
   const hovering=p.mode==='hover',attack=p.mode==='ice';
   const lift=hovering?Math.round(15*Math.sin(Math.PI*Math.min(1,p.elapsed/1.25))):0;
   const frame=hovering?9+Math.floor(p.elapsed*8)%2:attack?8:({down:0,right:2,up:4,left:6}[p.dir]+Math.floor(p.phase)%2);
-  ctx.save();ctx.fillStyle='#132c2466';ctx.beginPath();ctx.ellipse(x,y-2,11,4,0,Math.PI*2);ctx.fill();
+  ctx.save();ctx.fillStyle='#132c2466';ctx.beginPath();ctx.ellipse(x,y-2,11,4,0,0,Math.PI*2);ctx.fill();
   ctx.imageSmoothingEnabled=false;ctx.translate(x,y-lift);
   if(attack&&p.dir==='left')ctx.scale(-1,1);
   ctx.drawImage(art,frame*22,0,22,22,-22,-44,44,44);ctx.restore();
