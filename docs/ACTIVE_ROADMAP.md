@@ -1,5 +1,7 @@
 # Hemmakompassen – aktiv roadmap
 
+**27/11 – DES-01F / UX-READ-01, resultatens läsbarhet:** Större percentilaxel (12 px), resultattext (14 px), radbrytning och tydligt tangentbordsfokus för källhänvisning; ljus separator i referensåterkoppling. CSS/cache och regressionstest; fyra statiska källkontroller godkända. Supabase SELECT 2 new, 5 reviewing, inga statusändringar. CI, merge, fysisk Safari och autentiserad verifiering återstår. Inga ändrade poäng eller användardata.
+
 **27/11 – DES-01F / UX-READ-01, PR #542 mergad:** Squash `e35784af38d14e9f29986439ca59fea2bd48698a`. CI #45929196290: visual success (funktionella kontrakt, bygge, Chromium, rapportdialog och browser/skärmbilder); game-contracts failure, totalt workflow failure. Inga spelfiler ändrade i PR. Supabase SELECT: 2 new, 5 reviewing, inga statusändringar. Fysisk Safari, autentiserade tvåkontotester och livepublicering ej verifierade.
 
 **27/11 – DES-01F / UX-READ-01, smala personlighetstestkontroller:** CSS för navigationsknappar i en kolumn vid högst 390 px och radbrytning i navigations-/delningsknappar. Cache uppdaterad, tre statiska källkontroller godkända, regressionstest tillagt. Supabase SELECT: 2 new, 5 reviewing, inga statusändringar. CI, merge, fysisk Safari och autentiserade tester ännu inte verifierade.
