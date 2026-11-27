@@ -3845,3 +3845,18 @@ body .live-layout #live-app .schyssta-view .schyssta-approved-details > summary:
     line-height:1.45;
   }
 }
+
+/* DES-01G / UX-READ-01: readable rule search and filter controls. */
+body .live-layout #live-app .schyssta-view .schyssta-filter-toolbar label {
+  font-size:14px;
+  line-height:1.5;
+  overflow-wrap:anywhere;
+}
+body .live-layout #live-app .schyssta-view .schyssta-filter-toolbar :is(input,select) {
+  font-size:16px;
+  min-height:44px;
+}
+body .live-layout #live-app .schyssta-view .schyssta-filter-toolbar :is(input,select):focus-visible {
+  outline:3px solid #314f60;
+  outline-offset:2px;
+}
