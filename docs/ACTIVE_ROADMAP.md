@@ -6,6 +6,8 @@
 
 **27/11 – DES-01F/UX-READ-01, personlighetstestets svarsalternativ:** Ljusdesignens tangentbordsfokus får blå kontrasterande kontur, radioknappar olivgrön markering och långa svarstexter får radbrytning i smal vy. CSS/cache och nytt statiskt regressionstest; fyra avgränsade källkontroller passerade. Supabase SELECT: 2 new, 5 reviewing, inga statusändringar. CI, merge, fysisk Safari och autentiserade användartester återstår. Ingen poängberäkning eller lagring ändrad.
 
+**27/11 – DES-01F / UX-READ-01, PR #541 mergad:** Squash `10b537f708f6b81b855a2b287e94849fb73cb5ef`. CI #45924828132 visual success: 896/896 kontrakttester, bygge, Chromium, rapportdialog och browser/skärmbilder godkända. Rimforsa 66/93, samma 27 tidigare fel; totalt workflow failure. Inga spelfiler ändrade. Supabase SELECT 2 new, 5 reviewing; inga statusändringar. Fysisk Safari, autentiserade tvåkontotester och Pages-publicering ej verifierade. DES-01 kvarstår som övergripande pågående.
+
 ## Snabböversikt – 17 november 2026
 
 **Syfte:** Hitta nästa genomförbara arbete utan att behöva läsa hela ändringshistoriken. Detaljer, acceptanskriterier och verifieringslogg finns längre ned i **den här filen**; sammanfattningen är ingen ny parallell arbetskö.
