@@ -16,6 +16,8 @@ try {
  await page.locator('#showMap').click();await page.locator('#goBoba').click();
  const route=await page.evaluate(()=>({path:window.__rimforsaTest.state.path.length,boba:{x:window.__rimforsaTest.npcSystem.boba.p.x,y:window.__rimforsaTest.npcSystem.boba.p.y}}));console.log('BOBA ROUTE',route);assert(route.path>0,'Boba needs a reachable walking route');
  await page.waitForFunction(()=>window.__bobaDraws>0,{},{timeout:15000});
+ await page.waitForFunction(()=>{const t=window.__rimforsaTest,p=t.npcSystem.boba.p;return Math.hypot(t.state.x-p.x,t.state.y-p.y)<=32;},{},{timeout:25000});
+ console.log('BOBA REACHED',await page.evaluate(()=>{const t=window.__rimforsaTest,p=t.npcSystem.boba.p;return Math.hypot(t.state.x-p.x,t.state.y-p.y);}));
  const humpvind=await page.evaluate(()=>{
   const t=window.__rimforsaTest,h=t.npcSystem.humpvind;
   h.reset();const p=h.p;if(!p.ready)return {ready:false};
