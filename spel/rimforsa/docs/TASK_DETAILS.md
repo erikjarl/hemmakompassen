@@ -375,3 +375,8 @@ Lägg till tydligt isbollsskottljud och träffljud när isbollen träffar draken
 #### SKATT-01 – Växande skatt vid hemmet
 
 Skapa en liten skattplatta nära hemhuset, utan att blockera gångvägar eller fordon. Visualisera spelarens gemensamma aktuella myntförmögenhet (kartmynt, minispelsmynt och potatismynt) med en allt större glittrande skatt i enhetlig detaljerad 16-bitars SNES-stil. Uppdatera vid intjäning, köp och återställning enligt befintliga saldoregler; visa gärna det exakta saldot vid plattan. Ändra inte ekonomins regler. Kontrollera tomt saldo, flera växande nivåer och återställning.
+
+
+#### KARTA-SYD-01
+
+Direktbeställning 27 november 2026: När Lage når väg 23:s södra ände på Rimforsakartan ska en separat värld med den andra, uttryckligen godkända bilden av Helvetets portar laddas automatiskt till fots, med bil eller med helikopter. Samma 1448×1086-dimensioner och pixelstil; inga stora stenpartier får vara gångbara, även vid hopp eller automatisk pekrutt. Bil följer huvudvägen; helikoptern får flyga över hinder men inte landa på sten. Behåll mynt, hjärtan, bensin och fordonsläge; möjliggör retur via väg 23 norrut och håll kartornas NPC:er, minispel och parkerade fordon åtskilda. Bildfil: `spel/rimforsa/helvetets-portar.png` (godkänd andra bild, inte första utkastet). Ingen övergång till saknad bild. Kontrollera visuellt polygonernas täckning och faktisk spelstart/övergång i webbläsare inklusive WebKit-ljudregression.
