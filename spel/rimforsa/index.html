@@ -156,7 +156,7 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
 <script src="./boat-direction-art.js?v=12"></script>
 <script src="./fuel.js?v=3"></script>
 <script src="./friend-sprites.js?v=2"></script>
-<script src="./npc.js?v=17"></script>
+<script src="./npc.js?v=18"></script>
 <script src="./farm.js?v=6"></script>
 <script src="./dragon.js?v=30"></script>
 <script src="./helicopter.js?v=5"></script>
@@ -587,7 +587,17 @@ function humpvindGrass(x,y){
  }
  return n/9;
 }
-const npcSystem=window.RimforsaNPC.createSystem(canStand,Math.random,humpvindGrass);
+function bobaReachable(x,y){
+ if(!humpvindReachable)return false;
+ const gx=Math.floor(x/STEP),gy=Math.floor(y/STEP);
+ for(let oy=-1;oy<=1;oy++)for(let ox=-1;ox<=1;ox++){
+  const cx=gx+ox,cy=gy+oy;
+  if(cx<1||cy<1||cx>=NX-1||cy>=NY-1||!humpvindReachable[cy*NX+cx])continue;
+  if(canWalkStraight(x,y,(cx+.5)*STEP,(cy+.5)*STEP))return true;
+ }
+ return false;
+}
+const npcSystem=window.RimforsaNPC.createSystem(canStand,Math.random,humpvindGrass,bobaReachable);
 const dragon=window.RimforsaDragon.createDragon((x,y,margin)=>carDrive.roadAt(x,y,margin));
 const helicopter=window.RimforsaHelicopter.createHelicopter();
 const iceShots=[];let iceCooldown=0,heliCrashTime=0;
@@ -1176,8 +1186,8 @@ function drawPoops(){
 }
 // Högst en omplanering per vald gångrutt, så ett omöjligt mål inte
 // orsakar oändliga A*-försök vid en blockerad vägkant.
-let routeRetriesLeft=0;
-function clearPath(){state.path=[];routeRetriesLeft=0;}
+let routeRetriesLeft=0,bobaRoute=null;
+ function clearPath(){state.path=[];routeRetriesLeft=0;bobaRoute=null;}
 function nearHeli(){return heliRegion===region&&!state.inCar&&!state.inHeli&&Math.hypot(state.x-helicopter.position.x,state.y-helicopter.position.y)<65;}
 function enterHeli(){cancelJump();if(heliFuel.snapshot().level<=0){message.textContent='Helikoptern har tom tank. Tanka på macken för 7 spelmynt.';if(audio.fuelEmpty)audio.fuelEmpty();return;}stop();state.inHeli=true;helicopter.setAirborne(true);audio.setHeliActive?.(true);state.x=helicopter.position.x;state.y=helicopter.position.y;state.nearKey=null;updateMessage();}
 function landHeli(emergency=false){if(heliCrashTime>0&&!emergency)return;heliCrashTime=0;const exit=nearbyExit();if(!exit&&!emergency){message.textContent='Flyg till gångbar mark innan du landar!';return;}stop();state.inHeli=false;helicopter.setAirborne(false);audio.setHeliActive?.(false);if(exit){state.x=exit.x;state.y=exit.y;helicopter.position.x=exit.x;helicopter.position.y=exit.y;}else{helicopter.reset();state.x=360;state.y=335;}state.nearKey=null;coinNoticeUntil=0;updateMessage();}
@@ -1659,7 +1669,7 @@ function reset({clearMoney=true}={}){
  pizzaOverlay.hidden=true;icaOverlay.hidden=true;winOverlay.hidden=true;document.getElementById('lossOverlay').hidden=true;hurtUntil=0;audio.setCarSpeed(0);audio.setCarActive(false);state.inCar=false;state.inHeli=false;audio.setHeliActive?.(false);helicopter.reset();
  carPos.x=carDrive.HOME.x;carPos.y=carDrive.HOME.y;parkedCarDir='right';
  state.x=360;state.y=335;state.camX=360;state.camY=335;state.dir='down';
- state.phase=0;state.visited.clear();state.path=[];state.near=null;state.nearKey=null;
+ state.phase=0;state.visited.clear();clearPath();state.near=null;state.nearKey=null;
  npcSystem.reset();scatterCoins();interact.textContent='Utforska ✨';interact.hidden=true;title.textContent='Hem – Ulrikavägen';
  message.innerHTML='<strong>Ny skattjakt!</strong> Leta efter '+COIN_TARGET+' guldmynt som glimmar bakom små buskar vid vägarna.';
  updateMessage();
@@ -1841,7 +1851,7 @@ canvas.addEventListener('pointerdown',ev=>{
  const r=canvas.getBoundingClientRect(),sx=(ev.clientX-r.left)*canvas.width/r.width,sy=(ev.clientY-r.top)*canvas.height/r.height;
  const x=state.camX-canvas.width/2+sx,y=state.camY-canvas.height/2+sy;
  const route=pathTo(x,y);
- state.path=route;
+ bobaRoute=null;state.path=route;
  routeRetriesLeft=route.length?1:0;
  // Ge ett kort besked om ett tydligt utpekat mål inte är nåbart.
  // Undvik varningsljud när spelaren bara trycker nära Lages fötter.
@@ -2072,7 +2082,8 @@ function tick(now){
   }else{
     const byKeys=!!(dx||dy);
     if(byKeys)clearPath();
-    else if(state.path.length){
+     else if(bobaRoute){refreshBobaRoute(now);}
+     if(!byKeys&&state.path.length){
       // Hoppa över onödiga rutpunkter på raka, fullt gångbara vägsträckor.
       // Detta minskar sicksack/ruttstopp vid smala vägkanter utan ändrad mask eller grafik.
       let furthest=0;
@@ -2186,7 +2197,25 @@ function closeMap(silent=false){if(!overlay.classList.contains('show'))return;ov
 for(const id of ['showMap','miniMapBtn'])document.getElementById(id).addEventListener('click',openMap);
 document.getElementById('closeMap').addEventListener('click',()=>closeMap());
 document.getElementById('goBeach').addEventListener('click',()=>routeFromMap(1220,740));
-document.getElementById('goBoba').addEventListener('click',()=>{const b=npcSystem.boba?.p;if(b?.ready){routeFromMap(b.x,b.y);}else document.getElementById('mapRouteHint').textContent='Boba väntar på att kartan ska laddas.';});
+function refreshBobaRoute(now){
+ if(!bobaRoute)return;
+ const b=npcSystem.boba?.p;
+ if(region!=='rimforsa'||!b?.ready){clearPath();return;}
+ if(Math.hypot(state.x-b.x,state.y-b.y)<=32&&canWalkStraight(state.x,state.y,b.x,b.y)){
+  clearPath();title.textContent='Boba';message.textContent='Du hittade Boba!';coinNoticeUntil=performance.now()+2500;return;
+ }
+ if(now<bobaRoute.next)return;
+ bobaRoute.next=now+800;
+ if(state.path.length&&Math.hypot(b.x-bobaRoute.x,b.y-bobaRoute.y)<15)return;
+ const route=pathTo(b.x,b.y);
+ if(!route.length){clearPath();message.textContent='Kunde inte hitta en ny väg till Boba. Öppna kartan och försök igen.';return;}
+ state.path=route;routeRetriesLeft=1;bobaRoute.x=b.x;bobaRoute.y=b.y;
+}
+document.getElementById('goBoba').addEventListener('click',()=>{
+ const b=npcSystem.boba?.p;
+ if(b?.ready&&region==='rimforsa'){if(routeFromMap(b.x,b.y))bobaRoute={x:b.x,y:b.y,next:0};}
+ else document.getElementById('mapRouteHint').textContent='Boba väntar på att kartan ska laddas.';
+});
 for(const p of farmSites){document.getElementById(p.plot===0?'goFarm':'goFarm'+(p.plot+1)).addEventListener('click',()=>routeFromMap(p.x,p.y));}
 whole.addEventListener('pointerdown',ev=>{
  ev.preventDefault();
