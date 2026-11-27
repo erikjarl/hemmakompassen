@@ -1,5 +1,7 @@
 # Hemmakompassen – aktiv roadmap
 
+**27/11 – Jobb hk, DES-01F / CI-isolering (PR #540):** Föregående CI #45897357079 gav 961 godkända och 27 underkända testfall; samtliga underkända gäller Rimforsa. Webbläsarstegen hoppades över. Commit `ac757b7` delar kontrakttesterna i oberoende jobb: 19 Rimforsa-testfiler i eget jobb och övriga i befintligt visual-jobb; inga testfall tas bort. Båda jobbens resultat ska granskas, och rött speljobb får inte tolkas som grönt totalresultat. Supabase SELECT: två new, fem reviewing, inga ändrade statusar. Ny CI, merge, verklig Safari och publicering ännu ej verifierade.
+
 ## Snabböversikt – 17 november 2026
 
 **Syfte:** Hitta nästa genomförbara arbete utan att behöva läsa hela ändringshistoriken. Detaljer, acceptanskriterier och verifieringslogg finns längre ned i **den här filen**; sammanfattningen är ingen ny parallell arbetskö.
