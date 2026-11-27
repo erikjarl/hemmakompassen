@@ -21,21 +21,21 @@ Undantag: endast verkligt övergripande hinder (t.ex. nekad skrivbehörighet, sa
 
 ## Rotation
 
-**SENAST BEARBETAD HUVUDUPPGIFT: `NPC-BOBA` – tvåvingad karaktär på avskilt fält.**
+**SENAST BEARBETAD HUVUDUPPGIFT: NPC-BOBA-FIX – nåbar spawn och rörlig gångrutt.**
 
-**NÄSTA ROTATIONSPOSITION: KARTA-SYD-01 – överför godkänd bild och verifiera kartövergång; välj annan aktiv uppgift om binär överföring fortfarande blockeras.**
+**NÄSTA ROTATIONSPOSITION: LJUD-SAFARI – kontrollera ljudregressionen; därefter KARTA-SYD-01.**
 
 Rotation: KARTA-SYD-01 → NPC-BOBA-FIX → LJUD-SAFARI. Om endast en uppgift återstår får den väljas igen. Stryk verifierat färdiga delmoment direkt, flytta färdiga uppgifter till färdigarkivet och uppdatera antalen. Behåll återkallade uppgifter utanför kön.
 
-**Senaste avslutningsnotis:** 2026-11-27 – KARTA-SYD-01: 24 kollisionspolygoner nu visuellt avstämda mot den godkända originalbilden med koordinatöverlägg. 2126/2126 isolerade kontroller godkända (stenar, väg, fria punkter, portal). Bildöverföring till GitHub och faktisk webbläsar-/start-/WebKit-ljudtest samt Pages-verifiering återstår; portalen är fortsatt spärrad tills bildfilen finns.
+**Senaste avslutningsnotis:** 2026-11-27 – NPC-BOBA-FIX: godkänd riktig PNG-gångmask avkodad, Boba (490,158) nåbar från hemmet via fyrgrannars rutnät (11 016 nåbara celler). Spawn/vandring kräver nu nåbar mark; Gå till Boba uppdaterar rutten mot rörligt mål och stannar vid faktisk närhet. 500 simulerade bild-/rörelseanrop och tre isolerade ruttkontroller godkända, JS-syntax godkänd. Starttestet utökat med ankomstkrav, push utlöser befintlig start-/WebKit-workflow; CI-resultat och Pages ej verifierade. KARTA-SYD-01: originalbilden finns lokalt men binär uppladdning blockerad; direkt git-nätåtkomst misslyckades (DNS). Ljudkod oförändrad.
 
 ## Kvar att göra – aktiv arbetskö (3)
 
 - [ ] **KARTA-SYD-01 – Helvetets portar, ny värld söder om Rimforsa.** [Krav](docs/TASK_DETAILS.md#karta-syd-01). Återstår: ladda upp exakt godkänd `helvetets-portar.png` (1448×1086) till `spel/rimforsa/`, aktivera genom att kontrollera laddning, verifiera faktisk övergång och retur till fots/bil/helikopter, kör start-/WebKit-ljudtest och kontrollera Pages. Portal- och kollisionslogik finns på main; 24 kollisionsytor visuellt kontrollerade mot originalbilden; använd inte ersättningsgrafik.
 
-- [ ] **NPC-BOBA-FIX – verifiera att Boba faktiskt visas och kan nås.** Rättat konstaterat canvasfel; verifiera nya oberoende webbläsartestet. START-01: tidigare oberoende webbläsartest godkänt för spelstart och Lages rörelse.
+- [ ] **NPC-BOBA-FIX – verifiera faktisk ankomst och bildrendering.** Återstår: oberoende webbläsartest av ny rörlig gångrutt, bildrendering och ankomst inom 32 px. Startpunkt på riktig gångmask verifierad, 500 simulerade anrop godkända.
 
-- [ ] **LJUD-SAFARI – permanent regressionsskydd.** Återställ ljudkontext på nästa gest efter sidavbrott, upptäck stillastående ljudklocka och kör nytt WebKit-test. Inväntar CI och verklig Safari-verifiering.
+- [ ] **LJUD-SAFARI – permanent regressionsskydd.** Återstår: verifiera WebKit-ljudtestet efter befintlig kontextåterställning och ljudklockekontroll; vid konstaterad regressionsbrist rätta koden. Fysisk Safari är separat verifiering.
 
 **Stående ljudgrind (27 november 2026):** Vid varje framtida speländring ska WebKit-mobiltestet `tests/rimforsa-audio-webkit.mjs` och befintligt starttest köras. Kontrollera riktig touchstart av ljud, framåtgående AudioContext-klocka, återkomst efter avbrott och sparat av/på-val. Ändra inte ljudets cacheversion utan motsvarande kodändring; verifiera CI före påstående om fungerande ljud. WebKit på Linux är inte fysisk iOS Safari. Vid rött test: åtgärda före nästa leverans.
 
