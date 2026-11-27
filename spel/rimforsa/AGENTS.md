@@ -23,7 +23,7 @@ Undantag: endast verkligt övergripande hinder (t.ex. nekad skrivbehörighet, sa
 
 **SJÄLVSTÄNDIG SLUTBEDÖMNING (25 november 2026):** Användaren delegerar bedömningen av färdig implementation till assistenten. Ingen användarfeedback eller fysisk mobiltestning ska vara ett rutinmässigt villkor för avbockning. Granska ursprungliga krav mot faktisk kod, använd proportionerliga isolerade tester vid behov, stryk direkt när kraven är uppfyllda och fortsätt. Separat visuell/ljudmässig kvalitetssäkring dokumenteras utan att hålla fungerande funktioner öppna. Behåll endast konkreta saknade funktioner, påvisade fel eller specifika ännu olösta krav i aktiv kö. Vid listrevision ska hela kön granskas.
 
-**Senaste avslutningsnotis:** 2026-11-27 – LJUD-SAFARI: WebKit-logg 46006401346 bekräftar touch, klocka, återhämtning och sparat mute; Pages för föregående commit godkänd. Samma körning avslöjade Boba-rutt med noll noder. Reachability använder nu identiska segmentsäkerhetskrav som A* och Boba-rutt väljer anslutna start/slutceller. Ny CI krävs för Boba; fysisk Safari ej verifierad.
+**Senaste avslutningsnotis:** 2026-11-27 – NPC-BOBA-FIX: CI 46016583834 visar Boba ready=false efter strikt nåbarhetsgraf; ljudtest godkänt, Pages godkänd. Boba söker nu först ursprungligt fält, därefter avskild nåbar nordlig terräng med 190 px eventavstånd (reserv 150 px), utan att ändra kollisionsmasken. Ny webbläsarverifiering krävs. Helvetets portar: bild hittad i biblioteket men rå binär överföring fortfarande blockerad.
 
 Detta är ett separat utvecklingskommando för **Lage i Rimforsa**. Läs repo-rotens `AGENTS.md`, denna fil och den **korta** `spel/rimforsa/ROADMAP.md` (enda aktiva arbetskö).
 

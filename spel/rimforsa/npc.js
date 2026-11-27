@@ -128,21 +128,31 @@ function makeSlobido(canStand,random,busySites,art){
 function makeBoba(canStand,random,art,reachable){
  const sites=[[360,335],[667,418],[1002,480],[394,641],[699,783],[921,813],[1220,740],[1100,116],[710,237],[770,237],[830,237],[464,454],[1148,242],[1198,248],[1248,256]];
  const p={x:0,y:0,homeX:0,homeY:0,ready:false,dir:'down',phase:0,mode:'walk',elapsed:0,cooldown:0,angle:0,turn:0,nextPower:0,wait:0,shots:[]};
- // Meadow west of road 23. Never use a global fallback: it could put Boba next to a minigame.
- const allowed=(x,y)=>x>=420&&x<=550&&y>=85&&y<=215&&sites.every(([sx,sy])=>Math.hypot(x-sx,y-sy)>=190)&&canStand(x,y)&&reachable(x,y);
+ // Prefer the original meadow, then other isolated reachable northern fields.
+ // Never relax collision checks or spawn next to an event.
+ let habitat={left:420,right:550,top:85,bottom:215,clearance:190};
+ const allowed=(x,y)=>x>=habitat.left&&x<=habitat.right&&y>=habitat.top&&y<=habitat.bottom&&sites.every(([sx,sy])=>Math.hypot(x-sx,y-sy)>=habitat.clearance)&&canStand(x,y)&&reachable(x,y);
  function reset(){
   p.ready=false;p.shots=[];let best=null,score=Infinity;
-  for(let y=88;y<=212;y+=2)for(let x=420;x<=550;x+=2){
-   if(!allowed(x,y))continue;
-   const d=(x-490)**2+(y-158)**2;
-   if(d<score){best={x,y};score=d;}
+  for(const zone of [
+   {left:420,right:550,top:85,bottom:215,clearance:190},
+   {left:85,right:660,top:75,bottom:445,clearance:190},
+   {left:85,right:660,top:75,bottom:445,clearance:150}
+  ]){
+   habitat=zone;
+   for(let y=zone.top;y<=zone.bottom;y+=2)for(let x=zone.left;x<=zone.right;x+=2){
+    if(!allowed(x,y))continue;
+    const d=(x-490)**2+(y-158)**2;
+    if(d<score){best={x,y};score=d;}
+   }
+   if(best)break;
   }
   if(!best)return;
   Object.assign(p,best,{homeX:best.x,homeY:best.y,ready:true,dir:'down',phase:0,mode:'walk',elapsed:0,cooldown:6+random()*7,angle:0,turn:0,nextPower:0,wait:0});
  }
  function update(dt,px,py){
   dt=Math.max(0,Math.min(.05,Number(dt)||0));if(!p.ready)return;
-  for(let i=p.shots.length-1;i>=0;i--){const s=p.shots[i];s.x+=s.vx*dt;s.life-=dt;if(s.life<=0||s.x<400||s.x>570)p.shots.splice(i,1);}
+  for(let i=p.shots.length-1;i>=0;i--){const s=p.shots[i];s.x+=s.vx*dt;s.life-=dt;if(s.life<=0||Math.abs(s.x-p.homeX)>110)p.shots.splice(i,1);}
   if(p.mode!=='walk'){
    const prev=p.elapsed;p.elapsed+=dt;
    if(p.mode==='ice'&&prev<.45&&p.elapsed>=.45){

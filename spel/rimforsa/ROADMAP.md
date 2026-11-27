@@ -21,19 +21,19 @@ Undantag: endast verkligt övergripande hinder (t.ex. nekad skrivbehörighet, sa
 
 ## Rotation
 
-**SENAST BEARBETAD HUVUDUPPGIFT: LJUD-SAFARI – verifierad WebKit och akut Boba-ruttfix.**
+**SENAST BEARBETAD HUVUDUPPGIFT: NPC-BOBA-FIX – reservhabitat vid blockerad spawn.**
 
 **NÄSTA ROTATIONSPOSITION: KARTA-SYD-01; därefter NPC-BOBA-FIX.**
 
 Rotation: KARTA-SYD-01 → NPC-BOBA-FIX → LJUD-SAFARI. Om endast en uppgift återstår får den väljas igen. Stryk verifierat färdiga delmoment direkt, flytta färdiga uppgifter till färdigarkivet och uppdatera antalen. Behåll återkallade uppgifter utanför kön.
 
-**Senaste avslutningsnotis:** 2026-11-27 – LJUD-SAFARI: WebKit-logg 46006401346 bekräftar touch, klocka, återhämtning och sparat mute; Pages för föregående commit godkänd. Samma körning avslöjade Boba-rutt med noll noder. Reachability använder nu identiska segmentsäkerhetskrav som A* och Boba-rutt väljer anslutna start/slutceller. Ny CI krävs för Boba; fysisk Safari ej verifierad.
+**Senaste avslutningsnotis:** 2026-11-27 – NPC-BOBA-FIX: CI 46016583834 visar Boba ready=false efter strikt nåbarhetsgraf; ljudtest godkänt, Pages godkänd. Boba söker nu först ursprungligt fält, därefter avskild nåbar nordlig terräng med 190 px eventavstånd (reserv 150 px), utan att ändra kollisionsmasken. Ny webbläsarverifiering krävs. Helvetets portar: bild hittad i biblioteket men rå binär överföring fortfarande blockerad.
 
 ## Kvar att göra – aktiv arbetskö (2)
 
 - [ ] **KARTA-SYD-01 – Helvetets portar, ny värld söder om Rimforsa.** [Krav](docs/TASK_DETAILS.md#karta-syd-01). Återstår: ladda upp exakt godkänd `helvetets-portar.png` (1448×1086) till `spel/rimforsa/`, aktivera genom att kontrollera laddning, verifiera faktisk övergång och retur till fots/bil/helikopter, kör start-/WebKit-ljudtest och kontrollera Pages. Portal- och kollisionslogik finns på main; 24 kollisionsytor visuellt kontrollerade mot originalbilden; använd inte ersättningsgrafik.
 
-- [ ] **NPC-BOBA-FIX – verifiera faktisk ankomst och bildrendering.** Ny CI efter korrigerad överensstämmelse mellan nåbarhetsgraf och A*. Föregående CI: noll ruttnoder; verifiera faktisk ankomst inom 32 px.
+- [ ] **NPC-BOBA-FIX – verifiera faktisk spawn, ankomst och bildrendering.** Ny CI efter utökad isolerad habitatsökning; föregående CI visade ready=false.
 
 
 **Stående ljudgrind (27 november 2026):** Vid varje framtida speländring ska WebKit-mobiltestet `tests/rimforsa-audio-webkit.mjs` och befintligt starttest köras. Kontrollera riktig touchstart av ljud, framåtgående AudioContext-klocka, återkomst efter avbrott och sparat av/på-val. Ändra inte ljudets cacheversion utan motsvarande kodändring; verifiera CI före påstående om fungerande ljud. WebKit på Linux är inte fysisk iOS Safari. Vid rött test: åtgärda före nästa leverans.
