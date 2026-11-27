@@ -470,6 +470,8 @@ async function markAllFamilyChatRead(){
   // Invalidate any count request started before the write. Its response must
   // not restore a stale badge, but neither may the write receipt imply zero.
   familyChatCountRequest++;
+  familyChatUnread=0;
+  familyChatUnreadError=true;
   familyChatStatus='Läsmarkeringen skickades. Kontrollerar återstående olästa meddelanden…';
   render();
   const readbackRequest=familyChatCountRequest+1;
