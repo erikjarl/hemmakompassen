@@ -16,5 +16,19 @@ try {
  await page.locator('#showMap').click();await page.locator('#goBoba').click();
  const route=await page.evaluate(()=>({path:window.__rimforsaTest.state.path.length,boba:{x:window.__rimforsaTest.npcSystem.boba.p.x,y:window.__rimforsaTest.npcSystem.boba.p.y}}));console.log('BOBA ROUTE',route);assert(route.path>0,'Boba needs a reachable walking route');
  await page.waitForFunction(()=>window.__bobaDraws>0,{},{timeout:15000});
+ const humpvind=await page.evaluate(()=>{
+  const t=window.__rimforsaTest,h=t.npcSystem.humpvind;
+  h.reset();const p=h.p;if(!p.ready)return {ready:false};
+  const origin={x:p.x,y:p.y};
+  const separation=Math.min(...t.sites.map(s=>Math.hypot(s.x-p.x,s.y-p.y)),...t.npcSystem.people.filter(s=>s.ready).map(s=>Math.hypot(s.x-p.x,s.y-p.y)));
+  const walkable=t.canStand(p.x,p.y),route=t.pathTo(p.x,p.y).length;
+  h.update(.05,p.x-20,p.y);
+  return {ready:true,origin,walkable,separation,route,mode:p.mode,moved:Math.hypot(p.x-origin.x,p.y-origin.y),hasDialogue:!!t.npcSystem.talk('humpvind')};
+ });
+ console.log('HUMPVIND',humpvind);
+ assert(humpvind.ready,'Humpvind needs a reachable grassy spawn');
+ assert(humpvind.walkable&&humpvind.separation>=150);
+ assert(humpvind.route>0,'Humpvind needs a route from Lage');
+ assert.equal(humpvind.mode,'flee');assert(humpvind.moved>1);assert.equal(humpvind.hasDialogue,false);
  assert.deepEqual(warnings,[]);assert.deepEqual(errors,[]);console.log('BOBA DRAW COUNT',await page.evaluate(()=>window.__bobaDraws));await page.screenshot({path:'rimforsa-start.png'});
 }finally{await browser.close();}

@@ -567,9 +567,9 @@ let homeTreasureBalance=0;
 // Two centerline foot samples give a little more usable width at narrow road edges.
 // Both samples still have to be inside the original walkability mask.
 const WALK_FOOT_SAMPLES=[[0,0],[0,-1]];
-let humpvindGrassPixels=null;
+let humpvindGrassPixels=null,humpvindReachable=null;
 function humpvindGrass(x,y){
- if(!imageLoaded)return 0;
+ if(!imageLoaded||!humpvindReachable||!humpvindReachable[Math.floor(y/STEP)*NX+Math.floor(x/STEP)])return 0;
  if(!humpvindGrassPixels){
   const c=document.createElement('canvas');c.width=W;c.height=H;
   const g=c.getContext('2d',{willReadFrequently:true});g.drawImage(tiles,0,0,W,H);
@@ -806,9 +806,10 @@ function edgeAssistedDirection(dx,dy,x=state.x,y=state.y){
 // favours road edges, while a short exclusion radius avoids hiding coins in buildings
 // or on the exact starting position. Bushes are visual decorations, not new obstacles.
 function buildCoinCandidates(){
- coinCandidates=[];
+ coinCandidates=[];humpvindReachable=null;
  const start=closestWalkable(360,335);if(!start)return;
  const reachable=new Uint8Array(MAX),queue=new Int32Array(MAX);
+ humpvindReachable=reachable;
  let head=0,tail=0;const first=start[1]*NX+start[0];queue[tail++]=first;reachable[first]=1;
  const moves=[[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
  while(head<tail){
