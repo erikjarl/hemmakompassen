@@ -1191,7 +1191,7 @@ let routeRetriesLeft=0,bobaRoute=null;
  function clearPath(){state.path=[];routeRetriesLeft=0;bobaRoute=null;}
 function nearHeli(){return heliRegion===region&&!state.inCar&&!state.inHeli&&Math.hypot(state.x-helicopter.position.x,state.y-helicopter.position.y)<65;}
 function enterHeli(){cancelJump();if(heliFuel.snapshot().level<=0){message.textContent='Helikoptern har tom tank. Tanka på macken för 7 spelmynt.';if(audio.fuelEmpty)audio.fuelEmpty();return;}stop();state.inHeli=true;helicopter.setAirborne(true);audio.setHeliActive?.(true);state.x=helicopter.position.x;state.y=helicopter.position.y;state.nearKey=null;updateMessage();}
-function landHeli(emergency=false){if(heliCrashTime>0&&!emergency)return;heliCrashTime=0;const exit=nearbyExit();if(!exit&&!emergency){message.textContent='Flyg till gångbar mark innan du landar!';return;}stop();state.inHeli=false;helicopter.setAirborne(false);audio.setHeliActive?.(false);if(exit){state.x=exit.x;state.y=exit.y;helicopter.position.x=exit.x;helicopter.position.y=exit.y;}else{helicopter.reset();state.x=360;state.y=335;}state.nearKey=null;coinNoticeUntil=0;updateMessage();}
+function landHeli(emergency=false){if(heliCrashTime>0&&!emergency)return;if(region==='south'&&!emergency&&!canStand(state.x,state.y)){message.textContent='Flyg till gångbar mark innan du landar!';return;}heliCrashTime=0;const exit=nearbyExit();if(!exit&&!emergency){message.textContent='Flyg till gångbar mark innan du landar!';return;}stop();state.inHeli=false;helicopter.setAirborne(false);audio.setHeliActive?.(false);if(exit){state.x=exit.x;state.y=exit.y;helicopter.position.x=exit.x;helicopter.position.y=exit.y;}else{helicopter.reset();state.x=360;state.y=335;}state.nearKey=null;coinNoticeUntil=0;updateMessage();}
 function nearCar(){return carRegion===region&&!state.inCar&&Math.hypot(state.x-carPos.x,state.y-carPos.y)<78;}
 function enterCar(){cancelJump();
  if(carFuel.snapshot().level<=0){message.textContent="Bilen har tom tank! Gå till Bensinmacken och tanka först.";if(audio.fuelEmpty)audio.fuelEmpty();return false;}
@@ -2041,7 +2041,7 @@ function tick(now){
  // Draken och spelaren ska använda samma pausvillkor: ingen eld när
  // huvudkartan är dold bakom butik, minispel, väska eller förlustdialog.
  const worldPlaying=worldIsPlaying();
- const previousHeli=worldPlaying&&state.inHeli?{...helicopter.position}:null;
+ let previousHeli=worldPlaying&&state.inHeli?{...helicopter.position}:null;
  if(worldPlaying&&!state.inCar&&!state.inHeli)advanceJump(dt);else cancelJump();
  iceBtn.hidden=!state.inHeli||region==="south";iceBtn.disabled=region==="south"||!worldPlaying||heliCrashTime>0||iceCooldown>0||dragon.isAway();
  jumpBtn.disabled=!worldPlaying||state.inCar||state.inHeli||jumpCooldown>0;
@@ -2128,7 +2128,7 @@ function tick(now){
       }else state.phase=0;
     }else state.phase=0;
   }
-   crossSouthPortal(dy);
+   if(crossSouthPortal(dy))previousHeli=null; // Coordinates from the other world must not form a dragon-hit sweep.
   }
   // Bajskorvar får inte ta hjärtan medan huvudkartan är pausad bakom
  // butiker, väska, minispel eller en dold webbläsarflik.
@@ -2228,7 +2228,7 @@ whole.addEventListener('pointerdown',ev=>{
  routeFromMap(place?place.x:x,place?place.y:y);
 });
 mini.addEventListener('click',openMap);overlay.addEventListener('click',e=>{if(e.target===overlay)closeMap()});
-window.__rimforsaTest={region:()=>region,southReady:()=>southReady,crossSouthPortal,startJump,jumpHeight,advanceJump,cancelJump,swimGame:window.RimforsaSwimMinigame,slideGame:window.RimforsaSlideMinigame,openPizza,closePizza,renderPizza,PIZZA_PRICE,openIca,closeIca,renderIca,icePrices,dragon,bag,state,sites,npcSystem,game,poops:()=>poops.map(p=>({...p})),scatterPoops,checkPoops,showTreasureVictory,troll,nearTroll,visitTroll,carPos,carDrive,nearCar,enterCar,exitCar,canStand,pathTo,moveTo:(x,y)=>{state.x=x;state.y=y;updateMessage()},isReady:()=>maskLoaded&&imageLoaded,hasSprite:()=>spriteLoaded,frames:()=>frameCount,edgeClearance,edgeAssistedDirection,slideMove,coinCandidates:()=>coinCandidates.slice(),coins:()=>coins.map(c=>({...c})),coinCount:()=>coinCount,scatterCoins,collectCoins,reset,openBoatGame,closeBoatGame,boatState,boatHazards,boatReady:()=>boatChartLoaded,boatPixelWater,spawnBoatCoins};
+window.__rimforsaTest={region:()=>region,southReady:()=>southReady,crossSouthPortal,enterHeli,landHeli,helicopter,vehicleRegions:()=>({car:carRegion,heli:heliRegion}),startJump,jumpHeight,advanceJump,cancelJump,swimGame:window.RimforsaSwimMinigame,slideGame:window.RimforsaSlideMinigame,openPizza,closePizza,renderPizza,PIZZA_PRICE,openIca,closeIca,renderIca,icePrices,dragon,bag,state,sites,npcSystem,game,poops:()=>poops.map(p=>({...p})),scatterPoops,checkPoops,showTreasureVictory,troll,nearTroll,visitTroll,carPos,carDrive,nearCar,enterCar,exitCar,canStand,pathTo,moveTo:(x,y)=>{state.x=x;state.y=y;updateMessage()},isReady:()=>maskLoaded&&imageLoaded,hasSprite:()=>spriteLoaded,frames:()=>frameCount,edgeClearance,edgeAssistedDirection,slideMove,coinCandidates:()=>coinCandidates.slice(),coins:()=>coins.map(c=>({...c})),coinCount:()=>coinCount,scatterCoins,collectCoins,reset,openBoatGame,closeBoatGame,boatState,boatHazards,boatReady:()=>boatChartLoaded,boatPixelWater,spawnBoatCoins};
 reset({clearMoney:false});
 southArt.src='./helvetets-portar.png';
  tiles.src='./rimforsa-karta.webp?v=2';maskImage.src='./gangbarhet.png?v=2';sprite.src='./lage-sprites.png';
