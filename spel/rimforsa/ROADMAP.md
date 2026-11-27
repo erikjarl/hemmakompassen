@@ -27,11 +27,11 @@ Undantag: endast verkligt övergripande hinder (t.ex. nekad skrivbehörighet, sa
 
 Rotation: KARTA-SYD-01 → NPC-BOBA-FIX → LJUD-SAFARI. Om endast en uppgift återstår får den väljas igen. Stryk verifierat färdiga delmoment direkt, flytta färdiga uppgifter till färdigarkivet och uppdatera antalen. Behåll återkallade uppgifter utanför kön.
 
-**Senaste avslutningsnotis:** 2026-11-27 – KARTA-SYD-01: portal- och kollisionskod på main (south-world.js, index.html), isolerade kontroller 123/123 godkända samt syntaxkontroll. Övergången är avsiktligt avstängd tills godkänd 1448×1086-bild helvetets-portar.png finns på rätt plats i repot. Binär överföring blockerad i aktuell verktygsmiljö. Browser-, start- och WebKit-ljudtest samt Pages-verifiering återstår.
+**Senaste avslutningsnotis:** 2026-11-27 – KARTA-SYD-01: 24 kollisionspolygoner nu visuellt avstämda mot den godkända originalbilden med koordinatöverlägg. 2126/2126 isolerade kontroller godkända (stenar, väg, fria punkter, portal). Bildöverföring till GitHub och faktisk webbläsar-/start-/WebKit-ljudtest samt Pages-verifiering återstår; portalen är fortsatt spärrad tills bildfilen finns.
 
 ## Kvar att göra – aktiv arbetskö (3)
 
-- [ ] **KARTA-SYD-01 – Helvetets portar, ny värld söder om Rimforsa.** [Krav](docs/TASK_DETAILS.md#karta-syd-01). Återstår: ladda upp exakt godkänd `helvetets-portar.png` (1448×1086) till `spel/rimforsa/`, aktivera genom att kontrollera laddning, verifiera faktisk övergång och retur till fots/bil/helikopter, finjustera kollisionspolygonerna mot bildens stenpartier, kör start-/WebKit-ljudtest och kontrollera Pages. Portal- och kollisionslogik finns redan på main; använd inte ersättningsgrafik.
+- [ ] **KARTA-SYD-01 – Helvetets portar, ny värld söder om Rimforsa.** [Krav](docs/TASK_DETAILS.md#karta-syd-01). Återstår: ladda upp exakt godkänd `helvetets-portar.png` (1448×1086) till `spel/rimforsa/`, aktivera genom att kontrollera laddning, verifiera faktisk övergång och retur till fots/bil/helikopter, kör start-/WebKit-ljudtest och kontrollera Pages. Portal- och kollisionslogik finns på main; 24 kollisionsytor visuellt kontrollerade mot originalbilden; använd inte ersättningsgrafik.
 
 - [ ] **NPC-BOBA-FIX – verifiera att Boba faktiskt visas och kan nås.** Rättat konstaterat canvasfel; verifiera nya oberoende webbläsartestet. START-01: tidigare oberoende webbläsartest godkänt för spelstart och Lages rörelse.
 
