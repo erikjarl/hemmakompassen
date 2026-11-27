@@ -3759,3 +3759,22 @@ body .live-layout #live-app .pf-reference-caveat a:focus-visible {
   outline:3px solid #314f60;
   outline-offset:3px;
 }
+
+/* DES-01F / UX-READ-01: readable chart disclosure with larger touch target. */
+body .live-layout #live-app .pf-chart-help > summary {
+  box-sizing:border-box;
+  min-height:44px;
+  padding:10px 0;
+  font-size:15px;
+  line-height:1.5;
+  overflow-wrap:anywhere;
+}
+body .live-layout #live-app .pf-chart-help p {
+  font-size:14px;
+  line-height:1.6;
+  overflow-wrap:anywhere;
+}
+body .live-layout #live-app .pf-chart-help > summary:focus-visible {
+  outline:3px solid #314f60;
+  outline-offset:3px;
+}
