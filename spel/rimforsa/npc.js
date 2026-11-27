@@ -127,7 +127,8 @@ function makeSlobido(canStand,random,busySites,art){
 }
 function createSystem(canStand,random=Math.random){
  if(typeof canStand!=='function')throw Error('NPCs need a walkable terrain callback');
- const slobidoArt=new Image();slobidoArt.src='./slobido-sprites.png?v=1';
+ const slobidoArt=typeof Image==='function'?new Image():{complete:false};
+ if(typeof Image==='function')slobidoArt.src='./slobido-sprites.png?v=1';
  const slobido=makeSlobido(canStand,random,busySites,slobidoArt);
  const people=definitions.map(p=>({...p,homeX:p.x,homeY:p.y,ready:false,dir:'down',frame:0,phase:0,turnTime:0,wait:.3,angle:0,speechIndex:0}));
  function locate(x,y){

@@ -27,7 +27,7 @@ Undantag: endast verkligt övergripande hinder (t.ex. nekad skrivbehörighet, sa
 
 Rotation: DRAKE-03 → SKATT-01. Om endast en uppgift återstår får den väljas igen. Stryk verifierat färdiga delmoment direkt, flytta färdiga uppgifter till färdigarkivet och uppdatera antalen. Behåll återkallade uppgifter utanför kön.
 
-**Senaste avslutningsnotis:** 2026-11-27 – NPC-SLOBIDO: bildbaserat spriteark, säker strandnära vandringszon, hopp och flyttbara laserögon; 6 000 simulerade uppdateringar och 600 renderingsanrop godkända med testmask. Faktisk kartplacering och Pages ännu ej visuellt verifierade. Aktiv kö tom efter kodleverans.
+**Senaste avslutningsnotis:** 2026-11-27 – NPC-SLOBIDO: bildbaserat spriteark, säker strandnära vandringszon, hopp och flyttbara laserögon; 6 000 simulerade uppdateringar och 600 renderingsanrop godkända med testmask. Kartmask verifierad: startpunkt (1216,540), 200 px från dykpunkten; ingen visuell spelning. Node-testmiljön utan Image hanteras nu. Pages-publicering ej bekräftad. Aktiv kö tom efter kodleverans.
 
 ## Kvar att göra – aktiv arbetskö (0)
 
