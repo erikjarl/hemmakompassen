@@ -68,6 +68,7 @@ let sharedUnderstandingRows=[],understandingShareError='',understandingSharesAva
 let schysstaSuggestions=[],schysstaRules=[],schysstaManualRules=[],schysstaNotifications=[],schysstaReplacementLinks=[],schysstaHistory=[],schysstaEndTarget=null,schysstaLoading=false,schysstaError='',schysstaRequest=0;
 let schysstaDraft='',schysstaDraftOpen=false,schysstaDraftKey=null,schysstaEditTarget=null,schysstaSubmitting=false,schysstaMessage='',schysstaCopyMessage='',schysstaCopyFallback=false,schysstaFocusId='',schysstaSearch='',schysstaFilterStatus='all';
 const schysstaSaving=new Set();
+const schysstaDecisionUnverified=new Set();
 const schysstaExpandedIds=new Set();
 let schysstaDecisionFeedback='';
 let activityNotifications=[],activityNotificationsError='',activityNotificationsLoading=false,
@@ -304,7 +305,7 @@ async function recheckInboxPair(){
     schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];
     schysstaNotifications=[];schysstaReplacementLinks=[];schysstaHistory=[];
     schysstaEndTarget=null;schysstaLoading=false;schysstaError='';
-    schysstaSaving.clear();schysstaPausedIds.clear();schysstaExpandedIds.clear();schysstaDecisionFeedback='';
+    schysstaSaving.clear();schysstaDecisionUnverified.clear();schysstaPausedIds.clear();schysstaExpandedIds.clear();schysstaDecisionFeedback='';
     schysstaDraft='';schysstaDraftOpen=false;schysstaDraftKey=null;
     schysstaEditTarget=null;schysstaSubmitting=false;schysstaMessage='';schysstaCopyMessage='';schysstaCopyFallback=false;
     activityNotificationsRequest++;
@@ -2701,6 +2702,7 @@ async function fetchSchysstaList(){
     schysstaNotifications=results[3].data;
     schysstaReplacementLinks=results[4].data;
     schysstaHistory=results[5].data;
+    schysstaDecisionUnverified.clear();
     const pendingIds=new Set(schysstaAllRules().filter(row=>row.status==='proposed'&&row.own_decision===null).map(row=>row.agreement_id));
     for(const id of schysstaPausedIds)if(!pendingIds.has(id))schysstaPausedIds.delete(id);
   }
@@ -2738,9 +2740,9 @@ async function proposeSchysstaRule(cardId){
   render();
 }
 async function decideSchysstaRule(agreementId,approved){
-  if(!schysstaListEnabled||!user||!SCHYSSTA_UUID.test(agreementId)||schysstaSaving.has(agreementId))return;
+  if(!schysstaListEnabled||!user||!SCHYSSTA_UUID.test(agreementId)||(schysstaSaving.has(agreementId)||schysstaDecisionUnverified.has(agreementId)))return;
   const viewer=user.id,session=sharedSession;
-  if(!await preflightSchysstaWrite(viewer,session)||schysstaSaving.has(agreementId))return;
+  if(!await preflightSchysstaWrite(viewer,session)||(schysstaSaving.has(agreementId)||schysstaDecisionUnverified.has(agreementId)))return;
   // A stale click or a repeated event must not submit a decision already
   // confirmed in the current server snapshot. Changing one's existing answer
   // is still allowed; accepted rules cannot be voted on again.
@@ -2756,6 +2758,7 @@ async function decideSchysstaRule(agreementId,approved){
     const refreshed=await fetchSchysstaList();
     if(user?.id!==viewer||sharedSession!==session)return;
     schysstaSaving.delete(agreementId);
+    if(!refreshed||schysstaError)schysstaDecisionUnverified.add(agreementId);
     const verified=refreshed&&!schysstaError
       ?schysstaAllRules().find(row=>row.agreement_id===agreementId):null;
     schysstaDecisionFeedback=verified?.own_decision===approved
@@ -2776,6 +2779,7 @@ async function decideSchysstaRule(agreementId,approved){
   // otherwise a second click can submit the same decision while verification waits.
   schysstaSaving.delete(agreementId);
   if(!refreshed||schysstaError){
+    schysstaDecisionUnverified.add(agreementId);
     // The write succeeded but its readback was superseded or failed. Do not
     // invite another approval click or claim a decision we cannot verify.
     schysstaDecisionFeedback='Ditt val skickades, men aktuell status kunde inte bekräftas. Uppdatera listan och kontrollera om beslutet är sparat innan du försöker igen.';
@@ -2807,6 +2811,8 @@ function schysstaView(){
     const submitButton=(approved,label,style='live-button')=>'<button class="'+style+'" type="button" data-schyssta-decision="'+item.agreement_id+'" data-approved="'+approved+'"'+(action?' disabled aria-busy="true"':'')+'>'+(action?'Sparar…':label)+'</button>';
     const decisionActions=item.status==='accepted'
       ?''
+      :schysstaDecisionUnverified.has(item.agreement_id)
+      ?'<p role="status">Ditt senaste beslut behöver kontrolleras.</p><button type="button" class="schyssta-secondary" data-schyssta-refresh>Kontrollera status</button>'
       :item.status==='rejected'
       ?'<p class="live-muted">Ni är inte överens om förslaget just nu. Ni kan prata om en annan formulering.</p>'
         +(item.own_decision===false?submitButton(true,'Ändra mitt svar till ja')
@@ -3044,7 +3050,7 @@ if(generation!==refreshGeneration)return;
 const {data:{user:u},error}=authResult;if(error&&error.name!=='AuthSessionMissingError')throw error;generalReviewEdit=null;themeReviewEdit=null;user=u;profile=null;members=[];mediatorExperience.reset(u?.id??null);aiResults.reset(u?.id??null);personalityExperience.reset(u?.id??null);swipeAnswers.clear();swipeImportance.clear();importancePending.clear();importanceSaving.clear();importanceAvailable=false;importanceLoadError='';priorityShares.clear();priorityShareSaving.clear();prioritySharesAvailable=false;priorityShareError='';skippedUnderstanding.clear();understandingShares.clear();understandingShareSaving.clear();understandingShareError='';understandingSharesAvailable=false;understandingShareChecking=false;for(const answers of themeAnswers.values())answers.clear();activeThemeDeck=null;themeCategory='all';themeIndex=0;themeReview=false;themeSaveError='';swipeBusy=false;swipeLoadError='';swipeSaveError='';swipeExportStatus='';swipeReview=false;swipeSkippedReview=false;swipeIndex=0;sharedMatches=[];sharedPriorities=[];sharedDeckId='general';sharedError='';sharedPriorityError='';sharedLoading=false;sharedSession++;sharedRequest++;activityInviteBusy=false;activityInviteError='';insightsRows=[];sharedUnderstandingRows=[];insightsLoading=false;insightsError='';insightsRequest++;if(swipeOverviewRefreshTimer!==null){clearTimeout(swipeOverviewRefreshTimer);swipeOverviewRefreshTimer=null;}swipeOverviewRows=[];swipeOverviewUnderstandingRows=[];swipeOverviewError='';swipeOverviewLoading=false;swipeOverviewRequest++;themesUnlocked=false;themesLoading=false;themesError='';themesRequest++;
 inboxPairEpoch=null;
 activityNotificationsRequest++;activityNotifications=[];activityNotificationsError='';activityNotificationsLoading=false;activityMarkBusy=null;activityFeedback='';
-if(typeof schysstaRequest!=='undefined'){schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];schysstaNotifications=[];schysstaReplacementLinks=[];schysstaHistory=[];schysstaEndTarget=null;schysstaLoading=false;schysstaError='';schysstaRequest++;schysstaSaving.clear();schysstaPausedIds.clear();schysstaExpandedIds.clear();schysstaDecisionFeedback='';clearFamilyChat();schysstaDraft='';schysstaDraftOpen=false;schysstaDraftKey=null;schysstaEditTarget=null;schysstaSubmitting=false;schysstaMessage='';schysstaCopyMessage='';schysstaCopyFallback=false;schysstaFocusId='';schysstaSearch='';schysstaFilterStatus='all';}
+if(typeof schysstaRequest!=='undefined'){schysstaSuggestions=[];schysstaRules=[];schysstaManualRules=[];schysstaNotifications=[];schysstaReplacementLinks=[];schysstaHistory=[];schysstaEndTarget=null;schysstaLoading=false;schysstaError='';schysstaRequest++;schysstaSaving.clear();schysstaDecisionUnverified.clear();schysstaPausedIds.clear();schysstaExpandedIds.clear();schysstaDecisionFeedback='';clearFamilyChat();schysstaDraft='';schysstaDraftOpen=false;schysstaDraftKey=null;schysstaEditTarget=null;schysstaSubmitting=false;schysstaMessage='';schysstaCopyMessage='';schysstaCopyFallback=false;schysstaFocusId='';schysstaSearch='';schysstaFilterStatus='all';}
 if(user){const viewer=user.id;
 let loaded;
 try{loaded=await Promise.all([db.from('profiles').select('display_name').eq('user_id',viewer).maybeSingle(),db.rpc('my_family_members'),db.from('swipe_answers').select('deck_id,card_id,answer').eq('user_id',viewer),db.from('swipe_skips').select('deck_id,card_id').eq('user_id',viewer),db.from('swipe_importance').select('deck_id,card_id,importance').eq('user_id',viewer),sharedUnderstandingEnabled?db.from('understanding_card_shares').select('deck_id,card_id').eq('user_id',viewer):Promise.resolve({data:[],error:null}),sharedPrioritiesEnabled?db.from('swipe_priority_shares').select('deck_id,card_id').eq('user_id',viewer):Promise.resolve({data:[],error:null}),db.rpc('my_current_inbox_pair_epoch')]);}
