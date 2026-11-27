@@ -55,3 +55,6 @@ När användaren skriver `jobb lage` (skiftlägesokänsligt) gäller det fristå
 
 
 **Stående ljudgrind (27 november 2026):** Vid varje framtida speländring ska WebKit-mobiltestet `tests/rimforsa-audio-webkit.mjs` och befintligt starttest köras. Kontrollera riktig touchstart av ljud, framåtgående AudioContext-klocka, återkomst efter avbrott och sparat av/på-val. Ändra inte ljudets cacheversion utan motsvarande kodändring; verifiera CI före påstående om fungerande ljud. WebKit på Linux är inte fysisk iOS Safari. Vid rött test: åtgärda före nästa leverans.
+
+
+**Humpvind (spelspår):** 2026-11-27 – Humpvind: ny passiv gräsälskande bildsprite från användarens karaktärsblad, dynamisk isolerad spawn, flykt från människor, kartmarkör; fysisk mobiltestning ej utförd.

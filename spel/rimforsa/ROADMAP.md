@@ -40,3 +40,7 @@ Rotation: DRAKE-03 → SKATT-01. Om endast en uppgift återstår får den välja
 ## Status
 
 50 tidigare verifierat färdiga uppgifter i [COMPLETED_TASKS.md](docs/COMPLETED_TASKS.md). Nio tidigare öppna uppgifter har återkallats av användaren 26 november 2026: MOBIL-01, ODLING-03, LJUD-02, GRAF-01, MYNT-03, HELI-02, NPC-04, BRÄNSLE-02, KARTA-01. De är historiska krav i TASK_DETAILS.md och inte aktiva eller färdigmarkerade. MINI-01 och [GAME_RULES.md](docs/GAME_RULES.md) gäller som kvalitetsregler för ändrad grafik/spelmekanik, inte som extra utvecklingsuppgifter. Dokumentera faktiskt genomförda delsteg i [WORKLOG.md](docs/WORKLOG.md) och synkronisera båda AGENTS-filerna vid varje utvecklingspass.
+
+
+### Humpvind (ny direktbeställning 2026-11-27)
+2026-11-27 – Humpvind: ny passiv gräsälskande bildsprite från användarens karaktärsblad, dynamisk isolerad spawn, flykt från människor, kartmarkör; fysisk mobiltestning ej utförd. Webbläsarverifiering återstår; ljudkod oförändrad.

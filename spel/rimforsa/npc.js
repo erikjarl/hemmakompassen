@@ -177,7 +177,69 @@ function makeBoba(canStand,random,art){
  }
  return {p,reset,update,draw,allowed};
 }
-function createSystem(canStand,random=Math.random){
+
+/* Humpvind: image sprite extracted from Lage's approved character sheet.
+   Passive, grass-loving creature, with no interaction prompt or attack. */
+function makeHumpvind(canStand,random,grassAt,others){
+ const art=typeof Image==='function'?new Image():{complete:false};
+ if(typeof Image==='function')art.src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAWCAMAAADkSAzAAAAAYFBMVEXz4dnLrt5qVHRpXZuafLCkjKPZmq0mHCk3IkVUOW2BcXWbgsLu0bxEMz/+8NnCpdu+oddoW5gZByYOBBe5nNX33bwsFjOkhsXRtuSwi6zSsq7bw+jOppgiDS67lajVsZ0w5hdiAAAAIHRSTlP//////////////////wD//////////////////////+AiIsEAAAEHSURBVHjafZKLkoMgDEWjVVvbLoEEAV/1//9yE6ruanf2DqNMjiHhRjD/CM6BQCGN43jjPyCNMCZUzR+wSICrIp8g+Z35SEd4xTdzosvjBzIzmXlHqu3YYFNKo8/QVVHl3FeGoUjFvSz8uxbai6R56UchWx8CAFhlhVRT6CjfkxMWFAjgptQJeaB3bXaIS0QbFAbZOCcPb30sKaEBam+I9R2A0O7CXOIKhrIdQRrSoGTpO7Yx1rkhgfJ102gKIkDXDT1TWL2dq8or9xKX1XUTHUZ2HTT6VDIsK/vlbT9007Is01T31XnY3PRUisO1Cf2Lj5CfQ7/N7fU6HQvQ0PajDOdMw2Q+tt9FTyS3MsMSmAAAAABJRU5ErkJggg==';
+ const p={x:0,y:0,homeX:0,homeY:0,ready:false,dir:'left',phase:0,mode:'wander',angle:0,turn:0};
+ const landmarks=[...busySites,[710,237],[770,237],[830,237],[490,158],[1228,548]];
+ const clearance=(x,y)=>Math.min(...landmarks.map(([a,b])=>Math.hypot(x-a,y-b)),...others().filter(q=>q.ready).map(q=>Math.min(Math.hypot(x-q.x,y-q.y),Math.hypot(x-q.homeX,y-q.homeY))));
+ const safe=(x,y)=>x>80&&x<1360&&y>70&&y<1010&&!(x<400&&y>470)&&canStand(x,y)&&clearance(x,y)>=155;
+ const allowed=(x,y)=>safe(x,y)&&Math.hypot(x-p.homeX,y-p.homeY)<=125;
+ function reset(){
+  p.ready=false;let best=null,score=-Infinity;
+  for(let y=84;y<1000;y+=12)for(let x=84;x<1350;x+=12){
+   if(!safe(x,y))continue;
+   // Prefer green surroundings and a patch with room to run in several directions.
+   const green=grassAt(x,y);
+   if(green<=0)continue;
+   let exits=0;for(let j=0;j<8;j++){const a=j*Math.PI/4;if(safe(x+Math.cos(a)*28,y+Math.sin(a)*28))exits++;}
+   if(exits<2)continue;
+   const s=green*100+exits*12+Math.min(280,clearance(x,y))*.18;
+   if(s>score){best={x,y};score=s;}
+  }
+  if(best)Object.assign(p,best,{homeX:best.x,homeY:best.y,ready:true,phase:0,mode:'wander',turn:0,dir:'left'});
+ }
+ function update(dt,px,py){
+  if(!p.ready)return;dt=Math.max(0,Math.min(.05,Number(dt)||0));if(!dt)return;
+  const humans=[{x:px,y:py},...others().filter(q=>q.ready&&q.lines)];
+  let threat=null,dist=Infinity;
+  for(const q of humans){const d=Math.hypot(p.x-q.x,p.y-q.y);if(d<dist){dist=d;threat=q;}}
+  const flee=dist<(p.mode==='flee'?180:135);
+  p.mode=flee?'flee':'wander';
+  if(flee)p.angle=Math.atan2(p.y-threat.y,p.x-threat.x);
+  else if((p.turn-=dt)<=0){p.angle=random()*Math.PI*2;p.turn=1+random()*2;}
+  const step=(flee?110:18)*dt;
+  let best=null,bestScore=-Infinity;
+  for(const offset of [0,.45,-.45,.9,-.9,1.45,-1.45,2.1,-2.1,Math.PI]){
+   const a=p.angle+offset,dx=Math.cos(a),dy=Math.sin(a),x=p.x+dx*step,y=p.y+dy*step;
+   if(!allowed(x,y))continue;
+   const s=flee?Math.hypot(x-threat.x,y-threat.y)-dist-Math.abs(offset)*.08:grassAt(x,y)*2-Math.abs(offset);
+   if(s>bestScore){best={x,y,dx};bestScore=s;}
+  }
+  if(!best){p.turn=0;p.phase=0;return;}
+  p.x=best.x;p.y=best.y;
+  if(Math.abs(best.dx)>.15)p.dir=best.dx<0?'left':'right';
+  p.phase+=dt*(flee?14:5);
+ }
+ function draw(ctx,camX,camY,w,h){
+  if(!p.ready||!art.complete||!art.naturalWidth)return;
+  const x=Math.round(p.x-camX+w/2),y=Math.round(p.y-camY+h/2);
+  if(x<-70||x>w+70||y<-70||y>h+70)return;
+  const bob=Math.round((p.mode==='flee'?4:1)*Math.abs(Math.sin(p.phase*Math.PI/2)));
+  ctx.save();
+  try{
+   ctx.fillStyle='#132c2466';ctx.beginPath();ctx.ellipse(x,y-2,13,4,0,0,Math.PI*2);ctx.fill();
+   ctx.save();try{ctx.translate(x,y-bob);if(p.dir==='right')ctx.scale(-1,1);ctx.imageSmoothingEnabled=false;ctx.drawImage(art,-28,-44,56,44);}finally{ctx.restore();}
+   ctx.font='bold 10px system-ui,sans-serif';ctx.textAlign='center';ctx.lineWidth=3;ctx.strokeStyle='#13342a';ctx.strokeText('Humpvind',x,y-48-bob);ctx.fillStyle='#e4c8ff';ctx.fillText('Humpvind',x,y-48-bob);
+  }finally{ctx.restore();}
+ }
+ return {p,reset,update,draw,allowed};
+}
+
+function createSystem(canStand,random=Math.random,grassAt=()=>0){
  if(typeof canStand!=='function')throw Error('NPCs need a walkable terrain callback');
  const slobidoArt=typeof Image==='function'?new Image():{complete:false};
  if(typeof Image==='function')slobidoArt.src='./slobido-sprites.png?v=1';
@@ -190,6 +252,7 @@ function createSystem(canStand,random=Math.random){
    try{npc[method](...args);}catch(err){const key=(npc===boba?'Boba':'Slobido')+':'+method;if(!reported.has(key)){reported.add(key);console.warn(key,err);}if(method==='draw'){const ctx=args[0];ctx.restore();ctx.setTransform?.(1,0,0,1,0,0);} }
  }
  const people=definitions.map(p=>({...p,homeX:p.x,homeY:p.y,ready:false,dir:'down',frame:0,phase:0,turnTime:0,wait:.3,angle:0,speechIndex:0}));
+ const humpvind=makeHumpvind(canStand,random,grassAt,()=>[...people,boba.p,slobido.p]);
  function locate(x,y){
    if(npcMayStand(x,y,canStand))return {x,y};
    for(const r of [12,24,36,48,64,88,110,140,180,220,260,320]){
@@ -216,6 +279,7 @@ function createSystem(canStand,random=Math.random){
      p.x=pos.x;p.y=pos.y;p.homeX=pos.x;p.homeY=pos.y;
      p.ready=true;p.dir='down';p.phase=0;p.turnTime=0;p.wait=.5;p.speechIndex=0;
    }
+   humpvind.reset();
  }
  function near(x,y,maxDistance=54){
    let best=null,dist=maxDistance;
@@ -251,9 +315,11 @@ function createSystem(canStand,random=Math.random){
      p.dir=Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up');
      p.phase+=dt*7;
    }
+   humpvind.update(dt,playerX,playerY);
  }
  function draw(ctx,camX,camY,width,height,sprite){
    optionalNpc(slobido,'draw',ctx,camX,camY,width,height);optionalNpc(boba,'draw',ctx,camX,camY,width,height);
+   humpvind.draw(ctx,camX,camY,width,height);
    const hasSprite=!!(sprite&&sprite.complete&&sprite.naturalWidth);
    for(const p of people){
      if(!p.ready)continue;
@@ -305,7 +371,7 @@ function createSystem(canStand,random=Math.random){
    }
  }
  reset();
- return {people,near,talk,update,draw,reset,slobido,boba};
+ return {people,near,talk,update,draw,reset,slobido,boba,humpvind};
 }
 root.RimforsaNPC={createSystem,definitions};
 })(window);
