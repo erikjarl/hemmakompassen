@@ -27,11 +27,11 @@ Undantag: endast verkligt övergripande hinder (t.ex. nekad skrivbehörighet, sa
 
 Rotation: KARTA-SYD-01. Om endast en uppgift återstår får den väljas igen. Stryk verifierat färdiga delmoment direkt, flytta färdiga uppgifter till färdigarkivet och uppdatera antalen. Behåll återkallade uppgifter utanför kön.
 
-**Senaste avslutningsnotis:** 2026-11-27 – Grafikstandard på uttrycklig beställning: bildgenererad illustrerad 16-bitarsgrafik prioriteras; beständig bildfil och separat implementeringspunkt får utgöra grafikförberedande leverans. NPC-BOBA-FIX arkiverad efter CI 46020988444: Boba synlig, 71 ruttnoder, ankomst 31,41 px, 216 bildritningar; WebKit godkänt, Pages och resurskontroll godkända. Separat UI-workflow var röd. KARTA-SYD-01 kvar: godkänd andra bild i biblioteket, binär överföring ej löst. Ingen ny spelkod eller bild i detta pass.
+**Senaste avslutningsnotis:** 2026-11-27 – KARTA-SYD-01: på direktbeställning breddad söderportal till hela kartbredden (x 0–1448, sista 36 px i y), bibehållen nordlig retur och bildladdningsspärr. Kod fe114e47420df77e475f8f338f9e1816499ad7d7, cache 5a4ffef99a5f7cc07ee6284adc8df6bfe668f2fd. Isolerad exekvering 18/18 godkänd. Originalbild saknas fortfarande på main (404); faktisk övergång, start-/WebKit-ljudtest och Pages ej verifierade. KARTA-SYD-01 kvarstår.
 
 ## Kvar att göra – aktiv arbetskö (1)
 
-- [ ] **KARTA-SYD-01 – Helvetets portar, ny värld söder om Rimforsa.** [Krav](docs/TASK_DETAILS.md#karta-syd-01). Återstår: ladda upp exakt godkänd `helvetets-portar.png` (1448×1086) till `spel/rimforsa/`, aktivera genom att kontrollera laddning, verifiera faktisk övergång och retur till fots/bil/helikopter, kör start-/WebKit-ljudtest och kontrollera Pages. Portal- och kollisionslogik finns på main; 24 kollisionsytor visuellt kontrollerade mot originalbilden; använd inte ersättningsgrafik. Godkänd andra bild: `Svensk skogskarta med mossiga stenportar.png`, biblioteksfil `file_00000000fd948210ba5aa019f0c08d38`.
+- [ ] **KARTA-SYD-01 – Helvetets portar, ny värld söder om Rimforsa.** [Krav](docs/TASK_DETAILS.md#karta-syd-01). Återstår: ladda upp exakt godkänd `helvetets-portar.png` (1448×1086) till `spel/rimforsa/`, aktivera genom att kontrollera laddning, verifiera faktisk övergång och retur till fots/bil/helikopter, kör start-/WebKit-ljudtest och kontrollera Pages. Portal- och kollisionslogik finns på main; söderportalen omfattar hela kartbredden; 24 kollisionsytor visuellt kontrollerade mot originalbilden; använd inte ersättningsgrafik. Godkänd andra bild: `Svensk skogskarta med mossiga stenportar.png`, biblioteksfil `file_00000000fd948210ba5aa019f0c08d38`.
 
 
 
