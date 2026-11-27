@@ -37,6 +37,6 @@ function canStand(x,y){return Number.isFinite(x)&&Number.isFinite(y)&&x>=8&&y>=8
 function roadX(y){const py=y/S;for(let i=1;i<road.length;i++){const [ax,ay]=road[i-1],[bx,by]=road[i];if(py<=by)return (ax+(bx-ax)*Math.max(0,(py-ay)/(by-ay)))*S;}return road.at(-1)[0]*S;}
 function canDrive(x,y){return x>=20&&y>=20&&x<W-20&&y<H-20&&Math.abs(x-roadX(y))<=17*S&&canStand(x,y);}
 function drive(x,y,dx,dy,dt){const len=Math.hypot(dx,dy);if(!len)return{x,y,moved:false};const n=Math.max(1,Math.ceil(210*Math.min(.05,Math.max(0,dt))/2)),step=210*Math.min(.05,Math.max(0,dt))/n,vx=dx/len*step,vy=dy/len*step;let moved=false;for(let i=0;i<n;i++){if(canDrive(x+vx,y+vy)){x+=vx;y+=vy;moved=true;}else if(vx&&canDrive(x+vx,y)){x+=vx;moved=true;}else if(vy&&canDrive(x,y+vy)){y+=vy;moved=true;}else break;}return{x,y,moved};}
-function crossing(region,x,y,dy,mode){const rimExitX=490;if(region==='rimforsa'&&dy>0&&y>=H-36&&Math.abs(x-rimExitX)<=36)return {region:'south',x:roadX(54),y:54};if(region==='south'&&dy<0&&y<=36&&Math.abs(x-roadX(y))<=36)return {region:'rimforsa',x:rimExitX,y:H-54};return null;}
+function crossing(region,x,y,dy,mode){const rimExitX=490;if(region==='rimforsa'&&dy>0&&y>=H-36&&x>=0&&x<=W)return {region:'south',x:roadX(54),y:54};if(region==='south'&&dy<0&&y<=36&&Math.abs(x-roadX(y))<=36)return {region:'rimforsa',x:rimExitX,y:H-54};return null;}
 root.RimforsaSouthWorld={W,H,roadX,blocked,canStand,canDrive,drive,crossing,rocks};
 })(typeof window!=='undefined'?window:globalThis);
