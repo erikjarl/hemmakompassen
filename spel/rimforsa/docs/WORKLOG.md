@@ -992,3 +992,6 @@ Körkorridorer och parkeringsytor definierade mot faktisk kartbild. Bilens centr
 ## 2026-11-27 – NPC-BOBA-FIX
 
 2026-11-27 – NPC-BOBA-FIX: oberoende Chromium-test avslöjade att Boba försvann på grund av ellipse() med sex i stället för sju parametrar. Rättat, cache v16 och Boba-markör samt Gå till Boba-knapp. Föregående START-01-test godkänt (Lage synlig/styrbar), nytt skarpare webbläsartest av riktig Boba-ritning och gångrutt inväntas.
+
+
+- **2026-11-27 – KARTA-SYD-01:** 2026-11-27 – KARTA-SYD-01: portal- och kollisionskod på main (south-world.js, index.html), isolerade kontroller 123/123 godkända samt syntaxkontroll. Övergången är avsiktligt avstängd tills godkänd 1448×1086-bild helvetets-portar.png finns på rätt plats i repot. Binär överföring blockerad i aktuell verktygsmiljö. Browser-, start- och WebKit-ljudtest samt Pages-verifiering återstår. Commits `b7b3c1f6` och `7df32045`. Inga ändringar i audio.js. Ingen genomförd visuell eller webbläsarverifiering; påstå inte att den nya världen är spelbar före bildöverföring och kontroll.
