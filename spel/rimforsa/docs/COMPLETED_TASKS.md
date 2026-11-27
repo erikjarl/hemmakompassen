@@ -77,3 +77,5 @@ Den 19 november 2026 avbockades sju äldre öppna uppgifter efter kodgranskning 
 - [x] **FORDON-03 – Bilen bara på bilvägarna.** · [Detaljer](TASK_DETAILS.md#fordon-03) · Kartbildsbaserade körkorridorer med vägkantstolerans, infarter, parkeringszoner och oförändrad vattenkontroll. Isolerade väg-, terräng-, rörelse- och vattentester godkända. Fysisk genomspelning ej utförd.
 
 - [x] **FORDON-02 – Samstämmiga bil- och båtvyer.** · [Detaljer](TASK_DETAILS.md#fordon-02) · Faktiskt 640×60-bilbildark visuellt granskat sida vid sida: åtta vyer med samstämmig vit kaross, tak, mörka rutor och ljus; ingen tydlig tidigare rapporterad modellskillnad kvar. Bilens rendering väljer samma ark i åtta riktningar; båtens åtta separat cachade canvasvyer bygger på samma skrov och palett. Fysisk mobilvisning och ny bildgenerering ej utförda; båtens vyer är kodritade bildytor, inte nya externa sprites.
+
+- [x] **LJUD-SAFARI** – WebKit touch, framåtgående ljudklocka, återställning efter avbrott, sparat mute godkända i [CI 46006401346](https://github.com/erikjarl/hemmakompassen/actions/runs/46006401346). Fysisk iOS separat; stående ljudgrind kvar.

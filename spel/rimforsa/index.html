@@ -824,7 +824,7 @@ function edgeAssistedDirection(dx,dy,x=state.x,y=state.y){
 // or on the exact starting position. Bushes are visual decorations, not new obstacles.
 function buildCoinCandidates(){
  coinCandidates=[];humpvindReachable=null;
- const start=closestWalkable(360,335);if(!start)return;
+ const start=walkableStart(360,335);if(!start)return;
  const reachable=new Uint8Array(MAX),queue=new Int32Array(MAX);
  humpvindReachable=reachable;
  let head=0,tail=0;const first=start[1]*NX+start[0];queue[tail++]=first;reachable[first]=1;
@@ -840,6 +840,7 @@ function buildCoinCandidates(){
    const xx=cx+dx,yy=cy+dy;if(xx<1||yy<1||xx>=NX-1||yy>=NY-1)continue;
    const next=yy*NX+xx;if(reachable[next]||!walkCell(xx,yy))continue;
    if(dx&&dy&&(!walkCell(cx+dx,cy)||!walkCell(cx,cy+dy)))continue;
+   if(!canWalkStraight((cx+.5)*STEP,(cy+.5)*STEP,(xx+.5)*STEP,(yy+.5)*STEP))continue;
    reachable[next]=1;queue[tail++]=next;
   }
  }
@@ -1757,14 +1758,14 @@ function safeTapTarget(x,y){
 // Välj en slutcell vars raka anslutning till fingertrycket verkligen är fri.
 // När en entré ligger nära en husvägg kan närmaste rutmitt annars hamna på
 // fel sida av väggen: A* hittar dit, men Lage stannar innan själva entrén.
-function walkableEndpoint(tx,ty){
+function walkableEndpoint(tx,ty,homeConnected=false){
  const cx=Math.floor(tx/STEP),cy=Math.floor(ty/STEP);
  let best=null,bestDistance=Infinity;
  for(let radius=0;radius<=7;radius++){
   for(let dy=-radius;dy<=radius;dy++)for(let dx=-radius;dx<=radius;dx++){
    if(Math.max(Math.abs(dx),Math.abs(dy))!==radius)continue;
    const gx=cx+dx,gy=cy+dy;
-   if(!walkCell(gx,gy))continue;
+   if(!walkCell(gx,gy)||(homeConnected&&!humpvindReachable?.[gy*NX+gx]))continue;
    const px=(gx+.5)*STEP,py=(gy+.5)*STEP;
    if(!canWalkStraight(px,py,tx,ty))continue;
    const distance=Math.hypot(px-tx,py-ty);
@@ -1776,14 +1777,14 @@ function walkableEndpoint(tx,ty){
 }
 // Hitta en rutmitt som faktiskt har fri anslutning från spelarens fötter.
 // Sök i ringar för att bevara smala gångpassager utan att öppna hinder.
-function walkableStart(x,y){
+function walkableStart(x,y,homeConnected=false){
  const cx=Math.floor(x/STEP),cy=Math.floor(y/STEP);
  let best=null,bestDistance=Infinity;
  for(let radius=0;radius<=7;radius++){
   for(let dy=-radius;dy<=radius;dy++)for(let dx=-radius;dx<=radius;dx++){
    if(Math.max(Math.abs(dx),Math.abs(dy))!==radius)continue;
    const gx=cx+dx,gy=cy+dy;
-   if(!walkCell(gx,gy))continue;
+   if(!walkCell(gx,gy)||(homeConnected&&!humpvindReachable?.[gy*NX+gx]))continue;
    const px=(gx+.5)*STEP,py=(gy+.5)*STEP;
    if(!canWalkStraight(x,y,px,py))continue;
    const distance=Math.hypot(px-x,py-y);
@@ -1793,7 +1794,7 @@ function walkableStart(x,y){
  }
  return null;
 }
-function pathTo(x,y){
+function pathTo(x,y,homeConnected=false){
  if(!maskLoaded)return [];
  const target=safeTapTarget(x,y);
  if(!target)return [];
@@ -1804,7 +1805,7 @@ function pathTo(x,y){
  // Startcellen måste gå att nå från Lages faktiska position.
  // Annars kan första A*-steget skära genom ett hushörn när han står
  // strax utanför rutnätets mittpunkt vid en smal entré.
- const s=walkableStart(state.x,state.y),t=walkableEndpoint(x,y);if(!s||!t)return [];
+ const s=walkableStart(state.x,state.y,homeConnected),t=walkableEndpoint(x,y,homeConnected);if(!s||!t)return [];
 const start=s[1]*NX+s[0],goal=t[1]*NX+t[0],prev=new Int32Array(MAX).fill(-1),dist=new Float32Array(MAX).fill(Infinity),seen=new Uint8Array(MAX);let heap=[];const push=(id,cost)=>{let i=heap.length;heap.push([cost,id]);while(i){const p=(i-1)>>1;if(heap[p][0]<=cost)break;heap[i]=heap[p];i=p}heap[i]=[cost,id]};const pop=()=>{let top=heap[0],last=heap.pop();if(heap.length){let i=0;while(true){let c=i*2+1;if(c>=heap.length)break;if(c+1<heap.length&&heap[c+1][0]<heap[c][0])c++;if(last[0]<=heap[c][0])break;heap[i]=heap[c];i=c}heap[i]=last}return top[1]};
 dist[start]=0;push(start,0);let reached=false,expanded=0;const moves=[[1,0,1],[-1,0,1],[0,1,1],[0,-1,1],[1,1,1.414],[-1,1,1.414],[1,-1,1.414],[-1,-1,1.414]];
 // Räkna endast unika utforskade celler mot sökgränsen. A* kan ha flera
@@ -2172,11 +2173,11 @@ function tick(now){
  }catch(err){if(!tickErrorReported){tickErrorReported=true;console.error('Rimforsa tick',err);}try{draw();}catch(drawErr){if(!reportedDrawErrors.has('recovery')){reportedDrawErrors.add('recovery');console.error('Rimforsa recovery',drawErr);}}}
 }
 requestAnimationFrame(tick);
-function routeFromMap(x,y){
+function routeFromMap(x,y,homeConnected=false){
  const hint=document.getElementById('mapRouteHint');
  if(!maskLoaded){hint.textContent='Kartan laddas fortfarande. Försök igen.';return false}
  if(state.inCar||state.inHeli){hint.textContent='Kliv ur bilen innan du väljer en gångväg.';return false}
- const route=pathTo(x,y);
+ const route=pathTo(x,y,homeConnected);
  if(!route.length){
   // Att vara nära räcker inte: ett hus, en sten eller vatten kan ligga
   // mellan Lage och målet. Acceptera bara ett redan nått, gångbart mål.
@@ -2207,13 +2208,13 @@ function refreshBobaRoute(now){
  if(now<bobaRoute.next)return;
  bobaRoute.next=now+800;
  if(state.path.length&&Math.hypot(b.x-bobaRoute.x,b.y-bobaRoute.y)<15)return;
- const route=pathTo(b.x,b.y);
+ const route=pathTo(b.x,b.y,true);
  if(!route.length){clearPath();message.textContent='Kunde inte hitta en ny väg till Boba. Öppna kartan och försök igen.';return;}
  state.path=route;routeRetriesLeft=1;bobaRoute.x=b.x;bobaRoute.y=b.y;
 }
 document.getElementById('goBoba').addEventListener('click',()=>{
  const b=npcSystem.boba?.p;
- if(b?.ready&&region==='rimforsa'){if(routeFromMap(b.x,b.y))bobaRoute={x:b.x,y:b.y,next:0};}
+ if(b?.ready&&region==='rimforsa'){if(routeFromMap(b.x,b.y,true))bobaRoute={x:b.x,y:b.y,next:0};}
  else document.getElementById('mapRouteHint').textContent='Boba väntar på att kartan ska laddas.';
 });
 for(const p of farmSites){document.getElementById(p.plot===0?'goFarm':'goFarm'+(p.plot+1)).addEventListener('click',()=>routeFromMap(p.x,p.y));}
