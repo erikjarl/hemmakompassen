@@ -3860,3 +3860,19 @@ body .live-layout #live-app .schyssta-view .schyssta-filter-toolbar :is(input,se
   outline:3px solid #314f60;
   outline-offset:2px;
 }
+
+/* DES-01G / UX-READ-01: readable family chat input and read controls. */
+body .live-layout #live-app .family-chat .family-chat-form textarea {
+  font-size:16px;
+  line-height:1.55;
+}
+body .live-layout #live-app .family-chat .family-chat-read-controls p {
+  font-size:14px;
+  line-height:1.5;
+  overflow-wrap:anywhere;
+}
+body .live-layout #live-app .family-chat :is(.family-chat-read-controls,.family-chat-compose-actions) button {
+  white-space:normal;
+  overflow-wrap:anywhere;
+  max-width:100%;
+}
