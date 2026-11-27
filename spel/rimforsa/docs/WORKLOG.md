@@ -977,3 +977,8 @@ Körkorridorer och parkeringsytor definierade mot faktisk kartbild. Bilens centr
 ## 2026-11-27 – NPC-SLOBIDO
 
 2026-11-27 – NPC-SLOBIDO: bildbaserat spriteark, säker strandnära vandringszon, hopp och flyttbara laserögon; 6 000 simulerade uppdateringar och 600 renderingsanrop godkända med testmask. Kartmask verifierad: startpunkt (1216,540), 200 px från dykpunkten; ingen visuell spelning. Node-testmiljön utan Image hanteras nu. Pages-publicering ej bekräftad. Aktiv kö tom efter kodleverans. Ingen ändring av dykspelets aktivering eller andra karaktärer. Bildrutor ur det korrigerade genererade karaktärsbladet, transparent PNG; laserögon flyttas i renderingen och är visuella, inte skadande.
+
+
+## 2026-11-27 – NPC-BOBA
+
+2026-11-27 – NPC-BOBA: bildbaserad tvåvingad Boba på 44×44 px (samma som Lage), avskild väster om väg 23. Minst 190 kartpixlar från samtliga listade event, vandring, svävning och ofarliga isbollar. 6 000 simulerade uppdateringar och 600 renderingsanrop godkända med testmask; riktig kartbild och mask granskade, ingen visuell spelning. Pages ej bekräftad. Aktiv kö tom efter kodleverans.

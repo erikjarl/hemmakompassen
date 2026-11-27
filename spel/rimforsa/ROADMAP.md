@@ -21,13 +21,13 @@ Undantag: endast verkligt övergripande hinder (t.ex. nekad skrivbehörighet, sa
 
 ## Rotation
 
-**SENAST BEARBETAD HUVUDUPPGIFT: `NPC-SLOBIDO` – vandrande karaktär vid Åsundabadet.**
+**SENAST BEARBETAD HUVUDUPPGIFT: `NPC-BOBA` – tvåvingad karaktär på avskilt fält.**
 
 **NÄSTA ROTATIONSPOSITION: Ingen – aktiv kö tom.**
 
 Rotation: DRAKE-03 → SKATT-01. Om endast en uppgift återstår får den väljas igen. Stryk verifierat färdiga delmoment direkt, flytta färdiga uppgifter till färdigarkivet och uppdatera antalen. Behåll återkallade uppgifter utanför kön.
 
-**Senaste avslutningsnotis:** 2026-11-27 – NPC-SLOBIDO: bildbaserat spriteark, säker strandnära vandringszon, hopp och flyttbara laserögon; 6 000 simulerade uppdateringar och 600 renderingsanrop godkända med testmask. Kartmask verifierad: startpunkt (1216,540), 200 px från dykpunkten; ingen visuell spelning. Node-testmiljön utan Image hanteras nu. Pages-publicering ej bekräftad. Aktiv kö tom efter kodleverans.
+**Senaste avslutningsnotis:** 2026-11-27 – NPC-BOBA: bildbaserad tvåvingad Boba på 44×44 px (samma som Lage), avskild väster om väg 23. Minst 190 kartpixlar från samtliga listade event, vandring, svävning och ofarliga isbollar. 6 000 simulerade uppdateringar och 600 renderingsanrop godkända med testmask; riktig kartbild och mask granskade, ingen visuell spelning. Pages ej bekräftad. Aktiv kö tom efter kodleverans.
 
 ## Kvar att göra – aktiv arbetskö (0)
 
@@ -35,4 +35,4 @@ Inga aktiva uppgifter. Invänta nya uttryckliga önskemål.
 
 ## Status
 
-49 tidigare verifierat färdiga uppgifter i [COMPLETED_TASKS.md](docs/COMPLETED_TASKS.md). Nio tidigare öppna uppgifter har återkallats av användaren 26 november 2026: MOBIL-01, ODLING-03, LJUD-02, GRAF-01, MYNT-03, HELI-02, NPC-04, BRÄNSLE-02, KARTA-01. De är historiska krav i TASK_DETAILS.md och inte aktiva eller färdigmarkerade. MINI-01 och [GAME_RULES.md](docs/GAME_RULES.md) gäller som kvalitetsregler för ändrad grafik/spelmekanik, inte som extra utvecklingsuppgifter. Dokumentera faktiskt genomförda delsteg i [WORKLOG.md](docs/WORKLOG.md) och synkronisera båda AGENTS-filerna vid varje utvecklingspass.
+50 tidigare verifierat färdiga uppgifter i [COMPLETED_TASKS.md](docs/COMPLETED_TASKS.md). Nio tidigare öppna uppgifter har återkallats av användaren 26 november 2026: MOBIL-01, ODLING-03, LJUD-02, GRAF-01, MYNT-03, HELI-02, NPC-04, BRÄNSLE-02, KARTA-01. De är historiska krav i TASK_DETAILS.md och inte aktiva eller färdigmarkerade. MINI-01 och [GAME_RULES.md](docs/GAME_RULES.md) gäller som kvalitetsregler för ändrad grafik/spelmekanik, inte som extra utvecklingsuppgifter. Dokumentera faktiskt genomförda delsteg i [WORKLOG.md](docs/WORKLOG.md) och synkronisera båda AGENTS-filerna vid varje utvecklingspass.

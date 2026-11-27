@@ -1,10 +1,12 @@
 # Lage i Rimforsa – färdiga uppgifter (arkiv)
 
-**Statuskälla:** [ROADMAP.md](../ROADMAP.md). Detta arkiv innehåller **49 avbockade uppgifter** som har tagits bort ur den aktiva att-göra-listan (senast 27 november 2026). Här behålls de som historik, inte som nya arbetsuppgifter.
+**Statuskälla:** [ROADMAP.md](../ROADMAP.md). Detta arkiv innehåller **50 avbockade uppgifter** som har tagits bort ur den aktiva att-göra-listan (senast 27 november 2026). Här behålls de som historik, inte som nya arbetsuppgifter.
 
 **Viktig avgränsning:** En del punkter är avbockade efter kodgranskning, inte fysiska mobiltester. Om ett dokumenterat acceptansvillkor visar sig saknas öppnas uppgiften på nytt i `ROADMAP.md`. Grafikstandard och separat kvalitetsarbete gäller fortfarande.
 
-## Avslutade uppgifter (49)
+## Avslutade uppgifter (50)
+
+- [x] **NPC-BOBA – Boba på avskild blomsteräng.** · 2026-11-27 – NPC-BOBA: bildbaserad tvåvingad Boba på 44×44 px (samma som Lage), avskild väster om väg 23. Minst 190 kartpixlar från samtliga listade event, vandring, svävning och ofarliga isbollar. 6 000 simulerade uppdateringar och 600 renderingsanrop godkända med testmask; riktig kartbild och mask granskade, ingen visuell spelning. Pages ej bekräftad. Aktiv kö tom efter kodleverans.
 
 - [x] **NPC-SLOBIDO – Slobido vid Åsundabadet.** · 2026-11-27: Bildbaserade 16-bitars bildrutor från genererat karaktärsblad. Vandrar på tillåtna kartpixlar 180–310 px från dykpunkten; inget samtals- eller skadehinder. 88 px bildhöjd jämfört med Lages 44 px. Växlar mellan hopp och laserögon med 10–20 s pauser. 6 000 simulerade uppdateringar och 600 renderingsanrop med testmask; verklig gångbarhetsmask kontrollerad vid startpunkten; visuell webbläsarkarta ej verifierad.
 

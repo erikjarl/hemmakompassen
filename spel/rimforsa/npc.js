@@ -125,11 +125,66 @@ function makeSlobido(canStand,random,busySites,art){
  }
  return {p,reset,update,draw,allowed};
 }
+function makeBoba(canStand,random,art){
+ const sites=[[360,335],[667,418],[1002,480],[394,641],[699,783],[921,813],[1220,740],[1100,116],[710,237],[770,237],[830,237],[464,454],[1148,242],[1198,248],[1248,256]];
+ const p={x:0,y:0,homeX:0,homeY:0,ready:false,dir:'down',phase:0,mode:'walk',elapsed:0,cooldown:0,angle:0,turn:0,nextPower:0,wait:0,shots:[]};
+ // Meadow west of road 23. Never use a global fallback: it could put Boba next to a minigame.
+ const allowed=(x,y)=>x>=420&&x<=550&&y>=85&&y<=215&&sites.every(([sx,sy])=>Math.hypot(x-sx,y-sy)>=190)&&canStand(x,y);
+ function reset(){
+  p.ready=false;p.shots=[];let best=null,score=Infinity;
+  for(let y=88;y<=212;y+=2)for(let x=420;x<=550;x+=2){
+   if(!allowed(x,y))continue;
+   const d=(x-490)**2+(y-158)**2;
+   if(d<score){best={x,y};score=d;}
+  }
+  if(!best)return;
+  Object.assign(p,best,{homeX:best.x,homeY:best.y,ready:true,dir:'down',phase:0,mode:'walk',elapsed:0,cooldown:6+random()*7,angle:0,turn:0,nextPower:0,wait:0});
+ }
+ function update(dt,px,py){
+  dt=Math.max(0,Math.min(.05,Number(dt)||0));if(!p.ready)return;
+  for(let i=p.shots.length-1;i>=0;i--){const s=p.shots[i];s.x+=s.vx*dt;s.life-=dt;if(s.life<=0||s.x<400||s.x>570)p.shots.splice(i,1);}
+  if(p.mode!=='walk'){
+   const prev=p.elapsed;p.elapsed+=dt;
+   if(p.mode==='ice'&&prev<.45&&p.elapsed>=.45){
+    const sign=p.dir==='left'?-1:1;
+    p.shots.push({x:p.x+sign*15,y:p.y-29,vx:sign*64,life:.65});
+   }
+   if(p.elapsed>=1.25){p.mode='walk';p.elapsed=0;p.cooldown=10+random()*10;p.wait=.4;}
+   return;
+  }
+  p.cooldown-=dt;
+  if(p.cooldown<=0){p.mode=p.nextPower++%2===0?'hover':'ice';p.elapsed=0;p.phase=0;if(p.mode==='ice')p.dir=p.x>490?'left':'right';return;}
+  if(Math.hypot(p.x-px,p.y-py)<35||p.wait>0){p.wait=Math.max(0,p.wait-dt);p.phase=0;return;}
+  if(p.turn<=0){p.angle=random()*Math.PI*2;p.turn=.7+random()*2;}
+  p.turn-=dt;
+  const dx=Math.cos(p.angle),dy=Math.sin(p.angle),nx=p.x+dx*17*dt,ny=p.y+dy*17*dt;
+  if(Math.hypot(nx-p.homeX,ny-p.homeY)>48||!allowed(nx,ny)){p.turn=0;p.wait=.2+random()*.3;p.phase=0;return;}
+  p.x=nx;p.y=ny;p.dir=Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up');p.phase+=dt*5;
+ }
+ function draw(ctx,camX,camY,w,h){
+  if(!p.ready||!art.complete||art.naturalWidth!==242||art.naturalHeight!==22)return;
+  const x=Math.round(p.x-camX+w/2),y=Math.round(p.y-camY+h/2);if(x<-100||x>w+100||y<-80||y>h+80)return;
+  const hovering=p.mode==='hover',attack=p.mode==='ice';
+  const lift=hovering?Math.round(15*Math.sin(Math.PI*Math.min(1,p.elapsed/1.25))):0;
+  const frame=hovering?9+Math.floor(p.elapsed*8)%2:attack?8:({down:0,right:2,up:4,left:6}[p.dir]+Math.floor(p.phase)%2);
+  ctx.save();ctx.fillStyle='#132c2466';ctx.beginPath();ctx.ellipse(x,y-2,11,4,0,Math.PI*2);ctx.fill();
+  ctx.imageSmoothingEnabled=false;ctx.translate(x,y-lift);
+  if(attack&&p.dir==='left')ctx.scale(-1,1);
+  ctx.drawImage(art,frame*22,0,22,22,-22,-44,44,44);ctx.restore();
+  ctx.save();ctx.font='bold 10px system-ui,sans-serif';ctx.textAlign='center';ctx.lineWidth=3;ctx.strokeStyle='#13342a';ctx.strokeText('Boba',x,y-48-lift);ctx.fillStyle='#ffb3a6';ctx.fillText('Boba',x,y-48-lift);
+  for(const s of p.shots){const bx=Math.round(s.x-camX+w/2),by=Math.round(s.y-camY+h/2);ctx.fillStyle='#326bb3';ctx.fillRect(bx-5,by-3,10,6);ctx.fillRect(bx-3,by-5,6,10);ctx.fillStyle='#7ce3ff';ctx.fillRect(bx-3,by-3,6,6);ctx.fillStyle='#e9ffff';ctx.fillRect(bx-2,by-2,3,3);}
+  ctx.restore();
+ }
+ return {p,reset,update,draw,allowed};
+}
 function createSystem(canStand,random=Math.random){
  if(typeof canStand!=='function')throw Error('NPCs need a walkable terrain callback');
  const slobidoArt=typeof Image==='function'?new Image():{complete:false};
  if(typeof Image==='function')slobidoArt.src='./slobido-sprites.png?v=1';
  const slobido=makeSlobido(canStand,random,busySites,slobidoArt);
+ const bobaArt=typeof Image==='function'?new Image():{complete:false};
+ if(typeof Image==='function')bobaArt.src='./boba-sprites.png?v=1';
+ const boba=makeBoba(canStand,Math.random,bobaArt);
  const people=definitions.map(p=>({...p,homeX:p.x,homeY:p.y,ready:false,dir:'down',frame:0,phase:0,turnTime:0,wait:.3,angle:0,speechIndex:0}));
  function locate(x,y){
    if(npcMayStand(x,y,canStand))return {x,y};
@@ -150,7 +205,7 @@ function createSystem(canStand,random=Math.random){
    return best;
  }
  function reset(){
-   slobido.reset();
+   slobido.reset();boba.reset();
    for(const p of people){
      const pos=locate(p.homeX,p.homeY);
      if(!pos){p.ready=false;continue;}
@@ -176,7 +231,7 @@ function createSystem(canStand,random=Math.random){
  }
  function update(dt,playerX,playerY){
    dt=Math.max(0,Math.min(.05,Number(dt)||0));
-   slobido.update(dt,playerX,playerY);
+   slobido.update(dt,playerX,playerY);boba.update(dt,playerX,playerY);
    for(const p of people){
      if(!p.ready)continue;
      if(Math.hypot(p.x-playerX,p.y-playerY)<42){p.wait=Math.max(p.wait,.22);p.phase=0;continue;}
@@ -194,7 +249,7 @@ function createSystem(canStand,random=Math.random){
    }
  }
  function draw(ctx,camX,camY,width,height,sprite){
-   slobido.draw(ctx,camX,camY,width,height);
+   slobido.draw(ctx,camX,camY,width,height);boba.draw(ctx,camX,camY,width,height);
    const hasSprite=!!(sprite&&sprite.complete&&sprite.naturalWidth);
    for(const p of people){
      if(!p.ready)continue;
@@ -246,7 +301,7 @@ function createSystem(canStand,random=Math.random){
    }
  }
  reset();
- return {people,near,talk,update,draw,reset,slobido};
+ return {people,near,talk,update,draw,reset,slobido,boba};
 }
 root.RimforsaNPC={createSystem,definitions};
 })(window);
