@@ -1,5 +1,7 @@
 # Hemmakompassen – aktiv roadmap
 
+**27/11 – DES-01F / UX-READ-01, PR #542 mergad:** Squash `e35784af38d14e9f29986439ca59fea2bd48698a`. CI #45929196290: visual success (funktionella kontrakt, bygge, Chromium, rapportdialog och browser/skärmbilder); game-contracts failure, totalt workflow failure. Inga spelfiler ändrade i PR. Supabase SELECT: 2 new, 5 reviewing, inga statusändringar. Fysisk Safari, autentiserade tvåkontotester och livepublicering ej verifierade.
+
 **27/11 – DES-01F / UX-READ-01, smala personlighetstestkontroller:** CSS för navigationsknappar i en kolumn vid högst 390 px och radbrytning i navigations-/delningsknappar. Cache uppdaterad, tre statiska källkontroller godkända, regressionstest tillagt. Supabase SELECT: 2 new, 5 reviewing, inga statusändringar. CI, merge, fysisk Safari och autentiserade tester ännu inte verifierade.
 
 **27/11 – Jobb hk, DES-01F / CI-isolering (PR #540):** Föregående CI #45897357079 gav 961 godkända och 27 underkända testfall; samtliga underkända gäller Rimforsa. Webbläsarstegen hoppades över. Commit `ac757b7` delar kontrakttesterna i oberoende jobb: 19 Rimforsa-testfiler i eget jobb och övriga i befintligt visual-jobb; inga testfall tas bort. Båda jobbens resultat ska granskas, och rött speljobb får inte tolkas som grönt totalresultat. Supabase SELECT: två new, fem reviewing, inga ändrade statusar. Ny CI, merge, verklig Safari och publicering ännu ej verifierade.
