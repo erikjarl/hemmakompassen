@@ -3,6 +3,7 @@
   'use strict';
   const AudioCtor = root.AudioContext || root.webkitAudioContext;
   let ctx=null,master=null,scene='land',enabled=false,hidden=false;
+  let recoveryNeeded=false, clockSample=null;
   let musicInterval=null,gullInterval=null,preschoolInterval=null,engine=null,waves=null,carEngine=null,carActive=false,melodyStep=0,volume=.55,dragonNearby=false;
   let rotor=null,heliActive=false;
   let sceneStarted=false,resumePending=false,resumeStartedAt=0,resumeSerial=0,resumeFailed=false,startChimePending=false;
@@ -243,7 +244,7 @@
         }catch(_){}
       }
     }
-    ctx=null;master=null;resumePending=false;resumeStartedAt=0;resumeFailed=false;resumeSerial++;
+    ctx=null;master=null;clockSample=null;resumePending=false;resumeStartedAt=0;resumeFailed=false;resumeSerial++;
   }
   function ensureContext(){
     if(!AudioCtor)return false;
@@ -276,7 +277,18 @@
     if(!ctx||ctx.state==='closed'){
       try{if(!ensureContext())return false;}catch(_){return false;}
     }
-    if(ctx.state==='running'){resumeFailed=false;restoreSceneFromGesture();confirmEnabledSound();return true;}
+    // A returning iOS page may report running while its output is silent.
+    // Recreate once, synchronously in a real gesture, never from a timer.
+    if(recoveryNeeded){recoveryNeeded=false;disposeContext();try{if(!ensureContext())return false;}catch(_){return false;}}
+    if(ctx.state==='running'){
+      const stamp=Date.now(), t=ctx.currentTime;
+      if(clockSample&&stamp-clockSample.stamp>=1500&&t-clockSample.t<.02){
+        disposeContext();try{if(!ensureContext())return false;}catch(_){return false;}
+      }else{
+        if(!clockSample||t>clockSample.t+.02)clockSample={stamp,t};
+        resumeFailed=false;restoreSceneFromGesture();confirmEnabledSound();return true;
+      }
+    }
     // Ett avslutat resume()-löfte kan lämna Safari kvar i suspended/interrupted.
     // Först NÄSTA användargest återskapar då kontexten, utan automatisk uppspelning.
     if(resumeFailed){
@@ -342,7 +354,7 @@
   }
   function disable(){
     stopSpeech();
-    enabled=false;startChimePending=false;
+    enabled=false;startChimePending=false;recoveryNeeded=false;
     // Av/på-knappen fungerar även som en riktig återställning när Safari
     // rapporterar "running" men högtalaren ändå har blivit tyst efter appbyte.
     // Nästa På-tryck skapar en fräsch motor direkt från klickets användargest.
@@ -752,7 +764,7 @@
       }
       return;
     }
-    if(nextHidden)stopSpeech();
+    if(nextHidden){stopSpeech();if(enabled&&ctx)recoveryNeeded=true;}
     hidden=nextHidden;
     stopScene();
     if(!hidden&&enabled&&ctx&&ctx.state==='running'){
@@ -800,6 +812,6 @@
       return true;
     }catch(_){speechMusicVolume(volume);return false;}
   }
-  function status(){return {enabled,available:!!AudioCtor,contextState:ctx?ctx.state:'not-created',scene,hidden,sceneStarted,playingMusic:musicInterval!==null,playingWaves:!!waves,playingEngine:!!engine,playingCarEngine:!!carEngine,playingRotor:!!rotor,heliActive,carActive,dragonNearby};}
+  function status(){return {enabled,available:!!AudioCtor,contextState:ctx?ctx.state:'not-created',recoveryNeeded,clock:ctx?ctx.currentTime:0,scene,hidden,sceneStarted,playingMusic:musicInterval!==null,playingWaves:!!waves,playingEngine:!!engine,playingCarEngine:!!carEngine,playingRotor:!!rotor,heliActive,carActive,dragonNearby};}
   root.RimforsaAudio={enable,disable,toggle,resumeFromGesture,setScene,setBoatSpeed,setCarActive,setCarSpeed,setHeliActive,setDragonNearby,iceShoot,dragonIceHit,coin,hit,poop,victory,slideLaunch,slideLand,slideCharge,slideLongJump,sharkBump,purchase,purchaseDenied,fuelFill,fuelEmpty,boatGrounding,boatOutOfFuel,regionArrival,carEnter,itemFound,helicopterHit,footballKick,footballSave,footballGoal,boatTreasure,npcTalk,bagOpen,bagClose,fuelStationEnter,mapOpen,boatLaunch,potatoSale,carExit,bagClear,newHunt,boatRetry,gameOver,shopEnter,mapClose,boatReturn,shopExit,routeSelected,routeBlocked,potatoPlant,potatoHarvest,speak,stopSpeech,setVisible,status};
 })(window);

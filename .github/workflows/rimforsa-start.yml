@@ -2,7 +2,7 @@ name: Rimforsa independent start smoke
 on:
   push:
     branches: [main]
-    paths: ['spel/rimforsa/**', 'tests/rimforsa-start-browser.mjs', '.github/workflows/rimforsa-start.yml']
+    paths: ['spel/rimforsa/**', 'tests/rimforsa-start-browser.mjs', 'tests/rimforsa-audio-webkit.mjs', '.github/workflows/rimforsa-start.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -16,9 +16,10 @@ jobs:
         with:
           node-version: '22'
       - run: npm install --no-save playwright
-      - run: npx playwright install chromium
+      - run: npx playwright install --with-deps chromium webkit
       - run: |
           python3 -m http.server 8765 > /tmp/rimforsa-http.log 2>&1 &
+          node tests/rimforsa-audio-webkit.mjs
           node tests/rimforsa-start-browser.mjs
       - uses: actions/upload-artifact@v4
         if: always()

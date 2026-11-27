@@ -29,9 +29,13 @@ Rotation: DRAKE-03 → SKATT-01. Om endast en uppgift återstår får den välja
 
 **Senaste avslutningsnotis:** 2026-11-27 – NPC-BOBA-FIX: oberoende Chromium-test avslöjade att Boba försvann på grund av ellipse() med sex i stället för sju parametrar. Rättat, cache v16 och Boba-markör samt Gå till Boba-knapp. Föregående START-01-test godkänt (Lage synlig/styrbar), nytt skarpare webbläsartest av riktig Boba-ritning och gångrutt inväntas.
 
-## Kvar att göra – aktiv arbetskö (1)
+## Kvar att göra – aktiv arbetskö (2)
 
 - [ ] **NPC-BOBA-FIX – verifiera att Boba faktiskt visas och kan nås.** Rättat konstaterat canvasfel; verifiera nya oberoende webbläsartestet. START-01: tidigare oberoende webbläsartest godkänt för spelstart och Lages rörelse.
+
+- [ ] **LJUD-SAFARI – permanent regressionsskydd.** Återställ ljudkontext på nästa gest efter sidavbrott, upptäck stillastående ljudklocka och kör nytt WebKit-test. Inväntar CI och verklig Safari-verifiering.
+
+**Stående ljudgrind (27 november 2026):** Vid varje framtida speländring ska WebKit-mobiltestet `tests/rimforsa-audio-webkit.mjs` och befintligt starttest köras. Kontrollera riktig touchstart av ljud, framåtgående AudioContext-klocka, återkomst efter avbrott och sparat av/på-val. Ändra inte ljudets cacheversion utan motsvarande kodändring; verifiera CI före påstående om fungerande ljud. WebKit på Linux är inte fysisk iOS Safari. Vid rött test: åtgärda före nästa leverans.
 
 ## Status
 

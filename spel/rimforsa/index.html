@@ -147,7 +147,7 @@ canvas#boatGame{display:block;width:100%;flex:1;min-height:180px;background:#1d6
  });
 })();
 </script>
-<script src="./audio.js?v=48"></script>
+<script src="./audio.js?v=49"></script>
 <script src="./gameplay.js?v=2"></script>
 <script src="./inventory.js?v=3"></script>
 <script src="./item-art.js?v=1"></script>
@@ -182,7 +182,7 @@ const audio=window.RimforsaAudio||{toggle:()=>false,status:()=>({enabled:false,a
 function showAudioState(){
  const s=audio.status();
  for(const button of document.querySelectorAll('[data-sound-toggle]')){
-  const needsResume=s.enabled&&s.contextState!=='running';
+  const needsResume=s.enabled&&(s.contextState!=='running'||s.recoveryNeeded||!s.sceneStarted);
   // Ljudknappen är ALLTID av/på, också när Safari har pausat AudioContext.
   // Återupptagning erbjuds via nästa riktiga spelgest utan att låsa av-knappen.
   button.textContent=needsResume?'🔈 Starta ljud':s.enabled?'🔊 Ljud av':'🔈 Ljud på';
@@ -202,7 +202,7 @@ function rememberSound(wanted){
 }
 for(const button of document.querySelectorAll('[data-sound-toggle]'))button.addEventListener('click',()=>{
  const status=audio.status();
- if(status.enabled&&status.contextState==='running'){
+ if(status.enabled&&status.contextState==='running'&&!status.recoveryNeeded&&status.sceneStarted){
   rememberSound(false);audio.disable();
  }else{
   rememberSound(true);
@@ -223,10 +223,12 @@ function resumeAudioGesture(ev){
  if(navigator.userActivation&&navigator.userActivation.isActive===false&&!['touchend','pointerup','click'].includes(ev.type))return;
  const status=audio.status();
  if(!status.enabled){if(audio.enable)audio.enable();}
- else if((status.contextState!=='running'||!status.sceneStarted)&&audio.resumeFromGesture)audio.resumeFromGesture();
+ else if(audio.resumeFromGesture)audio.resumeFromGesture();
  showAudioState();
 }
 document.addEventListener('pointerdown',resumeAudioGesture,{capture:true,passive:true});
+// Some iOS versions grant activation at touchstart; never attempt it without activation.
+document.addEventListener('touchstart',ev=>{if(navigator.userActivation?.isActive)resumeAudioGesture(ev);},{capture:true,passive:true});
 document.addEventListener('touchend',resumeAudioGesture,{capture:true,passive:true});
 document.addEventListener('pointerup',resumeAudioGesture,{capture:true,passive:true});
 document.addEventListener('keydown',resumeAudioGesture,true);
@@ -239,6 +241,7 @@ window.addEventListener('pagehide',()=>{audio.setVisible(false);showAudioState()
 // Safari kan återställa sidan från back/forward-cache utan visibilitychange.
 // Återbygg ljudscenen om kontexten fortfarande kör; avbruten kontext kräver ny gest.
 window.addEventListener('pageshow',()=>{audio.setVisible(!document.hidden);showAudioState();});
+window.addEventListener('focus',()=>{audio.setVisible(!document.hidden);showAudioState();});
 showAudioState();
 const boatChart=new Image(); boatChart.src='./boat-minigame-map.webp?v=9';
 const boatSprite=new Image(); boatSprite.src='./lage-motorboat.png?v=9';
