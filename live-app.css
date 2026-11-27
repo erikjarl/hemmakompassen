@@ -3703,3 +3703,17 @@ body .live-layout #live-app > .insights-view .ai-result-panel :is(a,[data-ai-ana
   .pf-percentile-chart .pf-reference-legend { font-size:13px; line-height:1.5; }
   .pf-percentile-chart .pf-reference-legend > span { min-width:0; overflow-wrap:anywhere; }
 }
+
+/* DES-01F: visible keyboard focus and consistent survey selection in the light theme. */
+body .live-layout #live-app .pf-survey .pf-option:focus-within {
+  outline:3px solid #314f60;
+  outline-offset:2px;
+}
+body .live-layout #live-app .pf-survey .pf-option input,
+body .live-layout #live-app .pf-survey .pf-option input:checked {
+  accent-color:#394627;
+}
+body .live-layout #live-app .pf-survey .pf-option span {
+  min-width:0;
+  overflow-wrap:anywhere;
+}
