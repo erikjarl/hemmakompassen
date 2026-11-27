@@ -374,7 +374,7 @@ function mergeFamilyChatPage(previous,latest,{older=false,quiet=false,hasMore=fa
   }
   return {messages:latest,hasMore:latest.length===50};
 }
-async function fetchFamilyChat(older=false,{quiet=false,preserveStatus=false}={}){
+async function fetchFamilyChat(older=false,{quiet=false,preserveStatus=false,awaitUnread=false}={}){
   if(!user||members.length!==2||!inboxPairEpoch)return;
   if(older?(!familyChatHasMore||familyChatLoadingOlder||familyChatLoading):(familyChatLoading||familyChatLoadingOlder))return;
   const viewer=user.id,session=sharedSession,request=++familyChatRequest;
@@ -416,7 +416,11 @@ async function fetchFamilyChat(older=false,{quiet=false,preserveStatus=false}={}
     if(!older)familyChatHistoryVerified=true;
     // Loading a message page must never create a receipt for pages not viewed.
     // Only the deliberate mark-all action below calls the RPC.
-    if(!older&&page()==='inkorg')void fetchFamilyChatUnread();
+    if(!older&&page()==='inkorg'){
+      if(awaitUnread)await fetchFamilyChatUnread();
+      else void fetchFamilyChatUnread();
+      if(request!==familyChatRequest||viewer!==user?.id||session!==sharedSession)return;
+    }
   }
   const changed=!quiet||previous!==JSON.stringify([familyChatMessages,familyChatHasMore,familyChatError,familyChatHistoryVerified]);
   if(changed&&page()==='inkorg'&&!familyChatDraft.trim()){
@@ -2491,11 +2495,11 @@ async function refreshWholeInbox(){
       return;
     }
     if(viewer!==user?.id||session!==sharedSession||page()!=='inkorg')return;
-    const pending=[fetchFamilyChatUnread()],skipped=[];
+    const pending=[],skipped=[];
     // Background requests already in flight are not part of this manual
     // refresh. Don't claim all sections were refreshed if some were skipped.
-    if(!familyChatLoading&&!familyChatLoadingOlder)pending.push(fetchFamilyChat());
-    else skipped.push('meddelanden');
+    if(!familyChatLoading&&!familyChatLoadingOlder)pending.push(fetchFamilyChat(false,{awaitUnread:true}));
+    else {skipped.push('meddelanden');pending.push(fetchFamilyChatUnread());}
     if(schysstaListEnabled){
       if(!schysstaLoading)pending.push(fetchSchysstaList());
       else skipped.push('regelförfrågningar');
