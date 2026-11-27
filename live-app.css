@@ -3717,3 +3717,22 @@ body .live-layout #live-app .pf-survey .pf-option span {
   min-width:0;
   overflow-wrap:anywhere;
 }
+
+/* DES-01F / UX-READ-01: prevent cramped survey navigation and sharing actions. */
+body .live-layout #live-app .pf-controls button,
+body .live-layout #live-app .pf-sharing button {
+  min-width:0;
+  white-space:normal;
+  overflow-wrap:anywhere;
+}
+@media (max-width:390px) {
+  body .live-layout #live-app .pf-controls {
+    display:grid;
+    grid-template-columns:minmax(0,1fr);
+    gap:8px;
+  }
+  body .live-layout #live-app .pf-sharing button {
+    max-width:100%;
+    margin-right:0;
+  }
+}
