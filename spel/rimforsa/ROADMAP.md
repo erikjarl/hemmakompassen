@@ -4,7 +4,7 @@
 **Publicerad adress:** https://erikjarl.github.io/hemmakompassen/spel/rimforsa/  
 **Senast rensad:** 2026-11-27 · **Källa för uppgiftsstatus och arbetsordning:** denna fil.
 
-**NY AVGRÄNSNING 26 november 2026 (uttrycklig användarinstruktion, företräde framför äldre regler):** Användaren är nöjd med spelet i övrigt. Arbeta endast med de nya önskemålen i ROADMAP: drakstridens ljud/musik, helikopterträffar med strikt eldklotsgräns och synlig förmögenhet vid hemmet. Tidigare öppna uppgifter är återkallade, inte verifierat färdiga, och får inte återinföras eller väljas som reservuppgift utan ny användarinstruktion. Den stående generella spriteinventeringen upphör; bildarbete görs endast för aktuella krav. Behåll SNES-kvalitetsregeln för ny grafik. Rotera mellan de nya aktiva uppgifterna; om endast en återstår får den bearbetas flera pass i följd. När kön är tom avslutas Jobb lage utan nya oombedda förändringar. Leveransgrinden gäller inom denna avgränsning.
+**NY AVGRÄNSNING 26 november 2026 (uttrycklig användarinstruktion, företräde framför äldre regler):** Användaren är nöjd med spelet i övrigt. Arbeta endast med aktuella uttryckliga önskemål i spelets ROADMAP, inklusive senare direktbeställningar (27 november: Helvetets portar / KARTA-SYD-01). Tidigare öppna uppgifter är återkallade, inte verifierat färdiga, och får inte återinföras eller väljas som reservuppgift utan ny användarinstruktion. Den stående generella spriteinventeringen upphör; bildarbete görs endast för aktuella krav. Behåll SNES-kvalitetsregeln för ny grafik. Rotera mellan de nya aktiva uppgifterna; om endast en återstår får den bearbetas flera pass i följd. När kön är tom avslutas Jobb lage utan nya oombedda förändringar. Leveransgrinden gäller inom denna avgränsning.
 
 ## Bindande leveransgrind för varje Jobb lage (26 november 2026)
 
@@ -23,13 +23,15 @@ Undantag: endast verkligt övergripande hinder (t.ex. nekad skrivbehörighet, sa
 
 **SENAST BEARBETAD HUVUDUPPGIFT: `NPC-BOBA` – tvåvingad karaktär på avskilt fält.**
 
-**NÄSTA ROTATIONSPOSITION: NPC-BOBA-FIX – verifiera Boba-ritning och gångrutt.**
+**NÄSTA ROTATIONSPOSITION: KARTA-SYD-01 – överför godkänd bild och verifiera kartövergång; välj annan aktiv uppgift om binär överföring fortfarande blockeras.**
 
-Rotation: DRAKE-03 → SKATT-01. Om endast en uppgift återstår får den väljas igen. Stryk verifierat färdiga delmoment direkt, flytta färdiga uppgifter till färdigarkivet och uppdatera antalen. Behåll återkallade uppgifter utanför kön.
+Rotation: KARTA-SYD-01 → NPC-BOBA-FIX → LJUD-SAFARI. Om endast en uppgift återstår får den väljas igen. Stryk verifierat färdiga delmoment direkt, flytta färdiga uppgifter till färdigarkivet och uppdatera antalen. Behåll återkallade uppgifter utanför kön.
 
-**Senaste avslutningsnotis:** 2026-11-27 – NPC-BOBA-FIX: oberoende Chromium-test avslöjade att Boba försvann på grund av ellipse() med sex i stället för sju parametrar. Rättat, cache v16 och Boba-markör samt Gå till Boba-knapp. Föregående START-01-test godkänt (Lage synlig/styrbar), nytt skarpare webbläsartest av riktig Boba-ritning och gångrutt inväntas.
+**Senaste avslutningsnotis:** 2026-11-27 – KARTA-SYD-01: portal- och kollisionskod på main (south-world.js, index.html), isolerade kontroller 123/123 godkända samt syntaxkontroll. Övergången är avsiktligt avstängd tills godkänd 1448×1086-bild helvetets-portar.png finns på rätt plats i repot. Binär överföring blockerad i aktuell verktygsmiljö. Browser-, start- och WebKit-ljudtest samt Pages-verifiering återstår.
 
-## Kvar att göra – aktiv arbetskö (2)
+## Kvar att göra – aktiv arbetskö (3)
+
+- [ ] **KARTA-SYD-01 – Helvetets portar, ny värld söder om Rimforsa.** [Krav](docs/TASK_DETAILS.md#karta-syd-01). Återstår: ladda upp exakt godkänd `helvetets-portar.png` (1448×1086) till `spel/rimforsa/`, aktivera genom att kontrollera laddning, verifiera faktisk övergång och retur till fots/bil/helikopter, finjustera kollisionspolygonerna mot bildens stenpartier, kör start-/WebKit-ljudtest och kontrollera Pages. Portal- och kollisionslogik finns redan på main; använd inte ersättningsgrafik.
 
 - [ ] **NPC-BOBA-FIX – verifiera att Boba faktiskt visas och kan nås.** Rättat konstaterat canvasfel; verifiera nya oberoende webbläsartestet. START-01: tidigare oberoende webbläsartest godkänt för spelstart och Lages rörelse.
 
