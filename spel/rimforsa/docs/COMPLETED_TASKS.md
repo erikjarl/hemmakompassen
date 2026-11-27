@@ -1,10 +1,12 @@
 # Lage i Rimforsa – färdiga uppgifter (arkiv)
 
-**Statuskälla:** [ROADMAP.md](../ROADMAP.md). Detta arkiv innehåller **48 avbockade uppgifter** som har tagits bort ur den aktiva att-göra-listan (senast 26 november 2026). Här behålls de som historik, inte som nya arbetsuppgifter.
+**Statuskälla:** [ROADMAP.md](../ROADMAP.md). Detta arkiv innehåller **49 avbockade uppgifter** som har tagits bort ur den aktiva att-göra-listan (senast 27 november 2026). Här behålls de som historik, inte som nya arbetsuppgifter.
 
 **Viktig avgränsning:** En del punkter är avbockade efter kodgranskning, inte fysiska mobiltester. Om ett dokumenterat acceptansvillkor visar sig saknas öppnas uppgiften på nytt i `ROADMAP.md`. Grafikstandard och separat kvalitetsarbete gäller fortfarande.
 
-## Avslutade uppgifter (48)
+## Avslutade uppgifter (49)
+
+- [x] **NPC-SLOBIDO – Slobido vid Åsundabadet.** · 2026-11-27: Bildbaserade 16-bitars bildrutor från genererat karaktärsblad. Vandrar på tillåtna kartpixlar 180–310 px från dykpunkten; inget samtals- eller skadehinder. 88 px bildhöjd jämfört med Lages 44 px. Växlar mellan hopp och laserögon med 10–20 s pauser. 6 000 simulerade uppdateringar och 600 renderingsanrop med testmask; faktisk webbläsarkarta ej verifierad.
 
 - [x] **DRAKE-03 – Drakstridens ljud och säkra eldbollar (nya kraven 26 november).** · [Krav](TASK_DETAILS.md#drake-03--drakstridens-ljud-och-säkra-eldbollar) · Isbollsljud, träffljud och närhetsmusik integrerade. Flygande helikopter kan beskjutas och träffas nära draken; synlig rök före nödlandning. Kartbaserad bilvägsgeometri med marginal skyddas utöver tidigare kartgranskad polygon. Isolerade modul- och nödlandningstester godkända; ingen ny fysisk webbläsarspelning.
 

@@ -972,3 +972,8 @@ Körkorridorer och parkeringsytor definierade mot faktisk kartbild. Bilens centr
 ### 2026-11-26 – Jobb lage / DRAKE-03 (vägskydd och synlig nödlandning)
 - Kartbaserad väggeometri från car.js med marginal används av draken; nollmarginalens bilfunktion oförändrad. 800 tidigare överlappande rutnätspunkter för projektilmarginal och 1114 för träffzon blockerade. 98 projektilpositioner kontrollerade, 15 svävande helikopterträffar, inga vägträffar i riktade prov.
 - Huvudkartans faktiska kodblock testade med mockad omgivning: 0,75 s träffrök/låst styrning före nödlandning, manuell avbrytning spärrad, meddelande korrekt. Syntax OK. Tidigare kartgranskad polygon enligt arkiv; ny rasterbild och fysisk spelning ej verifierade, direkt nätåtkomst till Pages saknades. Aktiv kö tom; 48 arkiverade.
+
+
+## 2026-11-27 – NPC-SLOBIDO
+
+2026-11-27 – NPC-SLOBIDO: bildbaserat spriteark, säker strandnära vandringszon, hopp och flyttbara laserögon; 6 000 simulerade uppdateringar och 600 renderingsanrop godkända med testmask. Faktisk kartplacering och Pages ännu ej visuellt verifierade. Aktiv kö tom efter kodleverans. Ingen ändring av dykspelets aktivering eller andra karaktärer. Bildrutor ur det korrigerade genererade karaktärsbladet, transparent PNG; laserögon flyttas i renderingen och är visuella, inte skadande.

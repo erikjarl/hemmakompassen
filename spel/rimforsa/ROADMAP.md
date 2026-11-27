@@ -2,7 +2,7 @@
 
 **Projekt:** `erikjarl/hemmakompassen` · **Spel:** `spel/rimforsa/index.html`  
 **Publicerad adress:** https://erikjarl.github.io/hemmakompassen/spel/rimforsa/  
-**Senast rensad:** 2026-11-26 · **Källa för uppgiftsstatus och arbetsordning:** denna fil.
+**Senast rensad:** 2026-11-27 · **Källa för uppgiftsstatus och arbetsordning:** denna fil.
 
 **NY AVGRÄNSNING 26 november 2026 (uttrycklig användarinstruktion, företräde framför äldre regler):** Användaren är nöjd med spelet i övrigt. Arbeta endast med de nya önskemålen i ROADMAP: drakstridens ljud/musik, helikopterträffar med strikt eldklotsgräns och synlig förmögenhet vid hemmet. Tidigare öppna uppgifter är återkallade, inte verifierat färdiga, och får inte återinföras eller väljas som reservuppgift utan ny användarinstruktion. Den stående generella spriteinventeringen upphör; bildarbete görs endast för aktuella krav. Behåll SNES-kvalitetsregeln för ny grafik. Rotera mellan de nya aktiva uppgifterna; om endast en återstår får den bearbetas flera pass i följd. När kön är tom avslutas Jobb lage utan nya oombedda förändringar. Leveransgrinden gäller inom denna avgränsning.
 
@@ -21,13 +21,13 @@ Undantag: endast verkligt övergripande hinder (t.ex. nekad skrivbehörighet, sa
 
 ## Rotation
 
-**SENAST BEARBETAD HUVUDUPPGIFT: `DRAKE-03` – vägskydd och synlig nödlandning.**
+**SENAST BEARBETAD HUVUDUPPGIFT: `NPC-SLOBIDO` – vandrande karaktär vid Åsundabadet.**
 
 **NÄSTA ROTATIONSPOSITION: Ingen – aktiv kö tom.**
 
 Rotation: DRAKE-03 → SKATT-01. Om endast en uppgift återstår får den väljas igen. Stryk verifierat färdiga delmoment direkt, flytta färdiga uppgifter till färdigarkivet och uppdatera antalen. Behåll återkallade uppgifter utanför kön.
 
-**Senaste avslutningsnotis:** 2026-11-26 – DRAKE-03: kartbaserad vägkorridor skyddas med marginal; synlig 0,75 s träffrök före nödlandning. Isolerade väg-, träff- och nödlandningstester godkända. Ny kartbild/webbläsare ej verifierad. Aktiv kö tom.
+**Senaste avslutningsnotis:** 2026-11-27 – NPC-SLOBIDO: bildbaserat spriteark, säker strandnära vandringszon, hopp och flyttbara laserögon; 6 000 simulerade uppdateringar och 600 renderingsanrop godkända med testmask. Faktisk kartplacering och Pages ännu ej visuellt verifierade. Aktiv kö tom efter kodleverans.
 
 ## Kvar att göra – aktiv arbetskö (0)
 
@@ -35,4 +35,4 @@ Inga aktiva uppgifter. Invänta nya uttryckliga önskemål.
 
 ## Status
 
-48 tidigare verifierat färdiga uppgifter i [COMPLETED_TASKS.md](docs/COMPLETED_TASKS.md). Nio tidigare öppna uppgifter har återkallats av användaren 26 november 2026: MOBIL-01, ODLING-03, LJUD-02, GRAF-01, MYNT-03, HELI-02, NPC-04, BRÄNSLE-02, KARTA-01. De är historiska krav i TASK_DETAILS.md och inte aktiva eller färdigmarkerade. MINI-01 och [GAME_RULES.md](docs/GAME_RULES.md) gäller som kvalitetsregler för ändrad grafik/spelmekanik, inte som extra utvecklingsuppgifter. Dokumentera faktiskt genomförda delsteg i [WORKLOG.md](docs/WORKLOG.md) och synkronisera båda AGENTS-filerna vid varje utvecklingspass.
+49 tidigare verifierat färdiga uppgifter i [COMPLETED_TASKS.md](docs/COMPLETED_TASKS.md). Nio tidigare öppna uppgifter har återkallats av användaren 26 november 2026: MOBIL-01, ODLING-03, LJUD-02, GRAF-01, MYNT-03, HELI-02, NPC-04, BRÄNSLE-02, KARTA-01. De är historiska krav i TASK_DETAILS.md och inte aktiva eller färdigmarkerade. MINI-01 och [GAME_RULES.md](docs/GAME_RULES.md) gäller som kvalitetsregler för ändrad grafik/spelmekanik, inte som extra utvecklingsuppgifter. Dokumentera faktiskt genomförda delsteg i [WORKLOG.md](docs/WORKLOG.md) och synkronisera båda AGENTS-filerna vid varje utvecklingspass.

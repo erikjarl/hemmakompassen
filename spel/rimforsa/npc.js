@@ -60,8 +60,75 @@ function drawFriend(ctx,p,x,y){
   else px(-8,-31,16,7,'#4a302e');
  }
 }
+function makeSlobido(canStand,random,busySites,art){
+ const p={x:0,y:0,homeX:0,homeY:0,ready:false,dir:'right',phase:0,mode:'walk',elapsed:0,wait:0,turn:0,angle:0,cooldown:0,nextPower:0};
+ const allowed=(x,y)=>x>=1040&&x<=1400&&y>=430&&y<=1010&&Math.hypot(x-1220,y-740)>=180&&Math.hypot(x-1220,y-740)<=310&&busySites.every(([sx,sy])=>Math.hypot(x-sx,y-sy)>=140)&&canStand(x,y);
+ function reset(){
+  p.ready=false;let best=null,score=Infinity;
+  for(let y=440;y<=1000;y+=4)for(let x=1040;x<=1400;x+=4){
+   const d=(x-1228)**2+(y-548)**2;
+   if(d<score&&allowed(x,y)){best={x,y};score=d;}
+  }
+  if(!best)return;
+  Object.assign(p,best,{homeX:best.x,homeY:best.y,ready:true,dir:'right',phase:0,mode:'walk',elapsed:0,wait:0,turn:0,cooldown:7+random()*6,nextPower:0});
+ }
+ function update(dt,px,py){
+  dt=Math.max(0,Math.min(.05,Number(dt)||0));if(!p.ready)return;
+  if(p.mode!=='walk'){
+   p.elapsed+=dt;
+   if(p.elapsed>=(p.mode==='hop'?.9:1.7)){p.mode='walk';p.elapsed=0;p.cooldown=10+random()*10;p.wait=.5;}
+   return;
+  }
+  p.cooldown-=dt;
+  if(p.cooldown<=0){
+   p.mode=p.nextPower++%2===0?'hop':'laser';p.elapsed=0;p.phase=0;
+   if(p.mode==='laser')p.dir=p.dir==='left'?'left':'right';return;
+  }
+  if(Math.hypot(p.x-px,p.y-py)<65){p.phase=0;p.turn=0;return;}
+  if(p.wait>0){p.wait-=dt;p.phase=0;return;}
+  if(p.turn<=0){p.angle=random()*Math.PI*2;p.turn=1+random()*2.5;}
+  p.turn-=dt;const dx=Math.cos(p.angle),dy=Math.sin(p.angle),nx=p.x+dx*16*dt,ny=p.y+dy*16*dt;
+  if(Math.hypot(nx-p.homeX,ny-p.homeY)>76||!allowed(nx,ny)){p.turn=0;p.wait=.2+random()*.4;p.phase=0;return;}
+  p.x=nx;p.y=ny;p.dir=Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up');p.phase+=dt*5;
+ }
+ function draw(ctx,camX,camY,w,h){
+  if(!p.ready||!art.complete||art.naturalWidth!==350||art.naturalHeight!==25)return;
+  const x=Math.round(p.x-camX+w/2),y=Math.round(p.y-camY+h/2);if(x<-200||x>w+200||y<-160||y>h+160)return;
+  const jumping=p.mode==='hop',power=p.mode==='laser',hop=jumping?Math.round(32*Math.sin(Math.PI*Math.min(1,p.elapsed/.9))):0;
+  const side=p.dir==='right'||p.dir==='left',moving=p.phase>0&&p.mode==='walk';
+  const frame=power||jumping&&side?0:p.dir==='down'?5:p.dir==='up'?6:moving?1+Math.floor(p.phase)%4:0;
+  const bob=!side&&moving?Math.round(2*Math.abs(Math.sin(p.phase*Math.PI/2))):0;
+  ctx.save();ctx.fillStyle='#132c2466';ctx.beginPath();ctx.ellipse(x,y-2,24,7,0,0,Math.PI*2);ctx.fill();
+  ctx.translate(x,y-hop-bob);if(p.dir==='left')ctx.scale(-1,1);ctx.imageSmoothingEnabled=false;
+  // Atlas cells have the same 25 px height; 88 world px vs Lage's 44 px.
+  ctx.drawImage(art,frame*50,0,50,25,-88,-88,176,88);
+  if(power){
+   // Erase both original low eyes with the surrounding green, then move them to two spots on the back.
+   const scale=176/50;
+   const rect=(a,b,c,d,color)=>{ctx.fillStyle=color;ctx.fillRect(Math.round(-88+a*scale),Math.round(-88+b*scale),Math.ceil(c*scale),Math.ceil(d*scale));};
+   const t=Math.min(1,p.elapsed/.48),back=p.elapsed>1.35?Math.min(1,(1.7-p.elapsed)/.35):t;
+   rect(37,19,5,3,'#91b355');
+   const eyes=[[38+(19-38)*back,19+(6-19)*back],[40+(29-40)*back,20+(8-20)*back]];
+   for(const [ex,ey] of eyes)rect(ex,ey,1.6,1.6,'#121910');
+   if(p.elapsed>.48&&p.elapsed<1.35){
+    const fire=p.elapsed>.78&&p.elapsed<1.28;
+    for(const [ex,ey] of eyes){
+     const sx=-88+(ex+.8)*scale,sy=-88+(ey+.8)*scale;
+     ctx.fillStyle='#ffb3da';ctx.fillRect(sx-4,sy-4,8,8);ctx.fillStyle='#fff7eb';ctx.fillRect(sx-2,sy-2,4,4);
+     if(fire){const len=60+30*Math.sin(Math.PI*(p.elapsed-.78)/.5);
+      ctx.beginPath();ctx.moveTo(sx,sy);ctx.lineTo(sx+len,sy-22);ctx.strokeStyle='#ed388e';ctx.lineWidth=6;ctx.stroke();
+      ctx.beginPath();ctx.moveTo(sx,sy);ctx.lineTo(sx+len,sy-22);ctx.strokeStyle='#ffe5f5';ctx.lineWidth=2;ctx.stroke();}
+    }
+   }
+  }
+  ctx.restore();ctx.save();ctx.font='bold 11px system-ui,sans-serif';ctx.textAlign='center';ctx.lineWidth=3;ctx.strokeStyle='#13342a';ctx.strokeText('Slobido',x,y-92-hop-bob);ctx.fillStyle='#f9cf51';ctx.fillText('Slobido',x,y-92-hop-bob);ctx.restore();
+ }
+ return {p,reset,update,draw,allowed};
+}
 function createSystem(canStand,random=Math.random){
  if(typeof canStand!=='function')throw Error('NPCs need a walkable terrain callback');
+ const slobidoArt=new Image();slobidoArt.src='./slobido-sprites.png?v=1';
+ const slobido=makeSlobido(canStand,random,busySites,slobidoArt);
  const people=definitions.map(p=>({...p,homeX:p.x,homeY:p.y,ready:false,dir:'down',frame:0,phase:0,turnTime:0,wait:.3,angle:0,speechIndex:0}));
  function locate(x,y){
    if(npcMayStand(x,y,canStand))return {x,y};
@@ -82,6 +149,7 @@ function createSystem(canStand,random=Math.random){
    return best;
  }
  function reset(){
+   slobido.reset();
    for(const p of people){
      const pos=locate(p.homeX,p.homeY);
      if(!pos){p.ready=false;continue;}
@@ -107,6 +175,7 @@ function createSystem(canStand,random=Math.random){
  }
  function update(dt,playerX,playerY){
    dt=Math.max(0,Math.min(.05,Number(dt)||0));
+   slobido.update(dt,playerX,playerY);
    for(const p of people){
      if(!p.ready)continue;
      if(Math.hypot(p.x-playerX,p.y-playerY)<42){p.wait=Math.max(p.wait,.22);p.phase=0;continue;}
@@ -124,6 +193,7 @@ function createSystem(canStand,random=Math.random){
    }
  }
  function draw(ctx,camX,camY,width,height,sprite){
+   slobido.draw(ctx,camX,camY,width,height);
    const hasSprite=!!(sprite&&sprite.complete&&sprite.naturalWidth);
    for(const p of people){
      if(!p.ready)continue;
@@ -175,7 +245,7 @@ function createSystem(canStand,random=Math.random){
    }
  }
  reset();
- return {people,near,talk,update,draw,reset};
+ return {people,near,talk,update,draw,reset,slobido};
 }
 root.RimforsaNPC={createSystem,definitions};
 })(window);
