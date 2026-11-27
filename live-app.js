@@ -2568,7 +2568,7 @@ function inboxView(){
        ?(unreadTotal>0?'Minst '+unreadTotal+(unreadTotal===1?' oläst':' olästa')+' i inkorgen':'Oläst antal kan inte kontrolleras')
        :unreadTotal+(unreadTotal===1?' oläst':' olästa')+' i inkorgen')+'</strong></p>'
      +'<p class="live-muted">Notissiffran vid Inkorg räknar privata meddelanden, regelhändelser och gemensamma kort. De markeras som lästa var för sig.</p>'
-     +(unreadUnknown?'<p role="status">Alla kategorier kunde inte kontrolleras. Välj Uppdatera hela inkorgen ovanför för att försöka igen.</p>':'')
+     +(unreadUnknown?'<p role="status">'+(familyChatReadBusy?'Kontrollerar läsmarkeringen. Övriga kategorier kan också ha okänt antal.':'Alla kategorier kunde inte kontrolleras. Välj Uppdatera hela inkorgen ovanför för att försöka igen.')+'</p>':'')
      +'<div class="inbox-unread-shortcuts">'
      +unreadShortcut('messages','Privata meddelanden',unreadMessages)
      +unreadShortcut('rules','Regelhändelser',unreadRules)
@@ -2584,7 +2584,9 @@ function inboxView(){
       +'<p class="family-chat-text">'+esc(m.body)+'</p>'
       +(m.sent_by_me?'<p class="family-chat-receipt">'+(m.read_at?'Läst':'Skickat')+'</p>':'')+'</li>').join('')+'</ol>'
     :emptyMessage?'<p class="live-muted">'+esc(emptyMessage)+'</p>':'';
-  const markAllHtml=familyChatUnreadError
+  const markAllHtml=familyChatReadBusy
+    ?'<p role="status">Kontrollerar läsmarkeringen…</p>'
+    :familyChatUnreadError
     ?'<p role="alert">Antalet olästa privata meddelanden kunde inte kontrolleras. Uppdatera konversationen för att försöka igen.</p>'
     :familyChatUnread>0
       ?'<div class="family-chat-read-controls"><p>'+familyChatUnread+(familyChatUnread===1?' oläst privat meddelande. Det markeras inte som läst':' olästa privata meddelanden. De markeras inte som lästa')+' bara för att du öppnar inkorgen.</p>'+
