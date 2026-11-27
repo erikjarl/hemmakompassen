@@ -3823,3 +3823,25 @@ body .live-layout #live-app .pf-survey .pf-option span {
     line-height:1.4;
   }
 }
+
+/* DES-01G / FBK-02: clear, compact approved-rule disclosure on mobile. */
+body .live-layout #live-app .schyssta-view .schyssta-approved-details > summary::after {
+  display:grid;
+  place-items:center;
+  width:28px;
+  height:28px;
+  border-radius:50%;
+  background:#e5e7db;
+  color:#394627;
+}
+@media (max-width:390px) {
+  body .live-layout #live-app .schyssta-view .schyssta-approved-present .schyssta-approved-details > summary {
+    padding-block:10px;
+    min-height:48px;
+    gap:10px;
+  }
+  body .live-layout #live-app .schyssta-view .schyssta-approved-details > summary > p {
+    font-size:16px;
+    line-height:1.45;
+  }
+}
