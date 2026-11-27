@@ -125,11 +125,11 @@ function makeSlobido(canStand,random,busySites,art){
  }
  return {p,reset,update,draw,allowed};
 }
-function makeBoba(canStand,random,art){
+function makeBoba(canStand,random,art,reachable){
  const sites=[[360,335],[667,418],[1002,480],[394,641],[699,783],[921,813],[1220,740],[1100,116],[710,237],[770,237],[830,237],[464,454],[1148,242],[1198,248],[1248,256]];
  const p={x:0,y:0,homeX:0,homeY:0,ready:false,dir:'down',phase:0,mode:'walk',elapsed:0,cooldown:0,angle:0,turn:0,nextPower:0,wait:0,shots:[]};
  // Meadow west of road 23. Never use a global fallback: it could put Boba next to a minigame.
- const allowed=(x,y)=>x>=420&&x<=550&&y>=85&&y<=215&&sites.every(([sx,sy])=>Math.hypot(x-sx,y-sy)>=190)&&canStand(x,y);
+ const allowed=(x,y)=>x>=420&&x<=550&&y>=85&&y<=215&&sites.every(([sx,sy])=>Math.hypot(x-sx,y-sy)>=190)&&canStand(x,y)&&reachable(x,y);
  function reset(){
   p.ready=false;p.shots=[];let best=null,score=Infinity;
   for(let y=88;y<=212;y+=2)for(let x=420;x<=550;x+=2){
@@ -162,7 +162,8 @@ function makeBoba(canStand,random,art){
   p.x=nx;p.y=ny;p.dir=Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up');p.phase+=dt*5;
  }
  function draw(ctx,camX,camY,w,h){
-  if(!p.ready||!art.complete||art.naturalWidth!==242||art.naturalHeight!==22)return;
+  if(!p.ready)return;
+   const artReady=art.complete&&art.naturalWidth===242&&art.naturalHeight===22;
   const x=Math.round(p.x-camX+w/2),y=Math.round(p.y-camY+h/2);if(x<-100||x>w+100||y<-80||y>h+80)return;
   const hovering=p.mode==='hover',attack=p.mode==='ice';
   const lift=hovering?Math.round(15*Math.sin(Math.PI*Math.min(1,p.elapsed/1.25))):0;
@@ -170,7 +171,7 @@ function makeBoba(canStand,random,art){
   ctx.save();ctx.fillStyle='#132c2466';ctx.beginPath();ctx.ellipse(x,y-2,11,4,0,0,Math.PI*2);ctx.fill();
   ctx.imageSmoothingEnabled=false;ctx.translate(x,y-lift);
   if(attack&&p.dir==='left')ctx.scale(-1,1);
-  ctx.drawImage(art,frame*22,0,22,22,-22,-44,44,44);ctx.restore();
+  if(artReady)ctx.drawImage(art,frame*22,0,22,22,-22,-44,44,44);ctx.restore();
   ctx.save();ctx.font='bold 10px system-ui,sans-serif';ctx.textAlign='center';ctx.lineWidth=3;ctx.strokeStyle='#13342a';ctx.strokeText('Boba',x,y-48-lift);ctx.fillStyle='#ffb3a6';ctx.fillText('Boba',x,y-48-lift);
   for(const s of p.shots){const bx=Math.round(s.x-camX+w/2),by=Math.round(s.y-camY+h/2);ctx.fillStyle='#326bb3';ctx.fillRect(bx-5,by-3,10,6);ctx.fillRect(bx-3,by-5,6,10);ctx.fillStyle='#7ce3ff';ctx.fillRect(bx-3,by-3,6,6);ctx.fillStyle='#e9ffff';ctx.fillRect(bx-2,by-2,3,3);}
   ctx.restore();
@@ -239,14 +240,14 @@ function makeHumpvind(canStand,random,grassAt,others){
  return {p,reset,update,draw,allowed};
 }
 
-function createSystem(canStand,random=Math.random,grassAt=()=>0){
+function createSystem(canStand,random=Math.random,grassAt=()=>0,bobaReachable=()=>true){
  if(typeof canStand!=='function')throw Error('NPCs need a walkable terrain callback');
  const slobidoArt=typeof Image==='function'?new Image():{complete:false};
  if(typeof Image==='function')slobidoArt.src='./slobido-sprites.png?v=1';
  const slobido=makeSlobido(canStand,random,busySites,slobidoArt);
  const bobaArt=typeof Image==='function'?new Image():{complete:false};
  if(typeof Image==='function')bobaArt.src='./boba-sprites.png?v=1';
- const boba=makeBoba(canStand,Math.random,bobaArt);
+ const boba=makeBoba(canStand,random,bobaArt,bobaReachable);
  const reported=new Set();
  function optionalNpc(npc,method,...args){
    try{npc[method](...args);}catch(err){const key=(npc===boba?'Boba':'Slobido')+':'+method;if(!reported.has(key)){reported.add(key);console.warn(key,err);}if(method==='draw'){const ctx=args[0];ctx.restore();ctx.setTransform?.(1,0,0,1,0,0);} }
