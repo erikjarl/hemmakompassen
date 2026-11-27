@@ -995,3 +995,5 @@ Körkorridorer och parkeringsytor definierade mot faktisk kartbild. Bilens centr
 
 
 - **2026-11-27 – KARTA-SYD-01:** 2026-11-27 – KARTA-SYD-01: portal- och kollisionskod på main (south-world.js, index.html), isolerade kontroller 123/123 godkända samt syntaxkontroll. Övergången är avsiktligt avstängd tills godkänd 1448×1086-bild helvetets-portar.png finns på rätt plats i repot. Binär överföring blockerad i aktuell verktygsmiljö. Browser-, start- och WebKit-ljudtest samt Pages-verifiering återstår. Commits `b7b3c1f6` och `7df32045`. Inga ändringar i audio.js. Ingen genomförd visuell eller webbläsarverifiering; påstå inte att den nya världen är spelbar före bildöverföring och kontroll.
+
+- **2026-11-27 – KARTA-SYD-01, kollisionskontroll:** 2026-11-27 – KARTA-SYD-01: 24 kollisionspolygoner nu visuellt avstämda mot den godkända originalbilden med koordinatöverlägg. 2126/2126 isolerade kontroller godkända (stenar, väg, fria punkter, portal). Bildöverföring till GitHub och faktisk webbläsar-/start-/WebKit-ljudtest samt Pages-verifiering återstår; portalen är fortsatt spärrad tills bildfilen finns. Commit `3dd652e7`. Ingen ändring i ljudkoden.
