@@ -3804,3 +3804,22 @@ body .live-layout #live-app .pf-survey .pf-counter > * {
   min-width:0;
   overflow-wrap:anywhere;
 }
+
+/* DES-01F / UX-READ-01: readable question headings and answer text at narrow widths. */
+body .live-layout #live-app .pf-survey .pf-question legend {
+  max-width:100%;
+  overflow-wrap:anywhere;
+}
+body .live-layout #live-app .pf-survey .pf-option span {
+  font-size:16px;
+  line-height:1.5;
+}
+@media (max-width:390px) {
+  body .live-layout #live-app .pf-survey .pf-question {
+    margin:16px 0;
+  }
+  body .live-layout #live-app .pf-survey .pf-question legend {
+    font-size:21px;
+    line-height:1.4;
+  }
+}
